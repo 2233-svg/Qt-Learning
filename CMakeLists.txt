@@ -12,11 +12,21 @@ set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
+file(GLOB_RECURSE BASIC_QT_WINDOW_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/project/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/project/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/project/*.ui"
+    "${CMAKE_CURRENT_SOURCE_DIR}/PublicInterFace/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Qt-Learing/*.cpp"
+)
+
 qt_add_executable(BasicQtWindow
     WIN32
-    main.cpp
-    MainWindow.cpp
-    MainWindow.h
+    ${BASIC_QT_WINDOW_SOURCES}
+)
+
+target_include_directories(BasicQtWindow PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/PublicInterFace"
 )
 
 target_link_libraries(BasicQtWindow PRIVATE Qt6::Widgets)
@@ -34,4 +44,3 @@ if(WIN32)
         )
     endif()
 endif()
-
