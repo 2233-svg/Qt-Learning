@@ -1,0 +1,36 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "qt-mingw-debug",
+      "displayName": "Qt MinGW Debug",
+      "description": "Qt 6.11.1 MinGW basic window project",
+      "generator": "Ninja",
+      "binaryDir": "D:/myQtWindowBuild/${presetName}",
+      "environment": {
+        "TEMP": "D:/myQtWindowBuild/tmp",
+        "TMP": "D:/myQtWindowBuild/tmp",
+        "PATH": "D:/QTforGui/qt/Tools/mingw1310_64/bin;D:/QTforGui/qt/6.11.1/mingw_64/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_PREFIX_PATH": "D:/QTforGui/qt/6.11.1/mingw_64",
+        "CMAKE_C_COMPILER": "D:/QTforGui/qt/Tools/mingw1310_64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "D:/QTforGui/qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "D:/QTforGui/qt/Tools/Ninja/ninja.exe"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "qt-mingw-debug",
+      "configurePreset": "qt-mingw-debug"
+    }
+  ]
+}
+
