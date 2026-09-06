@@ -93,217 +93,133 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QNetworkDiskCache::QNetworkDiskCache(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkDiskCache` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建新的磁盘缓存。`parent`参数传递给`QAbstractNetworkCache`的构造函数。
 
 ### `[virtual noexcept] QNetworkDiskCache::~QNetworkDiskCache()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkDiskCache` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁缓存对象。这不会清除磁盘缓存。
 
 ### `QString QNetworkDiskCache::cacheDirectory() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::cacheDirectory` 用于计算、查询或取得与“cache、Directory”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回缓存文件将存储的位置。
 
 ### `[override virtual] qint64 QNetworkDiskCache::cacheSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::cacheSize` 用于计算、查询或取得与“cache、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractNetworkCache::cacheSize()` const.
+返回缓存当前占用的大小。根据缓存实现，可能是磁盘大小或内存大小。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual slot] void QNetworkDiskCache::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractNetworkCache::clear()`。
+移除缓存中的所有项目。除非清除缓存失败，否则调用清除后`cacheSize()`应该返回0。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] QIODevice *QNetworkDiskCache::data(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QNetworkDiskCache` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimpations： `QAbstractNetworkCache::data`（const QUrl & url）。
+返回与`url`相关的数据。
+请求数据的应用程序在完成`QIODevice`后是否删除。
+如果没有缓存，`url` URL 无效;如果内存内部缓存错误，则返回`nullptr`。
+在基类中，这是一个纯虚拟函数。
 
 ### `[virtual protected] qint64 QNetworkDiskCache::expire()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::expire` 用于计算、查询或取得与“expire”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清理缓存使其大小低于最大缓存大小。返回当前缓存大小。
+当当前缓存大小大于当前缓存大小`maximumCacheSize()`旧缓存文件会被移除，直到总大小低于`maximumCacheSize()`的90%从最早的缓存开始，利用文件创建日期确定缓存文件的年代。
+子类可以重新实现该函数，改变缓存文件移除的顺序，考虑应用程序中已知的信息而`QNetworkDiskCache`不知道，例如缓存被访问的次数。
+注意：如果当前缓存大小未知，`cacheSize()`调用将失效。
 
 ### `QNetworkCacheMetaData QNetworkDiskCache::fileMetaData(const QString &fileName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::fileMetaData` 用于计算、查询或取得与“file、Meta、数据访问”相关的操作。调用时要先确认当前状态和 `fileName` 的有效范围；返回类型是 `QNetworkCacheMetaData`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkCacheMetaData`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回缓存文件`fileName`的`QNetworkCacheMetaData`。
+如果`fileName`不是缓存文件，`QNetworkCacheMetaData`将无效。
 
 ### `[override virtual] void QNetworkDiskCache::insert(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QNetworkDiskCache` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractNetworkCache::insert`（QIODevice *设备）。
+将数据插入`device`，并将准备好的元数据插入缓存。调用该函数后，数据和元数据应可用`data()`和`metaData()`检索。
+取消预设的插入调用，`remove()`元数据的 URL 上。
+在基类中，这是一个纯虚拟函数。
 
 ### `qint64 QNetworkDiskCache::maximumCacheSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::maximumCacheSize` 用于计算、查询或取得与“最大值、Cache、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前磁盘缓存的最大容量。
 
 ### `[override virtual] QNetworkCacheMetaData QNetworkDiskCache::metaData(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::metaData` 用于计算、查询或取得与“meta、数据访问”相关的操作。调用时要先确认当前状态和 `url` 的有效范围；返回类型是 `QNetworkCacheMetaData`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkCacheMetaData`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractNetworkCache::metaData`（const QUrl & url）。
+返回该网址`url`的元数据。
+如果 URL 有效且缓存包含 URL 数据，则返回有效 `QNetworkCacheMetaData`。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] QIODevice *QNetworkDiskCache::prepare(const QNetworkCacheMetaData &metaData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::prepare` 用于计算、查询或取得与“prepare”相关的操作。调用时要先确认当前状态和 `metaData` 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数 `metaData`：类型为 `const QNetworkCacheMetaData &`。没有默认值，调用时必须提供。传入 `const QNetworkCacheMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractNetworkCache::prepare`（const QNetworkCacheMetaData &metaData）。
+返回应填充缓存项目数据的设备`metaData`。当所有数据写入后，应调用`insert()`。如果`metaData`无效或元数据中的URL无效，则返回`nullptr`。
+缓存拥有设备，并在插入或移除时负责删除。
+取消预先插入的调用，`remove()`元数据的 URL 上。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] bool QNetworkDiskCache::remove(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractNetworkCache::remove`（const QUrl & url）。
+移除`url`的缓存条目，如果成功则返回true，否则为false。
+在基类中，这是一个纯虚拟函数。
 
 ### `void QNetworkDiskCache::setCacheDirectory(const QString &cacheDir)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCacheDirectory`。调用它会改变 `QNetworkDiskCache` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cacheDir`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置缓存文件存储的目录`cacheDir`。
+如果这个目录不存在，`QNetworkDiskCache`会创建它。
+准备好的缓存项目在插入时会存储在新的缓存目录中。
 
 ### `void QNetworkDiskCache::setMaximumCacheSize(qint64 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumCacheSize`。调用它会改变 `QNetworkDiskCache` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将磁盘缓存的最大容量设置为`size`。
+如果新缓存大小小于当前缓存大小，缓存就会调用`expire()`。
 
 ### `[override virtual] void QNetworkDiskCache::updateMetaData(const QNetworkCacheMetaData &metaData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkDiskCache::updateMetaData` 用于执行与“更新、Meta、数据访问”相关的操作。调用时要先确认当前状态和 `metaData` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `metaData`：类型为 `const QNetworkCacheMetaData &`。没有默认值，调用时必须提供。传入 `const QNetworkCacheMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractNetworkCache::updateMetaData`（const QNetworkCacheMetaData &metaData）。
+更新`metaData` 网址的缓存元日期`metaData`。
+如果缓存中没有该URL的缓存项，则不会采取任何操作。
+在基类中，这是一个纯虚拟函数。
 
 ## 6. 深入实践与常见坑
 

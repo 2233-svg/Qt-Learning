@@ -70,73 +70,37 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QStartedBarrier::QStartedBarrier(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QStartedBarrier` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建`QBarrier`以给定的`parent`和默认限制1开始。
 
 ### `[explicit] QStartedBarrier::QStartedBarrier(qsizetype limit, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QStartedBarrier` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `limit`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创作`QBarrier`以特定的`limit`和`parent`开始。
 
 ### `[override virtual protected] bool QStartedBarrier::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QStartedBarrier::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QBarrier::event`（QEvent *事件）。
 
 ### `[alias] BarrierKickerGetter`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QStartedBarrier` 的 `Barrier、Kicker、Getter` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+函数的类型别名用于取`QStoredBarrier`并返回 `ExecutableItem`，即`std::function<ExecutableItem(const QStoredBarrier &)>`，用于`When`构造器内。
 
 ### `[alias] QStoredBarrier`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QStartedBarrier` 的 `Q、Stored、Barrier` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于`QtTaskTree::Storage`的别名，用于<`QStartedBarrier`>配方中。
 
 ## 6. 深入实践与常见坑
 

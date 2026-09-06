@@ -67,117 +67,96 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[default] QFormDataPartBuilder::QFormDataPartBuilder(const QFormDataPartBuilder &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataPartBuilder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构造`other`的副本。只要相关`QFormDataBuilder`未被销毁，该对象仍然有效。
+副本的数据是共享的（浅层副本）：修改其中一部分也会改变另一部分。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QFormDataPartBuilder &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
+```cpp
+ QFormDataPartBuilder foo()
+ {
+     QFormDataBuilder builder;
+     auto qfdpb1 = builder.part("First"_L1);
+     auto qfdpb2 = qfdpb1; // this creates a shallow copy
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     qfdpb2.setBodyDevice(&image, "cutecat.jpg"); // qfdpb1 is also modified
+
+     return qfdbp2;  // invalid, builder is destroyed at the end of the scope
+ }
+```
 
 ### `[noexcept default] QFormDataPartBuilder::QFormDataPartBuilder(QFormDataPartBuilder &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataPartBuilder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QFormDataPartBuilder &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-构造一个QFormDataPartBuilder实例，使其指向`other`指向的同一个对象。
 
 ### `[noexcept default] QFormDataPartBuilder::~QFormDataPartBuilder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataPartBuilder` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QFormDataPartBuilder`物体。
 
 ### `QFormDataPartBuilder QFormDataPartBuilder::setBody(QByteArrayView data, QAnyStringView fileName = {}, QAnyStringView mimeType = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBody`。调用它会改变 `QFormDataPartBuilder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QFormDataPartBuilder`。
-- 参数 `data`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `fileName`：类型为 `QAnyStringView`。默认值为 `{}`。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `mimeType`：类型为 `QAnyStringView`。默认值为 `{}`。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`data`设为该MIME部分的正体，并在内容处理头中设置`fileName`为文件名参数。
+如果没有给出`mimeType`（空），则`QFormDataPartBuilder`尝试用`QMimeDatabase`自动检测哑剧类型的`data`。
+随后调用的 `setBodyDevice()` 会丢弃正文数据，设备将被使用。
+对于大量数据（例如图像），优先选择`setBodyDevice()`，因为它不会在内部复制数据。
 
 ### `QFormDataPartBuilder QFormDataPartBuilder::setBodyDevice(QIODevice *body, QAnyStringView fileName = {}, QAnyStringView mimeType = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBodyDevice`。调用它会改变 `QFormDataPartBuilder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QFormDataPartBuilder`。
-- 参数 `body`：类型为 `QIODevice *`。没有默认值，调用时必须提供。传入 `QIODevice *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fileName`：类型为 `QAnyStringView`。默认值为 `{}`。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `mimeType`：类型为 `QAnyStringView`。默认值为 `{}`。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`body`设为该部分的正体设备，`fileName`为内容处置头中的文件名参数。
+如果没有给出`mimeType`（空），`QFormDataPartBuilder`会尝试用`QMimeDatabase`自动检测哑剧类型的`body`。
+随后调用`setBody()`时，会丢弃身体设备，并使用`setBody()`提供的数据集。
+对于大量数据，这种方法应优先于`setBody()`，因为使用该方法时内容不会被复制，而是直接从设备读取。
+`body`必须是开放且可读的。`QFormDataPartBuilder`不拥有`body`，即设备必须关闭并在必要时销毁。
+注意：如果`body`是顺序的（例如套接字，但不是文件），`QNetworkAccessManager::post()`应在`body` 发出 finished()后调用。
 
 ### `QFormDataPartBuilder QFormDataPartBuilder::setHeaders(const QHttpHeaders &headers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QFormDataPartBuilder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QFormDataPartBuilder`。
-- 参数 `headers`：类型为 `const QHttpHeaders &`。没有默认值，调用时必须提供。传入 `const QHttpHeaders &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`headers`中指定的头部。
+注意：如果`headers`中指定了“content-type”和“content-disposition”的头部，将被类覆盖。
 
 ### `[default] QFormDataPartBuilder &QFormDataPartBuilder::operator=(QFormDataPartBuilder &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataPartBuilder` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QFormDataPartBuilder &`。
-- 参数 `other`：类型为 `QFormDataPartBuilder &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到这个`QFormDataPartBuilder`实例。
 
 ### `[default] QFormDataPartBuilder &QFormDataPartBuilder::operator=(const QFormDataPartBuilder &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataPartBuilder` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+将`other`分配到`QFormDataPartBuilder`并返回该`QFormDataPartBuilder`的引用。只要关联的 `QFormDataBuilder` 未被销毁，该对象就有效。
+副本的数据是共享的（浅层副本）：修改其中一部分也会改变另一部分。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QFormDataPartBuilder &`。
-- 参数 `other`：类型为 `const QFormDataPartBuilder &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
+```cpp
+ QFormDataPartBuilder foo()
+ {
+     QFormDataBuilder builder;
+     auto qfdpb1 = builder.part("First"_L1);
+     auto qfdpb2 = qfdpb1; // this creates a shallow copy
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     qfdpb2.setBodyDevice(&image, "cutecat.jpg"); // qfdpb1 is also modified
+
+     return qfdbp2;  // invalid, builder is destroyed at the end of the scope
+ }
+```
 
 ## 6. 深入实践与常见坑
 

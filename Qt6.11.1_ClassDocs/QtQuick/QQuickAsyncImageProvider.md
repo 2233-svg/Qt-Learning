@@ -65,23 +65,16 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 1 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[pure virtual] QQuickImageResponse *QQuickAsyncImageProvider::requestImageResponse(const QString &id, const QSize &requestedSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickAsyncImageProvider` 的核心操作 `requestImageResponse`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QQuickImageResponse *`。
-- 参数 `id`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `requestedSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现此方法返回将为纹理提供 `id` 的作业。
+`id`是请求的图像源，去除了“image：”方案和提供者标识符。例如，如果图像`source`为“image://myprovider/icons/home”，则给定的`id`为“icons/home”。
+`requestedSize`对应于图片项请求的`Image::sourceSize`。如果`requestedSize`是有效大小，返回的图像应当是该大小。
+注意：该方法可能被多个线程调用，因此确保实现为重入。
 
 ## 6. 深入实践与常见坑
 

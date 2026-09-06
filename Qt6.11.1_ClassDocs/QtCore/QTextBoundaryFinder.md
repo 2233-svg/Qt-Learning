@@ -86,340 +86,186 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QTextBoundaryFinder::BoundaryReasonflags QTextBoundaryFinder::BoundaryReasons`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 暴露的类型声明 `Boundary、Reasonflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:BoundaryReasonflags QTextBoundaryFinder::BoundaryReasons`。
-- 属性名：`QTextBoundaryFinder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextBoundaryFinder::NotAtBoundary`: `0`; 边界查找器不在边界位置。
+- `QTextBoundaryFinder::BreakOpportunity`: `0x1f`; 边界查找器位于换行机会位置。这样的换行机会也可能是一个项目边界（StartOfItem、EndOfItem或两者组合）、强制换行符或软连字符。
+- `QTextBoundaryFinder::StartOfItem (since Qt 5.0)`: `0x20`; 边界查找器位于字形、单词、句子或行的开始位置。
+- `QTextBoundaryFinder::EndOfItem (since Qt 5.0)`: `0x40`; 边界查找器位于字形、单词、句子或行的结束位置。
+- `QTextBoundaryFinder::MandatoryBreak (since Qt 5.0)`: `0x80`; 边界查找器位于行尾（仅适用于行边界类型）。
+- `QTextBoundaryFinder::SoftHyphen`: `0x100`; 边界查找器位于软连字符（仅适用于行边界类型）。
+BoundaryReasons 类型是 QFlags<BoundaryReason> 的 typedef。它存储 BoundaryReason 值的或组合。
 
 ### `QTextBoundaryFinder::QTextBoundaryFinder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个无效的 QTextBoundaryFinder 对象。
 
 ### `QTextBoundaryFinder::QTextBoundaryFinder(QTextBoundaryFinder::BoundaryType type, const QString &string)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QTextBoundaryFinder::BoundaryType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `string`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QTextBoundaryFinder 对象，`type` 操作于 `string`。
 
 ### `[since 6.0] QTextBoundaryFinder::QTextBoundaryFinder(QTextBoundaryFinder::BoundaryType type, QStringView string, unsigned char *buffer = nullptr, qsizetype bufferSize = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QTextBoundaryFinder::BoundaryType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `string`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `buffer`：类型为 `unsigned char *`。默认值为 `nullptr`。传入 `unsigned char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufferSize`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QTextBoundaryFinder 对象，操作于 `string` `type`。
+`buffer`是一个可选的工作缓冲区，大小为`bufferSize`你可以传递给QTextBoundaryFinder。如果缓冲区足够大以容纳所需的工作数据（bufferSize >= 长度1），它会使用它，而不是分配自己的缓冲区。
+警告：QTextBoundaryFinder 不会创建 `string` 的副本。只要 QTextBoundaryFinder 对象仍然存在，程序员有责任确保数组被分配。同样适用于 `buffer`。
 
 ### `QTextBoundaryFinder::QTextBoundaryFinder(QTextBoundaryFinder::BoundaryType type, const QChar *chars, qsizetype length, unsigned char *buffer = nullptr, qsizetype bufferSize = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QTextBoundaryFinder::BoundaryType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `chars`：类型为 `const QChar *`。没有默认值，调用时必须提供。传入 `const QChar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `buffer`：类型为 `unsigned char *`。默认值为 `nullptr`。传入 `unsigned char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufferSize`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与 QTextBoundaryFinder（类型、`QStringView`（字符、长度）、缓冲区、缓冲区大小）相同。
 
 ### `QTextBoundaryFinder::QTextBoundaryFinder(const QTextBoundaryFinder &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QTextBoundaryFinder &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制QTextBoundaryFinder对象，`other`。
 
 ### `[noexcept, since 6.11] QTextBoundaryFinder::QTextBoundaryFinder(QTextBoundaryFinder &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QTextBoundaryFinder &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`other`中移动构建了一个新的QTextBoundaryFinder。
+注意：被移出的对象他处于部分形成状态，唯一有效的操作是销毁和赋予新值。
 
 ### `[noexcept] QTextBoundaryFinder::~QTextBoundaryFinder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QTextBoundaryFinder`物体。
 
 ### `QTextBoundaryFinder::BoundaryReasons QTextBoundaryFinder::boundaryReasons() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextBoundaryFinder::boundaryReasons` 用于计算、查询或取得与“boundary、Reasons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBoundaryFinder::BoundaryReasons`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBoundaryFinder::BoundaryReasons`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回边界查找器选择当前位置作为边界的原因。
 
 ### `bool QTextBoundaryFinder::isAtBoundary() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAtBoundary`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对象的`position()`当前处于有效文本边界，返回`true`。
 
 ### `bool QTextBoundaryFinder::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果文本边界查找器有效，返回`true`;否则返回`false`。默认的`QTextBoundaryFinder`无效。
 
 ### `qsizetype QTextBoundaryFinder::position() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextBoundaryFinder::position` 用于计算、查询或取得与“position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `QTextBoundaryFinder` 的当前位置。
+范围从 0（字符串开头）到字符串长度（包括长度）。
 
 ### `void QTextBoundaryFinder::setPosition(qsizetype position)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPosition`。调用它会改变 `QTextBoundaryFinder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QTextBoundaryFinder`当前位置设置为`position`。
+如果`position`越界，则只绑定于有效位置。在这种情况下，有效位置范围为0到字符串长度（含）。
 
 ### `QString QTextBoundaryFinder::string() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextBoundaryFinder::string` 用于计算、查询或取得与“字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QTextBoundaryFinder`对象操作的字符串。
 
 ### `[noexcept, since 6.11] void QTextBoundaryFinder::swap(QTextBoundaryFinder &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextBoundaryFinder::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QTextBoundaryFinder &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本边界查找器与`other`交换。这个操作非常快，从未失败过。
 
 ### `void QTextBoundaryFinder::toEnd()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toEnd`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将寻器移动到弦的末端。这相当于`setPosition`（string.length()）。
 
 ### `qsizetype QTextBoundaryFinder::toNextBoundary()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toNextBoundary`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QTextBoundaryFinder`移动到下一个边界位置并返回该位置。
+如果没有下一个边界，则返回-1。
 
 ### `qsizetype QTextBoundaryFinder::toPreviousBoundary()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPreviousBoundary`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QTextBoundaryFinder`移动到上一个边界位置并返回该位置。
+如果没有先前边界，则返回-1。
 
 ### `void QTextBoundaryFinder::toStart()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toStart`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将寻标器移动到弦的起始位置。这等价于`setPosition`（0）。
 
 ### `QTextBoundaryFinder::BoundaryType QTextBoundaryFinder::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextBoundaryFinder::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBoundaryFinder::BoundaryType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBoundaryFinder::BoundaryType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QTextBoundaryFinder`类型。
 
 ### `[noexcept, since 6.11] QTextBoundaryFinder &QTextBoundaryFinder::operator=(QTextBoundaryFinder &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTextBoundaryFinder &`。
-- 参数 `other`：类型为 `QTextBoundaryFinder &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QTextBoundaryFinder`实例。
+注意：被移出的对象他处于部分形成状态，唯一有效的操作是销毁和赋予新值。
 
 ### `QTextBoundaryFinder &QTextBoundaryFinder::operator=(const QTextBoundaryFinder &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTextBoundaryFinder &`。
-- 参数 `other`：类型为 `const QTextBoundaryFinder &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将对象 `other` 分配给另一个`QTextBoundaryFinder`对象。
 
 ### `enum BoundaryReason { NotAtBoundary, BreakOpportunity, StartOfItem, EndOfItem, MandatoryBreak, SoftHyphen }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 暴露的类型声明 `Boundary、Reason`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextBoundaryFinder::NotAtBoundary`: `0`; 边界查找器不在边界位置。
+- `QTextBoundaryFinder::BreakOpportunity`: `0x1f`; 边界查找器位于换行机会位置。这样的换行机会也可能是一个项目边界（StartOfItem、EndOfItem或两者组合）、强制换行符或软连字符。
+- `QTextBoundaryFinder::StartOfItem (since Qt 5.0)`: `0x20`; 边界查找器位于字形、单词、句子或行的开始位置。
+- `QTextBoundaryFinder::EndOfItem (since Qt 5.0)`: `0x40`; 边界查找器位于字形、单词、句子或行的结束位置。
+- `QTextBoundaryFinder::MandatoryBreak (since Qt 5.0)`: `0x80`; 边界查找器位于行尾（仅适用于行边界类型）。
+- `QTextBoundaryFinder::SoftHyphen`: `0x100`; 边界查找器位于软连字符（仅适用于行边界类型）。
+BoundaryReasons 类型是 QFlags<BoundaryReason> 的 typedef。它存储 BoundaryReason 值的或组合。
 
 ### `flags BoundaryReasons`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextBoundaryFinder::NotAtBoundary`: `0`; 边界查找器不在边界位置。
+- `QTextBoundaryFinder::BreakOpportunity`: `0x1f`; 边界查找器位于换行机会位置。这样的换行机会也可能是一个项目边界（StartOfItem、EndOfItem或两者组合）、强制换行符或软连字符。
+- `QTextBoundaryFinder::StartOfItem (since Qt 5.0)`: `0x20`; 边界查找器位于字形、单词、句子或行的开始位置。
+- `QTextBoundaryFinder::EndOfItem (since Qt 5.0)`: `0x40`; 边界查找器位于字形、单词、句子或行的结束位置。
+- `QTextBoundaryFinder::MandatoryBreak (since Qt 5.0)`: `0x80`; 边界查找器位于行尾（仅适用于行边界类型）。
+- `QTextBoundaryFinder::SoftHyphen`: `0x100`; 边界查找器位于软连字符（仅适用于行边界类型）。
+BoundaryReasons 类型是 QFlags<BoundaryReason> 的 typedef。它存储 BoundaryReason 值的或组合。
 
 ### `enum BoundaryType { Grapheme, Word, Line, Sentence }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextBoundaryFinder` 暴露的类型声明 `Boundary、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextBoundaryFinder::Grapheme`: `0`; 查找最小边界的字形。它包括字母、标点符号、数字等。
+- `QTextBoundaryFinder::Word`: `1`; 查找一个单词。
+- `QTextBoundaryFinder::Line`: `3`; 查找将文本分为多行的可能位置。
+- `QTextBoundaryFinder::Sentence`: `2`; 查找句子的边界。这些包括句号、问号等。
 
 ## 6. 深入实践与常见坑
 

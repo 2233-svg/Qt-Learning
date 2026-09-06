@@ -75,414 +75,112 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 - `bool operator!=(const QOcspResponse &lhs, const QOcspResponse &rhs)`
 - `bool operator==(const QOcspResponse &lhs, const QOcspResponse &rhs)`
 
-### 相关非成员函数
-
-- `Constant Value Description`
-- `QOcspResponse::QOcspCertificateStatus::Good 0 The certificate is not revoked, but this does not necessarily mean that the certificate was ever issued or that the time at which the response was produced is within the certificate's validity interval.`
-- `QOcspResponse::QOcspCertificateStatus::Revoked 1 This state indicates that the certificate has been revoked (either permanently or temporarily - on hold).`
-- `QOcspResponse::QOcspCertificateStatus::Unknown 2 This state indicates that the responder doesn't know about the certificate being requested.`
-- `Constant Value`
-- `QOcspResponse::QOcspRevocationReason::None -1`
-- `QOcspResponse::QOcspRevocationReason::Unspecified 0`
-- `QOcspResponse::QOcspRevocationReason::KeyCompromise 1`
-- `QOcspResponse::QOcspRevocationReason::CACompromise 2`
-- `QOcspResponse::QOcspRevocationReason::AffiliationChanged 3`
-- `QOcspResponse::QOcspRevocationReason::Superseded 4`
-- `QOcspResponse::QOcspRevocationReason::CessationOfOperation 5`
-- `QOcspResponse::QOcspRevocationReason::CertificateHold 6`
-- `QOcspResponse::QOcspRevocationReason::RemoveFromCRL 7`
-
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 29 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QOcspResponse::QOcspResponse()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建带有状态`QOcspCertificateStatus::Unknown`和撤销理由`QOcspRevocationReason::None`的新回复。
 
 ### `QOcspResponse::QOcspResponse(const QOcspResponse &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QOcspResponse &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制构造一个QOcspResponse实例。
 
 ### `[noexcept] QOcspResponse::QOcspResponse(QOcspResponse &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QOcspResponse &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动构建一个QOcsp响应实例。
 
 ### `[noexcept] QOcspResponse::~QOcspResponse()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏反应。
 
 ### `QOcspCertificateStatus QOcspResponse::certificateStatus() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOcspResponse::certificateStatus` 用于计算、查询或取得与“certificate、状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOcspCertificateStatus`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOcspCertificateStatus`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+恢复证书状态。
 
 ### `class QSslCertificate QOcspResponse::responder() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 暴露的类型声明 `Q、Ssl、Certificate`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 返回值：`class QSslCertificate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能返回用于签署OCSP响应的证书。
 
 ### `QOcspRevocationReason QOcspResponse::revocationReason() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOcspResponse::revocationReason` 用于计算、查询或取得与“revocation、Reason”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOcspRevocationReason`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOcspRevocationReason`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原撤销的理由。
 
 ### `QSslCertificate QOcspResponse::subject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOcspResponse::subject` 用于计算、查询或取得与“subject”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslCertificate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslCertificate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回一个证书，该响应就是为该证书发出的。
 
 ### `[noexcept] void QOcspResponse::swap(QOcspResponse &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOcspResponse::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QOcspResponse &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将此响应替换为`other`。此操作非常快速且从未失败。
 
 ### `[noexcept] QOcspResponse &QOcspResponse::operator=(QOcspResponse &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QOcspResponse &`。
-- 参数 `other`：类型为 `QOcspResponse &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QOcspResponse`实例。
 
 ### `QOcspResponse &QOcspResponse::operator=(const QOcspResponse &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QOcspResponse &`。
-- 参数 `other`：类型为 `const QOcspResponse &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Copy-assign `other`并返回该响应的引用。
 
 ### `enum class QOcspCertificateStatus`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述在线证书状态。
+- `QOcspResponse::QOcspCertificateStatus::Good`：`0`;证书不会被撤销，但这不一定意味着证书曾经被签发过，或回复产生的时间在证书的有效期内。
+- `QOcspResponse::QOcspCertificateStatus::Revoked`：`1`;该状态表示证书已被吊销（永久或暂时——暂停）。
+- `QOcspResponse::QOcspCertificateStatus::Unknown`：`2`;该状态表示响应者不知道所请求的证书。
 
 ### `enum class QOcspRevocationReason`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述撤销的原因。
+此枚举描述了撤销原因，定义于 RFC 5280，第 5.3.1 节。
+- `QOcspResponse::QOcspRevocationReason::None`: `-1`
+- `QOcspResponse::QOcspRevocationReason::Unspecified`: `0`
+- `QOcspResponse::QOcspRevocationReason::KeyCompromise`: `1`
+- `QOcspResponse::QOcspRevocationReason::CACompromise`: `2`
+- `QOcspResponse::QOcspRevocationReason::AffiliationChanged`: `3`
+- `QOcspResponse::QOcspRevocationReason::Superseded`: `4`
+- `QOcspResponse::QOcspRevocationReason::CessationOfOperation`: `5`
+- `QOcspResponse::QOcspRevocationReason::CertificateHold`: `6`
+- `QOcspResponse::QOcspRevocationReason::RemoveFromCRL`: `7`
 
 ### `bool operator!=(const QOcspResponse &lhs, const QOcspResponse &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QOcspResponse &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QOcspResponse &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果`lhs`和`rhs`是针对不同证书的响应，或由不同响应者签署，或具有不同的吊销原因，或不同的证书状态。
 
 ### `bool operator==(const QOcspResponse &lhs, const QOcspResponse &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QOcspResponse` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QOcspResponse &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QOcspResponse &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `Constant Value Description`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的 `Constant` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspCertificateStatus::Good 0 The certificate is not revoked, but this does not necessarily mean that the certificate was ever issued or that the time at which the response was produced is within the certificate's validity interval.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspCertificateStatus::Good 0 The certificate is not revoked, but this does not necessarily mean that the certificate was ever issued or that the time at which the response was produced is within the certificate's validity interval.`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspCertificateStatus::Revoked 1 This state indicates that the certificate has been revoked (either permanently or temporarily - on hold).`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** `QOcspResponse::revoked` 用于计算、查询或取得与“revoked”相关的操作。调用时要先确认当前状态和 `hold` 的有效范围；返回类型是 `QOcspResponse::QOcspCertificateStatus::Revoked 1 This state indicates that the certificate has been`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOcspResponse::QOcspCertificateStatus::Revoked 1 This state indicates that the certificate has been`。
-- 参数 `hold`：类型为 `either permanently or temporarily - on`。没有默认值，调用时必须提供。传入 `either permanently or temporarily - on` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspCertificateStatus::Unknown 2 This state indicates that the responder doesn't know about the certificate being requested.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspCertificateStatus::Unknown 2 This state indicates that the responder doesn't know about the certificate being requested.`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `Constant Value`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的 `Constant` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::None -1`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::None -1`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::Unspecified 0`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::Unspecified 0`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::KeyCompromise 1`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::KeyCompromise 1`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::CACompromise 2`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::CACompromise 2`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::AffiliationChanged 3`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::AffiliationChanged 3`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::Superseded 4`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::Superseded 4`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::CessationOfOperation 5`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::CessationOfOperation 5`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::CertificateHold 6`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::CertificateHold 6`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QOcspResponse::QOcspRevocationReason::RemoveFromCRL 7`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QOcspResponse` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QOcspRevocationReason::RemoveFromCRL 7`。
-- 属性名：`QOcspResponse`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 对同一证书的响应是由同一响应者签署的，具有相同的吊销原因和相同的证书状态，则返回 `true`。
 
 ## 6. 深入实践与常见坑
 

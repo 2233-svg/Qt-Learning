@@ -80,228 +80,144 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGMaterialShader::Flagflags QSGMaterialShader::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QSGMaterialShader::Flags`。
-- 属性名：`QSGMaterialShader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于表示特殊材料属性。
+- `QSGMaterialShader::UpdatesGraphicsPipelineState`：`0x0001`;设置此标志后可调用`updateGraphicsPipelineState()`。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `QSGMaterialShader::QSGMaterialShader()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建了一个新的QSGMaterialShader。
 
 ### `[since 6.4] int QSGMaterialShader::combinedImageSamplerCount(int binding) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::combinedImageSamplerCount` 用于计算、查询或取得与“combined、Image、Sampler、数量统计”相关的操作。调用时要先确认当前状态和 `binding` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回合并图像采样器变量中的元素数，`binding`。该值从着色器代码中内省。变量可以是数组，且可能具有多个维度。
+计数反映了变量中合成图像采样器项目的总数。在以下示例中，`srcA`的计数为1，`srcB`为4，`srcC`为6。
+这个计数是`QSGMaterialShader::updateSampledImage`纹理参数中的`QSGTexture`指针数量。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`int`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ layout (binding = 0) uniform sampler2D srcA;
+ layout (binding = 1) uniform sampler2D srcB[4];
+ layout (binding = 2) uniform sampler2D srcC[2][3];
+```
 
 ### `QSGMaterialShader::Flags QSGMaterialShader::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGMaterialShader::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGMaterialShader::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前为该材质着色器设置的标志。
 
 ### `void QSGMaterialShader::setFlag(QSGMaterialShader::Flags flags, bool on = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlag`。调用它会改变 `QSGMaterialShader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QSGMaterialShader::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `on`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该材料着色器`flags`为真`on`;否则清除指定的标志。
 
 ### `void QSGMaterialShader::setFlags(QSGMaterialShader::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QSGMaterialShader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QSGMaterialShader::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置了该材质着色器的`flags`。
 
 ### `[protected] void QSGMaterialShader::setShader(QSGMaterialShader::Stage stage, const QShader &shader)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShader`。调用它会改变 `QSGMaterialShader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stage`：类型为 `QSGMaterialShader::Stage`。没有默认值，调用时必须提供。传入 `QSGMaterialShader::Stage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `shader`：类型为 `const QShader &`。没有默认值，调用时必须提供。传入 `const QShader &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为指定`stage`设定`shader`。
 
 ### `[protected] void QSGMaterialShader::setShaderFileName(QSGMaterialShader::Stage stage, const QString &filename)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShaderFileName`。调用它会改变 `QSGMaterialShader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stage`：类型为 `QSGMaterialShader::Stage`。没有默认值，调用时必须提供。传入 `QSGMaterialShader::Stage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `filename`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为指定`stage`设置着色器的着色器`filename`。
+文件通常包含序列化的`QShader`。
+警告：着色器，包括`.qsb`文件，被假定为可信内容。建议应用开发者在允许加载非应用内容的用户提供内容前，仔细考虑潜在影响。
 
 ### `[protected, since 6.8] void QSGMaterialShader::setShaderFileName(QSGMaterialShader::Stage stage, const QString &filename, int viewCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShaderFileName`。调用它会改变 `QSGMaterialShader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stage`：类型为 `QSGMaterialShader::Stage`。没有默认值，调用时必须提供。传入 `QSGMaterialShader::Stage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `filename`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `viewCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为指定`stage`设置着色器的`filename`。
+文件应包含序列化`QShader`。
+这种重载用于启用`multiview`渲染，特别是当构建系统的多视图便利选项被使用时。
+`viewCount`应该是2、3或4。`filename`会根据这些数据自动调整。
+警告：着色器，包括`.qsb`文件，被假定为可信内容。建议应用开发者在允许加载非应用内容前，仔细考虑潜在影响。
 
 ### `[virtual] bool QSGMaterialShader::updateGraphicsPipelineState(QSGMaterialShader::RenderState &state, QSGMaterialShader::GraphicsPipelineState *ps, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::updateGraphicsPipelineState` 用于计算、查询或取得与“更新、Graphics、Pipeline、State”相关的操作。调用时要先确认当前状态和 `state`、`ps`、`newMaterial`、`oldMaterial` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `state`：类型为 `QSGMaterialShader::RenderState &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-- 参数 `ps`：类型为 `QSGMaterialShader::GraphicsPipelineState *`。没有默认值，调用时必须提供。传入 `QSGMaterialShader::GraphicsPipelineState *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newMaterial`：类型为 `QSGMaterial *`。没有默认值，调用时必须提供。传入 `QSGMaterial *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldMaterial`：类型为 `QSGMaterial *`。没有默认值，调用时必须提供。传入 `QSGMaterial *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+场景图调用该函数，使材质能够提供自定义的图形状态。可通过材质自定义的状态集合仅限于混合和相关设置。
+注意：只有当`UpdatesGraphicsPipelineState`标志通过`setFlags()`启用时，才调用此功能。默认情况下，该函数未被设置，因此从未调用。
+每当对`ps`中的任何成员发生变更时，返回值必须`true`。
+注意：`ps` 的内容在调用该函数之间不持久。
+当前渲染`state`是从场景图传递的。
+子类专属状态可以从`newMaterial`中提取。当`oldMaterial`为空时，这个着色器刚刚被激活。
 
 ### `[virtual] void QSGMaterialShader::updateSampledImage(QSGMaterialShader::RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::updateSampledImage` 用于执行与“更新、Sampled、Image”相关的操作。调用时要先确认当前状态和 `state`、`binding`、`texture`、`newMaterial`、`oldMaterial` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `QSGMaterialShader::RenderState &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `texture`：类型为 `QSGTexture **`。没有默认值，调用时必须提供。传入 `QSGTexture **` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newMaterial`：类型为 `QSGMaterial *`。没有默认值，调用时必须提供。传入 `QSGMaterial *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldMaterial`：类型为 `QSGMaterial *`。没有默认值，调用时必须提供。传入 `QSGMaterial *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+场景图调用该函数，用于准备在着色器中使用采样图像，通常以组合图像采样器的形式出现。
+`binding` 是采样器的绑定编号。该函数为与 `QSGMaterialShader` 关联的着色器代码中的每个合并图像采样器变量调用。
+`texture` 是一个由`QSGTexture`指针组成的数组。数组中的元素数与着色器代码中指定的图像采样器变量中的元素数相匹配。该变量可以是一个数组，并且可以有多个维度。数组中的元素数量可以通过`QSGMaterialShader::combinedImageSamplerCount` 找到。
+当`texture`中的元素为空时，必须将其设置为有效的`QSGTexture`指针后才能返回。当非空时，材料自行决定是否存储新的`QSGTexture *`，或是否更新已知`QSGTexture`上的某些参数。`QSGTexture`的所有权不会转移。
+当前的渲染`state`是从场景图传递过来的。在相关情况下，由材质触发通过`QSGTexture::commitTextureOperations()`上传的队列纹理数据。
+子职业专属状态可以从`newMaterial`中提取。
+`oldMaterial`可以用来最小化变更。当`oldMaterial`为空时，这个着色器只是被激活了。
 
 ### `[virtual] bool QSGMaterialShader::updateUniformData(QSGMaterialShader::RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::updateUniformData` 用于计算、查询或取得与“更新、Uniform、数据访问”相关的操作。调用时要先确认当前状态和 `state`、`newMaterial`、`oldMaterial` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `state`：类型为 `QSGMaterialShader::RenderState &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-- 参数 `newMaterial`：类型为 `QSGMaterial *`。没有默认值，调用时必须提供。传入 `QSGMaterial *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldMaterial`：类型为 `QSGMaterial *`。没有默认值，调用时必须提供。传入 `QSGMaterial *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+场景图调用该函数以更新着色器程序的统一缓冲区内容。实现不执行任何实际图形操作，仅负责将数据复制到返回`RenderState::uniformData()`返回的`QByteArray`。场景图负责使该缓冲区在着色器中可见。
+当前渲染`state`从场景图传递。如果该状态表明任何相关状态为脏状态，实现必须更新通过`RenderState::uniformData()`访问的缓冲区中相应区域。当某个状态（如矩阵或不透明度）不脏时，无需操作对应区域，因为数据是持久的。
+每当对统一数据做出任何更改时，返回值必须`true`。
+子类特定的状态，例如平面颜色材质的颜色，应从`newMaterial`中提取，以便相应更新缓冲区中的相关区域。
+`oldMaterial`可以用来最小化缓冲区的变化（通常是memcpy调用），在更新材质状态时。当`oldMaterial`为空时，这个着色器刚刚被激活。
 
 ### `struct GraphicsPipelineState`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader` 的 `Graphics、Pipeline、State` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述材质希望应用于当前活跃图形管线状态的状态变化。
+与`QSGMaterialShader`不同，`QSGMaterialShader`无法直接通过底层图形API发出状态更改命令。这主要是因为可单独更改状态的概念已被现代图形API支持，已被弃用。
+因此，有权`QSGMaterialShader`暴露一个包含支持状态集的数据结构，材质可以在其 updatePipelineState() 实现中更改这些状态（如果有的话）。场景图随后会在内部将这些变化应用到活跃的图形流水线状态，然后根据需要回滚。
+当调用`updateGraphicsPipelineState()`时，结构体的所有成员都设置为一个有效值，以反映渲染器的当前状态。如果没有更改任何值（或没有重新实现函数），说明材质对默认值是正常的（不过默认值是动态的，例如根据`QSGMaterial`标志而定）。
 
 ### `class RenderState`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader` 暴露的类型声明 `渲染、State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在调用QSGMaterialShader：：updateUniformData()和其他更新类型函数时，封装当前渲染状态。
+渲染状态包含多个访问器，着色器需要遵守这些访问器，以符合当前场景图的状态。
 
 ### `enum Flag { UpdatesGraphicsPipelineState }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于表示特殊材料属性。
+- `QSGMaterialShader::UpdatesGraphicsPipelineState`：`0x0001`;设置此标志后可调用`updateGraphicsPipelineState()`。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于表示特殊材料属性。
+- `QSGMaterialShader::UpdatesGraphicsPipelineState`：`0x0001`;设置此标志后可调用`updateGraphicsPipelineState()`。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

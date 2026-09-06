@@ -70,153 +70,78 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QModelRoleDataSpan::QModelRoleDataSpan()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QModelRoleDataSpan` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的 QModelRoleDataSpan。其`data()`设为 `nullptr`，长度为零。
 
 ### `[constexpr noexcept(...)] template <typename Container, QModelRoleDataSpan::if_compatible_container<Container> = true> QModelRoleDataSpan::QModelRoleDataSpan(Container &c)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QModelRoleDataSpan` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `c`：类型为 `Container &`。没有默认值，调用时必须提供。传入 `Container &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个跨越容器`c`的QModelRoleDataSpan，容器可以是任意连续的`QModelRoleData`对象容器。例如，它可以是`QVector<QModelRoleData>`、`std::array<QModelRoleData, 10>`等。
+注意：只要该物体未被摧毁，容器必须保持存活。
+注意：该功能仅在`noexcept(std::data(c)) && noexcept(std::size(c))` `true`时使用。
 
 ### `[constexpr noexcept] QModelRoleDataSpan::QModelRoleDataSpan(QModelRoleData &modelRoleData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QModelRoleDataSpan` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `modelRoleData`：类型为 `QModelRoleData &`。没有默认值，调用时必须提供。传入 `QModelRoleData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建跨越`modelRoleData`的QModelRoleDataSpan，视为一个元素数组。
 
 ### `[constexpr] QModelRoleDataSpan::QModelRoleDataSpan(QModelRoleData *modelRoleData, qsizetype len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QModelRoleDataSpan` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `modelRoleData`：类型为 `QModelRoleData *`。没有默认值，调用时必须提供。传入 `QModelRoleData *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `len`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个从 `modelRoleData` 起、长度为 `len` 的 QModelRoleDataSpan，跨越数组。
+注意：只要该物体未被摧毁，阵列必须保持存活。
 
 ### `[constexpr noexcept] QModelRoleData *QModelRoleDataSpan::begin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QModelRoleData *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该对象所表示范围起点的指针。
 
 ### `[constexpr noexcept] QModelRoleData *QModelRoleDataSpan::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QModelRoleDataSpan` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QModelRoleData *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该对象所表示范围起点的指针。
 
 ### `[constexpr] QVariant *QModelRoleDataSpan::dataForRole(int role) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QModelRoleDataSpan::dataForRole` 用于计算、查询或取得与“数据访问、For、角色”相关的操作。调用时要先确认当前状态和 `role` 的有效范围；返回类型是 `QVariant *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant *`。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该张成中角色等于`role`的第一个`QModelRoleData`相关数据。如果不存在这样的`QModelRoleData`对象，则行为未定义。
+注意：避免从模型端调用该函数，因为模型不可能事先知道给定`QModelRoleDataSpan`中的角色。该函数更适合视图和代理，它们可以控制跨内的角色。
 
 ### `[constexpr noexcept] QModelRoleData *QModelRoleDataSpan::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QModelRoleData *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该对象所表示的张幅末端后一的虚数元素的指针。
 
 ### `[constexpr noexcept] qsizetype QModelRoleDataSpan::length() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `length`，返回 `QModelRoleDataSpan` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象所表示的跨度长度。
 
 ### `[constexpr noexcept] qsizetype QModelRoleDataSpan::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QModelRoleDataSpan` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象所表示的跨度长度。
 
 ### `[constexpr] QModelRoleData &QModelRoleDataSpan::operator[](qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QModelRoleDataSpan` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QModelRoleData &`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对张距中位置`index`的`QModelRoleData`的可修改引用。
+注意：`index`必须是该跨度的有效索引（0 <= `index` < `size()`）。
 
 ## 6. 深入实践与常见坑
 

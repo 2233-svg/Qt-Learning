@@ -99,313 +99,193 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 23 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QFontComboBox::FontFilterflags QFontComboBox::FontFilters`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 暴露的类型声明 `字体、Filterflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FontFilterflags QFontComboBox::FontFilters`。
-- 属性名：`QFontComboBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举可用于仅在字体组合框中显示某些类型的字体。
+- `QFontComboBox::AllFonts`：`0`；显示所有字体
+- `QFontComboBox::ScalableFonts`：`0x1`；显示可缩放字体
+- `QFontComboBox::NonScalableFonts`：`0x2`；显示不可缩放字体
+- `QFontComboBox::MonospacedFonts`：`0x4`；显示等宽字体
+- `QFontComboBox::ProportionalFonts`：`0x8`；显示比例字体
+FontFilters类型是QFlags<FontFilter>的typedef。它存储FontFilter值的或组合。
 
 ### `currentFont : QFont`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 的配置属性。初始化或状态切换时通过 `setCurrentFont(...)` 设置，之后用 `currentFont()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含当前所选字体。
 
-**签名拆解：**
-
-- 属性类型：`QFont`。
-- 属性名：`currentFont`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentFont()` 读取当前值；它不会修改应用状态。
 
 ### `fontFilters : FontFilters`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 的配置属性。初始化或状态切换时通过 `setFontFilters(...)` 设置，之后用 `fontFilters()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示组合盒的滤波器。
+默认情况下，所有字体都会被列出。
 
-**签名拆解：**
-
-- 属性类型：`FontFilters`。
-- 属性名：`fontFilters`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `fontFilters()` 读取当前值；它不会修改应用状态。
 
 ### `writingSystem : QFontDatabase::WritingSystem`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 的配置属性。初始化或状态切换时通过 `setWritingSystem(...)` 设置，之后用 `WritingSystem()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含作为组合盒过滤器的书写系统。
+如果`script`是`QFontDatabase::Any`（默认），所有字体都会被列出。
 
-**签名拆解：**
-
-- 属性类型：`QFontDatabase::WritingSystem`。
-- 属性名：`writingSystem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `writingSystem()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QFontComboBox::QFontComboBox(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建包含给定`parent`的字体组合框。
 
 ### `[virtual noexcept] QFontComboBox::~QFontComboBox()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏连击盒。
 
 ### `[signal] void QFontComboBox::currentFontChanged(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 发出的通知信号 `currentFontChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含当前所选字体。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `currentFont` 的变化，不要把它当作普通函数主动调用。
 
 ### `[since 6.3] std::optional<QFont> QFontComboBox::displayFont(const QString &fontFamily) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::displayFont` 用于计算、查询或取得与“display、字体”相关的操作。调用时要先确认当前状态和 `fontFamily` 的有效范围；返回类型是 `std::optional<QFont>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::optional<QFont>`。
-- 参数 `fontFamily`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字体（如果设置为）用于显示特定`fontFamily`（当组合打开时）。
 
 ### `[override virtual protected] bool QFontComboBox::event(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QComboBox::event`（QEvent *事件）。
 
 ### `[since 6.3] QString QFontComboBox::sampleTextForFont(const QString &fontFamily) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::sampleTextForFont` 用于计算、查询或取得与“sample、文本、For、字体”相关的操作。调用时要先确认当前状态和 `fontFamily` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `fontFamily`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在字体名称后（组合打开时）返回示例文本，适用于给定`fontFamily`。
 
 ### `[since 6.3] QString QFontComboBox::sampleTextForSystem(QFontDatabase::WritingSystem writingSystem) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::sampleTextForSystem` 用于计算、查询或取得与“sample、文本、For、System”相关的操作。调用时要先确认当前状态和 `writingSystem` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `writingSystem`：类型为 `QFontDatabase::WritingSystem`。没有默认值，调用时必须提供。传入 `QFontDatabase::WritingSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在组合打开时返回示例文本，显示在字体名称后面，针对给定`writingSystem`。
 
 ### `[since 6.3] void QFontComboBox::setDisplayFont(const QString &fontFamily, const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDisplayFont`。调用它会改变 `QFontComboBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fontFamily`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于显示某`fontFamily`（当连击打开时）的 `font`。
 
 ### `[since 6.3] void QFontComboBox::setSampleTextForFont(const QString &fontFamily, const QString &sampleText)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleTextForFont`。调用它会改变 `QFontComboBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fontFamily`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `sampleText`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`sampleText`在字体名称后显示（组合打开时），针对某一`fontFamily`。
+使用该函数提供的示例文本优先于带有`setSampleTextForSystem()`的示例文本。
 
 ### `[since 6.3] void QFontComboBox::setSampleTextForSystem(QFontDatabase::WritingSystem writingSystem, const QString &sampleText)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleTextForSystem`。调用它会改变 `QFontComboBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `writingSystem`：类型为 `QFontDatabase::WritingSystem`。没有默认值，调用时必须提供。传入 `QFontDatabase::WritingSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleText`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`sampleText`在字体名称后面显示（当组合打开时），针对某一`writingSystem`。
+带有`setSampleTextForFont()`的示例文本优先级。
 
 ### `[override virtual] QSize QFontComboBox::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QComboBox::sizeHint()` const.
+重新实现属性的访问函数：`QWidget::sizeHint`。
+该实现缓存大小提示，以避免在内容动态变化时调整大小。要使缓存值失效，请更改`sizeAdjustPolicy`。
 
 ### `enum FontFilter { AllFonts, ScalableFonts, NonScalableFonts, MonospacedFonts, ProportionalFonts }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 暴露的类型声明 `字体、Filter`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举可用于仅在字体组合框中显示某些类型的字体。
+- `QFontComboBox::AllFonts`：`0`；显示所有字体
+- `QFontComboBox::ScalableFonts`：`0x1`；显示可缩放字体
+- `QFontComboBox::NonScalableFonts`：`0x2`；显示不可缩放字体
+- `QFontComboBox::MonospacedFonts`：`0x4`；显示等宽字体
+- `QFontComboBox::ProportionalFonts`：`0x8`；显示比例字体
+FontFilters类型是QFlags<FontFilter>的typedef。它存储FontFilter值的或组合。
 
 ### `flags FontFilters`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFontComboBox` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举可用于仅在字体组合框中显示某些类型的字体。
+- `QFontComboBox::AllFonts`：`0`；显示所有字体
+- `QFontComboBox::ScalableFonts`：`0x1`；显示可缩放字体
+- `QFontComboBox::NonScalableFonts`：`0x2`；显示不可缩放字体
+- `QFontComboBox::MonospacedFonts`：`0x4`；显示等宽字体
+- `QFontComboBox::ProportionalFonts`：`0x8`；显示比例字体
+FontFilters类型是QFlags<FontFilter>的typedef。它存储FontFilter值的或组合。
 
 ### `QFont currentFont() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::currentFont` 用于计算、查询或取得与“当前、字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含当前所选字体。
 
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentFont()` 读取当前值；它不会修改应用状态。
 
 ### `QFontComboBox::FontFilters fontFilters() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::fontFilters` 用于计算、查询或取得与“字体、Filters”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFontComboBox::FontFilters`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示组合盒的滤波器。
+默认情况下，所有字体都会被列出。
 
-**签名拆解：**
-
-- 返回值：`QFontComboBox::FontFilters`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `fontFilters()` 读取当前值；它不会修改应用状态。
 
 ### `void setFontFilters(QFontComboBox::FontFilters filters)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFontFilters`。调用它会改变 `QFontComboBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示组合盒的滤波器。
+默认情况下，所有字体都会被列出。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filters`：类型为 `QFontComboBox::FontFilters`。没有默认值，调用时必须提供。传入 `QFontComboBox::FontFilters` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFontFilters(...)` 修改 `fontFilters`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWritingSystem(QFontDatabase::WritingSystem)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWritingSystem`。调用它会改变 `QFontComboBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含作为组合盒过滤器的书写系统。
+如果`script`是`QFontDatabase::Any`（默认），所有字体都会被列出。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `WritingSystem`：类型为 `QFontDatabase::`。没有默认值，调用时必须提供。传入 `QFontDatabase::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWritingSystem(...)` 修改 `writingSystem`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QFontDatabase::WritingSystem writingSystem() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QFontComboBox::writingSystem` 用于计算、查询或取得与“writing、System”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFontDatabase::WritingSystem`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含作为组合盒过滤器的书写系统。
+如果`script`是`QFontDatabase::Any`（默认），所有字体都会被列出。
 
-**签名拆解：**
-
-- 返回值：`QFontDatabase::WritingSystem`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `writingSystem()` 读取当前值；它不会修改应用状态。
 
 ### `void setCurrentFont(const QFont &f)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setCurrentFont`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含当前所选字体。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCurrentFont(...)` 修改 `currentFont`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

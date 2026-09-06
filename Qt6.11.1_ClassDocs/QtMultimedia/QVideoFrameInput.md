@@ -69,101 +69,54 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QVideoFrameInput::QVideoFrameInput(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameInput` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的QVideoFrameInput对象，`parent`。
 
 ### `[explicit] QVideoFrameInput::QVideoFrameInput(const QVideoFrameFormat &format, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameInput` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `format`：类型为 `const QVideoFrameFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的QVideoFrameInput对象，包含视频帧`format`和`parent`。
+指定的`format`在调用`QMediaRecorder::record()`时作为匹配视频编码器初始化的提示。如果格式未指定或无效，视频编码器将在发送第一帧时初始化。在匹配视频编码器初始化后发送不同像素格式和尺寸的视频帧可能会导致录制时的性能损失。
+如果你提前知道要发送什么样的帧，我们建议你先指定格式。
 
 ### `[override virtual noexcept] QVideoFrameInput::~QVideoFrameInput()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameInput` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了该物体。
 
 ### `QMediaCaptureSession *QVideoFrameInput::captureSession() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameInput::captureSession` 用于计算、查询或取得与“capture、Session”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaCaptureSession *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMediaCaptureSession *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视频帧输入所连接的捕获会话，或者如果视频帧输入未连接到捕获会话，则返回`nullptr`。
+用`QMediaCaptureSession::setVideoFrameInput()`将视频帧输入连接到会话。
 
 ### `QVideoFrameFormat QVideoFrameInput::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回构建视频帧输入时指定的视频帧格式。
 
 ### `[signal] void QVideoFrameInput::readyToSendVideoFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameInput` 发出的通知信号 `readyToSendVideoFrame`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+信号表明可以向视频帧输入发送新的帧。收到信号后，如果你还有帧要发送，可以调用一次或循环调用`sendVideoFrame`，直到它返回`false`。
 
 ### `bool QVideoFrameInput::sendVideoFrame(const QVideoFrame &frame)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameInput` 的核心操作 `sendVideoFrame`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `frame`：类型为 `const QVideoFrame &`。没有默认值，调用时必须提供。传入 `const QVideoFrame &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`QMediaCaptureSession`发送`QVideoFrame`到`QMediaRecorder`或视频输出。
+如果指定的`frame`已成功发送到目的地，返回`true`。返回`false`，如果帧尚未发送，这种情况可能发生在实例未分配给`QMediaCaptureSession`、会话没有视频输出或媒体录制设备、媒体录制器未启动或队列已满时。信号`readyToSendVideoFrame`将在目标能够处理新帧时立即发送。
+发送空视频帧时，`QMediaRecorder`视为输入流的结束。如果视频`QMediaRecorder::autoStop` `true`且所有输入都报告了流的结束，`QMediaRecorder`会自动停止录制。
 
 ## 6. 深入实践与常见坑
 

@@ -68,231 +68,131 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOptionMenuItem::CheckType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 暴露的类型声明 `Check、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CheckType`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指示是否应为该项目绘制勾选，甚至是否应绘制勾选。
+- `QStyleOptionMenuItem::NotCheckable`：`0`;该物品不可勾选。
+- `QStyleOptionMenuItem::Exclusive`：`1`;该物品是专用的检查物品（类似单选按钮）。
+- `QStyleOptionMenuItem::NonExclusive`：`2`;该项是一个非排他检查项（类似复选框）。
 
 ### `enum QStyleOptionMenuItem::MenuItemType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 暴露的类型声明 `Menu、项目访问、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MenuItemType`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举表示结构描述的菜单项类型。
+- `QStyleOptionMenuItem::Normal`：`0`;普通菜单项。
+- `QStyleOptionMenuItem::DefaultItem`：`1`;菜单项，作为默认动作，`QMenu::defaultAction()` 指定。
+- `QStyleOptionMenuItem::Separator`：`2`;菜单分隔器。
+- `QStyleOptionMenuItem::SubMenu`：`3`;表示菜单项指向子菜单。
+- `QStyleOptionMenuItem::Scroller`：`4`;弹出式菜单滚动器（目前仅在macOS上使用）。
+- `QStyleOptionMenuItem::TearOff`：`5`;菜单的可拆卸手柄。
+- `QStyleOptionMenuItem::Margin`：`6`;已弃用且未使用。菜单边缘。
+- `QStyleOptionMenuItem::EmptyArea`：`TearOff + 2`;菜单的空白区域。
 
 ### `enum QStyleOptionMenuItem::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionMenuItem::Type`：`SO_MenuItem`;提供样式选项（本类的样式`SO_MenuItem`）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来决定风格类型。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必担心这个。
 
 ### `enum QStyleOptionMenuItem::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionMenuItem::Version`：`1`;1
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
 
 ### `QStyleOptionMenuItem::QStyleOptionMenuItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QStyleOptionMenuItem，将成员变量初始化为默认值。
 
 ### `QStyleOptionMenuItem::QStyleOptionMenuItem(const QStyleOptionMenuItem &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOptionMenuItem &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`样式选项的副本。
 
 ### `QStyleOptionMenuItem::CheckType QStyleOptionMenuItem::checkType`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setCheckType(...)` 设置，之后用 `checkType()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:CheckType QStyleOptionMenuItem::checkType`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含菜单项的勾选类型。
+默认值是`NotCheckable`。
 
 ### `bool QStyleOptionMenuItem::checked`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setChecked(...)` 设置，之后用 `checked()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:checked`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+无论菜单项是否被勾选，该变量都保持。
+默认值为假。
 
 ### `QFont QStyleOptionMenuItem::font`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setFont(...)` 设置，之后用 `font()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:font`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存菜单项文本所用字体。
+这应该是用于绘制菜单文本（不含快捷方式）的字体。快捷方式通常使用画家的字体绘制。默认情况下，应用的默认字体是被使用的。
 
 ### `QIcon QStyleOptionMenuItem::icon`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setIcon(...)` 设置，之后用 `icon()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:icon`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含菜单项的图标。
+默认值为空图标，即既无像素图也无文件名的图标。
 
 ### `int QStyleOptionMenuItem::maxIconWidth`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setMaxIconWidth(...)` 设置，之后用 `maxIconWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:maxIconWidth`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留菜单项中该图标的最大图标宽度。
+这可以用来将图标绘制到正确的位置或正确对齐项目。无论菜单项是否有图标，变量都必须设置。默认值为 0。
 
 ### `bool QStyleOptionMenuItem::menuHasCheckableItems`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setMenuHasCheckableItems(...)` 设置，之后用 `menuHasCheckableItems()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:menuHasCheckableItems`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+无论菜单整体是否有可勾选的项目，这个变量都成立。
+默认值为真。
+如果该选项设置为 false，则菜单中没有可勾选的项目。这使得 GUI 样式可以节省一些通常用于检查列的水平空间。
 
 ### `QStyleOptionMenuItem::MenuItemType QStyleOptionMenuItem::menuItemType`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setMenuItemType(...)` 设置，之后用 `menuItemType()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MenuItemType QStyleOptionMenuItem::menuItemType`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含菜单项的类型。
+默认值是`Normal`。
 
 ### `QRect QStyleOptionMenuItem::menuRect`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setMenuRect(...)` 设置，之后用 `menuRect()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:menuRect`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留整个菜单的矩形。
+默认值为空矩形，即宽度和高度均为0的矩形。
 
 ### `int QStyleOptionMenuItem::reservedShortcutWidth`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setReservedShortcutWidth(...)` 设置，之后用 `reservedShortcutWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reservedShortcutWidth`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留菜单项快捷方式的预留宽度。
+`QMenu`设置为菜单中所有可见项目中最宽的快捷方式所占用的宽度。
+默认值是0。
 
 ### `QString QStyleOptionMenuItem::text`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionMenuItem` 的配置属性。初始化或状态切换时通过 `setText(...)` 设置，之后用 `text()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:text`。
-- 属性名：`QStyleOptionMenuItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存菜单项的文本。
+请注意，文本格式大致是“菜单文本\快捷方式”。
+如果菜单项没有快捷方式，它只会包含菜单项的文本。默认值是空字符串。
 
 ## 6. 深入实践与常见坑
 

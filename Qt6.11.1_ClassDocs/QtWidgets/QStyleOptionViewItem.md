@@ -70,352 +70,206 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOptionViewItem::Position`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 暴露的类型声明 `Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Position`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了物品装饰的位置。
+- `QStyleOptionViewItem::Left`：`0`;在正文左侧。
+- `QStyleOptionViewItem::Right`：`1`;在正文右侧。
+- `QStyleOptionViewItem::Top`：`2`;在正文上方。
+- `QStyleOptionViewItem::Bottom`：`3`;在正文下方。
 
 ### `enum QStyleOptionViewItem::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionViewItem::Type`：`SO_ViewItem`;提供的样式类型（本类别`SO_ViewItem`）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必担心这些。
 
 ### `enum QStyleOptionViewItem::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionViewItem::Version`：`1`;4
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
 
 ### `enum QStyleOptionViewItem::ViewItemFeatureflags QStyleOptionViewItem::ViewItemFeatures`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 暴露的类型声明 `View、项目访问、Featureflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ViewItemFeatureflags QStyleOptionViewItem::ViewItemFeatures`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了物品可能具备的不同特征类型。
+- `QStyleOptionViewItem::None`：`0x00`;表示普通物品。
+- `QStyleOptionViewItem::WrapText`：`0x01`;表示带有反装文本的项目。
+- `QStyleOptionViewItem::Alternate`：`0x02`;表示物品背景使用alternateBase渲染。
+- `QStyleOptionViewItem::HasCheckIndicator`：`0x04`;表示该项目具有检查状态指示器。
+- `QStyleOptionViewItem::HasDisplay`：`0x08`;表示该物品具有展示功能。
+- `QStyleOptionViewItem::HasDecoration`：`0x10`;表示该物品具有装饰角色。
+- `QStyleOptionViewItem::IsDecoratedRootColumn (since Qt 6.9)`：`0x20`;表示该物品具有树状树枝部分用于绘画。
+- `QStyleOptionViewItem::IsDecorationForRootColumn (since Qt 6.9)`：`0x40`;表示该项包含绘制树视图分支部分的信息。
+ViewItemFeatures 类型是 QFlags 的 typedef<ViewItemFeature>。它存储 ViewItemFeature 值的 OR 组合。
 
 ### `enum QStyleOptionViewItem::ViewItemPosition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 暴露的类型声明 `View、项目访问、Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ViewItemPosition`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举用于表示物品在行中的分布。它可以根据物品的位置不同绘制不同，例如在开头和结尾加圆角边，中间用直边。
+- `QStyleOptionViewItem::Invalid`：`0`;ViewItemPosition未知，应忽略。
+- `QStyleOptionViewItem::Beginning`：`1`;该物品出现在该行的开头。
+- `QStyleOptionViewItem::Middle`：`2`;该物品出现在行中间。
+- `QStyleOptionViewItem::End`：`3`;该物品出现在行末端。
+- `QStyleOptionViewItem::OnlyOne`：`4`;该物品是该行中唯一的物品，因此既位于开头，也位于末尾。
 
 ### `QStyleOptionViewItem::QStyleOptionViewItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QStyleOptionViewItem，将成员变量初始化为默认值。
 
 ### `QStyleOptionViewItem::QStyleOptionViewItem(const QStyleOptionViewItem &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOptionViewItem &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`样式选项的副本。
 
 ### `QBrush QStyleOptionViewItem::backgroundBrush`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setBackgroundBrush(...)` 设置，之后用 `backgroundBrush()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:backgroundBrush`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+应该用来绘制视图物品背景的那个`QBrush`。
 
 ### `Qt::CheckState QStyleOptionViewItem::checkState`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setCheckState(...)` 设置，之后用 `checkState()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:CheckState QStyleOptionViewItem::checkState`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该视图项可检查，即`ViewItemFeature::HasCheckIndicator`为真，则检查`checkState`为真;否则为假。
 
 ### `Qt::Alignment QStyleOptionViewItem::decorationAlignment`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setDecorationAlignment(...)` 设置，之后用 `decorationAlignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Alignment QStyleOptionViewItem::decorationAlignment`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量记录了该物品装饰的对齐。
+默认值为`Qt::AlignLeft`。
 
 ### `QStyleOptionViewItem::Position QStyleOptionViewItem::decorationPosition`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setDecorationPosition(...)` 设置，之后用 `decorationPosition()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Position QStyleOptionViewItem::decorationPosition`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示该物品装饰的位置。
+默认值是`Left`。
 
 ### `QSize QStyleOptionViewItem::decorationSize`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setDecorationSize(...)` 设置，之后用 `decorationSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:decorationSize`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量决定该物品装饰的大小。
+默认值为`QSize`（-1， -1），即无效大小。
 
 ### `Qt::Alignment QStyleOptionViewItem::displayAlignment`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setDisplayAlignment(...)` 设置，之后用 `displayAlignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Alignment QStyleOptionViewItem::displayAlignment`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存该项显示值的对齐。
+默认值是`Qt::AlignLeft`。
 
 ### `QStyleOptionViewItem::ViewItemFeatures QStyleOptionViewItem::features`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setFeatures(...)` 设置，之后用 `features()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ViewItemFeatures QStyleOptionViewItem::features`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量按位承载描述该视图项特征的 OR。
 
 ### `QFont QStyleOptionViewItem::font`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setFont(...)` 设置，之后用 `font()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:font`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存该项所使用的字体。
+默认情况下，使用应用程序的默认字体。
 
 ### `QIcon QStyleOptionViewItem::icon`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setIcon(...)` 设置，之后用 `icon()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:icon`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+视图中要绘制的图标（如果有的话）。
 
 ### `QModelIndex QStyleOptionViewItem::index`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setIndex(...)` 设置，之后用 `index()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:index`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+要绘制的模型索引。
 
 ### `QLocale QStyleOptionViewItem::locale`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setLocale(...)` 设置，之后用 `locale()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:locale`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存用于显示文本、数字和日期的地点。
+这使得样式能够显示例如日期，地点与应用程序默认位置不同。
 
 ### `bool QStyleOptionViewItem::showDecorationSelected`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setShowDecorationSelected(...)` 设置，之后用 `showDecorationSelected()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:showDecorationSelected`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+该变量决定是否应在选定物品上突出显示装饰。
+如果该选项成立，则应高亮显示所选物品上的分支及装饰物，表示该物品已被选中;否则无需高亮。默认值为false。
 
 ### `QString QStyleOptionViewItem::text`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setText(...)` 设置，之后用 `text()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:text`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+视图项中要绘制的文本（如有的话）。
 
 ### `Qt::TextElideMode QStyleOptionViewItem::textElideMode`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setTextElideMode(...)` 设置，之后用 `textElideMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:TextElideMode QStyleOptionViewItem::textElideMode`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于文本过长无法放入某项时，应添加省略号。
+默认值为`Qt::ElideMiddle`，即省略号出现在文本中间。
 
 ### `QStyleOptionViewItem::ViewItemPosition QStyleOptionViewItem::viewItemPosition`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setViewItemPosition(...)` 设置，之后用 `viewItemPosition()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ViewItemPosition QStyleOptionViewItem::viewItemPosition`。
-- 属性名：`QStyleOptionViewItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+给出该视图项相对于其他项的位置。详情请参见`ViewItemPosition`枚举。
 
 ### `const QWidget *QStyleOptionViewItem::widget`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的配置属性。初始化或状态切换时通过 `setWidget(...)` 设置，之后用 `widget()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 成员类型：`const QWidget *`。
-- 成员名：`widget`；读取前确认所属对象或命名空间仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含该项的父控件。
+该成员包含该项目的父控件（itemview），例如能够访问`QStyledItemDelegate`方法中的某些属性。
 
 ### `enum ViewItemFeature { None, WrapText, Alternate, HasCheckIndicator, HasDisplay, …, IsDecorationForRootColumn }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 暴露的类型声明 `View、项目访问、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了物品可能具备的不同特征类型。
+- `QStyleOptionViewItem::None`：`0x00`;表示普通物品。
+- `QStyleOptionViewItem::WrapText`：`0x01`;表示带有反装文本的项目。
+- `QStyleOptionViewItem::Alternate`：`0x02`;表示物品背景使用alternateBase渲染。
+- `QStyleOptionViewItem::HasCheckIndicator`：`0x04`;表示该项目具有检查状态指示器。
+- `QStyleOptionViewItem::HasDisplay`：`0x08`;表示该物品具有展示功能。
+- `QStyleOptionViewItem::HasDecoration`：`0x10`;表示该物品具有装饰角色。
+- `QStyleOptionViewItem::IsDecoratedRootColumn (since Qt 6.9)`：`0x20`;表示该物品具有树状树枝部分用于绘画。
+- `QStyleOptionViewItem::IsDecorationForRootColumn (since Qt 6.9)`：`0x40`;表示该项包含绘制树视图分支部分的信息。
+ViewItemFeatures 类型是 QFlags 的 typedef<ViewItemFeature>。它存储 ViewItemFeature 值的 OR 组合。
 
 ### `flags ViewItemFeatures`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionViewItem` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了物品可能具备的不同特征类型。
+- `QStyleOptionViewItem::None`：`0x00`;表示普通物品。
+- `QStyleOptionViewItem::WrapText`：`0x01`;表示带有反装文本的项目。
+- `QStyleOptionViewItem::Alternate`：`0x02`;表示物品背景使用alternateBase渲染。
+- `QStyleOptionViewItem::HasCheckIndicator`：`0x04`;表示该项目具有检查状态指示器。
+- `QStyleOptionViewItem::HasDisplay`：`0x08`;表示该物品具有展示功能。
+- `QStyleOptionViewItem::HasDecoration`：`0x10`;表示该物品具有装饰角色。
+- `QStyleOptionViewItem::IsDecoratedRootColumn (since Qt 6.9)`：`0x20`;表示该物品具有树状树枝部分用于绘画。
+- `QStyleOptionViewItem::IsDecorationForRootColumn (since Qt 6.9)`：`0x40`;表示该项包含绘制树视图分支部分的信息。
+ViewItemFeatures 类型是 QFlags 的 typedef<ViewItemFeature>。它存储 ViewItemFeature 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

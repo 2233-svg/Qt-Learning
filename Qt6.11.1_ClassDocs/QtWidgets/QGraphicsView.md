@@ -206,1752 +206,1164 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 129 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGraphicsView::CacheModeFlagflags QGraphicsView::CacheMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Cache、模式、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CacheModeFlagflags QGraphicsView::CacheMode`。
-- 属性名：`QGraphicsView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以为`QGraphicsView`的缓存模式设置的标志。
+- `QGraphicsView::CacheNone`：`0x0`;所有绘画均直接在视窗上完成。
+- `QGraphicsView::CacheBackground`：`0x1`;背景被缓存。这会影响自定义背景和基于`backgroundBrush`属性的背景。启用该标志后，`QGraphicsView`会分配一个视口完整大小的像素地图。
+CacheMode 类型是 QFlags 的 typedef<CacheModeFlag>。它存储 CacheModeFlag 值的 OR 组合。
 
 ### `enum QGraphicsView::DragMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Drag、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DragMode`。
-- 属性名：`QGraphicsView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了当鼠标在视口上按压并拖动时视图的默认动作。
+- `QGraphicsView::NoDrag`：`0`;没有发生任何事;鼠标事件被忽略。
+- `QGraphicsView::ScrollHandDrag`：`1`;光标变为指向的手指，拖动鼠标会滚动scrolbar。该模式兼容`interactive`和非交互模式。
+- `QGraphicsView::RubberBandDrag`：`2`;会出现一根橡皮筋。拖动鼠标可设置橡皮筋几何形状，并选择橡皮筋覆盖的所有物品。非交互式视图禁用此模式。
 
 ### `enum QGraphicsView::OptimizationFlagflags QGraphicsView::OptimizationFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Optimization、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OptimizationFlagflags QGraphicsView::OptimizationFlags`。
-- 属性名：`QGraphicsView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以启用以提升`QGraphicsView`渲染性能的标志。默认情况下，这些标志都没有被设置。注意，设置标志通常会带来副作用，而这种效果会因不同绘图设备和平台而异。
+- `QGraphicsView::DontSavePainterState`：`0x1`;渲染时，`QGraphicsView`保护画家状态（见`QPainter::save()`），无论是渲染背景或前景，还是渲染每个物品时。这允许你让画家处于改变状态（即你可以调用`QPainter::setPen()`或`QPainter::setBrush()`，但绘制后无需恢复状态）。但如果物品持续恢复状态，应启用该标志以防止`QGraphicsView`同样恢复。
+- `QGraphicsView::DontAdjustForAntialiasing`：`0x2`;禁用`QGraphicsView`对已曝光区域的抗锯齿自动调整功能。在`QGraphicsItem::boundingRect()`边界上渲染抗锯齿线条的物品，可能会渲染线条的部分区域。为防止渲染伪影，`QGraphicsView`会将所有暴露区域向所有方向扩展2像素。启用该标志后，`QGraphicsView`将不再执行这些调整，减少需要重绘的区域，从而提升性能。一个常见副作用是，使用抗锯齿绘制的物品在移动时可能会在场景中留下绘画痕迹。
+- `QGraphicsView::IndirectPainting`：`0x4`;自Qt 4.6起，恢复调用QGraphicsView：:d rawItems()和QGraphicsScene：:d rawItems()的旧绘画算法。仅用于兼容旧代码。
+OptimizationFlags 类型是 QFlags 的 typedef<OptimizationFlag>。它存储 OptimizationFlag 值的 OR 组合。
 
 ### `enum QGraphicsView::ViewportAnchor`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Viewport、Anchor`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ViewportAnchor`。
-- 属性名：`QGraphicsView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些枚举描述了当用户调整视图大小或转换视图时`QGraphicsView`可能使用的锚点。
+- `QGraphicsView::NoAnchor`：`0`;无锚点，即视角保持场景位置不变。
+- `QGraphicsView::AnchorViewCenter`：`1`;视角中心的场景点作为锚点。
+- `QGraphicsView::AnchorUnderMouse`：`2`;鼠标下方的点作为锚点。
 
 ### `enum QGraphicsView::ViewportUpdateMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Viewport、更新、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ViewportUpdateMode`。
-- 属性名：`QGraphicsView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了当场景内容发生变化或暴露时，`QGraphicsView`如何更新视口。
+- `QGraphicsView::FullViewportUpdate`：`0`;当场景中任何可见部分发生变化或重新曝光时，`QGraphicsView`会更新整个视口。当`QGraphicsView`花更多时间思考绘制内容时（例如，许多小项目被反复更新），这种方法最快。这是不支持部分更新的视口（如`QOpenGLWidget`）和需要禁用滚动优化的视口的首选更新模式。
+- `QGraphicsView::MinimalViewportUpdate`：`1`;`QGraphicsView`会确定需要重绘的最小视口区域，通过避免重绘未变区域，从而减少绘制时间。这是`QGraphicsView`的默认模式。虽然这种方法总体性能最佳，但如果场景中有许多细微可见的变化，`QGraphicsView`可能会花在寻找最小方法上的时间超过绘制时间。
+- `QGraphicsView::SmartViewportUpdate`：`2`;`QGraphicsView` 会通过分析需要重绘的区域来尝试找到最优的更新模式。
+- `QGraphicsView::BoundingRectViewportUpdate`：`4`;视口中所有变化的边界矩形将被重新绘制。该模式的优点是`QGraphicsView`只搜索一个区域进行变化，从而减少判断需要重绘区域的时间。缺点是未改变的区域也需要重新绘制。
+- `QGraphicsView::NoViewportUpdate`：`3`;场景变化时`QGraphicsView`永远不会更新视口;用户需要控制所有更新。该模式在`QGraphicsView`禁用所有（可能较慢的）物品可见性测试，适用于需要固定帧率或视口外部更新的场景。
 
 ### `alignment : Qt::Alignment`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setAlignment(...)` 设置，之后用 `Alignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了当整个场景可见时，场景在视图中的对齐。
+如果整个场景在视图中可见（即没有可见的滚动条），视图的对齐将决定场景在视图中渲染的位置。例如，如果对齐是`Qt::AlignCenter`（默认），场景会置中，如果对齐是（`Qt::AlignLeft` |`Qt::AlignTop`），场景将渲染在视图的左上角。
 
-**签名拆解：**
-
-- 属性类型：`Qt::Alignment`。
-- 属性名：`alignment`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
 
 ### `backgroundBrush : QBrush`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setBackgroundBrush(...)` 设置，之后用 `backgroundBrush()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留场景的背景画笔。
+该属性为该视图中场景设置背景画刷。它用于覆盖场景自身背景，并定义`drawBackground()`的行为。为了为该视图提供自定义背景绘图，你可以重新实现`drawBackground()`。
+默认情况下，该属性包含带有`Qt::NoBrush`图案的画刷。
 
-**签名拆解：**
-
-- 属性类型：`QBrush`。
-- 属性名：`backgroundBrush`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `backgroundBrush()` 读取当前值；它不会修改应用状态。
 
 ### `cacheMode : CacheMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setCacheMode(...)` 设置，之后用 `cacheMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了视图中哪些部分被缓存。
+`QGraphicsView`可以缓存预渲染内容在`QPixmap`中，然后绘制到视口上。此类缓存的目的是加快渲染慢区域的总渲染时间。例如，纹理、渐变和alpha混合背景渲染速度可能明显较慢;尤其是在变换视图时。`CacheBackground`标志使视图背景能够缓存。例如：
+每次视图被转换时，缓存都会被废除。然而，在滚动时，只需部分失效。
+默认情况下，没有缓存。
 
-**签名拆解：**
+**如何使用：** 调用 `cacheMode()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`CacheMode`。
-- 属性名：`cacheMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsView view;
+ view.setBackgroundBrush(QImage(":/images/backgroundtile.png"));
+ view.setCacheMode(QGraphicsView::CacheBackground);
+```
 
 ### `dragMode : DragMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setDragMode(...)` 设置，之后用 `dragMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了在按下左键时拖动鼠标在场景上的行为。
+该属性定义了用户点击场景背景并拖动鼠标时应发生的操作（例如，使用指针光标滚动视口内容，或用橡皮筋选择多个项目）。默认值`NoDrag`不起作用。
+这种行为只影响未被任何项目处理的鼠标点击。你可以通过创建`QGraphicsView`子类并重新实现`mouseMoveEvent()`来定义自定义行为。
 
-**签名拆解：**
-
-- 属性类型：`DragMode`。
-- 属性名：`dragMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragMode()` 读取当前值；它不会修改应用状态。
 
 ### `foregroundBrush : QBrush`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setForegroundBrush(...)` 设置，之后用 `foregroundBrush()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了场景的前景画笔。
+该属性为该视图中场景设置前景画笔。它用于覆盖场景自身的前景，并定义`drawForeground()`的行为。为了为该视图提供自定义前景绘制，你可以重新实现`drawForeground()`。
+默认情况下，该属性包含带有`Qt::NoBrush`图案的画刷。
 
-**签名拆解：**
-
-- 属性类型：`QBrush`。
-- 属性名：`foregroundBrush`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `foregroundBrush()` 读取当前值；它不会修改应用状态。
 
 ### `interactive : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setInteractive(...)` 设置，之后用 `interactive()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否允许场景交互。
+启用时，该视图设置为允许场景交互。否则，该视图不允许交互，鼠标或按键事件被忽略（即只读视图）。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`interactive`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `interactive()` 读取当前值；它不会修改应用状态。
 
 ### `optimizationFlags : OptimizationFlags`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setOptimizationFlags(...)` 设置，之后用 `optimizationFlags()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这些标志可以用来调节`QGraphicsView`的性能。
+`QGraphicsView` 使用裁剪、额外的边界矩形调整以及其他一些辅助工具，以提升常见图形场景的渲染质量和性能。然而，根据目标平台、场景和所使用的视口，这些操作可能会降低性能。
+效果因标志而异;详情请参见`OptimizationFlags`文档。
+默认情况下，没有启用任何最佳化标志。
 
-**签名拆解：**
-
-- 属性类型：`OptimizationFlags`。
-- 属性名：`optimizationFlags`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `optimizationFlags()` 读取当前值；它不会修改应用状态。
 
 ### `renderHints : QPainter::RenderHints`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setRenderHints(...)` 设置，之后用 `RenderHints()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含视图的默认渲染提示。
+这些提示用于在绘制每个可见物品前初始化`QPainter`。`QPainter` 使用渲染提示切换渲染功能，如抗锯齿和平滑像素映射转换。
+`QPainter::TextAntialiasing`默认是启用的。
 
-**签名拆解：**
+**如何使用：** 调用 `renderHints()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QPainter::RenderHints`。
-- 属性名：`renderHints`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ scene.addRect(QRectF(-10, -10, 20, 20));
+
+ QGraphicsView view(&scene);
+ view.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+ view.show();
+```
 
 ### `resizeAnchor : ViewportAnchor`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setResizeAnchor(...)` 设置，之后用 `resizeAnchor()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+视角在调整视角大小时应该如何定位场景。
+`QGraphicsView` 利用该属性决定当视口小部件大小变化时，场景在视口中的位置。默认行为`NoAnchor`在调整大小时场景位置保持不变;调整大小时，视图左上角看起来是锚定的。
+注意，当场景仅可见部分区域（即有滚动条时），该特性的影响尤为明显。否则，如果整个场景都能放入视图，`QGraphicsScene` 会利用视图对齐来将场景定位于视图中。
 
-**签名拆解：**
-
-- 属性类型：`ViewportAnchor`。
-- 属性名：`resizeAnchor`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resizeAnchor()` 读取当前值；它不会修改应用状态。
 
 ### `rubberBandSelectionMode : Qt::ItemSelectionMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setItemSelectionMode(...)` 设置，之后用 `ItemSelectionMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性支持选择带有橡皮筋选择矩形的物品。
+该属性定义了使用`RubberBandDrag`拖拽模式时如何选择物品。
+默认值为`Qt::IntersectsItemShape`;选择所有形状与橡皮筋相交或被橡皮筋包围的物品。
 
-**签名拆解：**
-
-- 属性类型：`Qt::ItemSelectionMode`。
-- 属性名：`rubberBandSelectionMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `rubberBandSelectionMode()` 读取当前值；它不会修改应用状态。
 
 ### `sceneRect : QRectF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setSceneRect(...)` 设置，之后用 `sceneRect()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了该视图所显示的场景面积。
+场景矩形定义了场景的范围，在视图中，这意味着你可以通过滚动条导航的场景区域。
+如果未设置，或者设置了空`QRectF`，该属性与`QGraphicsScene::sceneRect`值相同，且随`QGraphicsScene::sceneRect`变化。否则，视图的场景矩形不受场景影响。
+注意，尽管场景支持几乎无限大小，但滚动条的范围永远不会超过整数（INT_MIN、INT_MAX）。当场景大于滚动条值时，你可以选择使用`translate()`来导航场景。
+默认情况下，该属性在原点包含一个宽度和高度均为零的矩形。
 
-**签名拆解：**
-
-- 属性类型：`QRectF`。
-- 属性名：`sceneRect`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sceneRect()` 读取当前值；它不会修改应用状态。
 
 ### `transformationAnchor : ViewportAnchor`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setTransformationAnchor(...)` 设置，之后用 `transformationAnchor()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+视角在变换过程中应如何定位场景。
+`QGraphicsView`利用该特性决定当变换矩阵变化、视角坐标系变换时，场景在视口中的位置。默认行为`AnchorViewCenter`确保场景中心点在变换过程中保持不变（例如，旋转时场景看起来会围绕视角中心旋转）。
+注意，当场景仅可见部分区域（即有滚动条时），该特性的影响尤为明显。否则，如果整个场景都能放入视图，`QGraphicsScene`会利用视图对齐来将场景定位于视图中。
 
-**签名拆解：**
-
-- 属性类型：`ViewportAnchor`。
-- 属性名：`transformationAnchor`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `transformationAnchor()` 读取当前值；它不会修改应用状态。
 
 ### `viewportUpdateMode : ViewportUpdateMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的配置属性。初始化或状态切换时通过 `setViewportUpdateMode(...)` 设置，之后用 `viewportUpdateMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+视口应如何更新其内容。
+`QGraphicsView` 利用该属性决定如何更新场景中被重新曝光或更改的区域。通常你不需要修改这个属性，但在某些情况下修改可以提升渲染性能。具体细节请参见`ViewportUpdateMode`文档。
+默认值是`MinimalViewportUpdate`，当内容变化时，会尽量`QGraphicsView`更新视口的最小区域。
 
-**签名拆解：**
-
-- 属性类型：`ViewportUpdateMode`。
-- 属性名：`viewportUpdateMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `viewportUpdateMode()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsView::QGraphicsView(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QGraphicsView。`parent`传递给`QWidget`的构造器。
 
 ### `QGraphicsView::QGraphicsView(QGraphicsScene *scene, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `scene`：类型为 `QGraphicsScene *`。没有默认值，调用时必须提供。传入 `QGraphicsScene *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QGraphicsView，并将可视化场景设置为`scene`。`parent`传递给`QWidget`的构造器。
 
 ### `[virtual noexcept] QGraphicsView::~QGraphicsView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QGraphicsView`物体。
 
 ### `void QGraphicsView::centerOn(const QPointF &pos)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::centerOn` 用于执行与“center、On”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+滚动视口内容，确保场景坐标`pos`在视图中居中。
+由于`pos`是浮点坐标，而滚动条作用于整数坐标，中心化只是近似值。
+注意：如果物品靠近或超出边界，它会在视图中可见，但不会居中。
 
 ### `void QGraphicsView::centerOn(const QGraphicsItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::centerOn` 用于执行与“center、On”相关的操作。调用时要先确认当前状态和 `item` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `const QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+滚动视口内容，确保`item`在视野中居中。
 
 ### `void QGraphicsView::centerOn(qreal x, qreal y)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::centerOn` 用于执行与“center、On”相关的操作。调用时要先确认当前状态和 `x`、`y` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是为了方便而提供。它等同于调用 centerOn（`QPointF`（`x`， `y`））。
 
 ### `[override virtual protected] void QGraphicsView::contextMenuEvent(QContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::contextMenuEvent`（QContextMenuEvent *e）。
 
 ### `[override virtual protected] void QGraphicsView::dragEnterEvent(QDragEnterEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::dragEnterEvent` 用于执行与“drag、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDragEnterEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragEnterEvent`（QDragEnterEvent *event）。
 
 ### `[override virtual protected] void QGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDragLeaveEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragLeaveEvent`（QDragLeaveEvent *event）。
 
 ### `[override virtual protected] void QGraphicsView::dragMoveEvent(QDragMoveEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDragMoveEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragMoveEvent`（QDragMoveEvent *event）。
 
 ### `[virtual protected] void QGraphicsView::drawBackground(QPainter *painter, const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的核心操作 `drawBackground`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在绘制任何物品和前景之前，使用`painter`绘制场景背景。重新实现该函数，为该视图提供自定义背景。
+如果你只是想为背景定义颜色、纹理或渐变，可以调用`setBackgroundBrush()`。
+所有绘画都是在场景坐标中完成的。`rect`是裸露的矩形。
+默认实现会用视图的 `backgroundBrush` 填充`rect`。如果没有定义这样的画刷（默认），则调用场景的 drawBackground() 函数。
 
 ### `[virtual protected] void QGraphicsView::drawForeground(QPainter *painter, const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的核心操作 `drawForeground`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在绘制完背景和所有物品后，使用`painter`绘制场景前景。重新实现该函数，为该视图提供自定义前景。
+如果你只是想为前景定义颜色、纹理或渐变，可以调用`setForegroundBrush()`。
+所有绘画都是在场景坐标中完成的。`rect`是裸露的矩形。
+默认实现会用视图的 `foregroundBrush` 填充`rect`。如果没有定义这样的画刷（默认），则调用场景的 drawForeground() 函数。
 
 ### `[override virtual protected] void QGraphicsView::dropEvent(QDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dropEvent`（QDropEvent *事件）。
 
 ### `void QGraphicsView::ensureVisible(const QRectF &rect, int xmargin = 50, int ymargin = 50)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::ensureVisible` 用于执行与“ensure、可见状态”相关的操作。调用时要先确认当前状态和 `rect`、`xmargin`、`ymargin` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `xmargin`：类型为 `int`。默认值为 `50`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ymargin`：类型为 `int`。默认值为 `50`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+滚动视口内容，使场景矩形`rect`可见，边距以像素为单位`xmargin`和`ymargin`。如果无法到达指定的矩形，则将内容滚动至最近的有效位置。两个边距的默认值为50像素。
 
 ### `void QGraphicsView::ensureVisible(const QGraphicsItem *item, int xmargin = 50, int ymargin = 50)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::ensureVisible` 用于执行与“ensure、可见状态”相关的操作。调用时要先确认当前状态和 `item`、`xmargin`、`ymargin` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `const QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `xmargin`：类型为 `int`。默认值为 `50`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ymargin`：类型为 `int`。默认值为 `50`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+滚动视口内容，使物品`item`中心可见，边距以像素为单位`xmargin`和`ymargin`。如果无法到达指定点，内容会滚动到最近的有效位置。两个边距的默认值为50像素。
 
 ### `void QGraphicsView::ensureVisible(qreal x, qreal y, qreal w, qreal h, int xmargin = 50, int ymargin = 50)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::ensureVisible` 用于执行与“ensure、可见状态”相关的操作。调用时要先确认当前状态和 `x`、`y`、`w`、`h`、`xmargin`、`ymargin` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `xmargin`：类型为 `int`。默认值为 `50`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ymargin`：类型为 `int`。默认值为 `50`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数仅为方便而提供。它等同于调用 ensureVisible（`QRectF`（`x`， `y`， `w`， `h`）， `xmargin`， `ymargin`）。
 
 ### `[override virtual protected] bool QGraphicsView::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractScrollArea::event`（QEvent *事件）。
 
 ### `void QGraphicsView::fitInView(const QRectF &rect, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::fitInView` 用于执行与“fit、In、View”相关的操作。调用时要先确认当前状态和 `rect`、`aspectRatioMode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `aspectRatioMode`：类型为 `Qt::AspectRatioMode`。默认值为 `Qt::IgnoreAspectRatio`。传入 `Qt::AspectRatioMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+缩放视图矩阵并滚动滚动条，确保场景矩形`rect`嵌入视口内。`rect`必须位于场景矩形内部;否则，fitInView() 无法保证整个矩形都可见。
+该函数保持视野的旋转、平移或剪切。视角根据`aspectRatioMode`进行缩放。如果视角不紧密，`rect`将置中。
+通常会在`resizeEvent()`的重实现中调用 fitInView()，以确保整个场景或场景部分随着视角调整大小自动缩放以适应新的视口大小。不过请注意，如果新变换切换了滚动条的自动状态，从`resizeEvent()`调用 fitInView() 可能会导致不必要的缩放递归。你可以将滚动条策略切换为始终开启或关闭，以防止这种情况（参见`horizontalScrollBarPolicy()`和`verticalScrollBarPolicy()`）。
+如果`rect`空，或者视口太小，这个函数就不会有任何作用。
 
 ### `void QGraphicsView::fitInView(const QGraphicsItem *item, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::fitInView` 用于执行与“fit、In、View”相关的操作。调用时要先确认当前状态和 `item`、`aspectRatioMode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `const QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `aspectRatioMode`：类型为 `Qt::AspectRatioMode`。默认值为 `Qt::IgnoreAspectRatio`。传入 `Qt::AspectRatioMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+确保`item`紧密嵌入视图内，并根据视野`aspectRatioMode`比例缩放。
 
 ### `void QGraphicsView::fitInView(qreal x, qreal y, qreal w, qreal h, Qt::AspectRatioMode aspectRatioMode = Qt::IgnoreAspectRatio)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::fitInView` 用于执行与“fit、In、View”相关的操作。调用时要先确认当前状态和 `x`、`y`、`w`、`h`、`aspectRatioMode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `aspectRatioMode`：类型为 `Qt::AspectRatioMode`。默认值为 `Qt::IgnoreAspectRatio`。传入 `Qt::AspectRatioMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该便利函数等价于调用 fitInView（`QRectF`（`x`， `y`， `w`， `h`）， `aspectRatioMode`）。
 
 ### `[override virtual protected] void QGraphicsView::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::focusInEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点接收）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] bool QGraphicsView::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QWidget::focusNextPrevChild`（下一个布尔）。
+根据 Tab 和 Shift Tab 找到一个新的控件来给键盘焦点，如果能找到新控件，则返回 `true`，找不到则返回 false。
+如果`next`为真，该函数向前搜索;如果`next`为假，则向后搜索。
+有时，你会想重新实现这个函数。例如，浏览器可能会重新实现它，将“当前活跃链接”向前或向后移动，只有当它到达“页面”的最后或第一个链接时才调用 focusNextPrevChild()。
+子控件调用其父控件的 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过重新实现该函数，你就能控制所有子控件的焦点遍历。
 
 ### `[override virtual protected] void QGraphicsView::focusOutEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QWidget::focusOutEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] void QGraphicsView::inputMethodEvent(QInputMethodEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::inputMethodEvent` 用于执行与“input、Method、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QInputMethodEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodEvent`（QInputMethodEvent *event）。
+对于事件`event`，该事件处理程序可以被重新实现到子类中以接收输入法组合事件。当输入方法的状态发生变化时，调用该处理程序。
+注意，在创建自定义文本编辑小部件时，必须明确设置`Qt::WA_InputMethodEnabled`窗口属性（使用`setAttribute()`函数），才能接收输入法事件。
+默认实现调用 event->ignore()，拒绝输入法事件。详情请参见 `QInputMethodEvent` 文档。
 
 ### `[override virtual] QVariant QGraphicsView::inputMethodQuery(Qt::InputMethodQuery query) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `query` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `query`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodQuery`（Qt：：InputMethodQuery query） const.
+该方法仅适用于输入控件。输入方法用于查询控件的一组属性，以支持复杂的输入法操作，以支持周围文本和重新转换。
+`query` 指定查询的属性。
 
 ### `[slot] void QGraphicsView::invalidateScene(const QRectF &rect = QRectF(), QGraphicsScene::SceneLayers layers = QGraphicsScene::AllLayers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `invalidateScene`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。默认值为 `QRectF()`。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `layers`：类型为 `QGraphicsScene::SceneLayers`。默认值为 `QGraphicsScene::AllLayers`。传入 `QGraphicsScene::SceneLayers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rect` 内`layers`失效并调度重绘。`rect` 处于场景坐标内。`rect` 内任何缓存内容`layers`都会无条件失效并重新绘制。
+你可以调用这个函数来通知`QGraphicsView`场景背景或前景的变化。它通常用于基于瓦片背景的场景，以便在启用背景缓存时通知`QGraphicsView`发生变化。
+注意`QGraphicsView`目前仅支持后台缓存（参见 `QGraphicsView::CacheBackground`）。该函数等同于调用 `update()`，如果传递的是除 `QGraphicsScene::BackgroundLayer` 以外的任何层。
 
 ### `bool QGraphicsView::isTransformed() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTransformed`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果视图被变换（即被分配了非恒等变换，或滚动条被调整），返回`true`。
 
 ### `QGraphicsItem *QGraphicsView::itemAt(const QPoint &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `itemAt`，用于取得 `QGraphicsView` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
+返回位于视口坐标中的位置`pos`的物品。如果该位置有多个物品，该函数返回最顶的物品。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QGraphicsItem *`。
-- 参数 `pos`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void CustomView::mousePressEvent(QMouseEvent *event)
+ {
+     if (QGraphicsItem *item = itemAt(event->pos())) {
+         qDebug() << "You clicked on item" << item;
+     } else {
+         qDebug("You didn't click on an item.");
+     }
+ }
+```
 
 ### `QGraphicsItem *QGraphicsView::itemAt(int x, int y) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `itemAt`，用于取得 `QGraphicsView` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数为方便而提供。它等价于调用itemAt（`QPoint`（`x`， `y`））。
 
 ### `QList<QGraphicsItem *> QGraphicsView::items() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回相关场景中所有物品的列表，按递减堆叠顺序返回（即返回列表中的第一个物品是最上面的物品）。
 
 ### `QList<QGraphicsItem *> QGraphicsView::items(const QPoint &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回视图中`pos`位置的所有物品列表。物品按递减排列顺序排列（即列表中第一个为最上项，最后为最底项）。`pos`位于视口坐标内。
+该函数最常在`QGraphicsView`子类的鼠标事件处理程序中调用。`pos` 位于未变换的视口坐标中，就像`QMouseEvent::position()`一样。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `pos`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void CustomView::mousePressEvent(QMouseEvent *event)
+ {
+     qDebug() << "There are" << items(event->pos()).size()
+              << "items at position" << mapToScene(event->pos());
+ }
+```
 
 ### `QList<QGraphicsItem *> QGraphicsView::items(int x, int y) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `x`、`y` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是为了方便而提供的。它等同于调用 items（`QPoint`（`x`， `y`））。
 
 ### `QList<QGraphicsItem *> QGraphicsView::items(int x, int y, int w, int h, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `x`、`y`、`w`、`h`、`mode` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等同于调用 items(`QRectF`(`x`, `y`, `w`, `h`), `mode`)。
 
 ### `QList<QGraphicsItem *> QGraphicsView::items(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `path`、`mode` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`包含或与`path`相交的项目列表。`path`处于视口坐标内。
+`mode`的默认值为`Qt::IntersectsItemShape`;所有与`path`相交或包含的具体形状的项都会返回。
 
 ### `QList<QGraphicsItem *> QGraphicsView::items(const QPolygon &polygon, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `polygon`、`mode` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `polygon`：类型为 `const QPolygon &`。没有默认值，调用时必须提供。传入 `const QPolygon &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`包含或与`polygon`相交的项目列表。`polygon`处于视口坐标内。
+`mode`的默认值为`Qt::IntersectsItemShape`;所有与`polygon`相交或包含的具体形状的项都会返回。
+这些项按递减堆叠顺序排序（即返回列表中的第一个项是最上面的项）。
 
 ### `QList<QGraphicsItem *> QGraphicsView::items(const QRect &rect, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `rect`、`mode` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`包含或与`rect`相交的项目列表。`rect`位于视口坐标内。
+`mode`的默认值为`Qt::IntersectsItemShape`;所有与 相交或被 包含在 `rect` 的精确形状的项都将返回。
+这些项目按递减堆叠顺序排序（即返回列表中的第一个项目是最上面的）。
 
 ### `[override virtual protected] void QGraphicsView::keyPressEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理按键事件 `event`，默认实现负责场景、焦点图元以及视图自身的导航行为。子类可拦截自定义按键；不处理时必须调用基类实现，否则标准编辑或场景键盘操作会失效。
 
 ### `[override virtual protected] void QGraphicsView::keyReleaseEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyReleaseEvent`（QKeyEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该小部件的密钥释放事件。
+小部件必须先接受焦点并拥有焦点，才能接收密钥释放事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现忽略事件，以便小部件的父节点能够解释事件。
+注意`QKeyEvent`以 isAccepted() == true开头，所以你不需要调用`QKeyEvent::accept()`——只要你对密钥操作时不要调用基类实现即可。
 
 ### `QPainterPath QGraphicsView::mapFromScene(const QPainterPath &path) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景坐标画家路径`path`到视口坐标画师路径。
 
 ### `QPoint QGraphicsView::mapFromScene(const QPointF &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数 `point`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将场景坐标`point`返回到视口坐标。
 
 ### `QPolygon QGraphicsView::mapFromScene(const QPolygonF &polygon) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPolygon`。
-- 参数 `polygon`：类型为 `const QPolygonF &`。没有默认值，调用时必须提供。传入 `const QPolygonF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将场景坐标多边形`polygon`返回到视口坐标多边形。
 
 ### `QPolygon QGraphicsView::mapFromScene(const QRectF &rect) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPolygon`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将场景矩形返回`rect`视口坐标多边形。
 
 ### `QPoint QGraphicsView::mapFromScene(qreal x, qreal y) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是为了方便而提供。它等同于调用 mapFromScene（`QPointF`（`x`， `y`））。
 
 ### `QPolygon QGraphicsView::mapFromScene(qreal x, qreal y, qreal w, qreal h) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPolygon`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是为了方便而提供的。它等同于调用 mapFromScene（`QRectF`（`x`， `y`， `w`， `h`））。
 
 ### `QPainterPath QGraphicsView::mapToScene(const QPainterPath &path) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视口绘画路径`path`映射到场景坐标绘画路径。
 
 ### `QPointF QGraphicsView::mapToScene(const QPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数 `point`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视口坐标`point`映射到场景坐标。
+注意：将像素覆盖的整个矩形映射在`point`处，而不是点本身，这样很有用。为此，你可以调用 mapToScene（`QRect`（`point`， `QSize`（2， 2）））。
 
 ### `QPolygonF QGraphicsView::mapToScene(const QPolygon &polygon) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPolygonF`。
-- 参数 `polygon`：类型为 `const QPolygon &`。没有默认值，调用时必须提供。传入 `const QPolygon &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回映射到场景坐标多边形`polygon`视口多边形。
 
 ### `QPolygonF QGraphicsView::mapToScene(const QRect &rect) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPolygonF`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视口矩形`rect`映射到场景坐标多边形。
 
 ### `QPointF QGraphicsView::mapToScene(int x, int y) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是为方便而提供的。它等同于调用 mapToScene（`QPoint`（`x`， `y`））。
 
 ### `QPolygonF QGraphicsView::mapToScene(int x, int y, int w, int h) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToScene`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QPolygonF`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是为了方便而提供。它等同于调用 mapToScene（`QRect`（`x`， `y`， `w`， `h`））。
 
 ### `[override virtual protected] void QGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseDoubleClickEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QGraphicsView::mouseMoveEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseMoveEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QGraphicsView::mousePressEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mousePressEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QGraphicsView::mouseReleaseEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseReleaseEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QGraphicsView::paintEvent(QPaintEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::paintEvent`（QPaintEvent *event）。
 
 ### `void QGraphicsView::render(QPainter *painter, const QRectF &target = QRectF(), const QRect &source = QRect(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+利用`painter`将视图坐标中的`source`矩形矩形渲染到绘图设备坐标中的`target`。该函数用于将视图内容捕获到绘图设备，如`QImage`（例如截图），或打印到QPrinter。例如：
+如果`source`是空矩形，该函数会用`viewport()`->`rect()`来决定绘制什么。如果`target`是空矩形矩形，则使用`painter`的绘图设备的完整尺寸（例如，对于QPrinter，页面大小）。
+源矩形块内容会根据`aspectRatioMode`进行变换以适应目标矩形块。默认情况下，保持宽高比，`source`会按比例缩放以适应`target`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `target`：类型为 `const QRectF &`。默认值为 `QRectF()`。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `source`：类型为 `const QRect &`。默认值为 `QRect()`。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `aspectRatioMode`：类型为 `Qt::AspectRatioMode`。默认值为 `Qt::KeepAspectRatio`。传入 `Qt::AspectRatioMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QGraphicsScene scene;
+ scene.addItem(...
+ ...
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QGraphicsView view(&scene);
+ view.show();
+ ...
+
+ QPrinter printer(QPrinter::HighResolution);
+ printer.setPageSize(QPrinter::A4);
+ QPainter painter(&printer);
+
+ // print, fitting the viewport contents into a full page
+ view.render(&painter);
+
+ // print the upper half of the viewport into the lower.
+ // half of the page.
+ QRect viewport = view.viewport()->rect();
+ view.render(&painter,
+             QRectF(0, printer.height() / 2,
+                    printer.width(), printer.height() / 2),
+             viewport.adjusted(0, 0, 0, -viewport.height() / 2));
+```
 
 ### `void QGraphicsView::resetCachedContent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::resetCachedContent` 用于执行与“重置、Cached、Content”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重置所有缓存内容。调用该函数会清除`QGraphicsView`的缓存。如果当前缓存模式为`CacheNone`，该函数不起作用。
+当`backgroundBrush`或`QGraphicsScene::backgroundBrush`属性发生变化时，这个函数会自动调用;只有当你重新实现了`QGraphicsScene::drawBackground()`或`QGraphicsView::drawBackground()`来绘制自定义背景，并且需要触发一次完整的重绘时，才需要调用这个函数。
 
 ### `void QGraphicsView::resetTransform()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::resetTransform` 用于执行与“重置、Transform”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视图变换重置为恒来矩阵。
 
 ### `[override virtual protected] void QGraphicsView::resizeEvent(QResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::resizeEvent`（QResizeEvent *event）。
 
 ### `void QGraphicsView::rotate(qreal angle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::rotate` 用于执行与“rotate”相关的操作。调用时要先确认当前状态和 `angle` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `angle`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+顺时针旋转当前视角变换`angle`度。
 
 ### `[signal] void QGraphicsView::rubberBandChanged(QRect rubberBandRect, QPointF fromScenePoint, QPointF toScenePoint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 发出的通知信号 `rubberBandChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rubberBandRect`：类型为 `QRect`。没有默认值，调用时必须提供。传入 `QRect` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fromScenePoint`：类型为 `QPointF`。没有默认值，调用时必须提供。传入 `QPointF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toScenePoint`：类型为 `QPointF`。没有默认值，调用时必须提供。传入 `QPointF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当更换橡皮筋rect时，该信号会发出。视口Rect由`rubberBandRect`指定。拖动起始位置和拖止位置在场景点中提供`fromScenePoint`和`toScenePoint`。
+当橡皮筋选择结束时，该信号将以零值发出。
 
 ### `QRect QGraphicsView::rubberBandRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::rubberBandRect` 用于计算、查询或取得与“rubber、Band、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果用户当前用橡皮筋进行物品选择，该函数会返回当前橡皮筋区域（视口坐标）。当用户未使用橡皮筋时，该函数返回（空）QRectF()。
+注意，这个`QRect`的部分可以位于视觉视口之外。它可以包含例如负值。
 
 ### `void QGraphicsView::scale(qreal sx, qreal sy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::scale` 用于执行与“scale”相关的操作。调用时要先确认当前状态和 `sx`、`sy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sx`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sy`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前视图变换比例放大为（`sx`，`sy`）。
 
 ### `QGraphicsScene *QGraphicsView::scene() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::scene` 用于计算、查询或取得与“scene”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsScene *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsScene *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前视图中可视化场景的指针。如果当前没有可视化场景，则返回`nullptr`。
 
 ### `[override virtual protected] void QGraphicsView::scrollContentsBy(int dx, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::scrollContentsBy` 用于执行与“scroll、Contents、By”相关的操作。调用时要先确认当前状态和 `dx`、`dy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::scrollContentsBy`（智力 dx，智力 dy）。
+当滚动条被移动`dx`、`dy`时调用，因此视口内容应相应滚动。
+默认实现只需调用整个`viewport()`的`update()`，子类可以重新实现该处理程序以优化，或者像`QScrollArea`一样移动内容控件。参数`dx`和`dy`是为了方便，让类知道应该滚动多少（比如像素移动时很有用）。你也可以忽略这些值，直接滚动到滚动条指示的位置。
+调用该函数进行程序滚动是错误，建议使用滚动条（例如直接调用`QScrollBar::setValue()`）。
 
 ### `void QGraphicsView::setOptimizationFlag(QGraphicsView::OptimizationFlag flag, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptimizationFlag`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flag`：类型为 `QGraphicsView::OptimizationFlag`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enabled`为真，则启用`flag`;否则禁用`flag`。
 
 ### `void QGraphicsView::setRenderHint(QPainter::RenderHint hint, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderHint`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hint`：类型为 `QPainter::RenderHint`。没有默认值，调用时必须提供。传入 `QPainter::RenderHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enabled`为真，渲染提示`hint`启用;否则禁用。
 
 ### `void QGraphicsView::setScene(QGraphicsScene *scene)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setScene`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `scene`：类型为 `QGraphicsScene *`。没有默认值，调用时必须提供。传入 `QGraphicsScene *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前场景设置为`scene`。如果已经在观看`scene`，这个函数就不做任何事。
+当场景设置在一个视图上时，`QGraphicsScene::changed()`信号会自动连接到该视图的`updateScene()`槽，视图的滚动条也会根据场景大小进行调整。
+该观点并不拥有`scene`。
 
 ### `void QGraphicsView::setTransform(const QTransform &matrix, bool combine = false)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransform`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将视图的电流变换矩阵设置为`matrix`。
+如果`combine`为真，则`matrix`与当前矩阵结合;否则，`matrix`替换当前矩阵。`combine`默认为假。
+变换矩阵将场景转换为视角坐标。使用由恒等矩阵提供的默认变换，视野中的一个像素代表场景中的一个单元（例如，一个10x10矩形物体使用视图中的10x10像素绘制）。如果应用2x2缩放矩阵，场景将以1：2绘制（例如，10x10矩形物体则使用视图中的20x20像素绘制）。
+为了简化使用变换视图与物品的交互，`QGraphicsView` 提供了 mapTo... 和 mapFrom...这些函数可以在场景坐标和视图坐标之间转换。例如，你可以调用 `mapToScene()` 将视角坐标映射到浮点场景坐标，或者调用 `mapFromScene()` 将浮点场景坐标映射到视角坐标。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `matrix`：类型为 `const QTransform &`。没有默认值，调用时必须提供。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `combine`：类型为 `bool`。默认值为 `false`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QGraphicsScene scene;
+ scene.addText("GraphicsView rotated clockwise");
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QGraphicsView view(&scene);
+ view.rotate(90); // the text is rendered with a 90 degree clockwise rotation
+ view.show();
+```
 
 ### `[override virtual protected slot] void QGraphicsView::setupViewport(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setupViewport`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::setupViewport`（QWidget *viewport）。
+`QAbstractScrollArea`在调用`setViewport()`后调用该槽位。在`QGraphicsView`的子类中重新实现该函数，以便在使用前初始化新的视口`widget`。
+`QAbstractScrollArea`在调用`setViewport`（`viewport`）后调用该槽。在`QAbstractScrollArea`的子类中重构该函数，以在使用前初始化新`viewport`。
 
 ### `void QGraphicsView::shear(qreal sh, qreal sv)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::shear` 用于执行与“shear”相关的操作。调用时要先确认当前状态和 `sh`、`sv` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sh`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sv`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前视图变换剪切为（`sh`， `sv`）。
 
 ### `[override virtual protected] void QGraphicsView::showEvent(QShowEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::showEvent` 用于执行与“显示、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QShowEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::showEvent`（QShowEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收传递给 `event` 参数的控件显示事件。
+非自发的展示事件会在展示前立即发送到小部件。窗口的自发展示事件则在展示之后交付。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，窗口恢复时自发显示事件。收到自发隐藏事件后，小部件仍被视为`isVisible()`可见。
 
 ### `[override virtual] QSize QGraphicsView::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractScrollArea::sizeHint()` const.
 
 ### `QTransform QGraphicsView::transform() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::transform` 用于计算、查询或取得与“transform”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTransform`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTransform`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视图的电流变换矩阵。如果未设置电流变换，则返回单位矩阵。
 
 ### `void QGraphicsView::translate(qreal dx, qreal dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `translate`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前视图变换换为（`dx`， `dy`）。
 
 ### `[slot] void QGraphicsView::updateScene(const QList<QRectF> &rects)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `updateScene`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rects`：类型为 `const QList<QRectF> &`。没有默认值，调用时必须提供。传入 `const QList<QRectF> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安排场景矩形的更新 `rects`。
 
 ### `[slot] void QGraphicsView::updateSceneRect(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `updateSceneRect`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通知`QGraphicsView`场景的 rect 发生了变化。`rect` 是新的场景 rect。如果视图已经有明确设置的场景 rect，这个函数就不做任何事。
 
 ### `[override virtual protected] bool QGraphicsView::viewportEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::viewportEvent` 用于计算、查询或取得与“viewport、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::viewportEvent`（QEvent *事件）。
+滚动区域（`viewport()` 控件）的主事件处理程序。它处理指定的`event`，子类可以调用以提供合理的默认行为。
+返回`true`表示事件系统事件已处理，无需进一步处理;否则返回`false`表示事件应继续传播。
+你可以在子类中重新实现这个函数，但我们建议使用专门的事件处理程序。
+视口事件的专用处理程序有：`paintEvent()`、`mousePressEvent()`、`mouseReleaseEvent()`、`mouseDoubleClickEvent()`、`mouseMoveEvent()`、`wheelEvent()`、`dragEnterEvent()`、`dragMoveEvent()`、`dragLeaveEvent()`、`dropEvent()`、`contextMenuEvent()`和`resizeEvent()`。
 
 ### `QTransform QGraphicsView::viewportTransform() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::viewportTransform` 用于计算、查询或取得与“viewport、Transform”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTransform`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTransform`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个矩阵，将场景坐标映射到视口坐标。
 
 ### `[override virtual protected] void QGraphicsView::wheelEvent(QWheelEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QWheelEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::wheelEvent`（QWheelEvent *e）。
 
 ### `flags CacheMode`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以为`QGraphicsView`的缓存模式设置的标志。
+- `QGraphicsView::CacheNone`：`0x0`;所有绘画均直接在视窗上完成。
+- `QGraphicsView::CacheBackground`：`0x1`;背景被缓存。这会影响自定义背景和基于`backgroundBrush`属性的背景。启用该标志后，`QGraphicsView`会分配一个视口完整大小的像素地图。
+CacheMode 类型是 QFlags 的 typedef<CacheModeFlag>。它存储 CacheModeFlag 值的 OR 组合。
 
 ### `enum CacheModeFlag { CacheNone, CacheBackground }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Cache、模式、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以为`QGraphicsView`的缓存模式设置的标志。
+- `QGraphicsView::CacheNone`：`0x0`;所有绘画均直接在视窗上完成。
+- `QGraphicsView::CacheBackground`：`0x1`;背景被缓存。这会影响自定义背景和基于`backgroundBrush`属性的背景。启用该标志后，`QGraphicsView`会分配一个视口完整大小的像素地图。
+CacheMode 类型是 QFlags 的 typedef<CacheModeFlag>。它存储 CacheModeFlag 值的 OR 组合。
 
 ### `enum OptimizationFlag { DontSavePainterState, DontAdjustForAntialiasing, IndirectPainting }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 暴露的类型声明 `Optimization、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以启用以提升`QGraphicsView`渲染性能的标志。默认情况下，这些标志都没有被设置。注意，设置标志通常会带来副作用，而这种效果会因不同绘图设备和平台而异。
+- `QGraphicsView::DontSavePainterState`：`0x1`;渲染时，`QGraphicsView`保护画家状态（见`QPainter::save()`），无论是渲染背景或前景，还是渲染每个物品时。这允许你让画家处于改变状态（即你可以调用`QPainter::setPen()`或`QPainter::setBrush()`，但绘制后无需恢复状态）。但如果物品持续恢复状态，应启用该标志以防止`QGraphicsView`同样恢复。
+- `QGraphicsView::DontAdjustForAntialiasing`：`0x2`;禁用`QGraphicsView`对已曝光区域的抗锯齿自动调整功能。在`QGraphicsItem::boundingRect()`边界上渲染抗锯齿线条的物品，可能会渲染线条的部分区域。为防止渲染伪影，`QGraphicsView`会将所有暴露区域向所有方向扩展2像素。启用该标志后，`QGraphicsView`将不再执行这些调整，减少需要重绘的区域，从而提升性能。一个常见副作用是，使用抗锯齿绘制的物品在移动时可能会在场景中留下绘画痕迹。
+- `QGraphicsView::IndirectPainting`：`0x4`;自Qt 4.6起，恢复调用QGraphicsView：:d rawItems()和QGraphicsScene：:d rawItems()的旧绘画算法。仅用于兼容旧代码。
+OptimizationFlags 类型是 QFlags 的 typedef<OptimizationFlag>。它存储 OptimizationFlag 值的 OR 组合。
 
 ### `flags OptimizationFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以启用以提升`QGraphicsView`渲染性能的标志。默认情况下，这些标志都没有被设置。注意，设置标志通常会带来副作用，而这种效果会因不同绘图设备和平台而异。
+- `QGraphicsView::DontSavePainterState`：`0x1`;渲染时，`QGraphicsView`保护画家状态（见`QPainter::save()`），无论是渲染背景或前景，还是渲染每个物品时。这允许你让画家处于改变状态（即你可以调用`QPainter::setPen()`或`QPainter::setBrush()`，但绘制后无需恢复状态）。但如果物品持续恢复状态，应启用该标志以防止`QGraphicsView`同样恢复。
+- `QGraphicsView::DontAdjustForAntialiasing`：`0x2`;禁用`QGraphicsView`对已曝光区域的抗锯齿自动调整功能。在`QGraphicsItem::boundingRect()`边界上渲染抗锯齿线条的物品，可能会渲染线条的部分区域。为防止渲染伪影，`QGraphicsView`会将所有暴露区域向所有方向扩展2像素。启用该标志后，`QGraphicsView`将不再执行这些调整，减少需要重绘的区域，从而提升性能。一个常见副作用是，使用抗锯齿绘制的物品在移动时可能会在场景中留下绘画痕迹。
+- `QGraphicsView::IndirectPainting`：`0x4`;自Qt 4.6起，恢复调用QGraphicsView：:d rawItems()和QGraphicsScene：:d rawItems()的旧绘画算法。仅用于兼容旧代码。
+OptimizationFlags 类型是 QFlags 的 typedef<OptimizationFlag>。它存储 OptimizationFlag 值的 OR 组合。
 
 ### `Qt::Alignment alignment() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::alignment` 用于计算、查询或取得与“对齐方式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Alignment`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示了当整个场景可见时，场景在视图中的对齐。
+如果整个场景在视图中可见（即没有可见的滚动条），视图的对齐将决定场景在视图中渲染的位置。例如，如果对齐是`Qt::AlignCenter`（默认），场景会置中，如果对齐是（`Qt::AlignLeft` |`Qt::AlignTop`），场景将渲染在视图的左上角。
 
-**签名拆解：**
-
-- 返回值：`Qt::Alignment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
 
 ### `QBrush backgroundBrush() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::backgroundBrush` 用于计算、查询或取得与“background、Brush”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留场景的背景画笔。
+该属性为该视图中场景设置背景画刷。它用于覆盖场景自身背景，并定义`drawBackground()`的行为。为了为该视图提供自定义背景绘图，你可以重新实现`drawBackground()`。
+默认情况下，该属性包含带有`Qt::NoBrush`图案的画刷。
 
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `backgroundBrush()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsView::CacheMode cacheMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::cacheMode` 用于计算、查询或取得与“cache、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsView::CacheMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了视图中哪些部分被缓存。
+`QGraphicsView`可以缓存预渲染内容在`QPixmap`中，然后绘制到视口上。此类缓存的目的是加快渲染慢区域的总渲染时间。例如，纹理、渐变和alpha混合背景渲染速度可能明显较慢;尤其是在变换视图时。`CacheBackground`标志使视图背景能够缓存。例如：
+每次视图被转换时，缓存都会被废除。然而，在滚动时，只需部分失效。
+默认情况下，没有缓存。
 
-**签名拆解：**
+**如何使用：** 调用 `cacheMode()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QGraphicsView::CacheMode`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsView view;
+ view.setBackgroundBrush(QImage(":/images/backgroundtile.png"));
+ view.setCacheMode(QGraphicsView::CacheBackground);
+```
 
 ### `QGraphicsView::DragMode dragMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::dragMode` 用于计算、查询或取得与“drag、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsView::DragMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了在按下左键时拖动鼠标在场景上的行为。
+该属性定义了用户点击场景背景并拖动鼠标时应发生的操作（例如，使用指针光标滚动视口内容，或用橡皮筋选择多个项目）。默认值`NoDrag`不起作用。
+这种行为只影响未被任何项目处理的鼠标点击。你可以通过创建`QGraphicsView`子类并重新实现`mouseMoveEvent()`来定义自定义行为。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsView::DragMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragMode()` 读取当前值；它不会修改应用状态。
 
 ### `QBrush foregroundBrush() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::foregroundBrush` 用于计算、查询或取得与“foreground、Brush”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了场景的前景画笔。
+该属性为该视图中场景设置前景画笔。它用于覆盖场景自身的前景，并定义`drawForeground()`的行为。为了为该视图提供自定义前景绘制，你可以重新实现`drawForeground()`。
+默认情况下，该属性包含带有`Qt::NoBrush`图案的画刷。
 
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `foregroundBrush()` 读取当前值；它不会修改应用状态。
 
 ### `bool isInteractive() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInteractive`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性是否允许场景交互。
+启用时，该视图设置为允许场景交互。否则，该视图不允许交互，鼠标或按键事件被忽略（即只读视图）。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isInteractive()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsView::OptimizationFlags optimizationFlags() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::optimizationFlags` 用于计算、查询或取得与“optimization、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsView::OptimizationFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+这些标志可以用来调节`QGraphicsView`的性能。
+`QGraphicsView` 使用裁剪、额外的边界矩形调整以及其他一些辅助工具，以提升常见图形场景的渲染质量和性能。然而，根据目标平台、场景和所使用的视口，这些操作可能会降低性能。
+效果因标志而异;详情请参见`OptimizationFlags`文档。
+默认情况下，没有启用任何最佳化标志。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsView::OptimizationFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `optimizationFlags()` 读取当前值；它不会修改应用状态。
 
 ### `QPainter::RenderHints renderHints() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsView` 的核心操作 `renderHints`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+该属性包含视图的默认渲染提示。
+这些提示用于在绘制每个可见物品前初始化`QPainter`。`QPainter` 使用渲染提示切换渲染功能，如抗锯齿和平滑像素映射转换。
+`QPainter::TextAntialiasing`默认是启用的。
 
-**签名拆解：**
+**如何使用：** 调用 `renderHints()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QPainter::RenderHints`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ scene.addRect(QRectF(-10, -10, 20, 20));
+
+ QGraphicsView view(&scene);
+ view.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+ view.show();
+```
 
 ### `QGraphicsView::ViewportAnchor resizeAnchor() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::resizeAnchor` 用于计算、查询或取得与“调整尺寸、Anchor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsView::ViewportAnchor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视角在调整视角大小时应该如何定位场景。
+`QGraphicsView` 利用该属性决定当视口小部件大小变化时，场景在视口中的位置。默认行为`NoAnchor`在调整大小时场景位置保持不变;调整大小时，视图左上角看起来是锚定的。
+注意，当场景仅可见部分区域（即有滚动条时），该特性的影响尤为明显。否则，如果整个场景都能放入视图，`QGraphicsScene` 会利用视图对齐来将场景定位于视图中。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsView::ViewportAnchor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resizeAnchor()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::ItemSelectionMode rubberBandSelectionMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::rubberBandSelectionMode` 用于计算、查询或取得与“rubber、Band、Selection、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::ItemSelectionMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性支持选择带有橡皮筋选择矩形的物品。
+该属性定义了使用`RubberBandDrag`拖拽模式时如何选择物品。
+默认值为`Qt::IntersectsItemShape`;选择所有形状与橡皮筋相交或被橡皮筋包围的物品。
 
-**签名拆解：**
-
-- 返回值：`Qt::ItemSelectionMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `rubberBandSelectionMode()` 读取当前值；它不会修改应用状态。
 
 ### `QRectF sceneRect() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::sceneRect` 用于计算、查询或取得与“scene、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了该视图所显示的场景面积。
+场景矩形定义了场景的范围，在视图中，这意味着你可以通过滚动条导航的场景区域。
+如果未设置，或者设置了空`QRectF`，该属性与`QGraphicsScene::sceneRect`值相同，且随`QGraphicsScene::sceneRect`变化。否则，视图的场景矩形不受场景影响。
+注意，尽管场景支持几乎无限大小，但滚动条的范围永远不会超过整数（INT_MIN、INT_MAX）。当场景大于滚动条值时，你可以选择使用`translate()`来导航场景。
+默认情况下，该属性在原点包含一个宽度和高度均为零的矩形。
 
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sceneRect()` 读取当前值；它不会修改应用状态。
 
 ### `void setAlignment(Qt::Alignment alignment)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAlignment`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示了当整个场景可见时，场景在视图中的对齐。
+如果整个场景在视图中可见（即没有可见的滚动条），视图的对齐将决定场景在视图中渲染的位置。例如，如果对齐是`Qt::AlignCenter`（默认），场景会置中，如果对齐是（`Qt::AlignLeft` |`Qt::AlignTop`），场景将渲染在视图的左上角。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `alignment`：类型为 `Qt::Alignment`。没有默认值，调用时必须提供。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAlignment(...)` 修改 `alignment`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setBackgroundBrush(const QBrush &brush)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBackgroundBrush`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留场景的背景画笔。
+该属性为该视图中场景设置背景画刷。它用于覆盖场景自身背景，并定义`drawBackground()`的行为。为了为该视图提供自定义背景绘图，你可以重新实现`drawBackground()`。
+默认情况下，该属性包含带有`Qt::NoBrush`图案的画刷。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `brush`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setBackgroundBrush(...)` 修改 `backgroundBrush`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCacheMode(QGraphicsView::CacheMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCacheMode`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了视图中哪些部分被缓存。
+`QGraphicsView`可以缓存预渲染内容在`QPixmap`中，然后绘制到视口上。此类缓存的目的是加快渲染慢区域的总渲染时间。例如，纹理、渐变和alpha混合背景渲染速度可能明显较慢;尤其是在变换视图时。`CacheBackground`标志使视图背景能够缓存。例如：
+每次视图被转换时，缓存都会被废除。然而，在滚动时，只需部分失效。
+默认情况下，没有缓存。
 
-**签名拆解：**
+**如何使用：** 调用 `setCacheMode(...)` 修改 `cacheMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QGraphicsView::CacheMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsView view;
+ view.setBackgroundBrush(QImage(":/images/backgroundtile.png"));
+ view.setCacheMode(QGraphicsView::CacheBackground);
+```
 
 ### `void setDragMode(QGraphicsView::DragMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDragMode`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了在按下左键时拖动鼠标在场景上的行为。
+该属性定义了用户点击场景背景并拖动鼠标时应发生的操作（例如，使用指针光标滚动视口内容，或用橡皮筋选择多个项目）。默认值`NoDrag`不起作用。
+这种行为只影响未被任何项目处理的鼠标点击。你可以通过创建`QGraphicsView`子类并重新实现`mouseMoveEvent()`来定义自定义行为。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QGraphicsView::DragMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDragMode(...)` 修改 `dragMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setForegroundBrush(const QBrush &brush)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setForegroundBrush`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了场景的前景画笔。
+该属性为该视图中场景设置前景画笔。它用于覆盖场景自身的前景，并定义`drawForeground()`的行为。为了为该视图提供自定义前景绘制，你可以重新实现`drawForeground()`。
+默认情况下，该属性包含带有`Qt::NoBrush`图案的画刷。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `brush`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setForegroundBrush(...)` 修改 `foregroundBrush`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setInteractive(bool allowed)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setInteractive`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否允许场景交互。
+启用时，该视图设置为允许场景交互。否则，该视图不允许交互，鼠标或按键事件被忽略（即只读视图）。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `allowed`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setInteractive(...)` 修改 `interactive`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setOptimizationFlags(QGraphicsView::OptimizationFlags flags)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptimizationFlags`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+这些标志可以用来调节`QGraphicsView`的性能。
+`QGraphicsView` 使用裁剪、额外的边界矩形调整以及其他一些辅助工具，以提升常见图形场景的渲染质量和性能。然而，根据目标平台、场景和所使用的视口，这些操作可能会降低性能。
+效果因标志而异;详情请参见`OptimizationFlags`文档。
+默认情况下，没有启用任何最佳化标志。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QGraphicsView::OptimizationFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOptimizationFlags(...)` 修改 `optimizationFlags`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setRenderHints(QPainter::RenderHints hints)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderHints`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含视图的默认渲染提示。
+这些提示用于在绘制每个可见物品前初始化`QPainter`。`QPainter` 使用渲染提示切换渲染功能，如抗锯齿和平滑像素映射转换。
+`QPainter::TextAntialiasing`默认是启用的。
 
-**签名拆解：**
+**如何使用：** 调用 `setRenderHints(...)` 修改 `renderHints`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `hints`：类型为 `QPainter::RenderHints`。没有默认值，调用时必须提供。传入 `QPainter::RenderHints` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ scene.addRect(QRectF(-10, -10, 20, 20));
+
+ QGraphicsView view(&scene);
+ view.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+ view.show();
+```
 
 ### `void setResizeAnchor(QGraphicsView::ViewportAnchor anchor)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setResizeAnchor`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+视角在调整视角大小时应该如何定位场景。
+`QGraphicsView` 利用该属性决定当视口小部件大小变化时，场景在视口中的位置。默认行为`NoAnchor`在调整大小时场景位置保持不变;调整大小时，视图左上角看起来是锚定的。
+注意，当场景仅可见部分区域（即有滚动条时），该特性的影响尤为明显。否则，如果整个场景都能放入视图，`QGraphicsScene` 会利用视图对齐来将场景定位于视图中。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `anchor`：类型为 `QGraphicsView::ViewportAnchor`。没有默认值，调用时必须提供。传入 `QGraphicsView::ViewportAnchor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setResizeAnchor(...)` 修改 `resizeAnchor`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setRubberBandSelectionMode(Qt::ItemSelectionMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRubberBandSelectionMode`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性支持选择带有橡皮筋选择矩形的物品。
+该属性定义了使用`RubberBandDrag`拖拽模式时如何选择物品。
+默认值为`Qt::IntersectsItemShape`;选择所有形状与橡皮筋相交或被橡皮筋包围的物品。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setRubberBandSelectionMode(...)` 修改 `rubberBandSelectionMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSceneRect(const QRectF &rect)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSceneRect`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了该视图所显示的场景面积。
+场景矩形定义了场景的范围，在视图中，这意味着你可以通过滚动条导航的场景区域。
+如果未设置，或者设置了空`QRectF`，该属性与`QGraphicsScene::sceneRect`值相同，且随`QGraphicsScene::sceneRect`变化。否则，视图的场景矩形不受场景影响。
+注意，尽管场景支持几乎无限大小，但滚动条的范围永远不会超过整数（INT_MIN、INT_MAX）。当场景大于滚动条值时，你可以选择使用`translate()`来导航场景。
+默认情况下，该属性在原点包含一个宽度和高度均为零的矩形。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSceneRect(...)` 修改 `sceneRect`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSceneRect(qreal x, qreal y, qreal w, qreal h)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSceneRect`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了该视图所显示的场景面积。
+场景矩形定义了场景的范围，在视图中，这意味着你可以通过滚动条导航的场景区域。
+如果未设置，或者设置了空`QRectF`，该属性与`QGraphicsScene::sceneRect`值相同，且随`QGraphicsScene::sceneRect`变化。否则，视图的场景矩形不受场景影响。
+注意，尽管场景支持几乎无限大小，但滚动条的范围永远不会超过整数（INT_MIN、INT_MAX）。当场景大于滚动条值时，你可以选择使用`translate()`来导航场景。
+默认情况下，该属性在原点包含一个宽度和高度均为零的矩形。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSceneRect(...)` 修改 `sceneRect`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTransformationAnchor(QGraphicsView::ViewportAnchor anchor)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransformationAnchor`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+视角在变换过程中应如何定位场景。
+`QGraphicsView`利用该特性决定当变换矩阵变化、视角坐标系变换时，场景在视口中的位置。默认行为`AnchorViewCenter`确保场景中心点在变换过程中保持不变（例如，旋转时场景看起来会围绕视角中心旋转）。
+注意，当场景仅可见部分区域（即有滚动条时），该特性的影响尤为明显。否则，如果整个场景都能放入视图，`QGraphicsScene`会利用视图对齐来将场景定位于视图中。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `anchor`：类型为 `QGraphicsView::ViewportAnchor`。没有默认值，调用时必须提供。传入 `QGraphicsView::ViewportAnchor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTransformationAnchor(...)` 修改 `transformationAnchor`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setViewportUpdateMode(QGraphicsView::ViewportUpdateMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setViewportUpdateMode`。调用它会改变 `QGraphicsView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+视口应如何更新其内容。
+`QGraphicsView` 利用该属性决定如何更新场景中被重新曝光或更改的区域。通常你不需要修改这个属性，但在某些情况下修改可以提升渲染性能。具体细节请参见`ViewportUpdateMode`文档。
+默认值是`MinimalViewportUpdate`，当内容变化时，会尽量`QGraphicsView`更新视口的最小区域。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QGraphicsView::ViewportUpdateMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setViewportUpdateMode(...)` 修改 `viewportUpdateMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QGraphicsView::ViewportAnchor transformationAnchor() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::transformationAnchor` 用于计算、查询或取得与“transformation、Anchor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsView::ViewportAnchor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视角在变换过程中应如何定位场景。
+`QGraphicsView`利用该特性决定当变换矩阵变化、视角坐标系变换时，场景在视口中的位置。默认行为`AnchorViewCenter`确保场景中心点在变换过程中保持不变（例如，旋转时场景看起来会围绕视角中心旋转）。
+注意，当场景仅可见部分区域（即有滚动条时），该特性的影响尤为明显。否则，如果整个场景都能放入视图，`QGraphicsScene`会利用视图对齐来将场景定位于视图中。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsView::ViewportAnchor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `transformationAnchor()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsView::ViewportUpdateMode viewportUpdateMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsView::viewportUpdateMode` 用于计算、查询或取得与“viewport、更新、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsView::ViewportUpdateMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视口应如何更新其内容。
+`QGraphicsView` 利用该属性决定如何更新场景中被重新曝光或更改的区域。通常你不需要修改这个属性，但在某些情况下修改可以提升渲染性能。具体细节请参见`ViewportUpdateMode`文档。
+默认值是`MinimalViewportUpdate`，当内容变化时，会尽量`QGraphicsView`更新视口的最小区域。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsView::ViewportUpdateMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `viewportUpdateMode()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

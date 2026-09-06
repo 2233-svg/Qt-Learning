@@ -64,74 +64,38 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `using QLatin1String = QLatin1StringView`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1String` 暴露的类型声明 `Q、Latin、1、字符串`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 别名：`QLatin1String`。
-- 实际类型：`QLatin1StringView`；使用规则、复杂度和 API 与实际类型一致。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QLatin1String` 是 `QLatin1StringView` 的兼容别名，不会复制或拥有字符数据。新代码可以直接写 `QLatin1StringView`；底层 Latin-1 数据必须在视图使用期间保持有效。
 
 ### `QLatin1StringView::QLatin1StringView(const char *string)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QLatin1String` 是 `QLatin1StringView` 的兼容别名；`QLatin1StringView` 只借用 Latin-1 字符数据，不负责所有权。源字符数组必须在 view 使用期间保持有效。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `string`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QLatin1StringView 对象，用于存储一个`nullptr`。
 
 ### `qsizetype QLatin1StringView::size() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QLatin1String` 是 `QLatin1StringView` 的兼容别名；`size` 只借用 Latin-1 字符数据，不负责所有权。源字符数组必须在 view 使用期间保持有效。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的 Latin-1 字符串大小。
+注意：在Qt 6之前的版本中，该函数返回`int`，限制了64位架构`QLatin1StringView`中可存储的数据量。
 
 ### `const char *QLatin1StringView::data() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QLatin1String` 是 `QLatin1StringView` 的兼容别名；`data` 只借用 Latin-1 字符数据，不负责所有权。源字符数组必须在 view 使用期间保持有效。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串的开头。
 
 ### `bool QLatin1StringView::isEmpty() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QLatin1String` 是 `QLatin1StringView` 的兼容别名；`isEmpty` 只借用 Latin-1 字符数据，不负责所有权。源字符数组必须在 view 使用期间保持有效。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串是否为空（`size() == 0`）。
 
 ## 6. 深入实践与常见坑
 

@@ -108,633 +108,324 @@ Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 47 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.5] enum QTextLayout::GlyphRunRetrievalFlagflags QTextLayout::GlyphRunRetrievalFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 暴露的类型声明 `Glyph、运行、Retrieval、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:GlyphRunRetrievalFlagflags QTextLayout::GlyphRunRetrievalFlags`。
-- 属性名：`QTextLayout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+GlyphRunRetrievalFlag 指定了传递给 `glyphRuns()` 函数的标志，以决定哪些布局属性会被返回到`QGlyphRun`对象中。由于每个属性都会占用内存并可能需要额外分配，建议只请求你之后需要访问的属性。
+- `QTextLayout::RetrieveGlyphIndexes`：`0x1`;检索字体中对应字形的索引。
+- `QTextLayout::RetrieveGlyphPositions`：`0x2`;检索字形在布局中的相对位置。
+- `QTextLayout::RetrieveStringIndexes`：`0x4`;检索原始字符串中对应每个字形的索引。
+- `QTextLayout::RetrieveString`：`0x8`;从布局中检索原始源字符串。
+- `QTextLayout::RetrieveAll`：`0xffff`;检索布局中所有可用的属性。
+这个枚举是在Qt 6.5引入的。
+GlyphRunRetrievalFlags 类型是 QFlags 的 typedef<GlyphRunRetrievalFlag>。它存储 GlyphRunRetrievalFlag 值的 OR 组合。
 
 ### `QTextLayout::QTextLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空白的文本布局。
 
 ### `QTextLayout::QTextLayout(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建文本布局以布局给定的`text`。
 
 ### `QTextLayout::QTextLayout(const QString &text, const QFont &font, const QPaintDevice *paintdevice = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `paintdevice`：类型为 `const QPaintDevice *`。默认值为 `nullptr`。传入 `const QPaintDevice *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建文本布局，以配置指定`font`的给定`text`。
+所有的度量和布局计算都将基于绘画设备完成，`paintdevice`。如果`paintdevice` `nullptr`，计算将以屏幕指标进行。
 
 ### `[noexcept] QTextLayout::~QTextLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏布局。
 
 ### `void QTextLayout::beginLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginLayout`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+开始布局流程。
+警告：这将使布局失效，因此所有引用前述内容的现有`QTextLine`对象现在应被丢弃。
 
 ### `QRectF QTextLayout::boundingRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::boundingRect` 用于计算、查询或取得与“bounding、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+包含布局中所有线条的最小矩形。
 
 ### `bool QTextLayout::cacheEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::cacheEnabled` 用于计算、查询或取得与“cache、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果缓存了完整的布局信息，返回`true`;否则返回`false`。
 
 ### `void QTextLayout::clearFormats()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::clearFormats` 用于执行与“清空、Formats”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除文本布局支持的其他格式列表。
 
 ### `void QTextLayout::clearLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::clearLayout` 用于执行与“清空、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除布局中的行信息。调用该函数后，`lineCount()`返回0。
+警告：这将使布局失效，因此所有涉及之前内容的现有`QTextLine`对象应被丢弃。
 
 ### `QTextLine QTextLayout::createLine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::createLine` 用于计算、查询或取得与“创建、行”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextLine`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextLine`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有文本需要插入，则返回一行新的文本行以排版;否则返回无效的文本行。
+文本布局创建一个新的行对象，从布局的最后一行开始，或者如果布局为空，则从起始点开始。布局维护一个内部光标，每行从光标位置开始填充文本，当调用`QTextLine::setLineWidth()`函数时。
+一旦调用`QTextLine::setLineWidth()`，就可以创建新行并填充文本。重复此过程将布局出`QTextLayout`中包含的整个文本块。如果没有剩余文本可插入，返回的`QTextLine`将无效（isValid() 返回为 false）。
 
 ### `Qt::CursorMoveStyle QTextLayout::cursorMoveStyle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::cursorMoveStyle` 用于计算、查询或取得与“cursor、移动、Style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::CursorMoveStyle`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::CursorMoveStyle`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个`QTextLayout`的光标移动风格。默认是`Qt::LogicalMoveStyle`。
 
 ### `void QTextLayout::draw(QPainter *p, const QPointF &pos, const QList<QTextLayout::FormatRange> &selections = QList<FormatRange>(), const QRectF &clip = QRectF()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的核心操作 `draw`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `QPainter *`。没有默认值，调用时必须提供。传入 `QPainter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `selections`：类型为 `const QList<QTextLayout::FormatRange> &`。默认值为 `QList<FormatRange>()`。传入 `const QList<QTextLayout::FormatRange> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `clip`：类型为 `const QRectF &`。默认值为 `QRectF()`。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在画家`p`绘制整个布局，位置由`pos`指定。渲染后的布局包含给定的`selections`，并在`clip`指定的矩形内裁剪。
 
 ### `void QTextLayout::drawCursor(QPainter *painter, const QPointF &position, int cursorPosition, int width) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的核心操作 `drawCursor`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `position`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `cursorPosition`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `int`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用当前笔和指定`width`在指定`position`上，使用指定的`painter`绘制文本光标。文本中对应的位置由`cursorPosition`指定。
 
 ### `void QTextLayout::drawCursor(QPainter *painter, const QPointF &position, int cursorPosition) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的核心操作 `drawCursor`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `position`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `cursorPosition`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用当前笔在给定`position`绘制文本光标，使用指定的`painter`。文本中对应的位置由`cursorPosition`指定。
 
 ### `void QTextLayout::endLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endLayout`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+布局流程就此结束。
 
 ### `QFont QTextLayout::font() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::font` 用于计算、查询或取得与“字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前用于布局的字体，或如果未设置，则返回默认字体。
 
 ### `QList<QTextLayout::FormatRange> QTextLayout::formats() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `formats`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QList<QTextLayout::FormatRange>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本布局支持的其他格式列表。
 
 ### `QList<QGlyphRun> QTextLayout::glyphRuns(int from = -1, int length = -1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::glyphRuns` 用于计算、查询或取得与“glyph、Runs”相关的操作。调用时要先确认当前状态和 `from`、`length` 的有效范围；返回类型是 `QList<QGlyphRun>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGlyphRun>`。
-- 参数 `from`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有对应于`length`字符的字形的字形索引和位置，这些符号从该`QTextLayout` `from`位置开始。这是一个昂贵的函数，不应在时间敏感的上下文中调用。
+如果`from`小于零，则字形运行将从布局中的第一个字符开始。如果`length`小于零，则会从起始位置跨整个字符串。
+注意：这等同于调用 glyphRuns（from， length， QTextLayout：：GlyphRunRetrievalFlag：：GlyphIndexes |QTextLayout：：GlyphRunRetrievalFlag：：GlyphPositions）。
 
 ### `[since 6.5] QList<QGlyphRun> QTextLayout::glyphRuns(int from, int length, QTextLayout::GlyphRunRetrievalFlags retrievalFlags) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::glyphRuns` 用于计算、查询或取得与“glyph、Runs”相关的操作。调用时要先确认当前状态和 `from`、`length`、`retrievalFlags` 的有效范围；返回类型是 `QList<QGlyphRun>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGlyphRun>`。
-- 参数 `from`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `retrievalFlags`：类型为 `QTextLayout::GlyphRunRetrievalFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有对应于`length`字符的字形索引和位置，这些字形从`QTextLayout`中`from`位置开始。这是一个昂贵的函数，不应在时间敏感的上下文中调用。
+如果`from`小于零，则字形运行将从布局中的第一个字符开始。如果`length`小于零，则会从起始位置遍跨整个字符串。
+`retrievalFlags`会指定将从布局中检索哪些`QGlyphRun`属性。为了最小化分配和内存消耗，应设置为只包含你之后需要访问的属性。
 
 ### `bool QTextLayout::isValidCursorPosition(int pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValidCursorPosition`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `pos`：类型为 `int`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果位置`pos`是有效的光标位置，返回`true`。
+在Unicode语境中，文本中的某些位置不是有效的光标位置，因为该位置位于Unicode代理或字素簇内。
+字素簇是由两个或多个Unicode字符组成的序列，它们在屏幕上形成一个不可分割的实体。例如拉丁字母`Ä' can be represented in Unicode by two characters, `A'（0x41）和组合分位符（0x308）。文本光标只能有效地放置在这两个字符之前或之后，不能在它们之间，因为那样不合理。在印度语言中，每个音节都形成一个字素簇。
 
 ### `int QTextLayout::leftCursorPosition(int oldPos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::leftCursorPosition` 用于计算、查询或取得与“左侧、Cursor、Position”相关的操作。调用时要先确认当前状态和 `oldPos` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `oldPos`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`oldPos`左侧的光标位置，紧邻其侧。这取决于双向重排后字符的视觉位置。
 
 ### `QTextLine QTextLayout::lineAt(int i) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::lineAt` 用于计算、查询或取得与“行、按位置访问”相关的操作。调用时要先确认当前状态和 `i` 的有效范围；返回类型是 `QTextLine`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextLine`。
-- 参数 `i`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该文本布局中的第`i`行文本。
 
 ### `int QTextLayout::lineCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::lineCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该文本布局中的行数。
 
 ### `QTextLine QTextLayout::lineForTextPosition(int pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::lineForTextPosition` 用于计算、查询或取得与“行、For、文本、Position”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QTextLine`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextLine`。
-- 参数 `pos`：类型为 `int`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含 `pos` 指定光标位置的行。
 
 ### `qreal QTextLayout::maximumWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::maximumWidth` 用于计算、查询或取得与“最大值、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+布局可扩展的最大宽度;这基本上是整个文本的宽度。
+警告：该函数仅在布局完成后返回有效值。
 
 ### `qreal QTextLayout::minimumWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::minimumWidth` 用于计算、查询或取得与“最小值、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+布局所需的最小宽度。这是布局中最小且不可破坏子字符串的宽度。
+警告：该函数仅在布局完成后返回有效值。
 
 ### `int QTextLayout::nextCursorPosition(int oldPos, QTextLayout::CursorMode mode = SkipCharacters) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::nextCursorPosition` 用于计算、查询或取得与“移动到下一项、Cursor、Position”相关的操作。调用时要先确认当前状态和 `oldPos`、`mode` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `oldPos`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QTextLayout::CursorMode`。默认值为 `SkipCharacters`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`oldPos`之后的下一个有效光标位置，且该位置符合给定的光标`mode`。返回`oldPos`，如果`oldPos`不是有效的光标位置。
 
 ### `QPointF QTextLayout::position() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::position` 用于计算、查询或取得与“position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+布局的全局位置。这与边界矩形和布局过程无关。
 
 ### `int QTextLayout::preeditAreaPosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::preeditAreaPosition` 用于计算、查询或取得与“preedit、Area、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回将在编辑前处理的文本布局中区域的位置。
 
 ### `QString QTextLayout::preeditAreaText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::preeditAreaText` 用于计算、查询或取得与“preedit、Area、文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回编辑前插入的文本。
 
 ### `int QTextLayout::previousCursorPosition(int oldPos, QTextLayout::CursorMode mode = SkipCharacters) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::previousCursorPosition` 用于计算、查询或取得与“previous、Cursor、Position”相关的操作。调用时要先确认当前状态和 `oldPos`、`mode` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `oldPos`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QTextLayout::CursorMode`。默认值为 `SkipCharacters`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`oldPos`之前第一个尊重给定光标`mode`的有效光标位置。返回`oldPos`值，如果`oldPos`不是有效的光标位置。
 
 ### `int QTextLayout::rightCursorPosition(int oldPos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::rightCursorPosition` 用于计算、查询或取得与“右侧、Cursor、Position”相关的操作。调用时要先确认当前状态和 `oldPos` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `oldPos`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回光标位置在`oldPos`右侧，紧邻其侧。这取决于双向重排后字符的视觉位置。
 
 ### `void QTextLayout::setCacheEnabled(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCacheEnabled`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enable`为真，则实现完整布局信息的缓存;否则禁用布局缓存。通常`QTextLayout`在调用`endLayout()`后丢弃大部分布局信息以减少内存消耗。但如果你想直接绘制排版文本，启用缓存可能会显著加快绘图速度。
 
 ### `void QTextLayout::setCursorMoveStyle(Qt::CursorMoveStyle style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCursorMoveStyle`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `Qt::CursorMoveStyle`。没有默认值，调用时必须提供。传入 `Qt::CursorMoveStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视觉光标移动样式设置为给定的`style`。如果`QTextLayout`有文档支持，你可以忽略它，使用`QTextDocument`中的选项，这个选项适用于像`QLineEdit`或自定义小部件那样没有`QTextDocument`的自定义小部件。默认值是`Qt::LogicalMoveStyle`。
 
 ### `void QTextLayout::setFont(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFont`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将布局的字体设置为给定的`font`。该布局失效，必须重新排版。
 
 ### `void QTextLayout::setFormats(const QList<QTextLayout::FormatRange> &formats)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormats`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `formats`：类型为 `const QList<QTextLayout::FormatRange> &`。没有默认值，调用时必须提供。传入 `const QList<QTextLayout::FormatRange> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本布局支持的额外格式设置为`formats`。格式在预编辑区域文本存在后应用。
 
 ### `void QTextLayout::setPosition(const QPointF &p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPosition`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本布局移动到点 `p`。
 
 ### `void QTextLayout::setPreeditArea(int position, const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreeditArea`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `int`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在编辑前设置该区域的布局`position`和`text`。布局失效，必须重新布局。
 
 ### `void QTextLayout::setText(const QString &string)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setText`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `string`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将布局文本设置为给定的`string`。布局失效，必须重新排版。
+请注意，当将该`QTextLayout`作为`QTextDocument`的一部分使用时，这种方法不会有效果。
 
 ### `void QTextLayout::setTextOption(const QTextOption &option)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextOption`。调用它会改变 `QTextLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `const QTextOption &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将控制布局过程的文本选项结构设置为给定的 `option`。
 
 ### `QString QTextLayout::text() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::text` 用于计算、查询或取得与“文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回版面文本。
 
 ### `const QTextOption &QTextLayout::textOption() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextLayout::textOption` 用于计算、查询或取得与“文本、Option”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QTextOption &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QTextOption &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前用于控制布局过程的文本选项。
 
 ### `struct FormatRange`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的 `格式化、Range` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QTextLayout::FormatRange 结构用于在文本布局内容的指定区域应用额外的格式信息。
 
 ### `enum CursorMode { SkipCharacters, SkipWords }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 暴露的类型声明 `Cursor、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制光标移动的粒度：`SkipCharacters` 按字符位置移动，`SkipWords` 按单词边界移动。把它传给 `nextCursorPosition()` 或 `previousCursorPosition()`，Qt 会同时遵守双向文本和合法字形边界。
 
 ### `(since 6.5) enum GlyphRunRetrievalFlag { RetrieveGlyphIndexes, RetrieveGlyphPositions, RetrieveStringIndexes, RetrieveString, RetrieveAll }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 暴露的类型声明 `Glyph、运行、Retrieval、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+GlyphRunRetrievalFlag 指定了传递给 `glyphRuns()` 函数的标志，以决定哪些布局属性会被返回到`QGlyphRun`对象中。由于每个属性都会占用内存并可能需要额外分配，建议只请求你之后需要访问的属性。
+- `QTextLayout::RetrieveGlyphIndexes`：`0x1`;检索字体中对应字形的索引。
+- `QTextLayout::RetrieveGlyphPositions`：`0x2`;检索字形在布局中的相对位置。
+- `QTextLayout::RetrieveStringIndexes`：`0x4`;检索原始字符串中对应每个字形的索引。
+- `QTextLayout::RetrieveString`：`0x8`;从布局中检索原始源字符串。
+- `QTextLayout::RetrieveAll`：`0xffff`;检索布局中所有可用的属性。
+这个枚举是在Qt 6.5引入的。
+GlyphRunRetrievalFlags 类型是 QFlags 的 typedef<GlyphRunRetrievalFlag>。它存储 GlyphRunRetrievalFlag 值的 OR 组合。
 
 ### `flags GlyphRunRetrievalFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextLayout` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+GlyphRunRetrievalFlag 指定了传递给 `glyphRuns()` 函数的标志，以决定哪些布局属性会被返回到`QGlyphRun`对象中。由于每个属性都会占用内存并可能需要额外分配，建议只请求你之后需要访问的属性。
+- `QTextLayout::RetrieveGlyphIndexes`：`0x1`;检索字体中对应字形的索引。
+- `QTextLayout::RetrieveGlyphPositions`：`0x2`;检索字形在布局中的相对位置。
+- `QTextLayout::RetrieveStringIndexes`：`0x4`;检索原始字符串中对应每个字形的索引。
+- `QTextLayout::RetrieveString`：`0x8`;从布局中检索原始源字符串。
+- `QTextLayout::RetrieveAll`：`0xffff`;检索布局中所有可用的属性。
+这个枚举是在Qt 6.5引入的。
+GlyphRunRetrievalFlags 类型是 QFlags 的 typedef<GlyphRunRetrievalFlag>。它存储 GlyphRunRetrievalFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

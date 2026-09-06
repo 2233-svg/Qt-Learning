@@ -81,209 +81,143 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMediaMetaData::Key`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaMetaData` 暴露的类型声明 `Key`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Key`。
-- 属性名：`QMediaMetaData`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+可以使用以下元数据密钥：
+- `QMediaMetaData::Title`：`0`;媒体标题
+- `QMediaMetaData::Author`：`1`;媒体作者
+- `QMediaMetaData::Comment`：`2`;评论
+- `QMediaMetaData::Description`：`3`;简短的废弃
+- `QMediaMetaData::Genre`：`4`;媒体所属的类型
+- `QMediaMetaData::Date`：`5`;创建日期
+- `QMediaMetaData::Language`：`6`;媒体语言
+- `QMediaMetaData::Publisher`：`7`;媒体出版商信息。
+- `QMediaMetaData::Copyright`：`8`;媒体版权信息。
+- `QMediaMetaData::Url`：`9`;出版商网站网址
+- `QMediaMetaData::Duration`：`10`;媒体播放时长
+- `QMediaMetaData::MediaType`：`11`;媒体类型
+- `QMediaMetaData::FileFormat`：`12`;文件格式
+- `QMediaMetaData::AudioBitRate`：`13`
+- `QMediaMetaData::AudioCodec`：`14`
+- `QMediaMetaData::VideoBitRate`：`15`
+- `QMediaMetaData::VideoCodec`：`16`
+- `QMediaMetaData::VideoFrameRate`：`17`
+- `QMediaMetaData::AlbumTitle`：`18`;专辑标题
+- `QMediaMetaData::AlbumArtist`：`19`;艺术家信息。
+- `QMediaMetaData::ContributingArtist`：`20`
+- `QMediaMetaData::TrackNumber`：`21`
+- `QMediaMetaData::Composer`：`22`;媒体作曲家信息。
+- `QMediaMetaData::LeadPerformer`：`23`
+- `QMediaMetaData::ThumbnailImage`：`24`;媒体缩略图（嵌入元数据时）
+- `QMediaMetaData::CoverArtImage`：`25`;媒体封面艺术
+- `QMediaMetaData::Orientation`：`26`
+- `QMediaMetaData::Resolution`：`27`
+- `QMediaMetaData::HasHdrContent (since Qt 6.8)`：`28`;视频可能包含HDR内容（仅读，仅限FFmpeg和Darwin媒体后端）
 
 ### `[since 6.9] auto QMediaMetaData::asKeyValueRange() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaMetaData::asKeyValueRange` 用于计算、查询或取得与“as、Key、值访问、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个范围对象，允许对该哈希进行键值对迭代。
 
 ### `[invokable] void QMediaMetaData::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从元数据对象中移除所有数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] void QMediaMetaData::insert(QMediaMetaData::Key k, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMediaMetaData` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `k`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。传入 `QMediaMetaData::Key` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在钥匙中插入一个`value`：`k`。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] bool QMediaMetaData::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元数据中没有任何项，返回`true`;否则返回`false`。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[static protected] QMetaType QMediaMetaData::keyType(QMediaMetaData::Key key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `keyType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数 `key`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于存储密钥`key`数据的元类型。
 
 ### `[invokable] QList<QMediaMetaData::Key> QMediaMetaData::keys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaMetaData::keys` 用于计算、查询或取得与“keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QMediaMetaData::Key>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QMediaMetaData::Key>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回QMediaMetaData：：Keys的`QList`。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[static invokable] QString QMediaMetaData::metaDataKeyToString(QMediaMetaData::Key key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `metaDataKeyToString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `key`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个字符串表示`key`，可用于向用户展示元数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] void QMediaMetaData::remove(QMediaMetaData::Key k)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `k`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。传入 `QMediaMetaData::Key` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从Key： `k`中移除元数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] QString QMediaMetaData::stringValue(QMediaMetaData::Key key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaMetaData::stringValue` 用于计算、查询或取得与“字符串、值访问”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `key`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回密钥`key`的元数据作为`QString`。
+这主要是为了简化向用户展示元数据的过程。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[invokable] QVariant QMediaMetaData::value(QMediaMetaData::Key key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QMediaMetaData` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `key`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回密钥`key`的元数据值，若无元数据则返回空`QVariant`。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `QVariant &QMediaMetaData::operator[](QMediaMetaData::Key k)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaMetaData` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+返回存储在密钥`k`的数据。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVariant &`。
-- 参数 `k`：类型为 `QMediaMetaData::Key`。没有默认值，调用时必须提供。传入 `QMediaMetaData::Key` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMediaMetaData rockBallad1;
+ rockBalad[QMediaMetaData::Genre]="Rock"
+```
 
 ### `QHash<QMediaMetaData::Key, QVariant> QMediaMetaData::data`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaMetaData` 的配置属性。初始化或状态切换时通过 `setData(...)` 设置，之后用 `data()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:data`。
-- 属性名：`QMediaMetaData`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量存储元数据。
+注意：这是同类`protected`成员。
 
 ### `bool operator!=(const QMediaMetaData &a, const QMediaMetaData &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaMetaData` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QMediaMetaData &`。没有默认值，调用时必须提供。传入 `const QMediaMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QMediaMetaData &`。没有默认值，调用时必须提供。传入 `const QMediaMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较两个元数据对象 `a` 和 `b`，如果相同则返回`false`，若不同则返回`true`。
 
 ### `bool operator==(const QMediaMetaData &a, const QMediaMetaData &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaMetaData` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QMediaMetaData &`。没有默认值，调用时必须提供。传入 `const QMediaMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QMediaMetaData &`。没有默认值，调用时必须提供。传入 `const QMediaMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较两个元数据对象`a`和`b`，若相同则返回`true`，若不同则返回`false`。
 
 ## 6. 深入实践与常见坑
 

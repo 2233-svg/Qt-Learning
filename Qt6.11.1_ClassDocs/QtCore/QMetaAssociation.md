@@ -98,414 +98,217 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 30 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `bool QMetaAssociation::canContainsKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canContainsKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果容器可以用`containsKey()`查询密钥，返回`true`;否则返回`false`。
 
 ### `bool QMetaAssociation::canCreateConstIteratorAtKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canCreateConstIteratorAtKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`createConstIteratorAtKey()`创建指向容器中条目的const迭代器，则返回`true`，否则返回false。
 
 ### `bool QMetaAssociation::canCreateIteratorAtKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canCreateIteratorAtKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`createIteratorAtKey()`创建指向容器中条目的迭代器，返回`true`;否则返回false。
 
 ### `bool QMetaAssociation::canGetKeyAtConstIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetKeyAtConstIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果能用`keyAtConstIterator()`从const迭代器中检索密钥，则返回`true`，否则返回`false`。
 
 ### `bool QMetaAssociation::canGetKeyAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetKeyAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果能用 `keyAtIterator()` 从非一致性迭代器检索密钥，返回`true`，否则返回 `false`。
 
 ### `bool QMetaAssociation::canGetMappedAtConstIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetMappedAtConstIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`mappedAtConstIterator()`从cont迭代器中检索映射值，返回`true`，否则返回`false`。
 
 ### `bool QMetaAssociation::canGetMappedAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetMappedAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用 `mappedAtIterator()` 从非一致性迭代器中检索映射值，返回`true`，否则返回 `false`。
 
 ### `bool QMetaAssociation::canGetMappedAtKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetMappedAtKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果容器可以用`mappedAtKey()`查询值，返回`true`，否则返回`false`。
 
 ### `bool QMetaAssociation::canInsertKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canInsertKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`insertKey()`添加密钥到容器，返回`true`，否则返回`false`。
 
 ### `bool QMetaAssociation::canRemoveKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canRemoveKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`removeKey()`从容器中移除密钥，返回`true`，否则返回`false`。
 
 ### `bool QMetaAssociation::canSetMappedAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canSetMappedAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果映射值可以通过非const迭代器设置，则返回`setMappedAtIterator()` `true`，否则返回`false`。
 
 ### `bool QMetaAssociation::canSetMappedAtKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canSetMappedAtKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果映射值可以用`setMappedAtKey()`在容器中修改，返回`true`，否则返回`false`。
 
 ### `bool QMetaAssociation::containsKey(const void *container, const void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `containsKey`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `container` 可以查询键并且包含 `key`，则返回 `true`，否则返回 `false`。
 
 ### `void *QMetaAssociation::createConstIteratorAtKey(const void *container, const void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaAssociation::createConstIteratorAtKey` 用于计算、查询或取得与“创建、Const、Iterator、按位置访问、Key”相关的操作。调用时要先确认当前状态和 `container`、`key` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，返回指向`container`中 `key` 条目的 cont 迭代器。如果不存在该条目，则创建一个指向`container`末尾的 cont 迭代器。如果无法创建 cont 迭代器，返回 `nullptr`。
+必须用 `destroyConstIterator()` 来销毁 const 迭代子。
 
 ### `void *QMetaAssociation::createIteratorAtKey(void *container, const void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaAssociation::createIteratorAtKey` 用于计算、查询或取得与“创建、Iterator、按位置访问、Key”相关的操作。调用时要先确认当前状态和 `container`、`key` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，返回指向`container`中`key`的非const迭代子。如果该条目不存在，则创建一个指向`container`末尾的非const迭代子。如果无法创建非const迭代子，则返回`nullptr`。
+非const迭代子必须用 `destroyIterator()` 来销毁。
 
 ### `[static constexpr, since 6.0] template <typename T> QMetaAssociation QMetaAssociation::fromContainer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromContainer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QMetaAssociation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与模板参数类型对应的`QMetaAssociation`。
 
 ### `void QMetaAssociation::insertKey(void *container, const void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMetaAssociation` 添加依赖、数据或子对象的 API `insertKey`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，将`key`插入`container`中。如果容器有映射值，`key`会关联一个默认创建的映射值。
 
 ### `void QMetaAssociation::keyAtConstIterator(const void *iterator, void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaAssociation::keyAtConstIterator` 用于执行与“key、按位置访问、Const、Iterator”相关的操作。调用时要先确认当前状态和 `iterator`、`key` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索cont `iterator`指向的密钥，并尽可能将其存储在`key`指向的内存位置中。
 
 ### `void QMetaAssociation::keyAtIterator(const void *iterator, void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaAssociation::keyAtIterator` 用于执行与“key、按位置访问、Iterator”相关的操作。调用时要先确认当前状态和 `iterator`、`key` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索非const `iterator`指向的密钥，并尽可能将其存储在`key`指向的内存位置。
 
 ### `QMetaType QMetaAssociation::keyMetaType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaAssociation::keyMetaType` 用于计算、查询或取得与“key、Meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回容器中密钥的元类型。
 
 ### `void QMetaAssociation::mappedAtConstIterator(const void *iterator, void *mapped) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mappedAtConstIterator`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mapped`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索const `iterator`指向的映射值，并尽可能将其存储在`mapped`指向的内存位置。
 
 ### `void QMetaAssociation::mappedAtIterator(const void *iterator, void *mapped) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mappedAtIterator`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mapped`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索非const节点`iterator`指向的映射值，并尽可能将其存储在`mapped`指向的内存位置。
 
 ### `void QMetaAssociation::mappedAtKey(const void *container, const void *key, void *mapped) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mappedAtKey`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `mapped`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索`container`中与`key`关联的映射值，并将其放置在`mapped`指向的内存位置（如果可能的话）。
 
 ### `QMetaType QMetaAssociation::mappedMetaType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mappedMetaType`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回容器中映射值的元类型。
 
 ### `void QMetaAssociation::removeKey(void *container, const void *key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeKey`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，移除`key`及其映射值，从`container`中移除。
 
 ### `void QMetaAssociation::setMappedAtIterator(const void *iterator, const void *mapped) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMappedAtIterator`。调用它会改变 `QMetaAssociation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mapped`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，将`mapped`值写入非const型`iterator`指向的容器位置。
 
 ### `void QMetaAssociation::setMappedAtKey(void *container, const void *key, const void *mapped) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMappedAtKey`。调用它会改变 `QMetaAssociation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `const void *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `mapped`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，会用作为参数传递的`mapped`值覆盖`container`中与`key`关联的值。
 
 ### `[noexcept] bool operator!=(const QMetaAssociation &lhs, const QMetaAssociation &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaAssociation` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaAssociation &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaAssociation &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QMetaAssociation` `lhs`代表与`QMetaAssociation` `rhs`不同的容器类型，返回`true`，否则返回`false`。
 
 ### `[noexcept] bool operator==(const QMetaAssociation &lhs, const QMetaAssociation &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaAssociation` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaAssociation &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaAssociation &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果`QMetaAssociation` `lhs`表示与…相同的容器类型`QMetaAssociation` `rhs`，否则返回`false`.
 
 ### `(since 6.11) class Iterable`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaAssociation` 暴露的类型声明 `Iterable`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+QMetaAssociation：：Iterable 是 QVariant 中关联容器的可迭代接口。
+该类允许多种方法访问包含在`QVariant`中的关联容器元素。如果`QMetaAssociation::Iterable`实例可以转换为`QVariantHash`或`QVariantMap`，或者注册了自定义可变视图，则可以从`QVariant`中提取。
+容器本身在迭代之前不会被复制。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ QHash<int, QString> mapping;
+ mapping.insert(7, "Seven");
+ mapping.insert(11, "Eleven");
+ mapping.insert(42, "Forty-two");
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QVariant variant = QVariant::fromValue(mapping);
+ if (variant.canConvert<QVariantHash>()) {
+     QMetaAssociation::Iterable iterable = variant.value<QMetaAssociation::Iterable>();
+     // Can use C++11 range-for over the values:
+     for (const QVariant &v : iterable) {
+         qDebug() << v;
+     }
+     // Can use iterators:
+     QMetaAssociation::Iterable::const_iterator it = iterable.begin();
+     const QMetaAssociation::Iterable::const_iterator end = iterable.end();
+     for ( ; it != end; ++it) {
+         qDebug() << *it; // The current value
+         qDebug() << it.key();
+         qDebug() << it.value();
+     }
+ }
+```
 
 ## 6. 深入实践与常见坑
 

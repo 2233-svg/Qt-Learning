@@ -70,114 +70,58 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QCollatorSortKey::QCollatorSortKey(const QCollatorSortKey &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCollatorSortKey` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QCollatorSortKey &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`对齐密钥的副本。
 
 ### `[constexpr noexcept, since 6.8] QCollatorSortKey::QCollatorSortKey(QCollatorSortKey &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCollatorSortKey` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QCollatorSortKey &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`other`移动构建一个新的QCollatorSortKey。
+注意：移出对象 `other` 处于部分成形状态，唯一有效的操作是销毁和赋值。
 
 ### `[noexcept] QCollatorSortKey::~QCollatorSortKey()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCollatorSortKey` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会毁掉校对密钥。
 
 ### `int QCollatorSortKey::compare(const QCollatorSortKey &otherKey) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCollatorSortKey::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `otherKey` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `otherKey`：类型为 `const QCollatorSortKey &`。没有默认值，调用时必须提供。传入 `const QCollatorSortKey &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该键与`otherKey`进行比较，后者必须由与该键相同的`QCollator`的sortKey()创建。比较按照该`QCollator`的排序顺序进行。
+如果该键在`otherKey`之前排序，则返回负值;如果两个键相等，则返回0;如果该键在`otherKey`之后排序，则返回正值。
 
 ### `[noexcept] void QCollatorSortKey::swap(QCollatorSortKey &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCollatorSortKey::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QCollatorSortKey &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这个校对密钥与`other`交换。这个操作非常快，而且从未失败过。
 
 ### `[noexcept] QCollatorSortKey &QCollatorSortKey::operator=(QCollatorSortKey &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCollatorSortKey` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QCollatorSortKey &`。
-- 参数 `other`：类型为 `QCollatorSortKey &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QCollatorSortKey`实例。
+注意：移出对象`other`处于部分成形状态，唯一有效的操作是销毁和赋予新值。
 
 ### `QCollatorSortKey &QCollatorSortKey::operator=(const QCollatorSortKey &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCollatorSortKey` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QCollatorSortKey &`。
-- 参数 `other`：类型为 `const QCollatorSortKey &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`分配到这个收集键上。
 
 ### `bool operator<(const QCollatorSortKey &lhs, const QCollatorSortKey &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QCollatorSortKey` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QCollatorSortKey &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QCollatorSortKey &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+两个键必须由同一`QCollator`的sortKey()创建。如果`lhs`应在`rhs`之前排序，则返回`true`，根据创建它们的`QCollator`;否则返回`false`。
 
 ## 6. 深入实践与常见坑
 

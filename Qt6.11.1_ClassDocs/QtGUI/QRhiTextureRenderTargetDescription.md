@@ -77,246 +77,126 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QRhiTextureRenderTargetDescription::QRhiTextureRenderTargetDescription()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTargetDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的纹理渲染目标描述。
 
 ### `QRhiTextureRenderTargetDescription::QRhiTextureRenderTargetDescription(const QRhiColorAttachment &colorAttachment)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTargetDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `colorAttachment`：类型为 `const QRhiColorAttachment &`。没有默认值，调用时必须提供。传入 `const QRhiColorAttachment &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个纹理渲染目标描述，包含`colorAttachment`描述的一个附件。
 
 ### `QRhiTextureRenderTargetDescription::QRhiTextureRenderTargetDescription(const QRhiColorAttachment &colorAttachment, QRhiRenderBuffer *depthStencilBuffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTargetDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `colorAttachment`：类型为 `const QRhiColorAttachment &`。没有默认值，调用时必须提供。传入 `const QRhiColorAttachment &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `depthStencilBuffer`：类型为 `QRhiRenderBuffer *`。没有默认值，调用时必须提供。传入 `QRhiRenderBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有两个附件的纹理渲染目标描述，颜色附件由`colorAttachment`描述，以及深度/模板附件，带`depthStencilBuffer`。
 
 ### `QRhiTextureRenderTargetDescription::QRhiTextureRenderTargetDescription(const QRhiColorAttachment &colorAttachment, QRhiTexture *depthTexture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTargetDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `colorAttachment`：类型为 `const QRhiColorAttachment &`。没有默认值，调用时必须提供。传入 `const QRhiColorAttachment &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `depthTexture`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有两个附件的纹理渲染目标描述，颜色附件由`colorAttachment`描述，深度附件由`depthTexture`描述。
+注意：`depthTexture`必须有合适的格式，比如 `QRhiTexture::D16` 或 `QRhiTexture::D32F`。
 
 ### `const QRhiColorAttachment *QRhiTextureRenderTargetDescription::cbeginColorAttachments() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::cbeginColorAttachments` 用于计算、查询或取得与“cbegin、Color、Attachments”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiColorAttachment *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiColorAttachment *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向附件列表中第一个项的const迭代子。
 
 ### `const QRhiColorAttachment *QRhiTextureRenderTargetDescription::cendColorAttachments() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::cendColorAttachments` 用于计算、查询或取得与“cend、Color、Attachments”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiColorAttachment *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiColorAttachment *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 const 迭代器，指向附件列表中最后一个项目之后。
 
 ### `const QRhiColorAttachment *QRhiTextureRenderTargetDescription::colorAttachmentAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::colorAttachmentAt` 用于计算、查询或取得与“color、Attachment、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `const QRhiColorAttachment *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiColorAttachment *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定 `index` 的颜色附件。
 
 ### `qsizetype QRhiTextureRenderTargetDescription::colorAttachmentCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::colorAttachmentCount` 用于计算、查询或取得与“color、Attachment、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的颜色附件数量。
 
 ### `[since 6.8] QRhiTexture *QRhiTextureRenderTargetDescription::depthResolveTexture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::depthResolveTexture` 用于计算、查询或取得与“depth、Resolve、Texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回多采样深度（或深度模板）纹理（或纹理数组）解析的纹理。`nullptr`如果没有纹理，这是最常见的情况。
 
 ### `QRhiRenderBuffer *QRhiTextureRenderTargetDescription::depthStencilBuffer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::depthStencilBuffer` 用于计算、查询或取得与“depth、Stencil、Buffer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderBuffer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderBuffer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用作深度模板缓冲区的渲染缓冲区，若未设置则返回`nullptr`。
 
 ### `QRhiTexture *QRhiTextureRenderTargetDescription::depthTexture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::depthTexture` 用于计算、查询或取得与“depth、Texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前参考的深度纹理，如果没有设置，则返回`nullptr`。
 
 ### `void QRhiTextureRenderTargetDescription::setColorAttachments(std::initializer_list<QRhiColorAttachment> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorAttachments`。调用它会改变 `QRhiTextureRenderTargetDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiColorAttachment>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiColorAttachment>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置颜色附件的安装`list`。
 
 ### `template <typename InputIterator> void QRhiTextureRenderTargetDescription::setColorAttachments(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorAttachments`。调用它会改变 `QRhiTextureRenderTargetDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过迭代器 `first` 和 `last` 设置颜色附件列表。
 
 ### `[since 6.8] void QRhiTextureRenderTargetDescription::setDepthResolveTexture(QRhiTexture *tex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthResolveTexture`。调用它会改变 `QRhiTextureRenderTargetDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置深度（或深度模板）分辨率纹理`tex`。
+`tex`通常是一个二维纹理或二维纹理数组，其格式与纹理集通过`setDepthTexture()`匹配。
+注意：解析深度（或深度模板）数据只有在运行时报告支持`QRhi::ResolveDepthStencil`功能时才可行。深度模板解析并非图形API中普遍支持。因此，假设深度模板解析无条件可用的设计是不可移植的，应避免使用。
+注意：作为 OpenGL ES 的额外限制，设置深度解析纹理可能只能与 `setDepthTexture()` 结合使用，而不能与 `setDepthStencilBuffer()` 结合。
 
 ### `void QRhiTextureRenderTargetDescription::setDepthStencilBuffer(QRhiRenderBuffer *renderBuffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthStencilBuffer`。调用它会改变 `QRhiTextureRenderTargetDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `renderBuffer`：类型为 `QRhiRenderBuffer *`。没有默认值，调用时必须提供。传入 `QRhiRenderBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置深度模板的`renderBuffer`。不是强制的，例如当该渲染目标的任何渲染通道中没有使用深度测试/写入或模板相关功能时，可以保持为`nullptr`。
+注意：`depthStencilBuffer()` 和 `depthTexture()` 不能同时被集合（不能同时非零）。
+使用`QRhiRenderBuffer`代替二维`QRhiTexture`作为深度或深度/模板缓冲区非常常见，也是应用推荐的方法。使用`setDepthTexture()` `QRhiTexture`，因此如果深度数据需要事后访问（例如在着色器中采样），或者涉及多视图渲染（因为深度纹理必须是纹理数组），使用就变得相关。
 
 ### `void QRhiTextureRenderTargetDescription::setDepthTexture(QRhiTexture *texture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthTexture`。调用它会改变 `QRhiTextureRenderTargetDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `texture`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置深度模板的`texture`。这是`setDepthStencilBuffer()`的替代方案，后者提供一个具有合适类型（例如`QRhiTexture::D32F`）的`QRhiTexture`代替`QRhiRenderBuffer`。
+注意：`depthStencilBuffer()` 和 `depthTexture()` 不能同时被设定（也不能同时非空的）。
+`texture`可以是2D纹理，也可以是2D纹理数组（当纹理数组支持时）。指定纹理数组在多视图渲染中尤为重要。
+注意：如果`texture`格式包含模板组件，如`QRhiTexture::D24S8`，它也将作为模板缓冲区。
 
 ### `[since 6.9] void QRhiTextureRenderTargetDescription::setShadingRateMap(QRhiShadingRateMap *map)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShadingRateMap`。调用它会改变 `QRhiTextureRenderTargetDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `map`：类型为 `QRhiShadingRateMap *`。没有默认值，调用时必须提供。传入 `QRhiShadingRateMap *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与指定的`QRhiShadingRateMap` `map`关联。只有当`QRhi::VariableRateShadingMap`功能被报告为支持时，这才有效。
+当`QRhiCommandBuffer::setShadingRate()`也被调用时，每个图块使用较高的着色率。目前无法控制组合器行为。
+注意：当渲染目标已经构建完成（create() 成功调用时），设置着色率映射意味着需要一个新的 `QRhiRenderPassDescriptor`，因此需要重建。再次调用 setRenderPassDescriptor()（渲染过程外），然后通过调用 create()重建。这还会产生其他滚动后果，例如图形管线：这些也需要与新`QRhiRenderPassDescriptor`关联，然后重建。请参见`QRhiRenderPassDescriptor::serializedFormat()`，了解一些处理建议。记得也要设置 `QRhiGraphicsPipeline::UsesShadingRate` 标志。
 
 ### `[since 6.9] QRhiShadingRateMap *QRhiTextureRenderTargetDescription::shadingRateMap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTargetDescription::shadingRateMap` 用于计算、查询或取得与“shading、Rate、映射”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiShadingRateMap *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiShadingRateMap *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的`QRhiShadingRateMap`。默认情况下，这是`nullptr`。
 
 ## 6. 深入实践与常见坑
 

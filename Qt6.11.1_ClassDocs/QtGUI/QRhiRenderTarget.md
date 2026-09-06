@@ -64,74 +64,39 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[pure virtual] float QRhiRenderTarget::devicePixelRatio() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderTarget::devicePixelRatio` 用于计算、查询或取得与“device、Pixel、Ratio”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回设备像素比。对于`QRhiTextureRenderTarget`，这总是1。对于从`QRhiSwapChain`检索到的目标，该值反映了目标`QWindow`的设备像素比。
 
 ### `[pure virtual] QSize QRhiRenderTarget::pixelSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderTarget::pixelSize` 用于计算、查询或取得与“pixel、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回像素大小。
+只有在成功调用 create() 后才有效。在此之前，结果是默认构造的`QSize`。
+`QRhiTextureRenderTarget` 返回的大小是创建时关联附件的大小，实际上是第一个颜色附件的大小，或者如果没有颜色附件，则是深度/模板缓冲区。如果关联的纹理或渲染缓冲区随后被调整大小并重建，那么 pixelSize() 会隐式调用 create()，以重建底层数据结构。这种隐式检查类似于 `QRhiCommandBuffer::beginPass()` 所做的，确保返回的大小始终是最新的。
 
 ### `QRhiRenderPassDescriptor *QRhiRenderTarget::renderPassDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiRenderTarget` 的核心操作 `renderPassDescriptor`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回相关的 `QRhiRenderPassDescriptor`。
 
 ### `[pure virtual] int QRhiRenderTarget::sampleCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderTarget::sampleCount` 用于计算、查询或取得与“sample、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回采样计数，如果多重采样抗锯齿对该渲染目标无关，则返回1。
 
 ### `void QRhiRenderTarget::setRenderPassDescriptor(QRhiRenderPassDescriptor *desc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderPassDescriptor`。调用它会改变 `QRhiRenderTarget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `desc`：类型为 `QRhiRenderPassDescriptor *`。没有默认值，调用时必须提供。传入 `QRhiRenderPassDescriptor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`QRhiRenderPassDescriptor` `desc`用于该渲染目标。
 
 ## 6. 深入实践与常见坑
 

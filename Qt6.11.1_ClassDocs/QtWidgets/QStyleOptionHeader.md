@@ -69,231 +69,127 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOptionHeader::SectionPosition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 暴露的类型声明 `Section、Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SectionPosition`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举告诉你该部分相对于其他部分的位置。
+- `QStyleOptionHeader::Beginning`：`0`;在头部开头
+- `QStyleOptionHeader::Middle`：`1`;位于头部中间
+- `QStyleOptionHeader::End`：`2`;在头部末尾
+- `QStyleOptionHeader::OnlyOneSection`：`3`;仅有一个头部
 
 ### `enum QStyleOptionHeader::SelectedPosition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 暴露的类型声明 `Selected、Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SelectedPosition`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举会告诉你该部分相对于所选部分的位置。
+- `QStyleOptionHeader::NotAdjacent`：`0`;不邻接所选部分
+- `QStyleOptionHeader::NextIsSelected`：`1`;选定下一部分
+- `QStyleOptionHeader::PreviousIsSelected`：`2`;选取前一部分
+- `QStyleOptionHeader::NextAndPreviousAreSelected`：`3`;选定下一部分和上一部分
 
 ### `enum QStyleOptionHeader::SortIndicator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 暴露的类型声明 `Sort、Indicator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SortIndicator`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指示排序指示器应绘制的方向。
+- `QStyleOptionHeader::None`：`0`;无需排序指示器
+- `QStyleOptionHeader::SortUp`：`1`;绘制上升指示器
+- `QStyleOptionHeader::SortDown`：`2`;绘制下行指示器
 
 ### `enum QStyleOptionHeader::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionHeader::Type`：`SO_Header`;提供的样式类型（本类`SO_Header`）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型。一般来说，除非你想自己创建`QStyleOption`子职业和风格，否则不必担心这个。
 
 ### `enum QStyleOptionHeader::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionHeader::Version`：`1`;1
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你使用`qstyleoption_cast()`，通常不需要检查。
 
 ### `QStyleOptionHeader::QStyleOptionHeader()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建 QStyleOptionHeader，将成员变量初始化为默认值。
 
 ### `QStyleOptionHeader::QStyleOptionHeader(const QStyleOptionHeader &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOptionHeader &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`样式选项的副本。
 
 ### `QIcon QStyleOptionHeader::icon`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setIcon(...)` 设置，之后用 `icon()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:icon`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含了头部的图标。
+默认值为空图标，即既无像素图也无文件名的图标。
 
 ### `Qt::Alignment QStyleOptionHeader::iconAlignment`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setIconAlignment(...)` 设置，之后用 `iconAlignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Alignment QStyleOptionHeader::iconAlignment`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存了头部图标的对齐标志。
+默认值是`Qt::AlignLeft`。
 
 ### `Qt::Orientation QStyleOptionHeader::orientation`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setOrientation(...)` 设置，之后用 `orientation()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Orientation QStyleOptionHeader::orientation`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量记录头部的方向（水平或垂直）。
+默认方向是`Qt::Horizontal`。
 
 ### `QStyleOptionHeader::SectionPosition QStyleOptionHeader::position`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setPosition(...)` 设置，之后用 `position()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:SectionPosition QStyleOptionHeader::position`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持该截面相对于其他截面的位置。
+默认值是`QStyleOptionHeader::Beginning`。
 
 ### `int QStyleOptionHeader::section`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setSection(...)` 设置，之后用 `section()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:section`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示被绘制的头部区域。
+默认值是0。
 
 ### `QStyleOptionHeader::SelectedPosition QStyleOptionHeader::selectedPosition`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setSelectedPosition(...)` 设置，之后用 `selectedPosition()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:SelectedPosition QStyleOptionHeader::selectedPosition`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持截面相对于所选截面的位置。
+默认值为`QStyleOptionHeader::NotAdjacent`。
 
 ### `QStyleOptionHeader::SortIndicator QStyleOptionHeader::sortIndicator`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setSortIndicator(...)` 设置，之后用 `sortIndicator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:SortIndicator QStyleOptionHeader::sortIndicator`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含排序指示器应绘制的方向。
+默认值是`QStyleOptionHeader::None`。
 
 ### `QString QStyleOptionHeader::text`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setText(...)` 设置，之后用 `text()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:text`。
-- 属性名：`QStyleOptionHeader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存头部的文本。
+默认值是空字符串。
 
 ### `Qt::Alignment QStyleOptionHeader::textAlignment`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionHeader` 的配置属性。初始化或状态切换时通过 `setTextAlignment(...)` 设置，之后用 `textAlignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Alignment QStyleOptionHeader::textAlignment`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留头部文本的对齐标志。
+默认值是`Qt::AlignLeft`。
 
 ## 6. 深入实践与常见坑
 

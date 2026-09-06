@@ -83,205 +83,132 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QScrollBar::QScrollBar(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollBar` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个垂直滚动条。
+`parent`参数被发送给`QWidget`构造器。
+`minimum`默认为0，`maximum`为99，`singleStep`大小为1，`pageStep`大小为10，初始的 `value`为0。
 
 ### `[explicit] QScrollBar::QScrollBar(Qt::Orientation orientation, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollBar` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`orientation`构建一个滚动条。
+`parent`参数传递给`QWidget`构造者。
+`minimum`默认为0，`maximum`为99，`singleStep`大小为1，`pageStep`大小为10，初始的 `value`为 0。
 
 ### `[virtual noexcept] QScrollBar::~QScrollBar()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollBar` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏卷轴条。
 
 ### `[override virtual protected] void QScrollBar::contextMenuEvent(QContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
+显示用`createStandardContextMenu()`创建的标准右键菜单。
+如果你不想让滚动条有上下文菜单，可以将其`contextMenuPolicy`设置为`Qt::NoContextMenu`。样式也可以通过SH_ScrollBar_ContextMenu提示来控制这种行为。
+如果你想自定义右键菜单，可以重新实现这个函数。如果你想扩展标准的右键菜单，可以重新实现这个函数，调用`createStandardContextMenu()`并扩展返回的菜单。要么把返回的`QMenu`保存起来以便以后再用，要么设置WA_DeleteOnClose属性。
+事件信息通过`event`对象传递。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
+当小部件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用了处理器。
+默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
 
 ### `[since 6.10] QMenu *QScrollBar::createStandardContextMenu(QPoint position)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::createStandardContextMenu` 用于计算、查询或取得与“创建、Standard、Context、Menu”相关的操作。调用时要先确认当前状态和 `position` 的有效范围；返回类型是 `QMenu *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMenu *`。
-- 参数 `position`：类型为 `QPoint`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建标准的右键菜单，用户用鼠标右键点击滚动条时会显示。它从默认`contextMenuEvent()`处理程序调用，并获取鼠标点击在该小部件本地坐标中的`position`。弹出菜单的所有权转移给调用者。
 
 ### `[override virtual] bool QScrollBar::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSlider::event`（QEvent *e）。
 
 ### `[override virtual protected] void QScrollBar::hideEvent(QHideEvent *)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::hideEvent` 用于执行与“隐藏、Event”相关的操作。调用时要先确认当前状态和 `QHideEvent *` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `QHideEvent *`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::hideEvent`（QHideEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件隐藏事件。事件通过`event`参数传递。
+隐藏事件会在小部件被隐藏后立即发送。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，恢复窗口时自发显示事件。收到自发隐藏事件后，小部件仍被视为可见，意义`isVisible()`。
 
 ### `[virtual protected] void QScrollBar::initStyleOption(QStyleOptionSlider *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::initStyleOption` 用于执行与“init、Style、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionSlider *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用这个`QScrollBar`的值初始化`option`。这种方法适用于需要 `QStyleOptionSlider`但不想自己填满所有信息的子类。
 
 ### `[override virtual protected] void QScrollBar::mouseMoveEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseMoveEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标移动事件。
+如果关闭鼠标追踪，只有在鼠标移动过程中按下鼠标按钮时才会发生鼠标移动事件。如果开启鼠标追踪，即使未按键，鼠标移动事件也会发生。
+`QMouseEvent::position()`报告鼠标光标相对于该小部件的位置。对于按下和释放事件，位置通常与最后一次鼠标移动事件的位置相同，但如果用户的手握手，可能会有所不同。这是底层窗口系统的功能，而非Qt。
+如果你想在鼠标移动时立即显示提示（例如，获取鼠标坐标与`QMouseEvent::position()`并显示为提示），你必须先启用上述的鼠标追踪功能。然后，为了确保提示立即更新，你必须在鼠标移动事件（mouseMoveEvent）实现中调用`QToolTip::showText()`而不是`setToolTip()`。
 
 ### `[override virtual protected] void QScrollBar::mousePressEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mousePressEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标按键事件。
+如果你在 mousePressEvent() 创建新控件，`mouseReleaseEvent()`可能不会出现在你预期的位置，这取决于底层窗口系统（或 X11 窗口管理器）、控件的位置，甚至可能还有其他因素。
+默认实现实现了当你点击窗口外时关闭弹出小部件的功能。对于其他小部件类型，它没有任何作用。
 
 ### `[override virtual protected] void QScrollBar::mouseReleaseEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseReleaseEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标释放事件。
 
 ### `[override virtual protected] void QScrollBar::paintEvent(QPaintEvent *)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollBar` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `QPaintEvent *`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
+绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
+- `repaint()`或`update()`被援引，
+- 小部件被遮挡，现已被发现，或
+- 还有很多其他原因。
+许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
+Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
+当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
+背景可以用`setBackgroundRole()`和`setPalette()`设置。
+自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
+注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
+警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
 
 ### `[override virtual] QSize QScrollBar::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现了属性的访问函数：`QWidget::sizeHint`。
 
 ### `[override virtual protected] void QScrollBar::sliderChange(QAbstractSlider::SliderChange change)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::sliderChange` 用于执行与“slider、Change”相关的操作。调用时要先确认当前状态和 `change` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `change`：类型为 `QAbstractSlider::SliderChange`。没有默认值，调用时必须提供。传入 `QAbstractSlider::SliderChange` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSlider::sliderChange`（QAbstractSlider：：SliderChange change）。
+重新实现该虚拟功能以跟踪滑块的变化，如`SliderRangeChange`、`SliderOrientationChange`、`SliderStepsChange`或`SliderValueChange`。默认实现仅更新显示，忽略`change`参数。
 
 ### `[override virtual protected] void QScrollBar::wheelEvent(QWheelEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollBar::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QWheelEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把滚轮的像素或角度增量换算为滚动条值变化，并遵守方向、页面步长和反向控件设置。子类只在需要自定义滚动策略时重写；未处理的事件应交给基类。
 
 ## 6. 深入实践与常见坑
 

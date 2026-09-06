@@ -82,207 +82,123 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QStyledItemDelegate::QStyledItemDelegate(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyledItemDelegate` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`构造一个物品代理。
 
 ### `[virtual noexcept] QStyledItemDelegate::~QStyledItemDelegate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyledItemDelegate` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁物品授权者。
 
 ### `[override virtual] QWidget *QStyledItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::createEditor` 用于计算、查询或取得与“创建、Editor”相关的操作。调用时要先确认当前状态和 `parent`、`option`、`index` 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数 `parent`：类型为 `QWidget *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `option`：类型为 `const QStyleOptionViewItem &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemDelegate::createEditor`（QWidget *parent， const QStyleOptionViewItem &option， const QModelIndex &index） const.
+返回用于编辑`index`指定编辑项目的控件。`parent`控件和样式`option`用于控制编辑器控件的显示方式。
+返回用于编辑数据项的编辑器，并使用给定`index`。注意索引包含所用模型的信息。编辑器的父控件由`parent`指定，项目选项由`option`指定。
+基础实现返回`nullptr`。如果你想要自定义编辑，就需要重新实现这个函数。
+返回的编辑器小部件应有`Qt::StrongFocus`;否则，小部件接收的`QMouseEvent`会传播到视图。视图的背景会透出，除非编辑器自己绘制背景（例如用`setAutoFillBackground()`）。
 
 ### `[virtual] QString QStyledItemDelegate::displayText(const QVariant &value, const QLocale &locale) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::displayText` 用于计算、查询或取得与“display、文本”相关的操作。调用时要先确认当前状态和 `value`、`locale` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `locale`：类型为 `const QLocale &`。没有默认值，调用时必须提供。传入 `const QLocale &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回代理用来显示模型`Qt::DisplayRole`的字符串，`locale`。`value` 是模型提供的`Qt::DisplayRole`值。
+默认实现使用`QLocale::toString`将`value`转换为`QString`。
+对于空模型索引（即模型返回无效`QVariant`的索引），不调用该函数。
 
 ### `[override virtual protected] bool QStyledItemDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::editorEvent` 用于计算、查询或取得与“editor、Event”相关的操作。调用时要先确认当前状态和 `event`、`model`、`option`、`index` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `option`：类型为 `const QStyleOptionViewItem &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemDelegate::editorEvent`（QEvent *event， QAbstractItemModel *model， const QStyleOptionViewItem &option， const QModelIndex &index）.
+当开始编辑项目时，调用触发编辑的`event`、`model`、物品的`index`以及用于渲染该物品的`option`。
+鼠标事件会发送到 editorEvent()，即使它们没有开始编辑该项目。例如，如果你想在右键点击物品时打开上下文菜单，这会很有用。
+基础实现返回`false`（表示尚未处理该事件）。
 
 ### `[override virtual protected] bool QStyledItemDelegate::eventFilter(QObject *object, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::eventFilter` 用于计算、查询或取得与“event、Filter”相关的操作。调用时要先确认当前状态和 `object`、`event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
+详情见`QAbstractItemDelegate::handleEditorEvent()`。
 
 ### `[virtual protected] void QStyledItemDelegate::initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::initStyleOption` 用于执行与“init、Style、Option”相关的操作。调用时要先确认当前状态和 `option`、`index` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionViewItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用索引`index`初始化`option`值。这种方法适用于子类需要`QStyleOptionViewItem`但不想自己填满所有信息时。
 
 ### `QItemEditorFactory *QStyledItemDelegate::itemEditorFactory() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::itemEditorFactory` 用于计算、查询或取得与“项目访问、Editor、Factory”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QItemEditorFactory *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QItemEditorFactory *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回项目代理使用的编辑器工厂。如果没有编辑器工厂设置，函数将返回空。
 
 ### `[override virtual] void QStyledItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyledItemDelegate` 的核心操作 `paint`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `option`：类型为 `const QStyleOptionViewItem &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemDelegate::paint`（QPainter *painter， const QStyleOptionViewItem &option， const QModelIndex &index） const.
+使用`index`指定物品的指定`painter`和样式`option`渲染代理。
+该函数利用视图的`QStyle`绘制物品。
+在子类中重新实现绘画时，用`initStyleOption()`设置`option`，就像用`QStyledItemDelegate`一样。
+尽可能在绘画时使用`option`。尤其是它的`rect`变量决定绘制位置，以及`state`决定是否启用或选择。
+涂漆后，应确保油漆工恢复到调用该函数时的状态。例如，涂漆前调用`QPainter::save()`，涂漆后再调用`QPainter::restore()`可能很有用。
+如果你想提供自定义渲染，必须重新实现这个纯抽象函数。使用`painter`和样式`option`渲染物品`index`指定的物品。
+如果你重新实现这个，也必须重新实现`sizeHint()`。
 
 ### `[override virtual] void QStyledItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEditorData`。调用它会改变 `QStyledItemDelegate` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `editor`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemDelegate::setEditorData`（QWidget *编辑器，const QModelIndex & index）const.
+设置数据由模型`index`指定的数据模型项中的`editor`显示和编辑。
+默认实现将数据存储在`editor`小部件的用户属性中。
+将给定`editor`的内容设置为该项目在指定`index`的数据。注意，索引包含所用模型的信息。
+基础实现没有任何功能。如果你想要自定义编辑，就需要重新实现这个函数。
 
 ### `void QStyledItemDelegate::setItemEditorFactory(QItemEditorFactory *factory)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemEditorFactory`。调用它会改变 `QStyledItemDelegate` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `factory`：类型为 `QItemEditorFactory *`。没有默认值，调用时必须提供。传入 `QItemEditorFactory *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将编辑器工厂设置为物品代理使用的`factory`。如果没有设置编辑器工厂，物品代理将使用默认编辑器工厂。
 
 ### `[override virtual] void QStyledItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModelData`。调用它会改变 `QStyledItemDelegate` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `editor`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemDelegate::setModelData`（QWidget *editor， QAbstractItemModel *model， const QModelIndex &index） const.
+从`editor`小部件获取数据，并将其存储在指定`model`中，即物品`index`。
+默认实现从`editor`小部件的用户属性中获取数据模型中要存储的值。
+将`model`中给定`index`项的数据映射为给定`editor`的内容。
+基础实现没有任何功能。如果你想要自定义编辑，就需要重新实现这个函数。
 
 ### `[override virtual] QSize QStyledItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 `option`、`index` 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数 `option`：类型为 `const QStyleOptionViewItem &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemDelegate::sizeHint`（const QStyleOptionViewItem &option， const QModelIndex &index） const.
+返回代理显示`index`指定项目所需的大小，考虑`option`提供的样式信息。
+该函数利用视图的 `QStyle` 来确定项目大小。
+如果你想提供自定义渲染，必须重新实现这个纯抽象函数。选项由`option`指定，模型项由`index`指定。
+如果你重新实现这个，你也必须重新实现`paint()`。
 
 ### `[override virtual] void QStyledItemDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyledItemDelegate::updateEditorGeometry` 用于执行与“更新、Editor、几何区域”相关的操作。调用时要先确认当前状态和 `editor`、`option`、`index` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `editor`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `option`：类型为 `const QStyleOptionViewItem &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+Reimplementation s： `QAbstractItemDelegate::updateEditorGeometry`（QWidget *editor， const QStyleOptionViewItem &option， const QModelIndex &index） const.
+根据`index`给出的样式更新指定的物品`editor` `option`。
+根据`option`中指定的矩形，更新该项的`editor`几何体，`index`。如果物品内部布局，编辑器将相应布局。注意索引包含所用模型的信息。
+基础实现没有任何作用。如果你想要自定义编辑，必须重新实现这个函数。
 
 ## 6. 深入实践与常见坑
 

@@ -90,374 +90,234 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 28 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QRegularExpressionMatch::QRegularExpressionMatch()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个有效且空的 QRegularExpressionMatch 对象。正则表达式设置为默认构造的;匹配类型为 `QRegularExpression::NoMatch`，匹配选项为 `QRegularExpression::NoMatchOption`。
+对象会通过`hasMatch()`和 `hasPartialMatch()` 成员函数报告无匹配。
 
 ### `QRegularExpressionMatch::QRegularExpressionMatch(const QRegularExpressionMatch &match)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `match`：类型为 `const QRegularExpressionMatch &`。没有默认值，调用时必须提供。传入 `const QRegularExpressionMatch &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过复制给定`match`的结果来构建比赛结果。
 
 ### `[constexpr noexcept, since 6.1] QRegularExpressionMatch::QRegularExpressionMatch(QRegularExpressionMatch &&match)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `match`：类型为 `QRegularExpressionMatch &&`。没有默认值，调用时必须提供。传入 `QRegularExpressionMatch &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过将结果从给定`match`中移动来构造比赛结果。
+注意，移出 QRegularExpressionMatch 只能被销毁或分配到 。调用除解构器或赋值操作符外的其他函数效果尚未定义。
 
 ### `[noexcept] QRegularExpressionMatch::~QRegularExpressionMatch()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉比赛结果。
 
 ### `QString QRegularExpressionMatch::captured(QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::captured` 用于计算、查询或取得与“captured”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被捕获群捕获的子串，名为`name`。
+如果命名的捕获群`name`没有捕获字符串，或者没有名为`name`的捕获群，则返回空`QString`。
+注意：在6.8之前的Qt版本中，该功能采用`QString`或`QStringView`，而非`QAnyStringView`。
 
 ### `QString QRegularExpressionMatch::captured(int nth = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::captured` 用于计算、查询或取得与“captured”相关的操作。调用时要先确认当前状态和 `nth` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `nth`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`nth`捕获组捕获的子串。
+如果`nth`捕获群没有捕获字符串，或者不存在这样的捕获群，则返回空`QString`。
+注意：隐式捕获组编号0捕捉与整个模式匹配的子串。
 
 ### `qsizetype QRegularExpressionMatch::capturedEnd(QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedEnd` 用于计算、查询或取得与“captured、结束”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主语串内的偏移量，紧接着被捕获组捕获的子串`name`的终点位置。如果捕获组 `name` 未捕获或不存在字符串，返回 -1。
+注意：在6.8之前的Qt版本中，该功能采用`QString`或`QStringView`，而非使用`QAnyStringView`。
 
 ### `qsizetype QRegularExpressionMatch::capturedEnd(int nth = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedEnd` 用于计算、查询或取得与“captured、结束”相关的操作。调用时要先确认当前状态和 `nth` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `nth`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主语字符串内的偏移量，紧接着被`nth`捕获组捕获的子串的结束位置。如果`nth`捕获组未捕获或不存在字符串，返回 -1。
 
 ### `qsizetype QRegularExpressionMatch::capturedLength(QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedLength` 用于计算、查询或取得与“captured、Length”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被捕获群捕获的子串长度，称为`name`。
+注意：如果名为 `name` 的捕获组没有捕获字符串或不存在，则该函数返回 0。
+注意：在6.8之前的Qt版本中，该功能采用`QString`或`QStringView`，而非使用`QAnyStringView`。
 
 ### `qsizetype QRegularExpressionMatch::capturedLength(int nth = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedLength` 用于计算、查询或取得与“captured、Length”相关的操作。调用时要先确认当前状态和 `nth` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `nth`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`nth`捕获群捕获的子串长度。
+注意：如果`nth`捕获组没有捕获字符串或不存在，该函数返回0。
 
 ### `qsizetype QRegularExpressionMatch::capturedStart(QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedStart` 用于计算、查询或取得与“captured、启动”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主语字符串内对应捕获组 `name` 捕获子串起始位置的偏移量。如果捕获组 `name` 未捕获或不存在字符串，返回 -1。
+注意：在6.8之前的Qt版本中，这个功能需要`QString`或`QStringView`，而不是`QAnyStringView`。
 
 ### `qsizetype QRegularExpressionMatch::capturedStart(int nth = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedStart` 用于计算、查询或取得与“captured、启动”相关的操作。调用时要先确认当前状态和 `nth` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `nth`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主语字符串内对应`nth`捕获组捕获子串起始位置的偏移量。如果`nth`捕获组未捕获或不存在字符串，返回 -1。
 
 ### `QStringList QRegularExpressionMatch::capturedTexts() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedTexts` 用于计算、查询或取得与“captured、Texts”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回捕获群捕获的所有字符串列表，按组本身出现在模式字符串中的顺序排列。列表包含隐式捕获组编号0，捕获与整个模式匹配的子串。
 
 ### `QStringView QRegularExpressionMatch::capturedView(QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedView` 用于计算、查询或取得与“captured、View”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被捕获组名为`name`的字符串视图。
+如果命名的捕获群`name`没有捕获字符串，或者没有名为`name`的捕获群，则返回空`QStringView`。
+注意：在6.8之前的Qt版本中，该功能采用`QString`或`QStringView`，而非使用`QAnyStringView`。
 
 ### `QStringView QRegularExpressionMatch::capturedView(int nth = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::capturedView` 用于计算、查询或取得与“captured、View”相关的操作。调用时要先确认当前状态和 `nth` 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数 `nth`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`nth`捕获组捕获子串的视图。
+如果`nth`捕获群没有捕获字符串，或者不存在这样的捕获群，则返回空`QStringView`。
+注意：隐式捕获组编号0捕捉与整个模式匹配的子串。
 
 ### `[since 6.3] bool QRegularExpressionMatch::hasCaptured(QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasCaptured`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果捕获群名为`name`捕获了主语串中的某物，则返回true;否则返回false（或不存在名为`name`的捕获群）。
+注意：即使正则表达式匹配，正则表达式中某些捕获群也可能未捕获任何内容。例如，如果在模式中使用条件算子，就可能发生这种情况：
+类似地，捕获群可以捕获长度为0的子串;该函数将返回该捕获群的 `true`。
+注意：在6.8之前的Qt版本中，该功能采用`QString`或`QStringView`，而非`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QRegularExpression re("([a-z]+)|([A-Z]+)");
+ QRegularExpressionMatch m = re.match("UPPERCASE");
+ if (m.hasMatch()) {
+     qDebug() << m.hasCaptured(0); // true
+     qDebug() << m.hasCaptured(1); // false
+     qDebug() << m.hasCaptured(2); // true
+ }
+```
 
 ### `[since 6.3] bool QRegularExpressionMatch::hasCaptured(int nth) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasCaptured`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果`nth`捕获组捕获了主语字符串中的某部分，返回真;否则返回假（或不存在此类捕获组）。
+注意：隐式捕获组编号0捕捉与整个模式匹配的子串。
+注意：即使正则表达式匹配，正则表达式中某些捕获群也可能未捕获任何内容。例如，如果在模式中使用条件算子，就可能发生这种情况：
+类似地，捕获群可以捕获长度为0的子串;该函数将返回该捕获群的 `true`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `nth`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QRegularExpression re("([a-z]+)|([A-Z]+)");
+ QRegularExpressionMatch m = re.match("UPPERCASE");
+ if (m.hasMatch()) {
+     qDebug() << m.hasCaptured(0); // true
+     qDebug() << m.hasCaptured(1); // false
+     qDebug() << m.hasCaptured(2); // true
+ }
+```
 
 ### `bool QRegularExpressionMatch::hasMatch() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasMatch`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果正规表达式与主语字符串匹配，则返回`true`;否则返回 false。
 
 ### `bool QRegularExpressionMatch::hasPartialMatch() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasPartialMatch`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果正则表达式与主语字符串部分匹配，则返回`true`;否则返回为假。
+注意：只有明确使用部分匹配类型之一的匹配才能产生部分匹配。不过，如果匹配完全成功，该函数返回假，而`hasMatch()`返回真。
 
 ### `bool QRegularExpressionMatch::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果匹配对象是通过对有效`QRegularExpression`对象调用的`QRegularExpression::match()`函数获得的，返回`true`;如果`QRegularExpression`无效，返回`false`。
 
 ### `int QRegularExpressionMatch::lastCapturedIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::lastCapturedIndex` 用于计算、查询或取得与“末项、Captured、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回最后捕获某物的捕获组索引，包括隐式捕获群0。这可以用来提取所有捕获的子串：
+注意，一些索引小于lastCapturedIndex()的捕获组可能不匹配，因此什么都没捕获。
+如果正则表达式不匹配，该函数返回 -1。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QRegularExpressionMatch match = re.match(string);
+ for (int i = 0; i <= match.lastCapturedIndex(); ++i) {
+     QString captured = match.captured(i);
+     // ...
+ }
+```
 
 ### `QRegularExpression::MatchOptions QRegularExpressionMatch::matchOptions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::matchOptions` 用于计算、查询或取得与“匹配、Options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression::MatchOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression::MatchOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于获得该`QRegularExpressionMatch`对象的匹配选项，即传递给`QRegularExpression::match()`或`QRegularExpression::globalMatch()`的匹配选项。
 
 ### `QRegularExpression::MatchType QRegularExpressionMatch::matchType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::matchType` 用于计算、查询或取得与“匹配、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression::MatchType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression::MatchType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于获得该`QRegularExpressionMatch`对象的匹配类型，即传递给`QRegularExpression::match()`或`QRegularExpression::globalMatch()`的匹配类型。
 
 ### `QRegularExpression QRegularExpressionMatch::regularExpression() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::regularExpression` 用于计算、查询或取得与“regular、Expression”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 match() 函数返回该对象的 `QRegularExpression` 对象。
 
 ### `[noexcept] void QRegularExpressionMatch::swap(QRegularExpressionMatch &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatch::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QRegularExpressionMatch &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该匹配结果与`other`交换。此操作非常快速且从未失败。
 
 ### `[noexcept] QRegularExpressionMatch &QRegularExpressionMatch::operator=(QRegularExpressionMatch &&match)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatch &`。
-- 参数 `match`：类型为 `QRegularExpressionMatch &&`。没有默认值，调用时必须提供。传入 `QRegularExpressionMatch &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-将匹配结果`match`分配给该对象，并返回对结果的引用。
+注意，移出的 `QRegularExpressionMatch` 只能被销毁或分配到 。调用除解构器或赋值算符外的其他函数效果尚无定义。
 
 ### `QRegularExpressionMatch &QRegularExpressionMatch::operator=(const QRegularExpressionMatch &match)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatch &`。
-- 参数 `match`：类型为 `const QRegularExpressionMatch &`。没有默认值，调用时必须提供。传入 `const QRegularExpressionMatch &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将匹配结果`match`分配给该对象，并返回对该副本的引用。
 
 ### `QDebug operator<<(QDebug debug, const QRegularExpressionMatch &match)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatch` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `match`：类型为 `const QRegularExpressionMatch &`。没有默认值，调用时必须提供。传入 `const QRegularExpressionMatch &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将匹配对象`match`写入调试对象的`debug`以便调试。
 
 ## 6. 深入实践与常见坑
 

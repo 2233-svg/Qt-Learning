@@ -60,24 +60,13 @@ target_link_libraries(mytarget PRIVATE Qt6::CorePrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 1 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[pure virtual] void QAndroidActivityResultReceiver::handleActivityResult(int receiverRequestCode, int resultCode, const QJniObject &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidActivityResultReceiver::handleActivityResult` 用于执行与“handle、Activity、结果”相关的操作。调用时要先确认当前状态和 `receiverRequestCode`、`resultCode`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `receiverRequestCode`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `resultCode`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现该函数，在使用 `QtAndroidPrivate::startActivity()` 或 `QtAndroidPrivate::startIntentSender()` 启动活动后获得活动结果。`receiverRequestCode`是该接收端唯一的请求代码，最初传递给 startActivity() 或 startIntentSender() 函数。`resultCode` 是活动返回的结果，`data` 要么是空，要么是 android.content.intent 类的 Java 对象。这两个 last to 参数都与传递给 onActivityResult() 的参数相同。
 
 ## 6. 深入实践与常见坑
 

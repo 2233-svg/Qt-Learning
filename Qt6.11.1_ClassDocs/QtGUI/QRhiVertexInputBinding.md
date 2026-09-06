@@ -77,171 +77,82 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 12 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiVertexInputBinding::Classification`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputBinding` 暴露的类型声明 `Classification`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Classification`。
-- 属性名：`QRhiVertexInputBinding`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述输入数据分类。
+- `QRhiVertexInputBinding::PerVertex`：`0`;数据是每个顶点的
+- `QRhiVertexInputBinding::PerInstance`：`1`;数据是每个实例的数据
 
 ### `[constexpr noexcept] QRhiVertexInputBinding::QRhiVertexInputBinding()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputBinding` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建默认的顶点输入绑定描述。
 
 ### `QRhiVertexInputBinding::QRhiVertexInputBinding(quint32 stride, QRhiVertexInputBinding::Classification cls = PerVertex, quint32 stepRate = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputBinding` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `stride`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cls`：类型为 `QRhiVertexInputBinding::Classification`。默认值为 `PerVertex`。传入 `QRhiVertexInputBinding::Classification` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stepRate`：类型为 `quint32`。默认值为 `1`。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个顶点输入绑定描述，包含指定的`stride`、分类`cls`和实例步率`stepRate`。
+注意：除1 `stepRate`，只有在报告支持`QRhi::CustomInstanceStepRate`时才支持。
 
 ### `QRhiVertexInputBinding::Classification QRhiVertexInputBinding::classification() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputBinding::classification` 用于计算、查询或取得与“classification”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiVertexInputBinding::Classification`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiVertexInputBinding::Classification`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回输入数据分类。
 
 ### `quint32 QRhiVertexInputBinding::instanceStepRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputBinding::instanceStepRate` 用于计算、查询或取得与“instance、Step、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回实例步率。
 
 ### `void QRhiVertexInputBinding::setClassification(QRhiVertexInputBinding::Classification c)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setClassification`。调用它会改变 `QRhiVertexInputBinding` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `c`：类型为 `QRhiVertexInputBinding::Classification`。没有默认值，调用时必须提供。传入 `QRhiVertexInputBinding::Classification` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置输入数据分类`c`。默认情况下，该分类设置为`PerVertex`。
 
 ### `void QRhiVertexInputBinding::setInstanceStepRate(quint32 rate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setInstanceStepRate`。调用它会改变 `QRhiVertexInputBinding` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rate`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置实例步`rate`。默认情况下，这个步骤设置为1。
 
 ### `void QRhiVertexInputBinding::setStride(quint32 s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStride`。调用它会改变 `QRhiVertexInputBinding` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `s`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为大步调`s`。
 
 ### `quint32 QRhiVertexInputBinding::stride() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputBinding::stride` 用于计算、查询或取得与“stride”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回步进（字节单位）。
 
 ### `[noexcept] size_t qHash(const QRhiVertexInputBinding &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputBinding::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRhiVertexInputBinding &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRhiVertexInputBinding &a, const QRhiVertexInputBinding &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputBinding` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiVertexInputBinding &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiVertexInputBinding &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QRhiVertexInputBinding` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QRhiVertexInputBinding &a, const QRhiVertexInputBinding &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputBinding` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiVertexInputBinding &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiVertexInputBinding &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QRhiVertexInputBinding`对象`a`和`b`的值相等，返回`true`。
 
 ## 6. 深入实践与常见坑
 

@@ -183,1364 +183,922 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 101 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[anonymous] enum`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 暴露的类型声明 `enum`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟 `type()` 函数返回的值。
+- `QGraphicsWidget::Type`: `11`；一个图形控件项
 
 ### `autoFillBackground : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setAutoFillBackground(...)` 设置，之后用 `autoFillBackground()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了小部件背景是否自动填充。
+如果启用该属性，Qt 会在调用 `paint()` 方法前填充控件的背景。所用颜色由控件`palette`的 `QPalette::Window` 颜色角色定义。
+此外，除非设置了WA_OpaquePaintEvent或 WA_NoSystemBackground 属性，否则 Windows 总是充满 `QPalette::Window`。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`autoFillBackground`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoFillBackground()` 读取当前值；它不会修改应用状态。
 
 ### `focusPolicy : Qt::FocusPolicy`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setFocusPolicy(...)` 设置，之后用 `FocusPolicy()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了小部件接受键盘焦点的方式。
+焦点策略`Qt::TabFocus`，如果控件接受键盘对焦通过 Tab，`Qt::ClickFocus` 控件通过点击接受对焦，`Qt::StrongFocus` 如果两者都接受，`Qt::NoFocus`（默认）则不接受对焦。
+如果控件处理键盘事件，你必须启用键盘焦点。这通常由控件的构造函数完成。例如，`QLineEdit`构造函数调用 setFocusPolicy（`Qt::StrongFocus`）。
+如果你启用了焦点策略（即非`Qt::NoFocus`），`QGraphicsWidget`会自动启用ItemIsFocusable标志。在小部件上设置`Qt::NoFocus`会清除ItemIsFocusable标志。如果小部件当前有键盘焦点，小部件会自动失去焦点。
 
-**签名拆解：**
-
-- 属性类型：`Qt::FocusPolicy`。
-- 属性名：`focusPolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `focusPolicy()` 读取当前值；它不会修改应用状态。
 
 ### `font : QFont`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setFont(...)` 设置，之后用 `font()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含控件的字体。
+该属性提供了小部件的字体。
+`QFont` 包含已明确定义的字体属性和从控件父节点隐式继承的属性。因此，font() 可能返回的字体与带有 setFont() 的字体不同。该方案允许你在不影响字体继承的条目的情况下定义单个字体条目。
+当小部件的字体发生变化时，它会将其条目与父小部件对比。如果小部件没有父小部件，则会对场景进行解析。小部件随后会发送`FontChange`事件，并通知所有后代，以便它们也能解析自己的字体。
+默认情况下，该属性包含应用程序的默认字体。
 
-**签名拆解：**
-
-- 属性类型：`QFont`。
-- 属性名：`font`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `font()` 读取当前值；它不会修改应用状态。
 
 ### `geometry : QRectF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setGeometry(...)` 设置，之后用 `geometry()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了小部件的几何形状。
+将物品的几何体设置为`rect`。调用该函数后，物品的位置和大小会被修改。物品先移动，然后调整大小。
+调用该函数的一个副作用是，控件会接收移动事件和缩放事件。此外，如果控件被分配了布局，布局也会被激活。
 
-**签名拆解：**
-
-- 属性类型：`QRectF`。
-- 属性名：`geometry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `geometry()` 读取当前值；它不会修改应用状态。
 
 ### `layout : QGraphicsLayout*`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setLayout(...)` 设置，之后用 `layout()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了小部件的布局。
+在新布局分配之前，任何现有的布局管理器都会被删除。如果`layout` `nullptr`，小部件将不再拥有布局。现有子小部件的几何形状将不受影响。
+`QGraphicsWidget`对`layout`负责。
+目前由`layout`或其所有子布局管理的所有控件，都会自动被重新父级到该项。随后该布局被废止，子控件几何体根据该项的 `geometry()` 和 contentsMargins() 进行调整。未被 `layout` 明确管理的子节点在被分配到该控件后布局不受其影响。
+如果目前没有布局管理该小部件，layout() 会返回`nullptr`。
 
-**签名拆解：**
-
-- 属性类型：`QGraphicsLayout*`。
-- 属性名：`layout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `layout()` 读取当前值；它不会修改应用状态。
 
 ### `layoutDirection : Qt::LayoutDirection`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setLayoutDirection(...)` 设置，之后用 `LayoutDirection()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含该控件的布局方向。
+该属性修改该控件及其所有后代的 Widget `Qt::WA_RightToLeft`属性。它还设置了该控件的 `Qt::WA_SetLayoutDirection` 属性。
+控件的布局方向决定了布局管理器水平排列该控件子控件的顺序。默认值取决于应用程序的语言和地区，通常与读写单词的方向相同。使用`Qt::LeftToRight`时，布局开始从该控件的左侧向右放置子控件。`Qt::RightToLeft`则相反——布局会从右边开始向左移动。
+子控件继承父控件的布局方向。顶层控件的布局方向继承自 QGraphicsScene：：layoutDirection。如果你通过调用 setLayoutDirection() 更改控件的布局方向，该控件会发送一个`LayoutDirectionChange`事件，然后将新的布局方向传播给所有后代。
 
-**签名拆解：**
-
-- 属性类型：`Qt::LayoutDirection`。
-- 属性名：`layoutDirection`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `layoutDirection()` 读取当前值；它不会修改应用状态。
 
 ### `maximumSize : QSizeF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setMaximumSize(...)` 设置，之后用 `maximumSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了小部件的最大大小。
 
-**签名拆解：**
-
-- 属性类型：`QSizeF`。
-- 属性名：`maximumSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumSize()` 读取当前值；它不会修改应用状态。
 
 ### `minimumSize : QSizeF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setMinimumSize(...)` 设置，之后用 `minimumSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了小部件的最小大小。
 
-**签名拆解：**
-
-- 属性类型：`QSizeF`。
-- 属性名：`minimumSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumSize()` 读取当前值；它不会修改应用状态。
 
 ### `palette : QPalette`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setPalette(...)` 设置，之后用 `palette()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了小部件的调色板。
+该属性提供了控件的调色板。调色板为颜色组（例如`QPalette::Button`）和状态（例如`QPalette::Inactive`）提供颜色和笔刷，松散地定义了控件及其子节点的一般外观。
+`QPalette` 由已明确定义的颜色组和从控件父项隐式继承的颜色组组成。因此，palette() 可以返回与 setPalette() 设置的不同调色板。该方案允许您在调色板中定义单个条目而不影响调色板继承的条目。
+当一个小部件的调色板发生变化时，它会根据父小部件解析其条目，或者如果没有父小部件，则会根据场景进行解析。然后它会发送一个`PaletteChange`事件，并通知所有后代，以便它们也能解析自己的调色板。
+默认情况下，该属性包含应用程序的默认调色板。
 
-**签名拆解：**
-
-- 属性类型：`QPalette`。
-- 属性名：`palette`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `palette()` 读取当前值；它不会修改应用状态。
 
 ### `preferredSize : QSizeF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setPreferredSize(...)` 设置，之后用 `preferredSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了小部件的首选大小。
 
-**签名拆解：**
-
-- 属性类型：`QSizeF`。
-- 属性名：`preferredSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `preferredSize()` 读取当前值；它不会修改应用状态。
 
 ### `size : QSizeF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setSize(...)` 设置，之后用 `size()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示小部件的大小。
+调用 resize() 会将控件调整为由 `minimumSize()` 和 `maximumSize()` 组成的 `size`。该属性仅影响控件的宽度和高度（例如其左右边缘）;控件的位置和左上角不受影响。
+调整小部件大小会触发小部件立即接收包含该小部件旧大小和新大小的`GraphicsSceneResize`事件。如果该小部件在事件到达时已分配了布局，该布局将被激活，并自动更新任何子小部件的几何体。
+该属性不影响父控件的任何布局。如果控件本身由父控件管理;例如，它有一个分配了布局的父控件，该布局不会被激活。
+默认情况下，该属性包含宽度和高度均为零的大小。
 
-**签名拆解：**
-
-- 属性类型：`QSizeF`。
-- 属性名：`size`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `size()` 读取当前值；它不会修改应用状态。
 
 ### `sizePolicy : QSizePolicy`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setSizePolicy(...)` 设置，之后用 `sizePolicy()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了小部件的大小策略。
 
-**签名拆解：**
-
-- 属性类型：`QSizePolicy`。
-- 属性名：`sizePolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sizePolicy()` 读取当前值；它不会修改应用状态。
 
 ### `windowFlags : Qt::WindowFlags`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setWindowFlags(...)` 设置，之后用 `WindowFlags()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了小部件的窗口标志。
+窗口标志是窗口类型（例如`Qt::Dialog`）和多个为窗口行为提供提示的标志的组合。该行为依赖于平台。
+默认情况下，该属性不包含窗口标志。
+窗口是面板。如果你设置了`Qt::Window`标志，ItemIsPanel 标志将自动被设置。如果你清除了`Qt::Window`标志，ItemIsPanel 标志也会被清除。注意，ItemIsPanel 标志可以独立于`Qt::Window`设置。
 
-**签名拆解：**
-
-- 属性类型：`Qt::WindowFlags`。
-- 属性名：`windowFlags`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `windowFlags()` 读取当前值；它不会修改应用状态。
 
 ### `windowTitle : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的配置属性。初始化或状态切换时通过 `setWindowTitle(...)` 设置，之后用 `windowTitle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该物业拥有窗户产权（说明）。
+该物业仅用于窗户。
+默认情况下，如果没有设置标题，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`windowTitle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `windowTitle()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsWidget::QGraphicsWidget(QGraphicsItem *parent = nullptr, Qt::WindowFlags wFlags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QGraphicsItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `wFlags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QGraphicsWidget实例。可选的`parent`参数传递给`QGraphicsItem`的构造函数。可选的`wFlags`参数指定控件的窗口标志（例如，控件应是窗口、工具、弹窗等等）。
 
 ### `[virtual noexcept] QGraphicsWidget::~QGraphicsWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会摧毁`QGraphicsWidget`实例。
 
 ### `QList<QAction *> QGraphicsWidget::actions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::actions` 用于计算、查询或取得与“actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QAction *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QAction *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该控件的（可能是空的）动作列表。
 
 ### `void QGraphicsWidget::addAction(QAction *action)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsWidget` 添加依赖、数据或子对象的 API `addAction`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `action`：类型为 `QAction *`。没有默认值，调用时必须提供。传入 `QAction *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将动作`action`附加到该控件的操作列表中。
+所有 QGraphicsWidgets 都有 `QAction` 的列表，但它们可以用多种不同的图形方式表示。`QAction`列表（由 `actions()` 返回）的默认用途是创建上下文 `QMenu`。
+一个`QGraphicsWidget`应该只有每个动作的一个，添加它已有的动作不会导致同一个动作在小部件中出现两次。
 
 ### `void QGraphicsWidget::addActions(const QList<QAction *> &actions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsWidget` 添加依赖、数据或子对象的 API `addActions`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `actions`：类型为 `const QList<QAction *> &`。没有默认值，调用时必须提供。传入 `const QList<QAction *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`actions`动作附加到该小部件的动作列表中。
 
 ### `void QGraphicsWidget::adjustSize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::adjustSize` 用于执行与“adjust、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调整小部件大小以符合其有效首选大小提示。
+当该项首次被展示时，该函数被隐式调用。
 
 ### `[override virtual] QRectF QGraphicsWidget::boundingRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::boundingRect` 用于计算、查询或取得与“bounding、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::boundingRect()` const.
+这个纯虚拟函数将物品的外边界定义为矩形;所有绘画必须限制在物品的边界矩形内。`QGraphicsView`用此来判断物品是否需要重新绘制。
+虽然物品的形状可以任意，但边界矩形始终是矩形，且不受物品变换的影响。
+如果你想更改物品的边界矩形，必须先调用`prepareGeometryChange()`。这会通知场景即将发生的变化，以便更新物品几何索引;否则，场景将无法感知物品的新几何体，结果也未定义（通常渲染伪影会留在视图中）。
+重新实现这个函数，让`QGraphicsView`判断小部件哪些部分需要重新绘制。
+注意：对于绘制轮廓/笔画的形状，在包围矩形中包含一半的笔宽非常重要。不过，这并不需要补偿抗锯齿。
 
 ### `[virtual protected] void QGraphicsWidget::changeEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序可以重新实现以处理状态变化。
+该事件中被更改的状态可以通过`event`获取。
+变更事件包括：`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::ParentChange`、`QEvent::LayoutDirectionChange`和`QEvent::ContentsRectChange`。
 
 ### `[slot] bool QGraphicsWidget::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `close`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用这个函数来关闭小部件。
+如果小部件被关闭，返回`true`;否则返回`false`。该槽会先向小部件发送`QCloseEvent`，小部件可能接受也可能不接受。如果事件被忽略，则不会发生任何事。如果事件被接受，则会`hide()`小部件。
+如果小部件设置了`Qt::WA_DeleteOnClose`属性，它将被删除。
 
 ### `[virtual protected] void QGraphicsWidget::closeEvent(QCloseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `closeEvent`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QCloseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`event`来说，这个事件处理程序可以在子类中重新实现，以接收小部件关闭事件。默认实现接受该事件。
 
 ### `[override virtual protected] bool QGraphicsWidget::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsObject::event`（QEvent *ev）。
+负责`event`。`QGraphicsWidget`处理以下事件：
+- `Event`：使用情况
+- `Polish`：在展示后不久交付给小部件。
+- `GraphicsSceneMove`：在小部件本地位置发生变化后交付。
+- `GraphicsSceneResize`：在控件大小变化后交付。
+- `Show`：在小部件展示前交付。
+- `Hide`：隐藏后交付给小部件。
+- `PaletteChange`：在控件调色板更改后交付。
+- `FontChange`：在小部件字体更改后交付。
+- `EnabledChange`：在控件启用状态发生变化后交付。
+- `StyleChange`：在控件样式变更后交付。
+- `LayoutDirectionChange`：在控件布局方向改变后交付。
+- `ContentsRectChange`：在控件内容边距/目录rect发生变化后交付。
 
 ### `[override virtual protected] void QGraphicsWidget::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::focusInEvent`（QFocusEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以获得该项事件中的关注。默认实现调用`ensureVisible()`。
 
 ### `[virtual protected] bool QGraphicsWidget::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+找到一个新的控件以赋予键盘焦点，适用于 Tab 和 Shift Tab，如果能找到新控件则返回 `true`;否则返回`false`。如果 `next` 为真，该函数向前搜索;如果 `next` 为假，则向后搜索。
+有时，你会想重新实现这个函数，为你的小部件及其子小部件提供特殊的焦点处理。例如，浏览器可能会重新实现它，将当前活跃链接向前或向后移动，只有在到达页面最后或第一个链接时调用基础实现。
+子控件在其父控件上调用 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过为对象重新实现该函数，你可以控制所有子控件的焦点遍历。
 
 ### `[override virtual protected] void QGraphicsWidget::focusOutEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::focusOutEvent`（QFocusEvent *事件）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该项的焦点输出事件。默认实现不做任何事。
 
 ### `QGraphicsWidget *QGraphicsWidget::focusWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::focusWidget` 用于计算、查询或取得与“focus、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该控件、其子节点或后代当前拥有输入焦点，该函数将返回指向该控件的指针。如果没有后代控件具有输入焦点，则返回`nullptr`。
 
 ### `[signal] void QGraphicsWidget::geometryChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 发出的通知信号 `geometryChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含了小部件的几何形状。
+将物品的几何体设置为`rect`。调用该函数后，物品的位置和大小会被修改。物品先移动，然后调整大小。
+调用该函数的一个副作用是，控件会接收移动事件和缩放事件。此外，如果控件被分配了布局，布局也会被激活。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `geometry` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual] void QGraphicsWidget::getContentsMargins(qreal *left, qreal *top, qreal *right, qreal *bottom) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的核心操作 `getContentsMargins`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `left`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `top`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bottom`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsLayoutItem::getContentsMargins`（qreal *左，qreal *top，qreal *right，qreal *bottom）const.
+获取小部件的内容边距。边距存储在`left`、`top`、`right`和`bottom`，作为指向qreal的指针。每个参数都可以通过传递`nullptr`来省略。
+该虚拟函数为该`QGraphicsLayoutItem`提供`left`、`top`、`right`和`bottom`的内容余距。默认实现假设所有内容边距均为0。参数指向存储在qreal中的值。如果任何指针被`nullptr`，该值不会被更新。
 
 ### `void QGraphicsWidget::getWindowFrameMargins(qreal *left, qreal *top, qreal *right, qreal *bottom) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的核心操作 `getWindowFrameMargins`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `left`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `top`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bottom`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取小部件的窗口框架边距。边距存储在`left`、`top`、`right`和`bottom`中，作为指向qreal的指针。每个参数可以通过传递`nullptr`省略。
 
 ### `[virtual protected] void QGraphicsWidget::grabKeyboardEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::grabKeyboardEvent` 用于执行与“抓取、Keyboard、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`event`，这个事件处理程序可以在子类中重新实现，以接收 `QEvent::GrabKeyboard` 事件的通知。
 
 ### `[virtual protected] void QGraphicsWidget::grabMouseEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::grabMouseEvent` 用于执行与“抓取、Mouse、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`event`，这个事件处理程序可以重新实现到子类中，以接收`QEvent::GrabMouse`事件的通知。
 
 ### `int QGraphicsWidget::grabShortcut(const QKeySequence &sequence, Qt::ShortcutContext context = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::grabShortcut` 用于计算、查询或取得与“抓取、Shortcut”相关的操作。调用时要先确认当前状态和 `sequence`、`context` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `sequence`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `context`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为Qt的快捷方式系统添加一个快捷方式，监控给定`context`中的密钥`sequence`。如果`context` `Qt::ApplicationShortcut`，则该快捷方式适用于整个应用程序。否则，快捷方式要么是该控件本地的，`Qt::WidgetShortcut`，要么是窗口本身的，`Qt::WindowShortcut`。对于不属于窗口的控件（即顶层控件及其子控件），`Qt::WindowShortcut`快捷方式适用于场景。
+如果同一个密钥`sequence`被多个控件抓取，当密钥`sequence`发生时，会以非确定性顺序向所有适用该控件发送`QEvent::Shortcut`事件，但“模糊”标志设置为true。
+警告：通常不需要使用这个函数;如果你也想要相应的菜单选项和工具栏按钮，可以创建带有快捷键序列的`QAction`，或者如果只需要按键序列，可以创建`QShortcut`。`QAction`和`QShortcut`都帮你处理所有事件过滤，并提供当用户触发按键序列时触发的信号，因此比这个低层函数更易于使用。
 
 ### `[virtual protected] void QGraphicsWidget::hideEvent(QHideEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::hideEvent` 用于执行与“隐藏、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QHideEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`Hide`事件，这个事件处理程序是在小部件被隐藏后交付的，例如，当小部件之前显示时，已调用该小部件或其前祖之一的setVisible（false）。
+你可以重新实现这个事件处理程序，检测你的小部件是否被隐藏。调用`QEvent::accept()`或`QEvent::ignore()`对`event`没有任何影响。
 
 ### `[override virtual protected] void QGraphicsWidget::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::hoverLeaveEvent` 用于执行与“hover、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::hoverLeaveEvent`（QGraphicsSceneHoverEvent *event）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该项的悬停离开事件。默认实现调用`update()`;否则不做任何事。
+在`event`上打电话给`QEvent::ignore()`或`QEvent::accept()`没有任何效果。
 
 ### `[override virtual protected] void QGraphicsWidget::hoverMoveEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::hoverMoveEvent` 用于执行与“hover、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::hoverMoveEvent`（QGraphicsSceneHoverEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的悬停移动事件。默认实现不做任何事。
+打电话给`QEvent::ignore()`或`QEvent::accept()`打`event`没有效果。
 
 ### `[virtual protected] void QGraphicsWidget::initStyleOption(QStyleOption *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::initStyleOption` 用于执行与“init、Style、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+根据该控件当前状态填充样式选项对象，并将输出存储在`option`中。默认实现会为`option`填充以下属性。
+- `Style Option Property`：价值
+- `state & `QStyle：：State_Enabled`: Corresponds to `QGraphicsItem：：isEnabled()'。
+- `state & `QStyle：：State_HasFocus`: Corresponds to `QGraphicsItem：：hasFocus()'。
+- `state & `QStyle：：State_MouseOver`: Corresponds to `QGraphicsItem：：isUnderMouse()'。
+- `direction`：对应`QGraphicsWidget::layoutDirection()`。
+- `rect`：对应于`QGraphicsWidget::rect()`.toRect()。
+- `palette`：对应`QGraphicsWidget::palette()`。
+- `fontMetrics`：对应于`QFontMetrics`（`QGraphicsWidget::font()`）。
+`QGraphicsWidget`的子类应调用基础实现，然后用 `qstyleoption_cast`<>() 或测试 `QStyleOption::Type` 测试 `option`类型，再存储特定控件选项。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MyGroupBoxWidget::initStyleOption(QStyleOption *option) const
+ {
+     QGraphicsWidget::initStyleOption(option);
+     if (QStyleOptionGroupBox *box = qstyleoption_cast<QStyleOptionGroupBox *>(option)) {
+         // Add group box specific state.
+         box->flat = isFlat();
+         ...
+     }
+ }
+```
 
 ### `void QGraphicsWidget::insertAction(QAction *before, QAction *action)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsWidget` 添加依赖、数据或子对象的 API `insertAction`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `before`：类型为 `QAction *`。没有默认值，调用时必须提供。传入 `QAction *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `action`：类型为 `QAction *`。没有默认值，调用时必须提供。传入 `QAction *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该控件`before`动作之前，将动作`action`插入到该控件的动作列表中。如果`before`是`nullptr`或`before`不是该控件的有效动作，则会附加该动作。
+一个`QGraphicsWidget`应该每种动作都只有一个。
 
 ### `void QGraphicsWidget::insertActions(QAction *before, const QList<QAction *> &actions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsWidget` 添加依赖、数据或子对象的 API `insertActions`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `before`：类型为 `QAction *`。没有默认值，调用时必须提供。传入 `QAction *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `actions`：类型为 `const QList<QAction *> &`。没有默认值，调用时必须提供。传入 `const QList<QAction *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在动作 `before` 前，将`actions`动作插入该控件的动作列表。如果`before`是`nullptr`或`before`不是该控件的有效动作，则会附加该动作。
+一个`QGraphicsWidget`最多只能有每种动作的一次。
 
 ### `bool QGraphicsWidget::isActiveWindow() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isActiveWindow`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`该小部件的窗口是否在活动窗口中，或者该小部件没有窗口但处于当前有焦点的场景中。
+活动窗口是包含当前具有输入焦点的子控件，或本身具有输入焦点的窗口。
 
 ### `[override virtual protected] QVariant QGraphicsWidget::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::itemChange` 用于计算、查询或取得与“项目访问、Change”相关的操作。调用时要先确认当前状态和 `change`、`value` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `change`：类型为 `QGraphicsItem::GraphicsItemChange`。没有默认值，调用时必须提供。传入 `QGraphicsItem::GraphicsItemChange` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::itemChange`（QGraphicsItem：：GraphicsItemChange change， const QVariant &value）。
+`QGraphicsWidget` 使用该函数的基础实现来捕捉并传递与项目状态变化相关的事件。因此，子类调用基础实现非常重要。
+`change` 指定变更类型，`value` 是新的值。
+例如，`QGraphicsWidget` 使用 ItemVisibleChange 传递`Show`和`Hide`事件，ItemPositionHasChanged 传递`Move`事件，ItemParentChange 既用于传递`ParentChange`事件，也用于管理焦点链。
+`QGraphicsWidget`默认启用了ItemSendsGeometryChanges标志以跟踪位置变化。
+`QGraphicsItem`调用该虚拟函数，以通知自定义项目的某部分状态发生变化。通过重新实现该函数，你可以对变化做出反应，在某些情况下（取决于`change`）还可以进行调整。
+`change` 是正在变化的项的参数。`value` 是新值;值的类型取决于`change`。
+默认实现不做任何操作，返回`value`。
+注意：某些`QGraphicsItem`函数无法在该函数的重实现中调用;详情请参见`GraphicsItemChange`文档。
 
 ### `QGraphicsLayout *QGraphicsWidget::layout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::layout` 用于计算、查询或取得与“layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsLayout *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsLayout *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该控件的布局，若当前无布局管理该控件则返回`nullptr`。
+注意：用于物业布局的获取函数。
 
 ### `[virtual protected] void QGraphicsWidget::moveEvent(QGraphicsSceneMoveEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::moveEvent` 用于执行与“移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMoveEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`GraphicsSceneMove`事件，该事件处理程序是在小部件移动后交付的（例如其本地位置发生变化）。
+该事件仅在物品本地移动时执行。调用`setTransform()`或移动物品的祖先不会影响物品的本地位置。
+你可以重新实现这个事件处理程序，检测你的小部件是否移动了。调用`QEvent::accept()`或`QEvent::ignore()`对`event`没有影响。
 
 ### `[override virtual] void QGraphicsWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的核心操作 `paint`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `option`：类型为 `const QStyleOptionGraphicsItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QGraphicsItem::paint`（QPainter *painter， const QStyleOptionGraphicsItem *option， QWidget *widget）.
+该函数通常由`QGraphicsView`调用，将物品内容绘制为局部坐标。
+在`QGraphicsItem`子类中重新实现该函数，使用`painter`来提供该物品的绘画实现。`option`参数为物品提供了样式选项，如状态、暴露区域和细节层级提示。`widget`参数是可选的。如果提供了，它指向正在绘制的控件;否则为0。对于缓存绘制，`widget`总是0。
+画家的笔默认为0宽，笔初始化为从画具调色板中的`QPalette::Text`笔。画笔初始化为`QPalette::Window`。
+确保所有绘画都限制在`boundingRect()`边界内，以避免渲染伪影（因为`QGraphicsView`不会帮你裁剪画家）。特别是，当`QPainter`用指定`QPen`渲染形状轮廓时，轮廓的一半会在外侧绘制，另一半在你正在渲染的形状内侧（例如，笔宽为2单位时，你必须在`boundingRect()`内绘制1单位的轮廓）。`QGraphicsItem`不支持使用宽度非零的美观笔。
+所有涂装均在本地坐标内完成。
+注意：除非调用`update()`，否则物品必须始终以完全相同的方式重新绘制自己;否则可能会出现视觉伪影。换句话说，两次后续的paint()调用必须始终产生相同的输出，除非它们之间调用了`update()`。
+注意：启用缓存并不保证图形视图框架只调用一次 paint()，即使没有明确调用 `update()`。详情请参见 `setCacheMode()` 文档。
 
 ### `[virtual] void QGraphicsWidget::paintWindowFrame(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 的核心操作 `paintWindowFrame`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `option`：类型为 `const QStyleOptionGraphicsItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QGraphicsScene`调用该虚拟函数，在局部坐标中使用`painter`、`option`和`widget`绘制窗口框架。基础实现使用当前样式渲染框架和标题栏。
+你可以在`QGraphicsWidget`的子类中重新实现这个函数，以提供小部件窗口框的自定义渲染。
 
 ### `[virtual protected] void QGraphicsWidget::polishEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::polishEvent` 用于执行与“polish、Event”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件会在物品构建后、但通过场景显示或访问之前，由场景传递给该物品。你可以使用这个事件处理程序对需要物品完全构建的控件进行最后的初始化。
+基础实现什么都没有。
 
 ### `QRectF QGraphicsWidget::rect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::rect` 用于计算、查询或取得与“rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该项的局部rect作为`QRectF`。该函数等价于`QRectF`（QPointF()， `size()`）。
 
 ### `void QGraphicsWidget::releaseShortcut(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::releaseShortcut` 用于执行与“释放、Shortcut”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从 Qt 的快捷方式系统中移除该快捷方式的该`id`。小部件将不再接收快捷方式按键序列的 `QEvent::Shortcut` 事件（除非它有其他具有相同按键序列的快捷方式）。
+警告：通常不需要使用该函数，因为 Qt 的快捷方式系统在父控件被破坏时会自动移除快捷方式。最好使用`QAction`或`QShortcut`来处理快捷方式，因为它们比这个底层函数更易使用。另外请注意，这是一个昂贵的操作。
 
 ### `void QGraphicsWidget::removeAction(QAction *action)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeAction`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `action`：类型为 `QAction *`。没有默认值，调用时必须提供。传入 `QAction *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该动作`action`从该小部件的操作列表中移除。
 
 ### `void QGraphicsWidget::resize(qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::resize` 用于执行与“调整尺寸”相关的操作。调用时要先确认当前状态和 `w`、`h` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示小部件的大小。
+调用 resize() 会将控件调整为由 `minimumSize()` 和 `maximumSize()` 组成的 `size`。该属性仅影响控件的宽度和高度（例如其左右边缘）;控件的位置和左上角不受影响。
+调整小部件大小会触发小部件立即接收包含该小部件旧大小和新大小的`GraphicsSceneResize`事件。如果该小部件在事件到达时已分配了布局，该布局将被激活，并自动更新任何子小部件的几何体。
+该属性不影响父控件的任何布局。如果控件本身由父控件管理;例如，它有一个分配了布局的父控件，该布局不会被激活。
+默认情况下，该属性包含宽度和高度均为零的大小。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resize()` 读取当前值；它不会修改应用状态。
 
 ### `[virtual protected] void QGraphicsWidget::resizeEvent(QGraphicsSceneResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`GraphicsSceneResize`事件，该事件处理程序是在控件调整大小（即其局部大小改变）后交付的。`event`包含旧大小和新大小。
+该事件仅在控件本地调整大小时执行;调用控件或其任何祖先或视图的`setTransform()`不会影响控件的本地大小。
+你可以重新实现这个事件处理程序，检测你的小部件是否被调整了大小。调用`QEvent::accept()`或`QEvent::ignore()`在`event`上没有效果。
 
 ### `[override virtual protected] bool QGraphicsWidget::sceneEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::sceneEvent` 用于计算、查询或取得与“scene、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::sceneEvent`（QEvent *事件）。
+`QGraphicsWidget` 的 sceneEvent() 实现只是把`event`传递给 `QGraphicsWidget::event()`。你可以在 `event()` 或任何便利函数中处理你的小部件的所有事件;你不应该需要在 `QGraphicsWidget` 的子类中重新实现这个函数。
+如果`event`已被识别和处理，返回`true`;否则返回`false`。
+该虚拟函数接收该项的事件。在事件处理器 `contextMenuEvent()`、`focusInEvent()`、`focusOutEvent()`、`hoverEnterEvent()`、`hoverMoveEvent()`、`hoverLeaveEvent()`、`keyPressEvent()`、`keyReleaseEvent()`、`mousePressEvent()`、`mouseReleaseEvent()`、`mouseMoveEvent()` 和 `mouseDoubleClickEvent()` 之前，重新实现该函数以拦截事件。
+如果事件被识别并处理，返回 `true`;否则（例如，如果事件类型未被识别），则返回 false。
+`event` 是被截获的事件。
 
 ### `void QGraphicsWidget::setAttribute(Qt::WidgetAttribute attribute, bool on = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAttribute`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribute`：类型为 `Qt::WidgetAttribute`。没有默认值，调用时必须提供。传入 `Qt::WidgetAttribute` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `on`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`on`为真，该函数使 `attribute` 成为可能;否则`attribute`被禁用。
+请参阅`QGraphicsWidget`类文档，了解支持哪些属性及其用途的完整列表。
 
 ### `void QGraphicsWidget::setContentsMargins(QMarginsF margins)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContentsMargins`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `margins`：类型为 `QMarginsF`。没有默认值，调用时必须提供。传入 `QMarginsF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将小部件的内容边距设置为`margins`。
+目录边距用于指定布局，用于定义子控件和布局的位置。边距对于限制子控件仅在其自身几何体部分的控件中尤为有用。例如，带有布局的组框会将子控件放置在框架内，但位于标题下方。
+更改小部件的内容边距总是会触发`update()`，任何分配的布局都会自动激活。小部件随后会收到一个`ContentsRectChange`事件。
 
 ### `void QGraphicsWidget::setContentsMargins(qreal left, qreal top, qreal right, qreal bottom)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContentsMargins`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `left`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `top`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bottom`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将小部件的内容边距设置为`left`、`top`、`right`和`bottom`。
 
 ### `void QGraphicsWidget::setGeometry(qreal x, qreal y, qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGeometry`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了小部件的几何形状。
+将物品的几何体设置为`rect`。调用该函数后，物品的位置和大小会被修改。物品先移动，然后调整大小。
+调用该函数的一个副作用是，控件会接收移动事件和缩放事件。此外，如果控件被分配了布局，布局也会被激活。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setGeometry(...)` 修改 `geometry`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QGraphicsWidget::setLayout(QGraphicsLayout *layout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLayout`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了小部件的布局。
+在新布局分配之前，任何现有的布局管理器都会被删除。如果`layout` `nullptr`，小部件将不再拥有布局。现有子小部件的几何形状将不受影响。
+`QGraphicsWidget`对`layout`负责。
+目前由`layout`或其所有子布局管理的所有控件，都会自动被重新父级到该项。随后该布局被废止，子控件几何体根据该项的 `geometry()` 和 contentsMargins() 进行调整。未被 `layout` 明确管理的子节点在被分配到该控件后布局不受其影响。
+如果目前没有布局管理该小部件，layout() 会返回`nullptr`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `layout`：类型为 `QGraphicsLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setLayout(...)` 修改 `layout`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QGraphicsWidget::setShortcutAutoRepeat(int id, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShortcutAutoRepeat`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enabled`为真，则启用了用该`id`自动重复快捷方式;否则该功能被禁用。
 
 ### `void QGraphicsWidget::setShortcutEnabled(int id, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShortcutEnabled`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enabled`为真，则启用了该`id`的快捷方式;否则该快捷方式被禁用。
+警告：通常不需要使用这个函数，因为Qt的快捷方式系统会在控件变得隐藏/可见时自动启用或禁用快捷方式，并会显示焦点的得失。最好使用`QAction`或`QShortcut`来处理快捷方式，因为它们比这个低阶函数更容易使用。
 
 ### `void QGraphicsWidget::setStyle(QStyle *style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStyle`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `QStyle *`。没有默认值，调用时必须提供。传入 `QStyle *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将小部件的样式设置为`style`。`QGraphicsWidget`不拥有`style`。
+如果没有被分配样式，或者`style` `nullptr`，小部件将使用 `QGraphicsScene::style()`（如果已设置的话）。否则小部件将使用 `QApplication::style()`。
+如果 `style` 未被`nullptr`，该函数将设置 `Qt::WA_SetStyle` 属性;否则则清除该属性。
 
 ### `[static] void QGraphicsWidget::setTabOrder(QGraphicsWidget *first, QGraphicsWidget *second)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setTabOrder`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+将`second`小部件绕着焦点控件环移动，使得按下Tab键时键盘焦点从`first`控件转移到`second`控件。
+注意，由于`second`小部件的制表顺序发生了变化，你应该像这样排序链条：
+不是这样：
+如果`first` `nullptr`，表示如果场景获得Tab焦点（即用户按Tab使焦点进入场景），`second`应是第一个接收输入焦点的控件。如果`second` `nullptr`，则表示如果场景获得BackTab焦点，`first`应是第一个获得焦点的控件。
+默认情况下，制表顺序通过小部件创建顺序隐式定义。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `first`：类型为 `QGraphicsWidget *`。没有默认值，调用时必须提供。传入 `QGraphicsWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `second`：类型为 `QGraphicsWidget *`。没有默认值，调用时必须提供。传入 `QGraphicsWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setTabOrder(a, b); // a to b
+ setTabOrder(b, c); // a to b to c
+ setTabOrder(c, d); // a to b to c to d
+```
 
 ### `void QGraphicsWidget::setWindowFrameMargins(QMarginsF margins)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWindowFrameMargins`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `margins`：类型为 `QMarginsF`。没有默认值，调用时必须提供。传入 `QMarginsF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将小部件的窗口框边距设置为`margins`。默认的边距由样式提供，且依赖于当前的窗口标志。
+如果你想自己画窗户装饰，可以设置自己的框架边距覆盖默认边距。
 
 ### `void QGraphicsWidget::setWindowFrameMargins(qreal left, qreal top, qreal right, qreal bottom)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWindowFrameMargins`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `left`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `top`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bottom`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将小部件的窗口框边距设置为`left`、`top`、`right`和`bottom`。
 
 ### `[override virtual] QPainterPath QGraphicsWidget::shape() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::shape` 用于计算、查询或取得与“shape”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPainterPath`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsItem::shape()` const.
+返回该项的形状，作为本地坐标中的`QPainterPath`。该形状用于多种用途，包括碰撞检测、碰撞测试以及`QGraphicsScene::items()`函数。
+默认实现调用 `boundingRect()` 返回一个简单的矩形形状，但子类可以重新实现该函数，以返回非矩形物体更准确的形状。例如，一个圆形项目可能会选择返回椭圆形形状以更好地检测碰撞。例如：
+形状的轮廓会根据绘画时笔的宽度和风格而变化。如果你想在物体的形状中包含这个轮廓，可以用`QPainterPathStroker`从笔触中创建形状。
+该函数由默认实现的`contains()`和`collidesWithPath()`调用。
 
 ### `[virtual protected] void QGraphicsWidget::showEvent(QShowEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::showEvent` 用于执行与“显示、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QShowEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`Show`事件，这个事件处理程序在小部件尚未显示之前就被交付，例如，当小部件之前隐藏时，setVisible（true） 已被调用。
+你可以重新实现这个事件处理程序，检测你的小部件是否被显示。调用`QEvent::accept()`或`QEvent::ignore()`在`event`上没有效果。
 
 ### `[override virtual protected] QSizeF QGraphicsWidget::sizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 `which`、`constraint` 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数 `which`：类型为 `Qt::SizeHint`。没有默认值，调用时必须提供。传入 `Qt::SizeHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `constraint`：类型为 `const QSizeF &`。默认值为 `QSizeF()`。传入 `const QSizeF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsLayoutItem::sizeHint`（Qt：：SizeHint which， const QSizeF & constraint） const.
+该纯虚拟函数返回`QGraphicsLayoutItem` `which`的大小提示，利用`constraint`的宽度或高度来约束输出。
+在`QGraphicsLayoutItem`的一个子类中重新实现这个函数，以提供物品所需的尺寸提示。
 
 ### `QStyle *QGraphicsWidget::style() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::style` 用于计算、查询或取得与“style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStyle *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStyle *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向小部件样式的指针。如果该小部件没有显式分配的样式，则返回场景的样式。反之，如果场景没有分配样式，该函数返回`QApplication::style()`。
 
 ### `bool QGraphicsWidget::testAttribute(Qt::WidgetAttribute attribute) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::testAttribute` 用于计算、查询或取得与“test、Attribute”相关的操作。调用时要先确认当前状态和 `attribute` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `attribute`：类型为 `Qt::WidgetAttribute`。没有默认值，调用时必须提供。传入 `Qt::WidgetAttribute` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此小部件启用了 `attribute`，则返回 `true`；否则，返回 `false`。
 
 ### `[override virtual] int QGraphicsWidget::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsItem::type()` const.
+返回一个项目的类型，作为整数。所有标准的 Graphicsitem 类都关联一个唯一的值;参见`QGraphicsItem::Type`。`qgraphicsitem_cast()` 利用这些类型信息来区分类型。
+默认实现（`QGraphicsItem`）返回`UserType`。
+要启用自定义物品中的 `qgraphicsitem_cast()`，请重新实现该函数并声明一个等于自定义物品类型的 Type enum 值。自定义物品必须返回大于 `UserType`（65536）的值。
 
 ### `[virtual protected] void QGraphicsWidget::ungrabKeyboardEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::ungrabKeyboardEvent` 用于执行与“ungrab、Keyboard、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`event`，这个事件处理程序可以重新实现到子类中，以接收`QEvent::UngrabKeyboard`事件的通知。
 
 ### `[virtual protected] void QGraphicsWidget::ungrabMouseEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::ungrabMouseEvent` 用于执行与“ungrab、Mouse、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`event`，这个事件处理程序可以在子类中重新实现，以接收`QEvent::UngrabMouse`事件的通知。
 
 ### `void QGraphicsWidget::unsetWindowFrameMargins()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::unsetWindowFrameMargins` 用于执行与“unset、Window、Frame、Margins”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将窗框边距重置为样式提供的默认值。
 
 ### `[override virtual protected] void QGraphicsWidget::updateGeometry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::updateGeometry` 用于执行与“更新、几何区域”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsLayoutItem::updateGeometry()`。
+如果该小部件目前由布局管理，该函数会通知布局小部件的大小提示发生变化，布局可能需要相应调整大小和位置。
+如果小部件的 `sizeHint()` 发生变化，就调用这个函数。
+这个虚拟函数会丢弃任何缓存大小提示信息。如果你更改了`sizeHint()`函数的返回值，你应该总是调用这个函数。子类在重新实现该函数时必须始终调用基础实现。
 
 ### `[virtual protected] bool QGraphicsWidget::windowFrameEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowFrameEvent` 用于计算、查询或取得与“window、Frame、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`event`来说，如果该控件是窗口，该事件处理程序会接收窗口框架的事件。其基础实现支持默认窗口框架交互，如移动、调整大小等。
+你可以在`QGraphicsWidget`子类中重新实现这个处理程序，提供你自己的自定义窗口框架交互支持。
+如果`event`已被识别和处理，返回`true`;否则，返回`false`。
 
 ### `QRectF QGraphicsWidget::windowFrameGeometry() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowFrameGeometry` 用于计算、查询或取得与“window、Frame、几何区域”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回小部件的几何体，包含父坐标，包括任何窗口框架。
 
 ### `QRectF QGraphicsWidget::windowFrameRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowFrameRect` 用于计算、查询或取得与“window、Frame、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回小部件的本地rect，包括任何窗口框架。
 
 ### `[virtual protected] Qt::WindowFrameSection QGraphicsWidget::windowFrameSectionAt(const QPointF &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowFrameSectionAt` 用于计算、查询或取得与“window、Frame、Section、按位置访问”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `Qt::WindowFrameSection`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::WindowFrameSection`。
-- 参数 `pos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位于位置`pos`的窗框部分，若该位置没有窗框部分则返回`Qt::NoSection`。
+该函数用于`QGraphicsWidget`的窗口框架交互基础实现中。
+如果你想自定义窗口的交互式移动或调整大小，可以重新实现这个函数。例如，如果你只允许窗口右下角调整大小，可以重新实现该函数，使除`Qt::BottomRightSection`外的所有部分返回`Qt::NoSection`。
 
 ### `Qt::WindowType QGraphicsWidget::windowType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowType` 用于计算、查询或取得与“window、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::WindowType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::WindowType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回小部件窗口类型。
 
 ### `enum { Type }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsWidget` 暴露的类型声明 `enum`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟 `type()` 函数返回的值。
+- `QGraphicsWidget::Type`: `11`；一个图形控件项
 
 ### `bool autoFillBackground() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::autoFillBackground` 用于计算、查询或取得与“auto、Fill、Background”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了小部件背景是否自动填充。
+如果启用该属性，Qt 会在调用 `paint()` 方法前填充控件的背景。所用颜色由控件`palette`的 `QPalette::Window` 颜色角色定义。
+此外，除非设置了WA_OpaquePaintEvent或 WA_NoSystemBackground 属性，否则 Windows 总是充满 `QPalette::Window`。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoFillBackground()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::FocusPolicy focusPolicy() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::focusPolicy` 用于计算、查询或取得与“focus、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::FocusPolicy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示了小部件接受键盘焦点的方式。
+焦点策略`Qt::TabFocus`，如果控件接受键盘对焦通过 Tab，`Qt::ClickFocus` 控件通过点击接受对焦，`Qt::StrongFocus` 如果两者都接受，`Qt::NoFocus`（默认）则不接受对焦。
+如果控件处理键盘事件，你必须启用键盘焦点。这通常由控件的构造函数完成。例如，`QLineEdit`构造函数调用 setFocusPolicy（`Qt::StrongFocus`）。
+如果你启用了焦点策略（即非`Qt::NoFocus`），`QGraphicsWidget`会自动启用ItemIsFocusable标志。在小部件上设置`Qt::NoFocus`会清除ItemIsFocusable标志。如果小部件当前有键盘焦点，小部件会自动失去焦点。
 
-**签名拆解：**
-
-- 返回值：`Qt::FocusPolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `focusPolicy()` 读取当前值；它不会修改应用状态。
 
 ### `QFont font() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::font` 用于计算、查询或取得与“字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含控件的字体。
+该属性提供了小部件的字体。
+`QFont` 包含已明确定义的字体属性和从控件父节点隐式继承的属性。因此，font() 可能返回的字体与带有 setFont() 的字体不同。该方案允许你在不影响字体继承的条目的情况下定义单个字体条目。
+当小部件的字体发生变化时，它会将其条目与父小部件对比。如果小部件没有父小部件，则会对场景进行解析。小部件随后会发送`FontChange`事件，并通知所有后代，以便它们也能解析自己的字体。
+默认情况下，该属性包含应用程序的默认字体。
 
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `font()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::LayoutDirection layoutDirection() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::layoutDirection` 用于计算、查询或取得与“layout、Direction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::LayoutDirection`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含该控件的布局方向。
+该属性修改该控件及其所有后代的 Widget `Qt::WA_RightToLeft`属性。它还设置了该控件的 `Qt::WA_SetLayoutDirection` 属性。
+控件的布局方向决定了布局管理器水平排列该控件子控件的顺序。默认值取决于应用程序的语言和地区，通常与读写单词的方向相同。使用`Qt::LeftToRight`时，布局开始从该控件的左侧向右放置子控件。`Qt::RightToLeft`则相反——布局会从右边开始向左移动。
+子控件继承父控件的布局方向。顶层控件的布局方向继承自 QGraphicsScene：：layoutDirection。如果你通过调用 setLayoutDirection() 更改控件的布局方向，该控件会发送一个`LayoutDirectionChange`事件，然后将新的布局方向传播给所有后代。
 
-**签名拆解：**
-
-- 返回值：`Qt::LayoutDirection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `layoutDirection()` 读取当前值；它不会修改应用状态。
 
 ### `QPalette palette() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::palette` 用于计算、查询或取得与“palette”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPalette`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了小部件的调色板。
+该属性提供了控件的调色板。调色板为颜色组（例如`QPalette::Button`）和状态（例如`QPalette::Inactive`）提供颜色和笔刷，松散地定义了控件及其子节点的一般外观。
+`QPalette` 由已明确定义的颜色组和从控件父项隐式继承的颜色组组成。因此，palette() 可以返回与 setPalette() 设置的不同调色板。该方案允许您在调色板中定义单个条目而不影响调色板继承的条目。
+当一个小部件的调色板发生变化时，它会根据父小部件解析其条目，或者如果没有父小部件，则会根据场景进行解析。然后它会发送一个`PaletteChange`事件，并通知所有后代，以便它们也能解析自己的调色板。
+默认情况下，该属性包含应用程序的默认调色板。
 
-**签名拆解：**
-
-- 返回值：`QPalette`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `palette()` 读取当前值；它不会修改应用状态。
 
 ### `void resize(const QSizeF &size)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::resize` 用于执行与“调整尺寸”相关的操作。调用时要先确认当前状态和 `size` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示小部件的大小。
+调用 resize() 会将控件调整为由 `minimumSize()` 和 `maximumSize()` 组成的 `size`。该属性仅影响控件的宽度和高度（例如其左右边缘）;控件的位置和左上角不受影响。
+调整小部件大小会触发小部件立即接收包含该小部件旧大小和新大小的`GraphicsSceneResize`事件。如果该小部件在事件到达时已分配了布局，该布局将被激活，并自动更新任何子小部件的几何体。
+该属性不影响父控件的任何布局。如果控件本身由父控件管理;例如，它有一个分配了布局的父控件，该布局不会被激活。
+默认情况下，该属性包含宽度和高度均为零的大小。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSizeF &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resize()` 读取当前值；它不会修改应用状态。
 
 ### `void setAutoFillBackground(bool enabled)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoFillBackground`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了小部件背景是否自动填充。
+如果启用该属性，Qt 会在调用 `paint()` 方法前填充控件的背景。所用颜色由控件`palette`的 `QPalette::Window` 颜色角色定义。
+此外，除非设置了WA_OpaquePaintEvent或 WA_NoSystemBackground 属性，否则 Windows 总是充满 `QPalette::Window`。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoFillBackground(...)` 修改 `autoFillBackground`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFocusPolicy(Qt::FocusPolicy policy)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFocusPolicy`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示了小部件接受键盘焦点的方式。
+焦点策略`Qt::TabFocus`，如果控件接受键盘对焦通过 Tab，`Qt::ClickFocus` 控件通过点击接受对焦，`Qt::StrongFocus` 如果两者都接受，`Qt::NoFocus`（默认）则不接受对焦。
+如果控件处理键盘事件，你必须启用键盘焦点。这通常由控件的构造函数完成。例如，`QLineEdit`构造函数调用 setFocusPolicy（`Qt::StrongFocus`）。
+如果你启用了焦点策略（即非`Qt::NoFocus`），`QGraphicsWidget`会自动启用ItemIsFocusable标志。在小部件上设置`Qt::NoFocus`会清除ItemIsFocusable标志。如果小部件当前有键盘焦点，小部件会自动失去焦点。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `policy`：类型为 `Qt::FocusPolicy`。没有默认值，调用时必须提供。传入 `Qt::FocusPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFocusPolicy(...)` 修改 `focusPolicy`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFont(const QFont &font)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFont`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含控件的字体。
+该属性提供了小部件的字体。
+`QFont` 包含已明确定义的字体属性和从控件父节点隐式继承的属性。因此，font() 可能返回的字体与带有 setFont() 的字体不同。该方案允许你在不影响字体继承的条目的情况下定义单个字体条目。
+当小部件的字体发生变化时，它会将其条目与父小部件对比。如果小部件没有父小部件，则会对场景进行解析。小部件随后会发送`FontChange`事件，并通知所有后代，以便它们也能解析自己的字体。
+默认情况下，该属性包含应用程序的默认字体。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFont(...)` 修改 `font`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `virtual void setGeometry(const QRectF &rect) override`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGeometry`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了小部件的几何形状。
+将物品的几何体设置为`rect`。调用该函数后，物品的位置和大小会被修改。物品先移动，然后调整大小。
+调用该函数的一个副作用是，控件会接收移动事件和缩放事件。此外，如果控件被分配了布局，布局也会被激活。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setGeometry(...)` 修改 `geometry`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setLayoutDirection(Qt::LayoutDirection direction)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLayoutDirection`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含该控件的布局方向。
+该属性修改该控件及其所有后代的 Widget `Qt::WA_RightToLeft`属性。它还设置了该控件的 `Qt::WA_SetLayoutDirection` 属性。
+控件的布局方向决定了布局管理器水平排列该控件子控件的顺序。默认值取决于应用程序的语言和地区，通常与读写单词的方向相同。使用`Qt::LeftToRight`时，布局开始从该控件的左侧向右放置子控件。`Qt::RightToLeft`则相反——布局会从右边开始向左移动。
+子控件继承父控件的布局方向。顶层控件的布局方向继承自 QGraphicsScene：：layoutDirection。如果你通过调用 setLayoutDirection() 更改控件的布局方向，该控件会发送一个`LayoutDirectionChange`事件，然后将新的布局方向传播给所有后代。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `direction`：类型为 `Qt::LayoutDirection`。没有默认值，调用时必须提供。方向枚举，决定排列、遍历或坐标增长方向；要结合该类定义的枚举值判断实际方向。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setLayoutDirection(...)` 修改 `layoutDirection`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setPalette(const QPalette &palette)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPalette`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了小部件的调色板。
+该属性提供了控件的调色板。调色板为颜色组（例如`QPalette::Button`）和状态（例如`QPalette::Inactive`）提供颜色和笔刷，松散地定义了控件及其子节点的一般外观。
+`QPalette` 由已明确定义的颜色组和从控件父项隐式继承的颜色组组成。因此，palette() 可以返回与 setPalette() 设置的不同调色板。该方案允许您在调色板中定义单个条目而不影响调色板继承的条目。
+当一个小部件的调色板发生变化时，它会根据父小部件解析其条目，或者如果没有父小部件，则会根据场景进行解析。然后它会发送一个`PaletteChange`事件，并通知所有后代，以便它们也能解析自己的调色板。
+默认情况下，该属性包含应用程序的默认调色板。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `palette`：类型为 `const QPalette &`。没有默认值，调用时必须提供。传入 `const QPalette &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPalette(...)` 修改 `palette`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWindowFlags(Qt::WindowFlags wFlags)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWindowFlags`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了小部件的窗口标志。
+窗口标志是窗口类型（例如`Qt::Dialog`）和多个为窗口行为提供提示的标志的组合。该行为依赖于平台。
+默认情况下，该属性不包含窗口标志。
+窗口是面板。如果你设置了`Qt::Window`标志，ItemIsPanel 标志将自动被设置。如果你清除了`Qt::Window`标志，ItemIsPanel 标志也会被清除。注意，ItemIsPanel 标志可以独立于`Qt::Window`设置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `wFlags`：类型为 `Qt::WindowFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWindowFlags(...)` 修改 `windowFlags`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWindowTitle(const QString &title)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWindowTitle`。调用它会改变 `QGraphicsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该物业拥有窗户产权（说明）。
+该物业仅用于窗户。
+默认情况下，如果没有设置标题，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `title`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWindowTitle(...)` 修改 `windowTitle`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QSizeF size() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QGraphicsWidget` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
+该属性表示小部件的大小。
+调用 resize() 会将控件调整为由 `minimumSize()` 和 `maximumSize()` 组成的 `size`。该属性仅影响控件的宽度和高度（例如其左右边缘）;控件的位置和左上角不受影响。
+调整小部件大小会触发小部件立即接收包含该小部件旧大小和新大小的`GraphicsSceneResize`事件。如果该小部件在事件到达时已分配了布局，该布局将被激活，并自动更新任何子小部件的几何体。
+该属性不影响父控件的任何布局。如果控件本身由父控件管理;例如，它有一个分配了布局的父控件，该布局不会被激活。
+默认情况下，该属性包含宽度和高度均为零的大小。
 
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `size()` 读取当前值；它不会修改应用状态。
 
 ### `void unsetLayoutDirection()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::unsetLayoutDirection` 用于执行与“unset、Layout、Direction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含该控件的布局方向。
+该属性修改该控件及其所有后代的 Widget `Qt::WA_RightToLeft`属性。它还设置了该控件的 `Qt::WA_SetLayoutDirection` 属性。
+控件的布局方向决定了布局管理器水平排列该控件子控件的顺序。默认值取决于应用程序的语言和地区，通常与读写单词的方向相同。使用`Qt::LeftToRight`时，布局开始从该控件的左侧向右放置子控件。`Qt::RightToLeft`则相反——布局会从右边开始向左移动。
+子控件继承父控件的布局方向。顶层控件的布局方向继承自 QGraphicsScene：：layoutDirection。如果你通过调用 setLayoutDirection() 更改控件的布局方向，该控件会发送一个`LayoutDirectionChange`事件，然后将新的布局方向传播给所有后代。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `unsetLayoutDirection()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::WindowFlags windowFlags() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowFlags` 用于计算、查询或取得与“window、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::WindowFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了小部件的窗口标志。
+窗口标志是窗口类型（例如`Qt::Dialog`）和多个为窗口行为提供提示的标志的组合。该行为依赖于平台。
+默认情况下，该属性不包含窗口标志。
+窗口是面板。如果你设置了`Qt::Window`标志，ItemIsPanel 标志将自动被设置。如果你清除了`Qt::Window`标志，ItemIsPanel 标志也会被清除。注意，ItemIsPanel 标志可以独立于`Qt::Window`设置。
 
-**签名拆解：**
-
-- 返回值：`Qt::WindowFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `windowFlags()` 读取当前值；它不会修改应用状态。
 
 ### `QString windowTitle() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsWidget::windowTitle` 用于计算、查询或取得与“window、Title”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该物业拥有窗户产权（说明）。
+该物业仅用于窗户。
+默认情况下，如果没有设置标题，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `windowTitle()` 读取当前值；它不会修改应用状态。
 
 ### `void layoutChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `layoutChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含了小部件的布局。
+在新布局分配之前，任何现有的布局管理器都会被删除。如果`layout` `nullptr`，小部件将不再拥有布局。现有子小部件的几何形状将不受影响。
+`QGraphicsWidget`对`layout`负责。
+目前由`layout`或其所有子布局管理的所有控件，都会自动被重新父级到该项。随后该布局被废止，子控件几何体根据该项的 `geometry()` 和 contentsMargins() 进行调整。未被 `layout` 明确管理的子节点在被分配到该控件后布局不受其影响。
+如果目前没有布局管理该小部件，layout() 会返回`nullptr`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `layout` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

@@ -97,432 +97,375 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.9] enum class QCommandLineParser::MessageType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineParser` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MessageType`。
-- 属性名：`QCommandLineParser`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举用于指定消息类型及其向用户展示的方式。
+- `QCommandLineParser::MessageType::Information`：`0`;用于显示信息消息。消息将打印到`stdout`。
+- `QCommandLineParser::MessageType::Error`：`1`;用于显示错误信息。消息将打印到`stderr`。
+这个枚举是在Qt 6.9引入的。
 
 ### `enum QCommandLineParser::OptionsAfterPositionalArgumentsMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineParser` 暴露的类型声明 `Options、After、Positional、Arguments、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OptionsAfterPositionalArgumentsMode`。
-- 属性名：`QCommandLineParser`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了解析器如何解释位置参数之后出现的选项。
+- `QCommandLineParser::ParseAsOptions`：`0`;`application argument --opt -t` 被解释为设置选项 `opt` 和 `t`，就像 `application --opt -t argument` 一样。这是默认的解析模式。为了指定 `--opt` 和 `-t` 是位置参数，用户可以使用 `--`，如 `application argument -- --opt -t`。
+- `QCommandLineParser::ParseAsPositionalArguments`：`1`;`application argument --opt` 被解释为两个位置参数，分别是 `argument` 和 `--opt`。该模式适用于旨在启动其他可执行文件（如包装器、调试工具等）或支持内部命令后跟命令选项的可执行文件。`argument` 是命令的名称，之后出现的所有选项都可以被另一个命令行解析器收集和解析，可能存在于另一个可执行文件中。
 
 ### `enum QCommandLineParser::SingleDashWordOptionMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineParser` 暴露的类型声明 `Single、Dash、Word、Option、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SingleDashWordOptionMode`。
-- 属性名：`QCommandLineParser`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了解析器如何解释使用单一破折号后接多个字母的命令行选项，如`-abc`。
+- `QCommandLineParser::ParseAsCompactedShortOptions`：`0`;`-abc` 被解释为 `-a -b -c`，即三个在命令行中被压缩的空头期权，如果这些期权都不取值。如果 `a` 取值，则将其解释为 `-a bc`，即空头期权 `a` 后跟 value `bc`。这通常用于表现为编译器的工具，以处理诸如`-DDEFINE=VALUE`或`-I/include/path`等选项。这是默认的解析模式。建议新应用程序使用此模式。
+- `QCommandLineParser::ParseAsLongOptions`：`1`;`-abc` 被解释为 `--abc`，即名为 `abc` 的长选项。这就是 Qt 自有工具（uic、rcc 等）一直用于解析参数的方式。该模式应用于在以此类方式解析参数的应用程序中保持兼容性。如果`a`选项设置了 `QCommandLineOption::ShortOptionStyle` 标志，则有例外，此时仍被解释为 `-a bc`。
 
 ### `QCommandLineParser::QCommandLineParser()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineParser` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个命令行解析器对象。
 
 ### `[noexcept] QCommandLineParser::~QCommandLineParser()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineParser` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁命令行解析器对象。
 
 ### `QCommandLineOption QCommandLineParser::addHelpOption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCommandLineParser` 添加依赖、数据或子对象的 API `addHelpOption`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+为命令行解析器添加帮助选项。
+该命令行指定的选项由 `-h` 或 `--help` 描述。在 Windows 上，也支持替代`-?`。选项 `--help-all` 扩展到输出中包含未由该命令定义的通用 Qt 选项。
+这些选项由`QCommandLineParser`自动处理。
+记得使用`setApplicationDescription()`设置应用描述，使用该选项时会显示。
+返回选项实例，可用于调用`isSet()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QCommandLineOption`。
-- 参数：无。
+```cpp
+ int main(int argc, char *argv[])
+ {
+     QCoreApplication app(argc, argv);
+     QCoreApplication::setApplicationName("my-copy-program");
+     QCoreApplication::setApplicationVersion("1.0");
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     QCommandLineParser parser;
+     parser.setApplicationDescription("Test helper");
+     parser.addHelpOption();
+     parser.addVersionOption();
+     parser.addPositionalArgument("source", QCoreApplication::translate("main", "Source file to copy."));
+     parser.addPositionalArgument("destination", QCoreApplication::translate("main", "Destination directory."));
+
+     // A boolean option with a single name (-p)
+     QCommandLineOption showProgressOption("p", QCoreApplication::translate("main", "Show progress during copy"));
+     parser.addOption(showProgressOption);
+
+     // A boolean option with multiple names (-f, --force)
+     QCommandLineOption forceOption(QStringList() << "f" << "force",
+             QCoreApplication::translate("main", "Overwrite existing files."));
+     parser.addOption(forceOption);
+
+     // An option with a value
+     QCommandLineOption targetDirectoryOption(QStringList() << "t" << "target-directory",
+             QCoreApplication::translate("main", "Copy all source files into <directory>."),
+             QCoreApplication::translate("main", "directory"));
+     parser.addOption(targetDirectoryOption);
+
+     // Process the actual command line arguments given by the user
+     parser.process(app);
+
+     const QStringList args = parser.positionalArguments();
+     // source is args.at(0), destination is args.at(1)
+
+     bool showProgress = parser.isSet(showProgressOption);
+     bool force = parser.isSet(forceOption);
+     QString targetDir = parser.value(targetDirectoryOption);
+     // ...
+ }
+```
 
 ### `bool QCommandLineParser::addOption(const QCommandLineOption &option)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCommandLineParser` 添加依赖、数据或子对象的 API `addOption`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `option`：类型为 `const QCommandLineOption &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它增加了解析时需要寻找的选项`option`。
+如果添加选项成功，返回`true`;否则返回`false`。
+如果选项没有附加名称，或者该选项名称与之前添加的选项名称冲突，则添加该选项失败。
 
 ### `bool QCommandLineParser::addOptions(const QList<QCommandLineOption> &options)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCommandLineParser` 添加依赖、数据或子对象的 API `addOptions`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `options`：类型为 `const QList<QCommandLineOption> &`。没有默认值，调用时必须提供。传入 `const QList<QCommandLineOption> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加解析时需要寻找的选项。选项由参数`options`指定。
+如果所有选项都成功添加，返回`true`;否则返回`false`。
+请参阅文档`addOption()`该功能可能失效的说明。
 
 ### `void QCommandLineParser::addPositionalArgument(const QString &name, const QString &description, const QString &syntax = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCommandLineParser` 添加依赖、数据或子对象的 API `addPositionalArgument`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+为帮助文本定义了额外的论据。
+参数`name`和`description`会出现在帮助的`Arguments:`部分。如果指定了`syntax`，则会附加在使用行，否则`name`将被附加。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `syntax`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+```cpp
+ // Usage: image-editor file
+ //
+ // Arguments:
+ //   file                  The file to open.
+ parser.addPositionalArgument("file", QCoreApplication::translate("main", "The file to open."));
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // Usage: web-browser [urls...]
+ //
+ // Arguments:
+ //   urls                URLs to open, optionally.
+ parser.addPositionalArgument("urls", QCoreApplication::translate("main", "URLs to open, optionally."), "[urls...]");
+
+ // Usage: cp source destination
+ //
+ // Arguments:
+ //   source                Source file to copy.
+ //   destination           Destination directory.
+ parser.addPositionalArgument("source", QCoreApplication::translate("main", "Source file to copy."));
+ parser.addPositionalArgument("destination", QCoreApplication::translate("main", "Destination directory."));
+```
 
 ### `QCommandLineOption QCommandLineParser::addVersionOption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCommandLineParser` 添加依赖、数据或子对象的 API `addVersionOption`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QCommandLineOption`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+增加了`-v` / `--version`选项，显示应用程序的版本字符串。
+这个选项由`QCommandLineParser`自动处理。
+你可以用`QCoreApplication::setApplicationVersion()`设置实际版本字符串。
+返回选项实例，可用于调用`isSet()`。
 
 ### `QString QCommandLineParser::applicationDescription() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::applicationDescription` 用于计算、查询或取得与“application、Description”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`setApplicationDescription()`中设置的应用描述。
 
 ### `void QCommandLineParser::clearPositionalArguments()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::clearPositionalArguments` 用于执行与“清空、Positional、Arguments”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+清除帮助文本中额外参数的定义。
+这仅在支持多个具有不同选项的命令的工具的特殊情况下需要。一旦确定实际命令，即可定义该命令的选项，并相应调整命令的帮助文本。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ QCoreApplication app(argc, argv);
+ QCommandLineParser parser;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ parser.addPositionalArgument("command", "The command to execute.");
+
+ // Call parse() to find out the positional arguments.
+ parser.parse(QCoreApplication::arguments());
+
+ const QStringList args = parser.positionalArguments();
+ const QString command = args.isEmpty() ? QString() : args.first();
+ if (command == "resize") {
+     parser.clearPositionalArguments();
+     parser.addPositionalArgument("resize", "Resize the object to a new size.", "resize [resize_options]");
+     parser.addOption(QCommandLineOption("size", "New size.", "new_size"));
+     parser.process(app);
+     // ...
+ }
+
+ /*
+ This code results in context-dependent help:
+
+ $ tool --help
+ Usage: tool command
+
+ Arguments:
+   command  The command to execute.
+
+ $ tool resize --help
+ Usage: tool resize [resize_options]
+
+ Options:
+   --size <size>  New size.
+
+ Arguments:
+   resize         Resize the object to a new size.
+ */
+```
 
 ### `QString QCommandLineParser::errorText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::errorText` 用于计算、查询或取得与“错误、文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回翻译后的错误文本。只有当`parse()`返回`false`时才应调用此错误文本。
 
 ### `QString QCommandLineParser::helpText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::helpText` 用于计算、查询或取得与“help、文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含完整帮助信息的字符串。
 
 ### `bool QCommandLineParser::isSet(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSet`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+检查选项`name`是否被传递给了申请。
+如果选项`name`设置，返回`true`，否则返回 false。
+所提供的名称可以是任何添加`addOption()`选项的长或短名称。所有选项名称均视为等价。如果未识别该名称或该选项不存在，则返回false。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool verbose = parser.isSet("verbose");
+```
 
 ### `bool QCommandLineParser::isSet(const QCommandLineOption &option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSet`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+检查`option`是否已传递给申请。
+如果`option`被设置，返回`true`，否则返回假。
+这是检查无数值选项的推荐方法。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `option`：类型为 `const QCommandLineOption &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QCoreApplication app(argc, argv);
+ QCommandLineParser parser;
+ QCommandLineOption verboseOption("verbose");
+ parser.addOption(verboseOption);
+ parser.process(app);
+ bool verbose = parser.isSet(verboseOption);
+```
 
 ### `QStringList QCommandLineParser::optionNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::optionNames` 用于计算、查询或取得与“option、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一份已找到的期权名称列表。
+该列表返回解析器找到的所有识别期权名称列表，按发现顺序排列。对于任何形式为{–option=value}的多头期权，价值部分将被剔除。
+该列表中的名称不包含前面的破折号字符。如果解析器多次遇到名称，该列表可能会出现多个。
+列表中的任何条目都可以与`value()`或`values()`一起使用，以获得任何相关的期权值。
 
 ### `bool QCommandLineParser::parse(const QStringList &arguments)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::parse` 用于计算、查询或取得与“parse”相关的操作。调用时要先确认当前状态和 `arguments` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `arguments`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解析命令行`arguments`。
+大多数程序不需要调用这个，简单调用`process()`就足够了。
+parse() 是更低层的，只负责解析。应用程序需要处理错误，如果 parse() 返回 `false`，则使用 `errorText()`。这在图形程序中显示图形错误消息时非常有用。
+调用parse()代替`process()`也有助于暂时忽略未知选项，因为在调用`process()`之前，会根据某个参数提供更多选项定义。
+别忘了`arguments`必须以可执行文件的名称开头（但可以忽略）。
+在解析错误（未知选项或缺失值）时返回`false`;否则返回`true`。
 
 ### `QStringList QCommandLineParser::positionalArguments() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::positionalArguments` 用于计算、查询或取得与“positional、Arguments”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个位置论元列表。
+这些都是未被纳入选项的论点。
 
 ### `void QCommandLineParser::process(const QStringList &arguments)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::process` 用于执行与“处理”相关的操作。调用时要先确认当前状态和 `arguments` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `arguments`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理命令行`arguments`。
+除了解析选项（如`parse()`），该函数还处理内置选项并处理错误。
+内置选项如果被调用`addVersionOption` `--version`，如果`addHelpOption`调用则`--help`/`--help-all`。
+当调用这些选项之一，或发生错误（例如传递未知选项）时，当前进程将停止，使用exit()函数。
 
 ### `void QCommandLineParser::process(const QCoreApplication &app)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::process` 用于执行与“处理”相关的操作。调用时要先确认当前状态和 `app` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `app`：类型为 `const QCoreApplication &`。没有默认值，调用时必须提供。传入 `const QCoreApplication &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+命令行是从 `QCoreApplication` 实例 `app` 获取的。
 
 ### `void QCommandLineParser::setApplicationDescription(const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setApplicationDescription`。调用它会改变 `QCommandLineParser` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`helpText()` 表示应用`description`。
 
 ### `void QCommandLineParser::setOptionsAfterPositionalArgumentsMode(QCommandLineParser::OptionsAfterPositionalArgumentsMode parsingMode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptionsAfterPositionalArgumentsMode`。调用它会改变 `QCommandLineParser` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parsingMode`：类型为 `QCommandLineParser::OptionsAfterPositionalArgumentsMode`。没有默认值，调用时必须提供。传入 `QCommandLineParser::OptionsAfterPositionalArgumentsMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将解析模式设置为`parsingMode`。必须在`process()`或`parse()`之前调用。
 
 ### `void QCommandLineParser::setSingleDashWordOptionMode(QCommandLineParser::SingleDashWordOptionMode singleDashWordOptionMode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSingleDashWordOptionMode`。调用它会改变 `QCommandLineParser` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `singleDashWordOptionMode`：类型为 `QCommandLineParser::SingleDashWordOptionMode`。没有默认值，调用时必须提供。传入 `QCommandLineParser::SingleDashWordOptionMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将解析模式设置为`singleDashWordOptionMode`。必须在`process()`或`parse()`之前调用。
 
 ### `void QCommandLineParser::showHelp(int exitCode = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::showHelp` 用于执行与“显示、Help”相关的操作。调用时要先确认当前状态和 `exitCode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `exitCode`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+显示帮助信息，并退出应用程序。该选项由 –help 选项自动触发，但用户未正确调用应用时也可用来显示帮助。退出代码设置为 `exitCode`。如果用户请求查看帮助，应设置为 0，错误时应设置为其他值。
 
 ### `[static, since 6.9] void QCommandLineParser::showMessageAndExit(QCommandLineParser::MessageType type, const QString &message, int exitCode = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `showMessageAndExit`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QCommandLineParser::MessageType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `message`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `exitCode`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+显示一个`message`，并以给定的`exitCode`退出应用。
+`message`通常会根据给定的`type`直接打印到`stdout`或`stderr`，或者在必要时会显示在Windows的消息框中，并根据`type`显示信息图标或错误图标（如果不想要消息框，请设置`QT_COMMAND_LINE_PARSER_NO_GUI_MESSAGE_BOXES`环境变量）。
+这和`showHelp`、`showVersion`和内置选项使用的消息显示方式相同（如果`addVersionOption`被调用`--version`，`addHelpOption`则`--help` / `--help-all`）。
 
 ### `void QCommandLineParser::showVersion()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::showVersion` 用于执行与“显示、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+显示`QCoreApplication::applicationVersion()`的版本信息，并退出应用程序。该功能由 –version 选项自动触发，但不使用 `process()` 时也可用于显示版本。退出代码设为 EXIT_SUCCESS（0）。
 
 ### `QStringList QCommandLineParser::unknownOptionNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::unknownOptionNames` 用于计算、查询或取得与“unknown、Option、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个未知期权名称列表。
+本列表将包含未被识别的长名和短名选项。对于任何格式为{–option=value}的长选项，价值部分已被省略，只添加了长名称。
+该列表中的名称不包含前面的破折号字符。如果解析器多次遇到名称，该列表可能会出现多个。
 
 ### `QString QCommandLineParser::value(const QString &optionName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QCommandLineParser` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `optionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定期权名称的期权值 `optionName`，若未找到则返回空字符串。
+所提供的名称可以是任何添加`addOption()`选项的长或短名称。所有选项名称都被视为等价。如果名称未被识别或该选项不存在，则返回空字符串。
+对于解析器找到的选项，返回该选项的最后一个值。如果命令行中未指定该选项，则返回默认值。
+如果选项没有取值，会打印警告，并返回空字符串。
 
 ### `QString QCommandLineParser::value(const QCommandLineOption &option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QCommandLineParser` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `option`：类型为 `const QCommandLineOption &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`option`的选项值，若未找到则返回空字符串。
+对于解析器找到的选项，返回该选项的最后一个值。如果命令行中未指定该选项，则返回默认值。
+如果选项不取值，则返回空字符串。
 
 ### `QStringList QCommandLineParser::values(const QString &optionName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::values` 用于计算、查询或取得与“values”相关的操作。调用时要先确认当前状态和 `optionName` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `optionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定期权名称`optionName`的选项值列表，若未找到则返回空列表。
+所提供的名称可以是任何添加`addOption()`选项的长短名称。所有选项名称都被视为等价。如果名称未被识别或该选项不存在，则返回一个空列表。
+对于解析器找到的选项，列表会包含每次该选项被解析器遇到的时间条目。如果命令行中未指定该选项，则返回默认值。
+如果期权不取值，则返回一个空列表。
 
 ### `QStringList QCommandLineParser::values(const QCommandLineOption &option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineParser::values` 用于计算、查询或取得与“values”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `option`：类型为 `const QCommandLineOption &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`option`的选项值列表，若未找到则返回空列表。
+对于解析器找到的选项，列表会包含每次该选项被解析器遇到的时间条目。如果命令行中未指定该选项，则返回默认值。
+如果期权不取值，则返回一个空列表。
 
 ## 6. 深入实践与常见坑
 

@@ -94,436 +94,198 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 29 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QProxyStyle::QProxyStyle(QStyle *style = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `style`：类型为 `QStyle *`。默认值为 `nullptr`。传入 `QStyle *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QProxyStyle对象，用于覆盖指定`style`中的行为，或者如果未指定`style`则覆盖默认原生`style`。
+`style`的所有权转移给了QProxyStyle。
 
 ### `QProxyStyle::QProxyStyle(const QString &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QProxyStyle对象，用于覆盖由样式`key`指定的基础样式中的行为，或者如果指定样式`key`未被识别，则覆盖当前应用样式中的行为。
 
 ### `[virtual noexcept] QProxyStyle::~QProxyStyle()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QProxyStyle`物体。
 
 ### `QStyle *QProxyStyle::baseStyle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::baseStyle` 用于计算、查询或取得与“base、Style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStyle *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStyle *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回代理基础样式对象。如果代理样式上没有设置基础样式，`QProxyStyle`会创建一个应用样式的实例。
 
 ### `[override virtual] void QProxyStyle::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的核心操作 `drawComplexControl`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `control`：类型为 `QStyle::ComplexControl`。没有默认值，调用时必须提供。传入 `QStyle::ComplexControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOptionComplex *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+绘制由多个子控件组成的复杂控件；默认把 `control`、`option`、`painter` 和 `widget` 原样转交给基础样式。
 
 ### `[override virtual] void QProxyStyle::drawControl(QStyle::ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的核心操作 `drawControl`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `element`：类型为 `QStyle::ControlElement`。没有默认值，调用时必须提供。传入 `QStyle::ControlElement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+绘制按钮、标签等控件元素；默认委托基础样式，派生代理可在调用前后调整选项或追加绘制。
 
 ### `[override virtual] void QProxyStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment, const QPixmap &pixmap) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的核心操作 `drawItemPixmap`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `alignment`：类型为 `int`。没有默认值，调用时必须提供。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::drawItemPixmap`（QPainter *painter，const QRect & rectangle，int alignment，const QPixmap 和 pixmap）const.
+根据指定`alignment`，使用提供的`painter`，在指定`rectangle`中绘制给定的`pixmap`。
 
 ### `[override virtual] void QProxyStyle::drawItemText(QPainter *painter, const QRect &rect, int flags, const QPalette &pal, bool enabled, const QString &text, QPalette::ColorRole textRole = QPalette::NoRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的核心操作 `drawItemText`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `flags`：类型为 `int`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `pal`：类型为 `const QPalette &`。没有默认值，调用时必须提供。传入 `const QPalette &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `textRole`：类型为 `QPalette::ColorRole`。默认值为 `QPalette::NoRole`。传入 `QPalette::ColorRole` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::drawItemText`（QPainter *painter， const QRect & rectangle， int alignment， const QPalette and palette， bool enabled， const QString &text， QPalette：：ColorRole textRole） const.
+利用提供的`painter`和`palette`，在指定`rectangle`中绘制给定的`text`。
+文本使用画家的钢笔绘制，并根据指定的`alignment`对齐和包裹。如果指定了显式`textRole`，文本会使用该`palette`的颜色绘制。`enabled`参数表示该项目是否启用;在重新实现该功能时，`enabled`参数应影响该物品的绘制方式。
 
 ### `[override virtual] void QProxyStyle::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProxyStyle` 的核心操作 `drawPrimitive`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `element`：类型为 `QStyle::PrimitiveElement`。没有默认值，调用时必须提供。传入 `QStyle::PrimitiveElement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+绘制框线、箭头等基础图元；默认委托基础样式，`option` 和 `widget` 可用于取得状态与调色板。
 
 ### `[override virtual protected] bool QProxyStyle::event(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
 
 ### `[override virtual] QPixmap QProxyStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &pixmap, const QStyleOption *opt) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::generatedIconPixmap` 用于计算、查询或取得与“generated、Icon、Pixmap”相关的操作。调用时要先确认当前状态和 `iconMode`、`pixmap`、`opt` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `iconMode`：类型为 `QIcon::Mode`。没有默认值，调用时必须提供。传入 `QIcon::Mode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::generatedIconPixmap`（QIcon：：Mode iconMode， const QPixmap & pixmap， const QStyleOption *opt） const.
 
 ### `[override virtual] QStyle::SubControl QProxyStyle::hitTestComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex *option, const QPoint &pos, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::hitTestComplexControl` 用于计算、查询或取得与“hit、Test、Complex、Control”相关的操作。调用时要先确认当前状态和 `control`、`option`、`pos`、`widget` 的有效范围；返回类型是 `QStyle::SubControl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStyle::SubControl`。
-- 参数 `control`：类型为 `QStyle::ComplexControl`。没有默认值，调用时必须提供。传入 `QStyle::ComplexControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOptionComplex *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `pos`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+判断位置 `pos` 落在复杂控件的哪个子控件上；默认询问基础样式，未命中时返回 `SC_None`。
 
 ### `[override virtual] QRect QProxyStyle::itemPixmapRect(const QRect &r, int flags, const QPixmap &pixmap) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::itemPixmapRect` 用于计算、查询或取得与“项目访问、Pixmap、Rect”相关的操作。调用时要先确认当前状态和 `r`、`flags`、`pixmap` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `r`：类型为 `const QRect &`。没有默认值，调用时必须提供。传入 `const QRect &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `int`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::itemPixmapRect`（const QRect & rectangle，int alignment，const QPixmap 和 pixmap）const.
+返回给定`rectangle`内根据定义`alignment`绘制指定`pixmap`的区域。
 
 ### `[override virtual] QRect QProxyStyle::itemTextRect(const QFontMetrics &fm, const QRect &r, int flags, bool enabled, const QString &text) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::itemTextRect` 用于计算、查询或取得与“项目访问、文本、Rect”相关的操作。调用时要先确认当前状态和 `fm`、`r`、`flags`、`enabled`、`text` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `fm`：类型为 `const QFontMetrics &`。没有默认值，调用时必须提供。传入 `const QFontMetrics &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `r`：类型为 `const QRect &`。没有默认值，调用时必须提供。传入 `const QRect &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `int`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::itemTextRect`（const QFontMetrics & metrics， const QRect & rectangle， int alignment， bool enabled， const QString &text） const.
+返回给定`rectangle`内根据指定字体`metrics`和`alignment`绘制提供`text`的区域。`enabled`参数表示相关项是否启用。
+如果给定`rectangle`大于渲染`text`所需的面积，返回的矩形将根据指定的`alignment`在`rectangle`范围内偏移。例如，如果`alignment` `Qt::AlignCenter`，返回的矩形将置中于`rectangle`。如果给定`rectangle`小于所需面积，返回的矩形将是足够渲染`text`的最小矩形。
 
 ### `[override virtual] int QProxyStyle::layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::layoutSpacing` 用于计算、查询或取得与“layout、Spacing”相关的操作。调用时要先确认当前状态和 `control1`、`control2`、`orientation`、`option`、`widget` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `control1`：类型为 `QSizePolicy::ControlType`。没有默认值，调用时必须提供。传入 `QSizePolicy::ControlType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `control2`：类型为 `QSizePolicy::ControlType`。没有默认值，调用时必须提供。传入 `QSizePolicy::ControlType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。默认值为 `nullptr`。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::layoutSpacing`（QSizePolicy：：ControlType control1， QSizePolicy：：ControlType control2， Qt：：Orientation orientation， const QStyleOption *option， const QWidget *widget） const.
+layoutSpacing() 调用该槽位，用于确定布局中 `control1` 与 `control2` 之间的间距。`orientation` 指定控制是并排排列还是垂直堆叠。`option` 参数可用于传递关于父控件的额外信息。`widget` 参数为可选，若`option` `nullptr`也可用。
+默认实现返回 -1。
 
 ### `[override virtual] int QProxyStyle::pixelMetric(QStyle::PixelMetric metric, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::pixelMetric` 用于计算、查询或取得与“pixel、Metric”相关的操作。调用时要先确认当前状态和 `metric`、`option`、`widget` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `metric`：类型为 `QStyle::PixelMetric`。没有默认值，调用时必须提供。传入 `QStyle::PixelMetric` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。默认值为 `nullptr`。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查询 `metric` 对应的像素尺寸，例如边框宽度或图标大小；默认返回基础样式结果，`option`、`widget` 可为空。
 
 ### `[override virtual] void QProxyStyle::polish(QApplication *app)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::polish` 用于执行与“polish”相关的操作。调用时要先确认当前状态和 `app` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `app`：类型为 `QApplication *`。没有默认值，调用时必须提供。传入 `QApplication *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::polish`（QApplication *应用）。
 
 ### `[override virtual] void QProxyStyle::polish(QPalette &pal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::polish` 用于执行与“polish”相关的操作。调用时要先确认当前状态和 `pal` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pal`：类型为 `QPalette &`。没有默认值，调用时必须提供。传入 `QPalette &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重制版本：`QCommonStyle::polish`（QPalette 和 pal）。
 
 ### `[override virtual] void QProxyStyle::polish(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::polish` 用于执行与“polish”相关的操作。调用时要先确认当前状态和 `widget` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::polish`（QWidget *控件）。
 
 ### `void QProxyStyle::setBaseStyle(QStyle *style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBaseStyle`。调用它会改变 `QProxyStyle` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `QStyle *`。没有默认值，调用时必须提供。传入 `QStyle *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置了应该代理的基础样式。
+`style`的所有权转移给`QProxyStyle`。
+如果样式`nullptr`，则会自动分配一个与桌面相关的样式。
 
 ### `[override virtual] QSize QProxyStyle::sizeFromContents(QStyle::ContentsType type, const QStyleOption *option, const QSize &size, const QWidget *widget) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::sizeFromContents` 用于计算、查询或取得与“尺寸或数量、转换进入、Contents”相关的操作。调用时要先确认当前状态和 `type`、`option`、`size`、`widget` 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数 `type`：类型为 `QStyle::ContentsType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `option`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `widget`：类型为 `const QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::sizeFromContents`（QStyle：：ContentsType contentsType， const QStyleOption *opt， const QSize &contentsSize， const QWidget *widget） const.
 
 ### `[override virtual] QIcon QProxyStyle::standardIcon(QStyle::StandardPixmap standardIcon, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::standardIcon` 用于计算、查询或取得与“standard、Icon”相关的操作。调用时要先确认当前状态和 `standardIcon`、`option`、`widget` 的有效范围；返回类型是 `QIcon`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIcon`。
-- 参数 `standardIcon`：类型为 `QStyle::StandardPixmap`。没有默认值，调用时必须提供。传入 `QStyle::StandardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。默认值为 `nullptr`。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::standardIcon`（QStyle：：StandardPixmap standardIcon， const QStyleOption *option， const QWidget *widget） const.
+返回给定`standardIcon`的图标。
+重新实现这个槽位，为`QStyle`子职业提供你自己的图标。`option`参数可以用来传递寻找合适图标所需的额外信息。`widget`参数是可选的，也可以用来帮助查找图标。
+返回给定`standardIcon`的图标。
+`standardIcon`是一个标准像素映射，可以遵循某些现有的图形界面样式或指南。`option`参数可用于传递定义相应图标时所需的额外信息。`widget`参数是可选的，也可以用来辅助确定图标。
 
 ### `[override virtual] QPalette QProxyStyle::standardPalette() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::standardPalette` 用于计算、查询或取得与“standard、Palette”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPalette`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPalette`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::standardPalette()` const.
+回归该风格的标准调色板。
+注意，在支持系统颜色的系统中，样式的标准调色板不被使用。特别是，Windows Vista 和 Mac 样式不使用标准调色板，而是使用原生主题引擎。使用这些样式时，不应用 `QApplication::setPalette()` 设置调色板。
 
 ### `[override virtual] QPixmap QProxyStyle::standardPixmap(QStyle::StandardPixmap standardPixmap, const QStyleOption *opt, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::standardPixmap` 用于计算、查询或取得与“standard、Pixmap”相关的操作。调用时要先确认当前状态和 `standardPixmap`、`opt`、`widget` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `standardPixmap`：类型为 `QStyle::StandardPixmap`。没有默认值，调用时必须提供。传入 `QStyle::StandardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得 `standardPixmap` 对应的平台风格位图；默认由基础样式生成，调用者按值接收结果，不管理样式内部资源。
 
 ### `[override virtual] int QProxyStyle::styleHint(QStyle::StyleHint hint, const QStyleOption *option = nullptr, const QWidget *widget = nullptr, QStyleHintReturn *returnData = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::styleHint` 用于计算、查询或取得与“style、Hint”相关的操作。调用时要先确认当前状态和 `hint`、`option`、`widget`、`returnData` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `hint`：类型为 `QStyle::StyleHint`。没有默认值，调用时必须提供。传入 `QStyle::StyleHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。默认值为 `nullptr`。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `returnData`：类型为 `QStyleHintReturn *`。默认值为 `nullptr`。传入 `QStyleHintReturn *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查询影响控件行为的样式提示并返回整数结果；某些提示会通过可选的 `returnData` 返回额外结构化数据。
 
 ### `[override virtual] QRect QProxyStyle::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex *option, QStyle::SubControl sc, const QWidget *widget) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::subControlRect` 用于计算、查询或取得与“sub、Control、Rect”相关的操作。调用时要先确认当前状态和 `cc`、`option`、`sc`、`widget` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `cc`：类型为 `QStyle::ComplexControl`。没有默认值，调用时必须提供。传入 `QStyle::ComplexControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOptionComplex *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `sc`：类型为 `QStyle::SubControl`。没有默认值，调用时必须提供。传入 `QStyle::SubControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::subControlRect`（QStyle：：ComplexControl cc， const QStyleOptionComplex *opt， QStyle：：SubControl sc， const QWidget *widget） const.
 
 ### `[override virtual] QRect QProxyStyle::subElementRect(QStyle::SubElement element, const QStyleOption *option, const QWidget *widget) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::subElementRect` 用于计算、查询或取得与“sub、Element、Rect”相关的操作。调用时要先确认当前状态和 `element`、`option`、`widget` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `element`：类型为 `QStyle::SubElement`。没有默认值，调用时必须提供。传入 `QStyle::SubElement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+计算 `element` 在控件选项中的矩形区域；默认委托基础样式，返回坐标相对于 `option` 描述的控件。
 
 ### `[override virtual] void QProxyStyle::unpolish(QApplication *app)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::unpolish` 用于执行与“unpolish”相关的操作。调用时要先确认当前状态和 `app` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `app`：类型为 `QApplication *`。没有默认值，调用时必须提供。传入 `QApplication *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::unpolish`（QA申请 *应用）。
 
 ### `[override virtual] void QProxyStyle::unpolish(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProxyStyle::unpolish` 用于执行与“unpolish”相关的操作。调用时要先确认当前状态和 `widget` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QCommonStyle::unpolish`（QWidget *控件）。
 
 ## 6. 深入实践与常见坑
 

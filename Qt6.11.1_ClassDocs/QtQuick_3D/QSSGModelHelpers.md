@@ -61,144 +61,72 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[static] float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNodeId model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getGlobalOpacity`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 返回`model`的全局不透明度。
+`frameData`。
 
 ### `[static] float QSSGModelHelpers::getGlobalOpacity(const QSSGFrameData &frameData, QSSGNodeId model, QSSGPrepContextId prepId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getGlobalOpacity`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `prepId`：类型为 `QSSGPrepContextId`。没有默认值，调用时必须提供。传入 `QSSGPrepContextId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回返回`prepId`上下文中`model`的全局不透明度。默认情况下，准备上下文参数为QSSGPrepContextId：：Uninitialized，返回模型的原始全局不透明度。
+`frameData`。
 
 ### `[static] QMatrix4x4 QSSGModelHelpers::getGlobalTransform(const QSSGFrameData &frameData, QSSGNodeId model, QSSGPrepContextId prepId = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getGlobalTransform`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QMatrix4x4`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `prepId`：类型为 `QSSGPrepContextId`。默认值为 `{}`。传入 `QSSGPrepContextId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回返回`prepId`上下文中`model`的全局变换。默认情况下，prep context参数为QSSGPrepContextId：：Uninitialized，返回模型的原始全局变换。
+`frameData`。
 
 ### `[static] float QSSGModelHelpers::getLocalOpacity(const QSSGFrameData &frameData, QSSGNodeId model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getLocalOpacity`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 返回`model`的局部不透明度。
+`frameData`。
 
 ### `[static] QMatrix4x4 QSSGModelHelpers::getLocalTransform(const QSSGFrameData &frameData, QSSGNodeId model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getLocalTransform`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QMatrix4x4`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 返回`model`的局部变换。
+`frameData`。
 
 ### `[static] void QSSGModelHelpers::setGlobalOpacity(const QSSGFrameData &frameData, QSSGRenderablesId renderablesId, QSSGNodeId model, float opacity)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setGlobalOpacity`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `renderablesId`：类型为 `QSSGRenderablesId`。没有默认值，调用时必须提供。传入 `QSSGRenderablesId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `opacity`：类型为 `float`。没有默认值，调用时必须提供。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`renderablesId`语境中设定`model`的全局不透明度。
+`frameData`，`opacity`。
 
 ### `[static] void QSSGModelHelpers::setGlobalTransform(const QSSGFrameData &frameData, QSSGRenderablesId renderablesId, QSSGNodeId model, const QMatrix4x4 &transform)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setGlobalTransform`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `renderablesId`：类型为 `QSSGRenderablesId`。没有默认值，调用时必须提供。传入 `QSSGRenderablesId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `transform`：类型为 `const QMatrix4x4 &`。没有默认值，调用时必须提供。传入 `const QMatrix4x4 &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`renderablesId`的上下文中为`model`设置全局变换。
+`frameData`，`transform`。
 
 ### `[static] void QSSGModelHelpers::setModelMaterials(const QSSGFrameData &frameData, QSSGRenderablesId renderablesId, QSSGModelHelpers::MaterialList materials)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setModelMaterials`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `renderablesId`：类型为 `QSSGRenderablesId`。没有默认值，调用时必须提供。传入 `QSSGRenderablesId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `materials`：类型为 `QSSGModelHelpers::MaterialList`。没有默认值，调用时必须提供。传入 `QSSGModelHelpers::MaterialList` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数，将`materials`应用于renderablesId集合中的所有模型。
+`frameData`，`renderablesId`。
 
 ### `[static] void QSSGModelHelpers::setModelMaterials(const QSSGFrameData &frameData, QSSGRenderablesId renderablesId, QSSGNodeId model, QSSGModelHelpers::MaterialList materials)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setModelMaterials`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `renderablesId`：类型为 `QSSGRenderablesId`。没有默认值，调用时必须提供。传入 `QSSGRenderablesId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `model`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `materials`：类型为 `QSSGModelHelpers::MaterialList`。没有默认值，调用时必须提供。传入 `QSSGModelHelpers::MaterialList` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于`model`的`materials`。
+注意：与`model`物品上的标`materials`一样，材料的应用方式相同。
+子网格使用`materials`列表中的材料，对应其索引。如果材料数量少于子网格，列表中最后一个材料用于后续子网格。
+`frameData` `renderablesId`。
 
 ## 6. 深入实践与常见坑
 

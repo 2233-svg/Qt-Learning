@@ -79,191 +79,96 @@ for (auto it = container.cbegin(); it != container.cend(); ++it) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QRegularExpressionMatchIterator::QRegularExpressionMatchIterator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatchIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的有效QRegularExpressionMatchIterator对象。正则表达式设置为默认构造的;匹配类型为`QRegularExpression::NoMatch`，匹配选项为`QRegularExpression::NoMatchOption`。
+在构造对象上调用`hasNext()`成员函数会返回false，因为迭代器没有在有效的匹配序列上迭代。
 
 ### `QRegularExpressionMatchIterator::QRegularExpressionMatchIterator(const QRegularExpressionMatchIterator &iterator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatchIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `iterator`：类型为 `const QRegularExpressionMatchIterator &`。没有默认值，调用时必须提供。传入 `const QRegularExpressionMatchIterator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QRegularExpressionMatchIterator对象，作为`iterator`的副本。
 
 ### `[constexpr noexcept, since 6.1] QRegularExpressionMatchIterator::QRegularExpressionMatchIterator(QRegularExpressionMatchIterator &&iterator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatchIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `iterator`：类型为 `QRegularExpressionMatchIterator &&`。没有默认值，调用时必须提供。传入 `QRegularExpressionMatchIterator &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从 `iterator` 移动构建 QRegularExpressionMatchIterator 对象。
+注意，移动 QRegularExpressionMatchIterator 只能被销毁或赋值。调用除解构函数或赋值操作符外的其他函数效果未定义。
 
 ### `[noexcept] QRegularExpressionMatchIterator::~QRegularExpressionMatchIterator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatchIterator` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QRegularExpressionMatchIterator`物体。
 
 ### `bool QRegularExpressionMatchIterator::hasNext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasNext`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果迭代前方至少有一个匹配结果，返回`true`;否则返回`false`。
 
 ### `bool QRegularExpressionMatchIterator::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果迭代对象是从对有效`QRegularExpression`对象调用的`QRegularExpression::globalMatch()`函数获得的，返回`true`;返回 `false` 如果`QRegularExpression`无效。
 
 ### `QRegularExpression::MatchOptions QRegularExpressionMatchIterator::matchOptions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatchIterator::matchOptions` 用于计算、查询或取得与“匹配、Options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression::MatchOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression::MatchOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于获得该`QRegularExpressionMatchIterator`对象的匹配选项，即传递给`QRegularExpression::globalMatch()`的匹配选项。
 
 ### `QRegularExpression::MatchType QRegularExpressionMatchIterator::matchType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatchIterator::matchType` 用于计算、查询或取得与“匹配、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression::MatchType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression::MatchType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于获得该`QRegularExpressionMatchIterator`对象的匹配类型，也就是传递给`QRegularExpression::globalMatch()`的匹配类型。
 
 ### `QRegularExpressionMatch QRegularExpressionMatchIterator::next()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatchIterator::next` 用于计算、查询或取得与“移动到下一项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpressionMatch`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatch`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下一场比赛结果，并将迭代器前进一位。
+注意：当迭代器位于结果集末尾时调用该函数会导致未定义的结果。
 
 ### `QRegularExpressionMatch QRegularExpressionMatchIterator::peekNext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatchIterator::peekNext` 用于计算、查询或取得与“peek、移动到下一项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpressionMatch`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatch`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下一个匹配结果，无需移动迭代器。
+注意：当迭代器位于结果集末尾时调用该函数会导致未定义的结果。
 
 ### `QRegularExpression QRegularExpressionMatchIterator::regularExpression() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatchIterator::regularExpression` 用于计算、查询或取得与“regular、Expression”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 globalMatch() 函数返回该对象的 `QRegularExpression` 对象。
 
 ### `[noexcept] void QRegularExpressionMatchIterator::swap(QRegularExpressionMatchIterator &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionMatchIterator::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QRegularExpressionMatchIterator &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这个迭代器与`other`交换。这个操作非常快，从未失败过。
 
 ### `[noexcept] QRegularExpressionMatchIterator &QRegularExpressionMatchIterator::operator=(QRegularExpressionMatchIterator &&iterator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatchIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatchIterator &`。
-- 参数 `iterator`：类型为 `QRegularExpressionMatchIterator &&`。没有默认值，调用时必须提供。传入 `QRegularExpressionMatchIterator &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `iterator` 到该对象，并返回对结果的引用。
+注意，移出`QRegularExpressionMatchIterator`只能被销毁或分配到。调用除解构器或赋值操作符外的其他函数效果尚无定义。
 
 ### `QRegularExpressionMatchIterator &QRegularExpressionMatchIterator::operator=(const QRegularExpressionMatchIterator &iterator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionMatchIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatchIterator &`。
-- 参数 `iterator`：类型为 `const QRegularExpressionMatchIterator &`。没有默认值，调用时必须提供。传入 `const QRegularExpressionMatchIterator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将迭代器`iterator`分配给该对象，并返回对该副本的引用。
 
 ## 6. 深入实践与常见坑
 

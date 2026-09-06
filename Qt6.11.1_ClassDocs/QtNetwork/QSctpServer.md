@@ -68,87 +68,57 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QSctpServer::QSctpServer(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSctpServer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QSctpServer对象。
+设置数据报的操作模式。`parent`参数传递给`QObject`的构造函数。
 
 ### `[virtual noexcept] QSctpServer::~QSctpServer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSctpServer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁`QSctpServer`对象。如果服务器监听连接，套接字会自动关闭。
 
 ### `[override virtual protected] void QSctpServer::incomingConnection(qintptr socketDescriptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSctpServer::incomingConnection` 用于执行与“incoming、Connection”相关的操作。调用时要先确认当前状态和 `socketDescriptor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketDescriptor`：类型为 `qintptr`。没有默认值，调用时必须提供。传入 `qintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QTcpServer::incomingConnection`（qintptr socketDescriptor）。
+当有新的连接可用时，`QTcpServer`调用该虚拟函数。`socketDescriptor`参数是接受连接的本地套接字描述符。
+基础实现创建`QTcpSocket`，设置套接字描述符，然后将`QTcpSocket`存储在待处理连接的内部列表中。最后`newConnection()`被输出。
+重新实现该函数以改变连接可用时服务器的行为。
+如果该服务器使用`QNetworkProxy`，那么该`socketDescriptor`可能无法与本地套接字函数一起使用，只能与`QTcpSocket::setSocketDescriptor()`一起使用。
+注意：如果在该方法的重实现中创建了另一个套接字，需要通过调用`addPendingConnection()`将其添加到待处理连接机制中。
+注意：如果你想将一个新连接作为另一个线程中的新 `QTcpSocket` 对象处理，你必须将`socketDescriptor`传递给另一个线程，在那里创建`QTcpSocket`对象并使用其`setSocketDescriptor()`方法。
 
 ### `int QSctpServer::maximumChannelCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSctpServer::maximumChannelCount` 用于计算、查询或取得与“最大值、Channel、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被接受套接字能够支持的最大通道数。
+值为0（默认值）意味着连接通道数量由远程端点设定。
+如果`QSctpServer`在 TCP 仿真模式下运行，返回 -1。
 
 ### `QSctpSocket *QSctpServer::nextPendingDatagramConnection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSctpServer::nextPendingDatagramConnection` 用于计算、查询或取得与“移动到下一项、Pending、Datagram、Connection”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSctpSocket *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSctpSocket *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下一个待处理的数据报模式连接，作为连接`QSctpSocket`对象。
+数据报模式连接提供面向消息的多流通信。
+套接字是作为服务器的子节点创建的，这意味着当`QSctpServer`对象被销毁时，它会自动被删除。不过，完成后显式删除该对象仍然是个好主意，以避免浪费内存。
+如果没有待处理的数据报模式连接，该函数返回空。
+注意：返回的`QSctpSocket`对象不能从其他线程使用。如果你想使用来自其他线程的输入连接，需要覆盖`incomingConnection()`。
 
 ### `void QSctpServer::setMaximumChannelCount(int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumChannelCount`。调用它会改变 `QSctpServer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将服务器在数据报模式下支持的最大信道数设为`count`。如果`count`为0，则使用端点最大信道数值。负 `count` 设定TCP仿真模式。
+只有当`QSctpServer`处于UnconnectedState时才调用此方法。
 
 ## 6. 深入实践与常见坑
 

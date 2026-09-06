@@ -72,178 +72,96 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QSGOpaqueTextureMaterial::QSGOpaqueTextureMaterial()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGOpaqueTextureMaterial` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的 QSGOpaqueTextureMaterial。
+默认的mipmap过滤和过滤模式设置为`QSGTexture::Nearest`。默认的包裹模式设置为`QSGTexture::ClampToEdge`。
 
 ### `QSGTexture::AnisotropyLevel QSGOpaqueTextureMaterial::anisotropyLevel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGOpaqueTextureMaterial::anisotropyLevel` 用于计算、查询或取得与“anisotropy、Level”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::AnisotropyLevel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::AnisotropyLevel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原了该材料的无味层。
 
 ### `QSGTexture::Filtering QSGOpaqueTextureMaterial::filtering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGOpaqueTextureMaterial::filtering` 用于计算、查询或取得与“filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该材料的过滤模式。
+默认过滤是`QSGTexture::Nearest`。
 
 ### `QSGTexture::WrapMode QSGOpaqueTextureMaterial::horizontalWrapMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGOpaqueTextureMaterial::horizontalWrapMode` 用于计算、查询或取得与“水平、Wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::WrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::WrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+恢复了该材料的水平包裹模式。
+默认的水平包裹模式是`QSGTexture::ClampToEdge`。
 
 ### `QSGTexture::Filtering QSGOpaqueTextureMaterial::mipmapFiltering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGOpaqueTextureMaterial::mipmapFiltering` 用于计算、查询或取得与“mipmap、Filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该材料的mipmap过滤模式。
+默认的mipmap模式是`QSGTexture::Nearest`。
 
 ### `void QSGOpaqueTextureMaterial::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAnisotropyLevel`。调用它会改变 `QSGOpaqueTextureMaterial` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `level`：类型为 `QSGTexture::AnisotropyLevel`。没有默认值，调用时必须提供。传入 `QSGTexture::AnisotropyLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该材料的无效度调至`level`。
 
 ### `void QSGOpaqueTextureMaterial::setFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFiltering`。调用它会改变 `QSGOpaqueTextureMaterial` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把过滤设置为`filtering`。
+过滤模式是在纹理实例绑定渲染前设置的。
 
 ### `void QSGOpaqueTextureMaterial::setHorizontalWrapMode(QSGTexture::WrapMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalWrapMode`。调用它会改变 `QSGOpaqueTextureMaterial` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSGTexture::WrapMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将水平包裹模式设置为`mode`。
+水平包裹模式是在纹理实例绑定渲染前设置的。
 
 ### `void QSGOpaqueTextureMaterial::setMipmapFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMipmapFiltering`。调用它会改变 `QSGOpaqueTextureMaterial` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将mipmap模式设置为`filtering`。
+mipmap过滤模式是在纹理实例被绑定渲染之前设置的。
+如果纹理不支持mipmapping，启用mipmapping也无效。
 
 ### `void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTexture`。调用它会改变 `QSGOpaqueTextureMaterial` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `texture`：类型为 `QSGTexture *`。没有默认值，调用时必须提供。传入 `QSGTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这些材料的质地设定为`texture`。
+材质并不拥有纹理的所有权。
 
 ### `void QSGOpaqueTextureMaterial::setVerticalWrapMode(QSGTexture::WrapMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalWrapMode`。调用它会改变 `QSGOpaqueTextureMaterial` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSGTexture::WrapMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直包裹模式设置为`mode`。
+垂直包裹模式是在纹理实例绑定渲染前设置的。
 
 ### `QSGTexture *QSGOpaqueTextureMaterial::texture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGOpaqueTextureMaterial::texture` 用于计算、查询或取得与“texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该纹理材质的纹理。
 
 ### `QSGTexture::WrapMode QSGOpaqueTextureMaterial::verticalWrapMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGOpaqueTextureMaterial::verticalWrapMode` 用于计算、查询或取得与“垂直、Wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::WrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::WrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该材料的垂直包裹模式。
+默认的垂直包裹模式是`QSGTexture::ClampToEdge`。
 
 ## 6. 深入实践与常见坑
 

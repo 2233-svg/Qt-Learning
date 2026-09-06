@@ -93,272 +93,212 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 20 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGraphicsEffect::ChangeFlagflags QGraphicsEffect::ChangeFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 暴露的类型声明 `Change、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ChangeFlagflags QGraphicsEffect::ChangeFlags`。
-- 属性名：`QGraphicsEffect`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了QGraphicsEffectSource中发生的变化。
+- `QGraphicsEffect::SourceAttached`：`0x1`;该效果安装在源上。
+- `QGraphicsEffect::SourceDetached`：`0x2`;该效果在源代码中卸载。
+- `QGraphicsEffect::SourceBoundingRectChanged`：`0x4`;源的边界矩阵发生变化。
+- `QGraphicsEffect::SourceInvalidated`：`0x8`;源的视觉外观发生了变化。
+ChangeFlags 类型是 QFlags 的 typedef<ChangeFlag>。它存储 ChangeFlag 值的 OR 组合。
 
 ### `enum QGraphicsEffect::PixmapPadMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 暴露的类型声明 `Pixmap、Pad、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PixmapPadMode`。
-- 属性名：`QGraphicsEffect`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了从`sourcePixmap`返回的像素图应如何填充。
+- `QGraphicsEffect::NoPad`：`0`;像素地图不应获得任何额外的填充。
+- `QGraphicsEffect::PadToTransparentBorder`：`1`;像素地图应进行填充，以确保边界完全透明。
+- `QGraphicsEffect::PadToEffectiveBoundingRect`：`2`;像素贴图应填充以匹配效果的有效边界矩形。
 
 ### `enabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 的配置属性。初始化或状态切换时通过 `setEnabled(...)` 设置，之后用 `enabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+无论该效应是否被启用，这一属性都成立。
+如果某个效果被禁用，源会像正常一样渲染，不会受到该效果的干扰。如果该效果被启用，源体也会以该效果的状态渲染。
+该属性默认启用。
+利用这个特性，你可以在慢速平台上禁用某些效果，以确保用户界面响应灵敏。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`enabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `enabled()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsEffect::QGraphicsEffect(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个具有指定`parent`的新QGraphicsEffect实例。
 
 ### `[virtual noexcept] QGraphicsEffect::~QGraphicsEffect()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这样可以从源端移除效果，同时破坏图形效果。
 
 ### `QRectF QGraphicsEffect::boundingRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsEffect::boundingRect` 用于计算、查询或取得与“bounding、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该效应的有效边界矩形，即源在设备坐标下的边界矩形，并由效果本身施加的边际调整。
 
 ### `[virtual] QRectF QGraphicsEffect::boundingRectFor(const QRectF &rect) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsEffect::boundingRectFor` 用于计算、查询或取得与“bounding、Rect、For”相关的操作。调用时要先确认当前状态和 `rect` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据设备坐标中提供的`rect`返回该效果的有效边界矩形。在编写自定义效果时，每当参数发生变化可能导致该函数返回不同值时，必须调用`updateBoundingRect()`。
 
 ### `[pure virtual protected] void QGraphicsEffect::draw(QPainter *painter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 的核心操作 `draw`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+这个纯虚拟函数绘制该效应，并在需要绘制源时调用。
+在`QGraphicsEffect`子类中重新实现该函数，以提供该效果的绘制实现，使用`painter`。
+用户不应明确调用该函数，因为它仅用于重实现。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ MyGraphicsEffect::draw(QPainter *painter)
+ {
+     ...
+     QPoint offset;
+     if (sourceIsPixmap()) {
+         // No point in drawing in device coordinates (pixmap will be scaled anyways).
+         const QPixmap pixmap = sourcePixmap(Qt::LogicalCoordinates, &offset);
+         ...
+         painter->drawPixmap(offset, pixmap);
+     } else {
+         // Draw pixmap in device coordinates to avoid pixmap scaling;
+         const QPixmap pixmap = sourcePixmap(Qt::DeviceCoordinates, &offset);
+         painter->setWorldTransform(QTransform());
+         ...
+         painter->drawPixmap(offset, pixmap);
+     }
+     ...
+ }
+```
 
 ### `[protected] void QGraphicsEffect::drawSource(QPainter *painter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 的核心操作 `drawSource`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+直接使用给定的 `painter` 绘制源。
+该函数应仅从`QGraphicsEffect::draw()`调用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ MyGraphicsOpacityEffect::draw(QPainter *painter)
+ {
+     // Fully opaque; draw directly without going through a pixmap.
+     if (qFuzzyCompare(m_opacity, 1)) {
+         drawSource(painter);
+         return;
+     }
+     ...
+ }
+```
 
 ### `[signal] void QGraphicsEffect::enabledChanged(bool enabled)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 发出的通知信号 `enabledChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+无论该效应是否被启用，这一属性都成立。
+如果某个效果被禁用，源会像正常一样渲染，不会受到该效果的干扰。如果该效果被启用，源体也会以该效果的状态渲染。
+该属性默认启用。
+利用这个特性，你可以在慢速平台上禁用某些效果，以确保用户界面响应灵敏。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `enabled` 的变化，不要把它当作普通函数主动调用。
 
 ### `[protected] QRectF QGraphicsEffect::sourceBoundingRect(Qt::CoordinateSystem system = Qt::LogicalCoordinates) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsEffect::sourceBoundingRect` 用于计算、查询或取得与“来源、Bounding、Rect”相关的操作。调用时要先确认当前状态和 `system` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `system`：类型为 `Qt::CoordinateSystem`。默认值为 `Qt::LogicalCoordinates`。传入 `Qt::CoordinateSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回映射到给定`system`的源的边界矩形。
+在`QGraphicsEffect::draw()`之外调用`Qt::DeviceCoordinates`该函数时，会得到未定义的结果，因为没有可用的设备上下文。
 
 ### `[virtual protected] void QGraphicsEffect::sourceChanged(QGraphicsEffect::ChangeFlags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `sourceChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QGraphicsEffect::ChangeFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QGraphicsEffect`调用该虚拟函数以通知该效果源发生变化。如果该效果应用于任何缓存，则必须清除该缓存以反映源的新样貌。
+`flags`描述了发生了哪些变化。
 
 ### `[protected] bool QGraphicsEffect::sourceIsPixmap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsEffect::sourceIsPixmap` 用于计算、查询或取得与“来源、状态判断、Pixmap”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果源实际上是像素图，例如`QGraphicsPixmapItem`，则返回`true`。
+这个函数对优化很有用。例如，如果这个函数返回`true`，为了避免像素映射缩放，在设备坐标中绘制源图毫无意义——源像素映射无论如何都会被缩放。
 
 ### `[protected] QPixmap QGraphicsEffect::sourcePixmap(Qt::CoordinateSystem system = Qt::LogicalCoordinates, QPoint *offset = nullptr, QGraphicsEffect::PixmapPadMode mode = PadToEffectiveBoundingRect) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsEffect::sourcePixmap` 用于计算、查询或取得与“来源、Pixmap”相关的操作。调用时要先确认当前状态和 `system`、`offset`、`mode` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `system`：类型为 `Qt::CoordinateSystem`。默认值为 `Qt::LogicalCoordinates`。传入 `Qt::CoordinateSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `QPoint *`。默认值为 `nullptr`。传入 `QPoint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QGraphicsEffect::PixmapPadMode`。默认值为 `PadToEffectiveBoundingRect`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个带有源图的像素图。
+`system`指定了源图应使用的坐标系。可选的`offset`参数返回使用当前画师绘制像素图应绘制的偏移量。控制像素图填充方式请使用`mode`参数。
+当`system`被`Qt::DeviceCoordinates`时，返回的像素映射会被裁剪到当前画家设备的矩形上。
+在`QGraphicsEffect::draw()`之外调用该函数时，`Qt::DeviceCoordinates`调用该函数会得到未定义的结果，因为没有可用的设备上下文。
 
 ### `[slot] void QGraphicsEffect::update()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `update`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安排对效果的重新绘制。每当需要重新绘制效果时调用此函数。该函数不会触发对源的重新绘制。
 
 ### `[protected] void QGraphicsEffect::updateBoundingRect()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsEffect::updateBoundingRect` 用于执行与“更新、Bounding、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数会在效果边界矩形发生变化时通知效果框架。作为自定义特效作者，每当你更改任何会导致虚拟`boundingRectFor()`函数返回不同值的参数时，都必须调用这个函数。
+如果需要，该函数会调用`update()`。
 
 ### `enum ChangeFlag { SourceAttached, SourceDetached, SourceBoundingRectChanged, SourceInvalidated }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 暴露的类型声明 `Change、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了QGraphicsEffectSource中发生的变化。
+- `QGraphicsEffect::SourceAttached`：`0x1`;该效果安装在源上。
+- `QGraphicsEffect::SourceDetached`：`0x2`;该效果在源代码中卸载。
+- `QGraphicsEffect::SourceBoundingRectChanged`：`0x4`;源的边界矩阵发生变化。
+- `QGraphicsEffect::SourceInvalidated`：`0x8`;源的视觉外观发生了变化。
+ChangeFlags 类型是 QFlags 的 typedef<ChangeFlag>。它存储 ChangeFlag 值的 OR 组合。
 
 ### `flags ChangeFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsEffect` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了QGraphicsEffectSource中发生的变化。
+- `QGraphicsEffect::SourceAttached`：`0x1`;该效果安装在源上。
+- `QGraphicsEffect::SourceDetached`：`0x2`;该效果在源代码中卸载。
+- `QGraphicsEffect::SourceBoundingRectChanged`：`0x4`;源的边界矩阵发生变化。
+- `QGraphicsEffect::SourceInvalidated`：`0x8`;源的视觉外观发生了变化。
+ChangeFlags 类型是 QFlags 的 typedef<ChangeFlag>。它存储 ChangeFlag 值的 OR 组合。
 
 ### `bool isEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+无论该效应是否被启用，这一属性都成立。
+如果某个效果被禁用，源会像正常一样渲染，不会受到该效果的干扰。如果该效果被启用，源体也会以该效果的状态渲染。
+该属性默认启用。
+利用这个特性，你可以在慢速平台上禁用某些效果，以确保用户界面响应灵敏。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `void setEnabled(bool enable)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setEnabled`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+无论该效应是否被启用，这一属性都成立。
+如果某个效果被禁用，源会像正常一样渲染，不会受到该效果的干扰。如果该效果被启用，源体也会以该效果的状态渲染。
+该属性默认启用。
+利用这个特性，你可以在慢速平台上禁用某些效果，以确保用户界面响应灵敏。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setEnabled(...)` 修改 `enabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

@@ -115,580 +115,385 @@ if (instance.create()) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 44 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QVulkanInstance::DebugFilter`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的配置属性。初始化或状态切换时通过 `setDebugFilter(...)` 设置，之后用 `DebugFilter()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+用于调试过滤回调函数的Typedef，签名如下：
+返回`true`会抑制该信息的印刷。
+注意：从 Qt 6.5 开始，使用 `VK_EXT_debug_utils` 代替已废弃的 `VK_EXT_debug_report`。回调签名基于 VK_EXT_debug_report。因此，并非所有参数都有效。避免依赖除 `pMessage`、`messageCode` 和 `object` 以外的参数。希望访问 VK_EXT_debug_utils 中指定的所有回调数据的应用程序应迁移到 `DebugUtilsFilter`。
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:DebugFilter`。
-- 属性名：`QVulkanInstance`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool myDebugFilter(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
+                    size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage)
+```
 
 ### `[since 6.5] enum QVulkanInstance::DebugMessageSeverityFlagflags QVulkanInstance::DebugMessageSeverityFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 暴露的类型声明 `调试输出、Message、Severity、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DebugMessageSeverityFlagflags QVulkanInstance::DebugMessageSeverityFlags`。
-- 属性名：`QVulkanInstance`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVulkanInstance::VerboseSeverity`：`0x01`
+- `QVulkanInstance::InfoSeverity`：`0x02`
+- `QVulkanInstance::WarningSeverity`：`0x04`
+- `QVulkanInstance::ErrorSeverity`：`0x08`
+这个枚举是在Qt 6.5引入的。
+DebugMessageSeverityFlags 类型是 QFlags 的 typedef<DebugMessageSeverityFlag>。它存储 DebugMessageSeverityFlag 值的 OR 组合。
 
 ### `[since 6.5] enum QVulkanInstance::DebugMessageTypeFlagflags QVulkanInstance::DebugMessageTypeFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 暴露的类型声明 `调试输出、Message、类型、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DebugMessageTypeFlagflags QVulkanInstance::DebugMessageTypeFlags`。
-- 属性名：`QVulkanInstance`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVulkanInstance::GeneralMessage`：`0x01`
+- `QVulkanInstance::ValidationMessage`：`0x02`
+- `QVulkanInstance::PerformanceMessage`：`0x04`
+这个枚举是在Qt 6.5引入的。
+DebugMessageTypeFlags 类型是 QFlags 的 typedef<DebugMessageTypeFlag>。它存储 DebugMessageTypeFlag 值的 OR 组合。
 
 ### `[alias, since 6.5] QVulkanInstance::DebugUtilsFilter`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的配置属性。初始化或状态切换时通过 `setDebugUtilsFilter(...)` 设置，之后用 `DebugUtilsFilter()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+用于调试过滤回调函数的Typedef，签名如下：
+`message`参数指向 VkDebugUtilsMessengerCallbackDataEXT 结构。详情请参阅 `VK_EXT_debug_utils` 文档。Qt 头不使用 real类型，以避免对 1.0 后 Vulkan 头部产生依赖。
+返回`true`会抑制该信息的印刷。
+这种类型防御是在Qt 6.5中引入的。
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:DebugUtilsFilter`。
-- 属性名：`QVulkanInstance`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ std::function<bool(DebugMessageSeverityFlags severity, DebugMessageTypeFlags type, const void *message)>;
+```
 
 ### `enum QVulkanInstance::Flagflags QVulkanInstance::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QVulkanInstance::Flags`。
-- 属性名：`QVulkanInstance`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以传递给`setFlags()`的标志。这些标志控制`create()`的行为。
+- `QVulkanInstance::NoDebugOutputRedirect`：`0x01`;禁用 Vulkan 调试输出（`VK_EXT_debug_utils`）重定向到 `qDebug`。
+- `QVulkanInstance::NoPortabilityDrivers (since Qt 6.5)`：`0x02`;禁用标记为Vulkan可携带性实体设备的枚举。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `QVulkanInstance::QVulkanInstance()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的实例。
+注意：构造函数中不执行任何Vulkan初始化。
 
 ### `[noexcept] QVulkanInstance::~QVulkanInstance()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
+注意：实例被摧毁后`vkInstance()`会`nullptr`回来。
 
 ### `QVersionNumber QVulkanInstance::apiVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::apiVersion` 用于计算、查询或取得与“api、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回请求的 Vulkan API 版本，应用程序预期运行时会返回，或者如果未调用`setApiVersion()`版本号，则返回空版本号`create()`。
 
 ### `[since 6.5] void QVulkanInstance::clearDebugOutputFilters()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::clearDebugOutputFilters` 用于执行与“清空、调试输出、Output、Filters”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`installDebugOutputFilter()`之前安装的所有滤网功能。
+注意：该函数可以在`create()`之前调用。
 
 ### `bool QVulkanInstance::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+初始化 Vulkan 库并创建新实例或采用已有的 Vulkan 实例。
+成功时返回 true，错误时返回 false，或不支持 Vulkan 时返回。
+成功后，指向该`QVulkanInstance`的指针可以通过`vkInstance()`恢复。
+只要该`QVulkanInstance`存在，Vulkan实例和库就会使用，或者直到调用`destroy()`为止。
+默认情况下，VkInstance 是用 VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR 设置的标志创建的。这意味着 Vulkan 可移植性物理设备也会被枚举。如果不希望这样，可以设置 `NoPortabilityDrivers` 标志。
 
 ### `void QVulkanInstance::destroy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::destroy` 用于执行与“destroy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁底层平台实例，从而摧毁Vk实例（当被拥有时）。`QVulkanInstance`对象仍可通过再次调用`create()`重用。
 
 ### `QVulkanDeviceFunctions *QVulkanInstance::deviceFunctions(VkDevice device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::deviceFunctions` 用于计算、查询或取得与“device、Functions”相关的操作。调用时要先确认当前状态和 `device` 的有效范围；返回类型是 `QVulkanDeviceFunctions *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVulkanDeviceFunctions *`。
-- 参数 `device`：类型为 `VkDevice`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回暴露设备级核心 Vulkan 命令集的 `QVulkanDeviceFunctions` 对象，且保证跨平台功能正常。
+注意：返回对象中的 Vulkan 函数只能以 `device` 或 `device` 的子对象（VkQueue、VkCommandBuffer）作为首参数调用。这是因为这些函数通过 vkGetDeviceProcAddr 解析，以避免内部调度的潜在开销。
+注意：归还物品归`QVulkanInstance`所有和管理。请勿销毁或更改。
+注意：该对象是缓存的，因此再次用相同`device`调用该函数是一种廉价操作。然而，当设备被摧毁时，应用程序需通过调用`resetDeviceFunctions()`通知`QVulkanInstance`。
+核心 Vulkan 1.0 API 的功能将始终可用。对于更高版本的 Vulkan，如 1.1 和 1.2，`QVulkanDeviceFunctions` 对象会尝试解析这些核心 API 函数，但如果运行时 Vulkan 物理设备不支持这些功能，调用任何不支持函数会导致未指定行为。为了正确启用对 1.0 以上版本的支持，可能需要在 `create()` 前调用 `setApiVersion()` 来设置合适的实例 API 版本。此外，应用程序还应在 VkPhysicalDeviceProperties 中检查物理设备的 `apiVersion`。
 
 ### `VkResult QVulkanInstance::errorCode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::errorCode` 用于计算、查询或取得与“错误、Code”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `VkResult`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`VkResult`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在未成功`create()`后返回Vulkan错误代码，`VK_SUCCESS`其他情况。
+该值通常是 vkCreateInstance() 的返回值（创建新 Vulkan 实例而非采用现有实例时），但如果平台插件不支持 Vulkan，也可能`VK_NOT_READY`。
 
 ### `QByteArrayList QVulkanInstance::extensions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::extensions` 用于计算、查询或取得与“extensions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArrayList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果调用`create()`且成功，则返回启用的实例扩展。否则返回请求的扩展。
 
 ### `QVulkanInstance::Flags QVulkanInstance::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVulkanInstance::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVulkanInstance::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回请求的标志。
 
 ### `QVulkanFunctions *QVulkanInstance::functions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::functions` 用于计算、查询或取得与“functions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVulkanFunctions *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVulkanFunctions *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应的`QVulkanFunctions`对象，该对象暴露核心 Vulkan 命令集，排除设备级功能，且保证跨平台功能。
+注意：归还的物品由`QVulkanInstance`拥有和管理。请勿销毁或更改。
+核心 Vulkan 1.0 API 中的函数将始终可用。对于更高版本的 Vulkan，如 1.1 和 1.2，`QVulkanFunctions` 对象也会尝试解析这些核心 API 函数，但如果运行时 Vulkan 实例实现不支持这些功能，调用任何不支持的函数会导致不确定的行为。此外，为了正确启用对 1.0 以上版本的支持，可能需要在 `create()` 前调用 `setApiVersion()` 来设置合适的实例 API 版本。要查询 Vulkan 实现的实例级版本，请调用 `supportedApiVersion()`。
 
 ### `PFN_vkVoidFunction QVulkanInstance::getInstanceProcAddr(const char *name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的核心操作 `getInstanceProcAddr`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`PFN_vkVoidFunction`。
-- 参数 `name`：类型为 `const char *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的 `name` 解析 Vulkan 函数。
+对于核心，Vulkan命令更倾向于使用可从`functions()`和`deviceFunctions()`检索的函数包装器。
 
 ### `[since 6.5] void QVulkanInstance::installDebugOutputFilter(QVulkanInstance::DebugUtilsFilter filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVulkanInstance` 添加依赖、数据或子对象的 API `installDebugOutputFilter`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `QVulkanInstance::DebugUtilsFilter`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安装一个`filter`函数，每个 Vulkan 调试消息都会调用。当回调返回 `true` 时，消息被停止（过滤掉），不会出现在调试输出中。
+注意：过滤只有在`NoDebugOutputRedirect`未`set`时才有效。安装过滤器在其他情况下没有效果。
+注意：该函数可以在 `create()` 之前调用。
 
 ### `void QVulkanInstance::installDebugOutputFilter(QVulkanInstance::DebugFilter filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVulkanInstance` 添加依赖、数据或子对象的 API `installDebugOutputFilter`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `QVulkanInstance::DebugFilter`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安装一个`filter`函数，每个 Vulkan 调试消息都会调用。当回调返回 `true` 时，消息被停止（过滤掉），不会出现在调试输出中。
+注意：过滤只有在`NoDebugOutputRedirect`未`set`时才有效。安装过滤器在其他情况下没有效果。
+注意：该函数可以在 `create()` 之前调用。
 
 ### `bool QVulkanInstance::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`create()`成功且实例有效，则返回为真。
 
 ### `QByteArrayList QVulkanInstance::layers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::layers` 用于计算、查询或取得与“layers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArrayList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果调用`create()`且成功，则返回启用的实例层。否则返回请求的层。
 
 ### `void QVulkanInstance::presentAboutToBeQueued(QWindow *window)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::presentAboutToBeQueued` 用于执行与“present、About、转换输出、Be、Queued”相关的操作。调用时要先确认当前状态和 `window` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `window`：类型为 `QWindow *`。没有默认值，调用时必须提供。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数应由应用程序的渲染器调用，然后排队当前操作以获得`window`。
+虽然在某些平台上这不允许操作，但有些平台可能会执行窗口系统相关的同步。例如，在Wayland上，这会增加发送wl_surface.帧请求，以防止驱动在最小化窗口时阻塞。
 
 ### `void QVulkanInstance::presentQueued(QWindow *window)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::presentQueued` 用于执行与“present、Queued”相关的操作。调用时要先确认当前状态和 `window` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `window`：类型为 `QWindow *`。没有默认值，调用时必须提供。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数应由应用程序渲染器在排队完成当前操作后调用`window`。
+虽然在某些平台上这会是无操作操作，但有些平台可能会执行依赖窗口系统的同步。例如，在X11上，这会更新`_NET_WM_SYNC_REQUEST_COUNTER`。
 
 ### `void QVulkanInstance::removeDebugOutputFilter(QVulkanInstance::DebugFilter filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeDebugOutputFilter`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `QVulkanInstance::DebugFilter`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`installDebugOutputFilter()`之前安装的`filter`功能。
+注意：该函数可以在`create()`之前调用。
 
 ### `void QVulkanInstance::resetDeviceFunctions(VkDevice device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::resetDeviceFunctions` 用于执行与“重置、Device、Functions”相关的操作。调用时要先确认当前状态和 `device` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `VkDevice`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使给定`device`的`QVulkanDeviceFunctions`对象失效并销毁。
+当调用`deviceFunctions()`的VkDevice在应用计划继续运行时被销毁，可能在后续创建新的逻辑Vulkan设备时，必须调用该函数。
+在销毁`QVulkanInstance`之前无需调用，因为清理工作会自动完成。
 
 ### `void QVulkanInstance::setApiVersion(const QVersionNumber &vulkanVersion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setApiVersion`。调用它会改变 `QVulkanInstance` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `vulkanVersion`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。传入 `const QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定应用程序设计使用的最高 Vulkan API 版本。
+默认情况下，`vulkanVersion`是0，映射到Vulkan 1.0。
+注意：该函数只能在`create()`之前调用，之后调用则无效。
+注意：注意 Vulkan 1.1 改变了 Vulkan API 版本字段的行为。在 Vulkan 1.0 中，指定不支持的`vulkanVersion`会导致`VK_ERROR_INCOMPATIBLE_DRIVER` `create()`失败，这是规范要求的。从 Vulkan 1.1 开始，规范禁止此操作，驱动程序必须接受任何版本且不会失败实例创建。
+建议应用开发者熟悉 Vulkan 规范中的 `apiVersion` 说明。
 
 ### `void QVulkanInstance::setExtensions(const QByteArrayList &extensions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setExtensions`。调用它会改变 `QVulkanInstance` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `extensions`：类型为 `const QByteArrayList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定需要启用的额外实例`extensions`列表。也可以安全地指定不支持的扩展，因为运行时这些扩展不支持时会被忽略。
+注意：Qt 要求的与表面相关的扩展（例如 `VK_KHR_win32_surface`）始终会自动添加，无需在此列表中包含。
+注意：除非设置`NoPortabilityDrivers`标志，否则`VK_KHR_portability_enumeration`会自动添加。该值是在第6.5个Qt中引入的。
+注意：该函数只能在`create()`之前调用，若在后调用则无效。
 
 ### `void QVulkanInstance::setFlags(QVulkanInstance::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QVulkanInstance` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QVulkanInstance::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据提供的 `flags`配置`create()`的行为。
+注意：该函数只能在`create()`之前调用，之后调用则无效。
 
 ### `void QVulkanInstance::setLayers(const QByteArrayList &layers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLayers`。调用它会改变 `QVulkanInstance` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `layers`：类型为 `const QByteArrayList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定启用实例`layers`列表。也可以安全地指定不支持层，因为运行时不支持时这些层会被忽略。
+注意：该函数只能在`create()`之前调用，之后调用则无效。
 
 ### `void QVulkanInstance::setVkInstance(VkInstance existingVkInstance)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVkInstance`。调用它会改变 `QVulkanInstance` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `existingVkInstance`：类型为 `VkInstance`。没有默认值，调用时必须提供。传入 `VkInstance` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+让`QVulkanInstance`采用已有的 VkInstance 句柄，而不是创建一个新的。
+注意：`existingVkInstance`必须至少启用`VK_KHR_surface`并启用相应的 WSI 专用 `VK_KHR_*_surface`扩展。为确保调试输出重定向功能正常，还需要`VK_EXT_debug_utils`。
+注意：该函数只能在 `create()` 之前调用，之后调用则无效。
 
 ### `QVersionNumber QVulkanInstance::supportedApiVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::supportedApiVersion` 用于计算、查询或取得与“supported、Api、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由 Vulkan 实现支持的实例级功能版本。
+实际上，这要么是vkEnumerateInstanceVersion返回的值（如果该函数可用，Vulkan 1.1及更新版本），要么是1.0。
+希望根据运行时可用的 Vulkan 版本分支其 Vulkan 功能和 API 使用情况的应用程序，可以用该函数确定在调用 `create()` 前传入哪个版本给`setApiVersion()`。
+注意：该函数可以在`create()`之前调用。
 
 ### `QVulkanInfoVector<QVulkanExtension> QVulkanInstance::supportedExtensions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::supportedExtensions` 用于计算、查询或取得与“supported、Extensions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVulkanInfoVector<QVulkanExtension>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVulkanInfoVector<QVulkanExtension>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回支持的实例级扩展列表。
+注意：该函数可以在`create()`之前调用。
 
 ### `QVulkanInfoVector<QVulkanLayer> QVulkanInstance::supportedLayers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::supportedLayers` 用于计算、查询或取得与“supported、Layers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVulkanInfoVector<QVulkanLayer>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVulkanInfoVector<QVulkanLayer>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回支持的实例级层列表。
+注意：该函数可以在 `create()` 之前调用。
 
 ### `bool QVulkanInstance::supportsPresent(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, QWindow *window)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `supportsPresent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `physicalDevice`：类型为 `VkPhysicalDevice`。没有默认值，调用时必须提供。传入 `VkPhysicalDevice` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `queueFamilyIndex`：类型为 `uint32_t`。没有默认值，调用时必须提供。传入 `uint32_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `window`：类型为 `QWindow *`。没有默认值，调用时必须提供。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果队列家族中`queueFamilyIndex` `physicalDevice`支持向`window`呈现，则返回为真。
+在检查某台 Vulkan 设备的队列时调用该函数，以决定哪个队列可用于演示。
 
 ### `[static] VkSurfaceKHR QVulkanInstance::surfaceForWindow(QWindow *window)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `surfaceForWindow`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`VkSurfaceKHR`。
-- 参数 `window`：类型为 `QWindow *`。没有默认值，调用时必须提供。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建或检索给定`window`已有的`VkSurfaceKHR`柄。
+失败时返回Vulkan表面手柄或0。
 
 ### `VkInstance QVulkanInstance::vkInstance() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanInstance::vkInstance` 用于计算、查询或取得与“vk、Instance”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `VkInstance`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`VkInstance`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 VkInstance 处理`QVulkanInstance`包裹，或者如果尚未成功调用`create()`且未通过 `setVkInstance()` 提供现有实例，则返回 `nullptr`。
 
 ### `DebugFilter`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的 `调试输出、Filter` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+用于调试过滤回调函数的Typedef，签名如下：
+返回`true`会抑制该信息的印刷。
+注意：从 Qt 6.5 开始，使用 `VK_EXT_debug_utils` 代替已废弃的 `VK_EXT_debug_report`。回调签名基于 VK_EXT_debug_report。因此，并非所有参数都有效。避免依赖除 `pMessage`、`messageCode` 和 `object` 以外的参数。希望访问 VK_EXT_debug_utils 中指定的所有回调数据的应用程序应迁移到 `DebugUtilsFilter`。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool myDebugFilter(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
+                    size_t location, int32_t messageCode, const char *pLayerPrefix, const char *pMessage)
+```
 
 ### `(since 6.5) enum DebugMessageSeverityFlag { VerboseSeverity, InfoSeverity, WarningSeverity, ErrorSeverity }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 暴露的类型声明 `调试输出、Message、Severity、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVulkanInstance::VerboseSeverity`：`0x01`
+- `QVulkanInstance::InfoSeverity`：`0x02`
+- `QVulkanInstance::WarningSeverity`：`0x04`
+- `QVulkanInstance::ErrorSeverity`：`0x08`
+这个枚举是在Qt 6.5引入的。
+DebugMessageSeverityFlags 类型是 QFlags 的 typedef<DebugMessageSeverityFlag>。它存储 DebugMessageSeverityFlag 值的 OR 组合。
 
 ### `flags DebugMessageSeverityFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVulkanInstance::VerboseSeverity`：`0x01`
+- `QVulkanInstance::InfoSeverity`：`0x02`
+- `QVulkanInstance::WarningSeverity`：`0x04`
+- `QVulkanInstance::ErrorSeverity`：`0x08`
+这个枚举是在Qt 6.5引入的。
+DebugMessageSeverityFlags 类型是 QFlags 的 typedef<DebugMessageSeverityFlag>。它存储 DebugMessageSeverityFlag 值的 OR 组合。
 
 ### `(since 6.5) enum DebugMessageTypeFlag { GeneralMessage, ValidationMessage, PerformanceMessage }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 暴露的类型声明 `调试输出、Message、类型、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVulkanInstance::GeneralMessage`：`0x01`
+- `QVulkanInstance::ValidationMessage`：`0x02`
+- `QVulkanInstance::PerformanceMessage`：`0x04`
+这个枚举是在Qt 6.5引入的。
+DebugMessageTypeFlags 类型是 QFlags 的 typedef<DebugMessageTypeFlag>。它存储 DebugMessageTypeFlag 值的 OR 组合。
 
 ### `flags DebugMessageTypeFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVulkanInstance::GeneralMessage`：`0x01`
+- `QVulkanInstance::ValidationMessage`：`0x02`
+- `QVulkanInstance::PerformanceMessage`：`0x04`
+这个枚举是在Qt 6.5引入的。
+DebugMessageTypeFlags 类型是 QFlags 的 typedef<DebugMessageTypeFlag>。它存储 DebugMessageTypeFlag 值的 OR 组合。
 
 ### `(since 6.5) DebugUtilsFilter`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的 `调试输出、Utils、Filter` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+用于调试过滤回调函数的Typedef，签名如下：
+`message`参数指向 VkDebugUtilsMessengerCallbackDataEXT 结构。详情请参阅 `VK_EXT_debug_utils` 文档。Qt 头不使用 real类型，以避免对 1.0 后 Vulkan 头部产生依赖。
+返回`true`会抑制该信息的印刷。
+这种类型防御是在Qt 6.5中引入的。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ std::function<bool(DebugMessageSeverityFlags severity, DebugMessageTypeFlags type, const void *message)>;
+```
 
 ### `enum Flag { NoDebugOutputRedirect, NoPortabilityDrivers }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以传递给`setFlags()`的标志。这些标志控制`create()`的行为。
+- `QVulkanInstance::NoDebugOutputRedirect`：`0x01`;禁用 Vulkan 调试输出（`VK_EXT_debug_utils`）重定向到 `qDebug`。
+- `QVulkanInstance::NoPortabilityDrivers (since Qt 6.5)`：`0x02`;禁用标记为Vulkan可携带性实体设备的枚举。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanInstance` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以传递给`setFlags()`的标志。这些标志控制`create()`的行为。
+- `QVulkanInstance::NoDebugOutputRedirect`：`0x01`;禁用 Vulkan 调试输出（`VK_EXT_debug_utils`）重定向到 `qDebug`。
+- `QVulkanInstance::NoPortabilityDrivers (since Qt 6.5)`：`0x02`;禁用标记为Vulkan可携带性实体设备的枚举。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

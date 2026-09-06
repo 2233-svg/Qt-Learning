@@ -75,105 +75,51 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[default] QItemSelection::QItemSelection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelection` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空选择。
 
 ### `QItemSelection::QItemSelection(const QModelIndex &topLeft, const QModelIndex &bottomRight)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelection` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `topLeft`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `bottomRight`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个从左上角模型项（由`topLeft`索引指定）延伸到右下角（由`bottomRight`指定）的项选择。
 
 ### `bool QItemSelection::contains(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果选择包含给定`index`，返回`true`;否则返回`false`。
 
 ### `QModelIndexList QItemSelection::indexes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelection::indexes` 用于计算、查询或取得与“indexes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应所选项目的模型索引列表。
 
 ### `void QItemSelection::merge(const QItemSelection &other, QItemSelectionModel::SelectionFlags command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelection::merge` 用于执行与“merge”相关的操作。调用时要先确认当前状态和 `other`、`command` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-- 参数 `command`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用给定的 `command`将`other`选择与该 `QItemSelection`合并。该方法保证没有范围重叠。
+请注意，仅支持`QItemSelectionModel::Select`、`QItemSelectionModel::Deselect`和`QItemSelectionModel::Toggle`。
 
 ### `void QItemSelection::select(const QModelIndex &topLeft, const QModelIndex &bottomRight)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelection::select` 用于执行与“select”相关的操作。调用时要先确认当前状态和 `topLeft`、`bottomRight` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `topLeft`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `bottomRight`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将从左上角的模型项（由`topLeft`索引指定）到右下角的项（由`bottomRight`指定）添加到列表中。
+注意：`topLeft`和`bottomRight`必须有同一个父母。
 
 ### `[static] void QItemSelection::split(const QItemSelectionRange &range, const QItemSelectionRange &other, QItemSelection *result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `split`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `range`：类型为 `const QItemSelectionRange &`。没有默认值，调用时必须提供。传入 `const QItemSelectionRange &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `other`：类型为 `const QItemSelectionRange &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-- 参数 `result`：类型为 `QItemSelection *`。没有默认值，调用时必须提供。传入 `QItemSelection *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用选择`other`范围将选择区间`range`拆分。从`range`中移除`other`中的所有项，并将结果归入`result`。这可以与集合的减法运算语义进行比较。
 
 ## 6. 深入实践与常见坑
 

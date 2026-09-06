@@ -71,191 +71,119 @@
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.2] enum QChartView::RubberBandflags QChartView::RubberBands`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QChartView` 暴露的类型声明 `Rubber、Bandflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RubberBandflags QChartView::RubberBands`。
-- 属性名：`QChartView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可以应用于矩形缩放区域的不同类型的橡皮筋效应。
+- `QChartView::NoRubberBand`：`0x0`;不指定缩放区域，因此不启用缩放。
+- `QChartView::VerticalRubberBand`：`0x1`;橡皮筋水平锁定于图表大小，可垂直拉动以指定缩放区域。
+- `QChartView::HorizontalRubberBand`：`0x2`;橡皮筋垂直锁定于图表大小，可水平拉动以指定缩放区域。
+- `QChartView::RectangleRubberBand`：`0x3`;橡皮筋固定在被扣动的点，可以垂直或水平拉动。
+- `QChartView::ClickThroughRubberBand`：`0x80`;上述橡皮筋选项中的一个选项，允许将左键传递到图表项目，前提是这些图表项目接受点击。选择该选项时，使用橡皮筋选择模式之一。
+这个枚举是在Qt 6.2引入的。
+RubberBands类型是QFlag的typedef<RubberBand>。它存储了橡皮筋值的或组合。
 
 ### `[explicit] QChartView::QChartView(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QChartView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有父`parent`的图表视图对象。
 
 ### `[explicit] QChartView::QChartView(QChart *chart, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QChartView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `chart`：类型为 `QChart *`。没有默认值，调用时必须提供。传入 `QChart *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有父`parent`的图表视图对象以显示图表的`chart`。图表的所有权转移给图表视图。
 
 ### `[virtual noexcept] QChartView::~QChartView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QChartView` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除图表视图对象和相关的图表。
 
 ### `QChart *QChartView::chart() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QChartView::chart` 用于计算、查询或取得与“chart”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QChart *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QChart *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向关联图表的指针。
 
 ### `[override virtual protected] void QChartView::mouseMoveEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QChartView::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsView::mouseMoveEvent`（QMouseEvent *event）。
+如果橡皮筋矩形出现在`event`指定的新闻事件中，事件数据用于更新橡皮筋几何形状。否则，调用默认`QGraphicsView::mouseMoveEvent()`实现。
 
 ### `[override virtual protected] void QChartView::mousePressEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QChartView::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsView::mousePressEvent`（QMouseEvent *event）。
+如果按下左键并启用橡皮筋，事件`event`会被接受，橡皮筋会显示在屏幕上。这使用户能够选择缩放区域。
+如果按下其他鼠标按钮或禁用橡皮筋，事件会传递给`QGraphicsView::mousePressEvent()`。
 
 ### `[override virtual protected] void QChartView::mouseReleaseEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QChartView::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsView::mouseReleaseEvent`（QMouseEvent *event）。
+如果松开左键且橡皮筋已启用，事件`event`被接受，视角会缩放到橡皮筋指定的矩形区域。如果松开右键触发事件，视角会缩小。
 
 ### `[override virtual protected] void QChartView::resizeEvent(QResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QChartView::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsView::resizeEvent`（QResizeEvent *event）。
+利用`event`指定的数据调整和更新图表区域。
 
 ### `QChartView::RubberBands QChartView::rubberBand() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QChartView::rubberBand` 用于计算、查询或取得与“rubber、Band”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QChartView::RubberBands`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QChartView::RubberBands`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前图表视图使用的橡皮筋旗。
 
 ### `void QChartView::setChart(QChart *chart)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setChart`。调用它会改变 `QChartView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `chart`：类型为 `QChart *`。没有默认值，调用时必须提供。传入 `QChart *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前图表设置为`chart`。新图表的所有权转移给图表视图，释放之前图表的所有权。
+为避免内存泄漏，必须删除之前的图表。
 
 ### `void QChartView::setRubberBand(const QChartView::RubberBands &rubberBand)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRubberBand`。调用它会改变 `QChartView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rubberBand`：类型为 `const QChartView::RubberBands &`。没有默认值，调用时必须提供。传入 `const QChartView::RubberBands &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将橡皮筋标志设置为`rubberBand`。所选标志决定了缩放的执行方式。
+注意：极坐标图不支持橡皮筋缩放。
 
 ### `(since 6.2) enum RubberBand { NoRubberBand, VerticalRubberBand, HorizontalRubberBand, RectangleRubberBand, ClickThroughRubberBand }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QChartView` 暴露的类型声明 `Rubber、Band`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可以应用于矩形缩放区域的不同类型的橡皮筋效应。
+- `QChartView::NoRubberBand`：`0x0`;不指定缩放区域，因此不启用缩放。
+- `QChartView::VerticalRubberBand`：`0x1`;橡皮筋水平锁定于图表大小，可垂直拉动以指定缩放区域。
+- `QChartView::HorizontalRubberBand`：`0x2`;橡皮筋垂直锁定于图表大小，可水平拉动以指定缩放区域。
+- `QChartView::RectangleRubberBand`：`0x3`;橡皮筋固定在被扣动的点，可以垂直或水平拉动。
+- `QChartView::ClickThroughRubberBand`：`0x80`;上述橡皮筋选项中的一个选项，允许将左键传递到图表项目，前提是这些图表项目接受点击。选择该选项时，使用橡皮筋选择模式之一。
+这个枚举是在Qt 6.2引入的。
+RubberBands类型是QFlag的typedef<RubberBand>。它存储了橡皮筋值的或组合。
 
 ### `flags RubberBands`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QChartView` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可以应用于矩形缩放区域的不同类型的橡皮筋效应。
+- `QChartView::NoRubberBand`：`0x0`;不指定缩放区域，因此不启用缩放。
+- `QChartView::VerticalRubberBand`：`0x1`;橡皮筋水平锁定于图表大小，可垂直拉动以指定缩放区域。
+- `QChartView::HorizontalRubberBand`：`0x2`;橡皮筋垂直锁定于图表大小，可水平拉动以指定缩放区域。
+- `QChartView::RectangleRubberBand`：`0x3`;橡皮筋固定在被扣动的点，可以垂直或水平拉动。
+- `QChartView::ClickThroughRubberBand`：`0x80`;上述橡皮筋选项中的一个选项，允许将左键传递到图表项目，前提是这些图表项目接受点击。选择该选项时，使用橡皮筋选择模式之一。
+这个枚举是在Qt 6.2引入的。
+RubberBands类型是QFlag的typedef<RubberBand>。它存储了橡皮筋值的或组合。
 
 ## 6. 深入实践与常见坑
 

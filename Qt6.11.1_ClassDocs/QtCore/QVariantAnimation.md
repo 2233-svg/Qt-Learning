@@ -108,447 +108,281 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 33 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QVariantAnimation::KeyValue`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的配置属性。初始化或状态切换时通过 `setKeyValue(...)` 设置，之后用 `KeyValue()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:KeyValue`。
-- 属性名：`QVariantAnimation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是针对std：:p air<qreal， `QVariant`>的typedef。
 
 ### `QVariantAnimation::KeyValues`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的配置属性。初始化或状态切换时通过 `setKeyValues(...)` 设置，之后用 `KeyValues()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:KeyValues`。
-- 属性名：`QVariantAnimation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是`QList`<`KeyValue`>的typedef。
 
 ### `[read-only] currentValue : QVariant`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的状态/能力属性。通常通过 `currentValue()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性表示动画当前值。
+该属性描述当前值;即起始值与结束值之间的插值值，使用当前进度时间。该值本身来自`interpolated()`，动画运行时反复调用。
+`QVariantAnimation`在当前值变化时调用虚拟`updateCurrentValue()`函数。这对需要跟踪更新的子类尤其有用。例如，`QPropertyAnimation` 用该函数来动画 Qt 属性。
 
-**签名拆解：**
-
-- 属性类型：`QVariant`。
-- 属性名：`currentValue`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentValue()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] duration : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的配置属性。初始化或状态切换时通过 `setDuration(...)` 设置，之后用 `duration()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性决定了动画的持续时间。
+该属性描述了动画的时长（以毫秒为单位）。默认时长为250毫秒。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`duration`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `duration()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] easingCurve : QEasingCurve`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的配置属性。初始化或状态切换时通过 `setEasingCurve(...)` 设置，之后用 `easingCurve()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性表示动画的缓和曲线。
+该属性定义了动画的缓和曲线。默认情况下，使用线性缓和曲线，从而实现线性插值。例如，还提供了其他曲线，例如`QEasingCurve::InCirc`，它提供了圆形的入口曲线。另一个例子是`QEasingCurve::InOutElastic`，它对插值变体的值产生弹性效应。
+`QVariantAnimation`会用`QEasingCurve::valueForProgress()`将动画的“归一化进度”（`currentTime()` / `totalDuration()`）转换为动画实际使用的有效进度。当`interpolated()`被调用时，正是这个有效进度。此外，`keyValues`中的步骤指的是这个有效进度。
+缓和曲线与插值器、`interpolated()`虚拟函数以及动画时长一起使用，以控制当前值随着动画进展的变化。
 
-**签名拆解：**
-
-- 属性类型：`QEasingCurve`。
-- 属性名：`easingCurve`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `easingCurve()` 读取当前值；它不会修改应用状态。
 
 ### `endValue : QVariant`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的配置属性。初始化或状态切换时通过 `setEndValue(...)` 设置，之后用 `endValue()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示动画的最终价值。
+该属性描述了动画的最终价值。
 
-**签名拆解：**
-
-- 属性类型：`QVariant`。
-- 属性名：`endValue`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `endValue()` 读取当前值；它不会修改应用状态。
 
 ### `startValue : QVariant`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的配置属性。初始化或状态切换时通过 `setStartValue(...)` 设置，之后用 `startValue()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含动画的可选起始值。
+该属性描述了动画的可选起始值。如果省略，或者起始值被分配为空`QVariant`，动画将在动画开始时使用结束的当前位置。
 
-**签名拆解：**
-
-- 属性类型：`QVariant`。
-- 属性名：`startValue`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `startValue()` 读取当前值；它不会修改应用状态。
 
 ### `QVariantAnimation::QVariantAnimation(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QVariantAnimation对象。`parent`传递给`QAbstractAnimation`的构造器。
 
 ### `[virtual noexcept] QVariantAnimation::~QVariantAnimation()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了动画效果。
 
 ### `[override virtual protected] bool QVariantAnimation::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractAnimation::event`（QEvent *事件）。
 
 ### `[virtual protected] QVariant QVariantAnimation::interpolated(const QVariant &from, const QVariant &to, qreal progress) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::interpolated` 用于计算、查询或取得与“interpolated”相关的操作。调用时要先确认当前状态和 `from`、`to`、`progress` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `from`：类型为 `const QVariant &`。没有默认值，调用时必须提供。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `to`：类型为 `const QVariant &`。没有默认值，调用时必须提供。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `progress`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该虚拟函数返回变体`from`和`to`之间的线性插值，通常在`progress`处，通常值介于0和1之间。你可以在`QVariantAnimation`的子类中重新实现该函数，提供你自己的插值算法。
+注意，为了让插值能处理返回小于0或大于1的`QEasingCurve`（如`QEasingCurve::InBack`），你应确保它可以外推。如果数据类型的语义不允许外推，这个函数应该能优雅地处理。
+如果你想让你的类处理 Qt 已经支持的类型，你应该调用该函数的 `QVariantAnimation` 实现（请参见类 `QVariantAnimation` 描述中的支持类型列表）。
 
 ### `QVariant QVariantAnimation::keyValueAt(qreal step) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::keyValueAt` 用于计算、查询或取得与“key、值访问、按位置访问”相关的操作。调用时要先确认当前状态和 `step` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `step`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`step`的关键帧值。给定`step`必须在0到1之间。如果没有`step`的`KeyValue`，则返回无效`QVariant`。
 
 ### `QVariantAnimation::KeyValues QVariantAnimation::keyValues() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::keyValues` 用于计算、查询或取得与“key、Values”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariantAnimation::KeyValues`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariantAnimation::KeyValues`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该动画的关键帧。
 
 ### `void QVariantAnimation::setKeyValueAt(qreal step, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeyValueAt`。调用它会改变 `QVariantAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `step`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`step`创建关键帧，并以给定`value`。给定`step`必须在0到1之间。
 
 ### `void QVariantAnimation::setKeyValues(const QVariantAnimation::KeyValues &keyValues)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeyValues`。调用它会改变 `QVariantAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keyValues`：类型为 `const QVariantAnimation::KeyValues &`。没有默认值，调用时必须提供。传入 `const QVariantAnimation::KeyValues &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`keyValues`替换当前的关键帧集合。关键帧的步长必须在0到1之间。
 
 ### `[override virtual protected] void QVariantAnimation::updateCurrentTime(int)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::updateCurrentTime` 用于执行与“更新、当前、时间”相关的操作。调用时要先确认当前状态和 `int` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `int`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractAnimation::updateCurrentTime`（int currentTime）。
+每次动画`currentTime`变化时都会调用这个纯虚拟函数。
 
 ### `[virtual protected] void QVariantAnimation::updateCurrentValue(const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::updateCurrentValue` 用于执行与“更新、当前、值访问”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每次动画当前值变化时都会调用这个虚拟函数。`value`参数是新的当前值。
+基础类实现什么都不做。
 
 ### `[override virtual protected] void QVariantAnimation::updateState(QAbstractAnimation::State newState, QAbstractAnimation::State oldState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::updateState` 用于执行与“更新、State”相关的操作。调用时要先确认当前状态和 `newState`、`oldState` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newState`：类型为 `QAbstractAnimation::State`。没有默认值，调用时必须提供。传入 `QAbstractAnimation::State` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldState`：类型为 `QAbstractAnimation::State`。没有默认值，调用时必须提供。传入 `QAbstractAnimation::State` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractAnimation::updateState`（QAbstractAnimation：：State newState， QAbstractAnimation：：State oldState）。
+当动画状态从`oldState`变为`newState`时，`QAbstractAnimation`调用了这个虚拟函数。
 
 ### `[signal] void QVariantAnimation::valueChanged(const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 发出的通知信号 `valueChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示动画当前值。
+该属性描述当前值;即起始值与结束值之间的插值值，使用当前进度时间。该值本身来自`interpolated()`，动画运行时反复调用。
+`QVariantAnimation`在当前值变化时调用虚拟`updateCurrentValue()`函数。这对需要跟踪更新的子类尤其有用。例如，`QPropertyAnimation` 用该函数来动画 Qt 属性。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `currentValue` 的变化，不要把它当作普通函数主动调用。
 
 ### `template <typename T> void qRegisterAnimationInterpolator(QVariant (*)(const T &, const T &, qreal) func)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::qRegisterAnimationInterpolator` 用于计算、查询或取得与“q、注册、Animation、Interpolator”相关的操作。调用时要先确认当前状态和 `func` 的有效范围；返回类型是 `template <typename T> void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> void`。
-- 参数 `func`：类型为 `QVariant (*)(const T &, const T &, qreal)`。没有默认值，调用时必须提供。传入 `QVariant (*)(const T &, const T &, qreal)` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册模板类型`T`的自定义插值器`func`。在构建动画之前，必须先注册该插值器。要取消注册（并使用默认插值器），请将`func`设置为`nullptr`。
+注意：该功能是线程安全的。
 
 ### `KeyValue`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的 `Key、值访问` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是针对std：:p air<qreal， `QVariant`>的typedef。
 
 ### `KeyValues`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVariantAnimation` 的 `Key、Values` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是`QList`<`KeyValue`>的typedef。
 
 ### `QBindable<int> bindableDuration()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableDuration`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性决定了动画的持续时间。
+该属性描述了动画的时长（以毫秒为单位）。默认时长为250毫秒。
 
-**签名拆解：**
-
-- 返回值：`QBindable<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableDuration()` 取得 `duration` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QEasingCurve> bindableEasingCurve()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableEasingCurve`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性表示动画的缓和曲线。
+该属性定义了动画的缓和曲线。默认情况下，使用线性缓和曲线，从而实现线性插值。例如，还提供了其他曲线，例如`QEasingCurve::InCirc`，它提供了圆形的入口曲线。另一个例子是`QEasingCurve::InOutElastic`，它对插值变体的值产生弹性效应。
+`QVariantAnimation`会用`QEasingCurve::valueForProgress()`将动画的“归一化进度”（`currentTime()` / `totalDuration()`）转换为动画实际使用的有效进度。当`interpolated()`被调用时，正是这个有效进度。此外，`keyValues`中的步骤指的是这个有效进度。
+缓和曲线与插值器、`interpolated()`虚拟函数以及动画时长一起使用，以控制当前值随着动画进展的变化。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QEasingCurve>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableEasingCurve()` 取得 `easingCurve` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QVariant currentValue() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::currentValue` 用于计算、查询或取得与“当前、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示动画当前值。
+该属性描述当前值;即起始值与结束值之间的插值值，使用当前进度时间。该值本身来自`interpolated()`，动画运行时反复调用。
+`QVariantAnimation`在当前值变化时调用虚拟`updateCurrentValue()`函数。这对需要跟踪更新的子类尤其有用。例如，`QPropertyAnimation` 用该函数来动画 Qt 属性。
 
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentValue()` 读取当前值；它不会修改应用状态。
 
 ### `virtual int duration() const override`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::duration` 用于计算、查询或取得与“持续时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性决定了动画的持续时间。
+该属性描述了动画的时长（以毫秒为单位）。默认时长为250毫秒。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `duration()` 读取当前值；它不会修改应用状态。
 
 ### `QEasingCurve easingCurve() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVariantAnimation::easingCurve` 用于计算、查询或取得与“easing、Curve”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QEasingCurve`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性表示动画的缓和曲线。
+该属性定义了动画的缓和曲线。默认情况下，使用线性缓和曲线，从而实现线性插值。例如，还提供了其他曲线，例如`QEasingCurve::InCirc`，它提供了圆形的入口曲线。另一个例子是`QEasingCurve::InOutElastic`，它对插值变体的值产生弹性效应。
+`QVariantAnimation`会用`QEasingCurve::valueForProgress()`将动画的“归一化进度”（`currentTime()` / `totalDuration()`）转换为动画实际使用的有效进度。当`interpolated()`被调用时，正是这个有效进度。此外，`keyValues`中的步骤指的是这个有效进度。
+缓和曲线与插值器、`interpolated()`虚拟函数以及动画时长一起使用，以控制当前值随着动画进展的变化。
 
-**签名拆解：**
-
-- 返回值：`QEasingCurve`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `easingCurve()` 读取当前值；它不会修改应用状态。
 
 ### `QVariant endValue() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endValue`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+该属性表示动画的最终价值。
+该属性描述了动画的最终价值。
 
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `endValue()` 读取当前值；它不会修改应用状态。
 
 ### `void setDuration(int msecs)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDuration`。调用它会改变 `QVariantAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性决定了动画的持续时间。
+该属性描述了动画的时长（以毫秒为单位）。默认时长为250毫秒。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msecs`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDuration(...)` 修改 `duration`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setEasingCurve(const QEasingCurve &easing)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEasingCurve`。调用它会改变 `QVariantAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性表示动画的缓和曲线。
+该属性定义了动画的缓和曲线。默认情况下，使用线性缓和曲线，从而实现线性插值。例如，还提供了其他曲线，例如`QEasingCurve::InCirc`，它提供了圆形的入口曲线。另一个例子是`QEasingCurve::InOutElastic`，它对插值变体的值产生弹性效应。
+`QVariantAnimation`会用`QEasingCurve::valueForProgress()`将动画的“归一化进度”（`currentTime()` / `totalDuration()`）转换为动画实际使用的有效进度。当`interpolated()`被调用时，正是这个有效进度。此外，`keyValues`中的步骤指的是这个有效进度。
+缓和曲线与插值器、`interpolated()`虚拟函数以及动画时长一起使用，以控制当前值随着动画进展的变化。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `easing`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。传入 `const QEasingCurve &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setEasingCurve(...)` 修改 `easingCurve`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setEndValue(const QVariant &value)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEndValue`。调用它会改变 `QVariantAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示动画的最终价值。
+该属性描述了动画的最终价值。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setEndValue(...)` 修改 `endValue`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setStartValue(const QVariant &value)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStartValue`。调用它会改变 `QVariantAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含动画的可选起始值。
+该属性描述了动画的可选起始值。如果省略，或者起始值被分配为空`QVariant`，动画将在动画开始时使用结束的当前位置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setStartValue(...)` 修改 `startValue`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QVariant startValue() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startValue`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+该属性包含动画的可选起始值。
+该属性描述了动画的可选起始值。如果省略，或者起始值被分配为空`QVariant`，动画将在动画开始时使用结束的当前位置。
 
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `startValue()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

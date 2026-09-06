@@ -71,168 +71,126 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 12 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QSemaphore::QSemaphore(int n = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphore` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `n`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建新的信号量，并将它守护的资源数量初始化为`n`（默认为0）。
 
 ### `[noexcept] QSemaphore::~QSemaphore()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphore` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁信号旗。
+警告：销毁正在使用的信号量可能导致不明确的行为。
 
 ### `void QSemaphore::acquire(int n = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::acquire` 用于执行与“acquire”相关的操作。调用时要先确认当前状态和 `n` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试获取信号量保护的`n`资源。如果`n` > `available()`，该调用将被阻塞，直到资源充足。
 
 ### `int QSemaphore::available() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `available`，返回 `QSemaphore` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前可用资源数量。该数字永远不会为负。
 
 ### `void QSemaphore::release(int n = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::release` 用于执行与“释放”相关的操作。调用时要先确认当前状态和 `n` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+释放资源`n`由信号旗守护。
+该函数也可以用来“创建”资源。例如：
+`QSemaphoreReleaser` 是围绕该函数的 RAII 封装器。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `n`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSemaphore sem(5);      // a semaphore that guards 5 resources
+ sem.acquire(5);         // acquire all 5 resources
+ sem.release(5);         // release the 5 resources
+ sem.release(10);        // "create" 10 new resources
+```
 
 ### `bool QSemaphore::tryAcquire(int n = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::tryAcquire` 用于计算、查询或取得与“try、Acquire”相关的操作。调用时要先确认当前状态和 `n` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+尝试获取由信号板守护的`n`资源，成功后返回`true`。如果`available()` < `n`，该调用立即返回`false`，且不获得任何资源。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `n`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSemaphore sem(5);      // sem.available() == 5
+ sem.tryAcquire(250);    // sem.available() == 5, returns false
+ sem.tryAcquire(3);      // sem.available() == 2, returns true
+```
 
 ### `[since 6.6] bool QSemaphore::tryAcquire(int n, QDeadlineTimer timer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::tryAcquire` 用于计算、查询或取得与“try、Acquire”相关的操作。调用时要先确认当前状态和 `n`、`timer` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+试图获取由信号机守护的`n`资源，成功后返回`true`。如果`available()` < `n`，该调用将等待`timer`到期后资源开放。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `n`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timer`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSemaphore sem(5);                          // sem.available() == 5
+ sem.tryAcquire(250, QDeadlineTimer(1000));  // sem.available() == 5, waits 1000 milliseconds and returns false
+ sem.tryAcquire(3, QDeadlineTimer(30s));     // sem.available() == 2, returns true without waiting
+```
 
 ### `bool QSemaphore::tryAcquire(int n, int timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::tryAcquire` 用于计算、查询或取得与“try、Acquire”相关的操作。调用时要先确认当前状态和 `n`、`timeout` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+尝试获取由信号量保护的`n`资源，成功后返回`true`。如果`available()` < `n`，该调用最多等待`timeout`毫秒以待资源可用。注意：将负数作为`timeout`等同于调用`acquire()`，即如果`timeout`为负，该函数将永远等待资源可用的时间。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `n`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timeout`：类型为 `int`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSemaphore sem(5);            // sem.available() == 5
+ sem.tryAcquire(250, 1000);    // sem.available() == 5, waits 1000 milliseconds and returns false
+ sem.tryAcquire(3, 30000);     // sem.available() == 2, returns true without waiting
+```
 
 ### `[since 6.3] template <typename Rep, typename Period> bool QSemaphore::tryAcquire(int n, std::chrono::duration<Rep, Period> timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::tryAcquire` 用于计算、查询或取得与“try、Acquire”相关的操作。调用时要先确认当前状态和 `n`、`timeout` 的有效范围；返回类型是 `template <typename Rep, typename Period> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+尝试获取由信号板守护的`n`资源，成功后返回`true`。如果`available()` < `n`，该调用立即返回`false`，且不获得任何资源。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Rep, typename Period> bool`。
-- 参数 `n`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timeout`：类型为 `std::chrono::duration<Rep, Period>`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSemaphore sem(5);      // sem.available() == 5
+ sem.tryAcquire(250);    // sem.available() == 5, returns false
+ sem.tryAcquire(3);      // sem.available() == 2, returns true
+```
 
 ### `[noexcept, since 6.3] bool QSemaphore::try_acquire()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::try_acquire` 用于计算、查询或取得与“try、acquire”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此功能是为了`std::counting_semaphore`兼容性而提供。
+它等价于调用`tryAcquire(1)`，函数在成功获取资源后返回`true`。
 
 ### `[since 6.3] template <typename Rep, typename Period> bool QSemaphore::try_acquire_for(const std::chrono::duration<Rep, Period> &timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::try_acquire_for` 用于计算、查询或取得与“try、acquire、for”相关的操作。调用时要先确认当前状态和 `timeout` 的有效范围；返回类型是 `template <typename Rep, typename Period> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Rep, typename Period> bool`。
-- 参数 `timeout`：类型为 `const std::chrono::duration<Rep, Period> &`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此功能是为了`std::counting_semaphore`兼容性而提供。
+它等价于调用`tryAcquire(1, timeout)`，即调用在给定的`timeout`值上超时。函数在成功获取资源后返回`true`。
 
 ### `[since 6.3] template <typename Clock, typename Duration> bool QSemaphore::try_acquire_until(const std::chrono::time_point<Clock, Duration> &tp)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphore::try_acquire_until` 用于计算、查询或取得与“try、acquire、until”相关的操作。调用时要先确认当前状态和 `tp` 的有效范围；返回类型是 `template <typename Clock, typename Duration> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Clock, typename Duration> bool`。
-- 参数 `tp`：类型为 `const std::chrono::time_point<Clock, Duration> &`。没有默认值，调用时必须提供。传入 `const std::chrono::time_point<Clock, Duration> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此功能是为了`std::counting_semaphore`兼容性而提供。
+它等同于调用`tryAcquire(1, tp - Clock::now())`，意味着记录`tp`（时间点），在等待时忽略对`Clock`的调整。函数在成功获取资源后返回`true`。
 
 ## 6. 深入实践与常见坑
 

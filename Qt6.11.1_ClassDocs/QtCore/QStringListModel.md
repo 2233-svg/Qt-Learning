@@ -85,246 +85,164 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QStringListModel::QStringListModel(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringListModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用给定的 `parent` 构建一个字符串列表模型。
 
 ### `[explicit] QStringListModel::QStringListModel(const QStringList &strings, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringListModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `strings`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个字符串列表模型，包含指定的 `strings`，并使用给定的 `parent`。
 
 ### `[override virtual, since 6.0] bool QStringListModel::clearItemData(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::clearItemData` 用于计算、查询或取得与“清空、项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::clearItemData`（const QModelIndex & index）。
+移除给定`index`所有角色中存储的数据。成功返回`true`;否则返回`false`。如果数据被成功移除，应发出`dataChanged()`信号。基类实现返回`false`。
 
 ### `[override virtual] QVariant QStringListModel::data(const QModelIndex &index, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QStringListModel` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 通常与 role、QModelIndex 有关；数据变化后发 `dataChanged`，不要在 data() 中修改模型。
+重实现自：`QAbstractItemModel::data`（const QModelIndex & index， int role） const.
+返回指定`role`的数据，来自给定`index`的项目。
+如果视图请求无效索引，则返回一个无效变体。
+返回`index`所指项在给定`role`下存储的数据。
+注意：如果你没有要返回的值，请返回一个无效（默认构造的）`QVariant`。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] Qt::ItemFlags QStringListModel::flags(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `Qt::ItemFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ItemFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractListModel::flags`（const QModelIndex & index） const.
+返回该物品的标志，并`index`。
+有效项目已启用、可选、编辑、拖拽和拖拽。
 
 ### `[override virtual] bool QStringListModel::insertRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStringListModel` 添加依赖、数据或子对象的 API `insertRows`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::insertRows`（整数行，整数计数，条件QModelIndex和parent）。
+从给定`row`开始插入`count`行。
+行的`parent`索引是可选的，仅用于与`QAbstractItemModel`的一致性。默认情况下，会指定空索引，表示这些行入到模型的顶层。
+如果插入成功，返回`true`。
+注意：该函数的基类实现不做任何操作，返回`false`。
+支持此功能的模型中，`count`行在给定`row`之前插入模型。新行中的项目将是`parent`模型索引所表示项的子节点。
+如果`row`为0，则这些行会加在父行中已有的行之前。
+如果`row` `rowCount()`，则这些行会附加到父节点中已有的行上。
+如果`parent`没有子节点，则插入一列`count`行。
+如果行成功插入，返回`true`;否则返回`false`。
+如果你实现了自己的模型，如果你想支持插入，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。无论哪种情况，你都需要调用 `beginInsertRows()` 和 `endInsertRows()` 通知其他组件模型已经变更。
+注意：该函数可以通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] QMap<int, QVariant> QStringListModel::itemData(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::itemData` 用于计算、查询或取得与“项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QMap<int, QVariant>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMap<int, QVariant>`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::itemData`（const QModelIndex & index） const.
+返回一个映射，包含模型中该项目在给定`index`处所有预定义角色的值。
+如果你想将默认行为扩展到地图中包含自定义角色，可以重新实现这个函数。
 
 ### `[override virtual] bool QStringListModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::moveRows` 用于计算、查询或取得与“移动、行”相关的操作。调用时要先确认当前状态和 `sourceParent`、`sourceRow`、`count`、`destinationParent`、`destinationChild` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `sourceParent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `sourceRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `destinationParent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `destinationChild`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::moveRows`（const QModelIndex & sourceParent， int sourceRow， int count， const QModelIndex &destinationParent， int destinationChild）。
+在支持此操作的模型中，将从父`sourceParent`下的给定`sourceRow`开始，`count`行移动到父`destinationParent`下行`destinationChild`。
+如果行成功移动，返回`true`;否则返回`false`。
+基类实现什么都不做，只返回`false`。
+如果你实现了自己的模型，如果你想支持移动，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QStringListModel::removeRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRows`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::removeRows`（整数行，整数计数，条件QModelIndex和parent）。
+从给定`row`开始，从模型中移除`count`行。
+行的`parent`索引是可选的，仅用于与`QAbstractItemModel`的一致性。默认情况下，会指定空索引，表示模型顶层的行被移除。
+如果移除行成功，退货`true`。
+在支持此功能的模型中，会从模型中移除从父 `parent` 下以给定`row`开始的`count`行。
+如果行被成功移除，返回`true`;否则返回`false`。
+基类实现什么都不做，返回`false`。
+如果你实现了自己的模型，如果你想支持删除，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] int QStringListModel::rowCount(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::rowCount`（const QModelIndex &parent）const.
+返回模型中的行数。该值对应于模型内部字符串列表中的项数。
+可选的`parent`参数在大多数用于指定要计数行父节点的模型中存在。由于如果指定了有效的父节点，则该列表是一个列表，结果总是0。
+返回给定`parent`下的行数。当父节点有效时，表示 rowCount 返回的是父节点的子节点数。
+注意：在实现基于表的模型时，当父模型有效时，rowCount() 应返回 0。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] bool QStringListModel::setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QStringListModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 成功修改后要发出对应 dataChanged；同时确认 flags 包含可编辑能力。
+重实现自：`QAbstractItemModel::setData`（const QModelIndex & index， const QVariant & value， int role）。
+将项目中指定`role`的数据，模型中给定的`index`，设置为提供的`value`。
+如果物品发生变化，`dataChanged()`信号会被发射。发出`dataChanged()`信号后返回`true`。
+将`index`项的 `role` 数据设置为 `value`。
+成功时返回`true`;否则返回`false`。
+如果数据成功设置，`dataChanged()`信号应会发出。
+基类实现返回`false`。该函数和`data()`必须为可编辑模型重新实现。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QStringListModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemData`。调用它会改变 `QStringListModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `roles`：类型为 `const QMap<int, QVariant> &`。没有默认值，调用时必须提供。传入 `const QMap<int, QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::setItemData`（const QModelIndex & index， const QMap<int， QVariant> and roles）。
+如果`roles`同时包含`Qt::DisplayRole`和`Qt::EditRole`，则后者优先。
+将`index`项的角色数据设置为每个`Qt::ItemDataRole`的对应值`roles`。
+成功时返回`true`;否则返回`false`。
+未在`roles`中的角色不会被修改。
 
 ### `void QStringListModel::setStringList(const QStringList &strings)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStringList`。调用它会改变 `QStringListModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `strings`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模型内部字符串列表设置为`strings`。模型会通知任何附加视图其底层数据发生变化。
 
 ### `[override virtual] QModelIndex QStringListModel::sibling(int row, int column, const QModelIndex &idx) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::sibling` 用于计算、查询或取得与“sibling”相关的操作。调用时要先确认当前状态和 `row`、`column`、`idx` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `idx`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractListModel::sibling`（int row， int column， const QModelIndex &idx） const.
 
 ### `[override virtual] void QStringListModel::sort(int column, Qt::SortOrder order = Qt::AscendingOrder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::sort` 用于执行与“sort”相关的操作。调用时要先确认当前状态和 `column`、`order` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::AscendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::sort`（整数列，Qt：：SortOrder）。
+按给定`order`中的`column`排序模型。
+基础类实现什么都不做。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `QStringList QStringListModel::stringList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::stringList` 用于计算、查询或取得与“字符串、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型用来存储数据的字符串列表。
 
 ### `[override virtual] Qt::DropActions QStringListModel::supportedDropActions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringListModel::supportedDropActions` 用于计算、查询或取得与“supported、Drop、Actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropActions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropActions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::supportedDropActions()` const.
+返回该模型支持的投放动作。
+默认实现返回`Qt::CopyAction`。如果你希望支持额外操作，请重新实现这个函数。你还必须重新实现`dropMimeData()`函数以处理这些额外的操作。
 
 ## 6. 深入实践与常见坑
 

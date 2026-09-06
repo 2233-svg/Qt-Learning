@@ -89,337 +89,213 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QImageIOHandler::ImageOption`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 暴露的类型声明 `Image、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ImageOption`。
-- 属性名：`QImageIOHandler`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了 `QImageIOHandler` 支持的不同选项。一些选项用于查询图像属性，其他选项用于切换图像的写入方式。
+- `QImageIOHandler::Size`: `0`; 图像的原始尺寸。支持此选项的处理程序应从图像元数据中读取图像大小，并将此尺寸作为 `QSize` 从 `option()` 返回。
+- `QImageIOHandler::ClipRect`: `1`; 裁剪矩形或感兴趣区域（ROI）。支持此选项的处理程序应仅从原始图像的 `read()` 中读取提供的 `QRect` 区域，然后应用其他任何转换。
+- `QImageIOHandler::ScaledSize`: `4`; 图像的缩放尺寸。支持此选项的处理程序应在应用任何裁剪矩形转换（ClipRect）后，将图像缩放到提供的尺寸（`QSize`）。如果处理程序不支持此选项，`QImageReader` 将在读取图像后执行缩放。
+- `QImageIOHandler::ScaledClipRect`: `3`; 图像的缩放裁剪矩形（或 ROI, 感兴趣区域）。支持此选项的处理程序应在应用任何缩放（ScaleSize）或常规裁剪（ClipRect）后，应用提供的裁剪矩形（`QRect`）。如果处理程序不支持此选项，`QImageReader` 将在读取图像后应用缩放裁剪矩形。
+- `QImageIOHandler::Description`: `2`; 图像描述。一些图像格式，如 GIF 和 PNG, 允许将文本或注释嵌入图像数据中（例如用于存储版权信息）。文本通常以键值对形式存储，但某些格式将所有文本存储在一个连续块中。`QImageIOHandler` 将文本作为一个 `QString` 返回，其中键和值用 ':' 分隔，键值对之间用两个换行符（\n\n）分隔。例如，"Title: Sunset\n\nAuthor: Jim Smith\nSarah Jones\n\n"。存储文本为单个块的格式可以使用 "Description" 作为键。
+- `QImageIOHandler::CompressionRatio`: `5`; 图像数据的压缩比。支持此选项的处理程序在写入时应根据此选项的值（int）设置压缩率。
+- `QImageIOHandler::Gamma`: `6`; 图像的伽马等级。支持此选项的处理程序在写入时应根据此选项的值（float）设置图像伽马等级。
+- `QImageIOHandler::Quality`: `7`; 图像的质量等级。支持此选项的处理程序在写入时应根据此选项的值（int）设置图像质量等级。
+- `QImageIOHandler::Name`: `8`; 图像名称。支持此选项的处理程序应从图像元数据中读取名称并作为 `QString` 返回，或者在写入图像时将名称存储在图像元数据中。
+- `QImageIOHandler::SubType`: `9`; 图像子类型。支持此选项的处理程序可以使用子类型值在读取和写入图像时提供帮助。例如，PPM 处理程序的子类型值可能为 "ppm" 或 "ppmraw"。
+- `QImageIOHandler::IncrementalReading`: `10`; 支持此选项的处理程序应以类似动画的方式分多次读取图像。`QImageReader` 将把图像视为动画。
+- `QImageIOHandler::Endianness`：`11`;图像的端序。某些图像格式可以存储为BigEndian或LittleEndian。支持端序的处理器会利用该选项的值来决定图像应如何存储。
+- `QImageIOHandler::Animation`：`12`;支持动画的图像格式在`supportsOption()`中返回该值为真;否则返回为假。
+- `QImageIOHandler::BackgroundColor`：`13`;某些图像格式允许指定背景色。支持背景色的处理器在读取图像时会将背景色初始化为该选项（`QColor`）。
+- `QImageIOHandler::ImageFormat`：`14`;处理程序返回的图像数据格式。这可以是`QImage::Format`中列出的任何格式。
+- `QImageIOHandler::SupportedSubTypes`：`15`;支持不同保存变体的图像格式应在此选项中返回支持变体名称列表（<`QByteArray`>`QList`）。
+- `QImageIOHandler::OptimizedWrite`：`16`;支持此选项的处理器在写入时应启用优化标志。
+- `QImageIOHandler::ProgressiveScanWrite`：`17`;支持此选项的处理器预期将图像写入为逐行扫描图像。
+- `QImageIOHandler::ImageTransformation`：`18`;支持此选项的处理器可以读取图像的转换元数据。支持该选项的处理器不应直接应用该转换。
 
 ### `enum QImageIOHandler::Transformationflags QImageIOHandler::Transformations`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 暴露的类型声明 `Transformationflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Transformationflags QImageIOHandler::Transformations`。
-- 属性名：`QImageIOHandler`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了某些图像格式支持的不同变换或方向，通常通过EXIF实现。
+- `QImageIOHandler::TransformationNone`：`0`;不应应用任何变换。
+- `QImageIOHandler::TransformationMirror`：`1`;水平镜像图像。
+- `QImageIOHandler::TransformationFlip`：`2`;垂直镜像。
+- `QImageIOHandler::TransformationRotate180`：`TransformationMirror | TransformationFlip`;将图像旋转180度。这等同于水平和垂直镜像。
+- `QImageIOHandler::TransformationRotate90`：`4`;将图像旋转90度。
+- `QImageIOHandler::TransformationMirrorAndRotate90`：`TransformationMirror | TransformationRotate90`;将图像水平镜像，然后旋转90度。
+- `QImageIOHandler::TransformationFlipAndRotate90`：`TransformationFlip | TransformationRotate90`;垂直镜像图像，然后旋转90度。
+- `QImageIOHandler::TransformationRotate270`：`TransformationRotate180 | TransformationRotate90`;将图像旋转270度。这相当于水平、垂直镜像，然后旋转90度。
+变换类型是QFlag的typedef<Transformation>。它存储了变换值的或组合。
 
 ### `QImageIOHandler::QImageIOHandler()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QImageIOHandler对象。
 
 ### `[virtual noexcept] QImageIOHandler::~QImageIOHandler()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QImageIOHandler`物体。
 
 ### `[static, since 6.0] bool QImageIOHandler::allocateImage(QSize size, QImage::Format format, QImage *image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `allocateImage`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `size`：类型为 `QSize`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `format`：类型为 `QImage::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `image`：类型为 `QImage *`。没有默认值，调用时必须提供。传入 `QImage *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是子类读取函数的一种便捷方法。如果所需分配超过当前分配限制，图像格式处理程序必须拒绝加载图像。该函数检查参数和限制，并在分配有效且必要时执行。成功返回后，`image`将成为给定`size`和`format`的有效分离 `QImage`。
 
 ### `[pure virtual] bool QImageIOHandler::canRead() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canRead`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以从设备读取图像（即支持图像格式，设备可读取且初始头信息显示图像可读），返回`true`;否则返回`false`。
+在重新实现 canRead() 时，确保 I/O 设备（`device()`）保持其原始状态（例如，使用 peek() 而非 `read()`）。
 
 ### `[virtual] int QImageIOHandler::currentImageNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::currentImageNumber` 用于计算、查询或取得与“当前、Image、Number”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于支持动画的图像格式，该函数返回动画中当前图像的序列号。如果在`read()`图像之前调用该函数，则返回-1。序列中第一张图像的编号为0。
+如果图像格式不支持动画，则返回0。
 
 ### `[virtual] QRect QImageIOHandler::currentImageRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::currentImageRect` 用于计算、查询或取得与“当前、Image、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前图像的rect。如果没有为图像定义rect，则返回空的QRect()。
+该功能适用于动画，因为动画中每次只能更新帧的部分。
 
 ### `QIODevice *QImageIOHandler::device() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::device` 用于计算、查询或取得与“device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前分配给`QImageIOHandler`的设备。如果设备未被分配，则返回`nullptr`。
 
 ### `QByteArray QImageIOHandler::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前分配给`QImageIOHandler`的格式。如果没有分配格式，则返回空字符串。
 
 ### `[virtual] int QImageIOHandler::imageCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::imageCount` 用于计算、查询或取得与“image、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于支持动画的图像格式，该函数返回动画中的图像数量。如果图像格式不支持动画，或者无法确定图像数量，则返回0。
+默认实现返回1，如果`canRead()`返回`true`;否则返回0。
 
 ### `[virtual] bool QImageIOHandler::jumpToImage(int imageNumber)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::jumpToImage` 用于计算、查询或取得与“jump、转换输出、Image”相关的操作。调用时要先确认当前状态和 `imageNumber` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `imageNumber`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于支持动画的图像格式，该函数会跳转到序列号为`imageNumber`的图像。下一次调用`read()`将尝试读取该图像。
+默认实现不做任何操作，返回`false`。
 
 ### `[virtual] bool QImageIOHandler::jumpToNextImage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::jumpToNextImage` 用于计算、查询或取得与“jump、转换输出、移动到下一项、Image”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于支持动画的图像格式，这个函数会跳转到下一张图片。
+默认实现不做任何操作，返回`false`。
 
 ### `[virtual] int QImageIOHandler::loopCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::loopCount` 用于计算、查询或取得与“loop、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于支持动画的图像格式，该函数返回动画应循环的次数。如果图像格式不支持动画，则返回0。
 
 ### `[virtual] int QImageIOHandler::nextImageDelay() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::nextImageDelay` 用于计算、查询或取得与“移动到下一项、Image、Delay”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于支持动画的图像格式，该函数返回等待读取下一张图像的毫秒数。如果图像格式不支持动画，则返回0。
 
 ### `[virtual] QVariant QImageIOHandler::option(QImageIOHandler::ImageOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOHandler::option` 用于计算、查询或取得与“option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `option`：类型为 `QImageIOHandler::ImageOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回分配给`option`的`QVariant`值。该值的类型取决于期权。例如，option（Size） 返回`QSize`变体。
 
 ### `[pure virtual] bool QImageIOHandler::read(QImage *image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 的核心操作 `read`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `image`：类型为 `QImage *`。没有默认值，调用时必须提供。传入 `QImage *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从设备读取图像，并存储在`image`中。如果图像成功读取，返回`true`;否则返回false。
+对于支持增量加载的图像格式和动画格式，图像处理器可以假设`image`指向上一帧。
 
 ### `void QImageIOHandler::setDevice(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDevice`。调用它会改变 `QImageIOHandler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QImageIOHandler`的设备设置为`device`。图像处理程序在读取和写入图像时将使用该设备。
+设备只能设置一次，必须在调用`canRead()`、`read()`、`write()`等之前设置好。如果需要读取多个文件，可以构建多个相应`QImageIOHandler`子类的实例。
 
 ### `void QImageIOHandler::setFormat(const QByteArray &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QImageIOHandler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QImageIOHandler`的格式设置为`format`。该格式对支持多种图像格式的处理程序最为有用。
 
 ### `void QImageIOHandler::setFormat(const QByteArray &format) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QImageIOHandler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QImageIOHandler`格式设置为`format`。该格式对支持多种图像格式的处理程序最为有用。
+该函数被声明为 const，以便从`canRead()`调用。
 
 ### `[virtual] void QImageIOHandler::setOption(QImageIOHandler::ImageOption option, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOption`。调用它会改变 `QImageIOHandler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QImageIOHandler::ImageOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用价值`value`来设置期权`option`。
 
 ### `[virtual] bool QImageIOHandler::supportsOption(QImageIOHandler::ImageOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `supportsOption`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `option`：类型为 `QImageIOHandler::ImageOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QImageIOHandler`支持选项`option`，则返回`true`;否则返回`false`。例如，如果`QImageIOHandler`支持`Size`选项，supportsOption（Size） 必须返回true。
 
 ### `[virtual] bool QImageIOHandler::write(const QImage &image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 的核心操作 `write`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `image`：类型为 `const QImage &`。没有默认值，调用时必须提供。传入 `const QImage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将映像`image`写入指定设备。成功时返回`true`;否则返回`false`。
+默认实现不做任何操作，只是返回`false`。
 
 ### `enum Transformation { TransformationNone, TransformationMirror, TransformationFlip, TransformationRotate180, TransformationRotate90, …, TransformationRotate270 }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 暴露的类型声明 `Transformation`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了某些图像格式支持的不同变换或方向，通常通过EXIF实现。
+- `QImageIOHandler::TransformationNone`：`0`;不应应用任何变换。
+- `QImageIOHandler::TransformationMirror`：`1`;水平镜像图像。
+- `QImageIOHandler::TransformationFlip`：`2`;垂直镜像。
+- `QImageIOHandler::TransformationRotate180`：`TransformationMirror | TransformationFlip`;将图像旋转180度。这等同于水平和垂直镜像。
+- `QImageIOHandler::TransformationRotate90`：`4`;将图像旋转90度。
+- `QImageIOHandler::TransformationMirrorAndRotate90`：`TransformationMirror | TransformationRotate90`;将图像水平镜像，然后旋转90度。
+- `QImageIOHandler::TransformationFlipAndRotate90`：`TransformationFlip | TransformationRotate90`;垂直镜像图像，然后旋转90度。
+- `QImageIOHandler::TransformationRotate270`：`TransformationRotate180 | TransformationRotate90`;将图像旋转270度。这相当于水平、垂直镜像，然后旋转90度。
+变换类型是QFlag的typedef<Transformation>。它存储了变换值的或组合。
 
 ### `flags Transformations`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOHandler` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了某些图像格式支持的不同变换或方向，通常通过EXIF实现。
+- `QImageIOHandler::TransformationNone`：`0`;不应应用任何变换。
+- `QImageIOHandler::TransformationMirror`：`1`;水平镜像图像。
+- `QImageIOHandler::TransformationFlip`：`2`;垂直镜像。
+- `QImageIOHandler::TransformationRotate180`：`TransformationMirror | TransformationFlip`;将图像旋转180度。这等同于水平和垂直镜像。
+- `QImageIOHandler::TransformationRotate90`：`4`;将图像旋转90度。
+- `QImageIOHandler::TransformationMirrorAndRotate90`：`TransformationMirror | TransformationRotate90`;将图像水平镜像，然后旋转90度。
+- `QImageIOHandler::TransformationFlipAndRotate90`：`TransformationFlip | TransformationRotate90`;垂直镜像图像，然后旋转90度。
+- `QImageIOHandler::TransformationRotate270`：`TransformationRotate180 | TransformationRotate90`;将图像旋转270度。这相当于水平、垂直镜像，然后旋转90度。
+变换类型是QFlag的typedef<Transformation>。它存储了变换值的或组合。
 
 ## 6. 深入实践与常见坑
 

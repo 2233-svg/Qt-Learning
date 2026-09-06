@@ -205,1656 +205,1005 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 125 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `backgroundVisible : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setBackgroundVisible(...)` 设置，之后用 `backgroundVisible()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定调色板背景是否在文档区域外可见。
+如果设置为 true，纯文本编辑会在未被文本文档覆盖的视口区域绘制调色板背景。否则，如果设置为 false，则不会。该功能使用户能够直观区分文档中用调色板底色绘制的区域，以及未被任何文档覆盖的空白区域。
+默认是假的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`backgroundVisible`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `backgroundVisible()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] blockCount : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的状态/能力属性。通常通过 `blockCount()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含文档中的文本块数量。
+默认情况下，在空文档中，该属性的值为1。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`blockCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blockCount()` 读取当前值；它不会修改应用状态。
 
 ### `centerOnScroll : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setCenterOnScroll(...)` 设置，之后用 `centerOnScroll()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定光标是否应置中于屏幕。
+如果设置为 true，纯文本编辑会将文档垂直滚动，使光标在视口中心可见。这也允许文本编辑滚动到文档末尾以下。否则，如果设置为 false，纯文本编辑会尽可能少地滚动，以确保光标可见。同样的算法适用于通过 `appendPlainText()` 添加的任何新行。
+默认是假的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`centerOnScroll`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `centerOnScroll()` 读取当前值；它不会修改应用状态。
 
 ### `cursorWidth : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setCursorWidth(...)` 设置，之后用 `cursorWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性指定光标的宽度（像素单位）。默认值为1。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`cursorWidth`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `cursorWidth()` 读取当前值；它不会修改应用状态。
 
 ### `documentTitle : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setDocumentTitle(...)` 设置，之后用 `documentTitle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含从文本中解析出来的文档标题。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`documentTitle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `documentTitle()` 读取当前值；它不会修改应用状态。
 
 ### `lineWrapMode : LineWrapMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setLineWrapMode(...)` 设置，之后用 `lineWrapMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了线环模式。
+默认模式是`WidgetWidth`，使文字在文本编辑的右侧边缘被包裹。包裹发生在空白处，保持整词完整。如果你希望在单词内进行折叠，请使用`setWordWrapMode()`。
 
-**签名拆解：**
-
-- 属性类型：`LineWrapMode`。
-- 属性名：`lineWrapMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `lineWrapMode()` 读取当前值；它不会修改应用状态。
 
 ### `maximumBlockCount : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setMaximumBlockCount(...)` 设置，之后用 `maximumBlockCount()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性限制了文档中块的限制。
+指定文档可拥有的最大块数。如果文档中有更多带有该属性的块，则从文档开头移除块。
+负值或零值表示文档可以包含无限数量的块。
+默认值是0。
+注意，设置该属性会立即将限制应用到文档内容上。设置该属性还会禁用撤销重做历史。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`maximumBlockCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumBlockCount()` 读取当前值；它不会修改应用状态。
 
 ### `overwriteMode : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setOverwriteMode(...)` 设置，之后用 `overwriteMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了用户输入的文本是否会覆盖现有文本。
+与许多文本编辑器一样，纯文本编辑器小部件可以配置为插入或覆盖用户输入的新文本。
+如果`true`该属性，现有文本会逐字符被新文本覆盖;否则，文本会在光标位置插入，取代现有文本。
+默认情况下，该属性为`false`（新文本不会覆盖现有文本）。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`overwriteMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `overwriteMode()` 读取当前值；它不会修改应用状态。
 
 ### `placeholderText : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setPlaceholderText(...)` 设置，之后用 `placeholderText()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含编辑器占位文本。
+设置该属性后，只要`document()`为空，编辑器就会显示一个灰色的占位文本。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`placeholderText`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `placeholderText()` 读取当前值；它不会修改应用状态。
 
 ### `plainText : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setPlainText(...)` 设置，之后用 `plainText()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性获取并设置纯文本编辑器的内容。设置该属性后，之前的内容会被移除，撤销/重做历史也会被重置。`currentCharFormat()`也会被重置，除非`textCursor()`已经在文档开头。
+默认情况下，对于无内容的编辑器，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`plainText`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `plainText()` 读取当前值；它不会修改应用状态。
 
 ### `readOnly : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setReadOnly(...)` 设置，之后用 `readOnly()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定文本编辑是否为只读。
+在只读文本编辑中，用户只能浏览文本并选择文本;无法修改文本。
+该属性的默认值为假。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`readOnly`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `readOnly()` 读取当前值；它不会修改应用状态。
 
 ### `tabChangesFocus : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setTabChangesFocus(...)` 设置，之后用 `tabChangesFocus()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+无论Tab键改变焦点还是被接受为输入，这一属性都成立。
+在某些情况下，文本编辑不应允许用户使用Tab键输入计表器或更改缩进，因为这会破坏焦点链。默认为false。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`tabChangesFocus`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabChangesFocus()` 读取当前值；它不会修改应用状态。
 
 ### `tabStopDistance : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setTabStopDistance(...)` 设置，之后用 `tabStopDistance()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示制表停止距离（像素单位）。
+默认情况下，该属性包含80像素的值。
+不要设置小于`QChar::VisualTabCharacter`字符`horizontalAdvance()`的值，否则制表符字符将被不完全绘制。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`tabStopDistance`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabStopDistance()` 读取当前值；它不会修改应用状态。
 
 ### `textInteractionFlags : Qt::TextInteractionFlags`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setTextInteractionFlags(...)` 设置，之后用 `TextInteractionFlags()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+规定标签在显示文本时应如何与用户输入交互。
+如果标志中包含`Qt::LinksAccessibleByKeyboard`或`Qt::TextSelectableByKeyboard`，那么焦点策略也会自动设置为`Qt::ClickFocus`。
+默认值取决于`QPlainTextEdit`是只读还是可编辑。
 
-**签名拆解：**
-
-- 属性类型：`Qt::TextInteractionFlags`。
-- 属性名：`textInteractionFlags`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textInteractionFlags()` 读取当前值；它不会修改应用状态。
 
 ### `undoRedoEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setUndoRedoEnabled(...)` 设置，之后用 `undoRedoEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否允许撤销和重做。
+用户只有在该属性成立且存在可撤销（或重做）的操作时，才能撤销或重做操作。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`undoRedoEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `undoRedoEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `wordWrapMode : QTextOption::WrapMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的配置属性。初始化或状态切换时通过 `setWrapMode(...)` 设置，之后用 `WrapMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示`QPlainTextEdit`在用单词包裹文本时所采用的模式。
+默认情况下，该属性设置为`QTextOption::WrapAtWordBoundaryOrAnywhere`。
 
-**签名拆解：**
-
-- 属性类型：`QTextOption::WrapMode`。
-- 属性名：`wordWrapMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wordWrapMode()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QPlainTextEdit::QPlainTextEdit(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有父 `parent` 的空 QPlainTextEdit。
 
 ### `[explicit] QPlainTextEdit::QPlainTextEdit(const QString &text, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有父 `parent`的 QPlainTextEdit。文本编辑将显示纯文本`text`。
 
 ### `[virtual noexcept] QPlainTextEdit::~QPlainTextEdit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `QString QPlainTextEdit::anchorAt(const QPoint &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::anchorAt` 用于计算、查询或取得与“anchor、按位置访问”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `pos`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位置`pos`锚点的引用，如果该点没有锚点，则返回空字符串。
 
 ### `[slot] void QPlainTextEdit::appendHtml(const QString &html)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `appendHtml`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `html`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在文本编辑末尾附加一个带有`html`的新段落。
+`appendPlainText()`。
 
 ### `[slot] void QPlainTextEdit::appendPlainText(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `appendPlainText`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在文本编辑末尾附加一个带有`text`的新段落。
 
 ### `[protected] QRectF QPlainTextEdit::blockBoundingGeometry(const QTextBlock &block) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::blockBoundingGeometry` 用于计算、查询或取得与“阻塞或屏蔽、Bounding、几何区域”相关的操作。调用时要先确认当前状态和 `block` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `block`：类型为 `const QTextBlock &`。没有默认值，调用时必须提供。传入 `const QTextBlock &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回内容坐标中的文本`block`边界矩形。用`contentOffset()`平移矩形以获得视口上的视觉坐标。
 
 ### `[protected] QRectF QPlainTextEdit::blockBoundingRect(const QTextBlock &block) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::blockBoundingRect` 用于计算、查询或取得与“阻塞或屏蔽、Bounding、Rect”相关的操作。调用时要先确认当前状态和 `block` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `block`：类型为 `const QTextBlock &`。没有默认值，调用时必须提供。传入 `const QTextBlock &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本在块自身坐标`block`的边界矩形。
 
 ### `[signal] void QPlainTextEdit::blockCountChanged(int newBlockCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `blockCountChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newBlockCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当区块计数变化时，该信号都会发出。新的区块计数会以`newBlockCount`传递。
 
 ### `[virtual protected] bool QPlainTextEdit::canInsertFromMimeData(const QMimeData *source) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canInsertFromMimeData`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `source`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果MIME数据对象的内容（由`source`指定的）可以被解码并插入文档，该函数会返回`true`。例如，当拖动操作中鼠标进入该控件时调用该功能，需要判断是否能接受拖动。
 
 ### `bool QPlainTextEdit::canPaste() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canPaste`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回是否可以将剪贴板的文本粘贴到文本编辑中。
 
 ### `[slot] void QPlainTextEdit::centerCursor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `centerCursor`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+滚动文档以使光标垂直居中。
 
 ### `[override virtual protected] void QPlainTextEdit::changeEvent(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QFrame::changeEvent`（QEvent *ev）。
 
 ### `[slot] void QPlainTextEdit::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `clear`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除文本编辑中的所有文本。
+注释：
+- 撤销/重做历史也会被清除。
+- `currentCharFormat()` 会被重置，除非`textCursor()`已经在文档开头。
 
 ### `[protected] QPointF QPlainTextEdit::contentOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::contentOffset` 用于计算、查询或取得与“content、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回内容的视口坐标起点。
+纯文本编辑内容的起点始终是第一个可见文本块的左上角。内容偏移量不同于（0,0）当文本被水平滚动，或第一个可见块部分滚动出屏幕时，即可见文本不以第一个可见块的第一行开始，或者第一个可见块是第一个块且编辑器显示边距时。
 
 ### `[override virtual protected] void QPlainTextEdit::contextMenuEvent(QContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+重实现自：`QAbstractScrollArea::contextMenuEvent`（QContextMenuEvent *e）。
+显示用`createStandardContextMenu()`创建的标准右键菜单。
+如果你不希望文本编辑带有右键菜单，可以将其`contextMenuPolicy`设置为`Qt::NoContextMenu`。如果你想自定义右键菜单，请重新实现这个函数。如果你想扩展标准的右键菜单，重新实现这个功能，调用`createStandardContextMenu()`并扩展返回的菜单。
+事件信息通过`event`对象传递。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `event`：类型为 `QContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MyQPlainTextEdit::contextMenuEvent(QContextMenuEvent *event)
+ {
+     QMenu *menu = createStandardContextMenu();
+     menu->addAction(tr("My Menu Item"));
+     //...
+     menu->exec(event->globalPos());
+     delete menu;
+ }
+```
 
 ### `[slot] void QPlainTextEdit::copy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `copy`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将选中的文本复制到剪贴板上。
 
 ### `[signal] void QPlainTextEdit::copyAvailable(bool yes)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `copyAvailable`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `yes`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当文本编辑中选择或取消选择文本时，会发出该信号。
+当选择文本时，该信号将以`yes`设置为true的状态发出。如果未选择文本或取消选择文本，则以`yes`为false的状态发出该信号。
+如果`yes`为真，那么可以用`copy()`将选件复制到剪贴板。如果`yes`为假，则不`copy()`。
 
 ### `[virtual protected] QMimeData *QPlainTextEdit::createMimeDataFromSelection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::createMimeDataFromSelection` 用于计算、查询或取得与“创建、Mime、数据访问、转换进入、Selection”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMimeData *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeData *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回一个新的 MIME 数据对象，以表示文本编辑当前选择的内容。当需要将选区封装到新的 `QMimeData` 对象中时，调用该功能;例如，当开始拖放操作，或将数据复制到剪贴板时。
+如果你重新实现这个函数，注意返回`QMimeData`对象的所有权会传递给调用者。通过`textCursor()`函数可以检索选择。
 
 ### `QMenu *QPlainTextEdit::createStandardContextMenu()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::createStandardContextMenu` 用于计算、查询或取得与“创建、Standard、Context、Menu”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMenu *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMenu *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能创建标准的上下文菜单，用户用鼠标右键点击文本编辑时会显示。该功能由默认`contextMenuEvent()`处理程序调用。弹出菜单的所有权转移给调用者。
+我们建议你改用createStandardContextMenu（`QPoint`）版本，它会启用与用户点击位置敏感的操作。
 
 ### `QMenu *QPlainTextEdit::createStandardContextMenu(const QPoint &position)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::createStandardContextMenu` 用于计算、查询或取得与“创建、Standard、Context、Menu”相关的操作。调用时要先确认当前状态和 `position` 的有效范围；返回类型是 `QMenu *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMenu *`。
-- 参数 `position`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能创建标准的上下文菜单，用户用鼠标右键点击文本编辑时会显示。该功能从默认`contextMenuEvent()`处理程序调用，并获取鼠标点击所在的文档坐标`position`。这可以启用对用户点击位置敏感的操作。弹出菜单的所有权转移给调用者。
 
 ### `QTextCharFormat QPlainTextEdit::currentCharFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::currentCharFormat` 用于计算、查询或取得与“当前、Char、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextCharFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCharFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回插入新文本时使用的字符格式。
 
 ### `QTextCursor QPlainTextEdit::cursorForPosition(const QPoint &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::cursorForPosition` 用于计算、查询或取得与“cursor、For、Position”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数 `pos`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位置`pos`（视口坐标内）的`QTextCursor`。
 
 ### `[signal] void QPlainTextEdit::cursorPositionChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `cursorPositionChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当光标位置变化时，都会发出该信号。
 
 ### `QRect QPlainTextEdit::cursorRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::cursorRect` 用于计算、查询或取得与“cursor、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个矩形（以视口坐标表示），其中包含文本编辑的光标。
 
 ### `QRect QPlainTextEdit::cursorRect(const QTextCursor &cursor) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::cursorRect` 用于计算、查询或取得与“cursor、Rect”相关的操作。调用时要先确认当前状态和 `cursor` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `cursor`：类型为 `const QTextCursor &`。没有默认值，调用时必须提供。传入 `const QTextCursor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个包含`cursor`的矩形（以视口坐标为单位）。
 
 ### `[slot] void QPlainTextEdit::cut()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `cut`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将选中的文本复制到剪贴板，并从文本编辑中删除。
+如果没有被选中的文本，什么都不会发生。
 
 ### `QTextDocument *QPlainTextEdit::document() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::document` 用于计算、查询或取得与“document”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextDocument *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextDocument *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向底层文档的指针。
 
 ### `[override virtual protected] void QPlainTextEdit::dragEnterEvent(QDragEnterEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::dragEnterEvent` 用于执行与“drag、Enter、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QDragEnterEvent *`。没有默认值，调用时必须提供。传入 `QDragEnterEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragEnterEvent`（QDragEnterEvent *event）。
 
 ### `[override virtual protected] void QPlainTextEdit::dragLeaveEvent(QDragLeaveEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QDragLeaveEvent *`。没有默认值，调用时必须提供。传入 `QDragLeaveEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragLeaveEvent`（QDragLeaveEvent *event）。
 
 ### `[override virtual protected] void QPlainTextEdit::dragMoveEvent(QDragMoveEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QDragMoveEvent *`。没有默认值，调用时必须提供。传入 `QDragMoveEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragMoveEvent`（QDragMoveEvent *event）。
 
 ### `[override virtual protected] void QPlainTextEdit::dropEvent(QDropEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QDropEvent *`。没有默认值，调用时必须提供。传入 `QDropEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dropEvent`（QDropEvent *事件）。
 
 ### `void QPlainTextEdit::ensureCursorVisible()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::ensureCursorVisible` 用于执行与“ensure、Cursor、可见状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+必要时通过滚动文本编辑确保光标可见。
 
 ### `QList<QTextEdit::ExtraSelection> QPlainTextEdit::extraSelections() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::extraSelections` 用于计算、查询或取得与“extra、Selections”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QTextEdit::ExtraSelection>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QTextEdit::ExtraSelection>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回报之前设置的额外选择。
 
 ### `bool QPlainTextEdit::find(const QString &exp, QTextDocument::FindFlags options = QTextDocument::FindFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `exp`、`options` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `exp`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `options`：类型为 `QTextDocument::FindFlags`。默认值为 `QTextDocument::FindFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用给定的`options`查找字符串的下一次出现`exp`。如果找到`exp`，返回`true`，并更改光标选择匹配;否则返回`false`。
 
 ### `bool QPlainTextEdit::find(const QRegularExpression &exp, QTextDocument::FindFlags options = QTextDocument::FindFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `exp`、`options` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `exp`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `QTextDocument::FindFlags`。默认值为 `QTextDocument::FindFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`options`找到下一个与正则表达式`exp`匹配的出现。
+如果找到匹配并更改光标选择匹配，返回`true`;否则返回`false`。
+警告：出于历史原因，`exp` 设置的大小写敏感性选项被忽略。相反，`options`用于判断搜索是否具有大小写敏感性。
 
 ### `[protected] QTextBlock QPlainTextEdit::firstVisibleBlock() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::firstVisibleBlock` 用于计算、查询或取得与“首项、可见状态、阻塞或屏蔽”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回第一个可见的方块。
 
 ### `[override virtual protected] void QPlainTextEdit::focusInEvent(QFocusEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::focusInEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点接收）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] bool QPlainTextEdit::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QWidget::focusNextPrevChild`（下一个布尔）。
+根据 Tab 和 Shift Tab 找到一个新的控件来给键盘焦点，如果能找到新控件，则返回 `true`，找不到则返回 false。
+如果`next`为真，该函数向前搜索;如果`next`为假，则向后搜索。
+有时，你会想重新实现这个函数。例如，浏览器可能会重新实现它，将“当前活跃链接”向前或向后移动，只有当它到达“页面”的最后或第一个链接时才调用 focusNextPrevChild()。
+子控件调用其父控件的 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过重新实现该函数，你就能控制所有子控件的焦点遍历。
 
 ### `[override virtual protected] void QPlainTextEdit::focusOutEvent(QFocusEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QWidget::focusOutEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[protected] QAbstractTextDocumentLayout::PaintContext QPlainTextEdit::getPaintContext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的核心操作 `getPaintContext`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QAbstractTextDocumentLayout::PaintContext`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`viewport()`的绘画上下文，仅在重新实现`paintEvent()`时有用。
 
 ### `[override virtual protected] void QPlainTextEdit::inputMethodEvent(QInputMethodEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::inputMethodEvent` 用于执行与“input、Method、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QInputMethodEvent *`。没有默认值，调用时必须提供。传入 `QInputMethodEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodEvent`（QInputMethodEvent *event）。
+对于事件`event`，该事件处理程序可以被重新实现到子类中以接收输入法组合事件。当输入方法的状态发生变化时，调用该处理程序。
+注意，在创建自定义文本编辑小部件时，必须明确设置`Qt::WA_InputMethodEnabled`窗口属性（使用`setAttribute()`函数），才能接收输入法事件。
+默认实现调用 event->ignore()，拒绝输入法事件。详情请参见 `QInputMethodEvent` 文档。
 
 ### `[override virtual] QVariant QPlainTextEdit::inputMethodQuery(Qt::InputMethodQuery property) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `property` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `property`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodQuery`（Qt：：InputMethodQuery query） const.
+该方法仅适用于输入控件。输入方法用于查询控件的一组属性，以支持复杂的输入法操作，以支持周围文本和重新转换。
+`query` 指定查询的属性。
 
 ### `[virtual protected] void QPlainTextEdit::insertFromMimeData(const QMimeData *source)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QPlainTextEdit` 添加依赖、数据或子对象的 API `insertFromMimeData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `source`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数将由`source`指定的内容插入当前光标位置的文本编辑中。每当通过剪贴板粘贴操作插入文本，或文本编辑接受拖放操作数据时，都会调用该功能。
 
 ### `[slot] void QPlainTextEdit::insertPlainText(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `insertPlainText`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+方便的槽函数，可以插入当前光标位置的`text`。
+它等价于。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ edit->textCursor().insertText(text);
+```
 
 ### `[override virtual protected] void QPlainTextEdit::keyPressEvent(QKeyEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理按键事件 `event`，默认实现负责纯文本输入、选择、删除和快捷键。子类可拦截自定义按键；不处理时必须调用基类实现，否则标准编辑或场景键盘操作会失效。
 
 ### `[override virtual protected] void QPlainTextEdit::keyReleaseEvent(QKeyEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyReleaseEvent`（QKeyEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该小部件的密钥释放事件。
+小部件必须先接受焦点并拥有焦点，才能接收密钥释放事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现忽略事件，以便小部件的父节点能够解释事件。
+注意`QKeyEvent`以 isAccepted() == true开头，所以你不需要调用`QKeyEvent::accept()`——只要你对密钥操作时不要调用基类实现即可。
 
 ### `[virtual] QVariant QPlainTextEdit::loadResource(int type, const QUrl &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `loadResource`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QUrl &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+加载由给定`type`和`name`指定的资源。
+该函数是`QTextDocument::loadResource()`的扩展。
 
 ### `void QPlainTextEdit::mergeCurrentCharFormat(const QTextCharFormat &modifier)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::mergeCurrentCharFormat` 用于执行与“merge、当前、Char、格式化”相关的操作。调用时要先确认当前状态和 `modifier` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `modifier`：类型为 `const QTextCharFormat &`。没有默认值，调用时必须提供。传入 `const QTextCharFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过在编辑器光标上调用`QTextCursor::mergeCharFormat`，将`modifier`中指定的属性合并到当前字符格式中。如果编辑器有选区，则`modifier`的属性直接应用到该选区。
 
 ### `[signal] void QPlainTextEdit::modificationChanged(bool changed)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `modificationChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `changed`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当文档内容发生变化，影响修改状态时，就会发出该信号。如果`changed`为真，则说明文档已被修改;否则为假。
+例如，在文档上调用 setModified（false） 然后插入文本，信号就会被发出。如果你撤销该操作，使文档恢复到原始未修改状态，信号就会再次发出。
 
 ### `[override virtual protected] void QPlainTextEdit::mouseDoubleClickEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseDoubleClickEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QPlainTextEdit::mouseMoveEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseMoveEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QPlainTextEdit::mousePressEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mousePressEvent`（QMouseEvent *e）。
 
 ### `[override virtual protected] void QPlainTextEdit::mouseReleaseEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseReleaseEvent`（QMouseEvent *e）。
 
 ### `void QPlainTextEdit::moveCursor(QTextCursor::MoveOperation operation, QTextCursor::MoveMode mode = QTextCursor::MoveAnchor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::moveCursor` 用于执行与“移动、Cursor”相关的操作。调用时要先确认当前状态和 `operation`、`mode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `operation`：类型为 `QTextCursor::MoveOperation`。没有默认值，调用时必须提供。传入 `QTextCursor::MoveOperation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QTextCursor::MoveMode`。默认值为 `QTextCursor::MoveAnchor`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过执行指定`operation`移动光标。
+如果`mode` `QTextCursor::KeepAnchor`，光标会选择它移动的文本。这与用户按住Shift键并用光标键移动光标时的效果相同。
 
 ### `[override virtual protected] void QPlainTextEdit::paintEvent(QPaintEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。传入 `QPaintEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::paintEvent`（QPaintEvent *event）。
 
 ### `[slot] void QPlainTextEdit::paste()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `paste`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将剪贴板上的文本粘贴到当前光标位置的文本编辑中。
+如果剪贴板里没有文字，什么都不会发生。
+要改变该函数的行为，即修改`QPlainTextEdit`可粘贴的内容及其粘贴方式，需重新实现虚拟 `canInsertFromMimeData()` 并`insertFromMimeData()`函数。
 
 ### `void QPlainTextEdit::print(QPagedPaintDevice *printer) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::print` 用于执行与“print”相关的操作。调用时要先确认当前状态和 `printer` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `printer`：类型为 `QPagedPaintDevice *`。没有默认值，调用时必须提供。传入 `QPagedPaintDevice *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数将文本编辑的文档打印到给定的 `printer`。这等同于直接调用文档上的打印方法，但该函数还支持 QPrinter：：Selection 作为打印范围。
 
 ### `[slot] void QPlainTextEdit::redo()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `redo`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新做上次的操作。
+如果没有重做操作，即撤销/重做历史中没有重做步骤，则不会发生任何事。
 
 ### `[signal] void QPlainTextEdit::redoAvailable(bool available)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `redoAvailable`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `available`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当重做操作可用（`available`为真）或不可用（`available`为假）时，该信号就会发出。
 
 ### `[override virtual protected] void QPlainTextEdit::resizeEvent(QResizeEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。传入 `QResizeEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::resizeEvent`（QResizeEvent *event）。
 
 ### `[override virtual protected] void QPlainTextEdit::scrollContentsBy(int dx, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::scrollContentsBy` 用于执行与“scroll、Contents、By”相关的操作。调用时要先确认当前状态和 `dx`、`dy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::scrollContentsBy`（智力 dx，智力 dy）。
+当滚动条被移动`dx`、`dy`时调用，因此视口内容应相应滚动。
+默认实现只需调用整个`viewport()`的`update()`，子类可以重新实现该处理程序以优化，或者像`QScrollArea`一样移动内容控件。参数`dx`和`dy`是为了方便，让类知道应该滚动多少（比如像素移动时很有用）。你也可以忽略这些值，直接滚动到滚动条指示的位置。
+调用该函数进行程序滚动是错误，建议使用滚动条（例如直接调用`QScrollBar::setValue()`）。
 
 ### `[slot] void QPlainTextEdit::selectAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `selectAll`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择所有文本。
 
 ### `[signal] void QPlainTextEdit::selectionChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `selectionChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当选择发生变化时，该信号都会发出。
 
 ### `void QPlainTextEdit::setCurrentCharFormat(const QTextCharFormat &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentCharFormat`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QTextCharFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过在编辑器光标上调用 `QTextCursor::setCharFormat()`，设置插入新文本到 `format` 时使用的字符格式。如果编辑器有选区，则将 char 格式直接应用于该选区。
 
 ### `void QPlainTextEdit::setDocument(QTextDocument *document)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocument`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `document`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。传入 `QTextDocument *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这`document`成为文本编辑器的新文档。
+所提供文档的父`QObject`仍然是该对象的所有者。如果当前文档是文本编辑器的子文档，则该文档将被删除。
+文档必须具有继承`QPlainTextDocumentLayout`的文档布局（参见 `QTextDocument::setDocumentLayout()`）。
 
 ### `void QPlainTextEdit::setExtraSelections(const QList<QTextEdit::ExtraSelection> &selections)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setExtraSelections`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selections`：类型为 `const QList<QTextEdit::ExtraSelection> &`。没有默认值，调用时必须提供。传入 `const QList<QTextEdit::ExtraSelection> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能允许临时用指定颜色标记文档中的某些区域，具体颜色为`selections`。例如，在编程编辑器中，用特定背景色标记整行文本以表示断点的存在。
 
 ### `[slot] void QPlainTextEdit::setPlainText(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setPlainText`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性获取并设置纯文本编辑器的内容。设置该属性后，之前的内容会被移除，撤销/重做历史也会被重置。`currentCharFormat()`也会被重置，除非`textCursor()`已经在文档开头。
+默认情况下，对于无内容的编辑器，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPlainText(...)` 修改 `plainText`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QPlainTextEdit::setTextCursor(const QTextCursor &cursor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextCursor`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cursor`：类型为 `const QTextCursor &`。没有默认值，调用时必须提供。传入 `const QTextCursor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定可见`cursor`。
 
 ### `[override virtual protected] void QPlainTextEdit::showEvent(QShowEvent *)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::showEvent` 用于执行与“显示、Event”相关的操作。调用时要先确认当前状态和 `QShowEvent *` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `QShowEvent *`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+重实现自：`QWidget::showEvent`（QShowEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收传递给 `event` 参数的控件显示事件。
+非自发的展示事件会在展示前立即发送到小部件。窗口的自发展示事件则在展示之后交付。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，窗口恢复时自发显示事件。收到自发隐藏事件后，小部件仍被视为`isVisible()`可见。
 
 ### `[signal] void QPlainTextEdit::textChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `textChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性获取并设置纯文本编辑器的内容。设置该属性后，之前的内容会被移除，撤销/重做历史也会被重置。`currentCharFormat()`也会被重置，除非`textCursor()`已经在文档开头。
+默认情况下，对于无内容的编辑器，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `plainText` 的变化，不要把它当作普通函数主动调用。
 
 ### `QTextCursor QPlainTextEdit::textCursor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::textCursor` 用于计算、查询或取得与“文本、Cursor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回代表当前可见光标的`QTextCursor`副本。注意，返回光标的变化不会影响`QPlainTextEdit`的光标;使用`setTextCursor()`来更新可见光标。
 
 ### `QString QPlainTextEdit::toPlainText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPlainText`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+该属性获取并设置纯文本编辑器的内容。设置该属性后，之前的内容会被移除，撤销/重做历史也会被重置。`currentCharFormat()`也会被重置，除非`textCursor()`已经在文档开头。
+默认情况下，对于无内容的编辑器，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `toPlainText()` 读取当前值；它不会修改应用状态。
 
 ### `[slot] void QPlainTextEdit::undo()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `undo`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+撤销上次的操作。
+如果没有可撤销的操作，即撤销/重做历史中没有撤销步骤，则不会发生任何事。
 
 ### `[signal] void QPlainTextEdit::undoAvailable(bool available)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `undoAvailable`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `available`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当撤销操作可用（`available`为真）或不可用（`available`为假）时，该信号都会发出。
 
 ### `[signal] void QPlainTextEdit::updateRequest(const QRect &rect, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 发出的通知信号 `updateRequest`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+当文本文档需要更新指定`rect`时，该信号会发出。如果文本被滚动，`rect`会覆盖整个视口区域。如果文本是垂直滚动，`dy`会显示视口被滚动的像素数。
+信号的目的是支持纯文本编辑子类中的额外控件，例如显示行号、断点或其他额外信息。
 
 ### `[override virtual protected] void QPlainTextEdit::wheelEvent(QWheelEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QWheelEvent *`。没有默认值，调用时必须提供。传入 `QWheelEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::wheelEvent`（QWheelEvent *e）。
 
 ### `[slot] void QPlainTextEdit::zoomIn(int range = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `zoomIn`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `range`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过将基础字体大小`range`点放大，并将所有字体大小重新计算为新大小来放大文本。这不会改变任何图片的大小。
 
 ### `[slot] void QPlainTextEdit::zoomOut(int range = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `zoomOut`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `range`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过缩小基础字体大小`range`点，并重新计算所有字体大小为新大小来缩放文本。这不会改变任何图片的大小。
 
 ### `enum LineWrapMode { NoWrap, WidgetWidth }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextEdit` 暴露的类型声明 `行、Wrap、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制纯文本编辑器的换行：`NoWrap` 保持逻辑行并允许水平滚动，`WidgetWidth` 按视口宽度折行。折行只改变显示，不会向文档插入换行符。
 
 ### `bool backgroundVisible() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::backgroundVisible` 用于计算、查询或取得与“background、可见状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定调色板背景是否在文档区域外可见。
+如果设置为 true，纯文本编辑会在未被文本文档覆盖的视口区域绘制调色板背景。否则，如果设置为 false，则不会。该功能使用户能够直观区分文档中用调色板底色绘制的区域，以及未被任何文档覆盖的空白区域。
+默认是假的。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `backgroundVisible()` 读取当前值；它不会修改应用状态。
 
 ### `int blockCount() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::blockCount` 用于计算、查询或取得与“阻塞或屏蔽、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含文档中的文本块数量。
+默认情况下，在空文档中，该属性的值为1。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blockCount()` 读取当前值；它不会修改应用状态。
 
 ### `bool centerOnScroll() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::centerOnScroll` 用于计算、查询或取得与“center、On、Scroll”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定光标是否应置中于屏幕。
+如果设置为 true，纯文本编辑会将文档垂直滚动，使光标在视口中心可见。这也允许文本编辑滚动到文档末尾以下。否则，如果设置为 false，纯文本编辑会尽可能少地滚动，以确保光标可见。同样的算法适用于通过 `appendPlainText()` 添加的任何新行。
+默认是假的。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `centerOnScroll()` 读取当前值；它不会修改应用状态。
 
 ### `int cursorWidth() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::cursorWidth` 用于计算、查询或取得与“cursor、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性指定光标的宽度（像素单位）。默认值为1。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `cursorWidth()` 读取当前值；它不会修改应用状态。
 
 ### `QString documentTitle() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::documentTitle` 用于计算、查询或取得与“document、Title”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含从文本中解析出来的文档标题。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `documentTitle()` 读取当前值；它不会修改应用状态。
 
 ### `bool isReadOnly() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isReadOnly`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定文本编辑是否为只读。
+在只读文本编辑中，用户只能浏览文本并选择文本;无法修改文本。
+该属性的默认值为假。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isReadOnly()` 读取当前值；它不会修改应用状态。
 
 ### `bool isUndoRedoEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUndoRedoEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性是否允许撤销和重做。
+用户只有在该属性成立且存在可撤销（或重做）的操作时，才能撤销或重做操作。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isUndoRedoEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `QPlainTextEdit::LineWrapMode lineWrapMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::lineWrapMode` 用于计算、查询或取得与“行、Wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPlainTextEdit::LineWrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示了线环模式。
+默认模式是`WidgetWidth`，使文字在文本编辑的右侧边缘被包裹。包裹发生在空白处，保持整词完整。如果你希望在单词内进行折叠，请使用`setWordWrapMode()`。
 
-**签名拆解：**
-
-- 返回值：`QPlainTextEdit::LineWrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `lineWrapMode()` 读取当前值；它不会修改应用状态。
 
 ### `int maximumBlockCount() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::maximumBlockCount` 用于计算、查询或取得与“最大值、阻塞或屏蔽、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性限制了文档中块的限制。
+指定文档可拥有的最大块数。如果文档中有更多带有该属性的块，则从文档开头移除块。
+负值或零值表示文档可以包含无限数量的块。
+默认值是0。
+注意，设置该属性会立即将限制应用到文档内容上。设置该属性还会禁用撤销重做历史。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumBlockCount()` 读取当前值；它不会修改应用状态。
 
 ### `bool overwriteMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::overwriteMode` 用于计算、查询或取得与“overwrite、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了用户输入的文本是否会覆盖现有文本。
+与许多文本编辑器一样，纯文本编辑器小部件可以配置为插入或覆盖用户输入的新文本。
+如果`true`该属性，现有文本会逐字符被新文本覆盖;否则，文本会在光标位置插入，取代现有文本。
+默认情况下，该属性为`false`（新文本不会覆盖现有文本）。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `overwriteMode()` 读取当前值；它不会修改应用状态。
 
 ### `QString placeholderText() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::placeholderText` 用于计算、查询或取得与“placeholder、文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含编辑器占位文本。
+设置该属性后，只要`document()`为空，编辑器就会显示一个灰色的占位文本。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `placeholderText()` 读取当前值；它不会修改应用状态。
 
 ### `void setBackgroundVisible(bool visible)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBackgroundVisible`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定调色板背景是否在文档区域外可见。
+如果设置为 true，纯文本编辑会在未被文本文档覆盖的视口区域绘制调色板背景。否则，如果设置为 false，则不会。该功能使用户能够直观区分文档中用调色板底色绘制的区域，以及未被任何文档覆盖的空白区域。
+默认是假的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `visible`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setBackgroundVisible(...)` 修改 `backgroundVisible`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCenterOnScroll(bool enabled)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCenterOnScroll`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定光标是否应置中于屏幕。
+如果设置为 true，纯文本编辑会将文档垂直滚动，使光标在视口中心可见。这也允许文本编辑滚动到文档末尾以下。否则，如果设置为 false，纯文本编辑会尽可能少地滚动，以确保光标可见。同样的算法适用于通过 `appendPlainText()` 添加的任何新行。
+默认是假的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCenterOnScroll(...)` 修改 `centerOnScroll`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCursorWidth(int width)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCursorWidth`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性指定光标的宽度（像素单位）。默认值为1。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `int`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCursorWidth(...)` 修改 `cursorWidth`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDocumentTitle(const QString &title)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocumentTitle`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含从文本中解析出来的文档标题。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `title`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDocumentTitle(...)` 修改 `documentTitle`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setLineWrapMode(QPlainTextEdit::LineWrapMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLineWrapMode`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示了线环模式。
+默认模式是`WidgetWidth`，使文字在文本编辑的右侧边缘被包裹。包裹发生在空白处，保持整词完整。如果你希望在单词内进行折叠，请使用`setWordWrapMode()`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QPlainTextEdit::LineWrapMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setLineWrapMode(...)` 修改 `lineWrapMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaximumBlockCount(int maximum)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumBlockCount`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性限制了文档中块的限制。
+指定文档可拥有的最大块数。如果文档中有更多带有该属性的块，则从文档开头移除块。
+负值或零值表示文档可以包含无限数量的块。
+默认值是0。
+注意，设置该属性会立即将限制应用到文档内容上。设置该属性还会禁用撤销重做历史。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `maximum`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaximumBlockCount(...)` 修改 `maximumBlockCount`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setOverwriteMode(bool overwrite)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOverwriteMode`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了用户输入的文本是否会覆盖现有文本。
+与许多文本编辑器一样，纯文本编辑器小部件可以配置为插入或覆盖用户输入的新文本。
+如果`true`该属性，现有文本会逐字符被新文本覆盖;否则，文本会在光标位置插入，取代现有文本。
+默认情况下，该属性为`false`（新文本不会覆盖现有文本）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `overwrite`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOverwriteMode(...)` 修改 `overwriteMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setPlaceholderText(const QString &placeholderText)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPlaceholderText`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含编辑器占位文本。
+设置该属性后，只要`document()`为空，编辑器就会显示一个灰色的占位文本。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `placeholderText`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPlaceholderText(...)` 修改 `placeholderText`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setReadOnly(bool ro)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadOnly`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定文本编辑是否为只读。
+在只读文本编辑中，用户只能浏览文本并选择文本;无法修改文本。
+该属性的默认值为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ro`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setReadOnly(...)` 修改 `readOnly`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTabChangesFocus(bool b)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabChangesFocus`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+无论Tab键改变焦点还是被接受为输入，这一属性都成立。
+在某些情况下，文本编辑不应允许用户使用Tab键输入计表器或更改缩进，因为这会破坏焦点链。默认为false。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTabChangesFocus(...)` 修改 `tabChangesFocus`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTabStopDistance(qreal distance)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabStopDistance`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示制表停止距离（像素单位）。
+默认情况下，该属性包含80像素的值。
+不要设置小于`QChar::VisualTabCharacter`字符`horizontalAdvance()`的值，否则制表符字符将被不完全绘制。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `distance`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTabStopDistance(...)` 修改 `tabStopDistance`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTextInteractionFlags(Qt::TextInteractionFlags flags)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextInteractionFlags`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+规定标签在显示文本时应如何与用户输入交互。
+如果标志中包含`Qt::LinksAccessibleByKeyboard`或`Qt::TextSelectableByKeyboard`，那么焦点策略也会自动设置为`Qt::ClickFocus`。
+默认值取决于`QPlainTextEdit`是只读还是可编辑。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `Qt::TextInteractionFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTextInteractionFlags(...)` 修改 `textInteractionFlags`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setUndoRedoEnabled(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUndoRedoEnabled`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否允许撤销和重做。
+用户只有在该属性成立且存在可撤销（或重做）的操作时，才能撤销或重做操作。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUndoRedoEnabled(...)` 修改 `undoRedoEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWordWrapMode(QTextOption::WrapMode policy)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWordWrapMode`。调用它会改变 `QPlainTextEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示`QPlainTextEdit`在用单词包裹文本时所采用的模式。
+默认情况下，该属性设置为`QTextOption::WrapAtWordBoundaryOrAnywhere`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `policy`：类型为 `QTextOption::WrapMode`。没有默认值，调用时必须提供。传入 `QTextOption::WrapMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWordWrapMode(...)` 修改 `wordWrapMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool tabChangesFocus() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::tabChangesFocus` 用于计算、查询或取得与“tab、Changes、Focus”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+无论Tab键改变焦点还是被接受为输入，这一属性都成立。
+在某些情况下，文本编辑不应允许用户使用Tab键输入计表器或更改缩进，因为这会破坏焦点链。默认为false。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabChangesFocus()` 读取当前值；它不会修改应用状态。
 
 ### `qreal tabStopDistance() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::tabStopDistance` 用于计算、查询或取得与“tab、停止、Distance”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示制表停止距离（像素单位）。
+默认情况下，该属性包含80像素的值。
+不要设置小于`QChar::VisualTabCharacter`字符`horizontalAdvance()`的值，否则制表符字符将被不完全绘制。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabStopDistance()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::TextInteractionFlags textInteractionFlags() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::textInteractionFlags` 用于计算、查询或取得与“文本、Interaction、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::TextInteractionFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+规定标签在显示文本时应如何与用户输入交互。
+如果标志中包含`Qt::LinksAccessibleByKeyboard`或`Qt::TextSelectableByKeyboard`，那么焦点策略也会自动设置为`Qt::ClickFocus`。
+默认值取决于`QPlainTextEdit`是只读还是可编辑。
 
-**签名拆解：**
-
-- 返回值：`Qt::TextInteractionFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textInteractionFlags()` 读取当前值；它不会修改应用状态。
 
 ### `QTextOption::WrapMode wordWrapMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextEdit::wordWrapMode` 用于计算、查询或取得与“word、Wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextOption::WrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示`QPlainTextEdit`在用单词包裹文本时所采用的模式。
+默认情况下，该属性设置为`QTextOption::WrapAtWordBoundaryOrAnywhere`。
 
-**签名拆解：**
-
-- 返回值：`QTextOption::WrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wordWrapMode()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

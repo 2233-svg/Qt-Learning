@@ -138,883 +138,416 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 64 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[bindable] sortRole : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStandardItemModel` 的配置属性。初始化或状态切换时通过 `setSortRole(...)` 设置，之后用 `sortRole()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询模型数据的项目角色，用于排序项目时查询数据。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`sortRole`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortRole()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QStandardItemModel::QStandardItemModel(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStandardItemModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的 `parent` 构建一个新的物品模型。
 
 ### `QStandardItemModel::QStandardItemModel(int rows, int columns, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStandardItemModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `rows`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `columns`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的项目模型，初始有`rows`行和`columns`列，且`parent`。
 
 ### `[virtual noexcept] QStandardItemModel::~QStandardItemModel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStandardItemModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁模型。模型销毁所有物品。
 
 ### `void QStandardItemModel::appendColumn(const QList<QStandardItem *> &items)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `appendColumn`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `items`：类型为 `const QList<QStandardItem *> &`。没有默认值，调用时必须提供。传入 `const QList<QStandardItem *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+附加包含`items`的列。如有必要，行数增加至`items`大小。
 
 ### `void QStandardItemModel::appendRow(const QList<QStandardItem *> &items)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `appendRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `items`：类型为 `const QList<QStandardItem *> &`。没有默认值，调用时必须提供。传入 `const QList<QStandardItem *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+附加包含`items`的行。如有必要，列数增加至`items`大小。
 
 ### `void QStandardItemModel::appendRow(QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `appendRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当构建只有一列的列表或树时，该函数提供了方便地添加单一新 `item` 的方法。
 
 ### `void QStandardItemModel::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从模型中移除所有项目（包括头部项），并将行数和列数设为零。
 
 ### `[override virtual] bool QStandardItemModel::clearItemData(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::clearItemData` 用于计算、查询或取得与“清空、项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::clearItemData`（const QModelIndex & index）。
 
 ### `[override virtual] int QStandardItemModel::columnCount(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::columnCount` 用于计算、查询或取得与“列、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::columnCount`（const QModelIndex &parent） const.
 
 ### `[override virtual] QVariant QStandardItemModel::data(const QModelIndex &index, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QStandardItemModel` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 通常与 role、QModelIndex 有关；数据变化后发 `dataChanged`，不要在 data() 中修改模型。
+重实现自：`QAbstractItemModel::data`（const QModelIndex & index， int role） const.
 
 ### `[override virtual] bool QStandardItemModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::dropMimeData` 用于计算、查询或取得与“drop、Mime、数据访问”相关的操作。调用时要先确认当前状态和 `data`、`action`、`row`、`column`、`parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `action`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把拖放数据 `data` 按 `action` 插入 `parent` 下的 `row`、`column` 位置，成功返回 `true`。`row` 或 `column` 为 -1 表示由模型选择合适位置；自定义 MIME 格式时应与 `mimeTypes()` 和 `mimeData()` 配套重实现。
 
 ### `QList<QStandardItem *> QStandardItemModel::findItems(const QString &text, Qt::MatchFlags flags = Qt::MatchExactly, int column = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::findItems` 用于计算、查询或取得与“查找、Items”相关的操作。调用时要先确认当前状态和 `text`、`flags`、`column` 的有效范围；返回类型是 `QList<QStandardItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QStandardItem *>`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `flags`：类型为 `Qt::MatchFlags`。默认值为 `Qt::MatchExactly`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `column`：类型为 `int`。默认值为 `0`。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与给定`text`匹配的物品列表，使用给定`flags`，在给定`column`中返回。
 
 ### `[override virtual] Qt::ItemFlags QStandardItemModel::flags(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `Qt::ItemFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ItemFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::flags`（const QModelIndex & index） const.
 
 ### `[override virtual] bool QStandardItemModel::hasChildren(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasChildren`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::hasChildren`（const QModelIndex & parent）const.
 
 ### `[override virtual] QVariant QStandardItemModel::headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::headerData` 用于计算、查询或取得与“header、数据访问”相关的操作。调用时要先确认当前状态和 `section`、`orientation`、`role` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::headerData`（int section，Qt：：Orientation orientation， int role）const.
 
 ### `QStandardItem *QStandardItemModel::horizontalHeaderItem(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::horizontalHeaderItem` 用于计算、查询或取得与“水平、Header、项目访问”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果设置了水平头部项，返回`column`的水平头项;否则返回`nullptr`。
 
 ### `[override virtual] QModelIndex QStandardItemModel::index(int row, int column, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `row`、`column`、`parent` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::index`（整数行，整数列，条件 QModelIndex 和父）const.
 
 ### `QModelIndex QStandardItemModel::indexFromItem(const QStandardItem *item) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::indexFromItem` 用于计算、查询或取得与“索引、转换进入、项目访问”相关的操作。调用时要先确认当前状态和 `item` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `item`：类型为 `const QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与给定`item`关联的`QModelIndex`。
+当你想执行需要`QModelIndex`项的操作时，可以使用这个函数，比如`QAbstractItemView::scrollTo()`。`QStandardItem::index()`是出于方便而提供的;它等同于调用这个函数。
 
 ### `void QStandardItemModel::insertColumn(int column, const QList<QStandardItem *> &items)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertColumn`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `items`：类型为 `const QList<QStandardItem *> &`。没有默认值，调用时必须提供。传入 `const QList<QStandardItem *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在 `column` 插入一列，包含 `items`。如有必要，行数增加到 `items` 大小。
 
 ### `bool QStandardItemModel::insertColumn(int column, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertColumn`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定`parent`的子项中插入给定`column`前的单一列。如果插入该列，返回`true`;否则返回`false`。
 
 ### `[override virtual] bool QStandardItemModel::insertColumns(int column, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertColumns`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::insertColumns`（整数列，整数计数，条件QModelIndex和parent）。
 
 ### `void QStandardItemModel::insertRow(int row, const QList<QStandardItem *> &items)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `items`：类型为 `const QList<QStandardItem *> &`。没有默认值，调用时必须提供。传入 `const QList<QStandardItem *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`row`插入包含`items`的行。如有必要，列数增加至`items`大小。
 
 ### `bool QStandardItemModel::insertRow(int row, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定`parent`的子项中插入给定`row`前的一行。如果插入该行，返回`true`;否则返回`false`。
 
 ### `void QStandardItemModel::insertRow(int row, QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`row`插入一行包含`item`。
+当构建只有一列的列表或树时，该函数提供了方便地添加单个新项的方式。
 
 ### `[override virtual] bool QStandardItemModel::insertRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStandardItemModel` 添加依赖、数据或子对象的 API `insertRows`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::insertRows`（整数行，整数计数，cont QModelIndex 和父）。
 
 ### `QStandardItem *QStandardItemModel::invisibleRootItem() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::invisibleRootItem` 用于计算、查询或取得与“invisible、Root、项目访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型的隐形根项。
+隐形根项通过`QStandardItem` API访问模型的顶层项，使得能够以统一方式处理顶层项及其子项的函数成为可能;例如，涉及树模型的递归函数。
+注意：调用从该函数检索的`QStandardItem`对象的 `index()` 是无效的。
 
 ### `QStandardItem *QStandardItemModel::item(int row, int column = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::item` 用于计算、查询或取得与“项目访问”相关的操作。调用时要先确认当前状态和 `row`、`column` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。默认值为 `0`。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已设置，返回给定`row`和`column`的项目;否则返回`nullptr`。
 
 ### `[signal] void QStandardItemModel::itemChanged(QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStandardItemModel` 发出的通知信号 `itemChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当`item`的数据发生变化时，该信号就会发出。
 
 ### `[override virtual] QMap<int, QVariant> QStandardItemModel::itemData(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::itemData` 用于计算、查询或取得与“项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QMap<int, QVariant>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMap<int, QVariant>`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::itemData`（const QModelIndex & index） const.
 
 ### `QStandardItem *QStandardItemModel::itemFromIndex(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::itemFromIndex` 用于计算、查询或取得与“项目访问、转换进入、索引”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向与给定`index`相关的`QStandardItem`的指针。
+调用该函数通常是处理视图（如`QAbstractItemView::activated()`）基于`QModelIndex`信号的初始步骤。在你的槽中，调用itemFromIndex()，并以信号携带的`QModelIndex`作为参数，获取指向对应`QStandardItem`的指针。
+注意，这个函数会懒惰地为索引创建一个项（使用`itemPrototype()`），并在父项的子表中设置，如果该索引中没有任何项。
+如果`index`是无效索引，该函数返回`nullptr`。
 
 ### `const QStandardItem *QStandardItemModel::itemPrototype() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::itemPrototype` 用于计算、查询或取得与“项目访问、Prototype”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QStandardItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型使用的物品原型。模型在需要按需构建新物品时（例如，当视图或物品委托调用`setData()`时，将物品原型作为物品工厂使用）。
 
 ### `[override virtual] QMimeData *QStandardItemModel::mimeData(const QModelIndexList &indexes) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::mimeData` 用于计算、查询或取得与“mime、数据访问”相关的操作。调用时要先确认当前状态和 `indexes` 的有效范围；返回类型是 `QMimeData *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeData *`。
-- 参数 `indexes`：类型为 `const QModelIndexList &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::mimeData`（const QModelIndexList & indexes） const.
 
 ### `[override virtual] QStringList QStandardItemModel::mimeTypes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::mimeTypes` 用于计算、查询或取得与“mime、Types”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::mimeTypes()` const.
 
 ### `[override virtual] void QStandardItemModel::multiData(const QModelIndex &index, QModelRoleDataSpan roleDataSpan) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::multiData` 用于执行与“multi、数据访问”相关的操作。调用时要先确认当前状态和 `index`、`roleDataSpan` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `roleDataSpan`：类型为 `QModelRoleDataSpan`。没有默认值，调用时必须提供。传入 `QModelRoleDataSpan` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一次读取 `index` 的多个角色并填入 `roleDataSpan`，避免逐个调用 `data()` 的开销。每个请求角色都应写回对应值；派生模型未处理的角色应交给基类实现。
 
 ### `[override virtual] QModelIndex QStandardItemModel::parent(const QModelIndex &child) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::parent` 用于计算、查询或取得与“父对象”相关的操作。调用时要先确认当前状态和 `child` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `child`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。子对象或子节点；要确认它是否由父对象接管，以及调用后原指针是否仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::parent`（const QModelIndex & index） const.
 
 ### `[override virtual] bool QStandardItemModel::removeColumns(int column, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeColumns`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::removeColumns`（整数列，整数计数，条件QModelIndex和parent）。
 
 ### `[override virtual] bool QStandardItemModel::removeRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRows`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::removeRows`（整数行、整数计数、cont QModelIndex 和父）。
 
 ### `[override virtual] QHash<int, QByteArray> QStandardItemModel::roleNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::roleNames` 用于计算、查询或取得与“角色、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHash<int, QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHash<int, QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::roleNames()` const.
 
 ### `[override virtual] int QStandardItemModel::rowCount(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：Const QModelIndex 和 parent const. `QAbstractItemModel::rowCount`（const QModelIndex & parent） const.
 
 ### `void QStandardItemModel::setColumnCount(int columns)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColumnCount`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `columns`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该模型中的列数设为`columns`。如果小于`columnCount()`，则丢弃不需要列中的数据。
 
 ### `[override virtual] bool QStandardItemModel::setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 成功修改后要发出对应 dataChanged；同时确认 flags 包含可编辑能力。
+重实现自：`QAbstractItemModel::setData`（const QModelIndex & index，const QVariant & value，int role）。
 
 ### `[override virtual] bool QStandardItemModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaderData`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::setHeaderData`（整数部分，Qt：：Orientation orientation，const QVariant & value，int role）。
 
 ### `void QStandardItemModel::setHorizontalHeaderItem(int column, QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalHeaderItem`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`column`的水平头项设置为`item`。模型对该项拥有权。如有必要，增加列数以适应该项。如果有，之前的头项（如果有的话）被删除。
 
 ### `void QStandardItemModel::setHorizontalHeaderLabels(const QStringList &labels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalHeaderLabels`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `labels`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`labels`设置水平头部标签。如有必要，列数增加至`labels`大小。
 
 ### `void QStandardItemModel::setItem(int row, int column, QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItem`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定`row`设置该项，并`column` `item`。模型对该项拥有权。如有必要，增加行数和列数以适应该项。如果有该位置的前一项（如果有的话）会被删除。
 
 ### `void QStandardItemModel::setItem(int row, QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItem`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定`row`设置该项，并`column` `item`。模型对该项拥有权。如有必要，增加行数和列数以适应该项。如果有该位置的前一项（如果有的话）会被删除。
 
 ### `[override virtual] bool QStandardItemModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemData`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `roles`：类型为 `const QMap<int, QVariant> &`。没有默认值，调用时必须提供。传入 `const QMap<int, QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::setItemData`（const QModelIndex & index， const QMap<int， QVariant> and roles）。
 
 ### `void QStandardItemModel::setItemPrototype(const QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemPrototype`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `const QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模型的项目原型设置为指定的`item`。模型拥有原型的所有权。
+物品原型作为`QStandardItem`工厂，依赖`QStandardItem::clone()`函数。要提供自己的原型、子类`QStandardItem`，重现`QStandardItem::clone()`，并将原型设置为自定义类的实例。每当`QStandardItemModel`需要按需创建物品（例如视图或物品代理调用`setData()`）时，新物品将是你自定义类的实例。
 
 ### `void QStandardItemModel::setItemRoleNames(const QHash<int, QByteArray> &roleNames)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemRoleNames`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `roleNames`：类型为 `const QHash<int, QByteArray> &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将物品角色名称设置为`roleNames`。
 
 ### `void QStandardItemModel::setRowCount(int rows)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRowCount`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rows`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该模型中的行数设为`rows`。如果小于`rowCount()`，不需要的行数据将被丢弃。
 
 ### `void QStandardItemModel::setVerticalHeaderItem(int row, QStandardItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalHeaderItem`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `item`：类型为 `QStandardItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`row`的垂直头项设置为`item`。模型对该项拥有所有权。如有必要，增加行数以适应该项。如果有之前的头部项，则被删除。
 
 ### `void QStandardItemModel::setVerticalHeaderLabels(const QStringList &labels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalHeaderLabels`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `labels`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`labels`设置垂直头部标签。如有必要，行数增加至`labels`大小。
 
 ### `[override virtual] void QStandardItemModel::sort(int column, Qt::SortOrder order = Qt::AscendingOrder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::sort` 用于执行与“sort”相关的操作。调用时要先确认当前状态和 `column`、`order` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::AscendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::sort`（整数列，Qt：：SortOrder order）。
 
 ### `[override virtual] Qt::DropActions QStandardItemModel::supportedDropActions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::supportedDropActions` 用于计算、查询或取得与“supported、Drop、Actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropActions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropActions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::supportedDropActions()` const.
+`QStandardItemModel`支持复制和移动。
 
 ### `QList<QStandardItem *> QStandardItemModel::takeColumn(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::takeColumn` 用于计算、查询或取得与“取出、列”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `QList<QStandardItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QStandardItem *>`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除给定`column`而不删除列项，返回指向已移除项的指针列表。模型释放了这些项的所有权。对于列中未被设置的项，列表中对应的指针将被`nullptr`。
 
 ### `QStandardItem *QStandardItemModel::takeHorizontalHeaderItem(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::takeHorizontalHeaderItem` 用于计算、查询或取得与“取出、水平、Header、项目访问”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在不删除`column`页首的水平头条项时移除，并返回指向该项的指针。模型释放了该项的所有权。
 
 ### `QStandardItem *QStandardItemModel::takeItem(int row, int column = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::takeItem` 用于计算、查询或取得与“取出、项目访问”相关的操作。调用时要先确认当前状态和 `row`、`column` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。默认值为 `0`。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在（`row`， `column`）处移除该物品而不删除它。模型释放该物品的所有权。
 
 ### `QList<QStandardItem *> QStandardItemModel::takeRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::takeRow` 用于计算、查询或取得与“取出、行”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QList<QStandardItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QStandardItem *>`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除给定`row`而不删除行中物品，并返回指向已移除物品的指针列表。模型释放了对该项的所有权。对于未被设置的行中物品，列表中对应的指针将被`nullptr`。
 
 ### `QStandardItem *QStandardItemModel::takeVerticalHeaderItem(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::takeVerticalHeaderItem` 用于计算、查询或取得与“取出、垂直、Header、项目访问”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在不删除该项目的情况下，将`row`处的垂直头项从头部移除，并返回指向该项的指针。模型释放了该项的所有权。
 
 ### `QStandardItem *QStandardItemModel::verticalHeaderItem(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::verticalHeaderItem` 用于计算、查询或取得与“垂直、Header、项目访问”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QStandardItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStandardItem *`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果设置了垂直头项，返回第`row`行的垂直头项;否则返回`nullptr`。
 
 ### `QBindable<int> bindableSortRole()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableSortRole`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询模型数据的项目角色，用于排序项目时查询数据。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`QBindable<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableSortRole()` 取得 `sortRole` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `void setSortRole(int role)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSortRole`。调用它会改变 `QStandardItemModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询模型数据的项目角色，用于排序项目时查询数据。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSortRole(...)` 修改 `sortRole`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `int sortRole() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStandardItemModel::sortRole` 用于计算、查询或取得与“sort、角色”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询模型数据的项目角色，用于排序项目时查询数据。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortRole()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

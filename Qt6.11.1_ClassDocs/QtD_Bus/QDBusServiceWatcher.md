@@ -88,288 +88,182 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 21 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDBusServiceWatcher::WatchModeFlagflags QDBusServiceWatcher::WatchMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 暴露的类型声明 `Watch、模式、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WatchModeFlagflags QDBusServiceWatcher::WatchMode`。
-- 属性名：`QDBusServiceWatcher`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QDBusServiceWatcher`支持三种不同的手表模式，这些模式由以下标志配置：
+- `QDBusServiceWatcher::WatchForRegistration`：`0x01`;仅关注服务注册，忽略与其他服务所有权变更相关的信号。
+- `QDBusServiceWatcher::WatchForUnregistration`：`0x02`;仅关注服务取消注册，忽略其他服务所有权变更相关的信号。
+- `QDBusServiceWatcher::WatchForOwnerChange`：`0x03`;注意任何形式的服务所有权变更。
+WatchMode 类型是 QFlags 的 typedef<WatchModeFlag>。它存储 WatchModeFlag 值的 OR 组合。
 
 ### `[bindable] watchMode : WatchMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 的配置属性。初始化或状态切换时通过 `setWatchMode(...)` 设置，之后用 `watchMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含该`QDBusServiceWatcher`对象当前的观察模式。
+该属性的默认值为 QDBusServiceWatcher：：WatchForOwnershipChange。
 
-**签名拆解：**
-
-- 属性类型：`WatchMode`。
-- 属性名：`watchMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `watchMode()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] watchedServices : QStringList`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 的配置属性。初始化或状态切换时通过 `setWatchedServices(...)` 设置，之后用 `watchedServices()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该地产拥有被关注的服务名单。
+注意：使用 setServicesWatched() 修改该列表是一项昂贵的操作。如果可以，建议通过`addWatchedService()`和`removeWatchedService()`来更改。
 
-**签名拆解：**
-
-- 属性类型：`QStringList`。
-- 属性名：`watchedServices`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `watchedServices()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QDBusServiceWatcher::QDBusServiceWatcher(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QDBusServiceWatcher对象。注意，在你与`setConnection()`建立连接之前，这个对象不会发出任何信号。
+`parent`参数传递给`QObject`以设置该对象的父节点。
 
 ### `QDBusServiceWatcher::QDBusServiceWatcher(const QString &service, const QDBusConnection &connection, QDBusServiceWatcher::WatchMode watchMode = WatchForOwnerChange, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `service`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `connection`：类型为 `const QDBusConnection &`。没有默认值，调用时必须提供。传入 `const QDBusConnection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `watchMode`：类型为 `QDBusServiceWatcher::WatchMode`。默认值为 `WatchForOwnerChange`。传入 `QDBusServiceWatcher::WatchMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建 QDBusServiceWatcher 对象并将其附加到 `connection` 连接。此外，该函数会立即开始监控服务`service`的`watchMode`变更。
+`parent`参数传递给`QObject`以设置该对象的父节点。
 
 ### `[virtual noexcept] QDBusServiceWatcher::~QDBusServiceWatcher()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁`QDBusServiceWatcher`对象并释放与之相关的资源。
 
 ### `void QDBusServiceWatcher::addWatchedService(const QString &newService)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDBusServiceWatcher` 添加依赖、数据或子对象的 API `addWatchedService`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newService`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象需要监控的服务列表增加`newService`。该函数比`setWatchedServices()`更高效，应尽可能用于添加服务。
+移除任何现有的`watchedServices`绑定。
 
 ### `QDBusConnection QDBusServiceWatcher::connection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connection`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QDBusConnection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回此对象所附加的 `QDBusConnection`。
 
 ### `bool QDBusServiceWatcher::removeWatchedService(const QString &service)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeWatchedService`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `service`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`service`从该对象监控的服务列表中移除。注意D-Bus通知是异步的，因此可能仍有约`service`的信号等待传递。每当D-Bus消息被处理时，这些信号仍会被发出。
+移除任何现有的绑定`watchedServices`。
+如果有服务被移除，该函数会返回`true`。
 
 ### `[signal] void QDBusServiceWatcher::serviceOwnerChanged(const QString &serviceName, const QString &oldOwner, const QString &newOwner)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 发出的通知信号 `serviceOwnerChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `oldOwner`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `newOwner`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当该对象检测到与`serviceName`服务相关的服务所有权发生变更时，就会发出该信号。`oldOwner`参数包含旧所有者名称，`newOwner`为新所有者。`oldOwner`和`newOwner`都是唯一的连接名称。
+注意，该信号在`serviceName`服务注册或未注册时也会发出。如果注册，`oldOwner`包含空字符串;如果未注册，`newOwner`包含空字符串。
+如果你只需要知道服务是注册还是未注册，而不需要通知所有权变更，可以考虑使用这些操作的特定模式。如果你使用更具体的模式，这类操作会更高效。
 
 ### `[signal] void QDBusServiceWatcher::serviceRegistered(const QString &serviceName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 发出的通知信号 `serviceRegistered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当该物体检测到服务`serviceName`在总线上可用时，就会发出该信号。
 
 ### `[signal] void QDBusServiceWatcher::serviceUnregistered(const QString &serviceName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 发出的通知信号 `serviceUnregistered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当该对象检测到服务`serviceName`未注册且不再可用时，就会发出该信号。
 
 ### `void QDBusServiceWatcher::setConnection(const QDBusConnection &connection)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setConnection`。调用它会改变 `QDBusServiceWatcher` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `connection`：类型为 `const QDBusConnection &`。没有默认值，调用时必须提供。传入 `const QDBusConnection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象所连接的D-Bus连接设置为`connection`。所有被监控的服务都会被转移到该连接。
+注意`QDBusConnection`对象是引用计数的：`QDBusServiceWatcher`会在连接存在时保留引用。连接直到引用计数降至零才关闭，因此确保在该`QDBusServiceWatcher`对象存在期间收到任何通知。
 
 ### `void QDBusServiceWatcher::setWatchedServices(const QStringList &services)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWatchedServices`。调用它会改变 `QDBusServiceWatcher` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该地产拥有被关注的服务名单。
+注意：使用 setServicesWatched() 修改该列表是一项昂贵的操作。如果可以，建议通过`addWatchedService()`和`removeWatchedService()`来更改。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `services`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWatchedServices(...)` 修改 `watchedServices`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QStringList QDBusServiceWatcher::watchedServices() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusServiceWatcher::watchedServices` 用于计算、查询或取得与“watched、Services”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回正在监控的D-Bus服务列表。
+注意：服务对象的获取功能。
 
 ### `flags WatchMode`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QDBusServiceWatcher`支持三种不同的手表模式，这些模式由以下标志配置：
+- `QDBusServiceWatcher::WatchForRegistration`：`0x01`;仅关注服务注册，忽略与其他服务所有权变更相关的信号。
+- `QDBusServiceWatcher::WatchForUnregistration`：`0x02`;仅关注服务取消注册，忽略其他服务所有权变更相关的信号。
+- `QDBusServiceWatcher::WatchForOwnerChange`：`0x03`;注意任何形式的服务所有权变更。
+WatchMode 类型是 QFlags 的 typedef<WatchModeFlag>。它存储 WatchModeFlag 值的 OR 组合。
 
 ### `enum WatchModeFlag { WatchForRegistration, WatchForUnregistration, WatchForOwnerChange }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusServiceWatcher` 暴露的类型声明 `Watch、模式、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QDBusServiceWatcher`支持三种不同的手表模式，这些模式由以下标志配置：
+- `QDBusServiceWatcher::WatchForRegistration`：`0x01`;仅关注服务注册，忽略与其他服务所有权变更相关的信号。
+- `QDBusServiceWatcher::WatchForUnregistration`：`0x02`;仅关注服务取消注册，忽略其他服务所有权变更相关的信号。
+- `QDBusServiceWatcher::WatchForOwnerChange`：`0x03`;注意任何形式的服务所有权变更。
+WatchMode 类型是 QFlags 的 typedef<WatchModeFlag>。它存储 WatchModeFlag 值的 OR 组合。
 
 ### `QBindable<QDBusServiceWatcher::WatchMode> bindableWatchMode()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableWatchMode`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含该`QDBusServiceWatcher`对象当前的观察模式。
+该属性的默认值为 QDBusServiceWatcher：：WatchForOwnershipChange。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QDBusServiceWatcher::WatchMode>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableWatchMode()` 取得 `watchMode` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QStringList> bindableWatchedServices()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableWatchedServices`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该地产拥有被关注的服务名单。
+注意：使用 setServicesWatched() 修改该列表是一项昂贵的操作。如果可以，建议通过`addWatchedService()`和`removeWatchedService()`来更改。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QStringList>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableWatchedServices()` 取得 `watchedServices` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `void setWatchMode(QDBusServiceWatcher::WatchMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWatchMode`。调用它会改变 `QDBusServiceWatcher` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含该`QDBusServiceWatcher`对象当前的观察模式。
+该属性的默认值为 QDBusServiceWatcher：：WatchForOwnershipChange。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QDBusServiceWatcher::WatchMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWatchMode(...)` 修改 `watchMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QDBusServiceWatcher::WatchMode watchMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDBusServiceWatcher::watchMode` 用于计算、查询或取得与“watch、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDBusServiceWatcher::WatchMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含该`QDBusServiceWatcher`对象当前的观察模式。
+该属性的默认值为 QDBusServiceWatcher：：WatchForOwnershipChange。
 
-**签名拆解：**
-
-- 返回值：`QDBusServiceWatcher::WatchMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `watchMode()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

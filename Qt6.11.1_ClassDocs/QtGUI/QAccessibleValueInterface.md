@@ -65,87 +65,44 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QAccessibleValueInterface::~QAccessibleValueInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleValueInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QAccessibleValueInterface`。
 
 ### `[pure virtual] QVariant QAccessibleValueInterface::currentValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleValueInterface::currentValue` 用于计算、查询或取得与“当前、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回控件当前值。通常是双重或整数。
 
 ### `[pure virtual] QVariant QAccessibleValueInterface::maximumValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleValueInterface::maximumValue` 用于计算、查询或取得与“最大值、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象接受的最大值。
 
 ### `[pure virtual] QVariant QAccessibleValueInterface::minimumStepSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleValueInterface::minimumStepSize` 用于计算、查询或取得与“最小值、Step、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可访问值的最小步长。这是更改值时合理的最小增量。在程序性更改值时，它应始终是最小步长的整数倍。
+有些工具即使`setCurrentValue`没有执行任何动作，也会使用这个数值。例如，进度条是只读的，但应该返回其范围除以100。
 
 ### `[pure virtual] QVariant QAccessibleValueInterface::minimumValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleValueInterface::minimumValue` 用于计算、查询或取得与“最小值、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象接受的最小值。
 
 ### `[pure virtual] void QAccessibleValueInterface::setCurrentValue(const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentValue`。调用它会改变 `QAccessibleValueInterface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`value`。如果期望`value`超出允许值范围，该调用将被忽略。
 
 ## 6. 深入实践与常见坑
 

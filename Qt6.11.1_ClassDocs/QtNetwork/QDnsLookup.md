@@ -132,791 +132,507 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 58 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDnsLookup::Error`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 暴露的类型声明 `错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Error`。
-- 属性名：`QDnsLookup`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+显示在处理DNS查询过程中发现的所有可能错误条件。
+- `QDnsLookup::NoError`：`0`;无错误条件。
+- `QDnsLookup::ResolverError`：`1`;系统DNS解析器初始化时发生错误。
+- `QDnsLookup::OperationCancelledError`：`2`;查找被中止，使用`abort()`方法。
+- `QDnsLookup::InvalidRequestError`：`3`;请求的DNS查询无效。
+- `QDnsLookup::InvalidReplyError`：`4`;服务器返回的回复无效。
+- `QDnsLookup::ServerFailureError`：`5`;服务器在处理请求时遇到内部故障（SERVFAIL）。
+- `QDnsLookup::ServerRefusedError`：`6`;服务器出于安全或策略原因拒绝处理请求（拒绝）。
+- `QDnsLookup::NotFoundError`：`7`;请求的域名不存在（NXDOMAIN）。
+- `QDnsLookup::TimeoutError`：`8`;服务器未能及时联系或未及时回复（自6.6版本起）。
 
 ### `enum QDnsLookup::Protocol`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 暴露的类型声明 `Protocol`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Protocol`。
-- 属性名：`QDnsLookup`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示被查询的DNS服务器类型。
+- `QDnsLookup::Standard`：`0`;常规、未加密的DNS，使用UDP并在需要时退回TCP（默认端口：53）
+- `QDnsLookup::DnsOverTls`：`1`;基于TLS的加密DNS（DoT，依RFC 7858规定），TCP上的加密DNS（默认端口：853）
 
 ### `enum QDnsLookup::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QDnsLookup`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示所执行的 DNS 查找类型。
+- `QDnsLookup::A`：`1`;IPv4地址记录。
+- `QDnsLookup::AAAA`：`28`;IPv6地址记录。
+- `QDnsLookup::ANY`：`255`;任何记录。
+- `QDnsLookup::CNAME`：`5`;正史姓名记录。
+- `QDnsLookup::MX`：`15`;邮件交换记录。
+- `QDnsLookup::NS`：`2`;名称服务器记录。
+- `QDnsLookup::PTR`：`12`;指针记录。
+- `QDnsLookup::SRV`：`33`;服役记录。
+- `QDnsLookup::TLSA (since Qt 6.8)`：`52`;TLS协会记录。
+- `QDnsLookup::TXT`：`16`;文本记录。
 
 ### `[read-only, since 6.8] authenticData : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的状态/能力属性。通常通过 `authenticData()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性决定了回复是否被解析器认证。
+`QDnsLookup`不自行执行认证。相反，它信任被查询的名称服务器执行认证并报告。应用程序负责判断其配置的服务器是否值得信赖`setNameserver()`;如果未设置服务器，`QDnsLookup`会遵守系统配置，决定是否可信响应。
+即使`error()`表示发生了解析器错误，该属性仍可被设置。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`authenticData`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `authenticData()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] error : Error`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的状态/能力属性。通常通过 `error()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性表示如果DNS查询失败或`NoError`时发生的错误类型。
 
-**签名拆解：**
-
-- 属性类型：`Error`。
-- 属性名：`error`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `error()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] errorString : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的状态/能力属性。通常通过 `errorString()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含了如果DNS查询失败时错误的人类可读描述。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`errorString`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `errorString()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] name : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的配置属性。初始化或状态切换时通过 `setName(...)` 设置，之后用 `name()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该房产名称值得查询。
+如果查找的名称为空，`QDnsLookup`会尝试解析DNS的根域名。该查询通常在`QDnsLookup::type`设置为`NS`时进行。
+注意：该名称将使用 IDNA 编码，这意味着它不适合查询与 DNS-SD 规范兼容的 SRV 记录。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`name`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `name()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] nameserver : QHostAddress`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的配置属性。初始化或状态切换时通过 `setNameserver(...)` 设置，之后用 `nameserver()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 属性类型：`QHostAddress`。
-- 属性名：`nameserver`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `nameserver()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable, since 6.6] nameserverPort : quint16`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的配置属性。初始化或状态切换时通过 `setNameserverPort(...)` 设置，之后用 `nameserverPort()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器端口号。
+值为0表示应使用默认端口`QDnsLookup` `nameserverProtocol()`。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，如果使用的`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，`QDnsLookup`使用的 Windows API 无法处理替代端口号。
 
-**签名拆解：**
-
-- 属性类型：`quint16`。
-- 属性名：`nameserverPort`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `nameserverPort()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable, since 6.8] nameserverProtocol : Protocol`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的配置属性。初始化或状态切换时通过 `setNameserverProtocol(...)` 设置，之后用 `nameserverProtocol()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性包含发送 DNS 查询时所使用的协议。
 
-**签名拆解：**
-
-- 属性类型：`Protocol`。
-- 属性名：`nameserverProtocol`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `nameserverProtocol()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] type : Type`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的配置属性。初始化或状态切换时通过 `setType(...)` 设置，之后用 `type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性包含DNS查找类型。
 
-**签名拆解：**
-
-- 属性类型：`Type`。
-- 属性名：`type`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `type()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QDnsLookup::QDnsLookup(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDnsLookup对象，并将`parent`设为父对象。
+`type`属性将默认归`QDnsLookup::A`。
 
 ### `QDnsLookup::QDnsLookup(QDnsLookup::Type type, const QString &name, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QDnsLookup::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定的`type`和`name`构造一个QDnsLookup对象，并将`parent`设为父对象。
 
 ### `QDnsLookup::QDnsLookup(QDnsLookup::Type type, const QString &name, const QHostAddress &nameserver, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QDnsLookup::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDnsLookup对象，用于查询记录类型`type`的`name`，使用运行在默认DNS端口上的DNS服务器`nameserver`，并将`parent`设为父对象。
 
 ### `[since 6.6] QDnsLookup::QDnsLookup(QDnsLookup::Type type, const QString &name, const QHostAddress &nameserver, quint16 port, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QDnsLookup::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDnsLookup对象，用于查询记录类型`type`的`name`，使用运行在端口`port`上的DNS服务器`nameserver`，并将`parent`设为父对象。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，前提是使用的`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，QDnsLookup 使用的 Windows API 无法处理备用端口号。
 
 ### `[since 6.8] QDnsLookup::QDnsLookup(QDnsLookup::Type type, const QString &name, QDnsLookup::Protocol protocol, const QHostAddress &nameserver, quint16 port = 0, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QDnsLookup::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `protocol`：类型为 `QDnsLookup::Protocol`。没有默认值，调用时必须提供。传入 `QDnsLookup::Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。默认值为 `0`。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDnsLookup对象，利用运行在端口`port`的DNS服务器`nameserver`发出记录类型`type`的`name`查询，并将`parent`设为父对象。
+如果支持，查询将通过`protocol`发送。使用`isProtocolSupported()`检查是否支持。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，前提是`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，QDnsLookup 使用的 Windows API 无法处理备用端口号。
 
 ### `[virtual noexcept] QDnsLookup::~QDnsLookup()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QDnsLookup`物体。
+即使`QDnsLookup`对象未完成，删除它也是安全的，你永远不会收到它的结果。
 
 ### `[slot] void QDnsLookup::abort()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `abort`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+中止DNS查找操作。
+如果查询已经完成，则不做任何操作。
 
 ### `QList<QDnsDomainNameRecord> QDnsLookup::canonicalNameRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canonicalNameRecords`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsDomainNameRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查询相关的规范名称记录列表。
 
 ### `[static noexcept, since 6.8] quint16 QDnsLookup::defaultPortForProtocol(QDnsLookup::Protocol protocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultPortForProtocol`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数 `protocol`：类型为 `QDnsLookup::Protocol`。没有默认值，调用时必须提供。传入 `QDnsLookup::Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回协议`protocol`的标准（默认）端口号。
 
 ### `[signal] void QDnsLookup::finished()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 发出的通知信号 `finished`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性决定了回复是否被解析器认证。
+`QDnsLookup`不自行执行认证。相反，它信任被查询的名称服务器执行认证并报告。应用程序负责判断其配置的服务器是否值得信赖`setNameserver()`;如果未设置服务器，`QDnsLookup`会遵守系统配置，决定是否可信响应。
+即使`error()`表示发生了解析器错误，该属性仍可被设置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `finished()` 读取当前值；它不会修改应用状态。
 
 ### `QList<QDnsHostAddressRecord> QDnsLookup::hostAddressRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::hostAddressRecords` 用于计算、查询或取得与“host、Address、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsHostAddressRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsHostAddressRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查询相关的主机地址记录列表。
 
 ### `bool QDnsLookup::isFinished() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFinished`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+无论回复已结束还是中止，都会返回。
 
 ### `[static, since 6.8] bool QDnsLookup::isProtocolSupported(QDnsLookup::Protocol protocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isProtocolSupported`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `protocol`：类型为 `QDnsLookup::Protocol`。没有默认值，调用时必须提供。传入 `QDnsLookup::Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QDnsLookup`支持使用`protocol`的DNS查询，则返回为真。
 
 ### `[slot] void QDnsLookup::lookup()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `lookup`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+执行DNS查询。
+完成后`finished()`信号会发出。
 
 ### `QList<QDnsMailExchangeRecord> QDnsLookup::mailExchangeRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::mailExchangeRecords` 用于计算、查询或取得与“mail、Exchange、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsMailExchangeRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsMailExchangeRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查询相关的邮件交换记录列表。
+记录是根据RFC 5321排序的，所以如果你用它们连接服务器，应该按照列出的顺序尝试。
 
 ### `[signal] void QDnsLookup::nameChanged(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 发出的通知信号 `nameChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：此特性支持`QProperty`绑定。
+该房产名称值得查询。
+如果查找的名称为空，`QDnsLookup`会尝试解析DNS的根域名。该查询通常在`QDnsLookup::type`设置为`NS`时进行。
+注意：该名称将使用 IDNA 编码，这意味着它不适合查询与 DNS-SD 规范兼容的 SRV 记录。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `name` 的变化，不要把它当作普通函数主动调用。
 
 ### `QList<QDnsDomainNameRecord> QDnsLookup::nameServerRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::nameServerRecords` 用于计算、查询或取得与“名称、Server、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsDomainNameRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsDomainNameRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查询相关的名称服务器记录列表。
 
 ### `QList<QDnsDomainNameRecord> QDnsLookup::pointerRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::pointerRecords` 用于计算、查询或取得与“pointer、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsDomainNameRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsDomainNameRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该查找关联的指针记录列表。
 
 ### `QList<QDnsServiceRecord> QDnsLookup::serviceRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::serviceRecords` 用于计算、查询或取得与“service、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsServiceRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsServiceRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查询相关的服务记录列表。
+记录是根据RFC 2782排序的，所以如果你用它们连接服务器，应该按照列表的顺序尝试。
 
 ### `[since 6.6] void QDnsLookup::setNameserver(const QHostAddress &nameserver, quint16 port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNameserver`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNameserver(...)` 修改 `nameserver`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[since 6.8] void QDnsLookup::setSslConfiguration(const QSslConfiguration &sslConfiguration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSslConfiguration`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sslConfiguration`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`sslConfiguration`用于外出DNS-over-TLS连接。
 
 ### `QSslConfiguration QDnsLookup::sslConfiguration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::sslConfiguration` 用于计算、查询或取得与“ssl、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslConfiguration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslConfiguration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的SSL配置。
 
 ### `QList<QDnsTextRecord> QDnsLookup::textRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::textRecords` 用于计算、查询或取得与“文本、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsTextRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsTextRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查找相关的文本记录列表。
 
 ### `[since 6.8] QList<QDnsTlsAssociationRecord> QDnsLookup::tlsAssociationRecords() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::tlsAssociationRecords` 用于计算、查询或取得与“tls、Association、Records”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QDnsTlsAssociationRecord>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDnsTlsAssociationRecord>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与此查询相关的TLS关联记录列表。
+根据基于DNS的命名实体认证（DANE）标准，若无法确认DNS回复的真实性，该字段应忽略且不得用于验证某服务器的认证实体。更多信息请参见 `isAuthenticData()`。
 
 ### `[signal] void QDnsLookup::typeChanged(QDnsLookup::Type type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsLookup` 发出的通知信号 `typeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：该特性支持`QProperty`绑定。
+该属性包含DNS查找类型。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QDnsLookup::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `type` 的变化，不要把它当作普通函数主动调用。
 
 ### `QBindable<QString> bindableName()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableName`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该房产名称值得查询。
+如果查找的名称为空，`QDnsLookup`会尝试解析DNS的根域名。该查询通常在`QDnsLookup::type`设置为`NS`时进行。
+注意：该名称将使用 IDNA 编码，这意味着它不适合查询与 DNS-SD 规范兼容的 SRV 记录。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QString>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableName()` 取得 `name` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QHostAddress> bindableNameserver()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableNameserver`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QHostAddress>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableNameserver()` 取得 `nameserver` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<quint16> bindableNameserverPort()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableNameserverPort`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器端口号。
+值为0表示应使用默认端口`QDnsLookup` `nameserverProtocol()`。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，如果使用的`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，`QDnsLookup`使用的 Windows API 无法处理替代端口号。
 
-**签名拆解：**
-
-- 返回值：`QBindable<quint16>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableNameserverPort()` 取得 `nameserverPort` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QDnsLookup::Protocol> bindableNameserverProtocol()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableNameserverProtocol`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性包含发送 DNS 查询时所使用的协议。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QDnsLookup::Protocol>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableNameserverProtocol()` 取得 `nameserverProtocol` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QDnsLookup::Type> bindableType()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableType`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性包含DNS查找类型。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QDnsLookup::Type>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableType()` 取得 `type` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QDnsLookup::Error error() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDnsLookup::Error`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示如果DNS查询失败或`NoError`时发生的错误类型。
 
-**签名拆解：**
-
-- 返回值：`QDnsLookup::Error`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `error()` 读取当前值；它不会修改应用状态。
 
 ### `QString errorString() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了如果DNS查询失败时错误的人类可读描述。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `errorString()` 读取当前值；它不会修改应用状态。
 
 ### `bool isAuthenticData() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAuthenticData`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定了回复是否被解析器认证。
+`QDnsLookup`不自行执行认证。相反，它信任被查询的名称服务器执行认证并报告。应用程序负责判断其配置的服务器是否值得信赖`setNameserver()`;如果未设置服务器，`QDnsLookup`会遵守系统配置，决定是否可信响应。
+即使`error()`表示发生了解析器错误，该属性仍可被设置。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isAuthenticData()` 读取当前值；它不会修改应用状态。
 
 ### `QString name() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该房产名称值得查询。
+如果查找的名称为空，`QDnsLookup`会尝试解析DNS的根域名。该查询通常在`QDnsLookup::type`设置为`NS`时进行。
+注意：该名称将使用 IDNA 编码，这意味着它不适合查询与 DNS-SD 规范兼容的 SRV 记录。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `name()` 读取当前值；它不会修改应用状态。
 
 ### `QHostAddress nameserver() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::nameserver` 用于计算、查询或取得与“nameserver”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `nameserver()` 读取当前值；它不会修改应用状态。
 
 ### `quint16 nameserverPort() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::nameserverPort` 用于计算、查询或取得与“nameserver、Port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器端口号。
+值为0表示应使用默认端口`QDnsLookup` `nameserverProtocol()`。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，如果使用的`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，`QDnsLookup`使用的 Windows API 无法处理替代端口号。
 
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `nameserverPort()` 读取当前值；它不会修改应用状态。
 
 ### `QDnsLookup::Protocol nameserverProtocol() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::nameserverProtocol` 用于计算、查询或取得与“nameserver、Protocol”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDnsLookup::Protocol`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性包含发送 DNS 查询时所使用的协议。
 
-**签名拆解：**
-
-- 返回值：`QDnsLookup::Protocol`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `nameserverProtocol()` 读取当前值；它不会修改应用状态。
 
 ### `void setName(const QString &name)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setName`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该房产名称值得查询。
+如果查找的名称为空，`QDnsLookup`会尝试解析DNS的根域名。该查询通常在`QDnsLookup::type`设置为`NS`时进行。
+注意：该名称将使用 IDNA 编码，这意味着它不适合查询与 DNS-SD 规范兼容的 SRV 记录。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setName(...)` 修改 `name`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setNameserver(const QHostAddress &nameserver)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNameserver`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNameserver(...)` 修改 `nameserver`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setNameserver(QDnsLookup::Protocol protocol, const QHostAddress &nameserver, quint16 port = 0)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNameserver`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `protocol`：类型为 `QDnsLookup::Protocol`。没有默认值，调用时必须提供。传入 `QDnsLookup::Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。默认值为 `0`。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNameserver(...)` 修改 `nameserver`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setNameserverPort(quint16 port)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNameserverPort`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器端口号。
+值为0表示应使用默认端口`QDnsLookup` `nameserverProtocol()`。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，如果使用的`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，`QDnsLookup`使用的 Windows API 无法处理替代端口号。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNameserverPort(...)` 修改 `nameserverPort`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setNameserverProtocol(QDnsLookup::Protocol protocol)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNameserverProtocol`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性包含发送 DNS 查询时所使用的协议。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `protocol`：类型为 `QDnsLookup::Protocol`。没有默认值，调用时必须提供。传入 `QDnsLookup::Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNameserverProtocol(...)` 修改 `nameserverProtocol`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setType(QDnsLookup::Type)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setType`。调用它会改变 `QDnsLookup` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性包含DNS查找类型。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `Type`：类型为 `QDnsLookup::`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setType(...)` 修改 `type`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QDnsLookup::Type type() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDnsLookup::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDnsLookup::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性包含DNS查找类型。
 
-**签名拆解：**
-
-- 返回值：`QDnsLookup::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `type()` 读取当前值；它不会修改应用状态。
 
 ### `void nameserverChanged(const QHostAddress &nameserver)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `nameserverChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `nameserver`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `nameserver` 的变化，不要把它当作普通函数主动调用。
 
 ### `void nameserverPortChanged(quint16 port)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `nameserverPortChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于 DNS 查询的名称服务器端口号。
+值为0表示应使用默认端口`QDnsLookup` `nameserverProtocol()`。
+注意：将端口号设置为非默认值（53）可能导致名称解析失败，具体取决于操作系统的限制和防火墙，如果使用的`nameserverProtocol()` `QDnsLookup::Standard`。值得注意的是，`QDnsLookup`使用的 Windows API 无法处理替代端口号。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `nameserverPort` 的变化，不要把它当作普通函数主动调用。
 
 ### `void nameserverProtocolChanged(QDnsLookup::Protocol protocol)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `nameserverProtocolChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性包含发送 DNS 查询时所使用的协议。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `protocol`：类型为 `QDnsLookup::Protocol`。没有默认值，调用时必须提供。传入 `QDnsLookup::Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `nameserverProtocol` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

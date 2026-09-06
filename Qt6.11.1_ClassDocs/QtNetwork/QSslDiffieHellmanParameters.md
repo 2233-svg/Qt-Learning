@@ -87,263 +87,136 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 19 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSslDiffieHellmanParameters::Error`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 暴露的类型声明 `错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Error`。
-- 属性名：`QSslDiffieHellmanParameters`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述了一个`QSslDiffieHellmanParameters`错误。
+- `QSslDiffieHellmanParameters::NoError`：`0`;未发生错误。
+- `QSslDiffieHellmanParameters::InvalidInputDataError`：`1`;给定的输入数据无法用于构造`QSslDiffieHellmanParameters`对象。
+- `QSslDiffieHellmanParameters::UnsafeParametersError`：`2`;Diffie-Hellman参数不安全，不应使用。
 
 ### `QSslDiffieHellmanParameters::QSslDiffieHellmanParameters()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的 QSslDiffieHellmanParameters 实例。
+如果在`QSslConfiguration`对象上设置空的QSslDiffieHellmanParameters实例，则Diffie-Hellman协商将被禁用。
 
 ### `QSslDiffieHellmanParameters::QSslDiffieHellmanParameters(const QSslDiffieHellmanParameters &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+制造了一个与`other`一模一样的复制品。
 
 ### `[noexcept] QSslDiffieHellmanParameters::QSslDiffieHellmanParameters(QSslDiffieHellmanParameters &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QSslDiffieHellmanParameters &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+来自`other`的移动构造。
+注意：移除对象`other`处于部分形成状态，唯一有效的操作是销毁和赋予新值。
 
 ### `[noexcept] QSslDiffieHellmanParameters::~QSslDiffieHellmanParameters()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QSslDiffieHellmanParameters`物体。
 
 ### `[static] QSslDiffieHellmanParameters QSslDiffieHellmanParameters::defaultParameters()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultParameters`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSslDiffieHellmanParameters`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QSslSocket`使用的默认`QSslDiffieHellmanParameters`。
+目前这是RFC 3526中的2048位MODP组。
 
 ### `[noexcept] QSslDiffieHellmanParameters::Error QSslDiffieHellmanParameters::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslDiffieHellmanParameters::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslDiffieHellmanParameters::Error`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslDiffieHellmanParameters::Error`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回导致`QSslDiffieHellmanParameters`对象无效的错误。
 
 ### `[noexcept] QString QSslDiffieHellmanParameters::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslDiffieHellmanParameters::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回导致`QSslDiffieHellmanParameters`对象无效的错误，以实现人类可读的描述。
 
 ### `[static] QSslDiffieHellmanParameters QSslDiffieHellmanParameters::fromEncoded(QIODevice *device, QSsl::EncodingFormat encoding = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromEncoded`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSslDiffieHellmanParameters`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `encoding`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。传入 `QSsl::EncodingFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从`device`中读取PEM或DER形式，构造`QSslDiffieHellmanParameters`对象，`encoding`规定。
+在返回的对象上使用`isValid()`方法检查Diffie-Hellman参数是否有效且加载正确。
+特别地，如果`device` `nullptr`或未开放读取，将返回无效对象。
 
 ### `[static] QSslDiffieHellmanParameters QSslDiffieHellmanParameters::fromEncoded(const QByteArray &encoded, QSsl::EncodingFormat encoding = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromEncoded`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSslDiffieHellmanParameters`。
-- 参数 `encoded`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `encoding`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。传入 `QSsl::EncodingFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用字节数组 `encoded` 构建一个`QSslDiffieHellmanParameters`对象，形式为 PEM 或 DER 格式，`encoding`规定。
+对返回的对象使用`isValid()`方法检查Diffie-Hellman参数是否有效且加载正确。
 
 ### `[noexcept] bool QSslDiffieHellmanParameters::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果是空的`QSslDiffieHellmanParameters`实例，返回`true`。
+在基于`QSslSocket`的服务器上设置空的`QSslDiffieHellmanParameters`实例会禁用Diffie-Hellman密钥交换。
 
 ### `[noexcept] bool QSslDiffieHellmanParameters::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这是有效的`QSslDiffieHellmanParameters`，则返回`true`;否则为假。
+该方法应在构造`QSslDiffieHellmanParameters`对象后使用以确定其有效性。
+如果`QSslDiffieHellmanParameters`对象无效，你可以使用`error()`方法来确定导致该对象无法构建的错误。
 
 ### `[noexcept] void QSslDiffieHellmanParameters::swap(QSslDiffieHellmanParameters &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslDiffieHellmanParameters::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QSslDiffieHellmanParameters`与`other`交换。这个操作非常快，从不失败。
 
 ### `[noexcept] QSslDiffieHellmanParameters &QSslDiffieHellmanParameters::operator=(QSslDiffieHellmanParameters &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSslDiffieHellmanParameters &`。
-- 参数 `other`：类型为 `QSslDiffieHellmanParameters &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动分配`other`到该`QSslDiffieHellmanParameters`实例。
+注意：移出对象 `other` 处于部分成形状态，唯一有效的操作是销毁和赋予新值。
 
 ### `QSslDiffieHellmanParameters &QSslDiffieHellmanParameters::operator=(const QSslDiffieHellmanParameters &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSslDiffieHellmanParameters &`。
-- 参数 `other`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`的内容复制到这个`QSslDiffieHellmanParameters`中，使两者`QSslDiffieHellmanParameters`完全相同。
+返回了对此`QSslDiffieHellmanParameters`的引用。
 
 ### `[noexcept] size_t qHash(const QSslDiffieHellmanParameters &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSslDiffieHellmanParameters::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QSslDiffieHellmanParameters &lhs, const QSslDiffieHellmanParameters &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 不等于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `QDebug operator<<(QDebug debug, const QSslDiffieHellmanParameters &dhparam)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dhparam`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。传入 `const QSslDiffieHellmanParameters &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 Diffie-Hellman 参数集写入调试对象 `debug` `dhparam` 进行调试。
+Diffie-Hellman 参数将以 Base64 编码的 DER 形式表示。
 
 ### `[noexcept] bool operator==(const QSslDiffieHellmanParameters &lhs, const QSslDiffieHellmanParameters &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSslDiffieHellmanParameters` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSslDiffieHellmanParameters &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 等于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ## 6. 深入实践与常见坑
 

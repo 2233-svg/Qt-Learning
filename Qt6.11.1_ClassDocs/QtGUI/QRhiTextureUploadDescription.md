@@ -68,127 +68,62 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QRhiTextureUploadDescription::QRhiTextureUploadDescription()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的纹理上传描述。
 
 ### `QRhiTextureUploadDescription::QRhiTextureUploadDescription(const QRhiTextureUploadEntry &entry)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `entry`：类型为 `const QRhiTextureUploadEntry &`。没有默认值，调用时必须提供。传入 `const QRhiTextureUploadEntry &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个纹理上传描述，包含由`entry`描述的单个子资源上传。
 
 ### `QRhiTextureUploadDescription::QRhiTextureUploadDescription(std::initializer_list<QRhiTextureUploadEntry> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `list`：类型为 `std::initializer_list<QRhiTextureUploadEntry>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiTextureUploadEntry>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建包含指定条目`list`的纹理上传描述。
+注意：`list`也可以包含多个具有相同层和层级的`QRhiTextureUploadEntry`元素。这在上传是部分的时合理，也就是它们的子资源描述的源代码大小或图像尺寸小于子资源的尺寸，这样比单独发布uploadTexture()更高效。
 
 ### `const QRhiTextureUploadEntry *QRhiTextureUploadDescription::cbeginEntries() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureUploadDescription::cbeginEntries` 用于计算、查询或取得与“cbegin、Entries”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiTextureUploadEntry *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiTextureUploadEntry *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向条目列表中第一个项的const迭代器。
 
 ### `const QRhiTextureUploadEntry *QRhiTextureUploadDescription::cendEntries() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureUploadDescription::cendEntries` 用于计算、查询或取得与“cend、Entries”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiTextureUploadEntry *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiTextureUploadEntry *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 const 迭代器，指向条目列表中最后一个项之后。
 
 ### `const QRhiTextureUploadEntry *QRhiTextureUploadDescription::entryAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureUploadDescription::entryAt` 用于计算、查询或取得与“entry、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `const QRhiTextureUploadEntry *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiTextureUploadEntry *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回条目`index`。
 
 ### `qsizetype QRhiTextureUploadDescription::entryCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureUploadDescription::entryCount` 用于计算、查询或取得与“entry、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回条目数量。
 
 ### `void QRhiTextureUploadDescription::setEntries(std::initializer_list<QRhiTextureUploadEntry> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEntries`。调用它会改变 `QRhiTextureUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiTextureUploadEntry>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiTextureUploadEntry>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定条目数量`list`。
 
 ### `template <typename InputIterator> void QRhiTextureUploadDescription::setEntries(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEntries`。调用它会改变 `QRhiTextureUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用迭代器 `first` 和 `last` 来设置条目列表。
 
 ## 6. 深入实践与常见坑
 

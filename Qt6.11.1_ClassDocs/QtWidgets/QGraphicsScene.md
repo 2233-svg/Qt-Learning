@@ -195,1657 +195,1177 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 120 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGraphicsScene::ItemIndexMethod`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 暴露的类型声明 `项目访问、索引、Method`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ItemIndexMethod`。
-- 属性名：`QGraphicsScene`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了索引算法`QGraphicsScene`用于管理场景中物品的位置信息。
+- `QGraphicsScene::BspTreeIndex`：`0`;应用了二元空间划分树。所有`QGraphicsScene`的物品定位算法通过二分搜索，复杂度接近对数级。添加、移动和移除物品是对数级的。这种方法最适合静态场景（即大多数物品不移动的场景）。
+- `QGraphicsScene::NoIndex`：`-1`;不应用索引。物品位置具有线性复杂度，因为场景中的所有物品都会被搜索。然而，添加、移动和移除物品则是恒定时间完成的。这种方法非常适合动态场景，因为许多物品会连续添加、移动或移除。
 
 ### `enum QGraphicsScene::SceneLayerflags QGraphicsScene::SceneLayers`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 暴露的类型声明 `Scene、Layerflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SceneLayerflags QGraphicsScene::SceneLayers`。
-- 属性名：`QGraphicsScene`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QGraphicsScene`中的渲染层。当`QGraphicsScene`绘制场景内容时，会按顺序分别渲染每一层。
+每层代表一个标志，在调用 `invalidate()` 或 `QGraphicsView::invalidateScene()` 等函数时可以合并进行 OR 映射。
+- `QGraphicsScene::ItemLayer`：`0x1`;物品图层。`QGraphicsScene`通过调用虚拟函数 drawItems() 来渲染所有位于该图层中的物品。物品图层绘制在背景图层之后，但前景图层之前。
+- `QGraphicsScene::BackgroundLayer`：`0x2`;背景图层。`QGraphicsScene` 通过调用虚拟函数 `drawBackground()` 来渲染该图层的场景背景。背景图层是所有图层中第一个绘制的。
+- `QGraphicsScene::ForegroundLayer`：`0x4`;前景图层。`QGraphicsScene` 通过调用虚拟函数 `drawForeground()` 来渲染该图层的场景前景。前景图层是所有图层中最后绘制的。
+- `QGraphicsScene::AllLayers`：`0xffff`;所有层;该值代表三层的组合。
+SceneLayers 类型是 QFlags 的 typedef<SceneLayer>。它存储 SceneLayer 值的 OR 组合。
 
 ### `backgroundBrush : QBrush`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setBackgroundBrush(...)` 设置，之后用 `backgroundBrush()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留场景的背景画笔。
+将此属性设置为将场景背景更换为不同的颜色、渐变或纹理。默认的背景刷是`Qt::NoBrush`。背景是在物品之前（后方）绘制的。
+`QGraphicsScene::render()`调用`drawBackground()`来绘制场景背景。为了更详细地控制背景绘制方式，可以在`QGraphicsScene`子类中重新实现`drawBackground()`。
 
-**签名拆解：**
+**如何使用：** 调用 `backgroundBrush()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QBrush`。
-- 属性名：`backgroundBrush`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ QGraphicsView view(&scene);
+ view.show();
+
+ // a blue background
+ scene.setBackgroundBrush(Qt::blue);
+
+ // a gradient background
+ QRadialGradient gradient(0, 0, 10);
+ gradient.setSpread(QGradient::RepeatSpread);
+ scene.setBackgroundBrush(gradient);
+```
 
 ### `bspTreeDepth : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setBspTreeDepth(...)` 设置，之后用 `bspTreeDepth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+此属性保存 `QGraphicsScene` 的 BSP 索引树的深度。
+当使用 `NoIndex` 时，此属性无效。
+该值决定 `QGraphicsScene` 的 BSP 树深度。树深度直接影响 `QGraphicsScene` 的性能和内存使用；内存使用随着树的深度呈指数增加。树深度优化后，`QGraphicsScene` 可以瞬间确定项目的局部性，即使场景中有成千上万或数百万的项目，也会大大提高渲染性能。
+默认值为 0，此时 Qt 将根据场景中项目的大小、位置和数量自动推测合理的默认深度。然而，如果这些参数频繁变化，`QGraphicsScene` 在内部重新调整深度时，可能会导致性能下降。通过设置此属性固定树深度可以避免潜在的性能下降。
+树的深度和场景矩形的大小决定场景分割的颗粒度。每个场景段的大小由以下算法决定：
+当每个段包含 0 到 10 个项目时，BSP 树大小为最优。
 
-**签名拆解：**
+**如何使用：** 调用 `bspTreeDepth()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`int`。
-- 属性名：`bspTreeDepth`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSizeF segmentSize = sceneRect().size() / pow(2, depth - 1);
+```
 
 ### `focusOnTouch : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setFocusOnTouch(...)` 设置，之后用 `focusOnTouch()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性决定物品在获得触控启动事件时是否获得焦点。
+通常的行为是只有在点击某个项目时才转移焦点。操作系统通常将触摸板上的轻触等同于鼠标点击，生成合成点击事件作为响应。不过，至少在macOS上你可以配置这种行为。
+默认情况下，`QGraphicsScene`在触控板等触控板上操作时也会转移焦点。如果操作系统配置为点击触控板时不生成合成鼠标点击，这就令人惊讶了。如果操作系统在点击触控板时会产生合成鼠标点击，启动触控手势时的焦点转移就没必要了。
+关闭 focusOnTouch 后，`QGraphicsScene` 的表现与 macOS 上正常。
+默认值为`true`，确保默认行为与5.12之前的Qt版本相同。设置为`false`以防止触摸事件触发焦点变化。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`focusOnTouch`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `focusOnTouch()` 读取当前值；它不会修改应用状态。
 
 ### `font : QFont`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setFont(...)` 设置，之后用 `font()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留场景的默认字体。
+该属性提供场景的字体。场景字体默认为 ，并解析所有来自 的条目 `QApplication::font`。
+如果场景的字体发生变化，无论是直接通过 setFont() 还是在应用程序字体变化时间接发生，`QGraphicsScene` 首先向自己发送一个 `FontChange` 事件，然后向场景中所有顶层控件发送`FontChange`事件。这些元素通过向场景解析自己的字体来响应，然后通知其子节点，子节点再次通知子节点，如此循环，直到所有控件元素都更新了字体。
+更改场景字体（无论是直接还是间接通过`QApplication::setFont()`）会自动安排整个场景的重新绘制。
 
-**签名拆解：**
-
-- 属性类型：`QFont`。
-- 属性名：`font`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `font()` 读取当前值；它不会修改应用状态。
 
 ### `foregroundBrush : QBrush`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setForegroundBrush(...)` 设置，之后用 `foregroundBrush()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了场景的前景画笔。
+更改此属性，将场景前景设置为不同的颜色、渐变或纹理。
+前景是在物品之后（上方）绘制的。默认的前景画笔是`Qt::NoBrush`（即不绘制前景）。
+`QGraphicsScene::render()`调用`drawForeground()`来绘制场景前景。如果想更详细地控制前景绘制方式，可以在`QGraphicsScene`子类中重新实现`drawForeground()`函数。
 
-**签名拆解：**
+**如何使用：** 调用 `foregroundBrush()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QBrush`。
-- 属性名：`foregroundBrush`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ QGraphicsView view(&scene);
+ view.show();
+
+ // a white semi-transparent foreground
+ scene.setForegroundBrush(QColor(255, 255, 255, 127));
+
+ // a grid foreground
+ scene.setForegroundBrush(QBrush(Qt::lightGray, Qt::CrossPattern));
+```
 
 ### `itemIndexMethod : ItemIndexMethod`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setItemIndexMethod(...)` 设置，之后用 `itemIndexMethod()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了项目索引方法。
+`QGraphicsScene` 对场景应用索引算法，以加快`items()`和`itemAt()`等物品发现功能。索引在静态场景（即物品不移动）时最为高效。对于动态场景或包含大量动画元素的场景，索引簿记可能超过快速查找速度。
+对于常见情况，默认的索引方法`BspTreeIndex`正常工作。如果你的场景使用了很多动画且出现缓慢，可以通过调用`setItemIndexMethod(NoIndex)`来禁用索引。
 
-**签名拆解：**
-
-- 属性类型：`ItemIndexMethod`。
-- 属性名：`itemIndexMethod`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `itemIndexMethod()` 读取当前值；它不会修改应用状态。
 
 ### `minimumRenderSize : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setMinimumRenderSize(...)` 设置，之后用 `minimumRenderSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了物品必须绘制的最小视图变换尺寸。
+当场景被渲染时，任何宽度或高度变换到目标视图后小于 minimumRenderSize() 的物品都不会被渲染。如果某个物品未被渲染且裁剪了其子对象，它们也不会被渲染。设置该值以加快在缩放视图下渲染多物体场景的渲染速度。
+默认值是0。如果未设置，或者设置为0或负值，所有项目都会被渲染。
+例如，设置该属性在场景由多个视图渲染时尤其有用，其中一个视图作为总览，始终显示所有物品。在拥有多物品的场景中，这种视图会使用较高的缩放因子，以便显示所有物品。由于缩放，较小的物体对最终渲染场景的贡献微乎其微。为了避免绘制这些元素并缩短渲染场景所需时间，你可以调用 setMinimumRenderSize() 并设置非负值。
+注意：由于太小未绘制的物品仍会通过`items()`和`itemAt()`等方法返回，并参与碰撞检测和交互。建议将 minimumRenderSize() 设置为小于或等于 1，以避免大型未渲染的可交互物品。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`minimumRenderSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumRenderSize()` 读取当前值；它不会修改应用状态。
 
 ### `palette : QPalette`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setPalette(...)` 设置，之后用 `palette()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了场景的默认调色板。
+该属性提供场景调色板。场景调色板默认使用并解析所有元素，`QApplication::palette`。
+如果场景调色板发生变化，无论是直接通过 setPalette() 还是在应用调色板变更时间接发生，`QGraphicsScene` 首先向自己发送一个 `PaletteChange` 事件，然后向场景中所有顶层控件发送`PaletteChange`事件。这些控件通过向场景解析自己的调色板来响应，然后通知其子节点，子节点再通知子节点，如此循环，直到所有控件项目更新了调色板。
+通过`QApplication::setPalette()`直接或间接更改场景调色板，会自动安排整个场景的重新绘制。
 
-**签名拆解：**
-
-- 属性类型：`QPalette`。
-- 属性名：`palette`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `palette()` 读取当前值；它不会修改应用状态。
 
 ### `sceneRect : QRectF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setSceneRect(...)` 设置，之后用 `sceneRect()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示场景矩形;场景的边界矩形。
+场景矩形定义了场景的范围。它主要用于`QGraphicsView`确定视图默认可滚动区域，`QGraphicsScene`则用于管理物品索引。
+如果未设置，或者设置为空`QRectF`，sceneRect() 将返回自场景创建以来场景中所有物品中最大的边界矩形（即当场景中添加或移动物品时会增长但不会缩小的矩形）。
 
-**签名拆解：**
-
-- 属性类型：`QRectF`。
-- 属性名：`sceneRect`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sceneRect()` 读取当前值；它不会修改应用状态。
 
 ### `stickyFocus : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的配置属性。初始化或状态切换时通过 `setStickyFocus(...)` 设置，之后用 `stickyFocus()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性适用于点击场景背景时是否清除焦点。
+在 stickyFocus 设置为 true 的 `QGraphicsScene` 中，当用户点击场景背景或不接受焦点的项目时，焦点保持不变。否则，焦点将被清除。
+默认情况下，该属性为 `false`。
+焦点会响应鼠标按下事件变化。可以在 `QGraphicsScene` 的子类中重新实现 `mousePressEvent()`，以根据用户点击位置切换此属性。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`stickyFocus`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `stickyFocus()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsScene::QGraphicsScene(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QGraphicsScene对象。`parent`参数传递给`QObject`的构造器。
 
 ### `QGraphicsScene::QGraphicsScene(const QRectF &sceneRect, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `sceneRect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QGraphicsScene对象，使用`sceneRect`作为其场景矩形。`parent`参数传递给`QObject`的构造函数。
 
 ### `QGraphicsScene::QGraphicsScene(qreal x, qreal y, qreal width, qreal height, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `qreal`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QGraphicsScene对象，使用由（`x`， `y`）指定的矩形，以及其场景矩形的`width`和`height`。`parent`参数传递给`QObject`的构造函数。
 
 ### `[virtual noexcept] QGraphicsScene::~QGraphicsScene()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在销毁场景对象之前，移除并删除场景对象中的所有物品。场景对象从应用程序的全局场景列表中移除，并从所有关联的视图中移除。
 
 ### `QGraphicsItem *QGraphicsScene::activePanel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::activePanel` 用于计算、查询或取得与“活动状态、Panel”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前活跃的面板，或者如果没有当前面板激活，则返回`nullptr`。
 
 ### `QGraphicsWidget *QGraphicsScene::activeWindow() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::activeWindow` 用于计算、查询或取得与“活动状态、Window”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前活跃窗口，若无窗口则返回`nullptr`。
 
 ### `QGraphicsEllipseItem *QGraphicsScene::addEllipse(const QRectF &rect, const QPen &pen = QPen(), const QBrush &brush = QBrush())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addEllipse`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsEllipseItem *`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `brush`：类型为 `const QBrush &`。默认值为 `QBrush()`。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加一个椭圆元素到场景，返回元素指针。椭圆的几何体由`rect`定义，其笔和画笔初始化为`pen`和`brush`。
+注意，该物品的几何形状以项目坐标表示，其位置初始化为 （0， 0）。
+如果该物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出`changed()`。
 
 ### `QGraphicsEllipseItem *QGraphicsScene::addEllipse(qreal x, qreal y, qreal w, qreal h, const QPen &pen = QPen(), const QBrush &brush = QBrush())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addEllipse`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsEllipseItem *`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `brush`：类型为 `const QBrush &`。默认值为 `QBrush()`。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等价于调用 addEllipse(`QRectF`(`x`, `y`, `w`, `h`), `pen`, `brush`) 。
 
 ### `void QGraphicsScene::addItem(QGraphicsItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addItem`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`item`及其所有子场景添加或移动到该场景。该场景拥有`item`的所有权。
+如果该物品是可见的（即`QGraphicsItem::isVisible()`返回 true），`QGraphicsScene` 在控制返回事件循环时会发出`changed()`。
+如果该物品已经在另一个场景中，它会先从原场景中移除，然后作为顶层添加到该场景。
+`QGraphicsScene`会在物品被添加到场景时向`item`发送ItemSceneChange通知。如果物品当前不属于某个场景，则只发送一个通知。如果它已经属于场景（即被移动到该场景），`QGraphicsScene`会在物品从上一个场景移除时发送新增通知。
+如果物品是面板，场景处于激活状态，且场景中没有激活面板，那么物品就会被激活。
 
 ### `QGraphicsLineItem *QGraphicsScene::addLine(const QLineF &line, const QPen &pen = QPen())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addLine`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsLineItem *`。
-- 参数 `line`：类型为 `const QLineF &`。没有默认值，调用时必须提供。传入 `const QLineF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加一个行项到场景中，返回条目指针。该行的几何体由`line`定义，其笔初始化为`pen`。
+注意，该物品的几何形状以项目坐标表示，其位置初始化为 （0， 0）。
+如果物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制回到事件循环时会发出`changed()`。
 
 ### `QGraphicsLineItem *QGraphicsScene::addLine(qreal x1, qreal y1, qreal x2, qreal y2, const QPen &pen = QPen())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addLine`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsLineItem *`。
-- 参数 `x1`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y1`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `x2`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y2`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便利函数等同于调用 addLine(`QLineF`(`x1`, `y1`, `x2`, `y2`), `pen`)。
 
 ### `QGraphicsPathItem *QGraphicsScene::addPath(const QPainterPath &path, const QPen &pen = QPen(), const QBrush &brush = QBrush())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addPath`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsPathItem *`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `brush`：类型为 `const QBrush &`。默认值为 `QBrush()`。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加路径元素到场景，返回物品指针。路径几何由`path`定义，笔和笔刷初始化为`pen`和`brush`。
+注意，该物品的几何形状以项目坐标表示，其位置初始化为 （0， 0）。
+如果物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出`changed()`。
 
 ### `QGraphicsPixmapItem *QGraphicsScene::addPixmap(const QPixmap &pixmap)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addPixmap`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsPixmapItem *`。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加一个像素地图元素到场景中，返回物品指针。像素映射由`pixmap`定义。
+注意，该物品的几何形状以项目坐标表示，其位置初始化为 （0， 0）。
+如果物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出 `changed()`。
 
 ### `QGraphicsPolygonItem *QGraphicsScene::addPolygon(const QPolygonF &polygon, const QPen &pen = QPen(), const QBrush &brush = QBrush())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addPolygon`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsPolygonItem *`。
-- 参数 `polygon`：类型为 `const QPolygonF &`。没有默认值，调用时必须提供。传入 `const QPolygonF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `brush`：类型为 `const QBrush &`。默认值为 `QBrush()`。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加一个多边形元素到场景，返回物品指针。多边形由`polygon`定义，笔和画笔初始化为`pen`和`brush`。
+注意，该物品的几何形状以项目坐标表示，其位置初始化为 （0， 0）。
+如果该物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出`changed()`。
 
 ### `QGraphicsRectItem *QGraphicsScene::addRect(const QRectF &rect, const QPen &pen = QPen(), const QBrush &brush = QBrush())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addRect`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsRectItem *`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `brush`：类型为 `const QBrush &`。默认值为 `QBrush()`。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加一个矩形元素到场景，返回物品指针。矩形的几何体由`rect`定义，其笔和画笔初始化为`pen`和`brush`。
+注意，该物品的几何形状以物品坐标表示，其位置初始化为 （0， 0）。例如，如果添加一个`QRect`（50， 50， 100， 100），其左上角相对于该物品坐标系的原点将位于 （50， 50）。
+如果物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出`changed()`。
 
 ### `QGraphicsRectItem *QGraphicsScene::addRect(qreal x, qreal y, qreal w, qreal h, const QPen &pen = QPen(), const QBrush &brush = QBrush())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addRect`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsRectItem *`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pen`：类型为 `const QPen &`。默认值为 `QPen()`。传入 `const QPen &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `brush`：类型为 `const QBrush &`。默认值为 `QBrush()`。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等价于调用 addRect(`QRectF`(`x`, `y`, `w`, `h`), `pen`, `brush`) 。
 
 ### `QGraphicsSimpleTextItem *QGraphicsScene::addSimpleText(const QString &text, const QFont &font = QFont())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addSimpleText`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsSimpleTextItem *`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `font`：类型为 `const QFont &`。默认值为 `QFont()`。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加场景中的`QGraphicsSimpleTextItem`，返回项目指针。文本字符串初始化为`text`，字体初始化为`font`。
+该项的位置初始化为（0， 0）。
+如果物品可见（即`QGraphicsItem::isVisible()`返回`true`），当控制返回事件循环时，`QGraphicsScene`会发出`changed()`。
 
 ### `QGraphicsTextItem *QGraphicsScene::addText(const QString &text, const QFont &font = QFont())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addText`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsTextItem *`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `font`：类型为 `const QFont &`。默认值为 `QFont()`。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并添加文本项到场景，返回条目指针。文本字符串初始化为`text`，字体初始化为`font`。
+该项的位置初始化为（0， 0）。
+如果物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出`changed()`。
 
 ### `QGraphicsProxyWidget *QGraphicsScene::addWidget(QWidget *widget, Qt::WindowFlags wFlags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QGraphicsScene` 添加依赖、数据或子对象的 API `addWidget`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsProxyWidget *`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `wFlags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`widget`创建一个新`QGraphicsProxyWidget`，添加到场景中，并返回代理的指针。`wFlags`为嵌入代理小部件设置默认窗口标志。
+该项的位置初始化为（0， 0）。
+如果该物品可见（即`QGraphicsItem::isVisible()`返回`true`），`QGraphicsScene`在控制返回事件循环时会发出`changed()`。
+请注意，不支持带有`Qt::WA_PaintOnScreen`控件属性的控件以及包裹外部应用程序或控制器的控件。示例包括`QOpenGLWidget`和QAxWidget。
 
 ### `[slot] void QGraphicsScene::advance()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `advance`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该槽通过调用场景中所有物品的 `QGraphicsItem::advance()`，将场景推进一步。该过程分为两个阶段：第一阶段，所有物品被通知场景即将变化;第二阶段通知所有物品可以移动。第一阶段称为 `QGraphicsItem::advance()` 传递 0 作为参数，第二阶段传递 1。
+注意你也可以用动画框架来做动画。
 
 ### `[signal] void QGraphicsScene::changed(const QList<QRectF> &region)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 发出的通知信号 `changed`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `region`：类型为 `const QList<QRectF> &`。没有默认值，调用时必须提供。传入 `const QList<QRectF> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当控制点到达事件环路时，如果场景内容发生变化，`QGraphicsScene`会发出该信号。`region`参数包含一个场景矩形列表，表示已更改的区域。
 
 ### `[slot] void QGraphicsScene::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `clear`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除并删除场景中的所有物品，但场景状态保持不变。
 
 ### `void QGraphicsScene::clearFocus()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::clearFocus` 用于执行与“清空、Focus”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除场景中的焦点。如果调用该功能时任何物品有焦点，它会失去焦点，场景恢复聚焦后重新聚焦。
+一个没有焦点的场景会忽视按键事件。
 
 ### `[slot] void QGraphicsScene::clearSelection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `clearSelection`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除当前选择。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::collidingItems(const QGraphicsItem *item, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::collidingItems` 用于计算、查询或取得与“colliding、Items”相关的操作。调用时要先确认当前状态和 `item`、`mode` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `item`：类型为 `const QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有与`item`碰撞的物品列表。碰撞通过调用`QGraphicsItem::collidesWithItem()`确定;碰撞检测由`mode`确定。默认情况下，所有形状相交`item`或包含在`item`形状内的物品都会返回。
+这些物品按递减顺序返回（即列表中第一个为最上项，最后一项为最底项）。
 
 ### `[virtual protected] void QGraphicsScene::contextMenuEvent(QGraphicsSceneContextMenuEvent *contextMenuEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `contextMenuEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `contextMenuEvent`：类型为 `QGraphicsSceneContextMenuEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneContextMenuEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序可用于事件`contextMenuEvent`，可以在子类中重新实现以接收上下文菜单事件。默认实现会将事件转发到事件位置上最顶的可见项，该项目接受上下文菜单事件。如果该位置没有项目接受上下文菜单事件，则该事件被忽略。
+注：关于哪些项目被该函数视为可见，请参见 `items()`。
 
 ### `QGraphicsItemGroup *QGraphicsScene::createItemGroup(const QList<QGraphicsItem *> &items)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::createItemGroup` 用于计算、查询或取得与“创建、项目访问、Group”相关的操作。调用时要先确认当前状态和 `items` 的有效范围；返回类型是 `QGraphicsItemGroup *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItemGroup *`。
-- 参数 `items`：类型为 `const QList<QGraphicsItem *> &`。没有默认值，调用时必须提供。传入 `const QList<QGraphicsItem *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`items`中的所有项分组到新的`QGraphicsItemGroup`，并返回该组的指针。该组以`items`的共同祖先为父，位置为（0， 0）。所有项都被重新父级到组，它们的位置和变换映射到该组。如果`items`为空，该函数将返回空的顶层`QGraphicsItemGroup`。
+`QGraphicsScene`拥有该组项目的所有权;你不需要删除它。要拆解（取消组）一个组，请调用`destroyItemGroup()`。
 
 ### `void QGraphicsScene::destroyItemGroup(QGraphicsItemGroup *group)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::destroyItemGroup` 用于执行与“destroy、项目访问、Group”相关的操作。调用时要先确认当前状态和 `group` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `group`：类型为 `QGraphicsItemGroup *`。没有默认值，调用时必须提供。传入 `QGraphicsItemGroup *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`group`中的所有物品重新父级到`group`的父级，然后从场景中移除`group`，最后删除。这些物品的位置和变换会从组映射到组的父单位。
 
 ### `[virtual protected] void QGraphicsScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::dragEnterEvent` 用于执行与“drag、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收场景的拖拽进入事件。
+默认实现接受事件，并准备场景接受拖曳移动事件。
 
 ### `[virtual protected] void QGraphicsScene::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序对于事件`event`，可以在子类中重新实现，以接收场景的拖放离开事件。
 
 ### `[virtual protected] void QGraphicsScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收场景的拖动移动事件。
+注意：关于该函数视为可见的项目定义，请参见 `items()`。
 
 ### `[virtual protected] void QGraphicsScene::drawBackground(QPainter *painter, const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的核心操作 `drawBackground`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在绘制任何物品和前景之前，使用`painter`绘制场景背景。重新实现该函数，为场景提供自定义背景。
+所有绘画均在场景坐标中完成。`rect`参数是曝光的矩形。
+如果你只是想为背景定义颜色、纹理或渐变，可以调用`setBackgroundBrush()`。
 
 ### `[virtual protected] void QGraphicsScene::drawForeground(QPainter *painter, const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的核心操作 `drawForeground`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在绘制完背景和所有物品后，使用 `painter` 绘制场景前景。重新实现该函数，为场景提供自定义前景。
+所有绘画都是在场景坐标中完成的。`rect`参数是暴露的矩形。
+如果你只是想为前景定义颜色、纹理或渐变，可以调用`setForegroundBrush()`。
 
 ### `[virtual protected] void QGraphicsScene::dropEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收场景的丢弃事件。
 
 ### `[override virtual protected] bool QGraphicsScene::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
+处理事件`event`，并将其分派到相应的事件处理程序。
+除了调用便利事件处理程序外，该函数还负责将鼠标移动事件转换为悬浮事件，以应对没有鼠标抓取物品时的使用。悬浮事件直接传递到物品上;没有方便功能。
+与`QWidget`不同，`QGraphicsScene`没有便利函数`enterEvent()`和`leaveEvent()`。用这个函数来获取这些事件。
+如果`event`已被识别和处理，返回`true`;否则，返回`false`。
 
 ### `[override virtual protected] bool QGraphicsScene::eventFilter(QObject *watched, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::eventFilter` 用于计算、查询或取得与“event、Filter”相关的操作。调用时要先确认当前状态和 `watched`、`event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `watched`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
+`QGraphicsScene` 会过滤 `QApplication` 事件以检测调色板和字体的变化。
 
 ### `[virtual protected] void QGraphicsScene::focusInEvent(QFocusEvent *focusEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `focusEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `focusEvent`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序在事件`focusEvent`中可以重新实现，以获得事件中的关注点。
+默认实现会先聚焦场景，然后再聚焦最后一个焦点。
 
 ### `QGraphicsItem *QGraphicsScene::focusItem() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::focusItem` 用于计算、查询或取得与“focus、项目访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当场景处于激活状态时，该函数返回场景当前的焦点项目，若无焦点则返回`nullptr`。当场景处于非激活状态时，该函数返回场景激活时将获得输入焦点的物品。
+当场景接收到按键事件时，焦点项会接收键盘输入。
 
 ### `[signal] void QGraphicsScene::focusItemChanged(QGraphicsItem *newFocusItem, QGraphicsItem *oldFocusItem, Qt::FocusReason reason)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 发出的通知信号 `focusItemChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newFocusItem`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。传入 `QGraphicsItem *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldFocusItem`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。传入 `QGraphicsItem *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `reason`：类型为 `Qt::FocusReason`。没有默认值，调用时必须提供。传入 `Qt::FocusReason` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当场景中焦点发生变化时（例如物品获得或失去输入焦点，或焦点从一个物品转移到另一个物体时），该信号由`QGraphicsScene`发出。如果你需要跟踪其他物品何时获得输入焦点，可以连接到该信号。它对实现虚拟键盘、输入方法和光标物品尤其有用。
+`oldFocusItem` 是指向之前有焦点的物品的指针，如果信号发出前没有物品有焦点，则为 0。`newFocusItem` 是指向获得输入焦点的物品的指针，或在焦点丢失时指向`nullptr`。`reason` 是焦点变化的原因（例如，如果场景在输入场有焦点时关闭，`oldFocusItem`会指向输入场的物品，`newFocusItem` 是`nullptr`，`reason` 是`Qt::ActiveWindowFocusReason`）。
 
 ### `[virtual protected slot] bool QGraphicsScene::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据 Tab 和 Shift Tab 的需要，找到新的控件以赋予键盘焦点，若能找到新控件则返回 `true`，找不到则返回 false。如果 `next` 为真，该函数向前搜索;如果 `next` 为假，则向后搜索。
+你可以在`QGraphicsScene`的子类中重新实现这个函数，以提供对场景中标签焦点如何通过的细致控制。默认实现基于`QGraphicsWidget::setTabOrder()`定义的标签焦点链。
 
 ### `[virtual protected] void QGraphicsScene::focusOutEvent(QFocusEvent *focusEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `focusEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `focusEvent`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`focusEvent`，可以在子类中重新实现以接收焦点输出事件。
+默认实现会先移除焦点，然后移除场景中的焦点。
 
 ### `bool QGraphicsScene::hasFocus() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasFocus`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果场景有焦点，返回`true`;否则返回`false`。如果场景有焦点，它会将按键事件从`QKeyEvent`转发到任何有焦点的项目。
 
 ### `qreal QGraphicsScene::height() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::height` 用于计算、查询或取得与“高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此便利函数等同于调用 `sceneRect().height()`。
 
 ### `[virtual protected] void QGraphicsScene::helpEvent(QGraphicsSceneHelpEvent *helpEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::helpEvent` 用于执行与“help、Event”相关的操作。调用时要先确认当前状态和 `helpEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `helpEvent`：类型为 `QGraphicsSceneHelpEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneHelpEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`helpEvent`，可以在子类中重新实现以接收帮助事件。事件类型为`QEvent::ToolTip`，当请求工具提示时创建。
+默认实现会在鼠标光标位置显示最顶端可见物品的工具提示，即z值最高的物品。如果没有设置工具提示，这个函数就不会有任何作用。
+注：关于哪些项目被该功能视为可见，请参见 `items()` 定义。
 
 ### `[virtual protected] void QGraphicsScene::inputMethodEvent(QInputMethodEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::inputMethodEvent` 用于执行与“input、Method、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QInputMethodEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收场景的输入法事件。
+默认实现会将事件转发到`focusItem()`。如果当前没有焦点项，或者当前焦点项不接受输入方法，该函数则不起作用。
 
 ### `[virtual] QVariant QGraphicsScene::inputMethodQuery(Qt::InputMethodQuery query) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `query` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `query`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+输入法使用该方法查询场景的一组属性，以支持复杂的输入法操作，以支持周围文本和重新转换。
+`query`参数指定查询的属性。
 
 ### `[slot] void QGraphicsScene::invalidate(const QRectF &rect = QRectF(), QGraphicsScene::SceneLayers layers = AllLayers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `invalidate`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+在现场`rect`中`layers`无效并安排重新绘制。`layers`中的任何缓存内容都会无条件失效并重新绘制。
+你可以利用这个功能重载来通知`QGraphicsScene`场景背景或前景的变化。这个功能通常用于基于瓦片背景的场景，用来通知`QGraphicsView`启用`CacheBackground`时发生的变化。
+注意`QGraphicsView`目前仅支持后台缓存（见`QGraphicsView::CacheBackground`）。该函数等同于如果传递了除`BackgroundLayer`以外的任何层，调用`update()`。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。默认值为 `QRectF()`。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `layers`：类型为 `QGraphicsScene::SceneLayers`。默认值为 `AllLayers`。传入 `QGraphicsScene::SceneLayers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+graphicsScene， qOverload（&QGraphicsScene：：invalidate））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+graphicsScene， [receiver = graphicsScene]（const QRectF &rect， QGraphicsScene：：SceneLayers layers） { receiver->invalidate（rect， layers）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
+
+**官方示例：**
+
+```cpp
+ QRectF TileScene::rectForTile(int x, int y) const
+ {
+     // Return the rectangle for the tile at position (x, y).
+     return QRectF(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+ }
+
+ void TileScene::setTile(int x, int y, const QPixmap &pixmap)
+ {
+     // Sets or replaces the tile at position (x, y) with pixmap.
+     if (x >= 0 && x < numTilesH && y >= 0 && y < numTilesV) {
+         tiles[y][x] = pixmap;
+         invalidate(rectForTile(x, y), BackgroundLayer);
+     }
+ }
+
+ void TileScene::drawBackground(QPainter *painter, const QRectF &exposed)
+ {
+     // Draws all tiles that intersect the exposed area.
+     for (int y = 0; y < numTilesV; ++y) {
+         for (int x = 0; x < numTilesH; ++x) {
+             QRectF rect = rectForTile(x, y);
+             if (exposed.intersects(rect))
+                 painter->drawPixmap(rect.topLeft(), tiles[y][x]);
+         }
+     }
+ }
+```
 
 ### `void QGraphicsScene::invalidate(qreal x, qreal y, qreal w, qreal h, QGraphicsScene::SceneLayers layers = AllLayers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `invalidate`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layers`：类型为 `QGraphicsScene::SceneLayers`。默认值为 `AllLayers`。传入 `QGraphicsScene::SceneLayers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等效于调用 invalidate(`QRectF`(`x`, `y`, `w`, `h`), `layers`);
 
 ### `bool QGraphicsScene::isActive() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isActive`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果场景处于激活状态（例如，至少有一个活跃`QGraphicsView`在观看），返回`true`;否则返回`false`。
 
 ### `QGraphicsItem *QGraphicsScene::itemAt(const QPointF &position, const QTransform &deviceTransform) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `itemAt`，用于取得 `QGraphicsScene` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数 `position`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。没有默认值，调用时必须提供。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定`position`的最高可见物品，若该位置无物品则返回`nullptr`。
+`deviceTransform`是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
+注意：关于该函数视为可见的项目定义，请参见 `items()`。
 
 ### `QGraphicsItem *QGraphicsScene::itemAt(qreal x, qreal y, const QTransform &deviceTransform) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `itemAt`，用于取得 `QGraphicsScene` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。没有默认值，调用时必须提供。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由（`x`， `y`）指定位置的最顶可见物品，若该位置无物品则返回`nullptr`。
+`deviceTransform`是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
+这种便利函数等同于调用`itemAt(QPointF(x, y), deviceTransform)`。
+注意：关于哪些项目被该函数视为可见，请参见 `items()`。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::items(Qt::SortOrder order = Qt::DescendingOrder) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `order` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::DescendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回现场所有物品的有序清单。`order`决定堆叠顺序。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::items(const QPointF &pos, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `pos`、`mode`、`order`、`deviceTransform` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `pos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::DescendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`不同，在列表中指定`pos`的可见项，这些项用`order`排序。在这种情况下，“visible”定义了以下项：isVisible() 返回 `true`，effectiveOpacity() 返回大于 0.0（完全透明），且父项未裁剪。
+`mode`的默认值是`Qt::IntersectsItemShape`;所有与`pos`形状相交的物品都会返回。
+`deviceTransform`是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::items(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `path`、`mode`、`order`、`deviceTransform` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::DescendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`，在列表中以`order`排序的列表中，这些可见项要么与指定`path`相交。在这种情况下，“visible”定义了以下条件的项：isVisible() 返回 `true`，effectiveOpacity() 返回大于 0.0（完全透明），且父项不会裁剪该项。
+`mode`的默认值为`Qt::IntersectsItemShape`;所有与`path`相交或包含的具体形状的项都会返回。
+`deviceTransform`是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::items(const QPolygonF &polygon, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `polygon`、`mode`、`order`、`deviceTransform` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `polygon`：类型为 `const QPolygonF &`。没有默认值，调用时必须提供。传入 `const QPolygonF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::DescendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`不同，位于指定`polygon`内或与其相交的可见项，且列表用`order`排序。在这种情况下，“visible”定义了以下条件的项：isVisible() 返回 `true`，effectiveOpacity() 返回大于 0.0（完全透明），且父项不裁剪该项。
+`mode`的默认值为`Qt::IntersectsItemShape`;所有与`polygon`相交或包含的具体形状的项都会返回。
+`deviceTransform`是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::items(const QRectF &rect, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, Qt::SortOrder order = Qt::DescendingOrder, const QTransform &deviceTransform = QTransform()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `rect`、`mode`、`order`、`deviceTransform` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::DescendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有根据`mode`不同，在列表中以`order`排序的列表中，这些可见项要么在指定`rect`内，要么与之相交。在这种情况下，“可见”定义了以下条件的项：isVisible() 返回 `true`，effectiveOpacity() 返回大于 0.0（完全透明），且父项不会裁剪该项。
+`mode`的默认值为`Qt::IntersectsItemShape`;所有与`rect`相交或包含的具体形状的项都会返回。
+`deviceTransform`是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::items(qreal x, qreal y, qreal w, qreal h, Qt::ItemSelectionMode mode, Qt::SortOrder order, const QTransform &deviceTransform = QTransform()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::items` 用于计算、查询或取得与“items”相关的操作。调用时要先确认当前状态和 `x`、`y`、`w`、`h`、`mode`、`order`、`deviceTransform` 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `order`：类型为 `Qt::SortOrder`。没有默认值，调用时必须提供。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有可见的项，这些项取决于`mode`，要么位于`x`、`y`、`w`和`h`定义的矩形内，要么与其相交，且列表用`order`排序。在这种情况下，“可见”定义了以下项：isVisible() 返回 `true`，effectiveOpacity() 返回大于 0.0（完全透明），且父项不会裁剪该矩形。
+`deviceTransform` 是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
 
 ### `QRectF QGraphicsScene::itemsBoundingRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::itemsBoundingRect` 用于计算、查询或取得与“items、Bounding、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+计算并返回场景中所有物品的边界矩形。该函数通过遍历所有物品来工作，因此对于大型场景来说可能会比较慢。
 
 ### `[virtual protected] void QGraphicsScene::keyPressEvent(QKeyEvent *keyEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `keyEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keyEvent`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`keyEvent`，可以在子类中重新实现以接收按键事件。默认实现会将事件转发到当前焦点项。
 
 ### `[virtual protected] void QGraphicsScene::keyReleaseEvent(QKeyEvent *keyEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `keyEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keyEvent`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`keyEvent`，可以在子类中重新实现以接收密钥释放事件。默认实现会将事件转发到当前焦点项。
 
 ### `[virtual protected] void QGraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`mouseEvent`，可以重新实现为子类，以接收场景的鼠标双击事件。
+如果有人在场景中双击，场景先会收到鼠标新闻事件，接着是发布事件（即点击），再是双击事件，最后是发布事件。如果双击事件传递到与首次新闻发布的物品不同的物品上，则会作为新闻事件发送。但在这种情况下，三击事件不会作为双击事件发送。
+默认实现与`mousePressEvent()`类似。
+注意：关于该函数视为可见的项目定义，请参见 `items()`。
 
 ### `QGraphicsItem *QGraphicsScene::mouseGrabberItem() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::mouseGrabberItem` 用于计算、查询或取得与“mouse、Grabber、项目访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的鼠标抓取物品，或者如果没有当前抓取该鼠标的物品，则返回`nullptr`。抓取鼠标的物品是接收所有发送到场景的鼠标事件的物品。
+当物品收到并接受鼠标按键事件时，它就成为鼠标抓取器，并且在以下任一事件发生前保持抓鼠状态：
+- 如果物品在没有其他按键按下时触发鼠标释放事件，则失去鼠标抓取功能。
+- 如果物品变得隐形（即有人喊`item->setVisible(false)`），或者被禁用（即有人喊`item->setEnabled(false)`），则失去抓取鼠标的权利。
+- 如果物品从场景中移除，则失去鼠标抓取功能。
+如果物品失去鼠标抓取，场景将忽略所有鼠标事件，直到新物品抓取该鼠标（即新物品获得鼠标按键事件）。
 
 ### `[virtual protected] void QGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`mouseEvent`，可以在子类中重新实现，以接收场景中的鼠标移动事件。
+默认实现取决于鼠标抓取器的状态。如果有抓取鼠标的物品，事件会发送给抓取者。如果当前位置有任何物品接受悬停事件，该事件会被转换成悬停事件并被接受;否则会被忽略。
 
 ### `[virtual protected] void QGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`mouseEvent`，可以在子类中重新实现，以接收场景的鼠标按键事件。
+默认实现取决于场景的状态。如果存在抓取鼠标的物品，事件会发送给抓取物品。否则，事件会转发到事件中最顶端的可见物品，该物品会立即成为抓取物品。
+如果场景中给定位置没有物品，选择区域会重置，任何焦点物品都会失去输入焦点，事件随后被忽略。
+注意：关于该函数视为可见的项目定义，请参见 `items()`。
 
 ### `[virtual protected] void QGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`mouseEvent`，可以在子类中重新实现，以接收场景中的鼠标释放事件。
+默认实现取决于鼠标抓取器的状态。如果没有抓取鼠标，该事件将被忽略。否则，如果有抓取物品，事件会发送给抓取鼠标。如果该松开鼠标代表鼠标上最后按下的按钮，抓取物品则失去抓取鼠标。
 
 ### `void QGraphicsScene::removeItem(QGraphicsItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeItem`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`item`物品及其所有子物品从场景中移除。`item`的所有权转移给调用者（即`QGraphicsScene`销毁后不会再删除`item`）。
 
 ### `void QGraphicsScene::render(QPainter *painter, const QRectF &target = QRectF(), const QRectF &source = QRectF(), Qt::AspectRatioMode aspectRatioMode = Qt::KeepAspectRatio)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+利用`painter`将场景中的`source`矩形渲染到`target`。此功能用于将场景内容捕获到绘图设备，如`QImage`（例如截图），或用于用QPrinter打印。例如：
+如果`source`是空矩形矩形，该函数会用`sceneRect()`来决定渲染什么。如果`target`是空矩形矩形，则使用`painter`的绘画装置的尺寸。
+源矩形块内容会根据`aspectRatioMode`进行转换以适应目标矩形块。默认情况下，保持宽高比，`source`会根据`target`进行缩放以适应。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `target`：类型为 `const QRectF &`。默认值为 `QRectF()`。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `source`：类型为 `const QRectF &`。默认值为 `QRectF()`。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `aspectRatioMode`：类型为 `Qt::AspectRatioMode`。默认值为 `Qt::KeepAspectRatio`。传入 `Qt::AspectRatioMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QGraphicsScene scene;
+ scene.addItem(...
+ ...
+ QPrinter printer(QPrinter::HighResolution);
+ printer.setPaperSize(QPrinter::A4);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QPainter painter(&printer);
+ scene.render(&painter);
+```
 
 ### `[signal] void QGraphicsScene::sceneRectChanged(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 发出的通知信号 `sceneRectChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当场景矩形发生变化时，`QGraphicsScene`会发出该信号。`rect`参数是新的场景矩形。
 
 ### `QList<QGraphicsItem *> QGraphicsScene::selectedItems() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::selectedItems` 用于计算、查询或取得与“selected、Items”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QGraphicsItem *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsItem *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有当前已选中的物品列表。物品的返回顺序无特定。
 
 ### `QPainterPath QGraphicsScene::selectionArea() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::selectionArea` 用于计算、查询或取得与“selection、Area”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPainterPath`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回之前用`setSelectionArea()`设置的选择区域，若未设置则返回空`QPainterPath`。
 
 ### `[signal] void QGraphicsScene::selectionChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 发出的通知信号 `selectionChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当选择发生变化时，`QGraphicsScene`会发出这个信号。你可以打电话给`selectedItems()`获取新的选中物品清单。
+每当选择或取消选中某个物品、设置、清除或以其他方式更改选择区域，或者将预选物品添加到场景中，或从场景中移除选中物品时，选择都会发生变化。
+`QGraphicsScene` 在组选择操作中只发出一次该信号。例如，如果你设置了选择区域，选择或取消了`QGraphicsItemGroup`，或者在场景中添加或移除包含多个选中项目的父项，selectionChanged() 只在操作完成后发出一次（而不是每个项目一次）。
 
 ### `bool QGraphicsScene::sendEvent(QGraphicsItem *item, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的核心操作 `sendEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `item`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过可能的事件过滤器向物品 `item`发送事件`event`。
+只有当该物品被启用时才会发送该事件。
+返回`false`事件是否被过滤或该项被禁用。否则返回事件处理器返回的值。
 
 ### `void QGraphicsScene::setActivePanel(QGraphicsItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setActivePanel`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+激活`item`，这必须是本场景中的物品。你也可以通过0代`item`，此时`QGraphicsScene`会关闭当前激活的任何面板。
+如果场景当前处于非激活状态，`item`保持非激活状态，直到场景激活（或`item` `nullptr`时，物品不会被激活）。
 
 ### `void QGraphicsScene::setActiveWindow(QGraphicsWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setActiveWindow`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QGraphicsWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+激活`widget`，这必须是该场景中的一个小部件。你也可以为`widget`传递0，这样`QGraphicsScene`会关闭当前任何正在激活的窗口。
 
 ### `void QGraphicsScene::setFocus(Qt::FocusReason focusReason = Qt::OtherFocusReason)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFocus`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `focusReason`：类型为 `Qt::FocusReason`。默认值为 `Qt::OtherFocusReason`。传入 `Qt::FocusReason` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Set 通过发送`QFocusEvent`到场景，将`focusReason`作为原因来聚焦场景。如果场景在之前失去焦点且物品有焦点后重新获得焦点，最后一个焦点物品将获得焦点，原因为`focusReason`。
+如果场景已经有焦点，这个功能就不做任何事。
 
 ### `void QGraphicsScene::setFocusItem(QGraphicsItem *item, Qt::FocusReason focusReason = Qt::OtherFocusReason)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFocusItem`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `focusReason`：类型为 `Qt::FocusReason`。默认值为 `Qt::OtherFocusReason`。传入 `Qt::FocusReason` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在移除之前可能有焦点的物品后，将场景的焦点物品设置为`item`，焦点理由`focusReason`。
+如果`item`是`nullptr`，或者它不接受对焦（即未启用`QGraphicsItem::ItemIsFocusable`标志），或者不可见或未启用，该功能仅会移除之前任何焦点物品的焦点。
+如果物品未`nullptr`，且场景当前没有焦点（即返回`hasFocus()`返回`false`），该函数会自动调用`setFocus()`。
 
 ### `void QGraphicsScene::setSelectionArea(const QPainterPath &path, const QTransform &deviceTransform)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionArea`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。没有默认值，调用时必须提供。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将选择区域设置为`path`。该区域内的所有物品会立即被选中，外面的所有物品都未被选中。你可以通过调用`selectedItems()`获取所有被选中的物品列表。
+`deviceTransform`是适用于视图的变换，如果场景中包含忽略变换的物品，则需要提供。
+要选择某个项目，必须标记为可选（`QGraphicsItem::ItemIsSelectable`）。
 
 ### `void QGraphicsScene::setSelectionArea(const QPainterPath &path, Qt::ItemSelectionOperation selectionOperation = Qt::ReplaceSelection, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape, const QTransform &deviceTransform = QTransform())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionArea`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `selectionOperation`：类型为 `Qt::ItemSelectionOperation`。默认值为 `Qt::ReplaceSelection`。传入 `Qt::ItemSelectionOperation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `Qt::ItemSelectionMode`。默认值为 `Qt::IntersectsItemShape`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `deviceTransform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`mode`来确定项目是否包含在选择区域内，将选择区域设置为`path`。
+`deviceTransform` 是适用于视图的变换，如果场景包含忽略变换的物品，则需要提供。
+`selectionOperation`决定当前选中的物品如何处理。
 
 ### `void QGraphicsScene::setStyle(QStyle *style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStyle`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `QStyle *`。没有默认值，调用时必须提供。传入 `QStyle *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将场景样式设置为或替换为`style`，并将样式重新父级到该场景。之前分配的任何样式都会被删除。场景的样式默认为`QApplication::style()`，并作为场景中所有`QGraphicsWidget`项的默认。
+无论是直接调用该函数，还是间接调用 `QApplication::setStyle()`，都会自动更新场景中所有未被明确分配样式的小部件的样式。
+如果`style` `nullptr`，`QGraphicsScene`会恢复为`QApplication::style()`。
 
 ### `QStyle *QGraphicsScene::style() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::style` 用于计算、查询或取得与“style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStyle *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStyle *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景的样式，或者如果场景没有明确分配样式，则返回`QApplication::style()`样式。
 
 ### `[slot] void QGraphicsScene::update(const QRectF &rect = QRectF())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `update`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+安排现场`rect`区域的重新绘制。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。默认值为 `QRectF()`。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+graphicsScene， qOverload（&QGraphicsScene：：update））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+graphicsScene， [receiver = graphicsScene]（const QRectF &rect） { receiver->update（rect）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `void QGraphicsScene::update(qreal x, qreal y, qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::update` 用于执行与“更新”相关的操作。调用时要先确认当前状态和 `x`、`y`、`w`、`h` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数等同于调用 update（`QRectF`（`x`， `y`， `w`， `h`））;
 
 ### `QList<QGraphicsView *> QGraphicsScene::views() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::views` 用于计算、查询或取得与“views”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QGraphicsView *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QGraphicsView *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回显示该场景的所有视图列表。
 
 ### `[virtual protected] void QGraphicsScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `wheelEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `wheelEvent`：类型为 `QGraphicsSceneWheelEvent *`。没有默认值，调用时必须提供。传入 `QGraphicsSceneWheelEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该事件处理程序用于事件`wheelEvent`，可以在子类中重新实现，以接收场景的鼠标滚轮事件。
+默认情况下，事件会传递到光标下方最顶层的可见物品。如果被忽略，事件会传播到下面的物品，反复传播直到事件被接受或事件到达场景。如果没有物品接受该事件，则被忽略。
+注：关于哪些项目被该功能视为可见，请参见 `items()` 定义。
 
 ### `qreal QGraphicsScene::width() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::width` 用于计算、查询或取得与“宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此便利函数等同于调用 `sceneRect()`.width()。
 
 ### `enum SceneLayer { ItemLayer, BackgroundLayer, ForegroundLayer, AllLayers }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 暴露的类型声明 `Scene、Layer`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QGraphicsScene`中的渲染层。当`QGraphicsScene`绘制场景内容时，会按顺序分别渲染每一层。
+每层代表一个标志，在调用 `invalidate()` 或 `QGraphicsView::invalidateScene()` 等函数时可以合并进行 OR 映射。
+- `QGraphicsScene::ItemLayer`：`0x1`;物品图层。`QGraphicsScene`通过调用虚拟函数 drawItems() 来渲染所有位于该图层中的物品。物品图层绘制在背景图层之后，但前景图层之前。
+- `QGraphicsScene::BackgroundLayer`：`0x2`;背景图层。`QGraphicsScene` 通过调用虚拟函数 `drawBackground()` 来渲染该图层的场景背景。背景图层是所有图层中第一个绘制的。
+- `QGraphicsScene::ForegroundLayer`：`0x4`;前景图层。`QGraphicsScene` 通过调用虚拟函数 `drawForeground()` 来渲染该图层的场景前景。前景图层是所有图层中最后绘制的。
+- `QGraphicsScene::AllLayers`：`0xffff`;所有层;该值代表三层的组合。
+SceneLayers 类型是 QFlags 的 typedef<SceneLayer>。它存储 SceneLayer 值的 OR 组合。
 
 ### `flags SceneLayers`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsScene` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QGraphicsScene`中的渲染层。当`QGraphicsScene`绘制场景内容时，会按顺序分别渲染每一层。
+每层代表一个标志，在调用 `invalidate()` 或 `QGraphicsView::invalidateScene()` 等函数时可以合并进行 OR 映射。
+- `QGraphicsScene::ItemLayer`：`0x1`;物品图层。`QGraphicsScene`通过调用虚拟函数 drawItems() 来渲染所有位于该图层中的物品。物品图层绘制在背景图层之后，但前景图层之前。
+- `QGraphicsScene::BackgroundLayer`：`0x2`;背景图层。`QGraphicsScene` 通过调用虚拟函数 `drawBackground()` 来渲染该图层的场景背景。背景图层是所有图层中第一个绘制的。
+- `QGraphicsScene::ForegroundLayer`：`0x4`;前景图层。`QGraphicsScene` 通过调用虚拟函数 `drawForeground()` 来渲染该图层的场景前景。前景图层是所有图层中最后绘制的。
+- `QGraphicsScene::AllLayers`：`0xffff`;所有层;该值代表三层的组合。
+SceneLayers 类型是 QFlags 的 typedef<SceneLayer>。它存储 SceneLayer 值的 OR 组合。
 
 ### `QBrush backgroundBrush() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::backgroundBrush` 用于计算、查询或取得与“background、Brush”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留场景的背景画笔。
+将此属性设置为将场景背景更换为不同的颜色、渐变或纹理。默认的背景刷是`Qt::NoBrush`。背景是在物品之前（后方）绘制的。
+`QGraphicsScene::render()`调用`drawBackground()`来绘制场景背景。为了更详细地控制背景绘制方式，可以在`QGraphicsScene`子类中重新实现`drawBackground()`。
 
-**签名拆解：**
+**如何使用：** 调用 `backgroundBrush()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QBrush`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ QGraphicsView view(&scene);
+ view.show();
+
+ // a blue background
+ scene.setBackgroundBrush(Qt::blue);
+
+ // a gradient background
+ QRadialGradient gradient(0, 0, 10);
+ gradient.setSpread(QGradient::RepeatSpread);
+ scene.setBackgroundBrush(gradient);
+```
 
 ### `int bspTreeDepth() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::bspTreeDepth` 用于计算、查询或取得与“bsp、Tree、Depth”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+此属性保存 `QGraphicsScene` 的 BSP 索引树的深度。
+当使用 `NoIndex` 时，此属性无效。
+该值决定 `QGraphicsScene` 的 BSP 树深度。树深度直接影响 `QGraphicsScene` 的性能和内存使用；内存使用随着树的深度呈指数增加。树深度优化后，`QGraphicsScene` 可以瞬间确定项目的局部性，即使场景中有成千上万或数百万的项目，也会大大提高渲染性能。
+默认值为 0，此时 Qt 将根据场景中项目的大小、位置和数量自动推测合理的默认深度。然而，如果这些参数频繁变化，`QGraphicsScene` 在内部重新调整深度时，可能会导致性能下降。通过设置此属性固定树深度可以避免潜在的性能下降。
+树的深度和场景矩形的大小决定场景分割的颗粒度。每个场景段的大小由以下算法决定：
+当每个段包含 0 到 10 个项目时，BSP 树大小为最优。
 
-**签名拆解：**
+**如何使用：** 调用 `bspTreeDepth()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`int`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSizeF segmentSize = sceneRect().size() / pow(2, depth - 1);
+```
 
 ### `bool focusOnTouch() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::focusOnTouch` 用于计算、查询或取得与“focus、On、Touch”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该特性决定物品在获得触控启动事件时是否获得焦点。
+通常的行为是只有在点击某个项目时才转移焦点。操作系统通常将触摸板上的轻触等同于鼠标点击，生成合成点击事件作为响应。不过，至少在macOS上你可以配置这种行为。
+默认情况下，`QGraphicsScene`在触控板等触控板上操作时也会转移焦点。如果操作系统配置为点击触控板时不生成合成鼠标点击，这就令人惊讶了。如果操作系统在点击触控板时会产生合成鼠标点击，启动触控手势时的焦点转移就没必要了。
+关闭 focusOnTouch 后，`QGraphicsScene` 的表现与 macOS 上正常。
+默认值为`true`，确保默认行为与5.12之前的Qt版本相同。设置为`false`以防止触摸事件触发焦点变化。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `focusOnTouch()` 读取当前值；它不会修改应用状态。
 
 ### `QFont font() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::font` 用于计算、查询或取得与“字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留场景的默认字体。
+该属性提供场景的字体。场景字体默认为 ，并解析所有来自 的条目 `QApplication::font`。
+如果场景的字体发生变化，无论是直接通过 setFont() 还是在应用程序字体变化时间接发生，`QGraphicsScene` 首先向自己发送一个 `FontChange` 事件，然后向场景中所有顶层控件发送`FontChange`事件。这些元素通过向场景解析自己的字体来响应，然后通知其子节点，子节点再次通知子节点，如此循环，直到所有控件元素都更新了字体。
+更改场景字体（无论是直接还是间接通过`QApplication::setFont()`）会自动安排整个场景的重新绘制。
 
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `font()` 读取当前值；它不会修改应用状态。
 
 ### `QBrush foregroundBrush() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::foregroundBrush` 用于计算、查询或取得与“foreground、Brush”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了场景的前景画笔。
+更改此属性，将场景前景设置为不同的颜色、渐变或纹理。
+前景是在物品之后（上方）绘制的。默认的前景画笔是`Qt::NoBrush`（即不绘制前景）。
+`QGraphicsScene::render()`调用`drawForeground()`来绘制场景前景。如果想更详细地控制前景绘制方式，可以在`QGraphicsScene`子类中重新实现`drawForeground()`函数。
 
-**签名拆解：**
+**如何使用：** 调用 `foregroundBrush()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QBrush`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ QGraphicsView view(&scene);
+ view.show();
+
+ // a white semi-transparent foreground
+ scene.setForegroundBrush(QColor(255, 255, 255, 127));
+
+ // a grid foreground
+ scene.setForegroundBrush(QBrush(Qt::lightGray, Qt::CrossPattern));
+```
 
 ### `QGraphicsScene::ItemIndexMethod itemIndexMethod() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::itemIndexMethod` 用于计算、查询或取得与“项目访问、索引、Method”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsScene::ItemIndexMethod`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了项目索引方法。
+`QGraphicsScene` 对场景应用索引算法，以加快`items()`和`itemAt()`等物品发现功能。索引在静态场景（即物品不移动）时最为高效。对于动态场景或包含大量动画元素的场景，索引簿记可能超过快速查找速度。
+对于常见情况，默认的索引方法`BspTreeIndex`正常工作。如果你的场景使用了很多动画且出现缓慢，可以通过调用`setItemIndexMethod(NoIndex)`来禁用索引。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsScene::ItemIndexMethod`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `itemIndexMethod()` 读取当前值；它不会修改应用状态。
 
 ### `qreal minimumRenderSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::minimumRenderSize` 用于计算、查询或取得与“最小值、渲染、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示了物品必须绘制的最小视图变换尺寸。
+当场景被渲染时，任何宽度或高度变换到目标视图后小于 minimumRenderSize() 的物品都不会被渲染。如果某个物品未被渲染且裁剪了其子对象，它们也不会被渲染。设置该值以加快在缩放视图下渲染多物体场景的渲染速度。
+默认值是0。如果未设置，或者设置为0或负值，所有项目都会被渲染。
+例如，设置该属性在场景由多个视图渲染时尤其有用，其中一个视图作为总览，始终显示所有物品。在拥有多物品的场景中，这种视图会使用较高的缩放因子，以便显示所有物品。由于缩放，较小的物体对最终渲染场景的贡献微乎其微。为了避免绘制这些元素并缩短渲染场景所需时间，你可以调用 setMinimumRenderSize() 并设置非负值。
+注意：由于太小未绘制的物品仍会通过`items()`和`itemAt()`等方法返回，并参与碰撞检测和交互。建议将 minimumRenderSize() 设置为小于或等于 1，以避免大型未渲染的可交互物品。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumRenderSize()` 读取当前值；它不会修改应用状态。
 
 ### `QPalette palette() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::palette` 用于计算、查询或取得与“palette”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPalette`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了场景的默认调色板。
+该属性提供场景调色板。场景调色板默认使用并解析所有元素，`QApplication::palette`。
+如果场景调色板发生变化，无论是直接通过 setPalette() 还是在应用调色板变更时间接发生，`QGraphicsScene` 首先向自己发送一个 `PaletteChange` 事件，然后向场景中所有顶层控件发送`PaletteChange`事件。这些控件通过向场景解析自己的调色板来响应，然后通知其子节点，子节点再通知子节点，如此循环，直到所有控件项目更新了调色板。
+通过`QApplication::setPalette()`直接或间接更改场景调色板，会自动安排整个场景的重新绘制。
 
-**签名拆解：**
-
-- 返回值：`QPalette`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `palette()` 读取当前值；它不会修改应用状态。
 
 ### `QRectF sceneRect() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::sceneRect` 用于计算、查询或取得与“scene、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示场景矩形;场景的边界矩形。
+场景矩形定义了场景的范围。它主要用于`QGraphicsView`确定视图默认可滚动区域，`QGraphicsScene`则用于管理物品索引。
+如果未设置，或者设置为空`QRectF`，sceneRect() 将返回自场景创建以来场景中所有物品中最大的边界矩形（即当场景中添加或移动物品时会增长但不会缩小的矩形）。
 
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sceneRect()` 读取当前值；它不会修改应用状态。
 
 ### `void setBackgroundBrush(const QBrush &brush)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBackgroundBrush`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留场景的背景画笔。
+将此属性设置为将场景背景更换为不同的颜色、渐变或纹理。默认的背景刷是`Qt::NoBrush`。背景是在物品之前（后方）绘制的。
+`QGraphicsScene::render()`调用`drawBackground()`来绘制场景背景。为了更详细地控制背景绘制方式，可以在`QGraphicsScene`子类中重新实现`drawBackground()`。
 
-**签名拆解：**
+**如何使用：** 调用 `setBackgroundBrush(...)` 修改 `backgroundBrush`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `brush`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ QGraphicsView view(&scene);
+ view.show();
+
+ // a blue background
+ scene.setBackgroundBrush(Qt::blue);
+
+ // a gradient background
+ QRadialGradient gradient(0, 0, 10);
+ gradient.setSpread(QGradient::RepeatSpread);
+ scene.setBackgroundBrush(gradient);
+```
 
 ### `void setBspTreeDepth(int depth)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBspTreeDepth`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+此属性保存 `QGraphicsScene` 的 BSP 索引树的深度。
+当使用 `NoIndex` 时，此属性无效。
+该值决定 `QGraphicsScene` 的 BSP 树深度。树深度直接影响 `QGraphicsScene` 的性能和内存使用；内存使用随着树的深度呈指数增加。树深度优化后，`QGraphicsScene` 可以瞬间确定项目的局部性，即使场景中有成千上万或数百万的项目，也会大大提高渲染性能。
+默认值为 0，此时 Qt 将根据场景中项目的大小、位置和数量自动推测合理的默认深度。然而，如果这些参数频繁变化，`QGraphicsScene` 在内部重新调整深度时，可能会导致性能下降。通过设置此属性固定树深度可以避免潜在的性能下降。
+树的深度和场景矩形的大小决定场景分割的颗粒度。每个场景段的大小由以下算法决定：
+当每个段包含 0 到 10 个项目时，BSP 树大小为最优。
 
-**签名拆解：**
+**如何使用：** 调用 `setBspTreeDepth(...)` 修改 `bspTreeDepth`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `depth`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSizeF segmentSize = sceneRect().size() / pow(2, depth - 1);
+```
 
 ### `void setFocusOnTouch(bool enabled)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFocusOnTouch`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该特性决定物品在获得触控启动事件时是否获得焦点。
+通常的行为是只有在点击某个项目时才转移焦点。操作系统通常将触摸板上的轻触等同于鼠标点击，生成合成点击事件作为响应。不过，至少在macOS上你可以配置这种行为。
+默认情况下，`QGraphicsScene`在触控板等触控板上操作时也会转移焦点。如果操作系统配置为点击触控板时不生成合成鼠标点击，这就令人惊讶了。如果操作系统在点击触控板时会产生合成鼠标点击，启动触控手势时的焦点转移就没必要了。
+关闭 focusOnTouch 后，`QGraphicsScene` 的表现与 macOS 上正常。
+默认值为`true`，确保默认行为与5.12之前的Qt版本相同。设置为`false`以防止触摸事件触发焦点变化。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFocusOnTouch(...)` 修改 `focusOnTouch`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFont(const QFont &font)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFont`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留场景的默认字体。
+该属性提供场景的字体。场景字体默认为 ，并解析所有来自 的条目 `QApplication::font`。
+如果场景的字体发生变化，无论是直接通过 setFont() 还是在应用程序字体变化时间接发生，`QGraphicsScene` 首先向自己发送一个 `FontChange` 事件，然后向场景中所有顶层控件发送`FontChange`事件。这些元素通过向场景解析自己的字体来响应，然后通知其子节点，子节点再次通知子节点，如此循环，直到所有控件元素都更新了字体。
+更改场景字体（无论是直接还是间接通过`QApplication::setFont()`）会自动安排整个场景的重新绘制。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFont(...)` 修改 `font`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setForegroundBrush(const QBrush &brush)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setForegroundBrush`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了场景的前景画笔。
+更改此属性，将场景前景设置为不同的颜色、渐变或纹理。
+前景是在物品之后（上方）绘制的。默认的前景画笔是`Qt::NoBrush`（即不绘制前景）。
+`QGraphicsScene::render()`调用`drawForeground()`来绘制场景前景。如果想更详细地控制前景绘制方式，可以在`QGraphicsScene`子类中重新实现`drawForeground()`函数。
 
-**签名拆解：**
+**如何使用：** 调用 `setForegroundBrush(...)` 修改 `foregroundBrush`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `brush`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QGraphicsScene scene;
+ QGraphicsView view(&scene);
+ view.show();
+
+ // a white semi-transparent foreground
+ scene.setForegroundBrush(QColor(255, 255, 255, 127));
+
+ // a grid foreground
+ scene.setForegroundBrush(QBrush(Qt::lightGray, Qt::CrossPattern));
+```
 
 ### `void setItemIndexMethod(QGraphicsScene::ItemIndexMethod method)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemIndexMethod`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了项目索引方法。
+`QGraphicsScene` 对场景应用索引算法，以加快`items()`和`itemAt()`等物品发现功能。索引在静态场景（即物品不移动）时最为高效。对于动态场景或包含大量动画元素的场景，索引簿记可能超过快速查找速度。
+对于常见情况，默认的索引方法`BspTreeIndex`正常工作。如果你的场景使用了很多动画且出现缓慢，可以通过调用`setItemIndexMethod(NoIndex)`来禁用索引。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `method`：类型为 `QGraphicsScene::ItemIndexMethod`。没有默认值，调用时必须提供。传入 `QGraphicsScene::ItemIndexMethod` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setItemIndexMethod(...)` 修改 `itemIndexMethod`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMinimumRenderSize(qreal minSize)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumRenderSize`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示了物品必须绘制的最小视图变换尺寸。
+当场景被渲染时，任何宽度或高度变换到目标视图后小于 minimumRenderSize() 的物品都不会被渲染。如果某个物品未被渲染且裁剪了其子对象，它们也不会被渲染。设置该值以加快在缩放视图下渲染多物体场景的渲染速度。
+默认值是0。如果未设置，或者设置为0或负值，所有项目都会被渲染。
+例如，设置该属性在场景由多个视图渲染时尤其有用，其中一个视图作为总览，始终显示所有物品。在拥有多物品的场景中，这种视图会使用较高的缩放因子，以便显示所有物品。由于缩放，较小的物体对最终渲染场景的贡献微乎其微。为了避免绘制这些元素并缩短渲染场景所需时间，你可以调用 setMinimumRenderSize() 并设置非负值。
+注意：由于太小未绘制的物品仍会通过`items()`和`itemAt()`等方法返回，并参与碰撞检测和交互。建议将 minimumRenderSize() 设置为小于或等于 1，以避免大型未渲染的可交互物品。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `minSize`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMinimumRenderSize(...)` 修改 `minimumRenderSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setPalette(const QPalette &palette)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPalette`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了场景的默认调色板。
+该属性提供场景调色板。场景调色板默认使用并解析所有元素，`QApplication::palette`。
+如果场景调色板发生变化，无论是直接通过 setPalette() 还是在应用调色板变更时间接发生，`QGraphicsScene` 首先向自己发送一个 `PaletteChange` 事件，然后向场景中所有顶层控件发送`PaletteChange`事件。这些控件通过向场景解析自己的调色板来响应，然后通知其子节点，子节点再通知子节点，如此循环，直到所有控件项目更新了调色板。
+通过`QApplication::setPalette()`直接或间接更改场景调色板，会自动安排整个场景的重新绘制。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `palette`：类型为 `const QPalette &`。没有默认值，调用时必须提供。传入 `const QPalette &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPalette(...)` 修改 `palette`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSceneRect(const QRectF &rect)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSceneRect`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示场景矩形;场景的边界矩形。
+场景矩形定义了场景的范围。它主要用于`QGraphicsView`确定视图默认可滚动区域，`QGraphicsScene`则用于管理物品索引。
+如果未设置，或者设置为空`QRectF`，sceneRect() 将返回自场景创建以来场景中所有物品中最大的边界矩形（即当场景中添加或移动物品时会增长但不会缩小的矩形）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSceneRect(...)` 修改 `sceneRect`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSceneRect(qreal x, qreal y, qreal w, qreal h)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSceneRect`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示场景矩形;场景的边界矩形。
+场景矩形定义了场景的范围。它主要用于`QGraphicsView`确定视图默认可滚动区域，`QGraphicsScene`则用于管理物品索引。
+如果未设置，或者设置为空`QRectF`，sceneRect() 将返回自场景创建以来场景中所有物品中最大的边界矩形（即当场景中添加或移动物品时会增长但不会缩小的矩形）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSceneRect(...)` 修改 `sceneRect`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setStickyFocus(bool enabled)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStickyFocus`。调用它会改变 `QGraphicsScene` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性适用于点击场景背景时是否清除焦点。
+在 stickyFocus 设置为 true 的 `QGraphicsScene` 中，当用户点击场景背景或不接受焦点的项目时，焦点保持不变。否则，焦点将被清除。
+默认情况下，该属性为 `false`。
+焦点会响应鼠标按下事件变化。可以在 `QGraphicsScene` 的子类中重新实现 `mousePressEvent()`，以根据用户点击位置切换此属性。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setStickyFocus(...)` 修改 `stickyFocus`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool stickyFocus() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsScene::stickyFocus` 用于计算、查询或取得与“sticky、Focus”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性适用于点击场景背景时是否清除焦点。
+在 stickyFocus 设置为 true 的 `QGraphicsScene` 中，当用户点击场景背景或不接受焦点的项目时，焦点保持不变。否则，焦点将被清除。
+默认情况下，该属性为 `false`。
+焦点会响应鼠标按下事件变化。可以在 `QGraphicsScene` 的子类中重新实现 `mousePressEvent()`，以根据用户点击位置切换此属性。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `stickyFocus()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

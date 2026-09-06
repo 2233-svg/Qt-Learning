@@ -72,150 +72,82 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QAbstractFileIconProvider::Optionflags QAbstractFileIconProvider::Options`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractFileIconProvider` 暴露的类型声明 `Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Optionflags QAbstractFileIconProvider::Options`。
-- 属性名：`QAbstractFileIconProvider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractFileIconProvider::DontUseCustomDirectoryIcons`：`0x00000001`;始终使用默认目录图标。部分平台允许用户设置不同的图标。自定义图标查找会在网络或可移动驱动器上造成显著性能影响。
+Options 类型是 QFlags 的 typedef<Option>。它存储 Option 值的 OR 组合。
 
 ### `QAbstractFileIconProvider::QAbstractFileIconProvider()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractFileIconProvider` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建文件图标提供者。
 
 ### `[virtual noexcept] QAbstractFileIconProvider::~QAbstractFileIconProvider()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractFileIconProvider` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会摧毁文件图标提供者。
 
 ### `[virtual] QIcon QAbstractFileIconProvider::icon(QAbstractFileIconProvider::IconType type) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractFileIconProvider::icon` 用于计算、查询或取得与“icon”相关的操作。调用时要先确认当前状态和 `type` 的有效范围；返回类型是 `QIcon`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIcon`。
-- 参数 `type`：类型为 `QAbstractFileIconProvider::IconType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`type`的图标集，使用当前图标主题。
 
 ### `[virtual] QIcon QAbstractFileIconProvider::icon(const QFileInfo &info) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractFileIconProvider::icon` 用于计算、查询或取得与“icon”相关的操作。调用时要先确认当前状态和 `info` 的有效范围；返回类型是 `QIcon`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIcon`。
-- 参数 `info`：类型为 `const QFileInfo &`。没有默认值，调用时必须提供。传入 `const QFileInfo &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`info`描述的文件图标，使用当前图标主题。
 
 ### `[virtual] QAbstractFileIconProvider::Options QAbstractFileIconProvider::options() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractFileIconProvider::options` 用于计算、查询或取得与“options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractFileIconProvider::Options`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractFileIconProvider::Options`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有影响图标提供者的选项。默认情况下，所有选项均被禁用。
 
 ### `[virtual] void QAbstractFileIconProvider::setOptions(QAbstractFileIconProvider::Options options)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptions`。调用它会改变 `QAbstractFileIconProvider` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QAbstractFileIconProvider::Options`。没有默认值，调用时必须提供。传入 `QAbstractFileIconProvider::Options` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+影响图标提供者的集合`options`。
 
 ### `[virtual] QString QAbstractFileIconProvider::type(const QFileInfo &info) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractFileIconProvider::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 `info` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `info`：类型为 `const QFileInfo &`。没有默认值，调用时必须提供。传入 `const QFileInfo &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`info`描述的文件类型。
 
 ### `enum IconType { Computer, Desktop, Trashcan, Network, Drive, …, File }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractFileIconProvider` 暴露的类型声明 `Icon、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractFileIconProvider::Computer`：`0`;用于整个计算设备的图标
+- `QAbstractFileIconProvider::Desktop`：`1`;用户特殊“桌面”目录的图标
+- `QAbstractFileIconProvider::Trashcan`：`2`;用户在桌面文件管理器中“垃圾桶”位置的图标
+- `QAbstractFileIconProvider::Network`：`3`;“网络服务器”图标位于桌面文件管理器中，网络内的工作组
+- `QAbstractFileIconProvider::Drive`：`4`;用于磁盘驱动器的图标
+- `QAbstractFileIconProvider::Folder`：`5`;用于表示本地文件系统目录的标准文件夹图标
+- `QAbstractFileIconProvider::File`：`6`;用于通用文本文件类型的图标
 
 ### `enum Option { DontUseCustomDirectoryIcons }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractFileIconProvider` 暴露的类型声明 `Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractFileIconProvider::DontUseCustomDirectoryIcons`：`0x00000001`;始终使用默认目录图标。部分平台允许用户设置不同的图标。自定义图标查找会在网络或可移动驱动器上造成显著性能影响。
+Options 类型是 QFlags 的 typedef<Option>。它存储 Option 值的 OR 组合。
 
 ### `flags Options`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractFileIconProvider` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractFileIconProvider::DontUseCustomDirectoryIcons`：`0x00000001`;始终使用默认目录图标。部分平台允许用户设置不同的图标。自定义图标查找会在网络或可移动驱动器上造成显著性能影响。
+Options 类型是 QFlags 的 typedef<Option>。它存储 Option 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

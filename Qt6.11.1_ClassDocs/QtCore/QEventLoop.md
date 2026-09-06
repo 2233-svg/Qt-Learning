@@ -81,192 +81,129 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QEventLoop::ProcessEventsFlagflags QEventLoop::ProcessEventsFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEventLoop` 暴露的类型声明 `处理、Events、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ProcessEventsFlagflags QEventLoop::ProcessEventsFlags`。
-- 属性名：`QEventLoop`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举控制`processEvents()`函数处理的事件类型。
+- `QEventLoop::AllEvents`：`0x00`;所有事件。注意`DeferredDelete`事件会被特别处理。详情请参见 `QObject::deleteLater()`。
+- `QEventLoop::ExcludeUserInputEvents`：`0x01`;不要处理用户输入事件，如ButtonPress和KeyPress。注意，这些事件不会被丢弃;下次调用`processEvents()`时，事件会在没有ExcludeUserInputEvents标志的情况下被传递。
+- `QEventLoop::ExcludeSocketNotifiers`：`0x02`;不要处理套接字通知事件。注意，这些事件不会被丢弃;下次调用`processEvents()`时，它们会被传递，而没有ExcludeSocketNotifiers标志。
+- `QEventLoop::WaitForMoreEvents`：`0x04`;如果没有待处理事件，则等待事件。
+ProcessEventsFlags 类型是 QFlags 的 typedef<ProcessEventsFlag>。它存储 ProcessEventsFlag 值的 OR 组合。
 
 ### `[explicit] QEventLoop::QEventLoop(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEventLoop` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个事件循环对象，`parent`。
 
 ### `[virtual noexcept] QEventLoop::~QEventLoop()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEventLoop` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁事件循环对象。
 
 ### `[override virtual] bool QEventLoop::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEventLoop::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
+该虚拟函数接收对象事件，如果事件`e`被识别并处理，应返回真。
+event() 函数可以重新实现，以自定义对象的行为。
+确保你调用所有未处理的事件的父事件类实现。
 
 ### `int QEventLoop::exec(QEventLoop::ProcessEventsFlags flags = AllEvents)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEventLoop::exec` 用于计算、查询或取得与“执行”相关的操作。调用时要先确认当前状态和 `flags` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `flags`：类型为 `QEventLoop::ProcessEventsFlags`。默认值为 `AllEvents`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+进入主事件循环，等待调用`exit()`。返回传递给`exit()`的值。
+如果指定了`flags`，只处理`flags`允许的事件类型。
+启动事件处理需要调用该函数。主事件循环接收来自窗口系统的事件，并将其分发给应用控件。
+一般来说，调用exec()之前不能进行任何用户交互。作为特殊情况，像`QMessageBox`这样的模态小部件可以在调用exec()之前使用，因为模态小部件使用自身的本地事件循环。
+为了让你的应用程序执行空闲处理（即在没有待处理事件时执行特殊函数），可以使用超时为0ns的`QChronoTimer`。更复杂的空闲处理方案可以通过`processEvents()`实现。
 
 ### `[slot] void QEventLoop::exit(int returnCode = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `exit`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `returnCode`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+告诉事件循环退出并返回代码。
+调用该函数后，事件循环从调用返回`exec()`。`exec()`函数返回`returnCode`。
+按照惯例，`returnCode`为0表示成功，任何非零值表示错误。
+注意，与同名的 C 库函数不同，该函数会返回调用者——停止的是事件处理。
 
 ### `bool QEventLoop::isRunning() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRunning`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果事件循环正在运行，则返回`true`;否则返回false。事件循环从调用`exec()`到调用`exit()`之间被视为运行。
 
 ### `bool QEventLoop::processEvents(QEventLoop::ProcessEventsFlags flags = AllEvents)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEventLoop::processEvents` 用于计算、查询或取得与“处理、Events”相关的操作。调用时要先确认当前状态和 `flags` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `flags`：类型为 `QEventLoop::ProcessEventsFlags`。默认值为 `AllEvents`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理一些与`flags`匹配的待处理事件。如果处理了待处理事件，返回`true`;否则返回`false`。
+当你有一个运行时间较长的操作，并且希望在不允许用户输入的情况下显示其进度时，这个函数尤其有用;即通过使用`ExcludeUserInputEvents`标志。
+这个函数只是`QAbstractEventDispatcher::processEvents()`的包装器。详情请参见该函数的文档。
 
 ### `[since 6.7] void QEventLoop::processEvents(QEventLoop::ProcessEventsFlags flags, QDeadlineTimer deadline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEventLoop::processEvents` 用于执行与“处理、Events”相关的操作。调用时要先确认当前状态和 `flags`、`deadline` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QEventLoop::ProcessEventsFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `deadline`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理与`flags`匹配的待处理事件，直到`deadline`过期或无更多事件可处理，以先发生者为准。该功能特别适用于运行时间较长且希望在不允许用户输入的情况下显示其进度，即使用`ExcludeUserInputEvents`标志。
+注释：
+- 该函数不连续处理事件;在处理完所有可用事件后返回。
+- 指定`WaitForMoreEvents`标志无意义，将被忽略。
 
 ### `void QEventLoop::processEvents(QEventLoop::ProcessEventsFlags flags, int maxTime)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEventLoop::processEvents` 用于执行与“处理、Events”相关的操作。调用时要先确认当前状态和 `flags`、`maxTime` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+处理与`flags`匹配的待处理事件，最长为`maxTime`毫秒，或直到无更多事件可处理，以较短者为准。
+相当于调用：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QEventLoop::ProcessEventsFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `maxTime`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ processEvents(flags, QDeadlineTimer(maxTime));
+```
 
 ### `[slot] void QEventLoop::quit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `quit`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+告诉事件循环正常退出。
+与出口（0）同理。
 
 ### `void QEventLoop::wakeUp()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEventLoop::wakeUp` 用于执行与“wake、Up”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+唤醒事件循环。
 
 ### `enum ProcessEventsFlag { AllEvents, ExcludeUserInputEvents, ExcludeSocketNotifiers, WaitForMoreEvents }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QEventLoop` 暴露的类型声明 `处理、Events、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举控制`processEvents()`函数处理的事件类型。
+- `QEventLoop::AllEvents`：`0x00`;所有事件。注意`DeferredDelete`事件会被特别处理。详情请参见 `QObject::deleteLater()`。
+- `QEventLoop::ExcludeUserInputEvents`：`0x01`;不要处理用户输入事件，如ButtonPress和KeyPress。注意，这些事件不会被丢弃;下次调用`processEvents()`时，事件会在没有ExcludeUserInputEvents标志的情况下被传递。
+- `QEventLoop::ExcludeSocketNotifiers`：`0x02`;不要处理套接字通知事件。注意，这些事件不会被丢弃;下次调用`processEvents()`时，它们会被传递，而没有ExcludeSocketNotifiers标志。
+- `QEventLoop::WaitForMoreEvents`：`0x04`;如果没有待处理事件，则等待事件。
+ProcessEventsFlags 类型是 QFlags 的 typedef<ProcessEventsFlag>。它存储 ProcessEventsFlag 值的 OR 组合。
 
 ### `flags ProcessEventsFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QEventLoop` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举控制`processEvents()`函数处理的事件类型。
+- `QEventLoop::AllEvents`：`0x00`;所有事件。注意`DeferredDelete`事件会被特别处理。详情请参见 `QObject::deleteLater()`。
+- `QEventLoop::ExcludeUserInputEvents`：`0x01`;不要处理用户输入事件，如ButtonPress和KeyPress。注意，这些事件不会被丢弃;下次调用`processEvents()`时，事件会在没有ExcludeUserInputEvents标志的情况下被传递。
+- `QEventLoop::ExcludeSocketNotifiers`：`0x02`;不要处理套接字通知事件。注意，这些事件不会被丢弃;下次调用`processEvents()`时，它们会被传递，而没有ExcludeSocketNotifiers标志。
+- `QEventLoop::WaitForMoreEvents`：`0x04`;如果没有待处理事件，则等待事件。
+ProcessEventsFlags 类型是 QFlags 的 typedef<ProcessEventsFlag>。它存储 ProcessEventsFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

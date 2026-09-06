@@ -122,806 +122,515 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 61 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QTextFormat::FormatType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 暴露的类型声明 `格式化、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FormatType`。
-- 属性名：`QTextFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QTextFormat`对象正在格式化的文本项。
+- `QTextFormat::InvalidFormat`：`-1`;由默认构造函数创建的无效格式
+- `QTextFormat::BlockFormat`：`1`;对象格式化文本块
+- `QTextFormat::CharFormat`：`2`;该对象格式化单个字符
+- `QTextFormat::ListFormat`：`3`;对象格式化列表
+- `QTextFormat::FrameFormat`：`5`;对象格式化帧
+- `QTextFormat::UserFormat`：`100`
 
 ### `enum QTextFormat::ObjectTypes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 暴露的类型声明 `Object、Types`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ObjectTypes`。
-- 属性名：`QTextFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了该格式所关联的`QTextObject`类型。
+- `QTextFormat::NoObject`：`0`
+- `QTextFormat::ImageObject`：`1`
+- `QTextFormat::TableObject`：`2`
+- `QTextFormat::TableCellObject`：`3`
+- `QTextFormat::UserObject`：`0x1000`;第一个可用于特定应用目的的对象。
 
 ### `enum QTextFormat::PageBreakFlagflags QTextFormat::PageBreakFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 暴露的类型声明 `Page、Break、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PageBreakFlagflags QTextFormat::PageBreakFlags`。
-- 属性名：`QTextFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了打印时分页的执行方式。它映射到对应的 css 属性。
+- `QTextFormat::PageBreak_Auto`：`0`;分页点根据当前页面的可用空间自动确定
+- `QTextFormat::PageBreak_AlwaysBefore`：`0x001`;页面总是在段落/表格之前被拆开
+- `QTextFormat::PageBreak_AlwaysAfter`：`0x010`;总是在段落/表格之后开始新页面
+PageBreakFlags 类型是 QFlags 的 typedef<PageBreakFlag>。它存储 PageBreakFlag 值的 OR 组合。
 
 ### `enum QTextFormat::Property`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 暴露的类型声明 `Property`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Property`。
-- 属性名：`QTextFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了格式可以具备的不同属性。
+- `QTextFormat::ObjectIndex`：`0x0`;格式化对象的索引。参见`objectIndex()`。
+段落与字符属性。
+- `QTextFormat::CssFloat`：`0x0800`;帧相对于周围文本的位置
+- `QTextFormat::LayoutDirection`：`0x0801`;文档中文本的布局方向（`Qt::LayoutDirection`）。
+- `QTextFormat::OutlinePen`：`0x810`
+- `QTextFormat::ForegroundBrush`：`0x821`
+- `QTextFormat::BackgroundBrush`：`0x820`
+- `QTextFormat::BackgroundImageUrl`：`0x823`
+段落属性。
+- `QTextFormat::BlockAlignment`：`0x1010`
+- `QTextFormat::BlockTopMargin`：`0x1030`
+- `QTextFormat::BlockBottomMargin`：`0x1031`
+- `QTextFormat::BlockLeftMargin`：`0x1032`
+- `QTextFormat::BlockRightMargin`：`0x1033`
+- `QTextFormat::TextIndent`：`0x1034`
+- `QTextFormat::TabPositions`：`0x1035`;指定制表表位置。制表表位置是`QTextOption::Tab`的结构体，存储在`QList`中（内部，`QList`<`QVariant`>中）。
+- `QTextFormat::BlockIndent`：`0x1040`
+- `QTextFormat::LineHeight`：`0x1048`
+- `QTextFormat::LineHeightType`：`0x1049`
+- `QTextFormat::BlockNonBreakableLines`：`0x1050`
+- `QTextFormat::BlockTrailingHorizontalRulerWidth`：`0x1060`;水平尺元素的宽度。
+- `QTextFormat::HeadingLevel`：`0x1070`;标题的层级，例如1对应HTML的H1标签;否则为0。该枚举值已在Qt 5.12中添加。
+- `QTextFormat::BlockCodeFence`：`0x1091`;在Markdown代码块周围“围栏”中使用的字符。如果代码块是缩进而非围栏，则该块不应具有此属性。该枚举值已在Qt 5.14中添加。
+- `QTextFormat::BlockQuoteLevel`：`0x1080`;该块的嵌套引用深度为1，表示该块是顶层块引号。非块引号块不应具备此属性。该枚举值已在第5.14卷加入。
+- `QTextFormat::BlockCodeLanguage`：`0x1090`;预格式化或代码块中的编程语言。不包含代码的块不应具备此属性。该枚举值在Qt 5.14中加入。
+- `QTextFormat::BlockMarker`：`0x10A0`;与方块并列展示的装饰类型。该枚举值已在第5.14卷加入。
+特征属性。
+- `QTextFormat::FontFamily`：`0x2000`;e{此属性已被弃用。}请使用 QTextFormat：：FontFamilies。
+- `QTextFormat::FontFamilies`：`0x1FE7`
+- `QTextFormat::FontStyleName`：`0x1FE8`
+- `QTextFormat::FontPointSize`：`0x2001`
+- `QTextFormat::FontPixelSize`：`0x2009`
+- `QTextFormat::FontSizeAdjustment`：`0x2002`;指定使用`FontPointSize`或`FontPixelSize`对基础字体大小添加整数调整。
+- `QTextFormat::FontFixedPitch`：`0x2008`
+- `QTextFormat::FontWeight`：`0x2003`
+- `QTextFormat::FontItalic`：`0x2004`
+- `QTextFormat::FontUnderline`：`0x2005`;该属性已被弃用。请使用 QTextFormat：：TextUnderlineStyle。
+- `QTextFormat::FontOverline`：`0x2006`
+- `QTextFormat::FontStrikeOut`：`0x2007`
+- `QTextFormat::FontCapitalization`：`FirstFontProperty`;指定将应用于文本的大小写类型。
+- `QTextFormat::FontLetterSpacingType`：`0x1FE9`;指定 FontLetterSpacing 属性的含义。默认为 `QFont::PercentageSpacing`。
+- `QTextFormat::FontLetterSpacing`：`0x1FE1`;更改字体中单个字母之间的默认间距。值以百分比或绝对值表示，具体取决于 FontLetterSpacingType。默认值为 100%。
+- `QTextFormat::FontWordSpacing`：`0x1FE2`;改变单词间的默认间距。正值使单词间距增加相应像素;负值减少字距。
+- `QTextFormat::FontStretch`：`0x1FEA`;对应`QFont::Stretch`属性
+- `QTextFormat::FontStyleHint`：`0x1FE3`;对应于`QFont::StyleHint`属性
+- `QTextFormat::FontStyleStrategy`：`0x1FE4`;对应`QFont::StyleStrategy`属性
+- `QTextFormat::FontKerning`：`0x1FE5`;指定字体是否启用了字距调整。
+- `QTextFormat::FontHintingPreference`：`0x1FE6`;根据`QFont::HintingPreference`枚举的值控制提示的使用。
+- `QTextFormat::FontFeatures`：`0x2010`;[自6.11起]为排版特征分配整数。更多信息请参见 `QFont::setFeature()`。
+- `QTextFormat::FontVariableAxes`：`0x2011`;[自6.11起]将浮点数分配给可变字体中的可变轴。更多信息请参见 `QFont::setVariableAxis()`。
+- `QTextFormat::TextUnderlineColor`：`0x2020`;指定绘制下划线、上线和划线的颜色。
+- `QTextFormat::TextVerticalAlignment`：`0x2021`;根据枚举`QTextCharFormat::VerticalAlignment`值指定文本垂直对齐类型。
+- `QTextFormat::TextOutline`：`0x2022`;指定用于绘制文本轮廓的`QPen`。
+- `QTextFormat::TextUnderlineStyle`：`0x2023`;根据`QTextCharFormat::UnderlineStyle`枚举的值指定文本下划线样式。
+- `QTextFormat::TextToolTip`：`0x2024`;指定文本片段时要显示的（可选）工具提示。
+- `QTextFormat::TextSuperScriptBaseline`：`0x2025`;指定上标文本的基准（高度百分比）。
+- `QTextFormat::TextSubScriptBaseline`：`0x2026`;指定下标文本的基线（以高度百分比计）。
+- `QTextFormat::TextBaselineOffset`：`0x2027`;指定文本的基线（以高度百分比计）。正值则相应地向上移动;负值则向下移动。
+- `QTextFormat::IsAnchor`：`0x2030`
+- `QTextFormat::AnchorHref`：`0x2031`
+- `QTextFormat::AnchorName`：`0x2032`
+- `QTextFormat::ObjectType`：`0x2f00`
+列表属性。
+- `QTextFormat::ListStyle`：`0x3000`;指定列表中项的样式，由`QTextListFormat::Style`枚举的值描述。
+- `QTextFormat::ListIndent`：`0x3001`;指定列表所使用的缩进量。
+- `QTextFormat::ListNumberPrefix`：`0x3002`;定义数字列表中条目编号前的文本。
+- `QTextFormat::ListNumberSuffix`：`0x3003`;定义数字列表中附加在条目编号后的文本。
+- `QTextFormat::ListStart (since Qt 6.6)`：`0x3004`;定义列表的第一个值。
+桌面与框架属性。
+- `QTextFormat::FrameBorder`：`0x4000`
+- `QTextFormat::FrameBorderBrush`：`0x4009`
+- `QTextFormat::FrameBorderStyle`：`0x4010`;参见枚举`BorderStyle`。
+- `QTextFormat::FrameBottomMargin`：`0x4006`
+- `QTextFormat::FrameHeight`：`0x4004`
+- `QTextFormat::FrameLeftMargin`：`0x4007`
+- `QTextFormat::FrameMargin`：`0x4001`
+- `QTextFormat::FramePadding`：`0x4002`
+- `QTextFormat::FrameRightMargin`：`0x4008`
+- `QTextFormat::FrameTopMargin`：`0x4005`
+- `QTextFormat::FrameWidth`：`0x4003`
+- `QTextFormat::TableCellSpacing`：`0x4102`
+- `QTextFormat::TableCellPadding`：`0x4103`
+- `QTextFormat::TableColumns`：`0x4100`
+- `QTextFormat::TableColumnWidthConstraints`：`0x4101`
+- `QTextFormat::TableHeaderRowCount`：`0x4104`
+- `QTextFormat::TableBorderCollapse`：`0x4105`;指定`QTextTableFormat::borderCollapse`属性。
+表单元特性。
+- `QTextFormat::TableCellRowSpan`：`0x4810`
+- `QTextFormat::TableCellColumnSpan`：`0x4811`
+- `QTextFormat::TableCellLeftPadding`：`0x4814`
+- `QTextFormat::TableCellRightPadding`：`0x4815`
+- `QTextFormat::TableCellTopPadding`：`0x4812`
+- `QTextFormat::TableCellBottomPadding`：`0x4813`
+表单元属性，适用于启用`QTextTableFormat::borderCollapse`。
+- `QTextFormat::TableCellTopBorder`：`0x4816`
+- `QTextFormat::TableCellBottomBorder`：`0x4817`
+- `QTextFormat::TableCellLeftBorder`：`0x4818`
+- `QTextFormat::TableCellRightBorder`：`0x4819`
+- `QTextFormat::TableCellTopBorderStyle`：`0x481a`
+- `QTextFormat::TableCellBottomBorderStyle`：`0x481b`
+- `QTextFormat::TableCellLeftBorderStyle`：`0x481c`
+- `QTextFormat::TableCellRightBorderStyle`：`0x481d`
+- `QTextFormat::TableCellTopBorderBrush`：`0x481e`
+- `QTextFormat::TableCellBottomBorderBrush`：`0x481f`
+- `QTextFormat::TableCellLeftBorderBrush`：`0x4820`
+- `QTextFormat::TableCellRightBorderBrush`：`0x4821`
+图像属性。
+- `QTextFormat::ImageName`：`0x5000`;图片的文件名或来源。
+- `QTextFormat::ImageTitle`：`0x5001`;HTML图片标签的标题属性，或Markdown图片链接中URL后面的引号字符串。该枚举值已在Qt 5.14中添加。
+- `QTextFormat::ImageAltText`：`0x5002`;HTML图片标签的alt属性，或Markdown图片链接中的图片描述。该枚举值已在Qt 5.14中添加。
+- `QTextFormat::ImageWidth`：`0x5010`
+- `QTextFormat::ImageHeight`：`0x5011`
+- `QTextFormat::ImageQuality`：`0x5014`
+- `QTextFormat::ImageMaxWidth`：`0x5015`;这个枚举值是在第6.8季度添加的。
+选择属性。
+- `QTextFormat::FullWidthSelection`：`0x06000`;当设置为选区的 characterFormat 时，文本的全宽度将被选中。
+分页特性。
+- `QTextFormat::PageBreakPolicy`：`0x7000`;规定页面如何被拆分。参见`PageBreakFlag`枚举。
+- `QTextFormat::UserProperty`：`0x100000`
 
 ### `QTextFormat::QTextFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个带有`InvalidFormat`的新文本格式。
 
 ### `[explicit] QTextFormat::QTextFormat(int type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建给定`type`的新文本格式。
 
 ### `QTextFormat::QTextFormat(const QTextFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建具有与`other`文本格式相同属性的新文本格式。
 
 ### `[noexcept] QTextFormat::~QTextFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了这种文本格式。
 
 ### `QBrush QTextFormat::background() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::background` 用于计算、查询或取得与“background”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于绘制文档背景的画笔。
 
 ### `bool QTextFormat::boolProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::boolProperty` 用于计算、查询或取得与“bool、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`propertyId`指定属性的值。如果属性不是QTextFormat：：Bool类型，则返回false。
 
 ### `QBrush QTextFormat::brushProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::brushProperty` 用于计算、查询或取得与“brush、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`propertyId`给出的属性值;如果属性不是`QMetaType::QBrush`类型，则返回`Qt::NoBrush`。
 
 ### `void QTextFormat::clearBackground()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::clearBackground` 用于执行与“清空、Background”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除用于绘制文档背景的画刷。将使用默认画刷。
 
 ### `void QTextFormat::clearForeground()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::clearForeground` 用于执行与“清空、Foreground”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除用于绘制文档前景的画刷。将使用默认画刷。
 
 ### `void QTextFormat::clearProperty(int propertyId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::clearProperty` 用于执行与“清空、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清算由`propertyId`给定的属性价值。
 
 ### `QColor QTextFormat::colorProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::colorProperty` 用于计算、查询或取得与“color、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`propertyId`给定的属性值;如果该属性不是`QMetaType::QColor`类型，则返回无效颜色。
 
 ### `qreal QTextFormat::doubleProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::doubleProperty` 用于计算、查询或取得与“double、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`propertyId`指定属性的值。如果属性不是类型`QMetaType::Double`或`QMetaType::Float`类型，则返回0。
 
 ### `QBrush QTextFormat::foreground() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::foreground` 用于计算、查询或取得与“foreground”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于渲染前景细节的画笔，如文本、框架轮廓和表格边框。
 
 ### `bool QTextFormat::hasProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasProperty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果文本格式具有与给定`propertyId`的属性，则返回`true`;否则返回`false`。
 
 ### `int QTextFormat::intProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::intProperty` 用于计算、查询或取得与“int、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`propertyId`指定属性的值。如果属性不是QTextFormat：：Integer类型，则返回0。
 
 ### `bool QTextFormat::isBlockFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBlockFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是 `BlockFormat`，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isCharFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCharFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是 `CharFormat`，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果格式不存储任何属性，则返回 true;否则返回 false。
 
 ### `bool QTextFormat::isFrameFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFrameFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是 `FrameFormat`，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isImageFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isImageFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是图像格式，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isListFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isListFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是 `ListFormat`，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isTableCellFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTableCellFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是 `TableCellFormat`，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isTableFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTableFormat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式是 `TableFormat`，则返回 `true`；否则返回 `false`。
 
 ### `bool QTextFormat::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果格式有效（即不`InvalidFormat`），返回`true`;否则返回`false`。
 
 ### `Qt::LayoutDirection QTextFormat::layoutDirection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::layoutDirection` 用于计算、查询或取得与“layout、Direction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::LayoutDirection`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::LayoutDirection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档的布局方向。
 
 ### `QTextLength QTextFormat::lengthProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::lengthProperty` 用于计算、查询或取得与“length、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QTextLength`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextLength`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`propertyId`给出的属性值。
 
 ### `QList<QTextLength> QTextFormat::lengthVectorProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::lengthVectorProperty` 用于计算、查询或取得与“length、Vector、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QList<QTextLength>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QTextLength>`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由 `propertyId` 给定的属性值。如果该属性不是 QTextFormat：：LengthVector 类型，则返回一个空列表。
 
 ### `void QTextFormat::merge(const QTextFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::merge` 用于执行与“merge”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`格式与此格式合并;若存在冲突，则优先使用`other`格式。
 
 ### `int QTextFormat::objectIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::objectIndex` 用于计算、查询或取得与“object、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回格式对象的索引，若格式对象无效则返回 -1。
 
 ### `int QTextFormat::objectType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::objectType` 用于计算、查询或取得与“object、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本格式的对象类型。
 
 ### `QPen QTextFormat::penProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::penProperty` 用于计算、查询或取得与“pen、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QPen`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPen`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`propertyId`给出的属性值;如果属性不是`QMetaType::QPen`类型，则返回`Qt::NoPen`。
 
 ### `QMap<int, QVariant> QTextFormat::properties() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::properties` 用于计算、查询或取得与“properties”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMap<int, QVariant>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMap<int, QVariant>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含该文本格式所有属性的映射。
 
 ### `QVariant QTextFormat::property(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::property` 用于计算、查询或取得与“property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`propertyId`所指定的属性。
 
 ### `int QTextFormat::propertyCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::propertyCount` 用于计算、查询或取得与“property、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回格式中存储的属性数量。
 
 ### `void QTextFormat::setBackground(const QBrush &brush)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBackground`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `brush`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用来绘制文档背景的画笔，`brush`指定。
 
 ### `void QTextFormat::setForeground(const QBrush &brush)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setForeground`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `brush`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将前景画笔设置为指定的`brush`。前景画笔主要用于渲染文本。
 
 ### `void QTextFormat::setLayoutDirection(Qt::LayoutDirection direction)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLayoutDirection`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `direction`：类型为 `Qt::LayoutDirection`。没有默认值，调用时必须提供。方向枚举，决定排列、遍历或坐标增长方向；要结合该类定义的枚举值判断实际方向。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文档的布局方向设置为指定的`direction`。
 
 ### `void QTextFormat::setObjectIndex(int index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setObjectIndex`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置格式对象的对象`index`。
 
 ### `void QTextFormat::setObjectType(int type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setObjectType`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本格式的对象类型设置为`type`。
 
 ### `void QTextFormat::setProperty(int propertyId, const QList<QTextLength> &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProperty`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QList<QTextLength> &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`propertyId`所给出属性的值设为`value`。
 
 ### `void QTextFormat::setProperty(int propertyId, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProperty`。调用它会改变 `QTextFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`propertyId`指定的属性设置为给定的`value`。
 
 ### `QString QTextFormat::stringProperty(int propertyId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::stringProperty` 用于计算、查询或取得与“字符串、Property”相关的操作。调用时要先确认当前状态和 `propertyId` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `propertyId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`propertyId`给出的属性值;如果属性不是`QMetaType::QString`类型，则返回空字符串。
 
 ### `void QTextFormat::swap(QTextFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QTextFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本格式替换为`other`。此操作非常快速且从未失败。
 
 ### `QTextBlockFormat QTextFormat::toBlockFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toBlockFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextBlockFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为块格式。
 
 ### `QTextCharFormat QTextFormat::toCharFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toCharFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextCharFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为字符格式。
 
 ### `QTextFrameFormat QTextFormat::toFrameFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toFrameFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextFrameFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为帧格式。
 
 ### `QTextImageFormat QTextFormat::toImageFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toImageFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextImageFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为图像格式。
 
 ### `QTextListFormat QTextFormat::toListFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toListFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextListFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为列表格式。
 
 ### `QTextTableCellFormat QTextFormat::toTableCellFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toTableCellFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextTableCellFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为表单元格格式。
 
 ### `QTextTableFormat QTextFormat::toTableFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toTableFormat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextTableFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式为表格格式。
 
 ### `int QTextFormat::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextFormat::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回此格式的类型。
 
 ### `QTextFormat::operator QVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本格式为`QVariant`。
 
 ### `bool QTextFormat::operator!=(const QTextFormat &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式与 `other` 文本格式不同，则返回 `true`。
 
 ### `QTextFormat &QTextFormat::operator=(const QTextFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTextFormat &`。
-- 参数 `other`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`文本格式分配给该文本格式，并返回该文本格式的引用。
 
 ### `bool QTextFormat::operator==(const QTextFormat &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此文本格式与 `other` 文本格式相同，则返回 `true`。
 
 ### `enum PageBreakFlag { PageBreak_Auto, PageBreak_AlwaysBefore, PageBreak_AlwaysAfter }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 暴露的类型声明 `Page、Break、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了打印时分页的执行方式。它映射到对应的 css 属性。
+- `QTextFormat::PageBreak_Auto`：`0`;分页点根据当前页面的可用空间自动确定
+- `QTextFormat::PageBreak_AlwaysBefore`：`0x001`;页面总是在段落/表格之前被拆开
+- `QTextFormat::PageBreak_AlwaysAfter`：`0x010`;总是在段落/表格之后开始新页面
+PageBreakFlags 类型是 QFlags 的 typedef<PageBreakFlag>。它存储 PageBreakFlag 值的 OR 组合。
 
 ### `flags PageBreakFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextFormat` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了打印时分页的执行方式。它映射到对应的 css 属性。
+- `QTextFormat::PageBreak_Auto`：`0`;分页点根据当前页面的可用空间自动确定
+- `QTextFormat::PageBreak_AlwaysBefore`：`0x001`;页面总是在段落/表格之前被拆开
+- `QTextFormat::PageBreak_AlwaysAfter`：`0x010`;总是在段落/表格之后开始新页面
+PageBreakFlags 类型是 QFlags 的 typedef<PageBreakFlag>。它存储 PageBreakFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

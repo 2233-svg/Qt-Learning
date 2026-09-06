@@ -119,758 +119,368 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 57 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QJSManagedValue::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QJSManagedValue`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举代表了 ECMA-262 规定的 JavaScript 原生类型。
+- `QJSManagedValue::Undefined`：`0`;`undefined`类型
+- `QJSManagedValue::Boolean`：`1`;`boolean`型
+- `QJSManagedValue::Number`：`2`;`number`类型
+- `QJSManagedValue::String`：`3`;`string`类型
+- `QJSManagedValue::Object`：`4`;`object`类型
+- `QJSManagedValue::Symbol`：`5`;`symbol`类型
+- `QJSManagedValue::Function`：`6`;`function`类型
+注意，`null`值不是自身的类型，而是一种特殊类型的对象。你可以用`isNull()`方法查询`QJSManagedValue`来获取该条件。此外，JavaScript没有整数类型，但它知道对数字的特殊处理，以准备纯整数操作。你可以查询`QJSManagedValue`，看看它是否包含这种处理的结果，方法是用`isInteger()`方法。
 
 ### `[constexpr noexcept] QJSManagedValue::QJSManagedValue()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QJSManagedValue，表示 JavaScript `undefined` 值。这是唯一不存储在 JavaScript 堆中的值。调用默认构造的 QJSManagedValue `engine()` 会返回 nullptr。
 
 ### `QJSManagedValue::QJSManagedValue(QJSValue value, QJSEngine *engine)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `QJSValue`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `engine`：类型为 `QJSEngine *`。没有默认值，调用时必须提供。传入 `QJSEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用`engine`堆从`value`创建QJSManagedValue。如果`value`本身被管理且其所属引擎未`engine`，结果为`undefined`值，并生成警告。
 
 ### `QJSManagedValue::QJSManagedValue(const QJSPrimitiveValue &value, QJSEngine *engine)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `engine`：类型为 `QJSEngine *`。没有默认值，调用时必须提供。传入 `QJSEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用`engine`堆从`value`生成QJSManagedValue。
 
 ### `QJSManagedValue::QJSManagedValue(const QString &string, QJSEngine *engine)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `string`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `engine`：类型为 `QJSEngine *`。没有默认值，调用时必须提供。传入 `QJSEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用`engine`堆从`string`创建QJSManagedValue。
 
 ### `QJSManagedValue::QJSManagedValue(const QVariant &variant, QJSEngine *engine)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `variant`：类型为 `const QVariant &`。没有默认值，调用时必须提供。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `engine`：类型为 `QJSEngine *`。没有默认值，调用时必须提供。传入 `QJSEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用`engine`堆从`variant`创建QJSManagedValue。
 
 ### `QJSManagedValue::QJSManagedValue(QJSManagedValue &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QJSManagedValue &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move从`other`构造一个QJSManagedValue。这使得`other`处于默认构造状态，表示未定义，不属于任何引擎。
 
 ### `[noexcept] QJSManagedValue::~QJSManagedValue()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉`QJSManagedValue`。
+注意：这会释放它在 JavaScript 堆上的内存槽。你不得销毁与该 `QJSEngine` 所在线程不同的线程`QJSManagedValue`。
 
 ### `QJSValue QJSManagedValue::call(const QJSValueList &arguments = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::call` 用于计算、查询或取得与“call”相关的操作。调用时要先确认当前状态和 `arguments` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `arguments`：类型为 `const QJSValueList &`。默认值为 `{}`。传入 `const QJSValueList &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QJSManagedValue`代表 JavaScript FunctionObject，则用给定的`arguments`调用，返回结果。否则返回 JavaScript 的 `undefined` 值。
+`arguments`必须是原始值或与该`QJSManagedValue`属于同一`QJSEngine`。否则调用不执行，返回JavaScript `undefined`值。
 
 ### `QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::callAsConstructor` 用于计算、查询或取得与“call、As、Constructor”相关的操作。调用时要先确认当前状态和 `arguments` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `arguments`：类型为 `const QJSValueList &`。默认值为 `{}`。传入 `const QJSValueList &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QJSManagedValue`代表一个JavaScript函数对象，则以构造函数的方式调用它并返回给定`arguments`，返回结果。否则返回JavaScript `undefined`值。
+`arguments`必须是原始值或与该`QJSManagedValue`属于同一`QJSEngine`。否则调用不执行，返回JavaScript `undefined`值。
 
 ### `QJSValue QJSManagedValue::callWithInstance(const QJSValue &instance, const QJSValueList &arguments = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::callWithInstance` 用于计算、查询或取得与“call、With、Instance”相关的操作。调用时要先确认当前状态和 `instance`、`arguments` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `instance`：类型为 `const QJSValue &`。没有默认值，调用时必须提供。传入 `const QJSValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arguments`：类型为 `const QJSValueList &`。默认值为 `{}`。传入 `const QJSValueList &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`代表 JavaScript FunctionObject，则在 FunctionObject `instance` 调用并返回给定`arguments`，返回结果。否则返回 JavaScript 的 `undefined` 值。
+`arguments`和`instance`必须是原始值或与该`QJSManagedValue`属于同一`QJSEngine`。否则调用不执行，返回JavaScript `undefined`值。
 
 ### `bool QJSManagedValue::deleteProperty(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `deleteProperty`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除该`QJSManagedValue` `name`的属性。如果删除成功，返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::deleteProperty(quint32 arrayIndex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `deleteProperty`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `arrayIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除该`QJSManagedValue`中存储的`arrayIndex`值。如果删除成功，返回`true`，否则返回`false`。
 
 ### `QJSEngine *QJSManagedValue::engine() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::engine` 用于计算、查询或取得与“engine”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSEngine *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSEngine *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QJSManagedValue`所属的`QJSEngine`。请注意，除非`QJSManagedValue`被默认构造或移出，否则引擎始终有效。在后者情况下，返回一个nullptr。
 
 ### `bool QJSManagedValue::equals(const QJSManagedValue &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::equals` 用于计算、查询或取得与“equals”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QJSManagedValue &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用JavaScript的“==”操作符，`QJSManagedValue`和`other`，返回结果。
 
 ### `bool QJSManagedValue::hasOwnProperty(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasOwnProperty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该 `QJSManagedValue` 具有属性 `name`，返回`true`，否则返回 `false`。不考虑原型链的属性。
 
 ### `bool QJSManagedValue::hasOwnProperty(quint32 arrayIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasOwnProperty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `arrayIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`有数组索引`arrayIndex`，返回`true`，否则返回`false`。不考虑原型链的属性。
 
 ### `bool QJSManagedValue::hasProperty(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasProperty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`具有属性`name`，则返回`true`，否则返回`false`。考虑原型链的属性。
 
 ### `bool QJSManagedValue::hasProperty(quint32 arrayIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasProperty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `arrayIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`具有数组索引`arrayIndex`，返回`true`，否则返回 `false`。考虑原型链的属性。
 
 ### `bool QJSManagedValue::isArray() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isArray`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值表示一个 JavaScript 数组对象，则返回 `true`，否则返回 `false`。
 
 ### `bool QJSManagedValue::isBoolean() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBoolean`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`boolean`，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isDate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDate`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值表示一个 JavaScript 日期对象，则返回 `true`，否则返回 `false`。
 
 ### `bool QJSManagedValue::isError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值代表JavaScript错误对象，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isFunction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFunction`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`function`，返回 `true`，否则`false`。
 
 ### `bool QJSManagedValue::isInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInteger`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`保持整数值，返回`true`，否则`false`。数字的存储格式不会影响对其执行的任何操作结果，但如果存储整数，许多操作会更快。
 
 ### `bool QJSManagedValue::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`持有JavaScript `null`值，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNumber`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`number`，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isObject`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`object`，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isQMetaObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isQMetaObject`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值代表在JavaScript堆上管理的`QMetaObject`指针，`false`返回`true`。
 
 ### `bool QJSManagedValue::isQObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isQObject`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值代表在 JavaScript 堆上管理的 `QObject` 指针，`false` 返回 `true`。
 
 ### `bool QJSManagedValue::isRegularExpression() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRegularExpression`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`该值是否代表JavaScript正则表达式对象，否则`false`返回。
 
 ### `bool QJSManagedValue::isString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isString`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`string`，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isSymbol() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSymbol`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`symbol`，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isUndefined() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUndefined`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`类型为`undefined`，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isUrl() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUrl`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值代表 JavaScript URL 对象，则返回`true`，否则`false`。
 
 ### `bool QJSManagedValue::isVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isVariant`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该值代表在 JavaScript 堆上管理的`QVariant`，则返回`true`，否则`false`返回。
 
 ### `QJSValue QJSManagedValue::property(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::property` 用于计算、查询或取得与“property”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QJSManagedValue` `name`的属性。如果在实际对象上找不到该属性，则会搜索原型链。
 
 ### `QJSValue QJSManagedValue::property(quint32 arrayIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::property` 用于计算、查询或取得与“property”相关的操作。调用时要先确认当前状态和 `arrayIndex` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `arrayIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QJSManagedValue` `arrayIndex`存储的属性。如果在实际对象上找不到该属性，则搜索原型链。
 
 ### `QJSManagedValue QJSManagedValue::prototype() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::prototype` 用于计算、查询或取得与“prototype”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSManagedValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSManagedValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QJSManagedValue`的原型。这适用于任意值。例如，你可以从 `boolean` 值中检索 JavaScript `boolean` 原型。
 
 ### `void QJSManagedValue::setProperty(const QString &name, const QJSValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProperty`。调用它会改变 `QJSManagedValue` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QJSValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将属性 `name` 设置为该`QJSManagedValue`上的 `value`。这只能在类型为 `object` 的 JavaScript 值上实现。此外，`value`必须是原语或属于与该值相同的引擎。
 
 ### `void QJSManagedValue::setProperty(quint32 arrayIndex, const QJSValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProperty`。调用它会改变 `QJSManagedValue` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `arrayIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QJSValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该`QJSManagedValue`中存储`value` `arrayIndex`。这只能在类型为`object`的JavaScript值上实现，且如果值不是数组，不推荐这样做。此外，`value`必须是原语，或者与该值属于同一引擎。
 
 ### `void QJSManagedValue::setPrototype(const QJSManagedValue &prototype)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrototype`。调用它会改变 `QJSManagedValue` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `prototype`：类型为 `const QJSManagedValue &`。没有默认值，调用时必须提供。传入 `const QJSManagedValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QJSManagedValue`的原型设置为`prototype`。前提条件是`prototype`与该`QJSManagedValue`属于同一`QJSEngine`，并且是对象（包括空）。此外，该`QJSManagedValue`也必须是对象（排除零），且不能创建原型循环。
 
 ### `bool QJSManagedValue::strictlyEquals(const QJSManagedValue &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::strictlyEquals` 用于计算、查询或取得与“strictly、Equals”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QJSManagedValue &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用JavaScript '==='操作符，`QJSManagedValue`和`other`，返回结果。
 
 ### `bool QJSManagedValue::toBoolean() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toBoolean`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将管理值转换为布尔值。如果管理值包含布尔值，则返回该布尔值。否则，将执行JavaScript规则的布尔强制。
 
 ### `QDateTime QJSManagedValue::toDateTime() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDateTime`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`包含 JavaScript 日期对象，返回等效的 `QDateTime`。否则返回无效的。
 
 ### `int QJSManagedValue::toInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toInteger`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将管理值转换为整数。首先根据`toNumber()`规则将数值转换为数值，然后根据将参数强制转换为32位整数的规则将其夹入整数范围。
+内部，值可能已经存储为整数，这时会选择快速路径。
+注意：将管理值转换为数字时可能会抛出异常。特别是，符号不能被强制转换为数字，或者自定义的 valueOf() 方法可能会抛出异常。此时结果为 0，转换后引擎会携带错误。
+注意：JavaScript 强制将数字输入 32 位整数的规则不直观。
 
 ### `QJSValue QJSManagedValue::toJSValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toJSValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将此`QJSManagedValue`复制到新的`QJSValue`中。这比从`QJSManagedValue`构造`QJSValue`效率低，但保留了`QJSManagedValue`。
 
 ### `double QJSManagedValue::toNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toNumber`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`double`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将管理值转换为数字。如果管理值包含数字，则返回该数字。否则，将通过JavaScript规则执行数字强制执行。
+注意：将管理值转换为数字时可能会抛出异常。特别是，符号不能被强制转换为数字，或者自定义的 valueOf() 方法可能会抛出异常。此时结果为 0，转换后引擎会携带错误。
 
 ### `QJSPrimitiveValue QJSManagedValue::toPrimitive() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPrimitive`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QJSPrimitiveValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将管理值转换为`QJSPrimitiveValue`。如果管理值包含由`QJSPrimitiveValue`支持的类型，则复制该值。否则，值被转换为字符串，并存储在`QJSPrimitiveValue`中。
+注意：将管理值转换为字符串可能会抛出异常。特别是，符号不能强制生成字符串，或者自定义`toString()`方法可能会抛出异常。在这种情况下，结果是未定义的值，转换后引擎会携带错误。
 
 ### `const QMetaObject *QJSManagedValue::toQMetaObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toQMetaObject`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`const QMetaObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`包含`QMetaObject`指针，则返回该指针。否则返回 nullptr。
 
 ### `QObject *QJSManagedValue::toQObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toQObject`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`包含`QObject`指针，则返回该指针。否则返回 nullptr。
 
 ### `QRegularExpression QJSManagedValue::toRegularExpression() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toRegularExpression`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`包含JavaScript正则表达式对象，则返回等价的`QRegularExpression`。否则返回无效的。
 
 ### `QString QJSManagedValue::toString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将管理值转换为字符串。如果管理值包含字符串，则返回该字符串。否则，将执行 JavaScript 规则的字符串强制执行。
+注意：将管理值转换为字符串时可能会抛出异常。特别是，符号无法强制生成字符串，或者自定义的 toString() 方法可能会抛出异常。在这种情况下，结果是空字符串，转换后引擎会携带错误。
 
 ### `QUrl QJSManagedValue::toUrl() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toUrl`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QJSManagedValue`包含JavaScript URL对象，则返回等效`QUrl`。否则返回无效的。
 
 ### `QVariant QJSManagedValue::toVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toVariant`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QJSManagedValue`复制到新的`QVariant`中。如果 `QJSManagedValue::isVariant()`返回 false，这也创造了一个有用的`QVariant`。`QVariant` 可以存储所有由 `QJSManagedValue` 支持的类型。
 
 ### `QJSManagedValue::Type QJSManagedValue::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSManagedValue::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSManagedValue::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSManagedValue::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QJSManagedValue`的JavaScript类型。
 
 ### `QJSManagedValue &QJSManagedValue::operator=(QJSManagedValue &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSManagedValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJSManagedValue &`。
-- 参数 `other`：类型为 `QJSManagedValue &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move从`other`中分配一个`QJSManagedValue`。这使得`other`处于默认构造状态，表示未定义，不属于任何引擎。
+注意：这会释放该`QJSManagedValue`在JavaScript堆中占用的内存槽。你不能在与该`QJSEngine`存在的线程不同的线程上移动分配`QJSManagedValue`。
 
 ## 6. 深入实践与常见坑
 

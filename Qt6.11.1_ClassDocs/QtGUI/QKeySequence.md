@@ -102,463 +102,306 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 34 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QKeySequence::StandardKey`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 暴露的类型声明 `Standard、Key`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StandardKey`。
-- 属性名：`QKeySequence`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表标准按键绑定。它们可以用来为`QAction`分配与平台相关的快捷键。
+请注意，按键绑定是依赖于平台的。当前绑定的快捷键可以用`keyBindings()`查询。
+- `QKeySequence::AddTab`：`19`;添加新标签页。
+- `QKeySequence::Back`：`13`;返回导航。
+- `QKeySequence::Backspace`：`69`;删除之前的角色。
+- `QKeySequence::Bold`：`27`;加粗字体。
+- `QKeySequence::Close`：`4`;关闭文档/标签页。
+- `QKeySequence::Copy`：`9`;收到。
+- `QKeySequence::Cut`：`8`;停。
+- `QKeySequence::Delete`：`7`;删除。
+- `QKeySequence::DeleteEndOfLine`：`60`;删除行尾。
+- `QKeySequence::DeleteEndOfWord`：`59`;删除光标末尾的单词。
+- `QKeySequence::DeleteStartOfWord`：`58`;删除单词开头直到光标。
+- `QKeySequence::DeleteCompleteLine`：`68`;删除整行。
+- `QKeySequence::Find`：`22`;在文档中查找。
+- `QKeySequence::FindNext`：`23`;查找下一个结果。
+- `QKeySequence::FindPrevious`：`24`;查找之前的结果。
+- `QKeySequence::Forward`：`14`;向前导航。
+- `QKeySequence::HelpContents`：`1`;打开帮助内容。
+- `QKeySequence::InsertLineSeparator`：`62`;插入新行。
+- `QKeySequence::InsertParagraphSeparator`：`61`;插入新段落。
+- `QKeySequence::Italic`：`28`;斜体文本。
+- `QKeySequence::MoveToEndOfBlock`：`41`;将光标移动到方块末尾。该快捷键仅在苹果平台上使用。
+- `QKeySequence::MoveToEndOfDocument`：`43`;将光标移动到文档末尾。
+- `QKeySequence::MoveToEndOfLine`：`39`;将光标移动到行尾。
+- `QKeySequence::MoveToNextChar`：`30`;将光标移动到下一个字符。
+- `QKeySequence::MoveToNextLine`：`34`;将光标移至下一行。
+- `QKeySequence::MoveToNextPage`：`36`;将光标移至下一页。
+- `QKeySequence::MoveToNextWord`：`32`;将光标移至下一个单词。
+- `QKeySequence::MoveToPreviousChar`：`31`;将光标移动到上一个角色。
+- `QKeySequence::MoveToPreviousLine`：`35`;将光标移至上一行。
+- `QKeySequence::MoveToPreviousPage`：`37`;将光标移至上一页。
+- `QKeySequence::MoveToPreviousWord`：`33`;将光标移至上一个单词。
+- `QKeySequence::MoveToStartOfBlock`：`40`;将光标移动到方块起始。该快捷键仅在苹果平台上使用。
+- `QKeySequence::MoveToStartOfDocument`：`42`;将光标移动到文档起始。
+- `QKeySequence::MoveToStartOfLine`：`38`;将光标移至行首。
+- `QKeySequence::New`：`6`;创建新文档。
+- `QKeySequence::NextChild`：`20`;导航到下一个标签页或子窗口。
+- `QKeySequence::Open`：`3`;打开文档。
+- `QKeySequence::Paste`：`10`;粘贴。
+- `QKeySequence::Preferences`：`64`;打开偏好设置对话框。
+- `QKeySequence::PreviousChild`：`21`;导航到上一个标签页或子窗口。
+- `QKeySequence::Print`：`18`;印刷文档。
+- `QKeySequence::Quit`：`65`;退出应用。
+- `QKeySequence::Redo`：`12`;重来。
+- `QKeySequence::Refresh`：`15`;刷新或重新加载当前文档。
+- `QKeySequence::Replace`：`25`;查找并替换。
+- `QKeySequence::SaveAs`：`63`;在提示用户输入文件名后保存文档。
+- `QKeySequence::Save`：`5`;保存文档。
+- `QKeySequence::SelectAll`：`26`;选择所有文本。
+- `QKeySequence::Deselect`：`67`;取消选择文本。自5.1版本起
+- `QKeySequence::SelectEndOfBlock`：`55`;将选择范围扩展到文本块的末尾。该快捷键仅在苹果平台上使用。
+- `QKeySequence::SelectEndOfDocument`：`57`;将选择范围扩展到文档末尾。
+- `QKeySequence::SelectEndOfLine`：`53`;将选择范围扩展到行尾。
+- `QKeySequence::SelectNextChar`：`44`;将选择范围扩展到下一个角色。
+- `QKeySequence::SelectNextLine`：`48`;将选择范围扩展到下一行。
+- `QKeySequence::SelectNextPage`：`50`;将选择范围扩展到下一页。
+- `QKeySequence::SelectNextWord`：`46`;将选择范围扩展到下一个单词。
+- `QKeySequence::SelectPreviousChar`：`45`;将选择范围扩展到之前的角色。
+- `QKeySequence::SelectPreviousLine`：`49`;将选择范围扩展到上一行。
+- `QKeySequence::SelectPreviousPage`：`51`;将选择范围扩展到上一页。
+- `QKeySequence::SelectPreviousWord`：`47`;将选择范围扩展到前一个词。
+- `QKeySequence::SelectStartOfBlock`：`54`;将选择范围扩展到文本块的开头。该快捷键仅在苹果平台上使用。
+- `QKeySequence::SelectStartOfDocument`：`56`;将选择范围扩展到文档起始。
+- `QKeySequence::SelectStartOfLine`：`52`;将选择范围扩展到行首。
+- `QKeySequence::Underline`：`29`;下划线文字。
+- `QKeySequence::Undo`：`11`;撤销。
+- `QKeySequence::UnknownKey`：`0`;未绑定钥匙。
+- `QKeySequence::WhatsThis`：`2`;启动“这是什么”。
+- `QKeySequence::ZoomIn`：`16`;放大。
+- `QKeySequence::ZoomOut`：`17`;拉远。
+- `QKeySequence::FullScreen`：`66`;切换窗口状态为全屏。
+- `QKeySequence::Cancel`：`70`;取消当前操作。
 
 ### `QKeySequence::QKeySequence()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空密钥序列。
 
 ### `QKeySequence::QKeySequence(QKeySequence::StandardKey key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定`key`构建一个QKeySequence对象。结果取决于当前运行的平台。
+最终生成的对象将基于`key`按键绑定列表中的第一个元素。
 
 ### `QKeySequence::QKeySequence(const QString &key, QKeySequence::SequenceFormat format = NativeText)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+基于`format`，从`key`字符串创建密钥序列。
+例如，“Ctrl O” 会得到 CTRL 'O'。字符串“Ctrl”、“Shift”、“Alt”和“Meta”都能识别，以及在“`QShortcut`”上下文中（使用 `QObject::tr()`）中翻译后的对应词。
+最多可通过逗号分隔四个键码，例如“Alt X，Ctrl S，Q”。
+该构造函数通常与`tr()`结合使用，以便在平译中替换快捷键：
+请注意“File|打开”译者评论。这绝非必要，但它为人工翻译者提供了一些背景信息。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `format`：类型为 `QKeySequence::SequenceFormat`。默认值为 `NativeText`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMenu *file = new QMenu(this);
+ file->addAction(tr("&Open..."), QKeySequence(tr("Ctrl+O", "File|Open")),
+                 this, &MainWindow::open);
+```
 
 ### `QKeySequence::QKeySequence(QKeyCombination k1, QKeyCombination k2 = QKeyCombination::fromCombined(0), QKeyCombination k3 = QKeyCombination::fromCombined(0), QKeyCombination k4 = QKeyCombination::fromCombined(0))`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `k1`：类型为 `QKeyCombination`。没有默认值，调用时必须提供。传入 `QKeyCombination` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k2`：类型为 `QKeyCombination`。默认值为 `QKeyCombination::fromCombined(0)`。传入 `QKeyCombination` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k3`：类型为 `QKeyCombination`。默认值为 `QKeyCombination::fromCombined(0)`。传入 `QKeyCombination` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k4`：类型为 `QKeyCombination`。默认值为 `QKeyCombination::fromCombined(0)`。传入 `QKeyCombination` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个最多4个键的键序列，`k1`、`k2`、`k3`和`k4`。
 
 ### `QKeySequence::QKeySequence(int k1, int k2 = 0, int k3 = 0, int k4 = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `k1`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k2`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k3`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k4`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个最多4个键的键序列，`k1`、`k2`、`k3`和`k4`。
+关键代码以`Qt::Key`形式列出，并可与修饰符（见 `Qt::KeyboardModifier`）如`Qt::ShiftModifier`、`Qt::ControlModifier`、`Qt::AltModifier`或`Qt::MetaModifier`组合。
 
 ### `QKeySequence::QKeySequence(const QKeySequence &keysequence)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `keysequence`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制构造器。复制`keysequence`。
 
 ### `[noexcept] QKeySequence::~QKeySequence()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏关键序列。
 
 ### `int QKeySequence::count() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QKeySequence` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回键序列中的键数。最大数值为4个。
 
 ### `[static] QKeySequence QKeySequence::fromString(const QString &str, QKeySequence::SequenceFormat format = PortableText)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QKeySequence`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `format`：类型为 `QKeySequence::SequenceFormat`。默认值为 `PortableText`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`format`返回字符串`str`的`QKeySequence`。
 
 ### `bool QKeySequence::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果密钥序列为空，则返回`true`;否则返回 false。
 
 ### `[static] QList<QKeySequence> QKeySequence::keyBindings(QKeySequence::StandardKey key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `keyBindings`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QKeySequence>`。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`key`的快捷键绑定列表。调用该函数的结果会根据目标平台而异。列表的第一个元素表示该平台的主要快捷方式。如果结果包含多个结果，这些可以视为同一平台上该`key`的替代快捷方式。
 
 ### `[static] QList<QKeySequence> QKeySequence::listFromString(const QString &str, QKeySequence::SequenceFormat format = PortableText)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `listFromString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QKeySequence>`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `format`：类型为 `QKeySequence::SequenceFormat`。默认值为 `PortableText`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串`str`中的`QKeySequence`列表，基于`format`。
 
 ### `[static] QString QKeySequence::listToString(const QList<QKeySequence> &list, QKeySequence::SequenceFormat format = PortableText)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `listToString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `list`：类型为 `const QList<QKeySequence> &`。没有默认值，调用时必须提供。传入 `const QList<QKeySequence> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `QKeySequence::SequenceFormat`。默认值为 `PortableText`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于`format`的`list`字符串表示。
 
 ### `QKeySequence::SequenceMatch QKeySequence::matches(const QKeySequence &seq) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequence::matches` 用于计算、查询或取得与“matches”相关的操作。调用时要先确认当前状态和 `seq` 的有效范围；返回类型是 `QKeySequence::SequenceMatch`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QKeySequence::SequenceMatch`。
-- 参数 `seq`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与 `seq` 匹配序列。成功时返回 `ExactMatch`，若匹配不完全`seq`返回`PartialMatch`，序列无共同点则返回`NoMatch`。若 `seq` 较短，返回 `NoMatch`。
 
 ### `[static] QKeySequence QKeySequence::mnemonic(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `mnemonic`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QKeySequence`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`text`中助记法的快捷键序列，若未找到助记符则返回空键序列。
+例如，mnemonic（“E&xit”）返回`Qt::ALT+Qt::Key_X`，助记词（“&Quit”）返回`ALT+Key_Q`，mnemonic（“Quit”）返回空`QKeySequence`。
 
 ### `[noexcept] void QKeySequence::swap(QKeySequence &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequence::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该密钥序列与`other`交换。该操作非常快且从未失败。
 
 ### `QString QKeySequence::toString(QKeySequence::SequenceFormat format = PortableText) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `format`：类型为 `QKeySequence::SequenceFormat`。默认值为 `PortableText`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于`format`的密钥序列的字符串表示。
+例如，`Qt::CTRL` `Qt::Key_O` 的值为“Ctrl O”。如果按键序列包含多个按键代码，每个按键在返回的字符串中用逗号分隔，如“Alt X， Ctrl Y， Z”。字符串如“Ctrl”、“Shift”等在“`QShortcut`”上下文中用`QObject::tr()`进行翻译。
+如果密钥序列没有密钥，则返回一个空字符串。
+在苹果平台上，返回的字符串类似于菜单栏中显示的序列，如果`format` `QKeySequence::NativeText`;否则，字符串使用“便携”格式，适合写入文件。
 
 ### `QKeySequence::operator QVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回密钥序列作为`QVariant`。
 
 ### `bool QKeySequence::operator!=(const QKeySequence &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该密钥序列与`other`密钥序列不等于，返回`true`;否则返回`false`。
 
 ### `bool QKeySequence::operator<(const QKeySequence &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供了该密钥序列与`other`密钥序列的任意比较。唯一保证`false`的是，如果两个密钥序列相等且（ks1 < ks2） == ！（ ks2 < ks1） 如果密钥序列不相等。
+该函数在某些情况下非常有用，例如你想在`QMap`中使用`QKeySequence`对象作为键。
 
 ### `bool QKeySequence::operator<=(const QKeySequence &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该密钥序列小于或等于`other`密钥序列，返回`true`;否则返回`false`。
 
 ### `[noexcept] QKeySequence &QKeySequence::operator=(QKeySequence &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeySequence &`。
-- 参数 `other`：类型为 `QKeySequence &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QKeySequence`实例。
 
 ### `QKeySequence &QKeySequence::operator=(const QKeySequence &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeySequence &`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+赋值算符。将`other`键序列分配给该对象。
 
 ### `bool QKeySequence::operator==(const QKeySequence &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该密钥序列等于`other`密钥序列，返回`true`;否则返回`false`。
 
 ### `bool QKeySequence::operator>(const QKeySequence &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该密钥序列大于`other`密钥序列，返回`true`;否则返回`false`。
 
 ### `bool QKeySequence::operator>=(const QKeySequence &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该密钥序列大于或等于`other`密钥序列，返回`true`;否则返回`false`。
 
 ### `QKeyCombination QKeySequence::operator[](uint index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `index`：类型为 `uint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回键序列中位置`index`的元素的引用。这只能用于读取元素。
 
 ### `[noexcept] size_t qHash(const QKeySequence &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QKeySequence::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `void qt_set_sequence_auto_mnemonic(bool b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QKeySequence::qt_set_sequence_auto_mnemonic` 用于执行与“qt、设置、sequence、auto、mnemonic”相关的操作。调用时要先确认当前状态和 `b` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+规定菜单项、标签等的助记词是否应被使用。在Windows和X11上，该功能默认开启;macOS上关闭此功能。当此功能关闭（即`b`为假时），`QKeySequence::mnemonic()`总是返回空字符串。
+注意：该函数未在 Qt 的任何头文件中声明。要在应用中使用，请在调用前声明该函数原型。
 
 ### `QDataStream &operator<<(QDataStream &stream, const QKeySequence &sequence)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sequence`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把密钥写入`sequence` `stream`。
 
 ### `QDataStream &operator>>(QDataStream &stream, QKeySequence &sequence)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sequence`：类型为 `QKeySequence &`。没有默认值，调用时必须提供。传入 `QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`stream`读取密钥序列到密钥`sequence`。
 
 ### `enum SequenceFormat { NativeText, PortableText }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 暴露的类型声明 `Sequence、格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QKeySequence::NativeText`：`0`;按键序列作为平台特定的字符串。这意味着它会以翻译形式显示，在苹果平台上它会类似于菜单栏中的按键序列。当你想向用户展示字符串时，这个枚举最好使用。
+- `QKeySequence::PortableText`：`1`;密钥序列以“便携”格式呈现，适合读写文件。在许多情况下，它看起来与Windows和X11的原生文本相似。
 
 ### `enum SequenceMatch { NoMatch, PartialMatch, ExactMatch }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequence` 暴露的类型声明 `Sequence、匹配`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QKeySequence::NoMatch`：`0`;密钥序列不同;甚至不部分匹配。
+- `QKeySequence::PartialMatch`：`1`;密钥序列部分匹配，但不相同。
+- `QKeySequence::ExactMatch`：`2`;密钥序列相同。
 
 ## 6. 深入实践与常见坑
 

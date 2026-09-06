@@ -277,3424 +277,1749 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 218 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QOpenGLExtraFunctions::QOpenGLExtraFunctions()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLExtraFunctions` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个默认函数解析器。解析器必须先调用`initializeOpenGLFunctions()`指定上下文。
 
 ### `QOpenGLExtraFunctions::QOpenGLExtraFunctions(QOpenGLContext *context)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLExtraFunctions` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `context`：类型为 `QOpenGLContext *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个函数解析器以实现上下文。如果`context` `nullptr`，则为当前`QOpenGLContext`创建该解析器。
+该群体中的上下文或其他上下文必须是当前的。
+以这种方式构建的对象只能与上下文及其他共享上下文一起使用。使用`initializeOpenGLFunctions()`来更改对象的上下文关联。
 
 ### `void QOpenGLExtraFunctions::glActiveShaderProgram(GLuint pipeline, GLuint program)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glActiveShaderProgram` 用于执行与“gl、活动状态、Shader、Program”相关的操作。调用时要先确认当前状态和 `pipeline`、`program` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glActiveShaderProgram（`pipeline`， `program`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glActiveShaderProgram() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBeginQuery(GLenum target, GLuint id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBeginQuery` 用于执行与“gl、起始位置、查询”相关的操作。调用时要先确认当前状态和 `target`、`id` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBeginQuery（`target`， `id`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glBeginQuery() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBeginTransformFeedback(GLenum primitiveMode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBeginTransformFeedback` 用于执行与“gl、起始位置、Transform、Feedback”相关的操作。调用时要先确认当前状态和 `primitiveMode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `primitiveMode`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBeginTransformFeedback（`primitiveMode`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glBeginTransformFeedback() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindBufferBase(GLenum target, GLuint index, GLuint buffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindBufferBase` 用于执行与“gl、绑定、Buffer、Base”相关的操作。调用时要先确认当前状态和 `target`、`index`、`buffer` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `buffer`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBindBufferBase（`target`， `index`， `buffer`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glBindBufferBase() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindBufferRange(GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindBufferRange` 用于执行与“gl、绑定、Buffer、Range”相关的操作。调用时要先确认当前状态和 `target`、`index`、`buffer`、`offset`、`size` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `buffer`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `GLsizeiptr`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBindBufferRange（`target`， `index`， `buffer`， `offset`， `size`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glBindBufferRange() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindImageTexture(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindImageTexture` 用于执行与“gl、绑定、Image、Texture”相关的操作。调用时要先确认当前状态和 `unit`、`texture`、`level`、`layered`、`layer`、`access`、`format` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `unit`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `texture`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layered`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layer`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `access`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `format`：类型为 `GLenum`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBindImageTexture（`unit`， `texture`， `level`， `layered`， `layer`， `access`， `format` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glBindImageTexture（ 的文档）。
 
 ### `void QOpenGLExtraFunctions::glBindProgramPipeline(GLuint pipeline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindProgramPipeline` 用于执行与“gl、绑定、Program、Pipeline”相关的操作。调用时要先确认当前状态和 `pipeline` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBindProgramPipeline（`pipeline`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glBindProgramPipeline() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindSampler(GLuint unit, GLuint sampler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindSampler` 用于执行与“gl、绑定、Sampler”相关的操作。调用时要先确认当前状态和 `unit`、`sampler` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `unit`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBindSampler（`unit`， `sampler`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glBindSampler() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindTransformFeedback(GLenum target, GLuint id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindTransformFeedback` 用于执行与“gl、绑定、Transform、Feedback”相关的操作。调用时要先确认当前状态和 `target`、`id` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBindTransformFeedback（`target`， `id`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glBindTransformFeedback() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindVertexArray(GLuint array)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindVertexArray` 用于执行与“gl、绑定、Vertex、Array”相关的操作。调用时要先确认当前状态和 `array` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `array`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBindVertexArray（`array`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glBindVertexArray() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBindVertexBuffer(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBindVertexBuffer` 用于执行与“gl、绑定、Vertex、Buffer”相关的操作。调用时要先确认当前状态和 `bindingindex`、`buffer`、`offset`、`stride` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bindingindex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `buffer`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stride`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBindVertexBuffer（`bindingindex`， `buffer`， `offset`， `stride` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glBindVertexBuffer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBlendBarrier()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBlendBarrier` 用于执行与“gl、Blend、Barrier”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glBlendBarrier() 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glBlendBarrier() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glBlendEquationSeparatei(GLuint buf, GLenum modeRGB, GLenum modeAlpha)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBlendEquationSeparatei` 用于执行与“gl、Blend、Equation、Separatei”相关的操作。调用时要先确认当前状态和 `buf`、`modeRGB`、`modeAlpha` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modeRGB`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `modeAlpha`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBlendEquationSeparatei（`buf`， `modeRGB`， `modeAlpha`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glBlendEquationSeparatei() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBlendEquationi(GLuint buf, GLenum mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBlendEquationi` 用于执行与“gl、Blend、Equationi”相关的操作。调用时要先确认当前状态和 `buf`、`mode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBlendEquationi（`buf`， `mode`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glBlendEquationi() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBlendFuncSeparatei(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBlendFuncSeparatei` 用于执行与“gl、Blend、Func、Separatei”相关的操作。调用时要先确认当前状态和 `buf`、`srcRGB`、`dstRGB`、`srcAlpha`、`dstAlpha` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcRGB`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `dstRGB`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `srcAlpha`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `dstAlpha`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBlendFuncSeparatei（`buf`， `srcRGB`， `dstRGB`， `srcAlpha`， `dstAlpha`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glBlendFuncSeparatei() 的文档。
 
 ### `void QOpenGLExtraFunctions::glBlendFunci(GLuint buf, GLenum src, GLenum dst)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBlendFunci` 用于执行与“gl、Blend、Funci”相关的操作。调用时要先确认当前状态和 `buf`、`src`、`dst` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `src`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `dst`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glBlendFunci（`buf`， `src`， `dst`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glBlendFunci() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glBlitFramebuffer` 用于执行与“gl、Blit、Framebuffer”相关的操作。调用时要先确认当前状态和 `srcX0`、`srcY0`、`srcX1`、`srcY1`、`dstX0`、`dstY0`、`dstX1`、`dstY1`、`mask`、`filter` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `srcX0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcY0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcX1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcY1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstX0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstY0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstX1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstY1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mask`：类型为 `GLbitfield`。没有默认值，调用时必须提供。传入 `GLbitfield` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `filter`：类型为 `GLenum`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数调用glBlitFramebuffer（`srcX0`、`srcY0`、`srcX1`、`srcY1`、`dstX0`、`dstY0`、`dstX1`、`dstY1`、`mask`、`filter`）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glBlitFramebuffer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glClearBufferfi` 用于执行与“gl、清空、Bufferfi”相关的操作。调用时要先确认当前状态和 `buffer`、`drawbuffer`、`depth`、`stencil` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buffer`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `drawbuffer`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `depth`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stencil`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glClearBufferfi（`buffer`， `drawbuffer`， `depth`， `stencil`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glClearBufferfi() 的文档。
 
 ### `void QOpenGLExtraFunctions::glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glClearBufferfv` 用于执行与“gl、清空、Bufferfv”相关的操作。调用时要先确认当前状态和 `buffer`、`drawbuffer`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buffer`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `drawbuffer`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glClearBufferfv（`buffer`， `drawbuffer`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glClearBufferfv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glClearBufferiv` 用于执行与“gl、清空、Bufferiv”相关的操作。调用时要先确认当前状态和 `buffer`、`drawbuffer`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buffer`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `drawbuffer`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glClearBufferiv（`buffer`， `drawbuffer`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glClearBufferiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glClearBufferuiv` 用于执行与“gl、清空、Bufferuiv”相关的操作。调用时要先确认当前状态和 `buffer`、`drawbuffer`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buffer`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `drawbuffer`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glClearBufferuiv（`buffer`， `drawbuffer`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glClearBufferuiv() 的文档。
 
 ### `GLenum QOpenGLExtraFunctions::glClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glClientWaitSync` 用于计算、查询或取得与“gl、Client、等待、Sync”相关的操作。调用时要先确认当前状态和 `sync`、`flags`、`timeout` 的有效范围；返回类型是 `GLenum`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLenum`。
-- 参数 `sync`：类型为 `GLsync`。没有默认值，调用时必须提供。传入 `GLsync` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `GLbitfield`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `timeout`：类型为 `GLuint64`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glClientWaitSync（`sync`， `flags`， `timeout` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glClientWaitSync() 的文档。
 
 ### `void QOpenGLExtraFunctions::glColorMaski(GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glColorMaski` 用于执行与“gl、Color、Maski”相关的操作。调用时要先确认当前状态和 `index`、`r`、`g`、`b`、`a` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `r`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `g`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `a`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glColorMaski（`index`、`r`、`g`、`b`、`a`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glColorMaski() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glCompressedTexImage3D` 用于执行与“gl、Compressed、Tex、Image、3、D”相关的操作。调用时要先确认当前状态和 `target`、`level`、`internalformat`、`width`、`height`、`depth`、`border`、`imageSize`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `depth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `border`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `imageSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glCompressedTexImage3D（`target`， `level`， `internalformat`， `width`， `height`， `depth`， `border`， `imageSize`， `data` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glCompressedTexImage3D() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glCompressedTexSubImage3D` 用于执行与“gl、Compressed、Tex、Sub、Image、3、D”相关的操作。调用时要先确认当前状态和 `target`、`level`、`xoffset`、`yoffset`、`zoffset`、`width`、`height`、`depth`、`format`、`imageSize`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `xoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `yoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `zoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `depth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `GLenum`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `imageSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数调用 glComCompressedTexSubImage3D（`target`， `level`， `xoffset`， `yoffset`， `zoffset`， `width`， `height`， `depth`， `format`， `imageSize`， `data`）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glCompressedTexSubImage3D() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glCopyBufferSubData` 用于执行与“gl、Copy、Buffer、Sub、数据访问”相关的操作。调用时要先确认当前状态和 `readTarget`、`writeTarget`、`readOffset`、`writeOffset`、`size` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `readTarget`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `writeTarget`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `readOffset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `writeOffset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `GLsizeiptr`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glCopyBufferSubData（`readTarget`、`writeTarget`、`readOffset`、`writeOffset`、`size`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参见 OpenGL ES 3.x 关于 glCopyBufferSubData() 的文档。
 
 ### `void QOpenGLExtraFunctions::glCopyImageSubData(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glCopyImageSubData` 用于执行与“gl、Copy、Image、Sub、数据访问”相关的操作。调用时要先确认当前状态和 `srcName`、`srcTarget`、`srcLevel`、`srcX`、`srcY`、`srcZ`、`dstName`、`dstTarget`、`dstLevel`、`dstX`、`dstY`、`dstZ`、`srcWidth`、`srcHeight`、`srcDepth` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `srcName`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcTarget`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `srcLevel`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcX`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcY`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcZ`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstName`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstTarget`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `dstLevel`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstX`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstY`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dstZ`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcWidth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcHeight`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `srcDepth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glCopyImageSubData（`srcName`、`srcTarget`、`srcLevel`、`srcX`、`srcY`、`srcZ`、`dstName`、`dstTarget`、`dstLevel`、`dstX`、`dstY`、`dstZ`、`srcWidth`、`srcHeight`、`srcDepth`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glCopyImageSubData() 的文档。
 
 ### `void QOpenGLExtraFunctions::glCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glCopyTexSubImage3D` 用于执行与“gl、Copy、Tex、Sub、Image、3、D”相关的操作。调用时要先确认当前状态和 `target`、`level`、`xoffset`、`yoffset`、`zoffset`、`x`、`y`、`width`、`height` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `xoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `yoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `zoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `x`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glCopyTexSubImage3D（`target`、`level`、`xoffset`、`yoffset`、`zoffset`、`x`、`y`、`width`、`height`）的便利功能。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glCopyTexSubImage3D() 的文档。
 
 ### `GLuint QOpenGLExtraFunctions::glCreateShaderProgramv(GLenum type, GLsizei count, const GLchar *const *strings)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glCreateShaderProgramv` 用于计算、查询或取得与“gl、创建、Shader、Programv”相关的操作。调用时要先确认当前状态和 `type`、`count`、`strings` 的有效范围；返回类型是 `GLuint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLuint`。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `strings`：类型为 `const GLchar *const *`。没有默认值，调用时必须提供。传入 `const GLchar *const *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glCreateShaderProgramv（`type`， `count`， `strings`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glCreateShaderProgramv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glDebugMessageCallback(GLDEBUGPROC callback, const void *userParam)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDebugMessageCallback` 用于执行与“gl、调试输出、Message、Callback”相关的操作。调用时要先确认当前状态和 `callback`、`userParam` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `callback`：类型为 `GLDEBUGPROC`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `userParam`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDebugMessageCallback（`callback`， `userParam`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参阅 OpenGL ES 3.X 关于 glDebugMessageCallback() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDebugMessageControl(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDebugMessageControl` 用于执行与“gl、调试输出、Message、Control”相关的操作。调用时要先确认当前状态和 `source`、`type`、`severity`、`count`、`ids`、`enabled` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `source`：类型为 `GLenum`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `severity`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ids`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDebugMessageControl（`source`、`type`、`severity`、`count`、`ids`、`enabled`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glDebugMessageContro() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDebugMessageInsert(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDebugMessageInsert` 用于执行与“gl、调试输出、Message、插入”相关的操作。调用时要先确认当前状态和 `source`、`type`、`id`、`severity`、`length`、`buf` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `source`：类型为 `GLenum`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `severity`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `length`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `buf`：类型为 `const GLchar *`。没有默认值，调用时必须提供。传入 `const GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDebugMessageInsert（`source`， `type`， `id`， `severity`， `length`， `buf` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glDebugMessageInsert() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDeleteProgramPipelines(GLsizei n, const GLuint *pipelines)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDeleteProgramPipelines` 用于执行与“gl、删除、Program、Pipelines”相关的操作。调用时要先确认当前状态和 `n`、`pipelines` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pipelines`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDeleteProgramPipelines（`n`， `pipelines`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参见 OpenGL ES 3.x 关于 glDeleteProgramPipelines() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDeleteQueries(GLsizei n, const GLuint *ids)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDeleteQueries` 用于执行与“gl、删除、Queries”相关的操作。调用时要先确认当前状态和 `n`、`ids` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ids`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDeleteQueries（`n`， `ids`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glDeleteQueries() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDeleteSamplers(GLsizei count, const GLuint *samplers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDeleteSamplers` 用于执行与“gl、删除、Samplers”相关的操作。调用时要先确认当前状态和 `count`、`samplers` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `samplers`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDeleteSamplers（`count`， `samplers`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glDeleteSamplers() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDeleteSync(GLsync sync)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDeleteSync` 用于执行与“gl、删除、Sync”相关的操作。调用时要先确认当前状态和 `sync` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sync`：类型为 `GLsync`。没有默认值，调用时必须提供。传入 `GLsync` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDeleteSync（`sync`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glDeleteSync() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDeleteTransformFeedbacks(GLsizei n, const GLuint *ids)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDeleteTransformFeedbacks` 用于执行与“gl、删除、Transform、Feedbacks”相关的操作。调用时要先确认当前状态和 `n`、`ids` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ids`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDeleteTransformFeedbacks（`n`， `ids`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glDeleteTransformFeedbacks() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDeleteVertexArrays(GLsizei n, const GLuint *arrays)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDeleteVertexArrays` 用于执行与“gl、删除、Vertex、Arrays”相关的操作。调用时要先确认当前状态和 `n`、`arrays` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arrays`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDeleteVertexArrays（`n`， `arrays`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glDeleteVertexArrays() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDisablei(GLenum target, GLuint index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDisablei` 用于执行与“gl、Disablei”相关的操作。调用时要先确认当前状态和 `target`、`index` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDisablei（`target`， `index`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glDisablei() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glDispatchCompute(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDispatchCompute` 用于执行与“gl、Dispatch、Compute”相关的操作。调用时要先确认当前状态和 `num_groups_x`、`num_groups_y`、`num_groups_z` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `num_groups_x`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `num_groups_y`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `num_groups_z`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDispatchCompute（`num_groups_x`， `num_groups_y`， `num_groups_z`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glDispatchCompute() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glDispatchComputeIndirect(GLintptr indirect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDispatchComputeIndirect` 用于执行与“gl、Dispatch、Compute、Indirect”相关的操作。调用时要先确认当前状态和 `indirect` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `indirect`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDispatchComputeIndirect（`indirect`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glDispatchComputeIndirect() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glDrawArraysIndirect(GLenum mode, const void *indirect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawArraysIndirect` 用于执行与“gl、绘制、Arrays、Indirect”相关的操作。调用时要先确认当前状态和 `mode`、`indirect` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `indirect`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDrawArraysIndirect（`mode`， `indirect`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glDrawArraysIndirect() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei instancecount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawArraysInstanced` 用于执行与“gl、绘制、Arrays、Instanced”相关的操作。调用时要先确认当前状态和 `mode`、`first`、`count`、`instancecount` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `first`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `instancecount`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDrawArraysInstanced（`mode`， `first`， `count`， `instancecount`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glDrawArraysInstanced() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawBuffers(GLsizei n, const GLenum *bufs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawBuffers` 用于执行与“gl、绘制、Buffers”相关的操作。调用时要先确认当前状态和 `n`、`bufs` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufs`：类型为 `const GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDrawBuffers（`n`， `bufs`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glDrawBuffers() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type, const void *indices, GLint basevertex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawElementsBaseVertex` 用于执行与“gl、绘制、Elements、Base、Vertex”相关的操作。调用时要先确认当前状态和 `mode`、`count`、`type`、`indices`、`basevertex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `indices`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `basevertex`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDrawElementsBaseVertex（`mode`， `count`， `type`， `indices`， `basevertex` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glDrawElementsBaseVerte() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawElementsIndirect(GLenum mode, GLenum type, const void *indirect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawElementsIndirect` 用于执行与“gl、绘制、Elements、Indirect”相关的操作。调用时要先确认当前状态和 `mode`、`type`、`indirect` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `indirect`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glDrawElementsIndirect（`mode`， `type`， `indirect`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glDrawElementsIndirect() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawElementsInstanced` 用于执行与“gl、绘制、Elements、Instanced”相关的操作。调用时要先确认当前状态和 `mode`、`count`、`type`、`indices`、`instancecount` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `indices`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `instancecount`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDrawElementsInstanced（`mode`， `count`， `type`， `indices`， `instancecount` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glDrawElementsInstanced() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawElementsInstancedBaseVertex(GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount, GLint basevertex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawElementsInstancedBaseVertex` 用于执行与“gl、绘制、Elements、Instanced、Base、Vertex”相关的操作。调用时要先确认当前状态和 `mode`、`count`、`type`、`indices`、`instancecount`、`basevertex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `indices`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `instancecount`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `basevertex`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDrawElementsInstancedBaseVertex（`mode`， `count`， `type`， `indices`， `instancecount`， `basevertex` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glDrawElementsInstancedBaseVerte() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawRangeElements` 用于执行与“gl、绘制、Range、Elements”相关的操作。调用时要先确认当前状态和 `mode`、`start`、`end`、`count`、`type`、`indices` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `start`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `indices`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDrawRangeElements（`mode`， `start`， `end`， `count`， `type`， `indices` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参阅 OpenGL ES 3.x 关于 glDrawRangeElements() 的文档。
 
 ### `void QOpenGLExtraFunctions::glDrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const void *indices, GLint basevertex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glDrawRangeElementsBaseVertex` 用于执行与“gl、绘制、Range、Elements、Base、Vertex”相关的操作。调用时要先确认当前状态和 `mode`、`start`、`end`、`count`、`type`、`indices`、`basevertex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `GLenum`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `start`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `indices`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `basevertex`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glDrawRangeElementsBaseVertex（`mode`， `start`， `end`， `count`， `type`， `indices`， `basevertex` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glDrawRangeElementsBaseVerte() 的文档。
 
 ### `void QOpenGLExtraFunctions::glEnablei(GLenum target, GLuint index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glEnablei` 用于执行与“gl、Enablei”相关的操作。调用时要先确认当前状态和 `target`、`index` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glEnablei（`target`， `index`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glEnablei() 的文档。
 
 ### `void QOpenGLExtraFunctions::glEndQuery(GLenum target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glEndQuery` 用于执行与“gl、结束、查询”相关的操作。调用时要先确认当前状态和 `target` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glEndQuery（`target`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glEndQuery() 的文档。
 
 ### `void QOpenGLExtraFunctions::glEndTransformFeedback()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glEndTransformFeedback` 用于执行与“gl、结束、Transform、Feedback”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glEndTransformFeedback()的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glEndTransformFeedback() 的文档。
 
 ### `GLsync QOpenGLExtraFunctions::glFenceSync(GLenum condition, GLbitfield flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glFenceSync` 用于计算、查询或取得与“gl、Fence、Sync”相关的操作。调用时要先确认当前状态和 `condition`、`flags` 的有效范围；返回类型是 `GLsync`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLsync`。
-- 参数 `condition`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `flags`：类型为 `GLbitfield`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glFenceSync（`condition`， `flags`） 的便利功能。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 openGL ES 3.x 关于 glFenceSync() 的文档。
 
 ### `void QOpenGLExtraFunctions::glFlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glFlushMappedBufferRange` 用于执行与“gl、刷新、Mapped、Buffer、Range”相关的操作。调用时要先确认当前状态和 `target`、`offset`、`length` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `offset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizeiptr`。没有默认值，调用时必须提供。传入 `GLsizeiptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glFlushMappedBufferRange（`target`， `offset`， `length`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glFlushMappedBufferRange() 的文档。
 
 ### `void QOpenGLExtraFunctions::glFramebufferParameteri(GLenum target, GLenum pname, GLint param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glFramebufferParameteri` 用于执行与“gl、Framebuffer、Parameteri”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glFramebufferParameteri（`target`， `pname`， `param` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glFramebufferParameteri() 的文档。
 
 ### `void QOpenGLExtraFunctions::glFramebufferTexture(GLenum target, GLenum attachment, GLuint texture, GLint level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glFramebufferTexture` 用于执行与“gl、Framebuffer、Texture”相关的操作。调用时要先确认当前状态和 `target`、`attachment`、`texture`、`level` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `attachment`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `texture`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glFramebufferTexture（`target`， `attachment`， `texture`， `level`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glFrameBufferTexture() 的文档。
 
 ### `void QOpenGLExtraFunctions::glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glFramebufferTextureLayer` 用于执行与“gl、Framebuffer、Texture、Layer”相关的操作。调用时要先确认当前状态和 `target`、`attachment`、`texture`、`level`、`layer` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `attachment`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `texture`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layer`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glFrameBufferTextureLayer（`target`， `attachment`， `texture`， `level`， `layer` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glFrameFrameBufferTextureLayer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGenProgramPipelines(GLsizei n, GLuint *pipelines)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGenProgramPipelines` 用于执行与“gl、Gen、Program、Pipelines”相关的操作。调用时要先确认当前状态和 `n`、`pipelines` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pipelines`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGenProgramPipelines（`n`， `pipelines`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glGenProgramPipelines() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glGenQueries(GLsizei n, GLuint *ids)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGenQueries` 用于执行与“gl、Gen、Queries”相关的操作。调用时要先确认当前状态和 `n`、`ids` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ids`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGenQueries（`n`， `ids`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGenQueries() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGenSamplers(GLsizei count, GLuint *samplers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGenSamplers` 用于执行与“gl、Gen、Samplers”相关的操作。调用时要先确认当前状态和 `count`、`samplers` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `samplers`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGenSamplers（`count`， `samplers`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGenSamplers() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGenTransformFeedbacks(GLsizei n, GLuint *ids)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGenTransformFeedbacks` 用于执行与“gl、Gen、Transform、Feedbacks”相关的操作。调用时要先确认当前状态和 `n`、`ids` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ids`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGenTransformFeedbacks（`n`， `ids`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGenTransformFeedbacks() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGenVertexArrays(GLsizei n, GLuint *arrays)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGenVertexArrays` 用于执行与“gl、Gen、Vertex、Arrays”相关的操作。调用时要先确认当前状态和 `n`、`arrays` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `n`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arrays`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGenVertexArrays（`n`， `arrays`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGenVertexArrays() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetActiveUniformBlockName(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetActiveUniformBlockName` 用于执行与“gl、Get、活动状态、Uniform、阻塞或屏蔽、名称”相关的操作。调用时要先确认当前状态和 `program`、`uniformBlockIndex`、`bufSize`、`length`、`uniformBlockName` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformBlockIndex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformBlockName`：类型为 `GLchar *`。没有默认值，调用时必须提供。传入 `GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glGetActiveUniformBlockName（`program`， `uniformBlockIndex`， `bufSize`， `length`， `uniformBlockName` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetActiveUniformBlockName() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetActiveUniformBlockiv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetActiveUniformBlockiv` 用于执行与“gl、Get、活动状态、Uniform、Blockiv”相关的操作。调用时要先确认当前状态和 `program`、`uniformBlockIndex`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformBlockIndex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetActiveUniformBlockiv（`program`， `uniformBlockIndex`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetActiveUniformBlockiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetActiveUniformsiv(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetActiveUniformsiv` 用于执行与“gl、Get、活动状态、Uniformsiv”相关的操作。调用时要先确认当前状态和 `program`、`uniformCount`、`uniformIndices`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformCount`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformIndices`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetActiveUniformsiv（`program`， `uniformCount`， `uniformIndices`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetActiveUniformsiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetBooleani_v(GLenum target, GLuint index, GLboolean *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetBooleani_v` 用于执行与“gl、Get、Booleani、v”相关的操作。调用时要先确认当前状态和 `target`、`index`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `data`：类型为 `GLboolean *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetBooleani_v（`target`， `index`， `data`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 文档中的 glGetBooleani_v()。
 
 ### `void QOpenGLExtraFunctions::glGetBufferParameteri64v(GLenum target, GLenum pname, GLint64 *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetBufferParameteri64v` 用于执行与“gl、Get、Buffer、Parameteri、64、v”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint64 *`。没有默认值，调用时必须提供。传入 `GLint64 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetBufferParameteri64v（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetBufferParameteri64v() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetBufferPointerv(GLenum target, GLenum pname, void **params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetBufferPointerv` 用于执行与“gl、Get、Buffer、Pointerv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `void **`。没有默认值，调用时必须提供。传入 `void **` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetBufferPointerv（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetBufferPointerv() 的文档。
 
 ### `GLuint QOpenGLExtraFunctions::glGetDebugMessageLog(GLuint count, GLsizei bufSize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetDebugMessageLog` 用于计算、查询或取得与“gl、Get、调试输出、Message、Log”相关的操作。调用时要先确认当前状态和 `count`、`bufSize`、`sources`、`types`、`ids`、`severities`、`lengths`、`messageLog` 的有效范围；返回类型是 `GLuint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLuint`。
-- 参数 `count`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sources`：类型为 `GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `types`：类型为 `GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `ids`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `severities`：类型为 `GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `lengths`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `messageLog`：类型为 `GLchar *`。没有默认值，调用时必须提供。传入 `GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetDebugMessageLog（`count`、`bufSize`、`sources`、`types`、`ids`、`severities`、`lengths`、`messageLog`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glGetDebugMessageLog() 的文档。
 
 ### `GLint QOpenGLExtraFunctions::glGetFragDataLocation(GLuint program, const GLchar *name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetFragDataLocation` 用于计算、查询或取得与“gl、Get、Frag、数据访问、Location”相关的操作。调用时要先确认当前状态和 `program`、`name` 的有效范围；返回类型是 `GLint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLint`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `const GLchar *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetFragDataLocation（`program`， `name`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetFragDataLocation() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetFramebufferParameteriv(GLenum target, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetFramebufferParameteriv` 用于执行与“gl、Get、Framebuffer、Parameteriv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetFramebufferParameteriv（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetFramebufferParameteriv() 的文档。
 
 ### `GLenum QOpenGLExtraFunctions::glGetGraphicsResetStatus()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetGraphicsResetStatus` 用于计算、查询或取得与“gl、Get、Graphics、重置、状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `GLenum`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLenum`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetGraphicsResetStatus()的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetGraphicsResetStatus() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetInteger64i_v(GLenum target, GLuint index, GLint64 *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetInteger64i_v` 用于执行与“gl、Get、Integer、64、i、v”相关的操作。调用时要先确认当前状态和 `target`、`index`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `data`：类型为 `GLint64 *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glGetInteger64i_v（`target`， `index`， `data` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 文档中的 glGetInteger64i_v()。
 
 ### `void QOpenGLExtraFunctions::glGetInteger64v(GLenum pname, GLint64 *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetInteger64v` 用于执行与“gl、Get、Integer、64、v”相关的操作。调用时要先确认当前状态和 `pname`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `data`：类型为 `GLint64 *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetInteger64v（`pname`， `data`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetInteger64v() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetIntegeri_v(GLenum target, GLuint index, GLint *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetIntegeri_v` 用于执行与“gl、Get、Integeri、v”相关的操作。调用时要先确认当前状态和 `target`、`index`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `data`：类型为 `GLint *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetIntegeri_v（`target`， `index`， `data`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参阅 OpenGL ES 3.x 文档中的 glGetIntegeri_v()。
 
 ### `void QOpenGLExtraFunctions::glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetInternalformativ` 用于执行与“gl、Get、Internalformativ”相关的操作。调用时要先确认当前状态和 `target`、`internalformat`、`pname`、`bufSize`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetInternalformativ（`target`， `internalformat`， `pname`， `bufSize`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetInternalformativ() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetMultisamplefv(GLenum pname, GLuint index, GLfloat *val)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetMultisamplefv` 用于执行与“gl、Get、Multisamplefv”相关的操作。调用时要先确认当前状态和 `pname`、`index`、`val` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `val`：类型为 `GLfloat *`。没有默认值，调用时必须提供。传入 `GLfloat *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetMultisamplefv（`pname`， `index`， `val`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetMultisamplefv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetObjectLabel(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetObjectLabel` 用于执行与“gl、Get、Object、Label”相关的操作。调用时要先确认当前状态和 `identifier`、`name`、`bufSize`、`length`、`label` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `identifier`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `name`：类型为 `GLuint`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `label`：类型为 `GLchar *`。没有默认值，调用时必须提供。传入 `GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetObjectLabel（`identifier`， `name`， `bufSize`， `length`， `label`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetObjectLabe() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetObjectPtrLabel(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetObjectPtrLabel` 用于执行与“gl、Get、Object、Ptr、Label”相关的操作。调用时要先确认当前状态和 `ptr`、`bufSize`、`length`、`label` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ptr`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `label`：类型为 `GLchar *`。没有默认值，调用时必须提供。传入 `GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetObjectPtrLabel（`ptr`， `bufSize`， `length`， `label`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glGetObjectPtrLabe() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetPointerv(GLenum pname, void **params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetPointerv` 用于执行与“gl、Get、Pointerv”相关的操作。调用时要先确认当前状态和 `pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `void **`。没有默认值，调用时必须提供。传入 `void **` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetPointerv（`pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetPointerv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetProgramBinary(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramBinary` 用于执行与“gl、Get、Program、Binary”相关的操作。调用时要先确认当前状态和 `program`、`bufSize`、`length`、`binaryFormat`、`binary` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `binaryFormat`：类型为 `GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `binary`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramBinary（`program`， `bufSize`， `length`， `binaryFormat`， `binary`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetProgramBinary() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetProgramInterfaceiv(GLuint program, GLenum programInterface, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramInterfaceiv` 用于执行与“gl、Get、Program、Interfaceiv”相关的操作。调用时要先确认当前状态和 `program`、`programInterface`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `programInterface`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramInterfaceiv（`program`， `programInterface`， `pname`， `params`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetProgramInterfaceiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetProgramPipelineInfoLog(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramPipelineInfoLog` 用于执行与“gl、Get、Program、Pipeline、Info、Log”相关的操作。调用时要先确认当前状态和 `pipeline`、`bufSize`、`length`、`infoLog` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `infoLog`：类型为 `GLchar *`。没有默认值，调用时必须提供。传入 `GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramPipelineInfoLog（`pipeline`， `bufSize`， `length`， `infoLog`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参阅 OpenGL ES 3.x 关于 glGetProgramPipelineInfoLog() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetProgramPipelineiv(GLuint pipeline, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramPipelineiv` 用于执行与“gl、Get、Program、Pipelineiv”相关的操作。调用时要先确认当前状态和 `pipeline`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramPipelineiv（`pipeline`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetProgramPipelineiv() 的文档。
 
 ### `GLuint QOpenGLExtraFunctions::glGetProgramResourceIndex(GLuint program, GLenum programInterface, const GLchar *name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramResourceIndex` 用于计算、查询或取得与“gl、Get、Program、Resource、索引”相关的操作。调用时要先确认当前状态和 `program`、`programInterface`、`name` 的有效范围；返回类型是 `GLuint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLuint`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `programInterface`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `name`：类型为 `const GLchar *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramResourceIndex（`program`， `programInterface`， `name`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetProgramResourceIndex() 的文档。
 
 ### `GLint QOpenGLExtraFunctions::glGetProgramResourceLocation(GLuint program, GLenum programInterface, const GLchar *name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramResourceLocation` 用于计算、查询或取得与“gl、Get、Program、Resource、Location”相关的操作。调用时要先确认当前状态和 `program`、`programInterface`、`name` 的有效范围；返回类型是 `GLint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLint`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `programInterface`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `name`：类型为 `const GLchar *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramResourceLocation（`program`， `programInterface`， `name`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetProgramResourceLocation() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetProgramResourceName(GLuint program, GLenum programInterface, GLuint index, GLsizei bufSize, GLsizei *length, GLchar *name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramResourceName` 用于执行与“gl、Get、Program、Resource、名称”相关的操作。调用时要先确认当前状态和 `program`、`programInterface`、`index`、`bufSize`、`length`、`name` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `programInterface`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `GLchar *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramResourceName（`program`， `programInterface`， `index`， `bufSize`， `length`， `name`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetProgramResourceName() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetProgramResourceiv(GLuint program, GLenum programInterface, GLuint index, GLsizei propCount, const GLenum *props, GLsizei bufSize, GLsizei *length, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetProgramResourceiv` 用于执行与“gl、Get、Program、Resourceiv”相关的操作。调用时要先确认当前状态和 `program`、`programInterface`、`index`、`propCount`、`props`、`bufSize`、`length`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `programInterface`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `propCount`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `props`：类型为 `const GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetProgramResourceiv（`program`、`programInterface`、`index`、`propCount`、`props`、`bufSize`、`length`、`params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glGetProgramResourceiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetQueryObjectuiv` 用于执行与“gl、Get、查询、Objectuiv”相关的操作。调用时要先确认当前状态和 `id`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetQueryObjectuiv（`id`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetQueryObjectuiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetQueryiv(GLenum target, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetQueryiv` 用于执行与“gl、Get、Queryiv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetQueryiv（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetQueryiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetSamplerParameterIiv(GLuint sampler, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetSamplerParameterIiv` 用于执行与“gl、Get、Sampler、Parameter、Iiv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetSamplerParameterIiv（`sampler`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetSamplerParameterIiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetSamplerParameterIuiv(GLuint sampler, GLenum pname, GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetSamplerParameterIuiv` 用于执行与“gl、Get、Sampler、Parameter、Iuiv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetSamplerParameterIuiv（`sampler`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetSamplerParameterIuiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetSamplerParameterfv(GLuint sampler, GLenum pname, GLfloat *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetSamplerParameterfv` 用于执行与“gl、Get、Sampler、Parameterfv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLfloat *`。没有默认值，调用时必须提供。传入 `GLfloat *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetSamplerParameterfv（`sampler`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetSamplerParameterfv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetSamplerParameteriv(GLuint sampler, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetSamplerParameteriv` 用于执行与“gl、Get、Sampler、Parameteriv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetSamplerParameteriv（`sampler`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetSamplerParameteriv() 的文档。
 
 ### `const GLubyte *QOpenGLExtraFunctions::glGetStringi(GLenum name, GLuint index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetStringi` 用于计算、查询或取得与“gl、Get、Stringi”相关的操作。调用时要先确认当前状态和 `name`、`index` 的有效范围；返回类型是 `const GLubyte *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const GLubyte *`。
-- 参数 `name`：类型为 `GLenum`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetStringi（`name`， `index`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetStringi() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetSynciv` 用于执行与“gl、Get、Synciv”相关的操作。调用时要先确认当前状态和 `sync`、`pname`、`bufSize`、`length`、`values` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sync`：类型为 `GLsync`。没有默认值，调用时必须提供。传入 `GLsync` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `values`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetSynciv（`sync`， `pname`， `bufSize`， `length`， `values`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetSynciv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetTexLevelParameterfv` 用于执行与“gl、Get、Tex、Level、Parameterfv”相关的操作。调用时要先确认当前状态和 `target`、`level`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLfloat *`。没有默认值，调用时必须提供。传入 `GLfloat *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetTexLevelParameterfv（`target`， `level`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetTexLevelParameterfv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetTexLevelParameteriv` 用于执行与“gl、Get、Tex、Level、Parameteriv”相关的操作。调用时要先确认当前状态和 `target`、`level`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetTexLevelParameteriv（`target`， `level`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetTexLevelParameteriv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetTexParameterIiv(GLenum target, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetTexParameterIiv` 用于执行与“gl、Get、Tex、Parameter、Iiv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetTexParameterIiv（`target`， `pname`， `params`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetTexParameterIiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetTexParameterIuiv(GLenum target, GLenum pname, GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetTexParameterIuiv` 用于执行与“gl、Get、Tex、Parameter、Iuiv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetTexParameterIuiv（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetTexParameterIuiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetTransformFeedbackVarying(GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLsizei *size, GLenum *type, GLchar *name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetTransformFeedbackVarying` 用于执行与“gl、Get、Transform、Feedback、Varying”相关的操作。调用时要先确认当前状态和 `program`、`index`、`bufSize`、`length`、`size`、`type`、`name` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei *`。没有默认值，调用时必须提供。传入 `GLsizei *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `GLsizei *`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `type`：类型为 `GLenum *`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `GLchar *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetTransformFeedbackVarying（`program`、`index`、`bufSize`、`length`、`size`、`type`、`name`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetTransformFeedbackVarying() 的文档。
 
 ### `GLuint QOpenGLExtraFunctions::glGetUniformBlockIndex(GLuint program, const GLchar *uniformBlockName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetUniformBlockIndex` 用于计算、查询或取得与“gl、Get、Uniform、阻塞或屏蔽、索引”相关的操作。调用时要先确认当前状态和 `program`、`uniformBlockName` 的有效范围；返回类型是 `GLuint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLuint`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformBlockName`：类型为 `const GLchar *`。没有默认值，调用时必须提供。传入 `const GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetUniformBlockIndex（`program`， `uniformBlockName`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetUniformBlockIndex() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetUniformIndices(GLuint program, GLsizei uniformCount, const GLchar *const *uniformNames, GLuint *uniformIndices)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetUniformIndices` 用于执行与“gl、Get、Uniform、Indices”相关的操作。调用时要先确认当前状态和 `program`、`uniformCount`、`uniformNames`、`uniformIndices` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformCount`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformNames`：类型为 `const GLchar *const *`。没有默认值，调用时必须提供。传入 `const GLchar *const *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformIndices`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetUniformIndices（`program`， `uniformCount`， `uniformNames`， `uniformIndices`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glGetUniformIndices() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetUniformuiv(GLuint program, GLint location, GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetUniformuiv` 用于执行与“gl、Get、Uniformuiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `params`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetUniformuiv（`program`， `location`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glGetUniformuiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetVertexAttribIiv` 用于执行与“gl、Get、Vertex、Attrib、Iiv”相关的操作。调用时要先确认当前状态和 `index`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetVertexAttribIiv（`index`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glGetVertexAttribIiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetVertexAttribIuiv` 用于执行与“gl、Get、Vertex、Attrib、Iuiv”相关的操作。调用时要先确认当前状态和 `index`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glGetVertexAttribIuiv（`index`， `pname`， `params`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glGetVertexAttribIuiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glGetnUniformfv(GLuint program, GLint location, GLsizei bufSize, GLfloat *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetnUniformfv` 用于执行与“gl、Getn、Uniformfv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`bufSize`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `params`：类型为 `GLfloat *`。没有默认值，调用时必须提供。传入 `GLfloat *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetnUniformfv（`program`， `location`， `bufSize`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glGetnUniformfv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glGetnUniformiv(GLuint program, GLint location, GLsizei bufSize, GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetnUniformiv` 用于执行与“gl、Getn、Uniformiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`bufSize`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `params`：类型为 `GLint *`。没有默认值，调用时必须提供。传入 `GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetnUniformiv（`program`， `location`， `bufSize`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glGetnUniformiv() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glGetnUniformuiv(GLuint program, GLint location, GLsizei bufSize, GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glGetnUniformuiv` 用于执行与“gl、Getn、Uniformuiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`bufSize`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `params`：类型为 `GLuint *`。没有默认值，调用时必须提供。传入 `GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glGetnUniformuiv（`program`， `location`， `bufSize`， `params`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glGetnUniformuiv() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glInvalidateFramebuffer(GLenum target, GLsizei numAttachments, const GLenum *attachments)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glInvalidateFramebuffer` 用于执行与“gl、Invalidate、Framebuffer”相关的操作。调用时要先确认当前状态和 `target`、`numAttachments`、`attachments` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `numAttachments`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `attachments`：类型为 `const GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glInvalidateFramebuffer（`target`， `numAttachments`， `attachments`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glInvalidateFramebuffer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glInvalidateSubFramebuffer(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glInvalidateSubFramebuffer` 用于执行与“gl、Invalidate、Sub、Framebuffer”相关的操作。调用时要先确认当前状态和 `target`、`numAttachments`、`attachments`、`x`、`y`、`width`、`height` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `numAttachments`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `attachments`：类型为 `const GLenum *`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `x`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glInvalidateSubFramebuffer（`target`、`numAttachments`、`attachments`、`x`、`y`、`width`、`height`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glInvalidateSubFramebuffer() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsEnabledi(GLenum target, GLuint index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsEnabledi` 用于计算、查询或取得与“gl、状态判断、Enabledi”相关的操作。调用时要先确认当前状态和 `target`、`index` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glIsEnabledi（`target`， `index`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glIsEnabledi() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsProgramPipeline(GLuint pipeline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsProgramPipeline` 用于计算、查询或取得与“gl、状态判断、Program、Pipeline”相关的操作。调用时要先确认当前状态和 `pipeline` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glIsProgramPipeline（`pipeline`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glIsProgramPipeline() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsQuery(GLuint id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsQuery` 用于计算、查询或取得与“gl、状态判断、查询”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glIsQuery（`id`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glIsQuery() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsSampler(GLuint sampler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsSampler` 用于计算、查询或取得与“gl、状态判断、Sampler”相关的操作。调用时要先确认当前状态和 `sampler` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glIsSampler（`sampler`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glIsSampler() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsSync(GLsync sync)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsSync` 用于计算、查询或取得与“gl、状态判断、Sync”相关的操作。调用时要先确认当前状态和 `sync` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `sync`：类型为 `GLsync`。没有默认值，调用时必须提供。传入 `GLsync` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glIsSync（`sync`） 的便利功能。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glIsSync() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsTransformFeedback(GLuint id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsTransformFeedback` 用于计算、查询或取得与“gl、状态判断、Transform、Feedback”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glIsTransformFeedback（`id`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glIsTransformFeedback() 的文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glIsVertexArray(GLuint array)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glIsVertexArray` 用于计算、查询或取得与“gl、状态判断、Vertex、Array”相关的操作。调用时要先确认当前状态和 `array` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `array`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glIsVertexArray（`array`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glIsVertexArray() 的文档。
 
 ### `void *QOpenGLExtraFunctions::glMapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glMapBufferRange` 用于计算、查询或取得与“gl、映射、Buffer、Range”相关的操作。调用时要先确认当前状态和 `target`、`offset`、`length`、`access` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `offset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizeiptr`。没有默认值，调用时必须提供。传入 `GLsizeiptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `access`：类型为 `GLbitfield`。没有默认值，调用时必须提供。传入 `GLbitfield` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glMapBufferRange（`target`， `offset`， `length`， `access`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glMapBufferRange() 的文档。
 
 ### `void QOpenGLExtraFunctions::glMemoryBarrier(GLbitfield barriers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glMemoryBarrier` 用于执行与“gl、Memory、Barrier”相关的操作。调用时要先确认当前状态和 `barriers` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `barriers`：类型为 `GLbitfield`。没有默认值，调用时必须提供。传入 `GLbitfield` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glMemoryBarrier（`barriers`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glMemoryBarrier() 的文档。
 
 ### `void QOpenGLExtraFunctions::glMemoryBarrierByRegion(GLbitfield barriers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glMemoryBarrierByRegion` 用于执行与“gl、Memory、Barrier、By、Region”相关的操作。调用时要先确认当前状态和 `barriers` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `barriers`：类型为 `GLbitfield`。没有默认值，调用时必须提供。传入 `GLbitfield` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glMemoryBarrierByRegion（`barriers`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参阅 OpenGL ES 3.x 关于 glMemoryBarrierByRegion() 的文档。
 
 ### `void QOpenGLExtraFunctions::glMinSampleShading(GLfloat value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glMinSampleShading` 用于执行与“gl、Min、Sample、Shading”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `GLfloat`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glMinSampleShading（`value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glMinSampleShading() 的文档。
 
 ### `void QOpenGLExtraFunctions::glObjectLabel(GLenum identifier, GLuint name, GLsizei length, const GLchar *label)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glObjectLabel` 用于执行与“gl、Object、Label”相关的操作。调用时要先确认当前状态和 `identifier`、`name`、`length`、`label` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `identifier`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `name`：类型为 `GLuint`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `length`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `label`：类型为 `const GLchar *`。没有默认值，调用时必须提供。传入 `const GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glObjectLabel（`identifier`， `name`， `length`， `label`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glObjectLabe() 的文档。
 
 ### `void QOpenGLExtraFunctions::glObjectPtrLabel(const void *ptr, GLsizei length, const GLchar *label)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glObjectPtrLabel` 用于执行与“gl、Object、Ptr、Label”相关的操作。调用时要先确认当前状态和 `ptr`、`length`、`label` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ptr`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `label`：类型为 `const GLchar *`。没有默认值，调用时必须提供。传入 `const GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glObjectPtrLabel（`ptr`， `length`， `label`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glObjectPtrLabe() 的文档。
 
 ### `void QOpenGLExtraFunctions::glPatchParameteri(GLenum pname, GLint value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glPatchParameteri` 用于执行与“gl、Patch、Parameteri”相关的操作。调用时要先确认当前状态和 `pname`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `value`：类型为 `GLint`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glPatchParameteri（`pname`， `value`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glPatchParameteri() 的文档。
 
 ### `void QOpenGLExtraFunctions::glPauseTransformFeedback()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glPauseTransformFeedback` 用于执行与“gl、暂停、Transform、Feedback”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glPauseTransformFeedback() 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glPauseTransformFeedback() 的文档。
 
 ### `void QOpenGLExtraFunctions::glPopDebugGroup()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glPopDebugGroup` 用于执行与“gl、Pop、调试输出、Group”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glPopDebugGroup()的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glPopDebugGroup() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glPrimitiveBoundingBox(GLfloat minX, GLfloat minY, GLfloat minZ, GLfloat minW, GLfloat maxX, GLfloat maxY, GLfloat maxZ, GLfloat maxW)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glPrimitiveBoundingBox` 用于执行与“gl、Primitive、Bounding、Box”相关的操作。调用时要先确认当前状态和 `minX`、`minY`、`minZ`、`minW`、`maxX`、`maxY`、`maxZ`、`maxW` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `minX`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minY`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minZ`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minW`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxX`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxY`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxZ`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxW`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数调用 glPrimitiveBoundingBox（`minX`， `minY`， `minZ`， `minW`， `maxX`， `maxY`， `maxZ`， `maxW`）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glPrimitiveBoundingBo() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLsizei length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramBinary` 用于执行与“gl、Program、Binary”相关的操作。调用时要先确认当前状态和 `program`、`binaryFormat`、`binary`、`length` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `binaryFormat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `binary`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramBinary（`program`， `binaryFormat`， `binary`， `length`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramBinary() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramParameteri(GLuint program, GLenum pname, GLint value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramParameteri` 用于执行与“gl、Program、Parameteri”相关的操作。调用时要先确认当前状态和 `program`、`pname`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `value`：类型为 `GLint`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramParameteri（`program`， `pname`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramParameteri() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform1f(GLuint program, GLint location, GLfloat v0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform1f` 用于执行与“gl、Program、Uniform、1、f”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform1f（`program`， `location`， `v0`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniform1f() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform1fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform1fv` 用于执行与“gl、Program、Uniform、1、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform1fv（`program`， `location`， `count`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniform1fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform1i(GLuint program, GLint location, GLint v0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform1i` 用于执行与“gl、Program、Uniform、1、i”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform1i（`program`， `location`， `v0` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform1i() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform1iv(GLuint program, GLint location, GLsizei count, const GLint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform1iv` 用于执行与“gl、Program、Uniform、1、iv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform1iv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniform1iv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform1ui(GLuint program, GLint location, GLuint v0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform1ui` 用于执行与“gl、Program、Uniform、1、ui”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform1ui（`program`， `location`， `v0`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniform1ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform1uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform1uiv` 用于执行与“gl、Program、Uniform、1、uiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform1uiv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform1uiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform2f(GLuint program, GLint location, GLfloat v0, GLfloat v1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform2f` 用于执行与“gl、Program、Uniform、2、f”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform2f（`program`， `location`， `v0`， `v1` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform2f() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform2fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform2fv` 用于执行与“gl、Program、Uniform、2、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform2fv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform2fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform2i(GLuint program, GLint location, GLint v0, GLint v1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform2i` 用于执行与“gl、Program、Uniform、2、i”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform2i（`program`， `location`， `v0`， `v1` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform2i() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform2iv(GLuint program, GLint location, GLsizei count, const GLint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform2iv` 用于执行与“gl、Program、Uniform、2、iv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform2iv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniform2iv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform2ui(GLuint program, GLint location, GLuint v0, GLuint v1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform2ui` 用于执行与“gl、Program、Uniform、2、ui”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform2ui（`program`， `location`， `v0`， `v1`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform2ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform2uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform2uiv` 用于执行与“gl、Program、Uniform、2、uiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform2uiv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniform2uiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform3f(GLuint program, GLint location, GLfloat v0, GLfloat v1, GLfloat v2)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform3f` 用于执行与“gl、Program、Uniform、3、f”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1`、`v2` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform3f（`program`， `location`， `v0`， `v1`， `v2`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform3f() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform3fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform3fv` 用于执行与“gl、Program、Uniform、3、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform3fv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform3fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform3i(GLuint program, GLint location, GLint v0, GLint v1, GLint v2)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform3i` 用于执行与“gl、Program、Uniform、3、i”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1`、`v2` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform3i（`program`， `location`， `v0`， `v1`， `v2`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniform3i() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform3iv(GLuint program, GLint location, GLsizei count, const GLint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform3iv` 用于执行与“gl、Program、Uniform、3、iv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform3iv（`program`， `location`， `count`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform3iv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform3ui(GLuint program, GLint location, GLuint v0, GLuint v1, GLuint v2)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform3ui` 用于执行与“gl、Program、Uniform、3、ui”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1`、`v2` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform3ui（`program`， `location`， `v0`， `v1`， `v2` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniform3ui() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform3uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform3uiv` 用于执行与“gl、Program、Uniform、3、uiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform3uiv（`program`， `location`， `count`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform3uiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform4f(GLuint program, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform4f` 用于执行与“gl、Program、Uniform、4、f”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1`、`v2`、`v3` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v3`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform4f（`program`， `location`， `v0`， `v1`， `v2`， `v3` 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform4f() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform4fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform4fv` 用于执行与“gl、Program、Uniform、4、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform4fv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniform4fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform4i(GLuint program, GLint location, GLint v0, GLint v1, GLint v2, GLint v3)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform4i` 用于执行与“gl、Program、Uniform、4、i”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1`、`v2`、`v3` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v3`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform4i（`program`、`location`、`v0`、`v1`、`v2`、`v3`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform4i() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform4iv(GLuint program, GLint location, GLsizei count, const GLint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform4iv` 用于执行与“gl、Program、Uniform、4、iv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform4iv（`program`， `location`， `count`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniform4iv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform4ui(GLuint program, GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform4ui` 用于执行与“gl、Program、Uniform、4、ui”相关的操作。调用时要先确认当前状态和 `program`、`location`、`v0`、`v1`、`v2`、`v3` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v3`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniform4ui（`program`、`location`、`v0`、`v1`、`v2`、`v3`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniform4ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniform4uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniform4uiv` 用于执行与“gl、Program、Uniform、4、uiv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniform4uiv（`program`， `location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniform4uiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix2fv` 用于执行与“gl、Program、Uniform、Matrix、2、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix2fv（`program`， `location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniformMatrix2fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix2x3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix2x3fv` 用于执行与“gl、Program、Uniform、Matrix、2、x、3、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix2x3fv（`program`， `location`， `count`， `transpose`， `value`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniformMatrix2x3fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix2x4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix2x4fv` 用于执行与“gl、Program、Uniform、Matrix、2、x、4、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniformMatrix2x4fv（`program`， `location`， `count`， `transpose`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniformMatrix2x4fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix3fv` 用于执行与“gl、Program、Uniform、Matrix、3、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix3fv（`program`， `location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniformMatrix3fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix3x2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix3x2fv` 用于执行与“gl、Program、Uniform、Matrix、3、x、2、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glProgramUniformMatrix3x2fv（`program`， `location`， `count`， `transpose`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glProgramUniformMatrix3x2fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix3x4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix3x4fv` 用于执行与“gl、Program、Uniform、Matrix、3、x、4、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix3x4fv的便利函数（`program`， `location`， `count`， `transpose`， `value`）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniformMatrix3x4fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix4fv` 用于执行与“gl、Program、Uniform、Matrix、4、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix4fv（`program`， `location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glProgramUniformMatrix4fv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix4x2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix4x2fv` 用于执行与“gl、Program、Uniform、Matrix、4、x、2、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix4x2fv（`program`， `location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glProgramUniformMatrix4x2fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glProgramUniformMatrix4x3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glProgramUniformMatrix4x3fv` 用于执行与“gl、Program、Uniform、Matrix、4、x、3、fv”相关的操作。调用时要先确认当前状态和 `program`、`location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glProgramUniformMatrix4x3fv（`program`， `location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glProgramUniformMatrix4x3fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glPushDebugGroup(GLenum source, GLuint id, GLsizei length, const GLchar *message)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glPushDebugGroup` 用于执行与“gl、Push、调试输出、Group”相关的操作。调用时要先确认当前状态和 `source`、`id`、`length`、`message` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `source`：类型为 `GLenum`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `id`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const GLchar *`。没有默认值，调用时必须提供。传入 `const GLchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glPushDebugGroup（`source`， `id`， `length`， `message`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glPushDebugGroup 的文档。
 
 ### `void QOpenGLExtraFunctions::glReadBuffer(GLenum src)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glReadBuffer` 用于执行与“gl、读取、Buffer”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `src`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glReadBuffer（`src`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glReadBuffer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glReadnPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, void *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glReadnPixels` 用于执行与“gl、Readn、Pixels”相关的操作。调用时要先确认当前状态和 `x`、`y`、`width`、`height`、`format`、`type`、`bufSize`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `format`：类型为 `GLenum`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `bufSize`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glReadnPixels（`x`、`y`、`width`、`height`、`format`、`type`、`bufSize`、`data`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glReadnPixels() 的文档。
 
 ### `void QOpenGLExtraFunctions::glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glRenderbufferStorageMultisample` 用于执行与“gl、Renderbuffer、Storage、Multisample”相关的操作。调用时要先确认当前状态和 `target`、`samples`、`internalformat`、`width`、`height` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `samples`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glRenderbufferStorageMultisample（`target`， `samples`， `internalformat`， `width`， `height` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glRenderbufferStorageMultisample() 的文档。
 
 ### `void QOpenGLExtraFunctions::glResumeTransformFeedback()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glResumeTransformFeedback` 用于执行与“gl、恢复运行、Transform、Feedback”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glResumeTransformFeedback()的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glResumeTransformFeedback() 的文档。
 
 ### `void QOpenGLExtraFunctions::glSampleMaski(GLuint maskNumber, GLbitfield mask)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSampleMaski` 用于执行与“gl、Sample、Maski”相关的操作。调用时要先确认当前状态和 `maskNumber`、`mask` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `maskNumber`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mask`：类型为 `GLbitfield`。没有默认值，调用时必须提供。传入 `GLbitfield` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSampleMaski（`maskNumber`， `mask`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glSampleMaski() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glSamplerParameterIiv(GLuint sampler, GLenum pname, const GLint *param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSamplerParameterIiv` 用于执行与“gl、Sampler、Parameter、Iiv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `const GLint *`。没有默认值，调用时必须提供。传入 `const GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSamplerParameterIiv（`sampler`， `pname`， `param`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glSamplerParameterIiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glSamplerParameterIuiv(GLuint sampler, GLenum pname, const GLuint *param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSamplerParameterIuiv` 用于执行与“gl、Sampler、Parameter、Iuiv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSamplerParameterIuiv（`sampler`， `pname`， `param`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glSamplerParameterIuiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSamplerParameterf` 用于执行与“gl、Sampler、Parameterf”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `GLfloat`。没有默认值，调用时必须提供。传入 `GLfloat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSamplerParameterf（`sampler`， `pname`， `param`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glSamplerParameterf() 的文档。
 
 ### `void QOpenGLExtraFunctions::glSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSamplerParameterfv` 用于执行与“gl、Sampler、Parameterfv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。传入 `const GLfloat *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSamplerParameterfv（`sampler`， `pname`， `param`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glSamplerParameterfv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glSamplerParameteri(GLuint sampler, GLenum pname, GLint param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSamplerParameteri` 用于执行与“gl、Sampler、Parameteri”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSamplerParameteri（`sampler`， `pname`， `param`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glSamplerParameteri() 的文档。
 
 ### `void QOpenGLExtraFunctions::glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glSamplerParameteriv` 用于执行与“gl、Sampler、Parameteriv”相关的操作。调用时要先确认当前状态和 `sampler`、`pname`、`param` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampler`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `param`：类型为 `const GLint *`。没有默认值，调用时必须提供。传入 `const GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glSamplerParameteriv（`sampler`， `pname`， `param`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glSamplerParameteriv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexBuffer(GLenum target, GLenum internalformat, GLuint buffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexBuffer` 用于执行与“gl、Tex、Buffer”相关的操作。调用时要先确认当前状态和 `target`、`internalformat`、`buffer` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buffer`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexBuffer（`target`， `internalformat`， `buffer`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glTexBuffer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexBufferRange(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexBufferRange` 用于执行与“gl、Tex、Buffer、Range”相关的操作。调用时要先确认当前状态和 `target`、`internalformat`、`buffer`、`offset`、`size` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buffer`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `GLintptr`。没有默认值，调用时必须提供。传入 `GLintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `GLsizeiptr`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexBufferRange（`target`， `internalformat`， `buffer`， `offset`， `size`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glTexBufferRange() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexImage3D` 用于执行与“gl、Tex、Image、3、D”相关的操作。调用时要先确认当前状态和 `target`、`level`、`internalformat`、`width`、`height`、`depth`、`border`、`format`、`type`、`pixels` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `depth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `border`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `GLenum`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `pixels`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexImage3D（`target`、`level`、`internalformat`、`width`、`height`、`depth`、`border`、`format`、`type`、`pixels`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glTexImage3D() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexParameterIiv(GLenum target, GLenum pname, const GLint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexParameterIiv` 用于执行与“gl、Tex、Parameter、Iiv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `const GLint *`。没有默认值，调用时必须提供。传入 `const GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexParameterIiv（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glTexParameterIiv() 的 OpenGL ES 3.X 文档。
 
 ### `void QOpenGLExtraFunctions::glTexParameterIuiv(GLenum target, GLenum pname, const GLuint *params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexParameterIuiv` 用于执行与“gl、Tex、Parameter、Iuiv”相关的操作。调用时要先确认当前状态和 `target`、`pname`、`params` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `pname`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `params`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexParameterIuiv（`target`， `pname`， `params`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.X 关于 glTexParameterIuiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexStorage2D` 用于执行与“gl、Tex、Storage、2、D”相关的操作。调用时要先确认当前状态和 `target`、`levels`、`internalformat`、`width`、`height` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `levels`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexStorage2D（`target`， `levels`， `internalformat`， `width`， `height`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glTexStorage2D() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexStorage2DMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexStorage2DMultisample` 用于执行与“gl、Tex、Storage、2、D、Multisample”相关的操作。调用时要先确认当前状态和 `target`、`samples`、`internalformat`、`width`、`height`、`fixedsamplelocations` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `samples`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `fixedsamplelocations`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexStorage2DMultisample（`target`， `samples`， `internalformat`， `width`， `height`， `fixedsamplelocations`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glTexStorage2DMultisample() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexStorage3D` 用于执行与“gl、Tex、Storage、3、D”相关的操作。调用时要先确认当前状态和 `target`、`levels`、`internalformat`、`width`、`height`、`depth` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `levels`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `depth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexStorage3D（`target`、`levels`、`internalformat`、`width`、`height`、`depth`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glTexStorage3D() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexStorage3DMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexStorage3DMultisample` 用于执行与“gl、Tex、Storage、3、D、Multisample”相关的操作。调用时要先确认当前状态和 `target`、`samples`、`internalformat`、`width`、`height`、`depth`、`fixedsamplelocations` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `samples`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalformat`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `depth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fixedsamplelocations`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexStorage3DMultisample（`target`、`samples`、`internalformat`、`width`、`height`、`depth`、`fixedsamplelocations`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.X 关于 glTexStorage3DMultisample() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTexSubImage3D` 用于执行与“gl、Tex、Sub、Image、3、D”相关的操作。调用时要先确认当前状态和 `target`、`level`、`xoffset`、`yoffset`、`zoffset`、`width`、`height`、`depth`、`format`、`type`、`pixels` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `level`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `xoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `yoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `zoffset`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `width`：类型为 `GLsizei`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `GLsizei`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `depth`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `GLenum`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `pixels`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTexSubImage3D（`target`、`level`、`xoffset`、`yoffset`、`zoffset`、`width`、`height`、`depth`、`format`、`type`、`pixels`的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glTexSubImage3D() 的文档。
 
 ### `void QOpenGLExtraFunctions::glTransformFeedbackVaryings(GLuint program, GLsizei count, const GLchar *const *varyings, GLenum bufferMode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glTransformFeedbackVaryings` 用于执行与“gl、Transform、Feedback、Varyings”相关的操作。调用时要先确认当前状态和 `program`、`count`、`varyings`、`bufferMode` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `varyings`：类型为 `const GLchar *const *`。没有默认值，调用时必须提供。传入 `const GLchar *const *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bufferMode`：类型为 `GLenum`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glTransformFeedbackVaryings（`program`， `count`， `varyings`， `bufferMode`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参阅 OpenGL ES 3.x 关于 glTransformFeedbackVaryings() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniform1ui(GLint location, GLuint v0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform1ui` 用于执行与“gl、Uniform、1、ui”相关的操作。调用时要先确认当前状态和 `location`、`v0` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniform1ui（`location`， `v0`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniform1ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniform1uiv(GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform1uiv` 用于执行与“gl、Uniform、1、uiv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniform1uiv（`location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glUniform1uiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glUniform2ui(GLint location, GLuint v0, GLuint v1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform2ui` 用于执行与“gl、Uniform、2、ui”相关的操作。调用时要先确认当前状态和 `location`、`v0`、`v1` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glUniform2ui（`location`， `v0`， `v1`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniform2ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniform2uiv(GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform2uiv` 用于执行与“gl、Uniform、2、uiv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniform2uiv（`location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniform2uiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniform3ui(GLint location, GLuint v0, GLuint v1, GLuint v2)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform3ui` 用于执行与“gl、Uniform、3、ui”相关的操作。调用时要先确认当前状态和 `location`、`v0`、`v1`、`v2` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glUniform3ui（`location`， `v0`， `v1`， `v2` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniform3ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniform3uiv(GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform3uiv` 用于执行与“gl、Uniform、3、uiv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniform3uiv（`location`， `count`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glUniform3uiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glUniform4ui(GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform4ui` 用于执行与“gl、Uniform、4、ui”相关的操作。调用时要先确认当前状态和 `location`、`v0`、`v1`、`v2`、`v3` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v0`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v1`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v3`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glUniform4ui（`location`， `v0`， `v1`， `v2`， `v3` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glUniform4ui() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glUniform4uiv(GLint location, GLsizei count, const GLuint *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniform4uiv` 用于执行与“gl、Uniform、4、uiv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLuint *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glUniform4uiv（`location`， `count`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniform4uiv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformBlockBinding` 用于执行与“gl、Uniform、阻塞或屏蔽、Binding”相关的操作。调用时要先确认当前状态和 `program`、`uniformBlockIndex`、`uniformBlockBinding` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformBlockIndex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uniformBlockBinding`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniformBlockBinding（`program`， `uniformBlockIndex`， `uniformBlockBinding`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glUniformBlockBinding() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformMatrix2x3fv` 用于执行与“gl、Uniform、Matrix、2、x、3、fv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniformMatrix2x3fv（`location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参见 OpenGL ES 3.x 关于 glUniformMatrix2x3fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformMatrix2x4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformMatrix2x4fv` 用于执行与“gl、Uniform、Matrix、2、x、4、fv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glUniformMatrix2x4fv（`location`， `count`， `transpose`， `value` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniformMatrix2x4fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformMatrix3x2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformMatrix3x2fv` 用于执行与“gl、Uniform、Matrix、3、x、2、fv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniformMatrix3x2fv（`location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniformMatrix3x2fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformMatrix3x4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformMatrix3x4fv` 用于执行与“gl、Uniform、Matrix、3、x、4、fv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniformMatrix3x4fv（`location`， `count`， `transpose`， `value`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniformMatrix3x4fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformMatrix4x2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformMatrix4x2fv` 用于执行与“gl、Uniform、Matrix、4、x、2、fv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniformMatrix4x2fv（`location`， `count`， `transpose`， `value`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUniformMatrix4x2fv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUniformMatrix4x3fv` 用于执行与“gl、Uniform、Matrix、4、x、3、fv”相关的操作。调用时要先确认当前状态和 `location`、`count`、`transpose`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transpose`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const GLfloat *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUniformMatrix4x3fv（`location`， `count`， `transpose`， `value`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glUniformMatrix4x3fv() 的 OpenGL ES 3.x 文档。
 
 ### `GLboolean QOpenGLExtraFunctions::glUnmapBuffer(GLenum target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUnmapBuffer` 用于计算、查询或取得与“gl、Unmap、Buffer”相关的操作。调用时要先确认当前状态和 `target` 的有效范围；返回类型是 `GLboolean`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLboolean`。
-- 参数 `target`：类型为 `GLenum`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glUnmapBuffer（`target`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUnmapBuffer() 的文档。
 
 ### `void QOpenGLExtraFunctions::glUseProgramStages(GLuint pipeline, GLbitfield stages, GLuint program)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glUseProgramStages` 用于执行与“gl、Use、Program、Stages”相关的操作。调用时要先确认当前状态和 `pipeline`、`stages`、`program` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stages`：类型为 `GLbitfield`。没有默认值，调用时必须提供。传入 `GLbitfield` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `program`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glUseProgramStages（`pipeline`， `stages`， `program` 的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glUseProgramStages() 的文档。
 
 ### `void QOpenGLExtraFunctions::glValidateProgramPipeline(GLuint pipeline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glValidateProgramPipeline` 用于执行与“gl、Validate、Program、Pipeline”相关的操作。调用时要先确认当前状态和 `pipeline` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pipeline`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glValidateProgramPipeline（`pipeline`） 的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glValidateProgramPipeline() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribBinding(GLuint attribindex, GLuint bindingindex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribBinding` 用于执行与“gl、Vertex、Attrib、Binding”相关的操作。调用时要先确认当前状态和 `attribindex`、`bindingindex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribindex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bindingindex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribBinding（`attribindex`， `bindingindex`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glVertexAttribBinding() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribDivisor(GLuint index, GLuint divisor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribDivisor` 用于执行与“gl、Vertex、Attrib、Divisor”相关的操作。调用时要先确认当前状态和 `index`、`divisor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `divisor`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribDivisor（`index`， `divisor`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glVertexAttribDivisor() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribFormat(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribFormat` 用于执行与“gl、Vertex、Attrib、格式化”相关的操作。调用时要先确认当前状态和 `attribindex`、`size`、`type`、`normalized`、`relativeoffset` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribindex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `GLint`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `normalized`：类型为 `GLboolean`。没有默认值，调用时必须提供。传入 `GLboolean` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `relativeoffset`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribFormat（`attribindex`， `size`， `type`， `normalized`， `relativeoffset`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glVertexAttribFormat() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribI4i` 用于执行与“gl、Vertex、Attrib、I、4、i”相关的操作。调用时要先确认当前状态和 `index`、`x`、`y`、`z`、`w` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `x`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `z`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `GLint`。没有默认值，调用时必须提供。传入 `GLint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribI4i（`index`， `x`， `y`， `z`， `w`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 OpenGL ES 3.x 关于 glVertexAttribI4i() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribI4iv(GLuint index, const GLint *v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribI4iv` 用于执行与“gl、Vertex、Attrib、I、4、iv”相关的操作。调用时要先确认当前状态和 `index`、`v` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `v`：类型为 `const GLint *`。没有默认值，调用时必须提供。传入 `const GLint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribI4iv（`index`， `v`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glVertexAttribI4iv() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribI4ui` 用于执行与“gl、Vertex、Attrib、I、4、ui”相关的操作。调用时要先确认当前状态和 `index`、`x`、`y`、`z`、`w` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `x`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `z`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribI4ui（`index`， `x`， `y`， `z`， `w`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glVertexAttribI4ui() 的文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribI4uiv(GLuint index, const GLuint *v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribI4uiv` 用于执行与“gl、Vertex、Attrib、I、4、uiv”相关的操作。调用时要先确认当前状态和 `index`、`v` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `v`：类型为 `const GLuint *`。没有默认值，调用时必须提供。传入 `const GLuint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribI4uiv（`index`， `v`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glVertexAttribI4uiv() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribIFormat(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribIFormat` 用于执行与“gl、Vertex、Attrib、I、格式化”相关的操作。调用时要先确认当前状态和 `attribindex`、`size`、`type`、`relativeoffset` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribindex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `GLint`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `relativeoffset`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribIFormat（`attribindex`， `size`， `type`， `relativeoffset`的便利函数）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+欲了解更多信息，请参阅 glVertexAttribIFormat() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void *pointer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexAttribIPointer` 用于执行与“gl、Vertex、Attrib、I、Pointer”相关的操作。调用时要先确认当前状态和 `index`、`size`、`type`、`stride`、`pointer` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `GLuint`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `size`：类型为 `GLint`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `type`：类型为 `GLenum`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `stride`：类型为 `GLsizei`。没有默认值，调用时必须提供。传入 `GLsizei` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pointer`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexAttribIPointer（`index`， `size`， `type`， `stride`， `pointer`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 glVertexAttribIPointer() 的 OpenGL ES 3.x 文档。
 
 ### `void QOpenGLExtraFunctions::glVertexBindingDivisor(GLuint bindingindex, GLuint divisor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glVertexBindingDivisor` 用于执行与“gl、Vertex、Binding、Divisor”相关的操作。调用时要先确认当前状态和 `bindingindex`、`divisor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bindingindex`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `divisor`：类型为 `GLuint`。没有默认值，调用时必须提供。传入 `GLuint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用glVertexBindingDivisor（`bindingindex`， `divisor`）的便利函数。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glVertexBindingDivisor() 的文档。
 
 ### `void QOpenGLExtraFunctions::glWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLExtraFunctions::glWaitSync` 用于执行与“gl、等待、Sync”相关的操作。调用时要先确认当前状态和 `sync`、`flags`、`timeout` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sync`：类型为 `GLsync`。没有默认值，调用时必须提供。传入 `GLsync` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `GLbitfield`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `timeout`：类型为 `GLuint64`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用 glWaitSync（`sync`， `flags`， `timeout` 的便利功能）。
+该函数仅在 OpenGL ES 3.x 或 OpenGL 3.x 或 4.x 上下文中可用。在运行纯 OpenGL 时，该函数仅在该配置文件和版本中包含该函数核心或扩展时可用。
+更多信息请参见 OpenGL ES 3.x 关于 glWaitSync() 的文档。
 
 ## 6. 深入实践与常见坑
 

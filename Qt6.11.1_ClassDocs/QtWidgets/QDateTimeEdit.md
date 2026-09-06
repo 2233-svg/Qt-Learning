@@ -168,1188 +168,830 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 89 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDateTimeEdit::Sectionflags QDateTimeEdit::Sections`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 暴露的类型声明 `Sectionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Sectionflags QDateTimeEdit::Sections`。
-- 属性名：`QDateTimeEdit`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDateTimeEdit::NoSection`：`0x0000`
+- `QDateTimeEdit::AmPmSection`：`0x0001`
+- `QDateTimeEdit::MSecSection`：`0x0002`
+- `QDateTimeEdit::SecondSection`：`0x0004`
+- `QDateTimeEdit::MinuteSection`：`0x0008`
+- `QDateTimeEdit::HourSection`：`0x0010`
+- `QDateTimeEdit::DaySection`：`0x0100`
+- `QDateTimeEdit::MonthSection`：`0x0200`
+- `QDateTimeEdit::YearSection`：`0x0400`
+Sections 类型是 QFlags 的 typedef<Section>。它存储 Section 值的 OR 组合。
 
 ### `calendarPopup : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setCalendarPopup(...)` 设置，之后用 `calendarPopup()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含当前的日历弹出展示模式。
+点击箭头按钮后会显示日历弹窗。该属性仅在存在有效日期显示格式时有效。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`calendarPopup`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `calendarPopup()` 读取当前值；它不会修改应用状态。
 
 ### `currentSection : Section`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setCurrentSection(...)` 设置，之后用 `currentSection()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示当前自旋盒截面。
 
-**签名拆解：**
-
-- 属性类型：`Section`。
-- 属性名：`currentSection`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentSection()` 读取当前值；它不会修改应用状态。
 
 ### `currentSectionIndex : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setCurrentSectionIndex(...)` 设置，之后用 `currentSectionIndex()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示旋量盒当前截面索引。
+如果格式是“yyyy/MM/dd”，displayText是“2001/05/21”，cursorPosition是5，currentSectionIndex返回1。如果cursorPosition是3，currentSectionIndex是0，依此类推。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`currentSectionIndex`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentSectionIndex()` 读取当前值；它不会修改应用状态。
 
 ### `date : QDate`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setDate(...)` 设置，之后用 `date()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了控件中设置的`QDate`。
+默认情况下，该物业包含一个指向2000年1月1日的日期。
 
-**签名拆解：**
-
-- 属性类型：`QDate`。
-- 属性名：`date`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `date()` 读取当前值；它不会修改应用状态。
 
 ### `dateTime : QDateTime`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setDateTime(...)` 设置，之后用 `dateTime()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示`QDateTimeEdit`中所设定的`QDateTime`。
+设置该属性时，新 `QDateTime` 转换为`QDateTimeEdit`的时间系统，因此时间系统保持不变。
+默认情况下，该属性设置为2000 CE的开始。它只能设置为有效的`QDateTime`值。如果任何操作导致该属性的日期-时间值为无效，则重置为`minimumDateTime`属性的值。
+如果`QDateTimeEdit`没有日期字段，设置该属性会使小部件的日期范围以该属性新值的日期开始和结束。
 
-**签名拆解：**
-
-- 属性类型：`QDateTime`。
-- 属性名：`dateTime`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dateTime()` 读取当前值；它不会修改应用状态。
 
 ### `displayFormat : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setDisplayFormat(...)` 设置，之后用 `displayFormat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了显示日期/日期编辑的格式。
+该格式在`QDateTime::toString()`和 `QDateTime::fromString()` 中有详细描述。
+示例格式字符串（假设日期为1969年7月2日）：
+- `Format`：结果
+- `dd.MM.yyyy`：1969年7月2日
+- `MMM d yy`：1969年7月2日
+- `MMMM d yy`：1969年7月2日
+请注意，如果你指定两位数年份，它会被解释为编辑日期时间初始化的世纪。默认的世纪是第21世纪（2000-2099）。
+如果你指定了无效格式，格式将不会被设置。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`displayFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `displayFormat()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] displayedSections : Sections`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的状态/能力属性。通常通过 `displayedSections()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性保存了日期时间编辑中当前显示的字段。
+返回该格式显示的部分的位集。
 
-**签名拆解：**
-
-- 属性类型：`Sections`。
-- 属性名：`displayedSections`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `displayedSections()` 读取当前值；它不会修改应用状态。
 
 ### `maximumDate : QDate`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setMaximumDate(...)` 设置，之后用 `maximumDate()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性拥有日期时间的最大日期。
+更改该属性会更新`maximumDateTime`属性的日期，同时保留`maximumTime`属性。设置该属性时，必要时会调整`minimumDate`以确保范围有效。发生这种情况时，如果`minimumTime`属性大于`maximumTime`属性，也会相应调整。否则，对该属性的更改会保留`minimumDateTime`属性。
+该属性只能被设置为描述当前`maximumTime`属性使`QDateTime`对象有效日期的有效`QDate`对象。setMaximumDate() 接受的最晚日期是公元9999年末。这是该属性的默认时间。该默认值可以通过`clearMaximumDateTime()`恢复。
 
-**签名拆解：**
-
-- 属性类型：`QDate`。
-- 属性名：`maximumDate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumDate()` 读取当前值；它不会修改应用状态。
 
 ### `maximumDateTime : QDateTime`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setMaximumDateTime(...)` 设置，之后用 `maximumDateTime()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含日期时间编辑的最大日期时间。
+更改该属性隐式地将`maximumDate`和`maximumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，`minimumDateTime`会调整以确保该范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMaximumDateTime() 接受的最晚日期时间为公元9999年末。这是该属性的默认值。该默认值可用 clearMaximumDateTime() 恢复。
 
-**签名拆解：**
-
-- 属性类型：`QDateTime`。
-- 属性名：`maximumDateTime`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumDateTime()` 读取当前值；它不会修改应用状态。
 
 ### `maximumTime : QTime`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setMaximumTime(...)` 设置，之后用 `maximumTime()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了日期时间编辑的最大时间。
+更改该属性会更新`maximumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`minimumTime`属性，以确保范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含时间为23：59：59和999毫秒。该默认值可以通过clearMaximumTime()恢复。
 
-**签名拆解：**
-
-- 属性类型：`QTime`。
-- 属性名：`maximumTime`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumTime()` 读取当前值；它不会修改应用状态。
 
 ### `minimumDate : QDate`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setMinimumDate(...)` 设置，之后用 `minimumDate()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含日期时间编辑的最小日期。
+更改该属性会更新`minimumDateTime`属性的日期，同时保留`minimumTime`属性。设置该属性时，如有必要，`maximumDate`会调整以确保范围保持有效。发生这种情况时，如果`maximumTime`属性小于`minimumTime`属性，也会相应调整。否则，对该属性的更改会保留`maximumDateTime`属性。
+该属性只能被设置为描述当前`minimumTime`属性使得有效`QDateTime`对象的有效日期的有效`QDate`对象。setMinimumDate() 接受的最早日期是公元100年的开始。该属性的默认时间为公元1752年9月14日。该默认值可以通过`clearMinimumDateTime()`恢复。
 
-**签名拆解：**
-
-- 属性类型：`QDate`。
-- 属性名：`minimumDate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumDate()` 读取当前值；它不会修改应用状态。
 
 ### `minimumDateTime : QDateTime`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setMinimumDateTime(...)` 设置，之后用 `minimumDateTime()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了日期时间编辑的最小日期时间。
+更改该属性隐式地将`minimumDate`和`minimumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，会调整`maximumDateTime`以确保该范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMinimumDateTime() 接受的最早日期时间是公元100年的开始。该属性的默认时间是公元1752年9月14日的开始。该默认可以通过 clearMinimumDateTime() 恢复。
 
-**签名拆解：**
-
-- 属性类型：`QDateTime`。
-- 属性名：`minimumDateTime`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumDateTime()` 读取当前值；它不会修改应用状态。
 
 ### `minimumTime : QTime`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setMinimumTime(...)` 设置，之后用 `minimumTime()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示日期时间编辑的最小时间。
+更改该属性会更新`minimumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`maximumTime`属性，以确保范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含 00：00：00 和 0 毫秒的时间。该默认值可以通过 clearMinimumTime() 恢复。
 
-**签名拆解：**
-
-- 属性类型：`QTime`。
-- 属性名：`minimumTime`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumTime()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] sectionCount : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的状态/能力属性。通常通过 `sectionCount()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含显示的分段数量。如果格式为“yyyy/yy/yyyy”，sectionCount返回3。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`sectionCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sectionCount()` 读取当前值；它不会修改应用状态。
 
 ### `time : QTime`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setTime(...)` 设置，之后用 `time()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了控件中设置的`QTime`。
+默认情况下，该属性包含时间为00：00：00和0毫秒。
 
-**签名拆解：**
-
-- 属性类型：`QTime`。
-- 属性名：`time`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `time()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.7] timeZone : QTimeZone`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的配置属性。初始化或状态切换时通过 `setTimeZone(...)` 设置，之后用 `timeZone()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含 datetime 编辑控件当前使用的时区。
+如果使用的日期时间格式包含时区指示器——即`t`、`tt`、`ttt`或`tttt`格式指定符——用户输入在解析时会在该时区重新表达，覆盖用户可能指定的任何时区。
 
-**签名拆解：**
-
-- 属性类型：`QTimeZone`。
-- 属性名：`timeZone`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `timeZone()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QDateTimeEdit::QDateTimeEdit(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的日期时间编辑器，并配有`parent`。
 
 ### `[explicit] QDateTimeEdit::QDateTimeEdit(QDate date, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `date`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的日期时间编辑器，并带有`parent`。该值设置为`date`。
 
 ### `[explicit] QDateTimeEdit::QDateTimeEdit(QTime time, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `time`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的日期时间编辑器，并带有`parent`。该值设置为`time`。
 
 ### `[explicit] QDateTimeEdit::QDateTimeEdit(const QDateTime &datetime, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `datetime`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的日期时间编辑器，并带有`parent`。该值设置为`datetime`。
 
 ### `[virtual noexcept] QDateTimeEdit::~QDateTimeEdit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `QCalendar QDateTimeEdit::calendar() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::calendar` 用于计算、查询或取得与“calendar”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCalendar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCalendar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+报告该小部件正在使用的日历系统。
 
 ### `QCalendarWidget *QDateTimeEdit::calendarWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::calendarWidget` 用于计算、查询或取得与“calendar、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCalendarWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCalendarWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`calendarPopup`设置为true且（sections() & `DateSections_Mask`） ！= 0，则返回编辑器的日历小部件。
+如果没有设置日历小部件，该函数会创建并返回一个日历小部件。
 
 ### `[override virtual] void QDateTimeEdit::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSpinBox::clear()`。
+清除行编辑中除前缀和后缀外的所有文本。
 
 ### `QDate QDateTimeEdit::date() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::date` 用于计算、查询或取得与“日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回日期时间编辑。
+注意：产权日期的获取函数。
 
 ### `[signal] void QDateTimeEdit::dateChanged(QDate date)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 发出的通知信号 `dateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含了控件中设置的`QDate`。
+默认情况下，该物业包含一个指向2000年1月1日的日期。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `date`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `date` 的变化，不要把它当作普通函数主动调用。
 
 ### `[signal] void QDateTimeEdit::dateTimeChanged(const QDateTime &datetime)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 发出的通知信号 `dateTimeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示`QDateTimeEdit`中所设定的`QDateTime`。
+设置该属性时，新 `QDateTime` 转换为`QDateTimeEdit`的时间系统，因此时间系统保持不变。
+默认情况下，该属性设置为2000 CE的开始。它只能设置为有效的`QDateTime`值。如果任何操作导致该属性的日期-时间值为无效，则重置为`minimumDateTime`属性的值。
+如果`QDateTimeEdit`没有日期字段，设置该属性会使小部件的日期范围以该属性新值的日期开始和结束。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `datetime`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `dateTime` 的变化，不要把它当作普通函数主动调用。
 
 ### `[virtual protected] QDateTime QDateTimeEdit::dateTimeFromText(const QString &text) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::dateTimeFromText` 用于计算、查询或取得与“日期、时间、转换进入、文本”相关的操作。调用时要先确认当前状态和 `text` 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`text`的适当日期时间。
+当datetime编辑需要解释用户输入的文本作为值时，会使用这个虚拟功能。
 
 ### `[override virtual] bool QDateTimeEdit::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSpinBox::event`（QEvent *事件）。
 
 ### `[override virtual protected] void QDateTimeEdit::fixup(QString &input) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::fixup` 用于执行与“fixup”相关的操作。调用时要先确认当前状态和 `input` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `input`：类型为 `QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QAbstractSpinBox::fixup`（QString & input） const.
+如果`input`未被验证`QValidator::Acceptable`，当按下Return或`interpretText()`调用时，`QAbstractSpinBox`会调用该虚拟函数。它会尝试修改文本使其有效。在各个子类中重新实现。
 
 ### `[override virtual protected] void QDateTimeEdit::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::focusInEvent`（QFocusEvent *event）。
 
 ### `[override virtual protected] bool QDateTimeEdit::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QWidget::focusNextPrevChild`（下一个布尔）。
+根据 Tab 和 Shift Tab 找到一个新的控件来给键盘焦点，如果能找到新控件，则返回 `true`，找不到则返回 false。
+如果`next`为真，该函数向前搜索;如果`next`为假，则向后搜索。
+有时，你会想重新实现这个函数。例如，浏览器可能会重新实现它，将“当前活跃链接”向前或向后移动，只有当它到达“页面”的最后或第一个链接时才调用 focusNextPrevChild()。
+子控件调用其父控件的 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过重新实现该函数，你就能控制所有子控件的焦点遍历。
 
 ### `[override virtual protected] void QDateTimeEdit::initStyleOption(QStyleOptionSpinBox *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::initStyleOption` 用于执行与“init、Style、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionSpinBox *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::initStyleOption`（QStyleOptionSpinBox *option） const.
+用这个 QDataTimeEdit 中的值初始化`option`。这种方法适用于需要 `QStyleOptionSpinBox` 但不想自己填满所有信息的子类。
+用这个`QSpinBox`的值初始化`option`。这种方法适用于需要`QStyleOptionSpinBox`但不想自己填满所有信息的子类。
 
 ### `[override virtual protected] void QDateTimeEdit::keyPressEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::keyPressEvent`（QKeyEvent *event）。
 
 ### `[override virtual protected] void QDateTimeEdit::mousePressEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::mousePressEvent`（QMouseEvent *event）。
 
 ### `[override virtual protected] void QDateTimeEdit::paintEvent(QPaintEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::paintEvent`（QPaintEvent *event）。
 
 ### `QDateTimeEdit::Section QDateTimeEdit::sectionAt(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::sectionAt` 用于计算、查询或取得与“section、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QDateTimeEdit::Section`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDateTimeEdit::Section`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`index`段。
+如果格式为“yyyy/MM/dd”，sectionAt（0） 返回 `YearSection`，sectionAt（1） 返回 `MonthSection`，sectionAt（2） 返回 `YearSection`，。
 
 ### `QString QDateTimeEdit::sectionText(QDateTimeEdit::Section section) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::sectionText` 用于计算、查询或取得与“section、文本”相关的操作。调用时要先确认当前状态和 `section` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `section`：类型为 `QDateTimeEdit::Section`。没有默认值，调用时必须提供。传入 `QDateTimeEdit::Section` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`section`的文本。
 
 ### `void QDateTimeEdit::setCalendar(QCalendar calendar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCalendar`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `calendar`：类型为 `QCalendar`。没有默认值，调用时必须提供。传入 `QCalendar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`calendar`设置为该小部件使用的日历系统。
+该小部件可以使用任何支持的历法系统。默认情况下，它使用格里高利历。
 
 ### `void QDateTimeEdit::setCalendarWidget(QCalendarWidget *calendarWidget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCalendarWidget`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `calendarWidget`：类型为 `QCalendarWidget *`。没有默认值，调用时必须提供。传入 `QCalendarWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定的`calendarWidget`设置为日历弹窗的控件。编辑器不会自动拥有该日历控件的所有权。
+注意：在设置日历小部件之前，必须将`calendarPopup`设置为true。
 
 ### `void QDateTimeEdit::setDateRange(QDate min, QDate max)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDateRange`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置日期时间编辑时允许的日期范围。
+该便利函数设定`minimumDate`和`maximumDate`属性。
+类似于：
+如果`min`或`max`无效，该函数不做任何事。该函数保持`minimumTime`属性。如果`max`小于`min`，则新的`maximumDateTime`属性即为新的`minimumDateTime`属性。如果`max`等于`min`且`maximumTime`属性小于`minimumTime`属性，则`maximumTime`属性被设为`minimumTime`属性。否则，保持`maximumTime`属性。
+如果该范围比其末期的时间区间更窄，例如跨越月末的一周，用户只能在禁用键盘追踪的情况下将日期编辑到该范围后半部分的日期。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `min`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `max`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setDateRange(min, max);
+```
 
 ### `void QDateTimeEdit::setDateTimeRange(const QDateTime &min, const QDateTime &max)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDateTimeRange`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置允许的日期时间范围以进行日期时间编辑。
+该便利函数设定`minimumDateTime`和`maximumDateTime`属性。
+类似于：
+如果`min`或`max`无效，该函数无效。如果`max`小于`min`，`min`也用作`max`。
+如果该范围比其末期的时间区间更窄，例如跨越月末的一周，用户只能在禁用键盘追踪的情况下将日期时间编辑为该范围后期的日期时间。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `min`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `max`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setDateTimeRange(min, max);
+```
 
 ### `void QDateTimeEdit::setSelectedSection(QDateTimeEdit::Section section)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectedSection`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `section`：类型为 `QDateTimeEdit::Section`。没有默认值，调用时必须提供。传入 `QDateTimeEdit::Section` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择`section`。如果当前显示的部分中不存在`section`，这个函数就不做任何事。如果`section` `NoSection`，这个函数会取消编辑器中的所有文本。否则，这个函数会将光标和当前部分移动到所选的部分。
 
 ### `void QDateTimeEdit::setTimeRange(QTime min, QTime max)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTimeRange`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置日期时间编辑时允许的时间范围。
+该便利函数设定`minimumTime`和`maximumTime`属性。
+注意，这些限制仅限制日期时间编辑在`minimumDate`和 `maximumDate` 上的值。当这些日期属性不一致时，`max`之后的时间允许在`maximumDate`之前的日期使用，`min`之前的时间则允许在`minimumDate`之后的日期使用。
+类似于：
+如果`min`或`max`无效，该函数不做任何事。该函数保持`minimumDate`和`maximumDate`属性。如果这些属性重合且`max`小于`min`，则`min`用作`max`。
+如果该范围比其末端的时间区间更窄，例如从十点到一小时，再到同一小时后十点，用户只能在关闭键盘追踪的情况下将时间编辑到音域后段。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `min`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `max`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setTimeRange(min, max);
+```
 
 ### `[override virtual] QSize QDateTimeEdit::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSpinBox::sizeHint()` const.
+重新实现了属性的访问函数：`QWidget::sizeHint`。
 
 ### `[override virtual] void QDateTimeEdit::stepBy(int steps)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::stepBy` 用于执行与“step、By”相关的操作。调用时要先确认当前状态和 `steps` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `steps`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::stepBy`（int steps）。
+每当用户触发一步时调用的虚拟函数。`steps`参数表示已完成的步数。例如，按`Qt::Key_Down`会触发对`stepBy(-1)`的调用，而按`Qt::Key_PageUp`则会触发对`stepBy(10)`的调用。
+如果你对`QAbstractSpinBox`子类，必须重新实现这个函数。注意，即使最终值超出最小值和最大值范围，这个函数仍然被调用。处理这些情况是这个函数的工作。
 
 ### `[override virtual protected] QAbstractSpinBox::StepEnabled QDateTimeEdit::stepEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::stepEnabled` 用于计算、查询或取得与“step、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSpinBox::StepEnabled`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSpinBox::StepEnabled`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSpinBox::stepEnabled()` const.
+虚拟功能决定在任何时刻是否合法。
+除非 （stepEnabled() & `StepUpEnabled`） ！= 0，否则向上箭头将被涂成禁用。
+默认实现会返回 （`StepUpEnabled`|`StepDownEnabled`） 如果开启了包裹。否则，如果值是最小值>则返回 `StepDownEnabled`;如果值为 < maximum()，则返回 `StepUpEnabled`。
+如果你`QAbstractSpinBox`子类，就需要重新实现这个函数。
 
 ### `[virtual protected] QString QDateTimeEdit::textFromDateTime(const QDateTime &dateTime) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::textFromDateTime` 用于计算、查询或取得与“文本、转换进入、日期、时间”相关的操作。调用时要先确认当前状态和 `dateTime` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `dateTime`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个虚拟功能由日期时间编辑在需要显示`dateTime`时使用。
+如果你重新实现这个，可能也需要重新实现`validate()`。
 
 ### `QTime QDateTimeEdit::time() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::time` 用于计算、查询或取得与“时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回日期时间编辑。
+注意：属性时间的获取函数。
 
 ### `[signal] void QDateTimeEdit::timeChanged(QTime time)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 发出的通知信号 `timeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含了控件中设置的`QTime`。
+默认情况下，该属性包含时间为00：00：00和0毫秒。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `time`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `time` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual protected] QValidator::State QDateTimeEdit::validate(QString &text, int &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validate`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QValidator::State`。
-- 参数 `text`：类型为 `QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `pos`：类型为 `int &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::validate`（QString & input， int and pos） const.
+`QAbstractSpinBox`调用该虚拟函数以判断`input`是否有效。`pos`参数表示字符串中的位置。在各个子类中重新实现。
 
 ### `[override virtual protected] void QDateTimeEdit::wheelEvent(QWheelEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QWheelEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSpinBox::wheelEvent`（QWheelEvent *event）。
 
 ### `enum Section { NoSection, AmPmSection, MSecSection, SecondSection, MinuteSection, …, YearSection }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 暴露的类型声明 `Section`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDateTimeEdit::NoSection`：`0x0000`
+- `QDateTimeEdit::AmPmSection`：`0x0001`
+- `QDateTimeEdit::MSecSection`：`0x0002`
+- `QDateTimeEdit::SecondSection`：`0x0004`
+- `QDateTimeEdit::MinuteSection`：`0x0008`
+- `QDateTimeEdit::HourSection`：`0x0010`
+- `QDateTimeEdit::DaySection`：`0x0100`
+- `QDateTimeEdit::MonthSection`：`0x0200`
+- `QDateTimeEdit::YearSection`：`0x0400`
+Sections 类型是 QFlags 的 typedef<Section>。它存储 Section 值的 OR 组合。
 
 ### `flags Sections`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDateTimeEdit` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDateTimeEdit::NoSection`：`0x0000`
+- `QDateTimeEdit::AmPmSection`：`0x0001`
+- `QDateTimeEdit::MSecSection`：`0x0002`
+- `QDateTimeEdit::SecondSection`：`0x0004`
+- `QDateTimeEdit::MinuteSection`：`0x0008`
+- `QDateTimeEdit::HourSection`：`0x0010`
+- `QDateTimeEdit::DaySection`：`0x0100`
+- `QDateTimeEdit::MonthSection`：`0x0200`
+- `QDateTimeEdit::YearSection`：`0x0400`
+Sections 类型是 QFlags 的 typedef<Section>。它存储 Section 值的 OR 组合。
 
 ### `bool calendarPopup() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::calendarPopup` 用于计算、查询或取得与“calendar、Popup”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含当前的日历弹出展示模式。
+点击箭头按钮后会显示日历弹窗。该属性仅在存在有效日期显示格式时有效。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `calendarPopup()` 读取当前值；它不会修改应用状态。
 
 ### `void clearMaximumDate()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::clearMaximumDate` 用于执行与“清空、最大值、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性拥有日期时间的最大日期。
+更改该属性会更新`maximumDateTime`属性的日期，同时保留`maximumTime`属性。设置该属性时，必要时会调整`minimumDate`以确保范围有效。发生这种情况时，如果`minimumTime`属性大于`maximumTime`属性，也会相应调整。否则，对该属性的更改会保留`minimumDateTime`属性。
+该属性只能被设置为描述当前`maximumTime`属性使`QDateTime`对象有效日期的有效`QDate`对象。setMaximumDate() 接受的最晚日期是公元9999年末。这是该属性的默认时间。该默认值可以通过`clearMaximumDateTime()`恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearMaximumDate()` 读取当前值；它不会修改应用状态。
 
 ### `void clearMaximumDateTime()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::clearMaximumDateTime` 用于执行与“清空、最大值、日期、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含日期时间编辑的最大日期时间。
+更改该属性隐式地将`maximumDate`和`maximumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，`minimumDateTime`会调整以确保该范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMaximumDateTime() 接受的最晚日期时间为公元9999年末。这是该属性的默认值。该默认值可用 clearMaximumDateTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearMaximumDateTime()` 读取当前值；它不会修改应用状态。
 
 ### `void clearMaximumTime()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::clearMaximumTime` 用于执行与“清空、最大值、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了日期时间编辑的最大时间。
+更改该属性会更新`maximumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`minimumTime`属性，以确保范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含时间为23：59：59和999毫秒。该默认值可以通过clearMaximumTime()恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearMaximumTime()` 读取当前值；它不会修改应用状态。
 
 ### `void clearMinimumDate()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::clearMinimumDate` 用于执行与“清空、最小值、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含日期时间编辑的最小日期。
+更改该属性会更新`minimumDateTime`属性的日期，同时保留`minimumTime`属性。设置该属性时，如有必要，`maximumDate`会调整以确保范围保持有效。发生这种情况时，如果`maximumTime`属性小于`minimumTime`属性，也会相应调整。否则，对该属性的更改会保留`maximumDateTime`属性。
+该属性只能被设置为描述当前`minimumTime`属性使得有效`QDateTime`对象的有效日期的有效`QDate`对象。setMinimumDate() 接受的最早日期是公元100年的开始。该属性的默认时间为公元1752年9月14日。该默认值可以通过`clearMinimumDateTime()`恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearMinimumDate()` 读取当前值；它不会修改应用状态。
 
 ### `void clearMinimumDateTime()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::clearMinimumDateTime` 用于执行与“清空、最小值、日期、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了日期时间编辑的最小日期时间。
+更改该属性隐式地将`minimumDate`和`minimumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，会调整`maximumDateTime`以确保该范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMinimumDateTime() 接受的最早日期时间是公元100年的开始。该属性的默认时间是公元1752年9月14日的开始。该默认可以通过 clearMinimumDateTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearMinimumDateTime()` 读取当前值；它不会修改应用状态。
 
 ### `void clearMinimumTime()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::clearMinimumTime` 用于执行与“清空、最小值、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示日期时间编辑的最小时间。
+更改该属性会更新`minimumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`maximumTime`属性，以确保范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含 00：00：00 和 0 毫秒的时间。该默认值可以通过 clearMinimumTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearMinimumTime()` 读取当前值；它不会修改应用状态。
 
 ### `QDateTimeEdit::Section currentSection() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::currentSection` 用于计算、查询或取得与“当前、Section”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTimeEdit::Section`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示当前自旋盒截面。
 
-**签名拆解：**
-
-- 返回值：`QDateTimeEdit::Section`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentSection()` 读取当前值；它不会修改应用状态。
 
 ### `int currentSectionIndex() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::currentSectionIndex` 用于计算、查询或取得与“当前、Section、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示旋量盒当前截面索引。
+如果格式是“yyyy/MM/dd”，displayText是“2001/05/21”，cursorPosition是5，currentSectionIndex返回1。如果cursorPosition是3，currentSectionIndex是0，依此类推。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentSectionIndex()` 读取当前值；它不会修改应用状态。
 
 ### `QDateTime dateTime() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::dateTime` 用于计算、查询或取得与“日期、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示`QDateTimeEdit`中所设定的`QDateTime`。
+设置该属性时，新 `QDateTime` 转换为`QDateTimeEdit`的时间系统，因此时间系统保持不变。
+默认情况下，该属性设置为2000 CE的开始。它只能设置为有效的`QDateTime`值。如果任何操作导致该属性的日期-时间值为无效，则重置为`minimumDateTime`属性的值。
+如果`QDateTimeEdit`没有日期字段，设置该属性会使小部件的日期范围以该属性新值的日期开始和结束。
 
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dateTime()` 读取当前值；它不会修改应用状态。
 
 ### `QString displayFormat() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::displayFormat` 用于计算、查询或取得与“display、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了显示日期/日期编辑的格式。
+该格式在`QDateTime::toString()`和 `QDateTime::fromString()` 中有详细描述。
+示例格式字符串（假设日期为1969年7月2日）：
+- `Format`：结果
+- `dd.MM.yyyy`：1969年7月2日
+- `MMM d yy`：1969年7月2日
+- `MMMM d yy`：1969年7月2日
+请注意，如果你指定两位数年份，它会被解释为编辑日期时间初始化的世纪。默认的世纪是第21世纪（2000-2099）。
+如果你指定了无效格式，格式将不会被设置。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `displayFormat()` 读取当前值；它不会修改应用状态。
 
 ### `QDateTimeEdit::Sections displayedSections() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::displayedSections` 用于计算、查询或取得与“displayed、Sections”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTimeEdit::Sections`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保存了日期时间编辑中当前显示的字段。
+返回该格式显示的部分的位集。
 
-**签名拆解：**
-
-- 返回值：`QDateTimeEdit::Sections`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `displayedSections()` 读取当前值；它不会修改应用状态。
 
 ### `QDate maximumDate() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::maximumDate` 用于计算、查询或取得与“最大值、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性拥有日期时间的最大日期。
+更改该属性会更新`maximumDateTime`属性的日期，同时保留`maximumTime`属性。设置该属性时，必要时会调整`minimumDate`以确保范围有效。发生这种情况时，如果`minimumTime`属性大于`maximumTime`属性，也会相应调整。否则，对该属性的更改会保留`minimumDateTime`属性。
+该属性只能被设置为描述当前`maximumTime`属性使`QDateTime`对象有效日期的有效`QDate`对象。setMaximumDate() 接受的最晚日期是公元9999年末。这是该属性的默认时间。该默认值可以通过`clearMaximumDateTime()`恢复。
 
-**签名拆解：**
-
-- 返回值：`QDate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumDate()` 读取当前值；它不会修改应用状态。
 
 ### `QDateTime maximumDateTime() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::maximumDateTime` 用于计算、查询或取得与“最大值、日期、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含日期时间编辑的最大日期时间。
+更改该属性隐式地将`maximumDate`和`maximumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，`minimumDateTime`会调整以确保该范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMaximumDateTime() 接受的最晚日期时间为公元9999年末。这是该属性的默认值。该默认值可用 clearMaximumDateTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumDateTime()` 读取当前值；它不会修改应用状态。
 
 ### `QTime maximumTime() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::maximumTime` 用于计算、查询或取得与“最大值、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了日期时间编辑的最大时间。
+更改该属性会更新`maximumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`minimumTime`属性，以确保范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含时间为23：59：59和999毫秒。该默认值可以通过clearMaximumTime()恢复。
 
-**签名拆解：**
-
-- 返回值：`QTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumTime()` 读取当前值；它不会修改应用状态。
 
 ### `QDate minimumDate() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::minimumDate` 用于计算、查询或取得与“最小值、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含日期时间编辑的最小日期。
+更改该属性会更新`minimumDateTime`属性的日期，同时保留`minimumTime`属性。设置该属性时，如有必要，`maximumDate`会调整以确保范围保持有效。发生这种情况时，如果`maximumTime`属性小于`minimumTime`属性，也会相应调整。否则，对该属性的更改会保留`maximumDateTime`属性。
+该属性只能被设置为描述当前`minimumTime`属性使得有效`QDateTime`对象的有效日期的有效`QDate`对象。setMinimumDate() 接受的最早日期是公元100年的开始。该属性的默认时间为公元1752年9月14日。该默认值可以通过`clearMinimumDateTime()`恢复。
 
-**签名拆解：**
-
-- 返回值：`QDate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumDate()` 读取当前值；它不会修改应用状态。
 
 ### `QDateTime minimumDateTime() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::minimumDateTime` 用于计算、查询或取得与“最小值、日期、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了日期时间编辑的最小日期时间。
+更改该属性隐式地将`minimumDate`和`minimumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，会调整`maximumDateTime`以确保该范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMinimumDateTime() 接受的最早日期时间是公元100年的开始。该属性的默认时间是公元1752年9月14日的开始。该默认可以通过 clearMinimumDateTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumDateTime()` 读取当前值；它不会修改应用状态。
 
 ### `QTime minimumTime() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::minimumTime` 用于计算、查询或取得与“最小值、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示日期时间编辑的最小时间。
+更改该属性会更新`minimumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`maximumTime`属性，以确保范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含 00：00：00 和 0 毫秒的时间。该默认值可以通过 clearMinimumTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`QTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `minimumTime()` 读取当前值；它不会修改应用状态。
 
 ### `int sectionCount() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::sectionCount` 用于计算、查询或取得与“section、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含显示的分段数量。如果格式为“yyyy/yy/yyyy”，sectionCount返回3。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sectionCount()` 读取当前值；它不会修改应用状态。
 
 ### `void setCalendarPopup(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCalendarPopup`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含当前的日历弹出展示模式。
+点击箭头按钮后会显示日历弹窗。该属性仅在存在有效日期显示格式时有效。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCalendarPopup(...)` 修改 `calendarPopup`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCurrentSection(QDateTimeEdit::Section section)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentSection`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示当前自旋盒截面。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `section`：类型为 `QDateTimeEdit::Section`。没有默认值，调用时必须提供。传入 `QDateTimeEdit::Section` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCurrentSection(...)` 修改 `currentSection`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCurrentSectionIndex(int index)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentSectionIndex`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示旋量盒当前截面索引。
+如果格式是“yyyy/MM/dd”，displayText是“2001/05/21”，cursorPosition是5，currentSectionIndex返回1。如果cursorPosition是3，currentSectionIndex是0，依此类推。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCurrentSectionIndex(...)` 修改 `currentSectionIndex`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDisplayFormat(const QString &format)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDisplayFormat`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了显示日期/日期编辑的格式。
+该格式在`QDateTime::toString()`和 `QDateTime::fromString()` 中有详细描述。
+示例格式字符串（假设日期为1969年7月2日）：
+- `Format`：结果
+- `dd.MM.yyyy`：1969年7月2日
+- `MMM d yy`：1969年7月2日
+- `MMMM d yy`：1969年7月2日
+请注意，如果你指定两位数年份，它会被解释为编辑日期时间初始化的世纪。默认的世纪是第21世纪（2000-2099）。
+如果你指定了无效格式，格式将不会被设置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QString &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDisplayFormat(...)` 修改 `displayFormat`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaximumDate(QDate max)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumDate`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性拥有日期时间的最大日期。
+更改该属性会更新`maximumDateTime`属性的日期，同时保留`maximumTime`属性。设置该属性时，必要时会调整`minimumDate`以确保范围有效。发生这种情况时，如果`minimumTime`属性大于`maximumTime`属性，也会相应调整。否则，对该属性的更改会保留`minimumDateTime`属性。
+该属性只能被设置为描述当前`maximumTime`属性使`QDateTime`对象有效日期的有效`QDate`对象。setMaximumDate() 接受的最晚日期是公元9999年末。这是该属性的默认时间。该默认值可以通过`clearMaximumDateTime()`恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `max`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaximumDate(...)` 修改 `maximumDate`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaximumDateTime(const QDateTime &dt)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumDateTime`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含日期时间编辑的最大日期时间。
+更改该属性隐式地将`maximumDate`和`maximumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，`minimumDateTime`会调整以确保该范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMaximumDateTime() 接受的最晚日期时间为公元9999年末。这是该属性的默认值。该默认值可用 clearMaximumDateTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dt`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaximumDateTime(...)` 修改 `maximumDateTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaximumTime(QTime max)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumTime`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了日期时间编辑的最大时间。
+更改该属性会更新`maximumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`minimumTime`属性，以确保范围有效。否则，更改该属性则保持`minimumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含时间为23：59：59和999毫秒。该默认值可以通过clearMaximumTime()恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `max`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaximumTime(...)` 修改 `maximumTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMinimumDate(QDate min)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumDate`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含日期时间编辑的最小日期。
+更改该属性会更新`minimumDateTime`属性的日期，同时保留`minimumTime`属性。设置该属性时，如有必要，`maximumDate`会调整以确保范围保持有效。发生这种情况时，如果`maximumTime`属性小于`minimumTime`属性，也会相应调整。否则，对该属性的更改会保留`maximumDateTime`属性。
+该属性只能被设置为描述当前`minimumTime`属性使得有效`QDateTime`对象的有效日期的有效`QDate`对象。setMinimumDate() 接受的最早日期是公元100年的开始。该属性的默认时间为公元1752年9月14日。该默认值可以通过`clearMinimumDateTime()`恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `min`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMinimumDate(...)` 修改 `minimumDate`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMinimumDateTime(const QDateTime &dt)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumDateTime`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了日期时间编辑的最小日期时间。
+更改该属性隐式地将`minimumDate`和`minimumTime`属性分别更新为该属性的日期和时间部分。设置该属性时，如有必要，会调整`maximumDateTime`以确保该范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性只能设置为有效的`QDateTime`值。setMinimumDateTime() 接受的最早日期时间是公元100年的开始。该属性的默认时间是公元1752年9月14日的开始。该默认可以通过 clearMinimumDateTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dt`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMinimumDateTime(...)` 修改 `minimumDateTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMinimumTime(QTime min)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumTime`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示日期时间编辑的最小时间。
+更改该属性会更新`minimumDateTime`属性的时间，同时保留`minimumDate`和`maximumDate`属性。如果这些属性的日期重合，设置该属性时会调整`maximumTime`属性，以确保范围有效。否则，更改该属性则保持`maximumDateTime`属性。
+该属性可以设置为任意有效的`QTime`值。默认情况下，该属性包含 00：00：00 和 0 毫秒的时间。该默认值可以通过 clearMinimumTime() 恢复。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `min`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMinimumTime(...)` 修改 `minimumTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTimeZone(const QTimeZone &zone)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTimeZone`。调用它会改变 `QDateTimeEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含 datetime 编辑控件当前使用的时区。
+如果使用的日期时间格式包含时区指示器——即`t`、`tt`、`ttt`或`tttt`格式指定符——用户输入在解析时会在该时区重新表达，覆盖用户可能指定的任何时区。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `zone`：类型为 `const QTimeZone &`。没有默认值，调用时必须提供。传入 `const QTimeZone &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTimeZone(...)` 修改 `timeZone`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QTimeZone timeZone() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDateTimeEdit::timeZone` 用于计算、查询或取得与“时间、Zone”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTimeZone`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含 datetime 编辑控件当前使用的时区。
+如果使用的日期时间格式包含时区指示器——即`t`、`tt`、`ttt`或`tttt`格式指定符——用户输入在解析时会在该时区重新表达，覆盖用户可能指定的任何时区。
 
-**签名拆解：**
-
-- 返回值：`QTimeZone`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `timeZone()` 读取当前值；它不会修改应用状态。
 
 ### `void setDate(QDate date)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setDate`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含了控件中设置的`QDate`。
+默认情况下，该物业包含一个指向2000年1月1日的日期。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `date`：类型为 `QDate`。没有默认值，调用时必须提供。传入 `QDate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDate(...)` 修改 `date`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDateTime(const QDateTime &dateTime)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setDateTime`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性表示`QDateTimeEdit`中所设定的`QDateTime`。
+设置该属性时，新 `QDateTime` 转换为`QDateTimeEdit`的时间系统，因此时间系统保持不变。
+默认情况下，该属性设置为2000 CE的开始。它只能设置为有效的`QDateTime`值。如果任何操作导致该属性的日期-时间值为无效，则重置为`minimumDateTime`属性的值。
+如果`QDateTimeEdit`没有日期字段，设置该属性会使小部件的日期范围以该属性新值的日期开始和结束。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dateTime`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDateTime(...)` 修改 `dateTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTime(QTime time)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setTime`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含了控件中设置的`QTime`。
+默认情况下，该属性包含时间为00：00：00和0毫秒。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `time`：类型为 `QTime`。没有默认值，调用时必须提供。传入 `QTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTime(...)` 修改 `time`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

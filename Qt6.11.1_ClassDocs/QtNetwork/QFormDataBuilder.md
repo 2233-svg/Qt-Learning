@@ -70,125 +70,83 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QFormDataBuilder::Optionflags QFormDataBuilder::Options`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Optionflags QFormDataBuilder::Options`。
-- 属性名：`QFormDataBuilder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制 `buildMultiPart()` 的选项。
+当前有几个 RFC 对如何精确格式化 `multipart/form-data` 存在分歧。为了避免硬编码任何单一 RFC，这些选项允许您控制遵循哪个 RFC。
+- `QFormDataBuilder::Option::Default`: `0x00`；默认值，旨在最大化常规互操作性。下面列出的所有选项都是关闭的。
+- `QFormDataBuilder::Option::OmitRfc8187EncodedFilename`: `0x01`；当一个主体部分的文件名包含非 US-ASCII 字符时，RFC 6266 第 4.3 节建议使用 RFC 8187 风格的编码 (`filename*=utf-8''...`)。然而，更近期的 RFC 7578 第 4.2 节禁止使用该机制。截至本文撰写时，这两个 RFC 都是当前有效的，因此此选项允许您选择遵循哪一个。默认情况下，将包含 RFC 8187 编码的 `filename*` 以及未编码的 `filename`，如 RFC 6266 所建议。
+- `QFormDataBuilder::Option::UseRfc7578PercentEncodedFilename`: `0x02`；当一个主体部分的文件名包含非 US-ASCII 字符时，RFC 7578 第 4.2 节建议对 UTF-8 编码的文件名的八位字节进行百分比编码。它还指出，许多实现实际上并不对 UTF-8 编码的文件名进行百分比编码，而只是输出“原始” UTF-8（`"` 和 `\` 使用 `\` 转义）。这也是 `QFormDataBuilder` 的默认设置。
+- `QFormDataBuilder::Option::PreferLatin1EncodedFilename`: `0x04`；RFC 5987 第 3.2 节要求接收者支持 ISO-8859-1（"Latin-1"）编码。当一个主体部分的文件名包含非 US-ASCII 字符，但可以归入 Latin-1 时，此选项优先使用 ISO-8859-1 编码而不是 UTF-8。更近期的 {https://datatracker.ietf.org/doc/html/rfc8187#appendix-A}{RFC 8187} 不再要求支持 ISO-8859-1，因此默认情况下所有非 US-ASCII 文件名都以 UTF-8 编码发送。
+- `QFormDataBuilder::Option::StrictRfc7578`: `OmitRfc8187EncodedFilename | UseRfc7578PercentEncodedFilename`；此选项组合其他选项以选择严格的 RFC 7578 合规性。
+Options 类型是 QFlags<Option> 的 typedef。它存储 Option 值的 OR 组合。
 
 ### `QFormDataBuilder::QFormDataBuilder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的 QFormDataBuilder 对象。
 
 ### `[noexcept] QFormDataBuilder::QFormDataBuilder(QFormDataBuilder &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QFormDataBuilder &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move构造一个QFormDataBuilder实例，使其指向`other`指向的同一个对象。
 
 ### `[noexcept] QFormDataBuilder::~QFormDataBuilder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QFormDataBuilder`物体。
 
 ### `std::unique_ptr<QHttpMultiPart> QFormDataBuilder::buildMultiPart(QFormDataBuilder::Options options = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFormDataBuilder::buildMultiPart` 用于计算、查询或取得与“build、Multi、Part”相关的操作。调用时要先确认当前状态和 `options` 的有效范围；返回类型是 `std::unique_ptr<QHttpMultiPart>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::unique_ptr<QHttpMultiPart>`。
-- 参数 `options`：类型为 `QFormDataBuilder::Options`。默认值为 `{}`。传入 `QFormDataBuilder::Options` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造并返回指向根据`options`构造的QHttpMultipart对象的指针。
 
 ### `QFormDataPartBuilder QFormDataBuilder::part(QAnyStringView name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFormDataBuilder::part` 用于计算、查询或取得与“part”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QFormDataPartBuilder`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFormDataPartBuilder`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新构建的`QFormDataPartBuilder`对象，使用`name`作为表单数据的`name`参数。只要关联的 `QFormDataBuilder` 未被销毁，该对象有效。
+出于互操作性，强烈建议将`name`字符限制为 US-ASCII。
 
 ### `[noexcept] QFormDataBuilder &QFormDataBuilder::operator=(QFormDataBuilder &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QFormDataBuilder &`。
-- 参数 `other`：类型为 `QFormDataBuilder &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QFormDataBuilder`实例。
 
 ### `enum class Option { Default, OmitRfc8187EncodedFilename, UseRfc7578PercentEncodedFilename, PreferLatin1EncodedFilename, StrictRfc7578 }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制 `buildMultiPart()` 的选项。
+当前有几个 RFC 对如何精确格式化 `multipart/form-data` 存在分歧。为了避免硬编码任何单一 RFC，这些选项允许您控制遵循哪个 RFC。
+- `QFormDataBuilder::Option::Default`: `0x00`；默认值，旨在最大化常规互操作性。下面列出的所有选项都是关闭的。
+- `QFormDataBuilder::Option::OmitRfc8187EncodedFilename`: `0x01`；当一个主体部分的文件名包含非 US-ASCII 字符时，RFC 6266 第 4.3 节建议使用 RFC 8187 风格的编码 (`filename*=utf-8''...`)。然而，更近期的 RFC 7578 第 4.2 节禁止使用该机制。截至本文撰写时，这两个 RFC 都是当前有效的，因此此选项允许您选择遵循哪一个。默认情况下，将包含 RFC 8187 编码的 `filename*` 以及未编码的 `filename`，如 RFC 6266 所建议。
+- `QFormDataBuilder::Option::UseRfc7578PercentEncodedFilename`: `0x02`；当一个主体部分的文件名包含非 US-ASCII 字符时，RFC 7578 第 4.2 节建议对 UTF-8 编码的文件名的八位字节进行百分比编码。它还指出，许多实现实际上并不对 UTF-8 编码的文件名进行百分比编码，而只是输出“原始” UTF-8（`"` 和 `\` 使用 `\` 转义）。这也是 `QFormDataBuilder` 的默认设置。
+- `QFormDataBuilder::Option::PreferLatin1EncodedFilename`: `0x04`；RFC 5987 第 3.2 节要求接收者支持 ISO-8859-1（"Latin-1"）编码。当一个主体部分的文件名包含非 US-ASCII 字符，但可以归入 Latin-1 时，此选项优先使用 ISO-8859-1 编码而不是 UTF-8。更近期的 {https://datatracker.ietf.org/doc/html/rfc8187#appendix-A}{RFC 8187} 不再要求支持 ISO-8859-1，因此默认情况下所有非 US-ASCII 文件名都以 UTF-8 编码发送。
+- `QFormDataBuilder::Option::StrictRfc7578`: `OmitRfc8187EncodedFilename | UseRfc7578PercentEncodedFilename`；此选项组合其他选项以选择严格的 RFC 7578 合规性。
+Options 类型是 QFlags<Option> 的 typedef。它存储 Option 值的 OR 组合。
 
 ### `flags Options`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFormDataBuilder` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制 `buildMultiPart()` 的选项。
+当前有几个 RFC 对如何精确格式化 `multipart/form-data` 存在分歧。为了避免硬编码任何单一 RFC，这些选项允许您控制遵循哪个 RFC。
+- `QFormDataBuilder::Option::Default`: `0x00`；默认值，旨在最大化常规互操作性。下面列出的所有选项都是关闭的。
+- `QFormDataBuilder::Option::OmitRfc8187EncodedFilename`: `0x01`；当一个主体部分的文件名包含非 US-ASCII 字符时，RFC 6266 第 4.3 节建议使用 RFC 8187 风格的编码 (`filename*=utf-8''...`)。然而，更近期的 RFC 7578 第 4.2 节禁止使用该机制。截至本文撰写时，这两个 RFC 都是当前有效的，因此此选项允许您选择遵循哪一个。默认情况下，将包含 RFC 8187 编码的 `filename*` 以及未编码的 `filename`，如 RFC 6266 所建议。
+- `QFormDataBuilder::Option::UseRfc7578PercentEncodedFilename`: `0x02`；当一个主体部分的文件名包含非 US-ASCII 字符时，RFC 7578 第 4.2 节建议对 UTF-8 编码的文件名的八位字节进行百分比编码。它还指出，许多实现实际上并不对 UTF-8 编码的文件名进行百分比编码，而只是输出“原始” UTF-8（`"` 和 `\` 使用 `\` 转义）。这也是 `QFormDataBuilder` 的默认设置。
+- `QFormDataBuilder::Option::PreferLatin1EncodedFilename`: `0x04`；RFC 5987 第 3.2 节要求接收者支持 ISO-8859-1（"Latin-1"）编码。当一个主体部分的文件名包含非 US-ASCII 字符，但可以归入 Latin-1 时，此选项优先使用 ISO-8859-1 编码而不是 UTF-8。更近期的 {https://datatracker.ietf.org/doc/html/rfc8187#appendix-A}{RFC 8187} 不再要求支持 ISO-8859-1，因此默认情况下所有非 US-ASCII 文件名都以 UTF-8 编码发送。
+- `QFormDataBuilder::Option::StrictRfc7578`: `OmitRfc8187EncodedFilename | UseRfc7578PercentEncodedFilename`；此选项组合其他选项以选择严格的 RFC 7578 合规性。
+Options 类型是 QFlags<Option> 的 typedef。它存储 Option 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

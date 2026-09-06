@@ -101,543 +101,375 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 39 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QStringList::QStringList(const QList<QString> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QList<QString> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建了`other`的副本。
+该操作耗时为常数，因为QStringList是隐式共享的。这使得从函数返回QStringList非常快速。如果共享实例被修改，它会被复制（写时复制），这需要线性时间。
 
 ### `QStringList::QStringList(const QString &str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个包含给定字符串 `str` 的字符串列表。像这样可以轻松创建更长的列表：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList longerList = (QStringList() << str1 << str2 << str3);
+```
 
 ### `QStringList::QStringList(QList<QString> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QList<QString> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+来自`QList`的移动构造<`QString`>。
+施工成功后，`other`将空无一人。
 
 ### `[noexcept] bool QStringList::contains(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果列表包含字符串 `str`，返回 `true`;否则返回 `false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
 
 ### `[noexcept] bool QStringList::contains(QLatin1StringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `str`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果列表中包含`str`查看的拉丁1字符串，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较是区分大小写的;否则比较不区分大小写。
 
 ### `[noexcept] bool QStringList::contains(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果列表包含字符串 `str`，返回 `true`;否则返回 `false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
 
 ### `[since 6.9] QStringList QStringList::filter(const QLatin1StringMatcher &matcher) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 `matcher` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回由`matcher`匹配的所有字符串列表（即`matcher.indexIn()`返回索引>= 0）。
+在大列表和/或字符串较长的列表中搜索时，使用`QLatin1StringMatcher`可能更快（最好的方法是做基准测试）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数 `matcher`：类型为 `const QLatin1StringMatcher &`。没有默认值，调用时必须提供。传入 `const QLatin1StringMatcher &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList veryLargeList;
+     QLatin1StringMatcher matcher("Street"_L1, Qt::CaseInsensitive);
+     QStringList filtered = veryLargeList.filter(matcher);
+```
 
 ### `QStringList QStringList::filter(const QString &str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 `str`、`cs` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回包含子字符串`str`的所有字符串列表。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
+这等价于。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+     QStringList list;
+     list << "Bill Murray" << "John Doe" << "Bill Clinton";
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     QStringList result;
+     result = list.filter("Bill");
+     // result: ["Bill Murray", "Bill Clinton"]
+```
 
 ### `QStringList QStringList::filter(const QRegularExpression &re) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 `re` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有与正则表达式`re`匹配的字符串列表。
 
 ### `[since 6.7] QStringList QStringList::filter(const QStringMatcher &matcher) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 `matcher` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回与`matcher`匹配的所有字符串列表（即`matcher.indexIn()`返回索引>= 0）。
+在大列表和/或字符串较长的列表中搜索时，使用`QStringMatcher`可能更快（最好的方法是基准测试）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数 `matcher`：类型为 `const QStringMatcher &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList veryLongList;
+     QStringMatcher matcher(u"Straße", Qt::CaseInsensitive);
+     QStringList filtered = veryLongList.filter(matcher);
+```
 
 ### `[since 6.7] QStringList QStringList::filter(QLatin1StringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 `str`、`cs` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回由`matcher`匹配的所有字符串列表（即`matcher.indexIn()`返回索引>= 0）。
+在大列表和/或字符串较长的列表中搜索时，使用`QLatin1StringMatcher`可能更快（最好的方法是做基准测试）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数 `str`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList veryLargeList;
+     QLatin1StringMatcher matcher("Street"_L1, Qt::CaseInsensitive);
+     QStringList filtered = veryLargeList.filter(matcher);
+```
 
 ### `QStringList QStringList::filter(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 `str`、`cs` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回由`matcher`匹配的所有字符串列表（即`matcher.indexIn()`返回索引>= 0）。
+在大列表和/或字符串较长的列表中搜索时，使用`QLatin1StringMatcher`可能更快（最好的方法是做基准测试）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList veryLargeList;
+     QLatin1StringMatcher matcher("Street"_L1, Qt::CaseInsensitive);
+     QStringList filtered = veryLargeList.filter(matcher);
+```
 
 ### `[noexcept] qsizetype QStringList::indexOf(QLatin1StringView str, qsizetype from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中第一个匹配`str`的索引位置，从索引位置`from`向前搜索。如果没有匹配的项目，返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
+注意：`cs`参数是在Qt 6.7中添加的，也就是说，这些方法现在会超载从基类继承的方法。在此之前，这些方法只有两个参数。这一变化是源代码兼容的，现有代码应继续正常工作。
 
 ### `qsizetype QStringList::indexOf(const QRegularExpression &re, qsizetype from = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `re`、`from` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中第一个匹配`str`的索引位置，从索引位置`from`向前搜索。如果没有匹配的项目，返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
+注意：`cs`参数是在Qt 6.7中添加的，也就是说，这些方法现在会超载从基类继承的方法。在此之前，这些方法只有两个参数。这一变化是源代码兼容的，现有代码应继续正常工作。
 
 ### `QString QStringList::join(const QString &separator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `separator`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将字符串列表中的所有字符串合并为一个字符串，每个元素之间由给定的 `separator` 分隔（该字符串可以是空字符串）。
 
 ### `QString QStringList::join(QChar separator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `separator`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注意：该功能会让`QStringList::join()`重载。
 
 ### `QString QStringList::join(QLatin1StringView separator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `separator`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注意：该功能会让`QStringList::join()`重载。
 
 ### `QString QStringList::join(QStringView separator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `separator`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将字符串列表中的所有字符串合并为一个字符串，每个元素之间由给定的 `separator` 分隔（该字符串可以是空字符串）。
 
 ### `[noexcept] qsizetype QStringList::lastIndexOf(QLatin1StringView str, qsizetype from = -1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `-1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中最后一个匹配`str`的索引位置，从索引位置`from`向后搜索。如果`from`为-1（默认值），搜索从最后一项开始。如果没有匹配的项，返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较是区分大小写的;否则比较是不区分大小写的。
+注意：`cs`参数是在Qt 6.7中添加的，也就是说，这些方法现在会超载从基类继承的方法。在此之前，这些方法只有两个参数。这一变化是源代码兼容的，现有代码应继续正常工作。
 
 ### `qsizetype QStringList::lastIndexOf(const QRegularExpression &re, qsizetype from = -1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `re`、`from` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `-1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中最后一个匹配`str`的索引位置，从索引位置`from`向后搜索。如果`from`为-1（默认值），搜索从最后一项开始。如果没有匹配的项，返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较是区分大小写的;否则比较是不区分大小写的。
+注意：`cs`参数是在Qt 6.7中添加的，也就是说，这些方法现在会超载从基类继承的方法。在此之前，这些方法只有两个参数。这一变化是源代码兼容的，现有代码应继续正常工作。
 
 ### `qsizetype QStringList::removeDuplicates()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeDuplicates`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数会从列表中移除重复的条目。条目不必排序。它们会保持原始顺序。
+返回被移除的条目数量。
 
 ### `QStringList &QStringList::replaceInStrings(const QString &before, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::replaceInStrings` 用于计算、查询或取得与“替换、In、Strings”相关的操作。调用时要先确认当前状态和 `before`、`after`、`cs` 的有效范围；返回类型是 `QStringList &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个字符串列表，每个字符串的 `before` 文本都被 `after` 文本替换，无论在 `before` 文本所在之处。
+注意：如果使用空的`before`参数，`after`参数会在字符串的每个字符前后插入。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList &`。
-- 参数 `before`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `after`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList list;
+     list << "alpha" << "beta" << "gamma" << "epsilon";
+     list.replaceInStrings("a", "o");
+     // list == ["olpho", "beto", "gommo", "epsilon"]
+```
 
 ### `QStringList &QStringList::replaceInStrings(const QRegularExpression &re, const QString &after)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::replaceInStrings` 用于计算、查询或取得与“替换、In、Strings”相关的操作。调用时要先确认当前状态和 `re`、`after` 的有效范围；返回类型是 `QStringList &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+将每个字符串列表字符串中所有正则表达式`re`的出现替换为 `after`。返回字符串列表的引用。
+对于包含捕获群的正则表达式，`after`中出现的\1， \2， ...被对应捕获群捕获的字符串替换。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList &`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `after`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList list;
+     list << "alpha" << "beta" << "gamma" << "epsilon";
+     list.replaceInStrings(QRegularExpression("^a"), "o");
+     // list == ["olpha", "beta", "gamma", "epsilon"]
+```
 
 ### `QStringList &QStringList::replaceInStrings(QStringView before, QStringView after, Qt::CaseSensitivity cs = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::replaceInStrings` 用于计算、查询或取得与“替换、In、Strings”相关的操作。调用时要先确认当前状态和 `before`、`after`、`cs` 的有效范围；返回类型是 `QStringList &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个字符串列表，每个字符串的 `before` 文本都被 `after` 文本替换，无论在 `before` 文本所在之处。
+注意：如果使用空的`before`参数，`after`参数会在字符串的每个字符前后插入。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList &`。
-- 参数 `before`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `after`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList list;
+     list << "alpha" << "beta" << "gamma" << "epsilon";
+     list.replaceInStrings("a", "o");
+     // list == ["olpho", "beto", "gommo", "epsilon"]
+```
 
 ### `QStringList &QStringList::replaceInStrings(QStringView before, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::replaceInStrings` 用于计算、查询或取得与“替换、In、Strings”相关的操作。调用时要先确认当前状态和 `before`、`after`、`cs` 的有效范围；返回类型是 `QStringList &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个字符串列表，每个字符串的 `before` 文本都被 `after` 文本替换，无论在 `before` 文本所在之处。
+注意：如果使用空的`before`参数，`after`参数会在字符串的每个字符前后插入。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList &`。
-- 参数 `before`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `after`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList list;
+     list << "alpha" << "beta" << "gamma" << "epsilon";
+     list.replaceInStrings("a", "o");
+     // list == ["olpho", "beto", "gommo", "epsilon"]
+```
 
 ### `QStringList &QStringList::replaceInStrings(const QString &before, QStringView after, Qt::CaseSensitivity cs = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::replaceInStrings` 用于计算、查询或取得与“替换、In、Strings”相关的操作。调用时要先确认当前状态和 `before`、`after`、`cs` 的有效范围；返回类型是 `QStringList &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个字符串列表，每个字符串的 `before` 文本都被 `after` 文本替换，无论在 `before` 文本所在之处。
+注意：如果使用空的`before`参数，`after`参数会在字符串的每个字符前后插入。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList &`。
-- 参数 `before`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `after`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QStringList list;
+     list << "alpha" << "beta" << "gamma" << "epsilon";
+     list.replaceInStrings("a", "o");
+     // list == ["olpho", "beto", "gommo", "epsilon"]
+```
 
 ### `void QStringList::sort(Qt::CaseSensitivity cs = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringList::sort` 用于执行与“sort”相关的操作。调用时要先确认当前状态和 `cs` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+按升序排序字符串列表。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
+排序使用STL的std：：sort()算法，该算法平均线性对数时间，即O（n log n）。
+如果你想按任意顺序排序字符串，可以考虑使用 `QMap` 类。例如，你可以用 `QMap`<`QString`，`QString`> 来创建不区分大小写的顺序（例如，键是字符串的小写版本，值是字符串），或者用 `QMap`<int，`QString`> 按整数索引排序字符串。
 
 ### `QStringList QStringList::operator+(const QStringList &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `other`：类型为 `const QStringList &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个字符串列表，该字符串列表是该字符串列表与`other`字符串列表的连接。
 
 ### `QStringList &QStringList::operator<<(const QString &str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringList &`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定字符串 `str` 附加到该字符串列表，并返回对字符串列表的引用。
 
 ### `QStringList &QStringList::operator<<(const QList<QString> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringList &`。
-- 参数 `other`：类型为 `const QList<QString> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`字符串列表附加到字符串列表，并返回对后者字符串列表的引用。
 
 ### `QStringList &QStringList::operator<<(const QStringList &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringList &`。
-- 参数 `other`：类型为 `const QStringList &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`字符串列表附加到字符串列表，并返回对后者字符串列表的引用。
 
 ### `QStringList &QStringList::operator=(const QList<QString> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringList &`。
-- 参数 `other`：类型为 `const QList<QString> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`QList`复制赋值操作符<`QString`>。将`other`字符串列表分配给该字符串列表。
+手术后，`other`和`*this`相等。
 
 ### `QStringList &QStringList::operator=(QList<QString> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringList &`。
-- 参数 `other`：类型为 `QList<QString> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将赋值算符从 `QList` <`QString`>移动。将字符串的`other`列表移动到该字符串列表。
+手术结束后，`other`会空无一人。
 
 ### `[alias] QMutableStringListIterator`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的 `Q、Mutable、字符串、List、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QStringListIterator`类型定义提供了一个类似Java的非const迭代器用于`QStringList`。
+`QStringList` 既提供 Java 风格的迭代器，也提供 STL 风格的叠代器。Java 风格的非 const 迭代器只是 `QMutableListIterator` 的类型定义<`QString`>。
 
 ### `[alias] QStringListIterator`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QStringList` 的 `Q、字符串、List、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QStringListIterator 类型定义为 `QStringList` 提供了一个类似 Java 的 const 迭代器。
+`QStringList` 既提供 Java 风格的迭代器，也提供 STL 风格的叠代器。Java 风格的 const 迭代器只是 `QListIterator` 的类型定义<`QString`>。
 
 ### `qsizetype indexOf(QStringView str, qsizetype from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringList::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中第一个匹配`str`的索引位置，从索引位置`from`向前搜索。如果没有匹配的项目，返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较区分大小写;否则比较不区分大小写。
+注意：`cs`参数是在Qt 6.7中添加的，也就是说，这些方法现在会超载从基类继承的方法。在此之前，这些方法只有两个参数。这一变化是源代码兼容的，现有代码应继续正常工作。
 
 ### `qsizetype indexOf(const QString &str, qsizetype from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringList::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中第一个完全匹配的`re`的索引位置，从索引位置`from`向前搜索。如果没有匹配的项目，返回-1。
 
 ### `qsizetype lastIndexOf(QStringView str, qsizetype from = -1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringList::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `-1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中最后一个匹配`str`的索引位置，从索引位置`from`向后搜索。如果`from`为-1（默认值），搜索从最后一项开始。如果没有匹配的项，返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则字符串比较是区分大小写的;否则比较是不区分大小写的。
+注意：`cs`参数是在Qt 6.7中添加的，也就是说，这些方法现在会超载从基类继承的方法。在此之前，这些方法只有两个参数。这一变化是源代码兼容的，现有代码应继续正常工作。
 
 ### `qsizetype lastIndexOf(const QString &str, qsizetype from = -1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringList::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `-1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列表中最后一个完全匹配的`re`的索引位置，从索引位置`from`向后搜索。如果`from`为-1（默认值），搜索从最后一个项目开始。如果没有匹配的项目，返回-1。
 
 ## 6. 深入实践与常见坑
 

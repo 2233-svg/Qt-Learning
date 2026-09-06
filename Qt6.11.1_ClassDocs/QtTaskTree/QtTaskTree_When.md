@@ -65,52 +65,63 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] When::When(const QtTaskTree::BarrierKickerGetter &kicker, QtTaskTree::WorkflowPolicy policy = WorkflowPolicy::StopOnError)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::When` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+产生延迟元件，使返回`kicker`与`Do`体并联运行的回`ExecutableItem`。`Do`体被延迟，直到传递给`kicker`的`QStoredBarrier`提前运行。`kicker`和`Do`体返回的`ExecutableItem`将通过`policy`并行运行。
+例如，如果你想延迟后续任务的执行直到`QProcess`开始，配方可以是：
+当上述配方执行时，`QTaskTree`会与`Do`体并行运行`QProcessTask`。`Do`体最初处于暂停状态——当传给踢球者的障碍物前进后，该程序会继续。这会在`QProcess`开始时立即发生。此后，`QProcess`与`Do`体并行运行。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `kicker`：类型为 `const QtTaskTree::BarrierKickerGetter &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::BarrierKickerGetter &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `policy`：类型为 `QtTaskTree::WorkflowPolicy`。默认值为 `WorkflowPolicy::StopOnError`。传入 `QtTaskTree::WorkflowPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ const auto kicker = [](const QStoredBarrier &barrier) {
+     const auto onSetup = [barrier](QProcess &process) {
+         QObject::connect(&process, &QProcess::started, barrier.activeStorage(), &QBarrier::advance);
+         ... // Setup process program, arguments, environment, etc...
+     };
+     return QProcessTask(onSetup);
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ const Group recipe {
+     When (kicker) >> Do {
+         delayedTask1,
+         ...
+     }
+ };
+```
 
 ### `[explicit] template < typename Task, typename Adapter, typename Deleter, typename Signal > When::When(const QtTaskTree::QCustomTask<Task, Adapter, Deleter> &customTask, Signal signal, QtTaskTree::WorkflowPolicy policy = QtTaskTree::WorkflowPolicy::StopOnError)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::When` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+创建一个延迟元件，将`customTask`及其`Task`的`signal`与`Do`体并联运行。在`Task` `signal`发出前，`Do`体会被延迟运行。`customTask`和`Do`体将通过`policy`并行运行。
+另一个 When 构造函数的代码可以简化为：
+注意：通过`customTask`的`Task`类型需要从`QObject`中推导出来。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `customTask`：类型为 `const QtTaskTree::QCustomTask<Task, Adapter, Deleter> &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::QCustomTask<Task, Adapter, Deleter> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signal`：类型为 `Signal`。没有默认值，调用时必须提供。传入 `Signal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `policy`：类型为 `QtTaskTree::WorkflowPolicy`。默认值为 `QtTaskTree::WorkflowPolicy::StopOnError`。传入 `QtTaskTree::WorkflowPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ const auto onSetup = [barrier](QProcess &process) {
+     ... // Setup process program, arguments, environment, etc...
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ const Group recipe {
+     When (QProcessTask(onSetup), &QProcess::started) >> Do {
+         delayedTask1,
+         ...
+     }
+ };
+```
 
 ### `QtTaskTree::Group operator>>(const QtTaskTree::When &whenItem, const QtTaskTree::Do &doItem)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::When` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::Group`。
-- 参数 `whenItem`：类型为 `const QtTaskTree::When &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::When &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `doItem`：类型为 `const QtTaskTree::Do &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Do &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`whenItem`与`doItem`身体结合，返回一个`Group`，准备用于任务树配方。
 
 ## 6. 深入实践与常见坑
 

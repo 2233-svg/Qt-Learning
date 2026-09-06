@@ -88,282 +88,177 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 21 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QQuickGraphicsConfiguration::QQuickGraphicsConfiguration()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickGraphicsConfiguration` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建默认的QQuickGraphicsConfiguration，未指定场景图需要考虑的任何额外设置。
 
 ### `[noexcept] QQuickGraphicsConfiguration::~QQuickGraphicsConfiguration()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickGraphicsConfiguration` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `QByteArrayList QQuickGraphicsConfiguration::deviceExtensions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickGraphicsConfiguration::deviceExtensions` 用于计算、查询或取得与“device、Extensions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArrayList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回请求的额外设备扩展列表。
 
 ### `[since 6.5] bool QQuickGraphicsConfiguration::isAutomaticPipelineCacheEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAutomaticPipelineCacheEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了自动流水线缓存，则返回为true。
+默认情况下，除非设置了某些应用属性或环境变量，否则这是正确的。更多信息请参见自动流水线缓存。
 
 ### `bool QQuickGraphicsConfiguration::isDebugLayerEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDebugLayerEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果要启用调试/验证层，则返回为真。
+默认情况下，该值为假。
 
 ### `bool QQuickGraphicsConfiguration::isDebugMarkersEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDebugMarkersEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了调试标记，则返回为真。
+默认情况下，该值为假。
 
 ### `bool QQuickGraphicsConfiguration::isDepthBufferEnabledFor2D() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDepthBufferEnabledFor2D`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对2D内容启用深度缓冲使用，则返回为真。
+默认情况下，该值为真，除非`QSG_NO_DEPTH_BUFFER`环境变量被设置。
 
 ### `QString QQuickGraphicsConfiguration::pipelineCacheLoadFile() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickGraphicsConfiguration::pipelineCacheLoadFile` 用于计算、查询或取得与“pipeline、Cache、加载、File”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的文件名以加载流水线缓存。
+默认情况下，该值是一个空字符串。
 
 ### `QString QQuickGraphicsConfiguration::pipelineCacheSaveFile() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickGraphicsConfiguration::pipelineCacheSaveFile` 用于计算、查询或取得与“pipeline、Cache、保存、File”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的文件名，用于存储流水线缓存。
+默认情况下，该值是一个空字符串。
 
 ### `[static, since 6.1] QByteArrayList QQuickGraphicsConfiguration::preferredInstanceExtensions()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `preferredInstanceExtensions`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 Qt Quick 偏好在 VkInstance 上启用的 Vulkan 实例扩展列表。
+在大多数情况下，Qt Quick负责创建`QVulkanInstance`。那么这个函数就不相关了。另一方面，当使用`QQuickRenderControl`与基于Vulkan的渲染结合时，应用程序负责创建`QVulkanInstance`并将其与（屏幕外的）`QQuickWindow`关联。在这种情况下，应用通常会查询启用实例扩展列表，并将其传递给`QVulkanInstance::setExtensions()`，然后再调用`QVulkanInstance::create()`。
 
 ### `bool QQuickGraphicsConfiguration::prefersSoftwareDevice() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickGraphicsConfiguration::prefersSoftwareDevice` 用于计算、查询或取得与“prefers、Software、Device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果优先考虑基于光栅器的软件图形设备，则返回为真。
+默认情况下，该值为假。
 
 ### `[since 6.5] void QQuickGraphicsConfiguration::setAutomaticPipelineCache(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutomaticPipelineCache`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`enable`调整自动流水线缓存的使用情况。
+默认值为真，除非设置了某些应用属性或环境变量。更多信息请参见自动管道缓存。
 
 ### `[since 6.5] void QQuickGraphicsConfiguration::setDebugLayer(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDebugLayer`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+启用图形API实现的调试或验证层（如有）。
+实际上，Vulkan 和 Direct 3D 11 支持此功能，前提是安装并运行时已提供必要的支持（验证层、Windows SDK）。当`enable`成立时，Qt 会尝试在 VkInstance 上启用标准验证层，或在图形设备上设置 `D3D11_CREATE_DEVICE_DEBUG`。
+对于macOS上的Metal，启动应用前请将环境变量设为`METAL_DEVICE_WRAPPER_TYPE=1`。
+将`enable`设为真调用该函数，等价于将环境变量`QSG_RHI_DEBUG_LAYER`设置为非零值。
+默认值为假。
+注意：启用调试层或验证层可能会带来不小的性能影响。强烈建议在启用该标志的情况下将应用交付生产环境。
+注意：由于底层图形API设计的不同，该设置不总是每个`QQuickWindow`单独设置，尽管每个`QQuickWindow`都有自己的`QQuickGraphicsConfiguration`。特别是在Vulkan中，实例对象（VkInstance）只被创建一次，之后应用中所有窗口都会使用。因此，启用验证层会影响所有窗口。这也意味着，尝试通过仅在其他窗口开始渲染后才显示的窗口来启用验证，对Vulkan没有影响。其他API，如D3D11，则将调试层概念作为每个设备（ID3D11Device）设置，因此它是基于真正的每个窗口进行控制（假设场景图渲染循环为每个`QQuickWindow`使用专用的图形设备/上下文）。
 
 ### `[since 6.5] void QQuickGraphicsConfiguration::setDebugMarkers(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDebugMarkers`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在适用的情况下，`enable`控制将调试标记和对象名称插入图形命令流中。
+一些框架，如 Qt Quick 3D，能够为它们创建的图形对象（缓冲区、纹理）标注名称，并指示命令缓冲区中渲染的起点和结束点。这些内容随后通过 RenderDoc 或 XCode 等工具制作的帧捕获数据可见。
+预计支持该接口的图形API有Vulkan（如果有VK_EXT_debug_utils）、Direct 3D 11和Metal。
+将 `enable` 设为 true 调用该函数，等同于将环境变量 `QSG_RHI_PROFILE` 设置为非零值。
+默认值为假。
+注意：启用调试标记可能会影响性能。不建议在启用该标志的情况下将应用程序交付生产环境。
 
 ### `void QQuickGraphicsConfiguration::setDepthBufferFor2D(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthBufferFor2D`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将2D内容的深度缓冲区使用设置为`enable`。禁用后，Qt Quick场景图永远不会写入深度缓冲区。
+默认情况下，除非`QSG_NO_DEPTH_BUFFER`环境变量被设置，否则该值为真。
+默认值为真是绝大多数场景的最优设置。禁用深度缓冲区使用会降低场景图批处理的效率。
+不过，在某些情况下，允许写入深度缓冲区的2D内容并不理想。可以考虑将3D场景作为“叠加层”叠加在2D场景之上，通过Qt Quick 3D使用`View3D`渲染，`renderMode`设置为`Overlay`。在这种情况下，深度缓冲区被2D内容填充可能会导致意想不到的结果。这是因为2D场景图渲染器生成和处理深度值的方式不一定与3D场景的工作方式兼容。这可能导致深度值冲突、碰撞和意外的深度测试失败。因此，这里的稳健方法是调用该函数，`enable`设为false，并禁用`QQuickWindow`中二维内容的深度缓冲写入。
+注意：该标志与设置`QSG_NO_DEPTH_BUFFER`环境变量不完全相同。该标志不控制深度模板缓冲区的存在。它对渲染流水线相当相关。要强制完全不添加深度/模板附件，设置 `QSG_NO_DEPTH_BUFFER` 和 `QSG_NO_STENCIL_BUFFER`。但请注意，这样的`QQuickWindow`及其中的任何 Item 图层可能会与某些操作模式的 `View3D` Item 不兼容，因为 3D 内容需要深度缓冲。调用该函数总是安全的，但可能导致资源（如深度缓冲区）被创建，尽管它们未被主动使用。
 
 ### `void QQuickGraphicsConfiguration::setDeviceExtensions(const QByteArrayList &extensions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDeviceExtensions`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `extensions`：类型为 `const QByteArrayList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置图形设备上需要启用的额外`extensions`列表（例如`VkDevice`）。
+当使用图形API渲染时，如果该概念不适用，`extensions`会被忽略。
+注意：列表中指定了额外的扩展。Qt Quick 总是启用场景图所需的扩展。
 
 ### `[since 6.5] void QQuickGraphicsConfiguration::setPipelineCacheLoadFile(const QString &filename)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPipelineCacheLoadFile`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filename`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置 `filename` 是`QQuickWindow`期望从哪里加载其图形/计算流水线缓存的初始内容。默认值为空，意味着流水线缓存加载被禁用。
+有关流水线缓存的讨论，请参见“流水线缓存保存与加载”。
+持续存储流水线缓存可以提升应用未来的运行性能，因为可以避免昂贵的着色器编译和流水线构建步骤。
+文件内容的加载时间并未定义，除此之外，它会在`QQuickWindow`场景图初始化的某个时刻发生。因此，文件在调用该函数后必须继续存在。`QQuickGraphicsConfiguration`仅存储文件名，无法单独执行任何实际的I/O和图形操作。真正的工作将在后续进行，可能是在另一个线程上。
+当运行图形 API 时，无法或不支持获取和重新加载流水线缓存（或着色器/程序二进制文件），调用该函数无效。
+调用该函数大体等同于将环境变量 `QSG_RHI_PIPELINE_CACHE_LOAD` 设置为 `filename`，但有一个重要区别：该函数仅控制关联`QQuickWindow`的流水线缓存存储。因此，拥有多个`QQuickWindow`或`QQuickView`实例的应用程序可以通过专门为每个窗口存储和重新加载缓存内容。环境变量不允许这样做。
+注意：如果文件中的数据在运行时与图形设备和驱动版本不匹配，内容将被忽略，应用程序会被透明地忽略。这适用于许多图形API，必要的检查由Qt负责。也有例外，最显著的是Direct 3D 11，其中“流水线缓存”仅用于存储运行时HLSL->DXBC编译的结果，因此设备和厂商都无关。
+警告：串行化的流水线缓存数据被假定为可信内容。建议应用开发者切勿从不受信任的来源传递数据。
 
 ### `[since 6.5] void QQuickGraphicsConfiguration::setPipelineCacheSaveFile(const QString &filename)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPipelineCacheSaveFile`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filename`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`QQuickWindow`预期存储图形/计算流水线缓存内容的`filename`。默认值为空，意味着流水线缓存加载被禁用。
+有关流水线缓存的讨论，请参见“流水线缓存保存与加载”。
+持续存储流水线缓存可以提升应用未来的运行性能，因为可以避免昂贵的着色器编译和流水线构建步骤。
+文件的写入时间尚未明确。由于关闭窗口，通常在撕毁场景图时会发生。因此，应用程序不应在`QQuickWindow`完全销毁前假设文件可用。`QQuickGraphicsConfiguration`仅存储文件名，本身不执行任何实际的I/O和图形操作。
+当使用图形 API 运行时，获取流水线缓存（或着色器/程序二进制文件）不适用或不支持，调用该函数无效。
+调用该函数大多等同于将环境变量 `QSG_RHI_PIPELINE_CACHE_SAVE` 设置为 `filename`，但有一个重要区别：该函数仅控制关联`QQuickWindow`的流水线缓存存储。因此，拥有多个`QQuickWindow`或`QQuickView`实例的应用程序可以通过专门为每个窗口存储并随后重新加载缓存内容。环境变量不允许这样做。
 
 ### `[since 6.5] void QQuickGraphicsConfiguration::setPreferSoftwareDevice(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreferSoftwareDevice`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+请求选择使用软件光栅化的适配器或物理设备。仅在底层 API 支持枚举适配器（例如 Direct 3D 或 Vulkan）时适用，否则忽略。
+如果图形API实现中没有此类图形适配器或物理设备，则请求被忽略。对于直接3D，可以预期始终有基于WARP的光栅器可用。而对于Vulkan，只有当Mesa的`lavapipe`或其他物理设备报告`VK_PHYSICAL_DEVICE_TYPE_CPU`可用时，标志才会生效。
+调用该函数时`enable`设为真，相当于将环境变量`QSG_RHI_PREFER_SOFTWARE_RENDERER`设置为非零值。
+默认值为假。
 
 ### `[since 6.6] void QQuickGraphicsConfiguration::setTimestamps(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTimestamps`。调用它会改变 `QQuickGraphicsConfiguration` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+启用后，GPU 时序数据会从支持该功能的平台和 3D API 上的命令缓冲区收集。这些数据随后会打印到渲染日志中，渲染器日志可以通过`QSG_RENDER_TIMING`环境变量或日志类别（如 `qt.scenegraph.time.renderloop`）启用，也可以对其他模块（如 Qt Quick 3D 的`DebugView`项）显示。
+默认情况下，此功能被禁用，因为收集数据可能需要额外工作，例如根据底层图形API在命令流中插入时间戳查询。启用时，要么调用该函数，`enable`设为true，要么将`QSG_RHI_PROFILE`环境变量设置为非零值。
+预计支持此类的图形 API，包括 Direct 3D 11、Direct 3D 12、Vulkan（只要底层 Vulkan 实现支持时间戳查询）、Metal 以及带有核心或兼容性配置文件的 OpenGL，适用于版本 3.3 或更新。OpenGL ES 不支持时间戳。
 
 ### `[since 6.6] bool QQuickGraphicsConfiguration::timestampsEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickGraphicsConfiguration::timestampsEnabled` 用于计算、查询或取得与“timestamps、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了 GPU 时序收集，则返回为真。
+默认情况下，该值为假。
 
 ## 6. 深入实践与常见坑
 

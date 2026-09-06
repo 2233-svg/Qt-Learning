@@ -128,725 +128,497 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 54 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QCompleter::CompletionMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 暴露的类型声明 `Completion、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CompletionMode`。
-- 属性名：`QCompleter`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了如何向用户提供补全。
+- `QCompleter::PopupCompletion`：`0`;当前完成项目会以弹出窗口显示。
+- `QCompleter::InlineCompletion`：`2`;补足词以内联形式出现（作为选定文本）。
+- `QCompleter::UnfilteredPopupCompletion`：`1`;所有可能的完成项目都会在弹窗中显示，最有可能的建议被标注为当前。
 
 ### `enum QCompleter::ModelSorting`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 暴露的类型声明 `Model、Sorting`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ModelSorting`。
-- 属性名：`QCompleter`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了模型中项的排序方式。
+- `QCompleter::UnsortedModel`：`0`;模型未排序。
+- `QCompleter::CaseSensitivelySortedModel`：`1`;模型按大小写分类。
+- `QCompleter::CaseInsensitivelySortedModel`：`2`;模型对大小写排序不敏感。
 
 ### `caseSensitivity : Qt::CaseSensitivity`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setCaseSensitivity(...)` 设置，之后用 `CaseSensitivity()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示匹配的大小写敏感性。
+默认值是`Qt::CaseSensitive`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::CaseSensitivity`。
-- 属性名：`caseSensitivity`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `caseSensitivity()` 读取当前值；它不会修改应用状态。
 
 ### `completionColumn : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setCompletionColumn(...)` 设置，之后用 `completionColumn()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含模型中搜索完备化的列。
+如果`popup()`是`QListView`，会自动设置显示该列。
+默认情况下，匹配列为0。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`completionColumn`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionColumn()` 读取当前值；它不会修改应用状态。
 
 ### `completionMode : CompletionMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setCompletionMode(...)` 设置，之后用 `completionMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+完成项如何提供给用户。
+默认值是`QCompleter::PopupCompletion`。
 
-**签名拆解：**
-
-- 属性类型：`CompletionMode`。
-- 属性名：`completionMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionMode()` 读取当前值；它不会修改应用状态。
 
 ### `completionPrefix : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setCompletionPrefix(...)` 设置，之后用 `completionPrefix()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保存用于提供补全的补全前缀。
+`completionModel()` 会更新以反映可能匹配 `prefix` 的列表。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`completionPrefix`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionPrefix()` 读取当前值；它不会修改应用状态。
 
 ### `completionRole : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setCompletionRole(...)` 设置，之后用 `completionRole()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含用于查询内容以匹配的项目角色。
+默认角色是`Qt::EditRole`。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`completionRole`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionRole()` 读取当前值；它不会修改应用状态。
 
 ### `filterMode : Qt::MatchFlags`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setMatchFlags(...)` 设置，之后用 `MatchFlags()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性控制过滤的执行方式。
+如果filterMode设置为`Qt::MatchStartsWith`，只有以类型字符开头的条目才会显示。`Qt::MatchContains`会显示包含类型字符的条目，并`Qt::MatchEndsWith`以类型字符结尾的条目。
+将 filterMode 设置为其他`Qt::MatchFlag`会发出警告，且不会执行任何操作。因此，`Qt::MatchCaseSensitive` 标志没有效果。使用 `caseSensitivity` 属性来控制大小写敏感性。
+默认模式是`Qt::MatchStartsWith`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::MatchFlags`。
-- 属性名：`filterMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterMode()` 读取当前值；它不会修改应用状态。
 
 ### `maxVisibleItems : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setMaxVisibleItems(...)` 设置，之后用 `maxVisibleItems()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性能显示完成器屏幕上的最大允许尺寸，单位为项目。
+默认情况下，该属性的值为7。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`maxVisibleItems`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maxVisibleItems()` 读取当前值；它不会修改应用状态。
 
 ### `modelSorting : ModelSorting`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setModelSorting(...)` 设置，之后用 `modelSorting()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了模型的排序方式。
+默认情况下，模型中不假设完成化的项目顺序。
+如果模型中`completionColumn()`和`completionRole()`的数据按升序排序，你可以将该属性设置为`CaseSensitivelySortedModel`或`CaseInsensitivelySortedModel`。在大型模型中，这能带来显著的性能提升，因为更完整的对象可以使用二分搜索算法而非线性搜索算法。
+模型的排序顺序（即升序或降序）通过动态检查模型内容来确定。
+注意：上述性能提升无法实现，当完成者的 `caseSensitivity` 与模型排序时使用的大小写敏感性不同。
 
-**签名拆解：**
-
-- 属性类型：`ModelSorting`。
-- 属性名：`modelSorting`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `modelSorting()` 读取当前值；它不会修改应用状态。
 
 ### `wrapAround : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的配置属性。初始化或状态切换时通过 `setWrapAround(...)` 设置，之后用 `wrapAround()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保存导航项目时补全是否循环。
+默认值为true。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`wrapAround`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wrapAround()` 读取当前值；它不会修改应用状态。
 
 ### `QCompleter::QCompleter(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个具有给定`parent`的完备对象。
 
 ### `QCompleter::QCompleter(QAbstractItemModel *model, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个包含给定`parent`的完备对象，提供指定`model`的完备化。
 
 ### `QCompleter::QCompleter(const QStringList &list, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `list`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有给定`parent`的QCompleter对象，使用指定`list`作为可能完备化的源。
 
 ### `[override virtual noexcept] QCompleter::~QCompleter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁完备对象。
 
 ### `[signal] void QCompleter::activated(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 发出的通知信号 `activated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+当用户激活`popup()`中的某个物品时，会发送该信号。（通过点击或按回车键）该物品在`completionModel()`中的`index`会被显示。
+注意：该信号重载。连接此信号：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
+使用 qOverload 连接：
+connect（completer， qOverload（&QCompleter：：activated），。
+receiver， &ReceiverClass：：slot）;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用λ：
+connect（completer， qOverload（&QCompleter：：activated），。
+this， []（const QModelIndex & index） { /* handle activated */ }）;
+
+
+更多示例和方法，请参见连接重载信号。
 
 ### `[signal] void QCompleter::activated(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 发出的通知信号 `activated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+当用户通过点击或按回车激活`popup()`中的某个物品时，会发送该信号。该物品的`text`会被显示出来。
+注意：该信号重载。连接此信号：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
+使用 qOverload 连接：
+connect（completer， qOverload（&QCompleter：：activated），。
+receiver， &ReceiverClass：：slot）;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用λ：
+connect（completer， qOverload（&QCompleter：：activated），。
+this， []（const QString &text） { /* handle activated */ }）;
+
+
+更多示例和方法，请参见连接重载信号。
 
 ### `[slot] void QCompleter::complete(const QRect &rect = QRect())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `complete`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。默认值为 `QRect()`。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`QCompleter::PopupCompletion`和QCompletion：：UnfilteredPopupCompletion模式，调用该函数会显示当前补全的弹窗。默认情况下，如果未指定`rect`，弹窗会显示在`widget()`底部。如果指定`rect`，弹窗会显示在矩形的左侧边缘。
+对于`QCompleter::InlineCompletion`模式，`highlighted()`信号与当前完成信号一起发射。
 
 ### `int QCompleter::completionCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::completionCount` 用于计算、查询或取得与“completion、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前前缀的完成次数。对于未排序且项目数量众多的模型，这可能成本较高。使用`setCurrentRow()`和`currentCompletion()`遍历所有补全。
 
 ### `QAbstractItemModel *QCompleter::completionModel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::completionModel` 用于计算、查询或取得与“completion、Model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回完备化模型。完备模型是一个只读列表模型，包含当前完备前缀的所有可能匹配。完备模型会自动更新以反映当前完备化。
+注意：该函数的返回值被定义为`QAbstractItemModel`，纯粹是为了一般性。这种实际返回的模型是`QAbstractProxyModel`子类的一个实例。
 
 ### `QString QCompleter::currentCompletion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::currentCompletion` 用于计算、查询或取得与“当前、Completion”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的补全字符串。这包括 `completionPrefix`。与 `setCurrentRow()` 一起使用时，可以用来遍历所有匹配。
 
 ### `QModelIndex QCompleter::currentIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::currentIndex` 用于计算、查询或取得与“当前、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前完备化的模型索引`completionModel()`。
 
 ### `int QCompleter::currentRow() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::currentRow` 用于计算、查询或取得与“当前、行”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前行。
 
 ### `[override virtual protected] bool QCompleter::event(QEvent *ev)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `ev` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ev`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
 
 ### `[override virtual protected] bool QCompleter::eventFilter(QObject *o, QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::eventFilter` 用于计算、查询或取得与“event、Filter”相关的操作。调用时要先确认当前状态和 `o`、`e` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `o`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
 
 ### `[signal] void QCompleter::highlighted(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 发出的通知信号 `highlighted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+当用户在`popup()`中选中某个项目时，会发送该信号。如果`complete()`被调用且`completionMode()`设置为`QCompleter::InlineCompletion`，也会发送该信号。该物品在`completionModel()`中的`index`会被给出。
+注意：该信号重载。连接此信号：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
+使用 qOverload 连接：
+connect（completer， qOverload（&QCompleter：：highlighted），。
+receiver， &ReceiverClass：：slot）;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用λ：
+connect（completer， qOverload（&QCompleter：：highlighted），。
+this， []（const QModelIndex &index） { /* handle highlighted */ }）;
+
+
+更多示例和方法，请参见连接重载信号。
 
 ### `[signal] void QCompleter::highlighted(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCompleter` 发出的通知信号 `highlighted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+当用户在`popup()`中选中某个物品时，会发送该信号。如果`completionMode()`设置为`QCompleter::InlineCompletion`，`complete()`也会发送。该物品的`text`会被给出。
+注意：该信号重载。连接此信号：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
+使用 qOverload 连接：
+connect（completer， qOverload（&QCompleter：：highlighted），。
+receiver， &ReceiverClass：：slot）;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用λ：
+connect（completer， qOverload（&QCompleter：：highlighted），。
+this， []（const QString &text） { /* handle highlighted */ }）;
+
+
+更多示例和方法，请参见连接重载信号。
 
 ### `QAbstractItemModel *QCompleter::model() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::model` 用于计算、查询或取得与“model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回提供完备性字符串的模型。
 
 ### `[virtual] QString QCompleter::pathFromIndex(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::pathFromIndex` 用于计算、查询或取得与“path、转换进入、索引”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`index`的路径。完备对象利用此方法从底层模型获取补全文本。
+默认实现会返回列表模型的编辑角色。如果模型是`QFileSystemModel`，则返回绝对文件路径。
 
 ### `QAbstractItemView *QCompleter::popup() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::popup` 用于计算、查询或取得与“popup”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemView *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于显示完成信息的弹窗。
 
 ### `bool QCompleter::setCurrentRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentRow`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前行设置为指定的`row`。成功时返回`true`;否则返回`false`。
+该函数可与`currentCompletion()`结合使用，遍历所有可能的完备化。
 
 ### `void QCompleter::setModel(QAbstractItemModel *model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModel`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置模型，提供完备化到`model`。`model`可以是列表模型或树模型。如果模型已经被设置过，且其父`QCompleter`为父模型，则被删除。
+为了方便，如果`model`是`QFileSystemModel`，`QCompleter` `caseSensitivity`会切换到Windows上的`Qt::CaseInsensitive`，`Qt::CaseSensitive`其他平台。
 
 ### `void QCompleter::setPopup(QAbstractItemView *popup)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPopup`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `popup`：类型为 `QAbstractItemView *`。没有默认值，调用时必须提供。传入 `QAbstractItemView *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于显示完成的弹窗设置为`popup`。`QCompleter`拥有视图的所有权。
+当`completionMode()`设置为`QCompleter::PopupCompletion`或`QCompleter::UnfilteredPopupCompletion`时，会自动生成`QListView`。默认弹窗显示`completionColumn()`。
+确保在修改视图设置前调用该函数。这是必要的，因为视图的属性可能要求视图上已设置模型（例如，隐藏视图中的列需要在视图上设置模型）。
 
 ### `void QCompleter::setWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWidget`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将提供完成的控件设置为`widget`。当使用 `QLineEdit::setCompleter()` 在`QLineEdit`上设置`QCompleter`或使用 `QComboBox::setCompleter()` 在`QComboBox`上设置时，该函数会自动调用。在为自定义控件提供完成时，需要显式设置该控件。
 
 ### `[virtual] QStringList QCompleter::splitPath(const QString &path) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::splitPath` 用于计算、查询或取得与“split、Path”相关的操作。调用时要先确认当前状态和 `path` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`path`拆分为字符串，用于在`model()`的每个层级匹配。
+splitPath() 的默认实现是基于 sourceModel() `QDir::separator()` 分割文件系统路径，当 sourceModel() 是`QFileSystemModel`时。
+当用于列表模型时，返回列表中的第一个项用于匹配。
 
 ### `QWidget *QCompleter::widget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCompleter::widget` 用于计算、查询或取得与“widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回完备器对象提供完备的小部件。
 
 ### `Qt::CaseSensitivity caseSensitivity() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::caseSensitivity` 用于计算、查询或取得与“case、Sensitivity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::CaseSensitivity`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示匹配的大小写敏感性。
+默认值是`Qt::CaseSensitive`。
 
-**签名拆解：**
-
-- 返回值：`Qt::CaseSensitivity`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `caseSensitivity()` 读取当前值；它不会修改应用状态。
 
 ### `int completionColumn() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::completionColumn` 用于计算、查询或取得与“completion、列”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含模型中搜索完备化的列。
+如果`popup()`是`QListView`，会自动设置显示该列。
+默认情况下，匹配列为0。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionColumn()` 读取当前值；它不会修改应用状态。
 
 ### `QCompleter::CompletionMode completionMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::completionMode` 用于计算、查询或取得与“completion、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCompleter::CompletionMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+完成项如何提供给用户。
+默认值是`QCompleter::PopupCompletion`。
 
-**签名拆解：**
-
-- 返回值：`QCompleter::CompletionMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionMode()` 读取当前值；它不会修改应用状态。
 
 ### `QString completionPrefix() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::completionPrefix` 用于计算、查询或取得与“completion、Prefix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保存用于提供补全的补全前缀。
+`completionModel()` 会更新以反映可能匹配 `prefix` 的列表。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionPrefix()` 读取当前值；它不会修改应用状态。
 
 ### `int completionRole() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::completionRole` 用于计算、查询或取得与“completion、角色”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含用于查询内容以匹配的项目角色。
+默认角色是`Qt::EditRole`。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `completionRole()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::MatchFlags filterMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::filterMode` 用于计算、查询或取得与“filter、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MatchFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该特性控制过滤的执行方式。
+如果filterMode设置为`Qt::MatchStartsWith`，只有以类型字符开头的条目才会显示。`Qt::MatchContains`会显示包含类型字符的条目，并`Qt::MatchEndsWith`以类型字符结尾的条目。
+将 filterMode 设置为其他`Qt::MatchFlag`会发出警告，且不会执行任何操作。因此，`Qt::MatchCaseSensitive` 标志没有效果。使用 `caseSensitivity` 属性来控制大小写敏感性。
+默认模式是`Qt::MatchStartsWith`。
 
-**签名拆解：**
-
-- 返回值：`Qt::MatchFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterMode()` 读取当前值；它不会修改应用状态。
 
 ### `int maxVisibleItems() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::maxVisibleItems` 用于计算、查询或取得与“max、可见状态、Items”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性能显示完成器屏幕上的最大允许尺寸，单位为项目。
+默认情况下，该属性的值为7。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maxVisibleItems()` 读取当前值；它不会修改应用状态。
 
 ### `QCompleter::ModelSorting modelSorting() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::modelSorting` 用于计算、查询或取得与“model、Sorting”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCompleter::ModelSorting`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了模型的排序方式。
+默认情况下，模型中不假设完成化的项目顺序。
+如果模型中`completionColumn()`和`completionRole()`的数据按升序排序，你可以将该属性设置为`CaseSensitivelySortedModel`或`CaseInsensitivelySortedModel`。在大型模型中，这能带来显著的性能提升，因为更完整的对象可以使用二分搜索算法而非线性搜索算法。
+模型的排序顺序（即升序或降序）通过动态检查模型内容来确定。
+注意：上述性能提升无法实现，当完成者的 `caseSensitivity` 与模型排序时使用的大小写敏感性不同。
 
-**签名拆解：**
-
-- 返回值：`QCompleter::ModelSorting`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `modelSorting()` 读取当前值；它不会修改应用状态。
 
 ### `void setCaseSensitivity(Qt::CaseSensitivity caseSensitivity)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCaseSensitivity`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示匹配的大小写敏感性。
+默认值是`Qt::CaseSensitive`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `caseSensitivity`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCaseSensitivity(...)` 修改 `caseSensitivity`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCompletionColumn(int column)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCompletionColumn`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含模型中搜索完备化的列。
+如果`popup()`是`QListView`，会自动设置显示该列。
+默认情况下，匹配列为0。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCompletionColumn(...)` 修改 `completionColumn`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCompletionMode(QCompleter::CompletionMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCompletionMode`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+完成项如何提供给用户。
+默认值是`QCompleter::PopupCompletion`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QCompleter::CompletionMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCompletionMode(...)` 修改 `completionMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCompletionRole(int role)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCompletionRole`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含用于查询内容以匹配的项目角色。
+默认角色是`Qt::EditRole`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCompletionRole(...)` 修改 `completionRole`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFilterMode(Qt::MatchFlags filterMode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFilterMode`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该特性控制过滤的执行方式。
+如果filterMode设置为`Qt::MatchStartsWith`，只有以类型字符开头的条目才会显示。`Qt::MatchContains`会显示包含类型字符的条目，并`Qt::MatchEndsWith`以类型字符结尾的条目。
+将 filterMode 设置为其他`Qt::MatchFlag`会发出警告，且不会执行任何操作。因此，`Qt::MatchCaseSensitive` 标志没有效果。使用 `caseSensitivity` 属性来控制大小写敏感性。
+默认模式是`Qt::MatchStartsWith`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filterMode`：类型为 `Qt::MatchFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFilterMode(...)` 修改 `filterMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaxVisibleItems(int maxItems)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaxVisibleItems`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性能显示完成器屏幕上的最大允许尺寸，单位为项目。
+默认情况下，该属性的值为7。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `maxItems`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaxVisibleItems(...)` 修改 `maxVisibleItems`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setModelSorting(QCompleter::ModelSorting sorting)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModelSorting`。调用它会改变 `QCompleter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了模型的排序方式。
+默认情况下，模型中不假设完成化的项目顺序。
+如果模型中`completionColumn()`和`completionRole()`的数据按升序排序，你可以将该属性设置为`CaseSensitivelySortedModel`或`CaseInsensitivelySortedModel`。在大型模型中，这能带来显著的性能提升，因为更完整的对象可以使用二分搜索算法而非线性搜索算法。
+模型的排序顺序（即升序或降序）通过动态检查模型内容来确定。
+注意：上述性能提升无法实现，当完成者的 `caseSensitivity` 与模型排序时使用的大小写敏感性不同。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sorting`：类型为 `QCompleter::ModelSorting`。没有默认值，调用时必须提供。传入 `QCompleter::ModelSorting` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setModelSorting(...)` 修改 `modelSorting`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool wrapAround() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QCompleter::wrapAround` 用于计算、查询或取得与“wrap、Around”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保存导航项目时补全是否循环。
+默认值为true。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wrapAround()` 读取当前值；它不会修改应用状态。
 
 ### `void setCompletionPrefix(const QString &prefix)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setCompletionPrefix`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性保存用于提供补全的补全前缀。
+`completionModel()` 会更新以反映可能匹配 `prefix` 的列表。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `prefix`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCompletionPrefix(...)` 修改 `completionPrefix`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWrapAround(bool wrap)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setWrapAround`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性保存导航项目时补全是否循环。
+默认值为true。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `wrap`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWrapAround(...)` 修改 `wrapAround`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

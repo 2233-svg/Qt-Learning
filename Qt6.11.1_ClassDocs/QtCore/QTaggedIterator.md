@@ -81,179 +81,91 @@ for (auto it = container.cbegin(); it != container.cend(); ++it) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QTaggedIterator::QTaggedIterator(Iterator &&it)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `it`：类型为 `Iterator &&`。没有默认值，调用时必须提供。传入 `Iterator &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从迭代器或`QConstIterator` `it`构造一个QTaggedIterator。检查作为模板参数传递的IteratorCategory是否与`it`的运行时能力匹配;如果没有匹配，`it`将被拒绝。
 
 ### `bool QTaggedIterator::operator!=(const QTaggedIterator<Iterator, IteratorCategory> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QTaggedIterator<Iterator, IteratorCategory> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`指向与该迭代子不同的项，则返回`true`;否则返回`false`。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> QTaggedIterator::operator+(qsizetype j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory>`。
-- 参数 `j`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器到该迭代器前方`j`位置的对象。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> &QTaggedIterator::operator++()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory> &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+前缀 `++` 操作符（`++it`）将迭代器推进到容器中的下一个项目，并将迭代器返回新的当前项目。
+在QMetaSequence：：Iterable：：constEnd()上调用该函数会导致结果未定义。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> QTaggedIterator::operator++(int x)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory>`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+后缀 `++` 操作符（`it++`）将迭代器推进到容器中的下一个项目，并返回迭代器到之前当前的项目。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> &QTaggedIterator::operator+=(qsizetype j)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory> &`。
-- 参数 `j`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`j`项推进迭代器。
 
 ### `qsizetype QTaggedIterator::operator-(const QTaggedIterator<Iterator, IteratorCategory> &j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `j`：类型为 `const QTaggedIterator<Iterator, IteratorCategory> &`。没有默认值，调用时必须提供。传入 `const QTaggedIterator<Iterator, IteratorCategory> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该迭代子与`j`之间的距离。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> QTaggedIterator::operator-(qsizetype j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory>`。
-- 参数 `j`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器到该迭代器后退`j`位置的项目。
+如果`QVariant`中的容器不支持双向迭代，调用该函数会导致结果未定义。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> &QTaggedIterator::operator--()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory> &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+前缀`--`操作符（`--it`）使前一个项目为当前，并返回新的当前项目的迭代器。
+在QMetaSequence：：Iterable：：constBegin()上调用该函数会导致未定义的结果。
+如果`QVariant`中的容器不支持双向迭代，调用该函数会导致结果未定义。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> QTaggedIterator::operator--(int x)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory>`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+后缀`--`操作符（`it--`）使前一个项目为当前，并返回之前当前项目的迭代器。
+如果`QVariant`中的容器不支持双向迭代，调用该函数会导致结果未定义。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> &QTaggedIterator::operator-=(qsizetype j)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory> &`。
-- 参数 `j`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+让迭代器按`j`项返回。
+如果`QVariant`中的容器不支持双向迭代，调用该函数会导致结果未定义。
 
 ### `bool QTaggedIterator::operator==(const QTaggedIterator<Iterator, IteratorCategory> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QTaggedIterator<Iterator, IteratorCategory> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `other`指向与该迭代器相同的项目，则返回 `true`;否则返回 `false`。
 
 ### `QTaggedIterator<Iterator, IteratorCategory> operator+(qsizetype j, const QTaggedIterator<Iterator, IteratorCategory> &k)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QTaggedIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTaggedIterator<Iterator, IteratorCategory>`。
-- 参数 `j`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `k`：类型为 `const QTaggedIterator<Iterator, IteratorCategory> &`。没有默认值，调用时必须提供。传入 `const QTaggedIterator<Iterator, IteratorCategory> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回迭代器到位于迭代器`k`前方`j`位置的项目。
 
 ## 6. 深入实践与常见坑
 

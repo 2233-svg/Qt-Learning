@@ -106,441 +106,290 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QScroller::Input`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 暴露的类型声明 `Input`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Input`。
-- 属性名：`QScroller`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含一个输入设备无关的视图，涵盖与`QScroller`相关的输入事件。
+- `QScroller::InputPress`：`1`;用户按下输入设备（例如`QEvent::MouseButtonPress`、`QEvent::GraphicsSceneMousePress`、`QEvent::TouchBegin`）
+- `QScroller::InputMove`：`2`;用户移动输入设备（例如`QEvent::MouseMove`、`QEvent::GraphicsSceneMouseMove`、`QEvent::TouchUpdate`）
+- `QScroller::InputRelease`：`3`;用户释放输入设备（例如`QEvent::MouseButtonRelease`、`QEvent::GraphicsSceneMouseRelease`、`QEvent::TouchEnd`）
 
 ### `enum QScroller::ScrollerGestureType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 暴露的类型声明 `Scroller、Gesture、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ScrollerGestureType`。
-- 属性名：`QScroller`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含了`QScroller`手势识别器支持的不同手势类型。
+- `QScroller::TouchGesture`：`0`;手势识别器仅在触摸事件时触发。具体来说，使用触摸屏时对单点反应，使用触摸板时对双重触点有反应。
+- `QScroller::LeftMouseButtonGesture`：`1`;手势识别器仅在左键事件时触发。
+- `QScroller::MiddleMouseButtonGesture`：`3`;手势识别器仅在中键事件时触发。
+- `QScroller::RightMouseButtonGesture`：`2`;手势识别器仅在右键事件时触发。
 
 ### `enum QScroller::State`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 暴露的类型声明 `State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:State`。
-- 属性名：`QScroller`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含了不同的`QScroller`状态。
+- `QScroller::Inactive`：`0`;滚动器没有滚动，也没有按压任何按钮。
+- `QScroller::Pressed`：`1`;收到触摸事件或鼠标按钮被按下，但滚动区域目前未被拖动。
+- `QScroller::Dragging`：`2`;滚动区域当前跟随触摸点或鼠标。
+- `QScroller::Scrolling`：`3`;卷轴区域会自行移动。
 
 ### `scrollerProperties : QScrollerProperties`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 的配置属性。初始化或状态切换时通过 `setScrollerProperties(...)` 设置，之后用 `scrollerProperties()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含该滚动器的滚动属性。`QScroller`利用这些属性来确定其滚动行为。
 
-**签名拆解：**
-
-- 属性类型：`QScrollerProperties`。
-- 属性名：`scrollerProperties`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `scrollerProperties()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] state : State`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 的状态/能力属性。通常通过 `state()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性表示滚轴的状态。
 
-**签名拆解：**
-
-- 属性类型：`State`。
-- 属性名：`state`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `state()` 读取当前值；它不会修改应用状态。
 
 ### `[static] QList<QScroller *> QScroller::activeScrollers()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `activeScrollers`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QScroller *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前活跃`QScroller`对象的全应用列表。活跃`QScroller`对象位于未`QScroller::Inactive`的`state()`中。该函数在编写自己的手势识别器时非常有用。
 
 ### `[slot] void QScroller::ensureVisible(const QRectF &rect, qreal xmargin, qreal ymargin)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `ensureVisible`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+开始滚动，使矩形`rect`在视口内可见，并通过`xmargin`像素数和`ymargin`在矩形周围设置额外边距。
+如果无法将矩形和边距放入视口内，内容会被滚动，以便尽可能多地从`rect`中可见。
+滚动速度计算使得在平台定义的时间跨度后达到给定位置。
+该函数通过调用`scrollTo()`来执行实际滚动。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `xmargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ymargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+scroller， qOverload（&QScroller：：ensureVisible））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+scroller， [receiver = scroller]（const QRectF &rect， qreal xmargin， qreal ymargin） { receiver->ensureVisible（rect， xmargin， ymargin）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[slot] void QScroller::ensureVisible(const QRectF &rect, qreal xmargin, qreal ymargin, int scrollTime)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `ensureVisible`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该版本将在`scrollTime`毫秒内到达目的地位置。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `xmargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ymargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `scrollTime`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+scroller， qOverload（&QScroller：：ensureVisible））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+scroller， [receiver = scroller]（const QRectF &rect， qreal xmargin， qreal ymargin， int scrollTime） { receiver->ensureVisible（rect， xmargin， ymargin， scrollTime）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `QPointF QScroller::finalPosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScroller::finalPosition` 用于计算、查询或取得与“final、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前滚动移动的估计最终位置。如果滚动状态未滚动，返回当前位置。当滚动状态为非激活时，结果未定义。
+目标位置以像素为单位。
 
 ### `[static] Qt::GestureType QScroller::grabGesture(QObject *target, QScroller::ScrollerGestureType scrollGestureType = TouchGesture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `grabGesture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`Qt::GestureType`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `scrollGestureType`：类型为 `QScroller::ScrollerGestureType`。默认值为 `TouchGesture`。传入 `QScroller::ScrollerGestureType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册一个自定义滚动手势识别器，获取`target`并返回最终手势类型。如果`scrollGestureType`设置为`TouchGesture`，手势在触摸事件触发。如果设置为`LeftMouseButtonGesture`、`RightMouseButtonGesture`或`MiddleMouseButtonGesture`，则在对应按钮的鼠标事件中触发。
+同一对象同时只能激活一个滚动手势。如果你在同一对象上调用两次该函数，它会先取消抓取已有的手势，再抓取新的手势。
+注意：为避免不良副作用，触发手势时会消耗鼠标事件。由于初始鼠标按键事件未被消耗，手势会在全局位置`(INT_MIN, INT_MIN)`发送假鼠标释放事件。这确保了收到原始鼠标按压的小部件内部状态一致。
 
 ### `[static] Qt::GestureType QScroller::grabbedGesture(QObject *target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `grabbedGesture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`Qt::GestureType`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前抓取的手势类型，`target`返回;如果没有手势，则返回0。
 
 ### `bool QScroller::handleInput(QScroller::Input input, const QPointF &position, qint64 timestamp = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScroller::handleInput` 用于计算、查询或取得与“handle、Input”相关的操作。调用时要先确认当前状态和 `input`、`position`、`timestamp` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `input`：类型为 `QScroller::Input`。没有默认值，调用时必须提供。传入 `QScroller::Input` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `position`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `timestamp`：类型为 `qint64`。默认值为 `0`。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能被手势识别器用来通知滚动器新的输入事件。滚动器根据输入事件及其附加的滚动属性改变其内部`state()`。滚动器不会区分事件来自哪种输入设备。因此，事件需要被拆分为`input`类型、`position`和毫秒`timestamp`。`position`必须处于目标的坐标系内。
+返回值`true`是否应被调用的过滤器消耗事件，或`false`是否应转发事件给控制。
+注意：大多数使用场景下，使用`grabGesture()`应该足够。
 
 ### `[static] bool QScroller::hasScroller(QObject *target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hasScroller`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`target`已经创建了`QScroller`对象，返回`true`;否则`false`。
 
 ### `QPointF QScroller::pixelPerMeter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScroller::pixelPerMeter` 用于计算、查询或取得与“pixel、Per、Meter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回滚动小部件的像素每米指标。
+该值通过使用`QPointF`分别报告x轴和y轴。
+注意：请注意，该值应在物理上正确。Qt 返回的实际 DPI 设置可能被底层窗口系统（例如 macOS）故意错误报告。
 
 ### `[slot] void QScroller::resendPrepareEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `resendPrepareEvent`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数会重新发送`QScrollPrepareEvent`。调用 resendPrepareEvent 会触发滚动器`QScrollPrepareEvent`。这允许接收方在滚动时重置内容位置和大小。在非活动状态下调用该函数无用，因为准备事件会在滚动开始前再次发送。
 
 ### `[slot] void QScroller::scrollTo(const QPointF &pos)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `scrollTo`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+开始滚动控件，使`pos`点位于视口左上角。
+当滚动超出有效滚动区域时的行为是未定义的。在这种情况下，滚动者可能会超出也可能不会。
+滚动速度将被计算为在平台定义的时间跨度后到达给定位置。
+`pos`以视口坐标表示。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `pos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+scroller，qOverload（&QScroller：：scrollTo））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+scroller， [receiver = scroller]（const QPointF &pos） { receiver->scrollTo（pos）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[slot] void QScroller::scrollTo(const QPointF &pos, int scrollTime)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `scrollTo`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该版本将在`scrollTime`毫秒内到达目的地位置。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `pos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `scrollTime`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+scroller，qOverload（&QScroller：：scrollTo））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+scroller， [receiver = scroller]（const QPointF &pos， int scrollTime） { receiver->rollTo（pos， scrollTime）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[static] QScroller *QScroller::scroller(QObject *target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `scroller`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QScroller *`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`target`的滚动器。只要该对象存在，该函数总是返回相同的`QScroller`实例。如果该`target`不存在`QScroller`，则隐式创建一个。在任何时刻，一个对象上不会有超过一个`QScroller`激活。
 
 ### `[static] const QScroller *QScroller::scroller(const QObject *target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `scroller`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QScroller *`。
-- 参数 `target`：类型为 `const QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是scroller()的const版本。
 
 ### `[signal] void QScroller::scrollerPropertiesChanged(const QScrollerProperties &newProperties)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 发出的通知信号 `scrollerPropertiesChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含该滚动器的滚动属性。`QScroller`利用这些属性来确定其滚动行为。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newProperties`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `scrollerProperties` 的变化，不要把它当作普通函数主动调用。
 
 ### `void QScroller::setSnapPositionsX(const QList<qreal> &positions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSnapPositionsX`。调用它会改变 `QScroller` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `positions`：类型为 `const QList<qreal> &`。没有默认值，调用时必须提供。传入 `const QList<qreal> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将水平轴的吸附位置设置为`positions`列表。这会覆盖之前设置的所有吸附位置和之前设定的吸附间隔。通过设置空位置列表可以停用吸附。
 
 ### `void QScroller::setSnapPositionsX(qreal first, qreal interval)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSnapPositionsX`。调用它会改变 `QScroller` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `first`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `interval`：类型为 `qreal`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将水平轴的吸附位置设置为规则间隔。第一个吸附位置位于`first`。下一个位于`first` `interval`。这可以用来实现列表头部。它覆盖了之前设置的所有吸附位置以及之前设定的吸附区间。吸附可以通过设置间隔 0.0 来停用。
 
 ### `void QScroller::setSnapPositionsY(const QList<qreal> &positions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSnapPositionsY`。调用它会改变 `QScroller` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `positions`：类型为 `const QList<qreal> &`。没有默认值，调用时必须提供。传入 `const QList<qreal> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直轴的吸附位置设置为`positions`列表。这会覆盖之前设置的所有吸附位置和之前设定的吸附间隔。通过设置空位置列表可以禁用吸附。
 
 ### `void QScroller::setSnapPositionsY(qreal first, qreal interval)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSnapPositionsY`。调用它会改变 `QScroller` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `first`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `interval`：类型为 `qreal`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直轴的吸附位置设置为规则间隔。第一个吸附位置位于`first`。下一个吸附位置在`first` `interval`。这覆盖了之前设置的所有吸附位置和之前设定的吸附间隔。吸附可以通过设置间隔为0.0来停用。
 
 ### `[signal] void QScroller::stateChanged(QScroller::State newState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScroller` 发出的通知信号 `stateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示滚轴的状态。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newState`：类型为 `QScroller::State`。没有默认值，调用时必须提供。传入 `QScroller::State` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `state` 的变化，不要把它当作普通函数主动调用。
 
 ### `void QScroller::stop()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `stop`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+停止滚动器并重置状态为非激活。
 
 ### `QObject *QScroller::target() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScroller::target` 用于计算、查询或取得与“目标”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该滚动器的目标对象。
 
 ### `[static] void QScroller::ungrabGesture(QObject *target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `ungrabGesture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把手势拿回来`target`。如果没有手势，什么都不做。
 
 ### `QPointF QScroller::velocity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScroller::velocity` 用于计算、查询或取得与“velocity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当状态处于滚动或拖动状态时，返回当前滚动速度（单位为米每秒）。否则返回零速度。
+速度分别通过`QPointF`分别报告x轴和y轴。
 
 ### `QScrollerProperties scrollerProperties() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QScroller::scrollerProperties` 用于计算、查询或取得与“scroller、Properties”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QScrollerProperties`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含该滚动器的滚动属性。`QScroller`利用这些属性来确定其滚动行为。
 
-**签名拆解：**
-
-- 返回值：`QScrollerProperties`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `scrollerProperties()` 读取当前值；它不会修改应用状态。
 
 ### `QScroller::State state() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QScroller::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QScroller::State`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示滚轴的状态。
 
-**签名拆解：**
-
-- 返回值：`QScroller::State`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `state()` 读取当前值；它不会修改应用状态。
 
 ### `void setScrollerProperties(const QScrollerProperties &prop)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setScrollerProperties`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含该滚动器的滚动属性。`QScroller`利用这些属性来确定其滚动行为。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `prop`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setScrollerProperties(...)` 修改 `scrollerProperties`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

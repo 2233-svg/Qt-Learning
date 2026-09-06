@@ -219,2197 +219,1217 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 161 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QLatin1StringView::const_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setConst_iterator(...)` 设置，之后用 `const_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_iterator`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只读的 STL 风格正向迭代器类型，用于从 `begin()`/`cbegin()` 遍历到 `end()`/`cend()`，不能通过它修改元素。 `QLatin1StringView` 不拥有字符数据，原始 Latin-1 缓冲区必须在迭代器使用期间保持有效。
 
 ### `[alias, since 6.7] QLatin1StringView::pointer`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setPointer(...)` 设置，之后用 `pointer()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:pointer`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。为兼容STL提供。
+这些类型定义是在Qt 6.7中引入的。
 
 ### `[alias] QLatin1StringView::const_reference`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setConst_reference(...)` 设置，之后用 `const_reference()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_reference`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`reference`别名。为兼容STL提供。
 
 ### `[alias] QLatin1StringView::const_reverse_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setConst_reverse_iterator(...)` 设置，之后用 `const_reverse_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_reverse_iterator`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只读的 STL 风格反向迭代器类型，用于从 `rbegin()`/`crbegin()` 反向遍历到 `rend()`/`crend()`。 `QLatin1StringView` 不拥有字符数据，原始 Latin-1 缓冲区必须在迭代器使用期间保持有效。
 
 ### `[alias] QLatin1StringView::difference_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setDifference_type(...)` 设置，之后用 `difference_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:difference_type`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`qsizetype`的别名。为兼容STL而提供。
 
 ### `[alias] QLatin1StringView::iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setIterator(...)` 设置，之后用 `iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:iterator`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QLatin1StringView`不支持可变迭代器，所以这和`const_iterator`一样。
 
 ### `[alias] QLatin1StringView::reference`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setReference(...)` 设置，之后用 `reference()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reference`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type &`的别名。为兼容STL提供。
 
 ### `[alias] QLatin1StringView::reverse_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setReverse_iterator(...)` 设置，之后用 `reverse_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reverse_iterator`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QLatin1StringView`不支持可变的反迭代器，所以这和`const_reverse_iterator`是一样的。
 
 ### `[alias] QLatin1StringView::size_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setSize_type(...)` 设置，之后用 `size_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:size_type`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`qsizetype`的别名。为兼容STL提供。
+注意：在Qt 6之前的版本中，这是`int`的别名，限制了64位架构`QLatin1StringView`中可存储的数据量。
 
 ### `[alias] QLatin1StringView::value_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的配置属性。初始化或状态切换时通过 `setValue_type(...)` 设置，之后用 `value_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:value_type`。
-- 属性名：`QLatin1StringView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`const char`的别名。为兼容STL而提供。
 
 ### `[constexpr noexcept] QLatin1StringView::QLatin1StringView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QLatin1StringView 对象，用于存储一个`nullptr`。
 
 ### `[explicit constexpr noexcept, since 6.3] QLatin1StringView::QLatin1StringView(QByteArrayView str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `str`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QLatin1StringView对象作为视图`str`。
+字符串数据不会被复制。调用者必须能够保证只要 QLatin1StringView 对象存在，`str`所指向的数据不会被删除或修改。大小可直接从`str`中获得，无需检查空终止器。
+注意：字节数组中的任何空（\0'）字节都包含在该字符串中，如果`QString`使用该字符串，该字符串将转换为Unicode空字符（U 0000）。
 
 ### `[explicit noexcept] QLatin1StringView::QLatin1StringView(const QByteArray &str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `str`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`str`上构建一个QLatin1StringView对象作为视图。
+字符串数据不会被复制。调用者必须能够保证只要 QLatin1StringView 对象存在，这些 TRUE `str` 不会被删除或修改。
 
 ### `[explicit constexpr noexcept] QLatin1StringView::QLatin1StringView(const char *str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `str`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QLatin1StringView 对象来存储`str`。
+字符串数据不会被复制。调用者必须能够保证只要QLatin1StringView对象存在，就不会`str`被删除或修改。
 
 ### `[constexpr noexcept, since 6.4] QLatin1StringView::QLatin1StringView(std::nullptr_t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QLatin1StringView 对象，用于存储一个`nullptr`。
 
 ### `[constexpr] QLatin1StringView::QLatin1StringView(const char *first, const char *last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `first`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QLatin1StringView对象，存储长度为（`last` - `first`）的 `first`。
+该范围 `[first,last)` 必须在整个拉丁-1字符串对象的生命周期内保持有效。
+如果`nullptr`也被`nullptr`，`last`传递为`first`是安全的，且会得到空拉丁-1字符串。
+行为是否`last`先于`first`、`first`为`nullptr`且`last`未为，或为`last - first > INT_MAX`，则不定义。
 
 ### `[constexpr noexcept] QLatin1StringView::QLatin1StringView(const char *str, qsizetype size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `str`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QLatin1StringView对象，用来存储`str`和`size`。
+字符串数据不会被复制。调用者必须能够保证只要 QLatin1StringView 对象存在，不会`str`被删除或修改。
+注意：字节数组中的任何空（\0'）字节都包含在该字符串中，如果`QString`使用该字符串，该字符串将转换为Unicode空字符（U 0000）。这种行为与Qt 5.x不同。
 
 ### `template <typename... Args> QString QLatin1StringView::arg(Args &&... args) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::arg` 用于计算、查询或取得与“arg”相关的操作。调用时要先确认当前状态和 `args` 的有效范围；返回类型是 `template <typename... Args> QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QString`。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 `args` 中对应的参数替换该字符串中出现的 `%N`。这些参数不是位置论元：`args`中的第一个用最低的`N`替换`%N`（全部），第二个用`args`的`%N`替换为下一个最低的`N`，依此类推。
+`Args`可以包含任何隐含转换为`QAnyStringView`的内容。
+注意：在6.9之前的Qt版本中，`QAnyStringView`和UTF-8字符串（`QUtf8StringView`、`QByteArray`、`QByteArrayView`、`const char8_t*`等）不支持`args`。
 
 ### `[constexpr] QLatin1Char QLatin1StringView::at(qsizetype pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QLatin1StringView` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QLatin1Char`。
-- 参数 `pos`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象中位置`pos`的字符。
+注意：该函数不进行错误检查。当`pos` <0或`pos` >= `size()`时，行为未定义。
 
 ### `[constexpr] QLatin1Char QLatin1StringView::back() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::back` 用于计算、查询或取得与“末尾”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1Char`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1Char`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串中的最后一个字符。和`at(size() - 1)`一样。
+此功能是为了STL兼容性而提供。
+警告：调用空字符串的函数构成未定义行为。
 
 ### `[constexpr noexcept] QLatin1StringView::const_iterator QLatin1StringView::begin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向字符串中的第一个字符。
+此功能是为了STL兼容性而提供。
 
 ### `[constexpr noexcept] QLatin1StringView::const_iterator QLatin1StringView::cbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`begin()`一样。
+此功能是为了STL兼容性而提供。
 
 ### `[constexpr noexcept] QLatin1StringView::const_iterator QLatin1StringView::cend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`end()`一样。
+此功能是为了STL兼容性而提供。
 
 ### `[constexpr] void QLatin1StringView::chop(qsizetype length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::chop` 用于执行与“chop”相关的操作。调用时要先确认当前状态和 `length` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串截断为`length`字符。
+和`*this = left(size() - length)`一样。
+注意：当`length` <0或`length` > `size()`时，行为未定义。
 
 ### `[constexpr] QLatin1StringView QLatin1StringView::chopped(qsizetype length) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::chopped` 用于计算、查询或取得与“chopped”相关的操作。调用时要先确认当前状态和 `length` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回长度为`size()` - `length`的子串，从该对象的开头开始。
+和`left(size() - length)`一样。
+注意：当`length` <0或`length` > `size()`时，行为未定义。
 
 ### `[noexcept] int QLatin1StringView::compare(QChar ch, Qt::CaseSensitivity cs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `ch`、`cs` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串视图与UTF-16字符串视图`str`、拉丁1字符串视图`l1`或字符`ch`进行比较。如果该字符串小于`str`、`l1`或`ch`，返回负整数;如果大于`ch` `l1` `str`，返回正整数;如果大于，返回正整数;如果相等，返回零。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `[noexcept, since 6.5] int QLatin1StringView::compare(QUtf8StringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `str`、`cs` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `str`：类型为 `QUtf8StringView`。没有默认值，调用时必须提供。传入 `QUtf8StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串视图与UTF-16字符串视图`str`、拉丁1字符串视图`l1`或字符`ch`进行比较。如果该字符串小于`str`、`l1`或`ch`，返回负整数;如果大于`ch` `l1` `str`，返回正整数;如果大于，返回正整数;如果相等，返回零。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `[constexpr noexcept, since 6.4] const char *QLatin1StringView::constBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`begin()`一样。
+此功能是为了与其他 Qt 容器的兼容性而提供。
 
 ### `[constexpr noexcept, since 6.4] const char *QLatin1StringView::constData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `constData`，用于取得 `QLatin1StringView` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串的开头。
+此功能是为了与其他 Qt 容器的兼容性而提供。
 
 ### `[constexpr noexcept, since 6.4] const char *QLatin1StringView::constEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`end()`一样。
+此功能是为了与其他 Qt 容器的兼容性而提供。
 
 ### `[noexcept] bool QLatin1StringView::contains(QChar c, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `c`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图包含`str`查看的UTF-16字符串、`l1`查看的拉丁字母1字符串或字符`ch`，则返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `[noexcept, since 6.4] qsizetype QLatin1StringView::count(QChar ch, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QLatin1StringView` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该字符串视图中 `str` 查看的 UTF-16 字符串、`l1` 查看的 Latin-1 字符串或字符 `ch` 的（可能重叠）次数。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `[noexcept] QLatin1StringView::const_reverse_iterator QLatin1StringView::crbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::crbegin` 用于计算、查询或取得与“crbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`rbegin()`一样。
+此功能是为了STL兼容性而提供。
 
 ### `[noexcept] QLatin1StringView::const_reverse_iterator QLatin1StringView::crend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::crend` 用于计算、查询或取得与“crend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`rend()`一样。
+此功能是为了STL兼容性而提供。
 
 ### `[constexpr noexcept] const char *QLatin1StringView::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QLatin1StringView` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串的开头。
 
 ### `[constexpr noexcept, since 6.4] bool QLatin1StringView::empty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::empty` 用于计算、查询或取得与“空状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串是否空（`size() == 0`）。
+此功能是为了STL兼容性而提供。
 
 ### `[constexpr noexcept] QLatin1StringView::const_iterator QLatin1StringView::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向字符串中最后一个字符之后。
+此功能是为了STL兼容性而提供。
 
 ### `[noexcept] bool QLatin1StringView::endsWith(QChar ch, Qt::CaseSensitivity cs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endsWith`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁语1字符串视图以UTF-16字符串`str`、拉丁语1字符串（`l1`）或字符`ch`结尾，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `[constexpr, since 6.4] QLatin1Char QLatin1StringView::first() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::first` 用于计算、查询或取得与“首项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1Char`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1Char`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串中的第一个字符。与`at(0)`或`front()`相同。
+此功能是为了与其他 Qt 容器的兼容性而提供。
+警告：调用空字符串的函数构成未定义行为。
 
 ### `[constexpr, since 6.0] QLatin1StringView QLatin1StringView::first(qsizetype n) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::first` 用于计算、查询或取得与“首项”相关的操作。调用时要先确认当前状态和 `n` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `n`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个包含该字符串视图前`n`字符的拉丁1字符串视图。
+注意：当`n` <0或`n` > `size()`时，行为未定义。
 
 ### `[constexpr] QLatin1Char QLatin1StringView::front() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::front` 用于计算、查询或取得与“开头”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1Char`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1Char`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串中的第一个字符。和 `at(0)` 一样。
+此功能是为了STL兼容性而提供。
+警告：调用空字符串的函数构成未定义行为。
 
 ### `[noexcept] qsizetype QLatin1StringView::indexOf(QChar c, qsizetype from, Qt::CaseSensitivity cs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `c`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `c`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`from`前进时，返回UTF-16字符串首次出现的`str`、`l1`查看的拉丁字母1字符串或字符`ch`的位置。如果未找到`str`、`l1`或`c`，分别返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
+如果`from`为-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
 
 ### `[constexpr noexcept] bool QLatin1StringView::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串是否为空（`size() == 0`）。
 
 ### `[constexpr noexcept] bool QLatin1StringView::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串是否为空（`data() == nullptr`）。
 
 ### `[constexpr, since 6.4] QLatin1Char QLatin1StringView::last() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::last` 用于计算、查询或取得与“末项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1Char`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1Char`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串的最后一个字符。和`at(size() - 1)`或`back()`一样。
+此功能是为了与其他 Qt 容器的兼容性而提供。
+警告：调用空字符串的函数构成未定义行为。
 
 ### `[constexpr, since 6.0] QLatin1StringView QLatin1StringView::last(qsizetype n) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::last` 用于计算、查询或取得与“末项”相关的操作。调用时要先确认当前状态和 `n` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `n`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含该字符串视图最后`n`字符的拉丁-1字符串视图。
+注意：当`n` <0或`n` > `size()`时，行为未定义。
 
 ### `[noexcept] qsizetype QLatin1StringView::lastIndexOf(QChar c, qsizetype from, Qt::CaseSensitivity cs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `c`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `c`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`str` `from`向后搜索UTF-16字符串的最后一次出现位置，分别由`l1`查看的拉丁字母1字符串，或字符`ch`;如果未找到`str`、`l1`或`ch`，则返回-1。
+如果`from`是-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
+注意：在搜索长度为0的`str`或`l1`时，数据末尾的匹配会被负的`from`排除，尽管`-1`通常被认为是从字符串末尾搜索：结尾的匹配位于最后一个字符之后，因此被排除。要包含这样的最终空匹配，要么给出`from`的正值，要么完全省略`from`参数。
 
 ### `[noexcept, since 6.2] qsizetype QLatin1StringView::lastIndexOf(QLatin1StringView l1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `l1`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`str` `from`向后搜索UTF-16字符串的最后一次出现位置，分别由`l1`查看的拉丁字母1字符串，或字符`ch`;如果未找到`str`、`l1`或`ch`，则返回-1。
+如果`from`是-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
+注意：在搜索长度为0的`str`或`l1`时，数据末尾的匹配会被负的`from`排除，尽管`-1`通常被认为是从字符串末尾搜索：结尾的匹配位于最后一个字符之后，因此被排除。要包含这样的最终空匹配，要么给出`from`的正值，要么完全省略`from`参数。
 
 ### `[constexpr noexcept] const char *QLatin1StringView::latin1() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::latin1` 用于计算、查询或取得与“latin、1”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的拉丁-1字符串的开头。
 
 ### `[constexpr] QLatin1StringView QLatin1StringView::left(qsizetype length) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::left` 用于计算、查询或取得与“左侧”相关的操作。调用时要先确认当前状态和 `length` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果你知道`length`不能越界，就用新代码中的`first()`，因为这样更快。
+返回该拉丁1字符串视图中长度为`length`从位置0开始的子串。
+如果 `length` 大于或等于 `size()`，或小于 0，则返回整个拉丁1字符串视图。
 
 ### `[constexpr noexcept, since 6.4] qsizetype QLatin1StringView::length() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `length`，返回 `QLatin1StringView` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`size()`一样。
+此功能是为了与其他 Qt 容器的兼容性而提供。
 
 ### `[static constexpr noexcept, since 6.8] qsizetype QLatin1StringView::maxSize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `maxSize`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它返回字符串视图理论上能表示的最大元素数。实际上，这个数量可以更小，受限于系统可用的内存容量。
 
 ### `[constexpr noexcept, since 6.8] qsizetype QLatin1StringView::max_size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::max_size` 用于计算、查询或取得与“max、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此功能是为了STL兼容性而提供。
+退货 `maxSize()`。
 
 ### `[constexpr] QLatin1StringView QLatin1StringView::mid(qsizetype start, qsizetype length = -1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::mid` 用于计算、查询或取得与“mid”相关的操作。调用时要先确认当前状态和 `start`、`length` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `start`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `length`：类型为 `qsizetype`。默认值为 `-1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回长度为`length`的子串，从该拉丁1字符串视图中位置`start`开始。
+如果你知道`start`和`length`不能越界，那就在新代码里用`sliced()`，因为这样更快。
+如果拉丁语1字符串视图`start`超过该字符串视图的长度，则返回空的拉丁1字符串视图。如果该字符串视图中从`start`开始可用字符少于`length`个，或者`length`为负（默认），该函数返回`start`可用的所有字符。
 
 ### `[noexcept] QLatin1StringView::const_reverse_iterator QLatin1StringView::rbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::rbegin` 用于计算、查询或取得与“rbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的反迭代子，指向字符串中的第一个字符，顺序相反。
+此功能是为了STL兼容性而提供。
 
 ### `[noexcept] QLatin1StringView::const_reverse_iterator QLatin1StringView::rend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::rend` 用于计算、查询或取得与“rend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反迭代子，指向字符串中最后一个字符之后，按倒序返回。
+此功能是为了STL兼容性而提供。
 
 ### `[constexpr] QLatin1StringView QLatin1StringView::right(qsizetype length) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::right` 用于计算、查询或取得与“右侧”相关的操作。调用时要先确认当前状态和 `length` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果你知道`length`不能越界，就在新代码中使用`last()`，因为这样更快。
+返回从位置`size()` - `length` `length` 开始的长度为 的子串，在此拉丁-1字符串视图中。
+如果 `length` 大于或等于 `size()`，或小于 0，则返回整个拉丁 1 字符串视图。
 
 ### `[constexpr noexcept] qsizetype QLatin1StringView::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QLatin1StringView` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象引用的 Latin-1 字符串大小。
+注意：在Qt 6之前的版本中，该函数返回`int`，限制了64位架构`QLatin1StringView`中可存储的数据量。
 
 ### `[constexpr, since 6.8] QLatin1StringView &QLatin1StringView::slice(qsizetype pos)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::slice` 用于计算、查询或取得与“slice”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QLatin1StringView &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView &`。
-- 参数 `pos`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+修改此拉丁1字符串视图，使其从位置`pos`开始，延伸至末尾。注意：当`pos` <为0或`pos` > `size()`时，行为未定义。
 
 ### `[constexpr, since 6.8] QLatin1StringView &QLatin1StringView::slice(qsizetype pos, qsizetype n)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::slice` 用于计算、查询或取得与“slice”相关的操作。调用时要先确认当前状态和 `pos`、`n` 的有效范围；返回类型是 `QLatin1StringView &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView &`。
-- 参数 `pos`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `n`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+修改此拉丁1字符串视图，从位置`pos`开始，扩展至`n`字符。
+注意：当`pos` <0、`n` < 0或`pos + n > size()`时，行为未定义。
 
 ### `[constexpr, since 6.0] QLatin1StringView QLatin1StringView::sliced(qsizetype pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::sliced` 用于计算、查询或取得与“sliced”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `pos`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个拉丁-1字符串视图，从该字符串视图的第`pos`位置开始，延伸至其末端。
+注意：当`pos` <0或`pos` > `size()`时，行为是未定义的。
 
 ### `[constexpr, since 6.0] QLatin1StringView QLatin1StringView::sliced(qsizetype pos, qsizetype n) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::sliced` 用于计算、查询或取得与“sliced”相关的操作。调用时要先确认当前状态和 `pos`、`n` 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数 `pos`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `n`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个拉丁1字符串视图，指向该字符串视图的`n`字符，从位置`pos`开始。
+注意：当`pos` <0、`n` <0或`pos + n > size()`时，行为未定义。
 
 ### `[noexcept] bool QLatin1StringView::startsWith(QChar ch, Qt::CaseSensitivity cs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startsWith`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图以`str`查看的UTF-16字符串、`l1`查看的拉丁1字符串或字符`ch`开始，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
 
 ### `[since 6.4] float QLatin1StringView::toFloat(bool *ok = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toFloat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`将该值转换为对应的浮点值。
+如果转换溢出，返回无穷大;如果因其他原因（如溢出），则返回0.0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+警告：`QLatin1StringView`内容可能仅包含有效的数字字符，包括加号/减号、科学记谱法中使用的字符e和小数点。添加单位或额外字符会导致转换错误。
+注意：数字转换在默认的 C 区域执行，无论用户所在的位置如何。使用`QLocale`进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
 
 ### `[since 6.4] ushort QLatin1StringView::toUShort(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toUShort`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`ushort`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `[since 6.0] QString QLatin1StringView::toString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+将拉丁1字符串转换为`QString`。等价于。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ return QString(*this);
+```
 
 ### `[since 6.9] QByteArray QLatin1StringView::toUtf8() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toUtf8`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串的UTF-8表示，作为`QByteArray`。该函数比先转换为`QString`更高效。
 
 ### `[constexpr noexcept(...), since 6.0] template <typename Needle, typename... Flags> auto QLatin1StringView::tokenize(Needle &&sep, Flags... flags) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `tokenize`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+在出现`sep`该字符串的地方将字符串拆分为子串视图，并返回这些字符串的懒散序列。
+等价于。
+但该功能在编译器中未启用 C 17 类模板参数推理（CTAD）时可正常工作。
+参见`QStringTokenizer`，了解`sep`和`flags`如何相互作用形成结果。
+注意：虽然该函数返回`QStringTokenizer`，但你绝不应明确命名其模板参数。如果你可以使用 C 17 类模板参数演绎（CTAD），你可以写成。
+（不含模板参数）。如果你不能使用 C 17 CTAD，你必须只将返回值存储在`auto`变量中：
+这是因为`QStringTokenizer`的模板参数对返回的具体`tokenize()`重载有非常微妙的依赖，且通常不对应分隔符所用的类型。
+注意：当“noexcept（qTokenize（std：:d eclval<const QLatin1StringView &>()，。
+std：：forward<Needle>（针），flags...））` is `true'。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Needle, typename... Flags> auto`。
-- 参数 `sep`：类型为 `Needle &&`。没有默认值，调用时必须提供。传入 `Needle &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `Flags...`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ return QStringTokenizer{std::forward<Needle>(sep), flags...};
+```
 
 ### `[noexcept] QLatin1StringView QLatin1StringView::trimmed() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::trimmed` 用于计算、查询或取得与“trimmed”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLatin1StringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLatin1StringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+去除前后空白并返回结果。
+空白空间指`QChar::isSpace()`返回`true`的字符。这包括ASCII字符“\t”、“\n”、“\v”、“\f”、“\r”和“''。
 
 ### `[constexpr] void QLatin1StringView::truncate(qsizetype length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::truncate` 用于执行与“truncate”相关的操作。调用时要先确认当前状态和 `length` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串截断为`length`。
+和`*this = left(length)`一样。
+注意：当`length` <0或`length` > `size()`时，行为未定义。
 
 ### `[constexpr] QLatin1Char QLatin1StringView::operator[](qsizetype pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QLatin1Char`。
-- 参数 `pos`：类型为 `qsizetype`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象中位置`pos`的字符。
+注意：该函数不进行错误检查。当`pos` <0或`pos` >= `size()`时，行为未定义。
 
 ### `[noexcept] bool operator!=(const QChar &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符 `lhs` 在词法上不等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator!=(const QLatin1StringView &lhs, const QChar &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在词法上不等于字符 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator!=(const QLatin1StringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在词法上不等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator!=(const QLatin1StringView &lhs, const QStringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在词法上不等于字符串视图 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator!=(const QLatin1StringView &lhs, const char *const &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串`lhs`不等于 cont 字符指针 `rhs`，返回 `true`;否则返回 `false`。
+`rhs` const 字符指针被转换为 `QUtf8StringView`。
+你可以通过在编译应用时定义`QT_NO_CAST_FROM_ASCII`来禁用这个操作符。例如，如果你想确保所有用户可见的字符串都通过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator!=(const QStringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果字符串视图`lhs`在词汇上不等于字符串`rhs`; 否则返回 `false`.
 
 ### `[noexcept] bool operator!=(const char *const &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果是 const char 指针`lhs`在词汇上不等于字符串`rhs`; 否则返回 `false`.
 
 ### `[noexcept] bool operator!=(const QLatin1StringView &lhs, const QByteArray &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rhs`字节数组被转换为`QUtf8StringView`。
+你可以通过编译应用时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见的字符串都通过`QObject::tr()`，这非常有用。
+注意：该函数会超载 QLatin1StringView：：operator！=()。
 
 ### `[constexpr noexcept, since 6.4] QLatin1StringView operator""_L1(const char *str, size_t size)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+字面操作符，将字符串的前`size`字符`QLatin1StringView`创建一个字面值`str`的字面操作符。
+以下代码创建`QLatin1StringView`：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QLatin1StringView`。
-- 参数 `str`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `size_t`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
+```cpp
+ using namespace Qt::StringLiterals;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ auto str = "hello"_L1;
+```
 
 ### `[noexcept] bool operator<(const QChar &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符 `lhs` 在字面上小于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const QLatin1StringView &lhs, const QChar &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上小于字符 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const QLatin1StringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上小于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const QLatin1StringView &lhs, const QStringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在词法上小于字符串视图 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const QLatin1StringView &lhs, const char *const &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串`lhs`词汇小于cont char指针`rhs`，返回`true`;否则返回`false`。
+`rhs` const 字符指针被转换为`QUtf8StringView`。
+你可以通过在编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用这个操作符。例如，如果你想确保所有用户可见的字符串都通过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator<(const QStringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串视图 `lhs` 在词汇上小于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const char *const &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 const char 指针 `lhs` 在词法上小于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const QLatin1StringView &lhs, const QByteArray &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rhs`字节数组被转换为`QUtf8StringView`。
+你可以通过在编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见的字符串都经过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator<=(const QChar &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符 `lhs` 在词汇上小于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<=(const QLatin1StringView &lhs, const QChar &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字典序上小于或等于字符 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<=(const QLatin1StringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上小于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<=(const QLatin1StringView &lhs, const QStringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上小于或等于字符串视图 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<=(const QLatin1StringView &lhs, const char *const &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串`lhs`词汇上小于或等于cont char指针`rhs`，返回`true`;否则返回`false`。
+`rhs` const 字符指针被转换为 `QUtf8StringView`。
+你可以在编译应用时定义`QT_NO_CAST_FROM_ASCII`来禁用这个操作符。例如，如果你想确保所有用户可见的字符串都通过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator<=(const QStringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串视图 `lhs` 在词法上小于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<=(const char *const &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果常量字符指针`lhs`在字面上小于或等于字符串`rhs`，则返回`true`；否则返回`false`。
 
 ### `[noexcept] bool operator<=(const QLatin1StringView &lhs, const QByteArray &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rhs`字节数组被转换为`QUtf8StringView`。
+你可以通过在编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见的字符串都经过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator==(const QChar &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符 `lhs` 在词法上等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QLatin1StringView &lhs, const QChar &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上等于字符 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QLatin1StringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QLatin1StringView &lhs, const QStringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在词法上等于字符串视图 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QLatin1StringView &lhs, const char *const &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串`lhs`等于cont char指针`rhs`，则返回`true`;否则返回`false`。
+`rhs` const 字符指针被转换为 `QUtf8StringView`。
+你可以通过在编译应用时定义`QT_NO_CAST_FROM_ASCII`来禁用这个操作符。例如，如果你想确保所有用户可见的字符串都通过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator==(const QStringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串视图 `lhs` 在词汇上等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const char *const &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 const char 指针 `lhs` 在词法上等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QLatin1StringView &lhs, const QByteArray &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rhs`字节数组被转换为`QUtf8StringView`。
+你可以通过在编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见的字符串都经过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator>(const QChar &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符 `lhs` 在字面上大于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>(const QLatin1StringView &lhs, const QChar &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果字符串`lhs`在词汇上大于字符`rhs`; 否则返回 `false`.
 
 ### `[noexcept] bool operator>(const QLatin1StringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上大于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>(const QLatin1StringView &lhs, const QStringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果字符串`lhs`在词汇上大于字符串视图`rhs`; 否则返回 `false`.
 
 ### `[noexcept] bool operator>(const QLatin1StringView &lhs, const char *const &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串`lhs`词汇大于cont char指针`rhs`，返回`true`;否则返回`false`。
+`rhs` const 字符指针被转换为`QUtf8StringView`。
+你可以通过编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见字符串都通过`QObject::tr()`，这非常有用。
 
 ### `[noexcept] bool operator>(const QStringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串视图 `lhs` 在词汇上大于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>(const char *const &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 const char 指针 `lhs` 在词法上大于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>(const QLatin1StringView &lhs, const QByteArray &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rhs`字节数组被转换为`QUtf8StringView`。
+你可以通过在编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见的字符串都经过`QObject::tr()`，这会非常有用。
 
 ### `[noexcept] bool operator>=(const QChar &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符 `lhs` 在词汇上大于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const QLatin1StringView &lhs, const QChar &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QChar &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上大于或等于字符 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const QLatin1StringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在词汇上大于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const QLatin1StringView &lhs, const QStringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串 `lhs` 在字面上大于或等于字符串视图 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const QLatin1StringView &lhs, const char *const &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串`lhs`词汇大于或等于cont char指针`rhs`，则返回`true`;否则返回`false`。
+`rhs` const 字符指针被转换为 `QUtf8StringView`。
+你可以通过在编译应用时定义`QT_NO_CAST_FROM_ASCII`来禁用这个操作符。例如，如果你想确保所有用户可见的字符串都通过`QObject::tr()`，这会很有用。
 
 ### `[noexcept] bool operator>=(const QStringView &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QStringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字符串视图 `lhs` 在词法上大于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const char *const &lhs, const QLatin1StringView &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const char *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果常量字符指针 `lhs` 在字面上大于或等于字符串 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const QLatin1StringView &lhs, const QByteArray &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QLatin1StringView &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rhs`字节数组被转换为`QUtf8StringView`。
+你可以通过在编译应用程序时定义`QT_NO_CAST_FROM_ASCII`来禁用该操作符。例如，如果你想确保所有用户可见的字符串都经过`QObject::tr()`，这会非常有用。
 
 ### `const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `const、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只读的 STL 风格正向迭代器类型，用于从 `begin()`/`cbegin()` 遍历到 `end()`/`cend()`，不能通过它修改元素。 `QLatin1StringView` 不拥有字符数据，原始 Latin-1 缓冲区必须在迭代器使用期间保持有效。
 
 ### `(since 6.7) const_pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `const、pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。为兼容STL提供。
+这些类型定义是在Qt 6.7中引入的。
 
 ### `const_reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `const、reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`reference`别名。为兼容STL提供。
 
 ### `const_reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `const、reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只读的 STL 风格反向迭代器类型，用于从 `rbegin()`/`crbegin()` 反向遍历到 `rend()`/`crend()`。 `QLatin1StringView` 不拥有字符数据，原始 Latin-1 缓冲区必须在迭代器使用期间保持有效。
 
 ### `difference_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `difference、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`qsizetype`的别名。为兼容STL而提供。
 
 ### `iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QLatin1StringView`不支持可变迭代器，所以这和`const_iterator`一样。
 
 ### `(since 6.7) pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。为兼容STL提供。
+这些类型定义是在Qt 6.7中引入的。
 
 ### `reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type &`的别名。为兼容STL提供。
 
 ### `reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QLatin1StringView`不支持可变的反迭代器，所以这和`const_reverse_iterator`是一样的。
 
 ### `size_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `尺寸或数量、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`qsizetype`的别名。为兼容STL提供。
+注意：在Qt 6之前的版本中，这是`int`的别名，限制了64位架构`QLatin1StringView`中可存储的数据量。
 
 ### `value_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLatin1StringView` 的 `值访问、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`const char`的别名。为兼容STL而提供。
 
 ### `int compare(QChar ch) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `ch` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串视图与UTF-16字符串视图`str`、拉丁1字符串视图`l1`或字符`ch`进行比较。如果该字符串小于`str`、`l1`或`ch`，返回负整数;如果大于`ch` `l1` `str`，返回正整数;如果大于，返回正整数;如果相等，返回零。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `int compare(QLatin1StringView l1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `l1`、`cs` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串视图与UTF-16字符串视图`str`、拉丁1字符串视图`l1`或字符`ch`进行比较。如果该字符串小于`str`、`l1`或`ch`，返回负整数;如果大于`ch` `l1` `str`，返回正整数;如果大于，返回正整数;如果相等，返回零。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `int compare(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `str`、`cs` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字符串视图与 `str` 比较，若字符串视图小于 `str` 则返回负整数;大于 `str` 则返回正整数;相等时返回零。
+如果`cs`是`Qt::CaseSensitive`（默认），则比较区分大小写;否则比较不区分大小写。
 
 ### `bool contains(QLatin1StringView l1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图包含`str`查看的UTF-16字符串、`l1`查看的拉丁字母1字符串或字符`ch`，则返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `bool contains(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图包含`str`查看的UTF-16字符串、`l1`查看的拉丁字母1字符串或字符`ch`，则返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `(since 6.4) qsizetype count(QLatin1StringView l1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QLatin1StringView` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该字符串视图中 `str` 查看的 UTF-16 字符串、`l1` 查看的 Latin-1 字符串或字符 `ch` 的（可能重叠）次数。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `(since 6.4) qsizetype count(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QLatin1StringView` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该字符串视图中 `str` 查看的 UTF-16 字符串、`l1` 查看的 Latin-1 字符串或字符 `ch` 的（可能重叠）次数。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `bool endsWith(QChar ch) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endsWith`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁语1字符串视图以UTF-16字符串`str`、拉丁语1字符串（`l1`）或字符`ch`结尾，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `bool endsWith(QLatin1StringView l1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endsWith`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁语1字符串视图以UTF-16字符串`str`、拉丁语1字符串（`l1`）或字符`ch`结尾，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `bool endsWith(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endsWith`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁语1字符串视图以UTF-16字符串`str`、拉丁语1字符串（`l1`）或字符`ch`结尾，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
 
 ### `qsizetype indexOf(QChar c, qsizetype from = 0) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `c`、`from` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `c`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`from`前进时，返回UTF-16字符串首次出现的`str`、`l1`查看的拉丁字母1字符串或字符`ch`的位置。如果未找到`str`、`l1`或`c`，分别返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
+如果`from`为-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
 
 ### `qsizetype indexOf(QLatin1StringView l1, qsizetype from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `l1`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`from`前进时，返回UTF-16字符串首次出现的`str`、`l1`查看的拉丁字母1字符串或字符`ch`的位置。如果未找到`str`、`l1`或`c`，分别返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
+如果`from`为-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
 
 ### `qsizetype indexOf(QStringView str, qsizetype from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`from`前进时，返回UTF-16字符串首次出现的`str`、`l1`查看的拉丁字母1字符串或字符`ch`的位置。如果未找到`str`、`l1`或`c`，分别返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
+如果`from`为-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
 
 ### `qsizetype lastIndexOf(QChar c) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `c` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `c`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`str` `from`向后搜索UTF-16字符串的最后一次出现位置，分别由`l1`查看的拉丁字母1字符串，或字符`ch`;如果未找到`str`、`l1`或`ch`，则返回-1。
+如果`from`是-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
+注意：在搜索长度为0的`str`或`l1`时，数据末尾的匹配会被负的`from`排除，尽管`-1`通常被认为是从字符串末尾搜索：结尾的匹配位于最后一个字符之后，因此被排除。要包含这样的最终空匹配，要么给出`from`的正值，要么完全省略`from`参数。
 
 ### `(since 6.3) qsizetype lastIndexOf(QChar ch, Qt::CaseSensitivity cs) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `ch`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`str` `from`向后搜索UTF-16字符串的最后一次出现位置，分别由`l1`查看的拉丁字母1字符串，或字符`ch`;如果未找到`str`、`l1`或`ch`，则返回-1。
+如果`from`是-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
+注意：在搜索长度为0的`str`或`l1`时，数据末尾的匹配会被负的`from`排除，尽管`-1`通常被认为是从字符串末尾搜索：结尾的匹配位于最后一个字符之后，因此被排除。要包含这样的最终空匹配，要么给出`from`的正值，要么完全省略`from`参数。
 
 ### `qsizetype lastIndexOf(QChar c, qsizetype from) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `c`、`from` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `c`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`str` `from`向后搜索UTF-16字符串的最后一次出现位置，分别由`l1`查看的拉丁字母1字符串，或字符`ch`;如果未找到`str`、`l1`或`ch`，则返回-1。
+如果`from`是-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
+注意：在搜索长度为0的`str`或`l1`时，数据末尾的匹配会被负的`from`排除，尽管`-1`通常被认为是从字符串末尾搜索：结尾的匹配位于最后一个字符之后，因此被排除。要包含这样的最终空匹配，要么给出`from`的正值，要么完全省略`from`参数。
 
 ### `qsizetype lastIndexOf(QLatin1StringView l1, qsizetype from, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `l1`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁字母1字符串视图中，从索引位置`str` `from`向后搜索UTF-16字符串的最后一次出现位置，分别由`l1`查看的拉丁字母1字符串，或字符`ch`;如果未找到`str`、`l1`或`ch`，则返回-1。
+如果`from`是-1，则从最后一个字符开始搜索;如果是-2，则从倒数第二个字符开始，依此类推。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索是区分大小写的;否则搜索是不区分大小写的。
+注意：在搜索长度为0的`str`或`l1`时，数据末尾的匹配会被负的`from`排除，尽管`-1`通常被认为是从字符串末尾搜索：结尾的匹配位于最后一个字符之后，因此被排除。要包含这样的最终空匹配，要么给出`from`的正值，要么完全省略`from`参数。
 
 ### `qsizetype lastIndexOf(QStringView str, qsizetype from, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`from`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁1字符串视图中，`str`查看UTF-16字符串的最后一次出现位置，`l1`返回拉丁1字符串的索引位置。如果未找到`str`或`l1`，分别返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
 
 ### `(since 6.2) qsizetype lastIndexOf(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLatin1StringView::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `str`、`cs` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该拉丁1字符串视图中，`str`查看UTF-16字符串的最后一次出现位置，`l1`返回拉丁1字符串的索引位置。如果未找到`str`或`l1`，分别返回-1。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
 
 ### `bool startsWith(QChar ch) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startsWith`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ch`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图以`str`查看的UTF-16字符串、`l1`查看的拉丁1字符串或字符`ch`开始，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
 
 ### `bool startsWith(QLatin1StringView l1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startsWith`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `l1`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图以`str`查看的UTF-16字符串、`l1`查看的拉丁1字符串或字符`ch`开始，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
 
 ### `bool startsWith(QStringView str, Qt::CaseSensitivity cs = Qt::CaseSensitive) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startsWith`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该拉丁1字符串视图以`str`查看的UTF-16字符串、`l1`查看的拉丁1字符串或字符`ch`开始，返回`true`;否则返回`false`。
+如果`cs`是`Qt::CaseSensitive`（默认），则搜索区分大小写;否则搜索不区分大小写。
 
 ### `(since 6.4) double toDouble(bool *ok = nullptr) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDouble`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`double`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`将该值转换为对应的浮点值。
+如果转换溢出，返回无穷大;如果因其他原因（如溢出），则返回0.0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+警告：`QLatin1StringView`内容可能仅包含有效的数字字符，包括加号/减号、科学记谱法中使用的字符e和小数点。添加单位或额外字符会导致转换错误。
+注意：数字转换在默认的 C 区域执行，无论用户所在的位置如何。使用`QLocale`进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
 
 ### `(since 6.4) int toInt(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toInt`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `(since 6.4) long toLong(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toLong`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`long`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `(since 6.4) qlonglong toLongLong(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toLongLong`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`qlonglong`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `(since 6.4) short toShort(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toShort`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`short`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `(since 6.4) uint toUInt(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toUInt`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`uint`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `(since 6.4) ulong toULong(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toULong`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`ulong`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ### `(since 6.4) qulonglong toULongLong(bool *ok = nullptr, int base = 10) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toULongLong`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`qulonglong`。
-- 参数 `ok`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `base`：类型为 `int`。默认值为 `10`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QLatin1StringView`用`base`为底的对应数值，默认为十。支持0、2至36的进制，9以上数字使用字母;A为十，B为十一，依此类推。
+如果`base`为0，则根据以下规则自动确定基准（按此顺序），如果拉丁1字符串视图以以下方式开头：
+- `"0x"`，其余部分读作十六进制（16进制）
+- `"0b"`，其余部分被读取为二进制（进制2）
+- `"0"`，其余部分读作八进制（八进制8）
+- 否则读作十进制
+如果转换失败，则返回0。
+如果`ok`未`nullptr`，则通过将*`ok`设为`false`报告失败，成功则将*`ok`设为`true`。
+注意：数字转换在默认的 C 区域内进行，无论用户所在的位置如何。使用 `QLocale` 进行数字和字符串之间的区域感知转换。
+该函数忽略前置和后置间距字符。
+注意：在Qt 6.4中加入了对“0b”前缀的支持。
 
 ## 6. 深入实践与常见坑
 

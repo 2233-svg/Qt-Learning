@@ -129,740 +129,454 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 56 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[anonymous] enum`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 暴露的类型声明 `enum`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟 `type()` 函数返回的值。
+- `QGraphicsTextItem::Type`: `8`；一个图形文本项
 
 ### `openExternalLinks : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 的配置属性。初始化或状态切换时通过 `setOpenExternalLinks(...)` 设置，之后用 `openExternalLinks()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+规定是否`QGraphicsTextItem`应使用`QDesktopServices::openUrl()`自动开启链路，而不是发出`linkActivated`信号。
+默认值为假。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`openExternalLinks`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `openExternalLinks()` 读取当前值；它不会修改应用状态。
 
 ### `textCursor : QTextCursor`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 的配置属性。初始化或状态切换时通过 `setTextCursor(...)` 设置，之后用 `textCursor()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示可编辑文本项中的可见文本光标。
+默认情况下，如果项目文本未被设置，该属性包含一个空文本光标;否则，它包含放置在项目文档开头的文本光标。
 
-**签名拆解：**
-
-- 属性类型：`QTextCursor`。
-- 属性名：`textCursor`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textCursor()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QGraphicsTextItem::QGraphicsTextItem(QGraphicsItem *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QGraphicsItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QGraphicsTextItem。`parent`传递给`QGraphicsItem`的构造器。
 
 ### `[explicit] QGraphicsTextItem::QGraphicsTextItem(const QString &text, QGraphicsItem *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `parent`：类型为 `QGraphicsItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QGraphicsTextItem，`text`作为默认明文。`parent`传递给`QGraphicsItem`的构造器。
 
 ### `[virtual noexcept] QGraphicsTextItem::~QGraphicsTextItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QGraphicsTextItem`。
 
 ### `void QGraphicsTextItem::adjustSize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::adjustSize` 用于执行与“adjust、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本项调整到合理的大小。
 
 ### `[override virtual] QRectF QGraphicsTextItem::boundingRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::boundingRect` 用于计算、查询或取得与“bounding、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::boundingRect()` const.
+这个纯虚拟函数将物品的外边界定义为矩形;所有绘画必须限制在物品的边界矩形内。`QGraphicsView`用此来判断物品是否需要重新绘制。
+虽然物品的形状可以任意，但边界矩形始终是矩形，且不受物品变换的影响。
+如果你想更改物品的边界矩形，必须先调用`prepareGeometryChange()`。这会通知场景即将发生的变化，以便更新物品几何索引;否则，场景将无法感知物品的新几何体，结果也未定义（通常渲染伪影会留在视图中）。
+重新实现这个函数，让`QGraphicsView`判断小部件哪些部分需要重新绘制。
+注意：对于绘制轮廓/笔画的形状，在包围矩形中包含一半的笔宽非常重要。不过，这并不需要补偿抗锯齿。
 
 ### `[override virtual] bool QGraphicsTextItem::contains(const QPointF &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `point`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::contains`（const QPointF & point） const.
+如果该项包含`point`，且位于本地坐标内，则返回`true`;否则返回 false。它通常被调用`QGraphicsView`来确定光标下方的物品，因此该函数的实现应尽可能轻量。
+默认情况下，这个函数调用`shape()`，但你可以在子类中重新实现，以提供（或许更高效的）实现。
 
 ### `[override virtual protected] void QGraphicsTextItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::contextMenuEvent`（QGraphicsSceneContextMenuEvent *event）。
+该事件处理程序可以被重新实现为子类以处理上下文菜单事件。`event`参数包含待处理事件的详细信息。
+如果你忽略该事件（即调用`QEvent::ignore()`），`event`会传播到该事件下方的任何项目。如果没有项目接受该事件，场景会忽略它并传播到视图。
+收到上下文菜单事件后，通常会打开`QMenu`。示例：
+默认实现会忽略该事件。
 
 ### `QColor QGraphicsTextItem::defaultTextColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::defaultTextColor` 用于计算、查询或取得与“default、文本、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于未格式文本的默认文本颜色。
 
 ### `QTextDocument *QGraphicsTextItem::document() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::document` 用于计算、查询或取得与“document”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextDocument *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextDocument *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该物品的文本文档。
 
 ### `[override virtual protected] void QGraphicsTextItem::dragEnterEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::dragEnterEvent` 用于执行与“drag、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dragEnterEvent`（QGraphicsSceneDragDropEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项目的拖入事件。拖入事件是在光标进入该物品区域时生成的。
+通过接受事件（即调用`QEvent::accept()`），物品将接受掉落事件，同时接收拖动移动和拖离事件。否则，事件将被忽略并传播到下面的物品。如果事件被接受，物品将接收拖动移动事件，然后控制权返回事件循环。
+dragEnterEvent 的一个常见实现会根据 `event` 中关联的 mime 数据接受或忽略`event`。示例：
+物品默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsTextItem::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dragLeaveEvent`（QGraphicsSceneDragDropEvent *event）。
+该事件处理程序（事件`event`）可以重新实现，以接收该物品的拖曳离开事件。拖曳离开事件是在光标离开物品区域时生成的。大多数情况下你不需要重新实现这个函数，但它对重置物品状态（例如高亮）非常有用。
+`event`打电话给`QEvent::ignore()`或`QEvent::accept()`没有任何影响。
+项目默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsTextItem::dragMoveEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dragMoveEvent`（QGraphicsSceneDragDropEvent *event）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该物品的拖动移动事件。拖动移动事件是在光标在物品区域内移动时生成的。大多数情况下你不需要重新实现这个函数;它用来表示只有物品的部分可以接受掉落。
+在`event`上调用`QEvent::ignore()`或`QEvent::accept()`，可以切换该物品是否接受该事件位置的掉落。默认情况下，`event`被接受，表示该物品允许在指定位置掉落。
+物品默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsTextItem::dropEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dropEvent`（QGraphicsSceneDragDropEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现以接收该物品的掉落事件。只有当最后一次拖动移动事件被接受时，物品才能接收掉落事件。
+打电话给`QEvent::ignore()`或`QEvent::accept()` `event`没有效果。
+物品默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsTextItem::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::focusInEvent`（QFocusEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以获得该项事件中的关注。默认实现调用`ensureVisible()`。
 
 ### `[override virtual protected] void QGraphicsTextItem::focusOutEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::focusOutEvent`（QFocusEvent *事件）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该项的焦点输出事件。默认实现不做任何事。
 
 ### `QFont QGraphicsTextItem::font() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::font` 用于计算、查询或取得与“字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该物品的字体，用于渲染文本。
 
 ### `[override virtual protected] void QGraphicsTextItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::hoverEnterEvent` 用于执行与“hover、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::hoverEnterEvent`（QGraphicsSceneHoverEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的悬停进入事件。默认实现调用`update()`;否则不做任何操作。
+打电话给`QEvent::ignore()`或`QEvent::accept()`对`event`没有影响。
 
 ### `[override virtual protected] void QGraphicsTextItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::hoverLeaveEvent` 用于执行与“hover、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::hoverLeaveEvent`（QGraphicsSceneHoverEvent *event）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该项的悬停离开事件。默认实现调用`update()`;否则不做任何事。
+在`event`上打电话给`QEvent::ignore()`或`QEvent::accept()`没有任何效果。
 
 ### `[override virtual protected] void QGraphicsTextItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::hoverMoveEvent` 用于执行与“hover、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::hoverMoveEvent`（QGraphicsSceneHoverEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的悬停移动事件。默认实现不做任何事。
+打电话给`QEvent::ignore()`或`QEvent::accept()`打`event`没有效果。
 
 ### `[override virtual protected] void QGraphicsTextItem::inputMethodEvent(QInputMethodEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::inputMethodEvent` 用于执行与“input、Method、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QInputMethodEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QGraphicsItem::inputMethodEvent`（QInputMethodEvent *event）.
+该事件处理程序对于事件`event`，可以重新实现以接收该项的输入法事件。默认实现忽略该事件。
 
 ### `[override virtual protected] QVariant QGraphicsTextItem::inputMethodQuery(Qt::InputMethodQuery query) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `query` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `query`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::inputMethodQuery`（Qt：：InputMethodQuery query） const.
+该方法仅对输入项相关。输入方法用它来查询项的一组属性，以支持复杂的输入法操作，如支持周围文本和重新转换。`query` 指定查询的属性。
 
 ### `[override virtual] bool QGraphicsTextItem::isObscuredBy(const QGraphicsItem *item) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isObscuredBy`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `item`：类型为 `const QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::isObscuredBy`（const QGraphicsItem *item） const.
+如果该物品的边界矩形完全被不透明的`item`形状遮挡，返回`true`。
+基础实现将`item`的`opaqueArea()`映射到该项目的坐标系，然后检查该项目的`boundingRect()`是否完全包含在映射形状内。
+你可以重新实现这个函数，提供一个自定义算法来判断该项是否被`item`遮挡。
 
 ### `[override virtual protected] void QGraphicsTextItem::keyPressEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::keyPressEvent`（QKeyEvent *event）。
+该事件处理程序（针对事件`event`）可以重新实现以接收该项的按键事件。默认实现忽略该事件。如果你重新实现该处理程序，事件默认会被接受。
+注意，键事件只会针对设置`ItemIsFocusable`标志且具有键盘输入焦点的物品。
 
 ### `[override virtual protected] void QGraphicsTextItem::keyReleaseEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::keyReleaseEvent`（QKeyEvent *event）。
+该事件处理程序（针对事件`event`）可以重新实现以接收该项的密钥释放事件。默认实现忽略该事件。如果你重新实现该处理程序，该事件默认会被接受。
+注意，键事件只会针对设置`ItemIsFocusable`标志且带有键盘输入焦点的物品。
 
 ### `[signal] void QGraphicsTextItem::linkActivated(const QString &link)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 发出的通知信号 `linkActivated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `link`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户点击文本项上的链接以实现`Qt::LinksAccessibleByMouse`或`Qt::LinksAccessibleByKeyboard`时，会发出该信号。`link`是被点击的链接。
 
 ### `[signal] void QGraphicsTextItem::linkHovered(const QString &link)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 发出的通知信号 `linkHovered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `link`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户将鼠标悬停在启用`Qt::LinksAccessibleByMouse`的文本项上的链接上时，会发出该信号。`link` 就是被悬停在的链接。
 
 ### `[override virtual protected] void QGraphicsTextItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mouseDoubleClickEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的鼠标双击事件。
+双击物品时，该物品首先会触发鼠标按键事件，接着是释放事件（即点击），再是双击事件，最后是释放事件。
+打电话给`QEvent::ignore()`或`QEvent::accept()`打`event`没有效果。
+默认实现调用`mousePressEvent()`。如果你想在重新实现这个函数时保留基础实现，可以在你的重实现中调用 QGraphicsItem：：mouseDoubleClickEvent()。
+注意，如果物品既非`selectable`也非`movable`，则不会触发双击事件（此时忽略单次鼠标点击，导致双击停止生成）。
 
 ### `[override virtual protected] void QGraphicsTextItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mouseMoveEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序（事件`event`）可以重新实现，以接收该物品的鼠标移动事件。如果你收到该事件，可以确定该物品也收到了鼠标按键事件，并且该物品是当前的鼠标抓取器。
+`event`打电话给`QEvent::ignore()`或`QEvent::accept()`没有任何影响。
+默认实现处理基本的项目交互，比如选择和移动。如果你想在重现这个函数时保留基础实现，可以在你的重实现中调用 QGraphicsItem：：mouseMoveEvent()。
+请注意，`mousePressEvent()`决定接收鼠标事件的图形项目。详情请参见`mousePressEvent()`描述。
 
 ### `[override virtual protected] void QGraphicsTextItem::mousePressEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mousePressEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该物品的鼠标按键事件。鼠标按键事件只传递给接受被按下鼠标按钮的物品。默认情况下，物品接受所有鼠标按键，但你可以通过调用`setAcceptedMouseButtons()`来更改。
+鼠标按键事件决定哪个物品应成为鼠标抓取器（参见`QGraphicsScene::mouseGrabberItem()`）。如果不重新实现此功能，按键事件将传播到该物品下方的最顶端任何物品，且不会有其他鼠标事件传递到该物品。
+如果你重新实现了这个功能，`event`默认会被接受（见`QEvent::accept()`），这个物品就是鼠标抓取器。这允许该物品接收未来的移动、释放和双击事件。如果你在`event`上调用`QEvent::ignore()`，这个物品将失去鼠标抓取功能，`event`会传播到最下面的任何物品。除非收到新的鼠标按键事件，否则不会再传递给该物品。
+默认实现处理基本的物品交互，比如选择和移动。如果你想在重现这个函数时保留基础实现，可以在重构中调用 QGraphicsItem：：mousePressEvent()。
+对于既非`movable`也非`selectable`的项目，事件为`QEvent::ignore()`d。
 
 ### `[override virtual protected] void QGraphicsTextItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mouseReleaseEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的鼠标释放事件。
+打电话给`QEvent::ignore()`或`QEvent::accept()` `event`没有效果。
+默认实现处理基本的物品操作，比如选择和移动。如果你想在重现这个函数时保留基础实现，可以在重写中调用 QGraphicsItem：：mouseReleaseEvent()。
+请注意，`mousePressEvent()`决定接收鼠标事件的图形项目。详情请参见`mousePressEvent()`描述。
 
 ### `[override virtual] QPainterPath QGraphicsTextItem::opaqueArea() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::opaqueArea` 用于计算、查询或取得与“opaque、Area”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPainterPath`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::opaqueArea()` const.
+该虚拟函数返回一个形状，表示该项不透明的区域。如果该区域用不透明的画笔或颜色填充（即不透明），则该区域是不透明的。
+该函数由`isObscuredBy()`使用，底层项目调用以确定是否被该项遮挡。
+默认实现返回空`QPainterPath`，表明该项完全透明且未遮挡其他项。
 
 ### `[override virtual] void QGraphicsTextItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 的核心操作 `paint`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `option`：类型为 `const QStyleOptionGraphicsItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QGraphicsItem::paint`（QPainter *painter， const QStyleOptionGraphicsItem *option， QWidget *widget）.
+该函数通常由`QGraphicsView`调用，将物品内容绘制为局部坐标。
+在`QGraphicsItem`子类中重新实现该函数，使用`painter`来提供该物品的绘画实现。`option`参数为物品提供了样式选项，如状态、暴露区域和细节层级提示。`widget`参数是可选的。如果提供了，它指向正在绘制的控件;否则为0。对于缓存绘制，`widget`总是0。
+画家的笔默认为0宽，笔初始化为从画具调色板中的`QPalette::Text`笔。画笔初始化为`QPalette::Window`。
+确保所有绘画都限制在`boundingRect()`边界内，以避免渲染伪影（因为`QGraphicsView`不会帮你裁剪画家）。特别是，当`QPainter`用指定`QPen`渲染形状轮廓时，轮廓的一半会在外侧绘制，另一半在你正在渲染的形状内侧（例如，笔宽为2单位时，你必须在`boundingRect()`内绘制1单位的轮廓）。`QGraphicsItem`不支持使用宽度非零的美观笔。
+所有涂装均在本地坐标内完成。
+注意：除非调用`update()`，否则物品必须始终以完全相同的方式重新绘制自己;否则可能会出现视觉伪影。换句话说，两次后续的paint()调用必须始终产生相同的输出，除非它们之间调用了`update()`。
+注意：启用缓存并不保证图形视图框架只调用一次 paint()，即使没有明确调用 `update()`。详情请参见 `setCacheMode()` 文档。
 
 ### `[override virtual protected] bool QGraphicsTextItem::sceneEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::sceneEvent` 用于计算、查询或取得与“scene、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsItem::sceneEvent`（QEvent *事件）。
+该虚拟函数接收该项的事件。在事件发送到专用事件处理程序`contextMenuEvent()`、`focusInEvent()`、`focusOutEvent()`、`hoverEnterEvent()`、`hoverMoveEvent()`、`hoverLeaveEvent()`、`keyPressEvent()`、`keyReleaseEvent()`、`mousePressEvent()`、`mouseReleaseEvent()`、`mouseMoveEvent()`和`mouseDoubleClickEvent()`之前，重新实现该函数。
+如果事件被识别并处理，返回 `true`;否则（例如，如果事件类型未被识别），返回 false。
+`event` 是截获的事件。
 
 ### `void QGraphicsTextItem::setDefaultTextColor(const QColor &col)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultTextColor`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `col`：类型为 `const QColor &`。没有默认值，调用时必须提供。传入 `const QColor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将未格式文本的颜色设置为`col`。
 
 ### `void QGraphicsTextItem::setDocument(QTextDocument *document)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocument`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `document`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。传入 `QTextDocument *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本文档`document`到该物品上。
 
 ### `void QGraphicsTextItem::setFont(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFont`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于渲染文本的字体设置为`font`。
 
 ### `void QGraphicsTextItem::setHtml(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHtml`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该物品的文本设置为`text`，前提是文本为HTML格式。如果该物品具有键盘输入焦点，该函数还会调用`ensureVisible()`以确保文本在所有视口中可见。
 
 ### `void QGraphicsTextItem::setPlainText(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPlainText`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该物品的文本设置为`text`。如果该物品具有键盘输入焦点，该函数还会调用`ensureVisible()`，确保文本在所有视口中可见。
 
 ### `void QGraphicsTextItem::setTabChangesFocus(bool b)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabChangesFocus`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`b`为真，Tab 键会使控件改变焦点;否则，Tab 键会在文档中插入一个 Tab。
+在某些情况下，文本编辑不应允许用户使用Tab键输入计表器或更改缩进，因为这会破坏焦点链。默认为false。
 
 ### `void QGraphicsTextItem::setTextInteractionFlags(Qt::TextInteractionFlags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextInteractionFlags`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `Qt::TextInteractionFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`flags`标志，指定文本项目应如何响应用户输入。
+`QGraphicsTextItem`的默认是`Qt::NoTextInteraction`。该功能还会影响ItemIsFocusable `QGraphicsItem`标志，如果`flags`与`Qt::NoTextInteraction`不同，则清除。
+默认情况下，文本是只读的。要将该项目转换为编辑器，请设置`Qt::TextEditable`标志。
 
 ### `void QGraphicsTextItem::setTextWidth(qreal width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextWidth`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该项目文本的首选宽度。如果实际文本宽度超过指定宽度，则会被拆分成多行。
+如果`width`设置为-1，文本不会被拆分为多行，除非通过明确的换行或新段落强制执行。
+默认值为-1。
+注意`QGraphicsTextItem`内部会保留一个`QTextDocument`，用于计算文本宽度。
 
 ### `[override virtual] QPainterPath QGraphicsTextItem::shape() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::shape` 用于计算、查询或取得与“shape”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPainterPath`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsItem::shape()` const.
+返回该项的形状，作为本地坐标中的`QPainterPath`。该形状用于多种用途，包括碰撞检测、碰撞测试以及`QGraphicsScene::items()`函数。
+默认实现调用 `boundingRect()` 返回一个简单的矩形形状，但子类可以重新实现该函数，以返回非矩形物体更准确的形状。例如，一个圆形项目可能会选择返回椭圆形形状以更好地检测碰撞。例如：
+形状的轮廓会根据绘画时笔的宽度和风格而变化。如果你想在物体的形状中包含这个轮廓，可以用`QPainterPathStroker`从笔触中创建形状。
+该函数由默认实现的`contains()`和`collidesWithPath()`调用。
 
 ### `bool QGraphicsTextItem::tabChangesFocus() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::tabChangesFocus` 用于计算、查询或取得与“tab、Changes、Focus”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 Tab 键会导致控件改变焦点，返回 `true`;否则返回 false。
+默认情况下，该行为被禁用，该函数将返回 false。
 
 ### `Qt::TextInteractionFlags QGraphicsTextItem::textInteractionFlags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::textInteractionFlags` 用于计算、查询或取得与“文本、Interaction、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::TextInteractionFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::TextInteractionFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的文本交互标志。
 
 ### `qreal QGraphicsTextItem::textWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::textWidth` 用于计算、查询或取得与“文本、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本宽度。
+宽度是根据`QGraphicsTextItem`内部保持的`QTextDocument`计算的。
 
 ### `QString QGraphicsTextItem::toHtml() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toHtml`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回已转换为HTML的物品文本，若未设置文本则返回空的`QString`。
 
 ### `QString QGraphicsTextItem::toPlainText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPlainText`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回将物品的文本转换为纯文本，或者如果没有设置文本则返回空`QString`。
 
 ### `[override virtual] int QGraphicsTextItem::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsItem::type()` const.
+返回一个项目的类型，作为整数。所有标准的 Graphicsitem 类都关联一个唯一的值;参见`QGraphicsItem::Type`。`qgraphicsitem_cast()` 利用这些类型信息来区分类型。
+默认实现（`QGraphicsItem`）返回`UserType`。
+要启用自定义物品中的 `qgraphicsitem_cast()`，请重新实现该函数并声明一个等于自定义物品类型的 Type enum 值。自定义物品必须返回大于 `UserType`（65536）的值。
 
 ### `enum { Type }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsTextItem` 暴露的类型声明 `enum`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟 `type()` 函数返回的值。
+- `QGraphicsTextItem::Type`: `8`；一个图形文本项
 
 ### `bool openExternalLinks() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `openExternalLinks`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+规定是否`QGraphicsTextItem`应使用`QDesktopServices::openUrl()`自动开启链路，而不是发出`linkActivated`信号。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `openExternalLinks()` 读取当前值；它不会修改应用状态。
 
 ### `void setOpenExternalLinks(bool open)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOpenExternalLinks`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+规定是否`QGraphicsTextItem`应使用`QDesktopServices::openUrl()`自动开启链路，而不是发出`linkActivated`信号。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `open`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOpenExternalLinks(...)` 修改 `openExternalLinks`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTextCursor(const QTextCursor &cursor)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextCursor`。调用它会改变 `QGraphicsTextItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示可编辑文本项中的可见文本光标。
+默认情况下，如果项目文本未被设置，该属性包含一个空文本光标;否则，它包含放置在项目文档开头的文本光标。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cursor`：类型为 `const QTextCursor &`。没有默认值，调用时必须提供。传入 `const QTextCursor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTextCursor(...)` 修改 `textCursor`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QTextCursor textCursor() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsTextItem::textCursor` 用于计算、查询或取得与“文本、Cursor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示可编辑文本项中的可见文本光标。
+默认情况下，如果项目文本未被设置，该属性包含一个空文本光标;否则，它包含放置在项目文档开头的文本光标。
 
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textCursor()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

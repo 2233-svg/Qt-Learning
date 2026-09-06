@@ -67,122 +67,127 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit constexpr] QAtomicScopedValueRollback::QAtomicScopedValueRollback(QBasicAtomicPointer<std::remove_pointer_t<T>> &var, std::memory_order mo = std::memory_order_seq_cst)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+记录`var`的价值，以便在销毁时恢复。
+这等价于：
+负载的`mo`调整详见内存顺序部分。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `var`：类型为 `QBasicAtomicPointer<std::remove_pointer_t<T>> &`。没有默认值，调用时必须提供。传入 `QBasicAtomicPointer<std::remove_pointer_t<T>> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mo`：类型为 `std::memory_order`。默认值为 `std::memory_order_seq_cst`。传入 `std::memory_order` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ T old_value = var.load(mo);
+ // And in the destructor: var.store(old_value, mo);
+```
 
 ### `[explicit constexpr] QAtomicScopedValueRollback::QAtomicScopedValueRollback(QBasicAtomicPointer<std::remove_pointer_t<T>> &var, T value, std::memory_order mo = std::memory_order_seq_cst)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+记录`var`的价值，以便在销毁时恢复。
+这等价于：
+负载的`mo`调整详见内存顺序部分。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `var`：类型为 `QBasicAtomicPointer<std::remove_pointer_t<T>> &`。没有默认值，调用时必须提供。传入 `QBasicAtomicPointer<std::remove_pointer_t<T>> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `T`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `mo`：类型为 `std::memory_order`。默认值为 `std::memory_order_seq_cst`。传入 `std::memory_order` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ T old_value = var.load(mo);
+ // And in the destructor: var.store(old_value, mo);
+```
 
 ### `QAtomicScopedValueRollback::~QAtomicScopedValueRollback()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
+恢复在构建时或最后一次调用`commit()`时的存储值，回到受管理变量。
+这等价于：
+其中`mo`与最初传递给构造函数的顺序相同。关于`mo`的含义，请参见内存顺序。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // In the constructor: T old_value = var.load(mo);
+ // or: T old_value = exchange(new_value, mo);
+ var.store(old_value, mo);
+```
 
 ### `void QAtomicScopedValueRollback::commit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAtomicScopedValueRollback::commit` 用于执行与“提交”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+将存储值更新为管理变量当前值，加载顺序与构建时相同。
+该更新值在销毁时会恢复，而非原始的先前值。
+这等价于：
+其中`mo`与最初传递给构造函数的顺序相同。关于`mo`的含义，请参见内存顺序。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // Given constructor: T old_value = var.load(mo);
+ old_value = var.load(mo);  // referesh it
+ // And, in the destructor: var.store(old_value, mo);
+```
 
 ### `QAtomicScopedValueRollback(QBasicAtomicInteger<T> &var, std::memory_order mo = std::memory_order_seq_cst)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+记录`var`的价值，以便在销毁时恢复。
+这等价于：
+负载的`mo`调整详见内存顺序部分。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `var`：类型为 `QBasicAtomicInteger<T> &`。没有默认值，调用时必须提供。传入 `QBasicAtomicInteger<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mo`：类型为 `std::memory_order`。默认值为 `std::memory_order_seq_cst`。传入 `std::memory_order` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ T old_value = var.load(mo);
+ // And in the destructor: var.store(old_value, mo);
+```
 
 ### `QAtomicScopedValueRollback(std::atomic<T> &var, std::memory_order mo = std::memory_order_seq_cst)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+为`var`分配`value`，并在内部存储`var`的先前值以恢复销毁。
+这等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `var`：类型为 `std::atomic<T> &`。没有默认值，调用时必须提供。传入 `std::atomic<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mo`：类型为 `std::memory_order`。默认值为 `std::memory_order_seq_cst`。传入 `std::memory_order` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ T old_value = var.exchange(new_value, mo);
+ // And in the destructor: var.store(old_value, mo);
+```
 
 ### `QAtomicScopedValueRollback(QBasicAtomicInteger<T> &var, T value, std::memory_order mo = std::memory_order_seq_cst)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+为`var`分配`value`，并在内部存储`var`的先前值以恢复销毁。
+这等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `var`：类型为 `QBasicAtomicInteger<T> &`。没有默认值，调用时必须提供。传入 `QBasicAtomicInteger<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `T`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `mo`：类型为 `std::memory_order`。默认值为 `std::memory_order_seq_cst`。传入 `std::memory_order` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ T old_value = var.exchange(new_value, mo);
+ // And in the destructor: var.store(old_value, mo);
+```
 
 ### `QAtomicScopedValueRollback(std::atomic<T> &var, T value, std::memory_order mo = std::memory_order_seq_cst)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QAtomicScopedValueRollback` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+为`var`分配`value`，并在内部存储`var`的先前值以恢复销毁。
+这等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `var`：类型为 `std::atomic<T> &`。没有默认值，调用时必须提供。传入 `std::atomic<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `T`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `mo`：类型为 `std::memory_order`。默认值为 `std::memory_order_seq_cst`。传入 `std::memory_order` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ T old_value = var.exchange(new_value, mo);
+ // And in the destructor: var.store(old_value, mo);
+```
 
 ## 6. 深入实践与常见坑
 

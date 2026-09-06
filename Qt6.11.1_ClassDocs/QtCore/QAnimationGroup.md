@@ -73,153 +73,76 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QAnimationGroup::QAnimationGroup(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAnimationGroup` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QAnimationGroup。`parent`传递给`QObject`的构造器。
 
 ### `[virtual noexcept] QAnimationGroup::~QAnimationGroup()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAnimationGroup` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏动画组。它也会破坏所有动画。
 
 ### `void QAnimationGroup::addAnimation(QAbstractAnimation *animation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QAnimationGroup` 添加依赖、数据或子对象的 API `addAnimation`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `animation`：类型为 `QAbstractAnimation *`。没有默认值，调用时必须提供。传入 `QAbstractAnimation *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该组增加`animation`。这将调用索引为`animationCount()`的 `insertAnimation`。
+注：该团队对动画拥有所有权。
 
 ### `QAbstractAnimation *QAnimationGroup::animationAt(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAnimationGroup::animationAt` 用于计算、查询或取得与“animation、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QAbstractAnimation *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractAnimation *`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该组中`index`的动画指针。当你需要访问特定动画时，这个函数非常有用。`index` 介于 0 到 `animationCount()` - 1 之间。
 
 ### `int QAnimationGroup::animationCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAnimationGroup::animationCount` 用于计算、查询或取得与“animation、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该组管理的动画数量。
 
 ### `void QAnimationGroup::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除并删除该动画组中的所有动画，并将当前时间重置为0。
 
 ### `[override virtual protected] bool QAnimationGroup::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAnimationGroup::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractAnimation::event`（QEvent *事件）。
 
 ### `int QAnimationGroup::indexOfAnimation(QAbstractAnimation *animation) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAnimationGroup::indexOfAnimation` 用于计算、查询或取得与“索引、Of、Animation”相关的操作。调用时要先确认当前状态和 `animation` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `animation`：类型为 `QAbstractAnimation *`。没有默认值，调用时必须提供。传入 `QAbstractAnimation *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`animation`的索引。返回的索引可以传递给以索引为参数的其他函数。
 
 ### `void QAnimationGroup::insertAnimation(int index, QAbstractAnimation *animation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QAnimationGroup` 添加依赖、数据或子对象的 API `insertAnimation`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `animation`：类型为 `QAbstractAnimation *`。没有默认值，调用时必须提供。传入 `QAbstractAnimation *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`index`处将`animation`插入该动画组。如果`index`为0，动画会从开头插入。如果`index` `animationCount()`，则动画插入在结尾。
+注：该团队对动画拥有所有权。
 
 ### `void QAnimationGroup::removeAnimation(QAbstractAnimation *animation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeAnimation`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `animation`：类型为 `QAbstractAnimation *`。没有默认值，调用时必须提供。传入 `QAbstractAnimation *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`animation`从该组中移除。`animation`的所有权转移给调用者。
 
 ### `QAbstractAnimation *QAnimationGroup::takeAnimation(int index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAnimationGroup::takeAnimation` 用于计算、查询或取得与“取出、Animation”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QAbstractAnimation *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractAnimation *`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`index`动画并从动画组中移除。
+注意：动画的所有权转移给来电者。
 
 ## 6. 深入实践与常见坑
 

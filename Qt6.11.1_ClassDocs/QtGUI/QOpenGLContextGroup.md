@@ -64,35 +64,19 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 2 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[static] QOpenGLContextGroup *QOpenGLContextGroup::currentContextGroup()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `currentContextGroup`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLContextGroup *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应当前上下文的`QOpenGLContextGroup`。
 
 ### `QList<QOpenGLContext *> QOpenGLContextGroup::shares() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContextGroup::shares` 用于计算、查询或取得与“shares”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QOpenGLContext *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QOpenGLContext *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该共享组中的所有`QOpenGLContext`对象。
 
 ## 6. 深入实践与常见坑
 

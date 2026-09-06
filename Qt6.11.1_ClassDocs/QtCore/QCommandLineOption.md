@@ -83,300 +83,183 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 22 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QCommandLineOption::Flagflags QCommandLineOption::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QCommandLineOption::Flags`。
-- 属性名：`QCommandLineOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QCommandLineOption::HiddenFromHelp`：`0x1`;在用户可见的帮助输出中隐藏此选项。所有选项默认可见。为特定选项设置此标志使该选项处于内部状态，即不在帮助输出中列出。
+- `QCommandLineOption::ShortOptionStyle`：`0x2`;无论`QCommandLineParser::setSingleDashWordOptionMode`设置了什么，该选项始终被视为短选项。这使得即使解析器处于`QCommandLineParser::ParseAsLongOptions`模式，`-DDEFINE=VALUE`或`-I/include/path`等标志仍可被解释为短标志。
+- `QCommandLineOption::IgnoreOptionsAfter`：`0x4`;[自6.9起]此选项之后不会解析其他选项。对于需要向次级应用程序发送额外命令行参数的情况非常有用。如果为该选项提供了值，则会被忽略。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `[explicit] QCommandLineOption::QCommandLineOption(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个名为 `name` 的命令行选项对象。
+名称可以是短的也可以是长的。如果名字只有一个字符，则被视为短名字。选项名称不得为空，不得以破折号或斜杠开头，不得包含`=`，且不得重复。
 
 ### `[explicit] QCommandLineOption::QCommandLineOption(const QStringList &names)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `names`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个命令行选项对象，名称为 `names`。
+这种重载允许为期权设置多个名称，例如`o`和`output`。
+名称可以是短的或长的。列表中任何一个字符长度的名称都是短名字。选项名称不得为空，不能以破折号或斜杠开头，不能包含`=`，且不得重复。
 
 ### `QCommandLineOption::QCommandLineOption(const QString &name, const QString &description, const QString &valueName = QString(), const QString &defaultValue = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个包含给定参数的命令行选项对象。
+选项名称设置为`name`。名称可以是短或长。如果名字长度为一个字符，则视为短名称。选项名称不得为空，不能以破折号或斜杠开头，不能包含`=`，且不能重复。
+描述设置为`description`。通常在描述末尾加上“.”。
+此外，如果期权期望某值，则需要设置`valueName`。期权的默认值设为`defaultValue`。
+在 5.4 之前的 Qt 版本中，该构造器被`explicit`。在 Qt 5.4 及以后版本中，该构造函数不再存在，且可用于统一初始化：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `valueName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `defaultValue`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QCommandLineParser parser;
+ parser.addOption({"verbose", "Verbose mode. Prints out more information."});
+```
 
 ### `QCommandLineOption::QCommandLineOption(const QStringList &names, const QString &description, const QString &valueName = QString(), const QString &defaultValue = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个包含给定参数的命令行选项对象。
+这种重载允许为期权设置多个名称，例如`o`和`output`。
+选项名称设置为`names`。名称可以是短的或长的。列表中任何长度为一个字符的名字都是短名称。选项名称不得为空，不得以破折号或斜杠开头，不能包含`=`，且不得重复。
+描述设置为`description`。通常在描述末加上“.”。
+此外，如果期权期望某值，则需要设置`valueName`值。期权的默认值设为`defaultValue`。
+在 5.4 之前的 Qt 版本中，该构造器被`explicit`。在 Qt 5.4 及以后版本中，该构造器不再存在，且可用于统一初始化：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `names`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `valueName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `defaultValue`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QCommandLineParser parser;
+ parser.addOption({{"o", "output"}, "Write generated data into <file>.", "file"});
+```
 
 ### `QCommandLineOption::QCommandLineOption(const QCommandLineOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QCommandLineOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QCommandLineOption对象，该对象是QCommandLineOption对象`other`的复制品。
 
 ### `[noexcept] QCommandLineOption::~QCommandLineOption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁命令行选项对象。
 
 ### `QStringList QCommandLineOption::defaultValues() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineOption::defaultValues` 用于计算、查询或取得与“default、Values”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该选项设置的默认值。
 
 ### `QString QCommandLineOption::description() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineOption::description` 用于计算、查询或取得与“description”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该选项的描述设置。
 
 ### `QCommandLineOption::Flags QCommandLineOption::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineOption::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCommandLineOption::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCommandLineOption::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一组影响该命令行选项的标志。
 
 ### `QStringList QCommandLineOption::names() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineOption::names` 用于计算、查询或取得与“names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该选项设置的名称。
 
 ### `void QCommandLineOption::setDefaultValue(const QString &defaultValue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultValue`。调用它会改变 `QCommandLineOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `defaultValue`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该选项的默认值设置为`defaultValue`。
+如果应用程序用户未在命令行中指定该选项，则使用默认值。
+如果`defaultValue`空，则该选项没有默认值。
 
 ### `void QCommandLineOption::setDefaultValues(const QStringList &defaultValues)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultValues`。调用它会改变 `QCommandLineOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `defaultValues`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该选项默认值列表设置为`defaultValues`。
+如果应用程序用户未在命令行中指定该选项，则使用默认值。
 
 ### `void QCommandLineOption::setDescription(const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDescription`。调用它会改变 `QCommandLineOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该选项使用的描述设置为`description`。
+通常在描述末尾加上“.”。
+`QCommandLineParser::showHelp()`使用了该描述。
 
 ### `void QCommandLineOption::setFlags(QCommandLineOption::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QCommandLineOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QCommandLineOption::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将影响该命令行选项的标志设置为`flags`。
 
 ### `void QCommandLineOption::setValueName(const QString &valueName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValueName`。调用它会改变 `QCommandLineOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `valueName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文档的期望值命名为`valueName`。
+未分配值的选项具有类似布尔的行为：用户要么指定 –option，要么不指定。
+赋予值的选项需要为期望值设置名称，以在帮助输出中的选项文档中。名称为`o`和`output`，值名为`file`的选项将显示为`-o, --output <file>`。
+如果你预计该选项只出现一次，就打电话给`QCommandLineParser::value()`;如果你预计该选项会多次出现，`QCommandLineParser::values()`。
 
 ### `[noexcept] void QCommandLineOption::swap(QCommandLineOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineOption::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QCommandLineOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该选项替换为`other`。这个操作非常快，从未失败过。
 
 ### `QString QCommandLineOption::valueName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommandLineOption::valueName` 用于计算、查询或取得与“值访问、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回期望值的名称。
+如果是空的，期权不会取值。
 
 ### `[noexcept] QCommandLineOption &QCommandLineOption::operator=(QCommandLineOption &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QCommandLineOption &`。
-- 参数 `other`：类型为 `QCommandLineOption &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QCommandLineOption`实例。
 
 ### `QCommandLineOption &QCommandLineOption::operator=(const QCommandLineOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QCommandLineOption &`。
-- 参数 `other`：类型为 `const QCommandLineOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制`other`对象并将其分配给该`QCommandLineOption`对象。
 
 ### `enum Flag { HiddenFromHelp, ShortOptionStyle, IgnoreOptionsAfter }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QCommandLineOption::HiddenFromHelp`：`0x1`;在用户可见的帮助输出中隐藏此选项。所有选项默认可见。为特定选项设置此标志使该选项处于内部状态，即不在帮助输出中列出。
+- `QCommandLineOption::ShortOptionStyle`：`0x2`;无论`QCommandLineParser::setSingleDashWordOptionMode`设置了什么，该选项始终被视为短选项。这使得即使解析器处于`QCommandLineParser::ParseAsLongOptions`模式，`-DDEFINE=VALUE`或`-I/include/path`等标志仍可被解释为短标志。
+- `QCommandLineOption::IgnoreOptionsAfter`：`0x4`;[自6.9起]此选项之后不会解析其他选项。对于需要向次级应用程序发送额外命令行参数的情况非常有用。如果为该选项提供了值，则会被忽略。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QCommandLineOption` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QCommandLineOption::HiddenFromHelp`：`0x1`;在用户可见的帮助输出中隐藏此选项。所有选项默认可见。为特定选项设置此标志使该选项处于内部状态，即不在帮助输出中列出。
+- `QCommandLineOption::ShortOptionStyle`：`0x2`;无论`QCommandLineParser::setSingleDashWordOptionMode`设置了什么，该选项始终被视为短选项。这使得即使解析器处于`QCommandLineParser::ParseAsLongOptions`模式，`-DDEFINE=VALUE`或`-I/include/path`等标志仍可被解释为短标志。
+- `QCommandLineOption::IgnoreOptionsAfter`：`0x4`;[自6.9起]此选项之后不会解析其他选项。对于需要向次级应用程序发送额外命令行参数的情况非常有用。如果为该选项提供了值，则会被忽略。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

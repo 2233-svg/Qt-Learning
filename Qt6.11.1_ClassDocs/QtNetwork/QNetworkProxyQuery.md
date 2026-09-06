@@ -94,315 +94,160 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 23 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkProxyQuery::QueryType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 暴露的类型声明 `查询、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:QueryType`。
-- 属性名：`QNetworkProxyQuery`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述一个`QNetworkProxyQuery`查询的类型。
+- `QNetworkProxyQuery::TcpSocket`：`0`;一个普通的输出TCP套接字
+- `QNetworkProxyQuery::UdpSocket`：`1`;基于数据报的UDP套接字，可发送至多个目的地
+- `QNetworkProxyQuery::SctpSocket`：`2`;一个面向消息的外出SCTP套接字
+- `QNetworkProxyQuery::TcpServer`：`100`;一个监听来自网络的 TCP 服务器
+- `QNetworkProxyQuery::UrlRequest`：`101`;更复杂的请求，涉及加载一个URL。
+- `QNetworkProxyQuery::SctpServer`：`102`;一个SCTP服务器，监听来自网络的连接
 
 ### `QNetworkProxyQuery::QNetworkProxyQuery()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个默认的QNetworkProxyQuery对象。默认情况下，查询类型将为`QNetworkProxyQuery::TcpSocket`。
 
 ### `[explicit] QNetworkProxyQuery::QNetworkProxyQuery(const QUrl &requestUrl, QNetworkProxyQuery::QueryType queryType = UrlRequest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `requestUrl`：类型为 `const QUrl &`。没有默认值，调用时必须提供。传入 `const QUrl &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `queryType`：类型为 `QNetworkProxyQuery::QueryType`。默认值为 `UrlRequest`。传入 `QNetworkProxyQuery::QueryType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有 URL `requestUrl` 的 QNetworkProxyQuery，并将查询类型设置为 `queryType`。
 
 ### `[explicit] QNetworkProxyQuery::QNetworkProxyQuery(quint16 bindPort, const QString &protocolTag = QString(), QNetworkProxyQuery::QueryType queryType = TcpServer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `bindPort`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `protocolTag`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `queryType`：类型为 `QNetworkProxyQuery::QueryType`。默认值为 `TcpServer`。传入 `QNetworkProxyQuery::QueryType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造类型为 `queryType` 的 QNetworkProxyQuery，并将协议标签设置为`protocolTag`。该构造器适合`QNetworkProxyQuery::TcpSocket`查询，因为它将本地端口号设置为 `bindPort`。
+注意，`bindPort`类型为quint16，以表示请求的确切端口号。在此上下文中不允许使用-1（未知）的值。
 
 ### `QNetworkProxyQuery::QNetworkProxyQuery(const QString &hostname, int port, const QString &protocolTag = QString(), QNetworkProxyQuery::QueryType queryType = TcpSocket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `hostname`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `protocolTag`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `queryType`：类型为 `QNetworkProxyQuery::QueryType`。默认值为 `TcpSocket`。传入 `QNetworkProxyQuery::QueryType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造类型为`queryType`的QNetworkProxyQuery，并将协议标签设置为`protocolTag`。该构造器适合查询`QNetworkProxyQuery::TcpSocket`，因为它将对等主机名设置为`hostname`，对等端的端口号为`port`。
 
 ### `QNetworkProxyQuery::QNetworkProxyQuery(const QNetworkProxyQuery &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QNetworkProxyQuery &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QNetworkProxyQuery对象，该对象是`other`的副本。
 
 ### `[noexcept] QNetworkProxyQuery::~QNetworkProxyQuery()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了这个`QNetworkProxyQuery`物体。
 
 ### `int QNetworkProxyQuery::localPort() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxyQuery::localPort` 用于计算、查询或取得与“local、Port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回接收来自远程服务器的入站数据包的套接字端口号，如果端口未知则返回-1。
 
 ### `QString QNetworkProxyQuery::peerHostName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxyQuery::peerHostName` 用于计算、查询或取得与“peer、Host、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回请求的外接连接的主机名或IP地址，如果远程主机名未知，则返回空字符串。
+如果查询类型`QNetworkProxyQuery::UrlRequest`，该函数返回被请求URL的宿主组件。
 
 ### `int QNetworkProxyQuery::peerPort() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxyQuery::peerPort` 用于计算、查询或取得与“peer、Port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回发出请求的端口号，若端口号未知则返回-1。
+如果查询类型为`QNetworkProxyQuery::UrlRequest`，该函数返回被请求URL的端口号。一般来说，框架会从默认值填充端口号。
 
 ### `QString QNetworkProxyQuery::protocolTag() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxyQuery::protocolTag` 用于计算、查询或取得与“protocol、Tag”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QNetworkProxyQuery`对象的协议标签，若协议标签未知，则返回空 `QString`。
+对于类型为`QNetworkProxyQuery::UrlRequest`的查询，该函数返回URL方案组件的值。
 
 ### `QNetworkProxyQuery::QueryType QNetworkProxyQuery::queryType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的核心操作 `queryType`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxyQuery::QueryType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回查询类型。
 
 ### `void QNetworkProxyQuery::setLocalPort(int port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocalPort`。调用它会改变 `QNetworkProxyQuery` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置套接字希望本地使用的端口号，以便从远程服务器接收到`port`的进站数据包。本地端口最常用于`QNetworkProxyQuery::TcpServer`和`QNetworkProxyQuery::UdpSocket`查询类型。
+有效值为0到65535（0表示任意端口号可接受）或-1，表示本地端口号未知或不适用。
+在某些情况下，对于特殊协议，本地端口号也可以用于类型为`QNetworkProxyQuery::TcpSocket`的查询。当这种情况发生时，套接字表示它希望在连接远程主机时使用`port`端口号。
 
 ### `void QNetworkProxyQuery::setPeerHostName(const QString &hostname)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerHostName`。调用它会改变 `QNetworkProxyQuery` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hostname`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将请求的外接连接的主机名设置为`hostname`。空主机名可用来表示远程主机未知。
+在`QNetworkProxyQuery::UdpSocket`或`QNetworkProxyQuery::TcpServer`查询类型情况下，对等主机名称也可用于指示输入连接的预期源地址。
 
 ### `void QNetworkProxyQuery::setPeerPort(int port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerPort`。调用它会改变 `QNetworkProxyQuery` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将请求的输出连接端口号设置为`port`。有效值为1到65535，或表示远程端口号未知的-1。
+对于`QNetworkProxyQuery::UdpSocket`或`QNetworkProxyQuery::TcpServer`查询类型，对等端口号也可用于表示预期的输入连接端口号。
 
 ### `void QNetworkProxyQuery::setProtocolTag(const QString &protocolTag)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProtocolTag`。调用它会改变 `QNetworkProxyQuery` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `protocolTag`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QNetworkProxyQuery`对象的协议标签设置为`protocolTag`。
+协议标签是一个任意字符串，指示通过套接字通信的是哪个协议，如“http”、“xmpp”、“telnet”等。后端使用协议标签返回更针对该协议的请求：例如，HTTP连接可能使用缓存HTTP代理服务器，而其他连接则使用更强大的SOCKSv5代理服务器。
 
 ### `void QNetworkProxyQuery::setQueryType(QNetworkProxyQuery::QueryType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setQueryType`。调用它会改变 `QNetworkProxyQuery` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QNetworkProxyQuery::QueryType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象的查询类型设置为`type`。
 
 ### `void QNetworkProxyQuery::setUrl(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUrl`。调用它会改变 `QNetworkProxyQuery` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QNetworkProxyQuery`对象的URL组件设置为`url`。设置URL还会设置协议标签、远程主机名和端口号。这样做是为了方便实现决定所用代理服务器的代码。
 
 ### `[noexcept] void QNetworkProxyQuery::swap(QNetworkProxyQuery &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxyQuery::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QNetworkProxyQuery &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络代理查询实例与`other`交换。此操作非常快且从未失败。
 
 ### `QUrl QNetworkProxyQuery::url() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxyQuery::url` 用于计算、查询或取得与“url”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在查询类型为`QNetworkProxyQuery::UrlRequest`时返回该`QNetworkProxyQuery`对象的URL组件。
 
 ### `bool QNetworkProxyQuery::operator!=(const QNetworkProxyQuery &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkProxyQuery &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QNetworkProxyQuery`对象不包含与`other`相同的数据，返回`true`。
 
 ### `QNetworkProxyQuery &QNetworkProxyQuery::operator=(const QNetworkProxyQuery &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxyQuery &`。
-- 参数 `other`：类型为 `const QNetworkProxyQuery &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制`other`的内容。
 
 ### `bool QNetworkProxyQuery::operator==(const QNetworkProxyQuery &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyQuery` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkProxyQuery &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QNetworkProxyQuery`对象包含与`other`相同的数据，返回`true`。
 
 ## 6. 深入实践与常见坑
 

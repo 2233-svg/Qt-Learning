@@ -106,556 +106,284 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 41 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QSslCertificate::PatternSyntax`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PatternSyntax`。
-- 属性名：`QSslCertificate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于解释图案含义的语法。
+- `QSslCertificate::PatternSyntax::RegularExpression`：`0`;一种丰富的类Perl模式匹配语法。
+- `QSslCertificate::PatternSyntax::Wildcard`：`1`;这提供了一种简单的模式匹配语法，类似于shell（命令解释器）用于“文件globbing”的语法。参见`QRegularExpression::fromWildcard()`。
+- `QSslCertificate::PatternSyntax::FixedString`：`2`;该模式是一个固定字符串。这等同于在字符串上使用正则表达式模式，其中所有元字符都通过 escape() 逃脱。这是默认的。
 
 ### `enum QSslCertificate::SubjectInfo`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 暴露的类型声明 `Subject、Info`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SubjectInfo`。
-- 属性名：`QSslCertificate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述了你可以将密钥传递给`QSslCertificate::issuerInfo()`或`QSslCertificate::subjectInfo()`，以获取关于证书发行方或主题的信息。
+- `QSslCertificate::Organization`：`0`;“O” 组织名称。
+- `QSslCertificate::CommonName`：`1`;“CN”通用名称;通常用于存储主机名称。
+- `QSslCertificate::LocalityName`：`2`;“L”。地名。
+- `QSslCertificate::OrganizationalUnitName`：`3`;“OU”组织单位名称。
+- `QSslCertificate::CountryName`：`4`;“C”国家。
+- `QSslCertificate::StateOrProvinceName`：`5`;“ST”代表州或省。
+- `QSslCertificate::DistinguishedNameQualifier`：`6`;尊贵姓名资格
+- `QSslCertificate::SerialNumber`：`7`;证书的序列号
+- `QSslCertificate::EmailAddress`：`8`;与证书关联的电子邮件地址
 
 ### `[explicit] QSslCertificate::QSslCertificate(QIODevice *device, QSsl::EncodingFormat format = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过读取`device`编码数据并使用第一个找到的证书`format`构建QSslCertificate。之后你可以调用`isNull()`查看`device`是否包含证书，以及该证书是否成功加载。
 
 ### `[explicit] QSslCertificate::QSslCertificate(const QByteArray &data = QByteArray(), QSsl::EncodingFormat format = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过解析`format`编码的`data`并使用第一个可用的证书构建QSslCertificate。之后你可以调用`isNull()`查看该证书是否包含`data`证书，以及该证书是否成功加载。
 
 ### `QSslCertificate::QSslCertificate(const QSslCertificate &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSslCertificate &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+制造了一个与`other`一模一样的复制品。
 
 ### `[constexpr noexcept, since 6.8] QSslCertificate::QSslCertificate(QSslCertificate &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QSslCertificate &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-从`other`构建新的QSsl证书。
+注意：移除对象 `other` 处于部分成形状态，唯一有效的操作是销毁和赋予新值。
 
 ### `[noexcept] QSslCertificate::~QSslCertificate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉`QSslCertificate`。
 
 ### `void QSslCertificate::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除此证书的内容，使其为 null 证书。
 
 ### `QByteArray QSslCertificate::digest(QCryptographicHash::Algorithm algorithm = QCryptographicHash::Md5) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::digest` 用于计算、查询或取得与“digest”相关的操作。调用时要先确认当前状态和 `algorithm` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `algorithm`：类型为 `QCryptographicHash::Algorithm`。默认值为 `QCryptographicHash::Md5`。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该证书的密码摘要。默认情况下，会生成MD5摘要，但您也可以指定自定义`algorithm`。
 
 ### `QDateTime QSslCertificate::effectiveDate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::effectiveDate` 用于计算、查询或取得与“effective、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回证书生效的日期时间，若为空证书则返回空`QDateTime`。
 
 ### `QDateTime QSslCertificate::expiryDate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::expiryDate` 用于计算、查询或取得与“expiry、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回证书到期的日期时间，如果是空证书则返回空`QDateTime`。
 
 ### `QList<QSslCertificateExtension> QSslCertificate::extensions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::extensions` 用于计算、查询或取得与“extensions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QSslCertificateExtension>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslCertificateExtension>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含该证书X509扩展的列表。
 
 ### `[static] QList<QSslCertificate> QSslCertificate::fromData(const QByteArray &data, QSsl::EncodingFormat format = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromData`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslCertificate>`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索并解析所有编码在指定`format`中的`data`证书，并返回证书列表。
 
 ### `[static] QList<QSslCertificate> QSslCertificate::fromDevice(QIODevice *device, QSsl::EncodingFormat format = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromDevice`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslCertificate>`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索并解析所有编码在指定`format`中的`device`证书，并返回证书列表。
 
 ### `[static, since 6.10] QList<QSslCertificate> QSslCertificate::fromFile(const QString &filePath, QSsl::EncodingFormat format = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromFile`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslCertificate>`。
-- 参数 `filePath`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从文件`filePath`读取数据，解析指定`format`中编码的所有证书，返回`QSslCertificate`对象列表。
+如果`filePath`不是普通文件，该方法会返回一个空列表。
 
 ### `[static] QList<QSslCertificate> QSslCertificate::fromPath(const QString &path, QSsl::EncodingFormat format = QSsl::Pem, QSslCertificate::PatternSyntax syntax = PatternSyntax::FixedString)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromPath`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+搜索`path`中所有文件，查找以指定`format`编码的证书，并以列表返回。`path`必须是与一个或多个文件匹配的文件或模式，符合`syntax`的规定。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QList<QSslCertificate>`。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `syntax`：类型为 `QSslCertificate::PatternSyntax`。默认值为 `PatternSyntax::FixedString`。传入 `QSslCertificate::PatternSyntax` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ const auto certs = QSslCertificate::fromPath("C:/ssl/certificate.*.pem",
+                                              QSsl::Pem, QSslCertificate::Wildcard);
+ for (const QSslCertificate &cert : certs) {
+     qDebug() << cert.issuerInfo(QSslCertificate::Organization);
+ }
+```
 
 ### `Qt::HANDLE QSslCertificate::handle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::handle` 用于计算、查询或取得与“handle”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::HANDLE`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::HANDLE`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有本地证书句柄，返回指向该地址的指针，否则`nullptr`。
+你可以使用该句号，结合本地 API，访问关于证书的扩展信息。
+警告：该功能的使用很可能不可移植，且其返回值可能因平台而异，或在次要版本间有所变化。
 
 ### `[static] bool QSslCertificate::importPkcs12(QIODevice *device, QSslKey *key, QSslCertificate *certificate, QList<QSslCertificate> *caCertificates = nullptr, const QByteArray &passPhrase = QByteArray())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `importPkcs12`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `key`：类型为 `QSslKey *`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `certificate`：类型为 `QSslCertificate *`。没有默认值，调用时必须提供。传入 `QSslCertificate *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `caCertificates`：类型为 `QList<QSslCertificate> *`。默认值为 `nullptr`。传入 `QList<QSslCertificate> *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `passPhrase`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从指定的 `device` 导入 PKCS#12 (pfx) 文件。PKCS#12 文件是一个可以包含多个证书和密钥的捆绑包。此方法从捆绑包中读取单个 `key`、其 `certificate` 及任何相关的 `caCertificates`。如果指定了 `passPhrase`，则将用于解密捆绑包。如果 PKCS#12 文件加载成功，则返回 `true`。
+注意：`device` 必须是打开状态且可读取。
 
 ### `bool QSslCertificate::isBlacklisted() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBlacklisted`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该证书被列入黑名单，返回`true`;否则返回`false`。
 
 ### `bool QSslCertificate::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果是空证书（即无内容的证书），返回`true`;否则返回`false`。
+默认情况下，`QSslCertificate`构造一个空证书。
 
 ### `bool QSslCertificate::isSelfSigned() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSelfSigned`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该证书是自签名，返回`true`;否则返回`false`。
+证书被视为自签名，其发行方和主题是相同的。
 
 ### `QString QSslCertificate::issuerDisplayName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `issuerDisplayName`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述发行人的名称。如果有`QSslCertificate::CommonName`，返回，否则回退到第一个`QSslCertificate::Organization`或第一个`QSslCertificate::OrganizationalUnitName`。
 
 ### `QStringList QSslCertificate::issuerInfo(QSslCertificate::SubjectInfo subject) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `issuerInfo`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `subject`：类型为 `QSslCertificate::SubjectInfo`。没有默认值，调用时必须提供。传入 `QSslCertificate::SubjectInfo` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从证书中返回`subject`的发行者信息，或者如果证书中没有`subject`信息，则返回一个空列表。每种类型的条目可以有多个条目。
 
 ### `QStringList QSslCertificate::issuerInfo(const QByteArray &attribute) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `issuerInfo`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `attribute`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回发行者信息，返回证书中的`attribute`信息，或者如果证书中没有`attribute`信息，则返回一个空列表。一个属性可以有多个条目。
 
 ### `QList<QByteArray> QSslCertificate::issuerInfoAttributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `issuerInfoAttributes`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该证书的发行者信息中具有值的属性列表。与给定属性相关的信息可以通过`issuerInfo()`方法访问。请注意，该列表可能包含SSL后端未知的任何元素的OID。
 
 ### `QSslKey QSslCertificate::publicKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::publicKey` 用于计算、查询或取得与“public、Key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslKey`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslKey`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回证书主体的公钥。
 
 ### `QByteArray QSslCertificate::serialNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::serialNumber` 用于计算、查询或取得与“serial、Number”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回证书的序列号字符串，格式为十六进制格式。
 
 ### `QMultiMap<QSsl::AlternativeNameEntryType, QString> QSslCertificate::subjectAlternativeNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::subjectAlternativeNames` 用于计算、查询或取得与“subject、Alternative、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiMap<QSsl::AlternativeNameEntryType, QString>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiMap<QSsl::AlternativeNameEntryType, QString>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该证书的备用主题名称列表。备用名称通常包含对该证书有效的主机名（可选带万用符）。
+如果 `CommonName` 的主体信息无法定义有效的主机名，或者主体信息名称与对等端的主机名不匹配，这些名称会与连接节点的主机名进行测试。
 
 ### `QString QSslCertificate::subjectDisplayName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::subjectDisplayName` 用于计算、查询或取得与“subject、Display、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述主题的名称。如果有，返回`QSslCertificate::CommonName`，否则回退到第一个`QSslCertificate::Organization`或第一个`QSslCertificate::OrganizationalUnitName`。
 
 ### `QStringList QSslCertificate::subjectInfo(QSslCertificate::SubjectInfo subject) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::subjectInfo` 用于计算、查询或取得与“subject、Info”相关的操作。调用时要先确认当前状态和 `subject` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `subject`：类型为 `QSslCertificate::SubjectInfo`。没有默认值，调用时必须提供。传入 `QSslCertificate::SubjectInfo` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`subject`信息，或如果证书中没有`subject`信息，则返回空列表。每种类型可以有多个条目。
 
 ### `QStringList QSslCertificate::subjectInfo(const QByteArray &attribute) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::subjectInfo` 用于计算、查询或取得与“subject、Info”相关的操作。调用时要先确认当前状态和 `attribute` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `attribute`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主题信息以供`attribute`，或如果证书中没有`attribute`信息，则返回空列表。一个属性可以有多个条目。
 
 ### `QList<QByteArray> QSslCertificate::subjectInfoAttributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::subjectInfoAttributes` 用于计算、查询或取得与“subject、Info、Attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该证书主体信息相关值的属性列表。与给定属性相关的信息可以通过`subjectInfo()`方法访问。请注意，该列表可能包含SSL后端未知的任何元素的OID。
 
 ### `[noexcept] void QSslCertificate::swap(QSslCertificate &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QSslCertificate &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该证书实例与`other`交换。此操作非常快速且从未失败。
 
 ### `QByteArray QSslCertificate::toDer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDer`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该证书转换为DER（二进制）编码表示。
 
 ### `QByteArray QSslCertificate::toPem() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPem`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该证书转换为PEM（Base64）编码表示。
 
 ### `QString QSslCertificate::toText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toText`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该证书转换为人类可读文本表示。
 
 ### `[static] QList<QSslError> QSslCertificate::verify(const QList<QSslCertificate> &certificateChain, const QString &hostName = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `verify`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslError>`。
-- 参数 `certificateChain`：类型为 `const QList<QSslCertificate> &`。没有默认值，调用时必须提供。传入 `const QList<QSslCertificate> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hostName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+验证证书链。待验证链在`certificateChain`参数中传递。列表中的第一个证书应是待验证链的叶子证书。如果指定了`hostName`，则还会检查证书是否适用于指定的主机名称。
+注意，根证书（CA）不应包含在待验证列表中，该列表将通过默认`QSslConfiguration`中指定的CA列表自动查找，此外，如果可能的话，还会在Unix和Windows上按需加载CA证书。
 
 ### `QByteArray QSslCertificate::version() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslCertificate::version` 用于计算、查询或取得与“version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回证书的版本字符串。
 
 ### `bool QSslCertificate::operator!=(const QSslCertificate &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSslCertificate &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该证书与`other`不同，返回`true`;否则返回`false`。
 
 ### `QSslCertificate &QSslCertificate::operator=(const QSslCertificate &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSslCertificate &`。
-- 参数 `other`：类型为 `const QSslCertificate &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`的内容复制到该证书中，使两份证书完全相同。
 
 ### `bool QSslCertificate::operator==(const QSslCertificate &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslCertificate` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSslCertificate &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该证书与`other`相同，返回`true`;否则返回`false`。
 
 ## 6. 深入实践与常见坑
 

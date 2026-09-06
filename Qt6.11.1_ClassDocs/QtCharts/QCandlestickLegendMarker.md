@@ -54,35 +54,21 @@
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 2 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[override virtual] QCandlestickSeries *QCandlestickLegendMarker::series()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCandlestickLegendMarker::series` 用于计算、查询或取得与“series”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCandlestickSeries *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCandlestickSeries *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLegendMarker::series()`。
+返回与该图例标记相关的系列指针。图例标记总是与系列相关。
 
 ### `[override virtual] QLegendMarker::LegendMarkerType QCandlestickLegendMarker::type()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCandlestickLegendMarker::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLegendMarker::LegendMarkerType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLegendMarker::LegendMarkerType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLegendMarker::type()`。
+返回相关系列的图例标记类型，比如饼切片或条形集合。
 
 ## 6. 深入实践与常见坑
 

@@ -74,171 +74,92 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 12 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QSpacerItem::QSpacerItem(int w, int h, QSizePolicy::Policy hPolicy = QSizePolicy::Minimum, QSizePolicy::Policy vPolicy = QSizePolicy::Minimum)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSpacerItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `w`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hPolicy`：类型为 `QSizePolicy::Policy`。默认值为 `QSizePolicy::Minimum`。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vPolicy`：类型为 `QSizePolicy::Policy`。默认值为 `QSizePolicy::Minimum`。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造具有首选宽度`w`、首选高度`h`、水平大小政策`hPolicy`和垂直尺寸策略`vPolicy`的间隔项。
+默认值提供一个间隙，如果没有其他东西需要空间，可以拉伸。
 
 ### `[virtual noexcept] QSpacerItem::~QSpacerItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSpacerItem` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `void QSpacerItem::changeSize(int w, int h, QSizePolicy::Policy hPolicy = QSizePolicy::Minimum, QSizePolicy::Policy vPolicy = QSizePolicy::Minimum)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::changeSize` 用于执行与“change、尺寸或数量”相关的操作。调用时要先确认当前状态和 `w`、`h`、`hPolicy`、`vPolicy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `w`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hPolicy`：类型为 `QSizePolicy::Policy`。默认值为 `QSizePolicy::Minimum`。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vPolicy`：类型为 `QSizePolicy::Policy`。默认值为 `QSizePolicy::Minimum`。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该间隔项更改为首选宽度`w`、首选高度`h`、水平尺寸政策`hPolicy`和垂直尺寸政策`vPolicy`。
+默认值提供一个间隙，如果没有其他东西需要空间，可以拉伸。
+注意，如果在间隔项添加到布局后调用changeSize()，则需要使布局失效，才能使间隔项的新大小生效。
 
 ### `[override virtual] Qt::Orientations QSpacerItem::expandingDirections() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::expandingDirections` 用于计算、查询或取得与“expanding、Directions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Orientations`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::Orientations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QLayoutItem::expandingDirections()` const.
+返回该布局项目是否能利用比`sizeHint()`更多的空间。值为`Qt::Vertical`或`Qt::Horizontal`表示它只想在一个维度上增长，而`Qt::Vertical` |`Qt::Horizontal`表示它想在两个维度上都增长。
 
 ### `[override virtual] QRect QSpacerItem::geometry() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::geometry` 用于计算、查询或取得与“几何区域”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::geometry()` const.
+返回该布局项目覆盖的矩形。
 
 ### `[override virtual] bool QSpacerItem::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::isEmpty()` const.
+`true`回归。
+在子类中实现，返回该项是否为空，即是否包含任何控件。
 
 ### `[override virtual] QSize QSpacerItem::maximumSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::maximumSize` 用于计算、查询或取得与“最大值、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QLayoutItem::maximumSize()` const.
+在子类中实现以返回该项的最大大小。
 
 ### `[override virtual] QSize QSpacerItem::minimumSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::minimumSize` 用于计算、查询或取得与“最小值、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QLayoutItem::minimumSize()` const.
+在子类中实现，以返回该项的最小大小。
 
 ### `[override virtual] void QSpacerItem::setGeometry(const QRect &r)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGeometry`。调用它会改变 `QSpacerItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `r`：类型为 `const QRect &`。没有默认值，调用时必须提供。传入 `const QRect &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::setGeometry`（const QRect & r）。
+在子类中实现，将该物品的几何体设置为`r`。
 
 ### `[override virtual] QSize QSpacerItem::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::sizeHint()` const.
+在子类中实现，以返回该物品的首选大小。
 
 ### `QSizePolicy QSpacerItem::sizePolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::sizePolicy` 用于计算、查询或取得与“尺寸或数量、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizePolicy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizePolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退货，按本商品的尺寸政策。
 
 ### `[override virtual] QSpacerItem *QSpacerItem::spacerItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSpacerItem::spacerItem` 用于计算、查询或取得与“spacer、项目访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSpacerItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSpacerItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::spacerItem()`。
+返回指向该对象的指针。
+如果该项是`QSpacerItem`，则返回为`QSpacerItem`;否则返回`nullptr`。该函数提供类型安全的铸造。
 
 ## 6. 深入实践与常见坑
 

@@ -94,398 +94,303 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 30 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiTexture::Flagflags QRhiTexture::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QRhiTexture::Flags`。
-- 属性名：`QRhiTexture`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用标志值来指定纹理的使用方式。如果不尊重`create()`之前设置的标志，并且试图以未事先声明的方式使用纹理，可能会导致不确定的行为或性能下降，具体取决于后端和底层图形API。
+- `QRhiTexture::RenderTarget`：`1 << 0`;纹理将与`QRhiTextureRenderTarget`结合使用。
+- `QRhiTexture::CubeMap`：`1 << 2`;纹理是立方体贴图。此类纹理有6个层，每个面分别为X、-X、Y、-Y、-Y、Z、-Z。Cubemap纹理不能多重采样。
+- `QRhiTexture::MipMapped`：`1 << 3`;纹理具有多重映射。相应的多重输出计数自动计算，也可以通过`QRhi::mipLevelsForSize()`检索。多重采样的纹理图像必须在通过`QRhiResourceUpdateBatch::generateMips()`上传或生成的纹理中提供。多采样纹理不能有多重映射。
+- `QRhiTexture::sRGB`：`1 << 4`;使用sRGB格式。
+- `QRhiTexture::UsedAsTransferSource`：`1 << 5`;纹理作为纹理复制或读回的源，即纹理作为`QRhiResourceUpdateBatch::copyTexture()`或`QRhiResourceUpdateBatch::readBackTexture()`的来源。
+- `QRhiTexture::UsedWithGenerateMips`：`1 << 6`;纹理将与`QRhiResourceUpdateBatch::generateMips()`一起使用。
+- `QRhiTexture::UsedWithLoadStore`：`1 << 7`;纹理将用于图像加载/存储操作，例如计算着色器中。
+- `QRhiTexture::UsedAsCompressedAtlas`：`1 << 8`;纹理采用压缩格式，子资源上传的尺寸可能与纹理大小不匹配。
+- `QRhiTexture::ExternalOES`：`1 << 9`;纹理应使用GL_TEXTURE_EXTERNAL_OES目标和OpenGL。该标志在其他图形API中被忽略。
+- `QRhiTexture::ThreeDimensional`：`1 << 10`;纹理是3D纹理。此类纹理应在`QRhi::newTexture()`重载时，除宽度和高度外，还取深度。3D纹理可以有mipmap，但不能是多重采样。在渲染或上传数据到3D纹理时，渲染目标的颜色附件或上传描述中指定的`layer`指的是范围内[0..depth-1]中的单个切片。底层图形API在运行时可能不支持3D纹理。支持通过`QRhi::ThreeDimensionalTextures`功能表示。
+- `QRhiTexture::TextureRectangleGL`：`1 << 11`;纹理应在OpenGL中使用GL_TEXTURE_RECTANGLE目标。该标志在其他图形API中被忽略。与ExternalOES类似，该标志在处理平台API时非常有用，因为平台API中原生的OpenGL纹理对象被封装成`QRhiTexture`，且平台只能为非二维纹理目标提供纹理。
+- `QRhiTexture::TextureArray`：`1 << 12`;纹理是一个纹理数组，即单个纹理对象，是同质的2D纹理数组。纹理数组是用`QRhi::newTextureArray()`创建的。底层图形API在运行时可能不支持纹理数组对象。支持由`QRhi::TextureArrays`功能表示。在渲染或上传数据到纹理数组时，渲染目标的颜色附件或上传描述中指定的`layer`会选择数组中的单个元素。
+- `QRhiTexture::OneDimensional`：`1 << 13`;纹理是一维纹理。这类纹理可以通过将高度和深度分别传递给`QRhi::newTexture()`来创建。请注意，根据底层图形API的不同，一维纹理可能存在限制。例如，渲染到它们或使用基于mipmap滤波的滤波可能不被支持。这由`QRhi::OneDimensionalTextures`和 `QRhi::OneDimensionalTextureMipmaps`特征标志表示。
+- `QRhiTexture::UsedAsShadingRateMap`：`1 << 14`
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QRhiTexture::Format`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 暴露的类型声明 `格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Format`。
-- 属性名：`QRhiTexture`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定纹理格式。另见`QRhi::isTextureFormatSupported()`，注意`QRhiTexture::sRGB`设置后`flags()`可以修改格式。
+- `QRhiTexture::UnknownFormat`：`0`;不是一个有效的格式。此格式无法传递给`setFormat()`。
+- `QRhiTexture::RGBA8`：`1`;四个分量，每个分量为无符号归一化8位。始终支持。（总共32位）
+- `QRhiTexture::BGRA8`：`2`;四个组件，每个组件为无符号归一化的8位。（总共32位）
+- `QRhiTexture::R8`：`3`;一个分量，无符号归一化的8位。（共8位）
+- `QRhiTexture::RG8`：`4`;两个分量，无符号归一化的8位。（共16位）
+- `QRhiTexture::R16`：`5`;一个分量，无符号归一化，16位。（共16位）
+- `QRhiTexture::RG16`：`6`;两个分量，无符号归一化的16位。（总共32位）
+- `QRhiTexture::RED_OR_ALPHA8`：`7`;要么与R8相同，要么是类似格式，但组件被混合为alpha，具体取决于`RedOrAlpha8IsRed`。（共8位）
+- `QRhiTexture::RGBA16F`：`8`;四个组件，16位浮点。（总共64位）
+- `QRhiTexture::RGBA32F`：`9`;四个组件，32位浮点数。（总共128位）
+- `QRhiTexture::R16F`：`10`;一个分量，16位浮点点数。（总共16位）
+- `QRhiTexture::R32F`：`11`;一个分量，32位浮点数。（总共32位）
+- `QRhiTexture::RGB10A2`：`12`;四个分量，无符号归一化的10位R、G和B，2位alpha。这是一个打包格式，因此适用本地元序。注意没有BGR10A2。这是因为RGB10A2通过D3D映射到DXGI_FORMAT_R10G10B10A2_UNORM，MTLPixelFormatRGB10A2Unorm通过Metal映射到VK_FORMAT_A2B10G10R10_UNORM_PACK32，在OpenGL（ES）上映射GL_RGB10_A2/GL_RGB/GL_UNSIGNED_INT_2_10_10_10_REV。这是唯一普遍支持的RGB30选项。对应的`QImage`格式是`QImage::Format_BGR30`和`QImage::Format_A2BGR30_Premultiplied`。（总共32位）
+- `QRhiTexture::D16`：`21`;16位深度（归一化无符号整数）
+- `QRhiTexture::D24`：`22`;24位深度（归一化无符号整数）
+- `QRhiTexture::D24S8`：`23`;24位深度（归一化无符号整数），8位模板
+- `QRhiTexture::D32F`：`24`;32位深度（32位浮點）
+- 4 `QRhiTexture::D32FS8 (since Qt 6.9)`：`25`;32位深度（32位浮点），8位模板，24位未使用（总共64位）
+- `QRhiTexture::BC1`：`26`
+- `QRhiTexture::BC2`：`27`
+- `QRhiTexture::BC3`：`28`
+- `QRhiTexture::BC4`：`29`
+- `QRhiTexture::BC5`：`30`
+- `QRhiTexture::BC6H`：`31`
+- `QRhiTexture::BC7`：`32`
+- `QRhiTexture::ETC2_RGB8`：`33`
+- `QRhiTexture::ETC2_RGB8A1`：`34`
+- `QRhiTexture::ETC2_RGBA8`：`35`
+- `QRhiTexture::ASTC_4x4`：`36`
+- `QRhiTexture::ASTC_5x4`：`37`
+- `QRhiTexture::ASTC_5x5`：`38`
+- `QRhiTexture::ASTC_6x5`：`39`
+- `QRhiTexture::ASTC_6x6`：`40`
+- `QRhiTexture::ASTC_8x5`：`41`
+- `QRhiTexture::ASTC_8x6`：`42`
+- `QRhiTexture::ASTC_8x8`：`43`
+- `QRhiTexture::ASTC_10x5`：`44`
+- `QRhiTexture::ASTC_10x6`：`45`
+- `QRhiTexture::ASTC_10x8`：`46`
+- `QRhiTexture::ASTC_10x10`：`47`
+- `QRhiTexture::ASTC_12x10`：`48`
+- `QRhiTexture::ASTC_12x12`：`49`
+- `QRhiTexture::R8UI (since Qt 6.9)`：`17`;一个分量，无符号的8位。（共8位）
+- `QRhiTexture::R32UI (since Qt 6.9)`：`18`;一个分量，无符号的32位。（总共32位）
+- `QRhiTexture::RG32UI (since Qt 6.9)`：`19`;两个组件，无符号的32位。（共64位）
+- `QRhiTexture::RGBA32UI (since Qt 6.9)`：`20`;四个组件，无符号32位。（总共128位）
+- `QRhiTexture::R8SI (since Qt 6.10)`：`13`;一个分量，带符号的8位。（总共8位）
+- `QRhiTexture::R32SI (since Qt 6.10)`：`14`;一个分量，带符号的32位。（总共32位）
+- `QRhiTexture::RG32SI (since Qt 6.10)`：`15`;两个分量，带符号32位。（总共64位）
+- `QRhiTexture::RGBA32SI (since Qt 6.10)`：`16`;四个分量，带符号32位。（总共128位）
 
 ### `int QRhiTexture::arrayRangeLength() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::arrayRangeLength` 用于计算、查询或取得与“array、Range、Length”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用`setArrayRange()`时返回暴露的数组范围大小。
 
 ### `int QRhiTexture::arrayRangeStart() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::arrayRangeStart` 用于计算、查询或取得与“array、Range、启动”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用`setArrayRange()`时返回第一个数组层。
 
 ### `int QRhiTexture::arraySize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::arraySize` 用于计算、查询或取得与“array、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回纹理数组大小。
 
 ### `[pure virtual] bool QRhiTexture::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建对应的本地图形资源。如果由于之前的 create() 存在资源且没有相应的`destroy()`，则 `destroy()` 会先隐式调用。
+成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终安全。
 
 ### `[virtual] bool QRhiTexture::createFrom(QRhiTexture::NativeTexture src)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::createFrom` 用于计算、查询或取得与“创建、转换进入”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `src`：类型为 `QRhiTexture::NativeTexture`。没有默认值，调用时必须提供。传入 `QRhiTexture::NativeTexture` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类似于`create()`，但不会创建新的原生纹理。取而代之的是使用`src`指定的原生纹理资源。
+这允许从外部图形引擎导入现有的原生纹理对象（该材质必须属于同一设备或共享上下文，具体取决于图形 API）。
+如果指定的本地贴图对象已成功封装为非拥有`QRhiTexture`，则返回为真。
+注意：`format()`、`pixelSize()`、`sampleCount()`和`flags()`仍需正确设置。将错误的尺寸和其他值传递给`QRhi::newTexture()`，然后再用createFrom()，期望仅凭本地纹理对象推断这些值，是错误的，会导致问题。
+注意：`QRhiTexture`不拥有纹理对象的所有权。`destroy()`不会释放该对象或任何关联内存。
+与此操作相反，即将`QRhiTexture`创建的原生纹理对象暴露给外部引擎，可以通过`nativeTexture()`实现。
+注意：在导入3D纹理、纹理数组对象，或OpenGL ES中的外部纹理时，特别重要的是通过`setFlags()`设置对应的标志（`ThreeDimensional`、`TextureArray`、`ExternalOES`），然后再调用该函数。
 
 ### `int QRhiTexture::depth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::depth` 用于计算、查询或取得与“depth”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回3D纹理的深度。
 
 ### `QRhiTexture::Flags QRhiTexture::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTexture::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回纹理标志。
 
 ### `QRhiTexture::Format QRhiTexture::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture::Format`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回纹理格式。
 
 ### `[virtual] QRhiTexture::NativeTexture QRhiTexture::nativeTexture()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::nativeTexture` 用于计算、查询或取得与“native、Texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTexture::NativeTexture`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture::NativeTexture`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该纹理的底层原生资源。如果后端不支持暴露底层原生资源，返回值将为空。
 
 ### `QSize QRhiTexture::pixelSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::pixelSize` 用于计算、查询或取得与“pixel、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回像素大小。
 
 ### `[since 6.8] QRhiTexture::ViewFormat QRhiTexture::readViewFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 的核心操作 `readViewFormat`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture::ViewFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回采样纹理时使用的视图格式。未调用时，视角格式被假定为与`format()`相同。
 
 ### `[override virtual] QRhiResource::Type QRhiTexture::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `int QRhiTexture::sampleCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTexture::sampleCount` 用于计算、查询或取得与“sample、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回采样计数。1表示没有多采样抗锯齿。
 
 ### `void QRhiTexture::setArrayRange(int startIndex, int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setArrayRange`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `startIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通常所有数组层都被暴露，着色器通过采样 `sampler2DArray` 时传递给 `texture()` GLSL 函数的第三个坐标选择该层。当`QRhi::TextureArrayRange`被报告为支持时，在请求`create()`或`createFrom()`只选择指定范围前调用 setArrayRange()，`count`从`startIndex`开始的元素。着色器逻辑可以基于此进行编写。
 
 ### `void QRhiTexture::setArraySize(int arraySize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setArraySize`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `arraySize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定格质感的`arraySize`。
 
 ### `void QRhiTexture::setDepth(int depth)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepth`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `depth`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置3D纹理的`depth`。
 
 ### `void QRhiTexture::setFlags(QRhiTexture::Flags f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiTexture::Flags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把纹理标记设置为`f`。
 
 ### `void QRhiTexture::setFormat(QRhiTexture::Format fmt)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fmt`：类型为 `QRhiTexture::Format`。没有默认值，调用时必须提供。传入 `QRhiTexture::Format` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将请求的纹理格式设置为`fmt`。
+注意：值集仅在下一次调用`create()`时考虑，即底层图形资源被（重新）创建时。否则设置新值是徒劳的，必须避免，因为可能导致状态不一致。
 
 ### `[virtual] void QRhiTexture::setNativeLayout(int layout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNativeLayout`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `layout`：类型为 `int`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于某些图形API，如Vulkan，在图像布局中需要特别注意直接使用图形API的自定义渲染代码。此功能允许在本地渲染命令后传达`QRhiTexture`背后的图像预期`layout`。
+例如，考虑直接用Vulkan渲染到`QRhiTexture`的VkImage，代码块被`QRhiCommandBuffer::beginExternal()`和`QRhiCommandBuffer::endExternal()`包围，然后在基于`QRhi`的渲染通道中使用该图像进行纹理采样。为避免图像布局可能出现错误的过渡，该函数可用于指示在该代码块中记录的命令完成后图像布局。
+调用该函数只有在`QRhiCommandBuffer::endExternal()`后且后续`QRhiCommandBuffer::beginPass()`之前才有意义。
+该函数对底层图形API不暴露图像布局概念的`QRhi`后端无效。
+注意：在Vulkan中，`layout`是`VkImageLayout`。而在Direct 3D 12中，`layout`是由`D3D12_RESOURCE_STATES`比特组成的值。
 
 ### `void QRhiTexture::setPixelSize(const QSize &sz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPixelSize`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sz`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将纹理大小（以像素为单位）设置为`sz`。
+注意：值集仅在下一次调用`create()`时考虑，即底层图形资源被重新创建时。否则设置新值是徒劳的，必须避免，因为可能导致状态不一致。其他设置器同样如此。
 
 ### `[since 6.8] void QRhiTexture::setReadViewFormat(const QRhiTexture::ViewFormat &fmt)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadViewFormat`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fmt`：类型为 `const QRhiTexture::ViewFormat &`。没有默认值，调用时必须提供。传入 `const QRhiTexture::ViewFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将着色器资源视图格式（或用于采样纹理的视图格式）设置为`fmt`。默认情况下，纹理本身使用相同的格式（以及sRGB特性），在大多数情况下无需调用该函数。
+只有当 `QRhi::TextureViewFormat` 功能被报告为支持时，才会考虑该设置。
+注意：此功能旨在实现非sRGB和sRGB之间的“投射”，以便着色器读取执行或不执行隐式sRGB转换。其他类型的投射可能有效，也可能无效。
 
 ### `void QRhiTexture::setSampleCount(int s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleCount`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `s`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将样本计数设置为`s`。
 
 ### `[since 6.8] void QRhiTexture::setWriteViewFormat(const QRhiTexture::ViewFormat &fmt)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWriteViewFormat`。调用它会改变 `QRhiTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fmt`：类型为 `const QRhiTexture::ViewFormat &`。没有默认值，调用时必须提供。传入 `const QRhiTexture::ViewFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将渲染目标视图格式设置为`fmt`。默认情况下，与纹理本身使用相同的格式（以及sRGB特性），大多数情况下无需调用该函数。
+提供写视图格式的一个常见应用场景是处理外部提供的纹理，这些贴图在我们控制之外使用带有3D API的sRGB格式，如Vulkan或Direct 3D，但渲染引擎已准备好在着色流水线末端处理线性化和sRGB转换。在这种情况下，渲染成此类纹理时需要的是一个具有相同但非sRGB格式的渲染目标视图（例如VkImageView）。（例如，如果从 OpenXR 实现中得到一个VK_FORMAT_R8G8B8A8_SRGB纹理，渲染时可能需要使用 VK_FORMAT_R8G8B8A8_UNORM 视图，如果渲染引擎的流水线需要;在此示例中，调用该函数的 `ViewFormat` 格式为 `QRhiTexture::RGBA8`，`srgb` 设置为 `false`）。
+只有当`QRhi::TextureViewFormat`功能被报告为支持时，才会考虑该设置。
+注意：此功能旨在实现非sRGB和sRGB之间的“投射”，以便着色器写入不执行或执行隐式sRGB转换。其他类型的投射可能有效，也可能无效。
 
 ### `[since 6.8] QRhiTexture::ViewFormat QRhiTexture::writeViewFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 的核心操作 `writeViewFormat`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture::ViewFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回写入纹理时及与图像加载/存储时使用的视图格式。未调用时，视图格式被假定为与`format()`相同。
 
 ### `struct NativeTexture`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 的 `Native、Texture` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+包含关于纹理底层原生资源的信息。
 
 ### `(since 6.8) struct ViewFormat`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 的 `View、格式化` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定从纹理读取或写入的视图格式。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QRhi`。
 
 ### `enum Flag { RenderTarget, CubeMap, MipMapped, sRGB, UsedAsTransferSource, …, UsedAsShadingRateMap }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用标志值来指定纹理的使用方式。如果不尊重`create()`之前设置的标志，并且试图以未事先声明的方式使用纹理，可能会导致不确定的行为或性能下降，具体取决于后端和底层图形API。
+- `QRhiTexture::RenderTarget`：`1 << 0`;纹理将与`QRhiTextureRenderTarget`结合使用。
+- `QRhiTexture::CubeMap`：`1 << 2`;纹理是立方体贴图。此类纹理有6个层，每个面分别为X、-X、Y、-Y、-Y、Z、-Z。Cubemap纹理不能多重采样。
+- `QRhiTexture::MipMapped`：`1 << 3`;纹理具有多重映射。相应的多重输出计数自动计算，也可以通过`QRhi::mipLevelsForSize()`检索。多重采样的纹理图像必须在通过`QRhiResourceUpdateBatch::generateMips()`上传或生成的纹理中提供。多采样纹理不能有多重映射。
+- `QRhiTexture::sRGB`：`1 << 4`;使用sRGB格式。
+- `QRhiTexture::UsedAsTransferSource`：`1 << 5`;纹理作为纹理复制或读回的源，即纹理作为`QRhiResourceUpdateBatch::copyTexture()`或`QRhiResourceUpdateBatch::readBackTexture()`的来源。
+- `QRhiTexture::UsedWithGenerateMips`：`1 << 6`;纹理将与`QRhiResourceUpdateBatch::generateMips()`一起使用。
+- `QRhiTexture::UsedWithLoadStore`：`1 << 7`;纹理将用于图像加载/存储操作，例如计算着色器中。
+- `QRhiTexture::UsedAsCompressedAtlas`：`1 << 8`;纹理采用压缩格式，子资源上传的尺寸可能与纹理大小不匹配。
+- `QRhiTexture::ExternalOES`：`1 << 9`;纹理应使用GL_TEXTURE_EXTERNAL_OES目标和OpenGL。该标志在其他图形API中被忽略。
+- `QRhiTexture::ThreeDimensional`：`1 << 10`;纹理是3D纹理。此类纹理应在`QRhi::newTexture()`重载时，除宽度和高度外，还取深度。3D纹理可以有mipmap，但不能是多重采样。在渲染或上传数据到3D纹理时，渲染目标的颜色附件或上传描述中指定的`layer`指的是范围内[0..depth-1]中的单个切片。底层图形API在运行时可能不支持3D纹理。支持通过`QRhi::ThreeDimensionalTextures`功能表示。
+- `QRhiTexture::TextureRectangleGL`：`1 << 11`;纹理应在OpenGL中使用GL_TEXTURE_RECTANGLE目标。该标志在其他图形API中被忽略。与ExternalOES类似，该标志在处理平台API时非常有用，因为平台API中原生的OpenGL纹理对象被封装成`QRhiTexture`，且平台只能为非二维纹理目标提供纹理。
+- `QRhiTexture::TextureArray`：`1 << 12`;纹理是一个纹理数组，即单个纹理对象，是同质的2D纹理数组。纹理数组是用`QRhi::newTextureArray()`创建的。底层图形API在运行时可能不支持纹理数组对象。支持由`QRhi::TextureArrays`功能表示。在渲染或上传数据到纹理数组时，渲染目标的颜色附件或上传描述中指定的`layer`会选择数组中的单个元素。
+- `QRhiTexture::OneDimensional`：`1 << 13`;纹理是一维纹理。这类纹理可以通过将高度和深度分别传递给`QRhi::newTexture()`来创建。请注意，根据底层图形API的不同，一维纹理可能存在限制。例如，渲染到它们或使用基于mipmap滤波的滤波可能不被支持。这由`QRhi::OneDimensionalTextures`和 `QRhi::OneDimensionalTextureMipmaps`特征标志表示。
+- `QRhiTexture::UsedAsShadingRateMap`：`1 << 14`
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTexture` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用标志值来指定纹理的使用方式。如果不尊重`create()`之前设置的标志，并且试图以未事先声明的方式使用纹理，可能会导致不确定的行为或性能下降，具体取决于后端和底层图形API。
+- `QRhiTexture::RenderTarget`：`1 << 0`;纹理将与`QRhiTextureRenderTarget`结合使用。
+- `QRhiTexture::CubeMap`：`1 << 2`;纹理是立方体贴图。此类纹理有6个层，每个面分别为X、-X、Y、-Y、-Y、Z、-Z。Cubemap纹理不能多重采样。
+- `QRhiTexture::MipMapped`：`1 << 3`;纹理具有多重映射。相应的多重输出计数自动计算，也可以通过`QRhi::mipLevelsForSize()`检索。多重采样的纹理图像必须在通过`QRhiResourceUpdateBatch::generateMips()`上传或生成的纹理中提供。多采样纹理不能有多重映射。
+- `QRhiTexture::sRGB`：`1 << 4`;使用sRGB格式。
+- `QRhiTexture::UsedAsTransferSource`：`1 << 5`;纹理作为纹理复制或读回的源，即纹理作为`QRhiResourceUpdateBatch::copyTexture()`或`QRhiResourceUpdateBatch::readBackTexture()`的来源。
+- `QRhiTexture::UsedWithGenerateMips`：`1 << 6`;纹理将与`QRhiResourceUpdateBatch::generateMips()`一起使用。
+- `QRhiTexture::UsedWithLoadStore`：`1 << 7`;纹理将用于图像加载/存储操作，例如计算着色器中。
+- `QRhiTexture::UsedAsCompressedAtlas`：`1 << 8`;纹理采用压缩格式，子资源上传的尺寸可能与纹理大小不匹配。
+- `QRhiTexture::ExternalOES`：`1 << 9`;纹理应使用GL_TEXTURE_EXTERNAL_OES目标和OpenGL。该标志在其他图形API中被忽略。
+- `QRhiTexture::ThreeDimensional`：`1 << 10`;纹理是3D纹理。此类纹理应在`QRhi::newTexture()`重载时，除宽度和高度外，还取深度。3D纹理可以有mipmap，但不能是多重采样。在渲染或上传数据到3D纹理时，渲染目标的颜色附件或上传描述中指定的`layer`指的是范围内[0..depth-1]中的单个切片。底层图形API在运行时可能不支持3D纹理。支持通过`QRhi::ThreeDimensionalTextures`功能表示。
+- `QRhiTexture::TextureRectangleGL`：`1 << 11`;纹理应在OpenGL中使用GL_TEXTURE_RECTANGLE目标。该标志在其他图形API中被忽略。与ExternalOES类似，该标志在处理平台API时非常有用，因为平台API中原生的OpenGL纹理对象被封装成`QRhiTexture`，且平台只能为非二维纹理目标提供纹理。
+- `QRhiTexture::TextureArray`：`1 << 12`;纹理是一个纹理数组，即单个纹理对象，是同质的2D纹理数组。纹理数组是用`QRhi::newTextureArray()`创建的。底层图形API在运行时可能不支持纹理数组对象。支持由`QRhi::TextureArrays`功能表示。在渲染或上传数据到纹理数组时，渲染目标的颜色附件或上传描述中指定的`layer`会选择数组中的单个元素。
+- `QRhiTexture::OneDimensional`：`1 << 13`;纹理是一维纹理。这类纹理可以通过将高度和深度分别传递给`QRhi::newTexture()`来创建。请注意，根据底层图形API的不同，一维纹理可能存在限制。例如，渲染到它们或使用基于mipmap滤波的滤波可能不被支持。这由`QRhi::OneDimensionalTextures`和 `QRhi::OneDimensionalTextureMipmaps`特征标志表示。
+- `QRhiTexture::UsedAsShadingRateMap`：`1 << 14`
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

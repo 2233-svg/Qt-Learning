@@ -74,95 +74,60 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QAbstractListModel::QAbstractListModel(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractListModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个抽象列表模型，`parent`。
 
 ### `[virtual noexcept] QAbstractListModel::~QAbstractListModel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractListModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它破坏了抽象列表模型。
 
 ### `[override virtual] bool QAbstractListModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractListModel::dropMimeData` 用于计算、查询或取得与“drop、Mime、数据访问”相关的操作。调用时要先确认当前状态和 `data`、`action`、`row`、`column`、`parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `action`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplementation s： `QAbstractItemModel::dropMimeData`（const QMimeData *data， Qt：:D ropAction action， int row， int column， const QModelIndex &parent）.
+处理拖放操作提供的`data`，拖拽操作以给定`action`结束。
+如果数据和动作由模型处理，返回`true`;否则返回`false`。
+指定的`row`、`column`和`parent`表示操作结束时该项在模型中的位置。模型有责任在正确的位置完成动作。
+例如，`QTreeView`中物品的投放动作可能导致新物品入，要么作为`row`、`column`和`parent`指定的物品的子项，要么作为该物品的兄弟姐妹。
+当`row`和`column`为-1时，意味着丢弃的数据应被视为直接丢弃`parent`。通常这意味着将数据作为`parent`的子项附加。如果`row`和`column`大于或等于零，则表示丢弃发生在指定`parent`中指定的`row`和`column`之前。
+调用`mimeTypes()`成员以获取可接受的MIME类型列表。该默认实现假设`mimeTypes()`的默认实现，返回单一默认MIME类型。如果你在自定义模型中重新实现`mimeTypes()`以返回多个MIME类型，必须重新实现该函数以利用它们。
 
 ### `[override virtual] Qt::ItemFlags QAbstractListModel::flags(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractListModel::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `Qt::ItemFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ItemFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::flags`（const QModelIndex & index） const.
+返回给定`index`的物品标志。
+基类实现返回一组标志组合，使该项（`ItemIsEnabled`）启用并允许选择（`ItemIsSelectable`）。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QModelIndex QAbstractListModel::index(int row, int column = 0, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractListModel::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `row`、`column`、`parent` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。默认值为 `0`。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::index`（整数行，整数列，cont QModelIndex 和 parent） const.
+返回`row`和`column`中的数据索引，并与`parent`。
+返回由给定`row`、`column`和`parent`索引指定的模型中项目的索引。
+在子类中重新实现该函数时，调用 `createIndex()` 生成模型索引，其他组件可以用来引用模型中的项目。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] QModelIndex QAbstractListModel::sibling(int row, int column, const QModelIndex &idx) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractListModel::sibling` 用于计算、查询或取得与“sibling”相关的操作。调用时要先确认当前状态和 `row`、`column`、`idx` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `idx`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QAbstractItemModel::sibling`（整数行，整数列，const QModelIndex & index）const.
+`row`时退回兄弟姐妹，`index` `column`物品，或者如果该地点没有兄弟姐妹，则`QModelIndex`无效。
+sibling() 只是一个方便函数，它会找到该项的父项，并用它检索指定`row`和`column`中子项的索引。
+该方法可选择性地覆盖以实现特定优化。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ## 6. 深入实践与常见坑
 

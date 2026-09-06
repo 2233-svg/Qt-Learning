@@ -131,871 +131,456 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 66 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QXmlStreamReader::Error`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 暴露的类型声明 `错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Error`。
-- 属性名：`QXmlStreamReader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举指定了不同的错误情况。
+- `QXmlStreamReader::NoError`：`0`;未发生错误。
+- `QXmlStreamReader::CustomError`：`2`;`raiseError()` 中出现了自定义错误
+- `QXmlStreamReader::NotWellFormedError`：`3`;解析器内部因读取XML未规范而报错。
+- `QXmlStreamReader::PrematureEndOfDocumentError`：`4`;输入流在解析完好的XML文档之前就已结束。如果流中出现更多XML时，可以通过调用`addData()`或等待它在`device()`上到达，从而恢复该错误。
+- `QXmlStreamReader::UnexpectedElementError`：`1`;解析器遇到的元素或标记与预期不同。
 
 ### `enum QXmlStreamReader::ReadElementTextBehaviour`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 暴露的类型声明 `读取、Element、文本、Behaviour`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ReadElementTextBehaviour`。
-- 属性名：`QXmlStreamReader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举规定了`readElementText()`的不同行为。
+- `QXmlStreamReader::ErrorOnUnexpectedElement`：`0`;遇到子元素时，举起`UnexpectedElementError`并返回已读内容。
+- `QXmlStreamReader::IncludeChildElements`：`1`;递归地包含子元素中的文本。
+- `QXmlStreamReader::SkipChildElements`：`2`;跳过子元素。
 
 ### `enum QXmlStreamReader::TokenType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 暴露的类型声明 `Token、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TokenType`。
-- 属性名：`QXmlStreamReader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举指定了读者刚刚读取的代币类型。
+- `QXmlStreamReader::NoToken`：`0`;读者尚未阅读任何内容。
+- `QXmlStreamReader::Invalid`：`1`;发生了错误，`error()`和`errorString()`中报告。
+- `QXmlStreamReader::StartDocument`：`2`;读取器以`documentVersion()`报告XML版本号，`documentEncoding()`中报告XML文档中指定的编码。如果文档声明为独立，`isStandaloneDocument()`返回`true`;否则返回`false`。
+- `QXmlStreamReader::EndDocument`：`3`;读者报告文档结尾。
+- `QXmlStreamReader::StartElement`：`4`;读者报告元素的起始，`namespaceUri()`和`name()`。空元素也以StartElement报告，紧接EndElement。方便函数`readElementText()`可调用，将所有内容串接至对应的EndElement。属性报告于`attributes()`，命名空间声明报告于`namespaceDeclarations()`。
+- `QXmlStreamReader::EndElement`：`5`;读者报告元素结尾时，`namespaceUri()` 和 `name()`。
+- `QXmlStreamReader::Characters`：`6`;读取器报告字符`text()`。如果字符全部为空白，`isWhitespace()`返回`true`。如果字符源自CDATA部分，`isCDATA()`返回`true`。
+- `QXmlStreamReader::Comment`：`7`;读者报告一条评论，`text()`。
+- `QXmlStreamReader::DTD`：`8`;读者以`text()`报告DTD，以`notationDeclarations()`表示，实体声明以以在`entityDeclarations()`。DTD声明的详细信息在`dtdName()`、`dtdPublicId()`和`dtdSystemId()`中报告。
+- `QXmlStreamReader::EntityReference`：`9`;读者报告无法解析的实体引用。引用名称以`name()`报告，替换文本以`text()`表示。
+- `QXmlStreamReader::ProcessingInstruction`：`10`;读卡器报告处理指令，表示`processingInstructionTarget()`和 `processingInstructionData()`。
 
 ### `namespaceProcessing : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的配置属性。初始化或状态切换时通过 `setNamespaceProcessing(...)` 设置，之后用 `namespaceProcessing()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+此属性保存流读取器的命名空间处理标志。
+此属性控制流读取器是否处理命名空间。如果启用，读取器将处理命名空间，否则不会。
+默认情况下，命名空间处理是启用的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`namespaceProcessing`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `namespaceProcessing()` 读取当前值；它不会修改应用状态。
 
 ### `QXmlStreamReader::QXmlStreamReader()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个流读器。
 
 ### `[explicit] QXmlStreamReader::QXmlStreamReader(QAnyStringView data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的流读取器，从`data`读取。
+注意：在 6.5 之前的 Qt 版本中，该构造器在 `QString` 和 `const char*` 时被超载。
 
 ### `[explicit] QXmlStreamReader::QXmlStreamReader(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的流读取器，从`device`读取数据。
 
 ### `[explicit] QXmlStreamReader::QXmlStreamReader(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的流读取器，从`data`读取数据。
 
 ### `[noexcept] QXmlStreamReader::~QXmlStreamReader()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁读者。
 
 ### `void QXmlStreamReader::addData(QAnyStringView data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QXmlStreamReader` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这会增加阅读器阅读的更多内容`data`。如果阅读器有`device()`，这个功能就没有任何作用。
+注意：在 6.5 之前的 Qt 版本中，该功能对 `QString` 和 `const char*` 重载。
 
 ### `void QXmlStreamReader::addData(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QXmlStreamReader` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为读者增加了阅读`data`。如果读者有`device()`，这个功能就没有任何作用。
 
 ### `void QXmlStreamReader::addExtraNamespaceDeclaration(const QXmlStreamNamespaceDeclaration &extraNamespaceDeclaration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QXmlStreamReader` 添加依赖、数据或子对象的 API `addExtraNamespaceDeclaration`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `extraNamespaceDeclaration`：类型为 `const QXmlStreamNamespaceDeclaration &`。没有默认值，调用时必须提供。传入 `const QXmlStreamNamespaceDeclaration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加一个`extraNamespaceDeclaration`。声明对当前元素的子节点有效，或者如果函数在读取任何元素之前被调用，则适用于整个 XML 文档。
 
 ### `void QXmlStreamReader::addExtraNamespaceDeclarations(const QXmlStreamNamespaceDeclarations &extraNamespaceDeclarations)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QXmlStreamReader` 添加依赖、数据或子对象的 API `addExtraNamespaceDeclarations`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `extraNamespaceDeclarations`：类型为 `const QXmlStreamNamespaceDeclarations &`。没有默认值，调用时必须提供。传入 `const QXmlStreamNamespaceDeclarations &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加由`extraNamespaceDeclarations`指定的声明向量。
 
 ### `bool QXmlStreamReader::atEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::atEnd` 用于计算、查询或取得与“按位置访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果读取者已阅读到XML文档结束，或发生`error()`且阅读中止，返回`true`。否则返回`false`。
+当atEnd()和`hasError()`返回true，`error()`返回`PrematureEndOfDocumentError`时，表示XML迄今为止是良好构造的，但尚未解析完整的XML文档。如果从`QByteArray`读取XML时，可以用`addData()`添加下一块XML;如果从`QIODevice`读取，则等待更多数据到达。无论哪种方式，一旦有更多数据可用，atEnd()都会返回false。
 
 ### `QXmlStreamAttributes QXmlStreamReader::attributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::attributes` 用于计算、查询或取得与“attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamAttributes`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamAttributes`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`StartElement`的属性。
 
 ### `qint64 QXmlStreamReader::characterOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::characterOffset` 用于计算、查询或取得与“character、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前字符偏移量，起始于0。
 
 ### `void QXmlStreamReader::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除读卡器中的所有`device()`或数据，并将其内部状态重置为初始状态。
 
 ### `qint64 QXmlStreamReader::columnNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::columnNumber` 用于计算、查询或取得与“列、Number”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前列号，起始于0。
 
 ### `QIODevice *QXmlStreamReader::device() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::device` 用于计算、查询或取得与“device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`QXmlStreamReader`关联的当前设备，若未分配设备则返回`nullptr`。
 
 ### `QStringView QXmlStreamReader::documentEncoding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::documentEncoding` 用于计算、查询或取得与“document、Encoding”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `StartDocument`，该函数返回XML声明中指定的编码字符串。否则返回空字符串。
 
 ### `QStringView QXmlStreamReader::documentVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::documentVersion` 用于计算、查询或取得与“document、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `StartDocument`，该函数返回XML声明中指定的版本字符串。否则返回空字符串。
 
 ### `QStringView QXmlStreamReader::dtdName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::dtdName` 用于计算、查询或取得与“dtd、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `DTD`，该函数返回DTD的名称。否则返回空字符串。
 
 ### `QStringView QXmlStreamReader::dtdPublicId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::dtdPublicId` 用于计算、查询或取得与“dtd、Public、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `DTD`，该函数返回DTD的公共标识符。否则返回空字符串。
 
 ### `QStringView QXmlStreamReader::dtdSystemId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::dtdSystemId` 用于计算、查询或取得与“dtd、System、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `DTD`，该函数返回DTD的系统标识符。否则返回空字符串。
 
 ### `QXmlStreamEntityDeclarations QXmlStreamReader::entityDeclarations() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::entityDeclarations` 用于计算、查询或取得与“entity、Declarations”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamEntityDeclarations`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamEntityDeclarations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `DTD`，该函数返回DTD未解析的（外部）实体声明。否则返回空向量。
+`QXmlStreamEntityDeclarations`类被定义为`QXmlStreamEntityDeclaration`的`QList`。
 
 ### `int QXmlStreamReader::entityExpansionLimit() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::entityExpansionLimit` 用于计算、查询或取得与“entity、Expansion、Limit”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回单个实体允许扩展的最大字符数。如果单个实体扩展超过给定限制，则该文档不被视为良好格式。
 
 ### `QXmlStreamEntityResolver *QXmlStreamReader::entityResolver() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::entityResolver` 用于计算、查询或取得与“entity、Resolver”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamEntityResolver *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamEntityResolver *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回实体解析器，若无实体解析器则返回`nullptr`。
 
 ### `QXmlStreamReader::Error QXmlStreamReader::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamReader::Error`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamReader::Error`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前错误的类型，若无错误则返回`NoError`。
 
 ### `QString QXmlStreamReader::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`raiseError()`设置的错误信息。
 
 ### `bool QXmlStreamReader::hasError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果发生错误，返回`true`，否则`false`。
 
 ### `[since 6.6] bool QXmlStreamReader::hasStandaloneDeclaration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasStandaloneDeclaration`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该文档有明确的独立声明（可以是“是”或“否”），返回`true`;否则返回`false`;
+如果没有解析任何 XML 声明，该函数返回 `false`。
 
 ### `bool QXmlStreamReader::isCDATA() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCDATA`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果读取器报告的字符源自 CDATA 部分，返回 `true`;否则返回 `false`。
 
 ### `bool QXmlStreamReader::isCharacters() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCharacters`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `Characters`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isComment() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isComment`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `Comment`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isDTD() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDTD`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `DTD`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isEndDocument() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEndDocument`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `EndDocument`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isEndElement() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEndElement`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `EndElement`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isEntityReference() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEntityReference`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `EntityReference`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isProcessingInstruction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isProcessingInstruction`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `ProcessingInstruction`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isStandaloneDocument() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isStandaloneDocument`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该文档在XML声明中被声明为独立文档，返回`true`;否则返回`false`。
+如果没有解析任何 XML 声明，该函数返回 `false`。
 
 ### `bool QXmlStreamReader::isStartDocument() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isStartDocument`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `StartDocument`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isStartElement() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isStartElement`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `tokenType()` 等于 `StartElement`，则返回 `true`；否则返回 `false`。
 
 ### `bool QXmlStreamReader::isWhitespace() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isWhitespace`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果读取者报告的字符仅包含空白，返回`true`;否则返回`false`。
 
 ### `qint64 QXmlStreamReader::lineNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::lineNumber` 用于计算、查询或取得与“行、Number”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的行号，起始于1。
 
 ### `QStringView QXmlStreamReader::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`StartElement`、`EndElement`或`EntityReference`的本地名称。
 
 ### `QXmlStreamNamespaceDeclarations QXmlStreamReader::namespaceDeclarations() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::namespaceDeclarations` 用于计算、查询或取得与“namespace、Declarations”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamNamespaceDeclarations`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamNamespaceDeclarations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()`是`StartElement`，该函数返回元素的命名空间声明。否则返回空向量。
+`QXmlStreamNamespaceDeclarations`类被定义为`QXmlStreamNamespaceDeclaration`的`QList`。
 
 ### `QStringView QXmlStreamReader::namespaceUri() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::namespaceUri` 用于计算、查询或取得与“namespace、Uri”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`StartElement`或`EndElement`的命名 spaceUri。
 
 ### `QXmlStreamNotationDeclarations QXmlStreamReader::notationDeclarations() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::notationDeclarations` 用于计算、查询或取得与“notation、Declarations”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamNotationDeclarations`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamNotationDeclarations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`tokenType()` `DTD`，该函数返回DTD的符号声明。否则返回空向量。
+`QXmlStreamNotationDeclarations`类被定义为`QXmlStreamNotationDeclaration`的`QList`。
 
 ### `QStringView QXmlStreamReader::prefix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::prefix` 用于计算、查询或取得与“prefix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`StartElement`或`EndElement`的前缀。
 
 ### `QStringView QXmlStreamReader::processingInstructionData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::processingInstructionData` 用于计算、查询或取得与“processing、Instruction、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`ProcessingInstruction`的数据。
 
 ### `QStringView QXmlStreamReader::processingInstructionTarget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::processingInstructionTarget` 用于计算、查询或取得与“processing、Instruction、目标”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`ProcessingInstruction`的目标。
 
 ### `QStringView QXmlStreamReader::qualifiedName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::qualifiedName` 用于计算、查询或取得与“qualified、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`StartElement`或`EndElement`的限定名称;
+限定名称是XML数据中元素的原始名称。它由命名空间前缀、冒号和元素的本地名称组成。由于命名空间前缀不是唯一的（同一个前缀可以指向不同的命名空间，不同的前缀也可能指向同一个命名空间），你不应该使用qualifiedName()，而是用解析后的`namespaceUri()`和属性的本地`name()`。
 
 ### `void QXmlStreamReader::raiseError(const QString &message = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::raiseError` 用于执行与“raise、错误”相关的操作。调用时要先确认当前状态和 `message` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `message`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会带可选的错误`message`提出自定义错误。
 
 ### `QString QXmlStreamReader::readElementText(QXmlStreamReader::ReadElementTextBehaviour behaviour = ErrorOnUnexpectedElement)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的核心操作 `readElementText`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `behaviour`：类型为 `QXmlStreamReader::ReadElementTextBehaviour`。默认值为 `ErrorOnUnexpectedElement`。传入 `QXmlStreamReader::ReadElementTextBehaviour` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在读取`StartElement`时调用便利函数。读取至对应`EndElement`，返回中间所有文本。若无错误，调用该函数后的当前令牌（见`tokenType()`）为`EndElement`。
+当函数读取`Characters`或`EntityReference`个符号时，会串接`text()`，但跳过`ProcessingInstruction`和`Comment`。如果当前符号未`StartElement`，则返回一个空字符串。
+`behaviour`定义了在到达`EndElement`之前读取其他内容时会发生什么。该函数可以包含子元素的文本（例如对HTML有用）、忽略子元素，或者提出`UnexpectedElementError`返回已读内容（默认）。
 
 ### `QXmlStreamReader::TokenType QXmlStreamReader::readNext()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的核心操作 `readNext`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamReader::TokenType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取下一个令牌并返回其类型。
+除了一个例外，一旦 readNext() 报告了`error()`，XML 流就无法进一步读取。此时 `atEnd()` 返回 `true`，`hasError()` 返回 `true`，而该函数返回 `QXmlStreamReader::Invalid`。
+例外是当`error()`返回`PrematureEndOfDocumentError`时。当到达一个本应良好排列的XML块的结尾，但该块不代表完整的XML文档时，会报告该错误。在这种情况下，解析可以通过调用`addData()`添加下一个XML块来恢复，当流从`QByteArray`读取时，或者在从`device()`读取流时等待更多数据到达。
 
 ### `bool QXmlStreamReader::readNextStartElement()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的核心操作 `readNextStartElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取直到当前元素内的下一个起始元素。当到达起始元素时返回`true`。到达结束元素或发生错误时返回假。
+当前元素是与最近解析的起始元素匹配且尚未达到匹配的末端元素的元素。当解析器到达末端元素时，当前元素即为父元素。
+这是一个方便你只关心解析XML元素时的函数。QXmlStream书签示例大量使用了该函数。
 
 ### `[since 6.10] QString QXmlStreamReader::readRawInnerData()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamReader` 的核心操作 `readRawInnerData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取并返回当前元素的原始内部XML内容。该功能有助于检索元素内嵌入的完整内容，包括嵌套标签、文本、注释、处理指令、CDATA部分及其他标记——保持原始XML结构。
+当前元素是与最近解析的起始元素匹配且尚未达到匹配的末端元素的元素。当解析器到达末端元素时，当前元素即为父元素。
+注意：DTD 中定义的实体引用在解析过程中被解析并以明文返回，因为 DTD 声明是单独处理的，不属于元素内容的一部分。输出中只有五个预定义的 XML 实体（`<`、`>`、`&`、`'`、`"`;）会被重新转义。
 
 ### `void QXmlStreamReader::setDevice(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDevice`。调用它会改变 `QXmlStreamReader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前设备设置为`device`。设置设备会将流重置到初始状态。
 
 ### `void QXmlStreamReader::setEntityExpansionLimit(int limit)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEntityExpansionLimit`。调用它会改变 `QXmlStreamReader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `limit`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将单个实体允许扩展的最大字符数设定为`limit`。如果单个实体扩展超过给定限制，则该文档不被视为良好格式。
+其限制是为了防止在加载未知XML文档时遭受DoS攻击，因为递归实体扩展可能会耗尽所有可用内存。
+该属性的默认值为4096字符。
 
 ### `void QXmlStreamReader::setEntityResolver(QXmlStreamEntityResolver *resolver)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEntityResolver`。调用它会改变 `QXmlStreamReader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `resolver`：类型为 `QXmlStreamEntityResolver *`。没有默认值，调用时必须提供。传入 `QXmlStreamEntityResolver *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这让`resolver`成为新的`entityResolver()`。
+流读取器不拥有解析器的所有权。调用者有责任确保解析器在流读取器对象的整个生命周期内有效，或直到设置另一个解析器或`nullptr`。
 
 ### `void QXmlStreamReader::skipCurrentElement()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::skipCurrentElement` 用于执行与“skip、当前、Element”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取至当前元素结束，跳过所有子节点。该函数用于跳过未知元素。
+当前元素是与最近解析的起始元素匹配且尚未达到匹配的末端元素的元素。当解析器到达末端元素时，当前元素即为父元素。
 
 ### `QStringView QXmlStreamReader::text() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::text` 用于计算、查询或取得与“文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`Characters`、`Comment`、`DTD`或`EntityReference`的文本。
 
 ### `QString QXmlStreamReader::tokenString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `tokenString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回读取器当前的令牌作为字符串。
 
 ### `QXmlStreamReader::TokenType QXmlStreamReader::tokenType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `tokenType`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamReader::TokenType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前令牌的类型。
+当前代币还可以查询便利功能`isStartDocument()`、`isEndDocument()`、`isStartElement()`、`isEndElement()`、`isCharacters()`、`isComment()`、`isDTD()`、`isEntityReference()`和`isProcessingInstruction()`。
 
 ### `bool namespaceProcessing() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QXmlStreamReader::namespaceProcessing` 用于计算、查询或取得与“namespace、Processing”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+此属性保存流读取器的命名空间处理标志。
+此属性控制流读取器是否处理命名空间。如果启用，读取器将处理命名空间，否则不会。
+默认情况下，命名空间处理是启用的。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `namespaceProcessing()` 读取当前值；它不会修改应用状态。
 
 ### `void setNamespaceProcessing(bool)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNamespaceProcessing`。调用它会改变 `QXmlStreamReader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+此属性保存流读取器的命名空间处理标志。
+此属性控制流读取器是否处理命名空间。如果启用，读取器将处理命名空间，否则不会。
+默认情况下，命名空间处理是启用的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bool`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNamespaceProcessing(...)` 修改 `namespaceProcessing`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

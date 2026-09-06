@@ -80,226 +80,163 @@ target_link_libraries(mytarget PRIVATE Qt6::Quick)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGRendererInterface::ShaderCompilationTypeflags QSGRendererInterface::ShaderCompilationTypes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Shader、Compilation、Typeflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ShaderCompilationTypeflags QSGRendererInterface::ShaderCompilationTypes`。
-- 属性名：`QSGRendererInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::RuntimeCompilation`：`0x01`;支持着色器源代码的运行时编译
+- `QSGRendererInterface::OfflineCompilation`：`0x02`;支持预编译字节码
+ShaderCompilationTypes 类型是 QFlags 的 typedef<ShaderCompilationType>。它存储 ShaderCompilationType 值的 OR 组合。
 
 ### `enum QSGRendererInterface::ShaderSourceTypeflags QSGRendererInterface::ShaderSourceTypes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Shader、来源、Typeflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ShaderSourceTypeflags QSGRendererInterface::ShaderSourceTypes`。
-- 属性名：`QSGRendererInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::ShaderSourceString`: `0x01`；可以将着色器源代码作为字符串提供在 `ShaderEffect` 对应的属性中
+- `QSGRendererInterface::ShaderSourceFile`: `0x02`；支持包含着色器源代码的本地或资源文件
+- `QSGRendererInterface::ShaderByteCode`: `0x04`；支持包含着色器字节码的本地或资源文件
+ShaderSourceTypes 类型是 QFlags<ShaderSourceType> 的 typedef。它存储 ShaderSourceType 值的按位或组合。
 
 ### `[virtual] void *QSGRendererInterface::getResource(QQuickWindow *window, QSGRendererInterface::Resource resource) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 的核心操作 `getResource`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `window`：类型为 `QQuickWindow *`。没有默认值，调用时必须提供。传入 `QQuickWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `resource`：类型为 `QSGRendererInterface::Resource`。没有默认值，调用时必须提供。传入 `QSGRendererInterface::Resource` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查询`window`中的图形`resource`。当相关资源不被支持或不可用时，返回空。
+成功时，返回的指针要么是直接指向接口的指针，要么是指向需要先去引用的不透明句柄的指针（例如，`VkDevice dev = *static_cast<VkDevice *>(result)`）。后者是必要的，因为此类句柄的大小可能与指针不同。
+注意：返回指针的所有权永远不会转移给调用者。
+注意：该函数只能在渲染线程中调用。
 
 ### `[virtual] void *QSGRendererInterface::getResource(QQuickWindow *window, const char *resource) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 的核心操作 `getResource`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `window`：类型为 `QQuickWindow *`。没有默认值，调用时必须提供。传入 `QQuickWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `resource`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查询图形资源。`resource` 是一个后端专用键。这使得支持资源枚举中未列出的任何未来资源为支持。
+注意：返回指针的所有权永远不会转移给调用者。
+注意：该函数只能在渲染线程中调用。
 
 ### `[pure virtual] QSGRendererInterface::GraphicsApi QSGRendererInterface::graphicsApi() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRendererInterface::graphicsApi` 用于计算、查询或取得与“graphics、Api”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGRendererInterface::GraphicsApi`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGRendererInterface::GraphicsApi`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 Qt Quick 场景图正在使用的图形 API。
+注意：该函数可以在任何线程上调用。
 
 ### `[static] bool QSGRendererInterface::isApiRhiBased(QSGRendererInterface::GraphicsApi api)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isApiRhiBased`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `api`：类型为 `QSGRendererInterface::GraphicsApi`。没有默认值，调用时必须提供。传入 `QSGRendererInterface::GraphicsApi` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`api`基于图形抽象层（`QRhi`），而非直接调用本地图形API，则返回为真。
+注意：该函数可以在任何线程上调用。
 
 ### `[pure virtual] QSGRendererInterface::ShaderCompilationTypes QSGRendererInterface::shaderCompilationType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRendererInterface::shaderCompilationType` 用于计算、查询或取得与“shader、Compilation、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGRendererInterface::ShaderCompilationTypes`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGRendererInterface::ShaderCompilationTypes`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用程序所用Qt Quick后端支持的着色器编译方法的位遮罩。
+注意：该函数可以在任何线程上调用。
 
 ### `[pure virtual] QSGRendererInterface::ShaderSourceTypes QSGRendererInterface::shaderSourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRendererInterface::shaderSourceType` 用于计算、查询或取得与“shader、来源、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGRendererInterface::ShaderSourceTypes`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGRendererInterface::ShaderSourceTypes`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回支持的着色器来源方式的位遮罩，显示`ShaderEffect`项中。
+注意：该函数可以在任何线程上调用。
 
 ### `[pure virtual] QSGRendererInterface::ShaderType QSGRendererInterface::shaderType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRendererInterface::shaderType` 用于计算、查询或取得与“shader、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGRendererInterface::ShaderType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGRendererInterface::ShaderType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用所使用的Qt Quick后端支持的着色语言。
+注意：该函数可以在任何线程上调用。
 
 ### `enum GraphicsApi { Unknown, Software, OpenVG, OpenGL, Direct3D11, …, Null }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Graphics、Api`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::Unknown`: `0`；正在使用未知的图形 API
+- `QSGRendererInterface::Software`: `1`；正在使用 Qt Quick 2D Renderer
+- `QSGRendererInterface::OpenVG`: `2`；通过 EGL 使用 OpenVG
+- `QSGRendererInterface::OpenGL (since Qt 5.14)`: `3`；通过图形抽象层使用 OpenGL ES 2.0 或更高版本
+- `QSGRendererInterface::Direct3D11 (since Qt 5.14)`: `4`；通过图形抽象层使用 Direct3D 11
+- `QSGRendererInterface::Direct3D12 (since Qt 6.6)`: `8`；通过图形抽象层使用 Direct3D 12
+- `QSGRendererInterface::Vulkan (since Qt 5.14)`: `5`；通过图形抽象层使用 Vulkan 1.0
+- `QSGRendererInterface::Metal (since Qt 5.14)`: `6`；通过图形抽象层使用 Metal
+- `QSGRendererInterface::Null (since Qt 5.14)`: `7`；通过图形抽象层使用 Null（无输出）
 
 ### `enum RenderMode { RenderMode2D, RenderMode2DNoDepthBuffer, RenderMode3D }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `渲染、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::RenderMode2D`：`0`;普通二维渲染
+- `QSGRendererInterface::RenderMode2DNoDepthBuffer`：`1`;正常2D渲染，禁用深度缓冲
+- `QSGRendererInterface::RenderMode3D`：`2`;场景作为三维图的一部分被渲染
 
 ### `enum Resource { DeviceResource, CommandQueueResource, CommandListResource, PainterResource, RhiResource, …, GraphicsQueueIndexResource }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Resource`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::DeviceResource`：`0`;资源在适用时是指向图形设备的指针。例如，`VkDevice *`、`MTLDevice *`或`ID3D11Device *`。注意，Vulkan返回的值是指向VkDevice的指针，而非句柄本身。这是因为Vulkan的句柄可能不是指针，且可能使用与架构指针大小不同的大小，因此仅仅投射/投射`void *`是错误的。
+- `QSGRendererInterface::CommandQueueResource`：`1`;资源是指向场景图使用的图形命令队列的指针（如适用）。例如，`VkQueue *`或`MTLCommandQueue *`。注意，Vulkan 返回的值是指向 VkQueue 的指针，而非句柄本身。
+- `QSGRendererInterface::CommandListResource`：`2`;资源是指向场景图使用的命令列表或缓冲区的指针（如适用）。例如，`VkCommandBuffer *`或`MTLCommandBuffer *`。该对象的有效性有限，仅在场景图准备下一帧时有效。注意，Vulkan 返回的值是指向 VkCommandBuffer 的指针，而非句柄本身。
+- `QSGRendererInterface::PainterResource`：`3`;资源是指向场景图在软件后端运行时使用的活跃 `QPainter`。
+- `QSGRendererInterface::RhiResource (since Qt 5.14)`：`4`;资源是指向场景图所用实例的`QRhi`（如适用时）。
+- `QSGRendererInterface::RhiSwapchainResource (since Qt 6.0)`：`5`;资源是指向与窗口相关的QRhiSwapchain实例的指针。当窗口与`QQuickRenderControl`组合使用时，该值为空。
+- `QSGRendererInterface::RhiRedirectCommandBuffer (since Qt 6.0)`：`6`;资源是指向与窗口及其`QQuickRenderControl`关联的`QRhiCommandBuffer`实例的指针。当窗口不关联`QQuickRenderControl`时，该值为空。
+- `QSGRendererInterface::RhiRedirectRenderTarget (since Qt 6.0)`：`7`;资源是指向与窗口及其`QQuickRenderControl`关联的`QRhiTextureRenderTarget`实例的指针。当窗口未关联`QQuickRenderControl`时，该值为空。注意该值始终反映主纹理渲染目标，且不依赖于Qt Quick场景，这意味着它不考虑由`ShaderEffect`层或`QQuickItem`层生成的额外纹理目标渲染通道。
+- `QSGRendererInterface::PhysicalDeviceResource (since Qt 5.14)`：`8`;资源是场景图所用的物理设备对象的指针（如适用）。例如，`VkPhysicalDevice *`。注意，Vulkan 返回的值是指向 VkPhysicalDevice，而非句柄本身。
+- `QSGRendererInterface::OpenGLContextResource (since Qt 5.14)`：`9`;资源是指向场景图（渲染线程上）所用`QOpenGLContext`的指针，如适用。
+- `QSGRendererInterface::DeviceContextResource (since Qt 5.14)`：`10`;资源是场景图所用设备上下文的指针（如适用）。例如，`ID3D11DeviceContext *`。
+- `QSGRendererInterface::CommandEncoderResource (since Qt 5.14)`：`11`;该资源是指向场景图当前激活的渲染命令编码器对象的指针，在适用时使用。例如，`MTLRenderCommandEncoder *`。该对象有效性有限，仅在场景图记录下一帧渲染时有效。
+- `QSGRendererInterface::VulkanInstanceResource (since Qt 5.14)`：`12`;资源是指向场景图所用`QVulkanInstance`的指针（如适用）。
+- `QSGRendererInterface::RenderPassResource (since Qt 5.14)`：`13`;资源是指向场景图主要渲染通道的指针，描述颜色和深度/模板附件及其使用方式。例如，`VkRenderPass *`。注意，该值始终反映主渲染目标（屏幕窗口或`QQuickRenderControl`重定向的纹理），不依赖于Qt Quick场景，这意味着它不考虑由`ShaderEffect`层或`QQuickItem`层生成的额外纹理目标渲染通道。
+- `QSGRendererInterface::RedirectPaintDevice (since Qt 6.4)`：`14`;资源是指向`QPaintDevice`实例的指针，该实例与窗口及其`QQuickRenderControl`关联。当窗口不关联`QQuickRenderControl`时，该值为空。
+- `QSGRendererInterface::GraphicsQueueFamilyIndexResource (since Qt 6.6)`：`15`;资源是指向场景图所用图形队列族索引的指针（如适用）。在Vulkan中，这是指向`uint32_t`索引值的指针。
+- `QSGRendererInterface::GraphicsQueueIndexResource (since Qt 6.6)`：`16`;资源是指向场景图所用图形队列索引（uint32_t，如适用）。在Vulkan中，这是指向`uint32_t`索引值的指针，实际上是`CommandQueueResource`报告的VkQueue的索引。
 
 ### `enum ShaderCompilationType { RuntimeCompilation, OfflineCompilation }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Shader、Compilation、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::RuntimeCompilation`：`0x01`;支持着色器源代码的运行时编译
+- `QSGRendererInterface::OfflineCompilation`：`0x02`;支持预编译字节码
+ShaderCompilationTypes 类型是 QFlags 的 typedef<ShaderCompilationType>。它存储 ShaderCompilationType 值的 OR 组合。
 
 ### `flags ShaderCompilationTypes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::RuntimeCompilation`：`0x01`;支持着色器源代码的运行时编译
+- `QSGRendererInterface::OfflineCompilation`：`0x02`;支持预编译字节码
+ShaderCompilationTypes 类型是 QFlags 的 typedef<ShaderCompilationType>。它存储 ShaderCompilationType 值的 OR 组合。
 
 ### `enum ShaderSourceType { ShaderSourceString, ShaderSourceFile, ShaderByteCode }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Shader、来源、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::ShaderSourceString`: `0x01`；可以将着色器源代码作为字符串提供在 `ShaderEffect` 对应的属性中
+- `QSGRendererInterface::ShaderSourceFile`: `0x02`；支持包含着色器源代码的本地或资源文件
+- `QSGRendererInterface::ShaderByteCode`: `0x04`；支持包含着色器字节码的本地或资源文件
+ShaderSourceTypes 类型是 QFlags<ShaderSourceType> 的 typedef。它存储 ShaderSourceType 值的按位或组合。
 
 ### `flags ShaderSourceTypes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::ShaderSourceString`: `0x01`；可以将着色器源代码作为字符串提供在 `ShaderEffect` 对应的属性中
+- `QSGRendererInterface::ShaderSourceFile`: `0x02`；支持包含着色器源代码的本地或资源文件
+- `QSGRendererInterface::ShaderByteCode`: `0x04`；支持包含着色器字节码的本地或资源文件
+ShaderSourceTypes 类型是 QFlags<ShaderSourceType> 的 typedef。它存储 ShaderSourceType 值的按位或组合。
 
 ### `enum ShaderType { UnknownShadingLanguage, GLSL, HLSL, RhiShader }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRendererInterface` 暴露的类型声明 `Shader、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGRendererInterface::UnknownShadingLanguage`: `0`；由于没有关联窗口和场景图，目前未知
+- `QSGRendererInterface::GLSL`: `1`；GLSL 或 GLSL ES
+- `QSGRendererInterface::HLSL`: `2`；HLSL
+- `QSGRendererInterface::RhiShader (since Qt 5.14)`: `3`；使用包含多个目标语言和中间格式着色器变体的 `QShader` 实例。
 
 ## 6. 深入实践与常见坑
 

@@ -122,756 +122,427 @@ QNetworkReply *reply = manager->post(request, jsonData);
 - `QNetworkRequest & operator=(const QNetworkRequest &other)`
 - `bool operator==(const QNetworkRequest &other) const`
 
-### 静态公有成员
-
-- `const std::chrono::std::chrono::milliseconds DefaultTransferTimeout`
-
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 56 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkRequest::Attribute`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `Attribute`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Attribute`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QNetworkRequest`和 `QNetworkReply` 的属性代码。
+属性是额外的元数据，用于控制请求的行为，并将回复中的更多信息反馈给应用程序。属性也可扩展，允许自定义实现传递自定义值。
+下表解释了默认属性码、关联的`QVariant`类型、如果该属性缺失的默认值，以及该值是否用于请求或回复。
+- `QNetworkRequest::HttpStatusCodeAttribute`：`0`;仅回复，类型：`QMetaType::Int`（无默认）表示从HTTP服务器接收的HTTP状态码（如200、304、404、401等）。如果连接不是基于HTTP，则不存在该属性。
+- `QNetworkRequest::HttpReasonPhraseAttribute`：`1`;仅回复，类型：`QMetaType::QByteArray`（无默认）表示来自HTTP服务器的HTTP理由短语（如“Ok”、“Found”、“Not Found”、“Access Denied”等）。这是状态码的人类可读表示（见上文）。如果连接不是基于HTTP，则该属性不存在。注意：使用HTTP/2时不使用理由短语。
+- `QNetworkRequest::RedirectionTargetAttribute`：`2`;仅回复，类型：`QMetaType::QUrl`（无默认）如果存在，表示服务器正在将请求重定向到不同的URL。网络访问API默认会执行重定向，除非使用`QNetworkRequest::ManualRedirectPolicy`。此外，如果使用`QNetworkRequest::UserVerifiedRedirectPolicy`，则该属性将在未执行重定向时被设置。返回的URL可能是相对的。使用`QUrl::resolved()`将其创建一个绝对URL。
+- `QNetworkRequest::ConnectionEncryptedAttribute`：`3`;仅回复，类型：`QMetaType::Bool`（默认：false）表示数据是否通过加密（安全）连接获得。
+- `QNetworkRequest::CacheLoadControlAttribute`：`4`;仅请求，类型：`QMetaType::Int`（默认：`QNetworkRequest::PreferNetwork`）控制缓存的访问方式。可能的值为`QNetworkRequest::CacheLoadControl`。注意默认`QNetworkAccessManager`实现不支持缓存。然而，某些后端可能使用该属性修改请求（例如缓存代理）。
+- `QNetworkRequest::CacheSaveControlAttribute`：`5`;仅请求，类型：`QMetaType::Bool`（默认：true）控制获得的数据是否应保存为缓存以备将来使用。如果值为假，获得的数据不会自动缓存。如果为真，数据可以缓存，前提是可缓存（可缓存内容取决于所用协议）。
+- `QNetworkRequest::SourceIsFromCacheAttribute`：`6`;仅回复，类型：`QMetaType::Bool`（默认：false）表示数据是否来自缓存。
+- `QNetworkRequest::DoNotBufferUploadDataAttribute`：`7`;仅请求，类型：`QMetaType::Bool`（默认：false）表示`QNetworkAccessManager`代码是否允许缓冲上传数据，例如执行HTTP POST时。使用该标志处理顺序上传数据时，必须设置`ContentLengthHeader`首部。
+- `QNetworkRequest::HttpPipeliningAllowedAttribute`：`8`;仅请求，类型：`QMetaType::Bool`（默认：false）表示`QNetworkAccessManager`代码是否允许对此请求使用 HTTP 流水线。
+- `QNetworkRequest::HttpPipeliningWasUsedAttribute`: `9`；仅限回复，类型：`QMetaType::Bool` 指示在接收此回复时是否使用了 HTTP 管道技术。
+- `QNetworkRequest::CustomVerbAttribute`: `10`；仅限请求，类型：`QMetaType::QByteArray` 保存要发送的自定义 HTTP 动词的值（用于除 GET、POST、PUT 和 DELETE 之外的其他动词）。此动词在调用 `QNetworkAccessManager::sendCustomRequest()` 时设置。
+- `QNetworkRequest::CookieLoadControlAttribute`: `11`；仅限请求，类型：`QMetaType::Int`（默认：`QNetworkRequest::Automatic`） 指示是否在请求中发送 'Cookie' 头。当创建跨域 XMLHttpRequest 时，如果创建请求的 JavaScript 未显式将 withCredentials 设置为 true，该属性会被 Qt WebKit 设置为 false。详情请参阅此处。（该值在 4.7 引入。）
+- `QNetworkRequest::CookieSaveControlAttribute`: `13`；仅限请求，类型：`QMetaType::Int`（默认：`QNetworkRequest::Automatic`） 指示是否将从服务器收到的 'Cookie' 头保存为回复的一部分。当创建跨域 XMLHttpRequest 时，如果创建请求的 JavaScript 未显式将 withCredentials 设置为 true，该属性会被 Qt WebKit 设置为 false。详情请参阅此处。（该值在 4.7 引入。）
+- `QNetworkRequest::AuthenticationReuseAttribute`: `12`；仅限请求，类型：`QMetaType::Int`（默认：`QNetworkRequest::Automatic`） 指示是否在请求中使用缓存的授权凭据（如果可用）。如果设置为 `QNetworkRequest::Manual`，并且认证机制为 'Basic' 或 'Digest'，Qt 不会使用请求 URL 的任何缓存凭据发送 'Authorization' HTTP 头。当创建跨域 XMLHttpRequest 时，如果创建请求的 JavaScript 未显式将 withCredentials 设置为 true，该属性会被 Qt WebKit 设置为 `QNetworkRequest::Manual`。详情请参阅此处。（该值在 4.7 引入。）
+- `QNetworkRequest::BackgroundRequestAttribute`: `17`；类型：`QMetaType::Bool`（默认：false） 指示这是后台传输，而非用户发起的传输。根据平台不同，后台传输可能受不同策略约束。
+- `QNetworkRequest::Http2AllowedAttribute`: `19`；仅限请求，类型：`QMetaType::Bool`（默认：true） 指示 `QNetworkAccessManager` 代码是否被允许在此请求中使用 HTTP/2。这适用于 SSL 请求或如果设置了 Http2CleartextAllowedAttribute 的“明文”HTTP/2。
+- `QNetworkRequest::Http2WasUsedAttribute`: `20`；仅限回复，类型：`QMetaType::Bool`（默认：false） 指示在接收此回复时是否使用了 HTTP/2。（该值在 5.9 引入。）
+- `QNetworkRequest::EmitAllUploadProgressSignalsAttribute`: `18`；仅限请求，类型：`QMetaType::Bool`（默认：false） 指示是否应触发所有上传信号。默认情况下，uploadProgress 信号仅每 100 毫秒触发一次。（该值在 5.5 引入。）
+- `QNetworkRequest::OriginalContentLengthAttribute`: `21`；仅限回复，类型 `QMetaType::Int` 保存原始 content-length 属性，在数据被压缩且请求标记为自动解压时，该属性将被作废并从头部移除。（该值在 5.9 引入。）
+- `QNetworkRequest::RedirectPolicyAttribute`：`22`;仅请求，类型：`QMetaType::Int`，应为`QNetworkRequest::RedirectPolicy`值之一（默认值：`NoLessSafeRedirectPolicy`）。（该值于 5.9 版本引入。）
+- `QNetworkRequest::Http2DirectAttribute`：`23`;仅请求，类型：`QMetaType::Bool`（默认：false）如果设置，该属性将强制`QNetworkAccessManager`在不进行初始HTTP/2协议协商的情况下使用HTTP/2协议。使用该属性意味着事先知道某服务器支持HTTP/2。该属性支持SSL，若设置了Http2CleartextAllowedAttribute，则支持“明文”HTTP/2。如果服务器不支持HTTP/2，且指定了HTTP/2直接，`QNetworkAccessManager`放弃，不尝试回退到HTTP/1.1。如果 Http2AllowedAttribute 和 Http2DirectAttribute 都被设置，Http2DirectAttribute 将优先。（该值于 5.11 版本引入。）
+- `QNetworkRequest::AutoDeleteReplyOnFinishAttribute`：`25`;仅请求，类型：`QMetaType::Bool`（默认：false）如果设置，该属性会`QNetworkAccessManager`在发出“完成”后删除`QNetworkReply`。（该值于 5.14 版本引入。）
+- `QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute`：在`26`;仅请求，类型：`QMetaType::Int` 设置在处理最后一个待处理请求后，TCP连接（HTTP1和HTTP2）何时关闭。（该值于6.3版本引入。）
+- `QNetworkRequest::Http2CleartextAllowedAttribute`：`27`;仅请求，类型：`QMetaType::Bool`（默认：false）如果设置，该属性会告诉`QNetworkAccessManager`尝试通过明文（也称为h2c）升级到HTTP/2。直到Qt 7，该属性的默认值可以通过设置QT_NETWORK_H2C_ALLOWED环境变量被覆盖为真。如果Http2AllowedAttribute未被设置，该属性将被忽略。（该值于6.3版本引入。）
+- `QNetworkRequest::UseCredentialsAttribute`：`28`;仅请求，类型：`QMetaType::Bool`（默认：false）表示底层的XMLHttp请求跨站访问控制请求是否应使用凭证发起。对同源请求无影响。这仅影响WebAssembly平台。（该值于6.5引入。）
+- `QNetworkRequest::FullLocalServerNameAttribute`：`29`;仅请求，类型：QMetaType：：String 包含用于底层`QLocalSocket`的完整本地服务器名称。当`QLocalSocket`仅仅使用简单名称的行为时，`QNetworkAccessManager`会用该属性连接特定的本地服务器。`QNetworkRequest`中的 URL 仍必须使用 Unix http： 或本地 http： 方案。URL 中的主机名将用作 HTTP 请求中的 Host 头。（该值于 6.8 版本引入。）
+- `QNetworkRequest::User`：有`1000`;特殊类型。QVariants中可以传递从User到UserMax的类型的更多信息。Network Access的默认实现会忽略该范围内的任何请求属性，且不会在回复中生成该范围内的任何属性。该范围保留给`QNetworkAccessManager`的扩展。
+- `QNetworkRequest::UserMax`：`32767`;特殊类型。参见用户。
 
 ### `enum QNetworkRequest::CacheLoadControl`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `Cache、加载、Control`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CacheLoadControl`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制`QNetworkAccessManager`的缓存机制。
+- `QNetworkRequest::AlwaysNetwork`：`0`;始终从网络加载，不检查缓存是否有有效条目（类似于浏览器中的“重新加载”功能）;此外，强制中间缓存重新验证。
+- `QNetworkRequest::PreferNetwork`：`1`;默认值;如果缓存的条目比网络条目更早，则从网络加载。这不会从缓存中返回过期数据，但会重新验证已过期的资源。
+- `QNetworkRequest::PreferCache`：`2`;如果有缓存，则从缓存加载，否则从网络加载。注意，这可能会从缓存中返回可能过期（但非过期）的项目。
+- `QNetworkRequest::AlwaysCache`：`3`;仅从缓存加载，若未缓存（即离线模式）则提示错误
 
 ### `enum QNetworkRequest::KnownHeaders`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `Known、Headers`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:KnownHeaders`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+已知 `QNetworkRequest` 解析的头类型列表。每个已知头也以其完整的 HTTP 名称的原始形式表示。
+- `QNetworkRequest::ContentDispositionHeader`: `6`; 对应 HTTP 的 Content-Disposition 头，包含一个字符串，该字符串包含处置类型（例如 attachment）和一个参数（例如 filename）。
+- `QNetworkRequest::ContentTypeHeader`: `0`; 对应 HTTP 的 Content-Type 头，包含一个字符串，该字符串包含媒体（MIME）类型及任何辅助数据（例如 charset）。
+- `QNetworkRequest::ContentLengthHeader`: `1`; 对应 HTTP 的 Content-Length 头，包含传输数据的字节长度。
+- `QNetworkRequest::LocationHeader`: `2`; 对应 HTTP 的 Location 头，包含表示数据实际位置的 URL，包括重定向的目标 URL。
+- `QNetworkRequest::LastModifiedHeader`: `3`; 对应 HTTP 的 Last-Modified 头，包含一个 `QDateTime`，表示内容的最后修改日期。
+- `QNetworkRequest::IfModifiedSinceHeader`: `9`; 对应 HTTP 的 If-Modified-Since 头，包含一个 `QDateTime`。通常附加在 `QNetworkRequest` 上。如果资源自此时间以来未更改，服务器应发送 304（未修改）响应。
+- `QNetworkRequest::ETagHeader`: `10`; 对应 HTTP 的 ETag 头，包含一个 `QString`，表示内容的最后修改状态。
+- `QNetworkRequest::IfMatchHeader`: `11`; 对应 HTTP 的 If-Match 头，包含一个 `QStringList`。通常附加在 `QNetworkRequest` 上。如果资源不匹配，服务器应发送 412（前置条件失败）响应。
+- `QNetworkRequest::IfNoneMatchHeader`: `12`; 对应 HTTP 的 If-None-Match 头，包含一个 `QStringList`。通常附加在 `QNetworkRequest` 上。如果资源匹配，服务器应发送 304（未修改）响应。
+- `QNetworkRequest::CookieHeader`: `4`; 对应 HTTP 的 Cookie 头，包含一个 `QList`<`QNetworkCookie`>，表示要发送回服务器的 cookie。
+- `QNetworkRequest::SetCookieHeader`: `5`; 对应 HTTP 的 Set-Cookie 头，包含一个 `QList`<`QNetworkCookie`>，表示服务器发送的需本地存储的 cookie。
+- `QNetworkRequest::UserAgentHeader`: `7`; HTTP 客户端发送的 User-Agent 头。
+- `QNetworkRequest::ServerHeader`: `8`; HTTP 客户端接收到的 Server 头。
 
 ### `enum QNetworkRequest::LoadControl`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `加载、Control`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:LoadControl`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示请求加载机制的某个方面是否被手动覆盖，例如被 Qt WebKit 覆盖。
+- `QNetworkRequest::Automatic`：`0`;默认值：表示默认行为。
+- `QNetworkRequest::Manual`：`1`;表示行为已被手动覆盖。
 
 ### `enum QNetworkRequest::Priority`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `Priority`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Priority`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举列出了可能的网络请求优先级。
+- `QNetworkRequest::HighPriority`：`1`;高优先级
+- `QNetworkRequest::NormalPriority`：`3`;普通优先级
+- `QNetworkRequest::LowPriority`：`5`;低优先级
 
 ### `enum QNetworkRequest::RedirectPolicy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `Redirect、Policy`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RedirectPolicy`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指示网络访问API是否应自动跟随HTTP重定向响应。
+- `QNetworkRequest::ManualRedirectPolicy`：`0`;不遵循任何重定向。
+- `QNetworkRequest::NoLessSafeRedirectPolicy`：`1`;默认值：仅允许“http”->“http”、“http” ->“https”或“https” ->“https”重定向。
+- `QNetworkRequest::SameOriginRedirectPolicy`：`2`;要求使用相同的协议、主机和端口。注意，http://example.com 和 http://example.com:80 在此策略下会失败（隐式/显式端口被视为不匹配）。
+- `QNetworkRequest::UserVerifiedRedirectPolicy`：`3`;客户端通过处理重定向()信号决定是否跟随每个重定向，对`QNetworkReply`对象发出redirectAllowed()以允许重定向，或通过中止/完成该重定向以拒绝重定向。例如，这可以用来询问用户是否接受重定向，或根据某些应用特定的配置做出决定。
+注意：当 Qt 处理重定向时，出于遗留和兼容性原因，当服务器返回 301 或 302 响应时，无论原始方法为何，Qt 都会通过 GET 发出重定向请求，除非是 HEAD。
 
 ### `enum QNetworkRequest::TransferTimeoutConstant`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 暴露的类型声明 `Transfer、超时、Constant`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TransferTimeoutConstant`。
-- 属性名：`QNetworkRequest`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个常量，可用于启用预设值的传输超时。
+- `QNetworkRequest::DefaultTransferTimeoutConstant`：`30000`;传输超时（毫秒）。如果`setTransferTimeout()`被调用且无参数。
 
 ### `QNetworkRequest::QNetworkRequest()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个没有请求URL的QNetworkRequest对象。使用`setUrl()`设置一个URL。
 
 ### `[explicit] QNetworkRequest::QNetworkRequest(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QNetworkRequest对象，`url`作为请求的URL。
 
 ### `QNetworkRequest::QNetworkRequest(const QNetworkRequest &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QNetworkRequest &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建`other`副本。
 
 ### `[noexcept] QNetworkRequest::~QNetworkRequest()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理`QNetworkRequest`物品。
 
 ### `QVariant QNetworkRequest::attribute(QNetworkRequest::Attribute code, const QVariant &defaultValue = QVariant()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::attribute` 用于计算、查询或取得与“attribute”相关的操作。调用时要先确认当前状态和 `code`、`defaultValue` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `code`：类型为 `QNetworkRequest::Attribute`。没有默认值，调用时必须提供。传入 `QNetworkRequest::Attribute` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `defaultValue`：类型为 `const QVariant &`。默认值为 `QVariant()`。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与代码`code`关联的属性。如果该属性尚未设置，则返回`defaultValue`。
+注意：该功能不适用于`QNetworkRequest::Attribute`中列出的默认设置。
 
 ### `[since 6.2] qint64 QNetworkRequest::decompressedSafetyCheckThreshold() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::decompressedSafetyCheckThreshold` 用于计算、查询或取得与“decompressed、Safety、Check、Threshold”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回档案炸弹检定的阈值。
+如果回复的解压长度小于此，Qt 会直接解压，无需进一步检查。
 
 ### `bool QNetworkRequest::hasRawHeader(QAnyStringView headerName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasRawHeader`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `headerName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该网络请求中存在原始头部`headerName`，则返回`true`。
+注意：在 6.7 之前的 Qt 版本中，该功能仅使用 `QByteArray`。
 
 ### `QVariant QNetworkRequest::header(QNetworkRequest::KnownHeaders header) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::header` 用于计算、查询或取得与“header”相关的操作。调用时要先确认当前状态和 `header` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `header`：类型为 `QNetworkRequest::KnownHeaders`。没有默认值，调用时必须提供。传入 `QNetworkRequest::KnownHeaders` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该请求中`header`已知的网络头部存在，返回该值。如果不存在，返回QVariant()（即无效变体）。
 
 ### `[since 6.8] QHttpHeaders QNetworkRequest::headers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::headers` 用于计算、查询或取得与“headers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHttpHeaders`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHttpHeaders`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络请求中设置的头部。
 
 ### `[since 6.5] QHttp1Configuration QNetworkRequest::http1Configuration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::http1Configuration` 用于计算、查询或取得与“http、1、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHttp1Configuration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHttp1Configuration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QNetworkAccessManager`当前用于该请求底层HTTP/1连接的参数。
 
 ### `QHttp2Configuration QNetworkRequest::http2Configuration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::http2Configuration` 用于计算、查询或取得与“http、2、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHttp2Configuration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHttp2Configuration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QNetworkAccessManager`当前用于该请求及其底层HTTP/2连接的参数。这要么是应用程序事先设置的配置，要么是默认配置。
+`QNetworkAccessManager`使用的默认值是：
+- 连接级流量控制的窗口大小为2147483647八位元组
+- 溪流级流量控制的窗口大小为214748364八位节
+- 最大帧尺寸为16384
+默认情况下，服务器推送被禁用，Huffman 压缩和字符串索引被启用。
 
 ### `int QNetworkRequest::maximumRedirectsAllowed() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::maximumRedirectsAllowed` 用于计算、查询或取得与“最大值、Redirects、Allowed”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该请求允许遵循的最大重定向次数。
 
 ### `QObject *QNetworkRequest::originatingObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::originatingObject` 用于计算、查询或取得与“originating、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回发起该网络请求的对象引用;如果未设置或对象已被销毁，返回`nullptr`。
 
 ### `QString QNetworkRequest::peerVerifyName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::peerVerifyName` 用于计算、查询或取得与“peer、Verify、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`setPeerVerifyName`设置的证书验证主机名称。默认情况下，返回一个空字符串。
 
 ### `QNetworkRequest::Priority QNetworkRequest::priority() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::priority` 用于计算、查询或取得与“priority”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkRequest::Priority`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkRequest::Priority`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将此请求的优先权归还。
 
 ### `QByteArray QNetworkRequest::rawHeader(QAnyStringView headerName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::rawHeader` 用于计算、查询或取得与“raw、Header”相关的操作。调用时要先确认当前状态和 `headerName` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `headerName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回原始的`headerName`头。如果不存在此类头部，则返回空`QByteArray`，可能与存在但无内容的头部无法区分（使用`hasRawHeader()`来判断该头是否存在）。
+原始头部可以用`setRawHeader()`或`setHeader()`设置。
+注意：在6.7之前的Qt版本中，该功能仅使用`QByteArray`。
 
 ### `QList<QByteArray> QNetworkRequest::rawHeaderList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::rawHeaderList` 用于计算、查询或取得与“raw、Header、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络请求中设置的所有原始头部列表。列表按头部设置顺序排列。
 
 ### `void QNetworkRequest::setAttribute(QNetworkRequest::Attribute code, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAttribute`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `code`：类型为 `QNetworkRequest::Attribute`。没有默认值，调用时必须提供。传入 `QNetworkRequest::Attribute` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将与代码`code`关联的属性设置为值`value`。如果属性已经设置，则丢弃之前的值。特别地，如果`value`是无效`QVariant`，则该属性为未设置。
 
 ### `[since 6.2] void QNetworkRequest::setDecompressedSafetyCheckThreshold(qint64 threshold)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDecompressedSafetyCheckThreshold`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `threshold`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定档案炸弹检定的`threshold`。
+一些支持的压缩算法可以在极小的压缩文件中编码出极其庞大的解压文件。这只有在解压后内容极其单调时才可能实现，而真实文件若以善意传输，这种情况很少发生：执行如此高压缩比的文件通常是缓冲区超载攻击或拒绝服务攻击（占用过多内存）的有效载体。因此，解压到巨大体积的文件，尤其是从极小压缩形式中解压的文件，最好被视为疑似恶意软件而被排除。
+如果回复的解压大小大于该阈值（默认为10 MiB，即10 * 1024 * 1024），Qt会检查压缩比：如果压缩比过大（GZip和Deflate为40：1，Brotli和ZStandard为100：1），则该回复将被视为错误。将阈值设置为`-1`会禁用此检查。
 
 ### `void QNetworkRequest::setHeader(QNetworkRequest::KnownHeaders header, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeader`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `header`：类型为 `QNetworkRequest::KnownHeaders`。没有默认值，调用时必须提供。传入 `QNetworkRequest::KnownHeaders` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将已知`header`头的值设置为`value`，覆盖之前设置的任何头部。该操作还设置等效的原始 HTTP 头部。
 
 ### `[since 6.8] void QNetworkRequest::setHeaders(QHttpHeaders &&newHeaders)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newHeaders`：类型为 `QHttpHeaders &&`。没有默认值，调用时必须提供。传入 `QHttpHeaders &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newHeaders`设置为该网络请求中的头部，覆盖之前设置的任何头部。
+如果某些头对应已知头，则会解析这些值，并设置相应的解析形式。
 
 ### `[since 6.8] void QNetworkRequest::setHeaders(const QHttpHeaders &newHeaders)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newHeaders`：类型为 `const QHttpHeaders &`。没有默认值，调用时必须提供。传入 `const QHttpHeaders &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newHeaders`设置为该网络请求中的头部，覆盖之前设置的任何头部。
+如果某些头对应已知头，则会解析这些值，并设置相应的解析形式。
 
 ### `[since 6.5] void QNetworkRequest::setHttp1Configuration(const QHttp1Configuration &configuration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHttp1Configuration`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `configuration`：类型为 `const QHttp1Configuration &`。没有默认值，调用时必须提供。传入 `const QHttp1Configuration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`configuration`设置请求的HTTP/1参数。
 
 ### `void QNetworkRequest::setHttp2Configuration(const QHttp2Configuration &configuration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHttp2Configuration`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `configuration`：类型为 `const QHttp2Configuration &`。没有默认值，调用时必须提供。传入 `const QHttp2Configuration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`configuration`设置请求的HTTP/2参数。
+注意：必须在提出请求前设置好配置。
+注意：HTTP/2 在单一 HTTP/2 连接中复用多个流。这意味着`QNetworkAccessManager`会使用第一个请求中发现的配置，来自发送到同一主机的一系列请求。
 
 ### `void QNetworkRequest::setMaximumRedirectsAllowed(int maxRedirectsAllowed)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumRedirectsAllowed`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `maxRedirectsAllowed`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该请求`maxRedirectsAllowed`允许遵循的最大重定向次数。
 
 ### `void QNetworkRequest::setOriginatingObject(QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOriginatingObject`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+允许设置指向发起请求的`object`的引用。
+例如，Qt WebKit 将发起对象设置为发起请求的 QWebFrame。
 
 ### `void QNetworkRequest::setPeerVerifyName(const QString &peerName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerVerifyName`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `peerName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`peerName`设置为证书验证的主机名，而不是用于TCP连接的主机名。
 
 ### `void QNetworkRequest::setPriority(QNetworkRequest::Priority priority)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPriority`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `priority`：类型为 `QNetworkRequest::Priority`。没有默认值，调用时必须提供。传入 `QNetworkRequest::Priority` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将此请求的优先级设置为`priority`。
+注意：`priority`只是给网络访问管理器的一个提示。它可以使用也可以不使用。目前它用于HTTP决定应先发送哪个请求给服务器。
 
 ### `void QNetworkRequest::setRawHeader(const QByteArray &headerName, const QByteArray &headerValue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRawHeader`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将头部`headerName`设置为值为`headerValue`。如果`headerName`对应于已知头部（参见 `QNetworkRequest::KnownHeaders`），则会解析原始格式，并设置相应的“煮熟”头部。
+还会将已知的首部`LastModifiedHeader`设置为解析日期的`QDateTime`对象。
+注意：设置同一个头部重复会覆盖之前的设置。为了实现多个同名 HTTP 头的行为，你应将两个值连接起来，用逗号（“，”）分隔，并设置一个单一原始头部。
+注意：自Qt 6.8起，头字段名称通过转换为小写字母进行规范化。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `headerName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `headerValue`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ request.setRawHeader(QByteArray("Last-Modified"), QByteArray("Sun, 06 Nov 1994 08:49:37 GMT"));
+```
 
 ### `void QNetworkRequest::setSslConfiguration(const QSslConfiguration &config)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSslConfiguration`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `config`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络请求的 SSL 配置设置为`config`。适用的设置包括私钥、本地证书、TLS 协议（例如 TLS 1.3）、CA 证书以及 SSL 后端允许使用的密码。
 
 ### `[since 6.11] void QNetworkRequest::setTcpKeepAliveIdleTimeBeforeProbes(std::chrono::seconds idle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTcpKeepAliveIdleTimeBeforeProbes`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `idle`：类型为 `std::chrono::seconds`。没有默认值，调用时必须提供。传入 `std::chrono::seconds` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果TCP保持在线功能已开启，则将连接在TCP开始发送保活探测前的空闲时间设置为`idle`。
 
 ### `[since 6.11] void QNetworkRequest::setTcpKeepAliveIntervalBetweenProbes(std::chrono::seconds interval)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTcpKeepAliveIntervalBetweenProbes`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `interval`：类型为 `std::chrono::seconds`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了TCP保持在线功能，设置单个保持活探测之间的时间为`interval`。
 
 ### `[since 6.11] void QNetworkRequest::setTcpKeepAliveProbeCount(int probes)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTcpKeepAliveProbeCount`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `probes`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置TCP在断开连接前应发送的最大保持活数`probes`如果TCP保持活功能已开启。
 
 ### `void QNetworkRequest::setTransferTimeout(int timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransferTimeout`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timeout`：类型为 `int`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`timeout`设置为毫秒级的传输超时。
 
 ### `[since 6.7] void QNetworkRequest::setTransferTimeout(std::chrono::milliseconds duration = DefaultTransferTimeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransferTimeout`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `duration`：类型为 `std::chrono::milliseconds`。默认值为 `DefaultTransferTimeout`。持续时间，通常以毫秒表示；要确认 0、负数、循环和平台精度。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置超时`duration`，如果没有数据交换，则中止传输。
+如果在超时结束前没有传输任何字节，传输将被中止。为零表示没有设置定时器。如果没有参数，超时为`QNetworkRequest::DefaultTransferTimeout`。如果未调用该函数，超时被禁用，值为零。
 
 ### `void QNetworkRequest::setUrl(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUrl`。调用它会改变 `QNetworkRequest` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该网络请求所指的URL为`url`。
 
 ### `QSslConfiguration QNetworkRequest::sslConfiguration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::sslConfiguration` 用于计算、查询或取得与“ssl、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslConfiguration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslConfiguration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络请求的SSL配置。默认情况下，这和`QSslConfiguration::defaultConfiguration()`相同。
 
 ### `[noexcept] void QNetworkRequest::swap(QNetworkRequest &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QNetworkRequest &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络请求与`other`交换。该操作非常快速且从未失败。
 
 ### `[since 6.11] std::chrono::seconds QNetworkRequest::tcpKeepAliveIdleTimeBeforeProbes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::tcpKeepAliveIdleTimeBeforeProbes` 用于计算、查询或取得与“tcp、Keep、Alive、Idle、时间、Before、Probes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::chrono::seconds`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::chrono::seconds`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果TCP保持功能已开启，返回连接在TCP开始发送保活探测前需要保持空闲的时间。
 
 ### `[since 6.11] std::chrono::seconds QNetworkRequest::tcpKeepAliveIntervalBetweenProbes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::tcpKeepAliveIntervalBetweenProbes` 用于计算、查询或取得与“tcp、Keep、Alive、间隔、Between、Probes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::chrono::seconds`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::chrono::seconds`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了TCP保持在线功能，返回单个保持活探测之间的时间。
 
 ### `[since 6.11] int QNetworkRequest::tcpKeepAliveProbeCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::tcpKeepAliveProbeCount` 用于计算、查询或取得与“tcp、Keep、Alive、Probe、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了TCP保持在线功能，返回TCP在断开连接前应发送的最大探测次数。
 
 ### `int QNetworkRequest::transferTimeout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::transferTimeout` 用于计算、查询或取得与“transfer、超时”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回传输时使用的超时，单位为毫秒。
+如果`transferTimeoutAsDuration()`.count()无法用`int`表示，则该函数返回`INT_MAX`/`INT_MIN`。
 
 ### `[since 6.7] std::chrono::milliseconds QNetworkRequest::transferTimeoutAsDuration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::transferTimeoutAsDuration` 用于计算、查询或取得与“transfer、超时、As、持续时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::chrono::milliseconds`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::chrono::milliseconds`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回超时时间，逾时如果没有数据交换，传输将中止。
+默认时长为零，意味着不使用超时。
 
 ### `QUrl QNetworkRequest::url() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkRequest::url` 用于计算、查询或取得与“url”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络请求所指的URL。
 
 ### `bool QNetworkRequest::operator!=(const QNetworkRequest &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkRequest &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此对象与 `other` 不同，则返回 `false`。
 
 ### `QNetworkRequest &QNetworkRequest::operator=(const QNetworkRequest &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QNetworkRequest &`。
-- 参数 `other`：类型为 `const QNetworkRequest &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建了`other`的副本。
 
 ### `bool QNetworkRequest::operator==(const QNetworkRequest &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkRequest &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该对象与`other`相同（即拥有相同的URL、相同头部和相同的元数据设置），返回`true`。
 
 ### `const std::chrono::std::chrono::milliseconds QNetworkRequest::DefaultTransferTimeout`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkRequest` 的配置属性。初始化或状态切换时通过 `setDefaultTransferTimeout(...)` 设置，之后用 `DefaultTransferTimeout()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:chrono::std::chrono::milliseconds QNetworkRequest::DefaultTransferTimeout`。
-- 属性名：`std`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const std::chrono::std::chrono::milliseconds DefaultTransferTimeout`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是 `QNetworkRequest` 的配置属性。初始化或状态切换时通过 `setConst(...)` 设置，之后用 `const()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:chrono::std::chrono::milliseconds DefaultTransferTimeout`。
-- 属性名：`std`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+传输超时为`QNetworkRequest::TransferTimeoutConstant`毫秒。如果调用`setTransferTimeout()`且未进行参数。
 
 ## 6. 深入实践与常见坑
 

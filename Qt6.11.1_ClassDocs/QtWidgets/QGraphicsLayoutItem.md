@@ -103,553 +103,266 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 41 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QGraphicsLayoutItem::QGraphicsLayoutItem(QGraphicsLayoutItem *parent = nullptr, bool isLayout = false)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsLayoutItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QGraphicsLayoutItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `isLayout`：类型为 `bool`。默认值为 `false`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造 QGraphicsLayoutItem 对象。`parent` 成为该对象的父对象。如果 `isLayout` 为真，则该项为 layout，否则 `isLayout` 为假。
 
 ### `[virtual noexcept] QGraphicsLayoutItem::~QGraphicsLayoutItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsLayoutItem` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QGraphicsLayoutItem`物体。
 
 ### `QRectF QGraphicsLayoutItem::contentsRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::contentsRect` 用于计算、查询或取得与“contents、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本地坐标中的内容。
+contents rect 定义了相关布局在排列子项时所使用的子矩形。该函数是一个便利功能，通过内容边距调整物品的 `geometry()`。注意 `getContentsMargins()` 是一个虚拟函数，你可以重新实现以返回物品的内容页余。
 
 ### `QSizeF QGraphicsLayoutItem::effectiveSizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::effectiveSizeHint` 用于计算、查询或取得与“effective、尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 `which`、`constraint` 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数 `which`：类型为 `Qt::SizeHint`。没有默认值，调用时必须提供。传入 `Qt::SizeHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `constraint`：类型为 `const QSizeF &`。默认值为 `QSizeF()`。传入 `const QSizeF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QGraphicsLayoutItem`的有效尺寸提示。
+`which` 就是所涉及的大小提示。`constraint` 是一个可选参数，在计算有效大小提示时定义了一个特殊的约束。默认情况下，`constraint` 是 `QSizeF`（-1， -1），这意味着大小提示没有约束。
+如果你想指定小部件的尺寸提示，可以`constraint`提供固定尺寸。这对只能垂直或水平增长的小部件很有用，需要将宽度或高度设置为特殊值。
+例如，一个文本段落项如果能放入200列宽度内，可能会垂直增长。你可以通过`QSizeF`（200， -1）作为约束，以获得合适的最小、首选和最大高度）。
+你可以通过在`QGraphicsLayoutItem`子类中重新实现`sizeHint()`，或者调用以下函数之一来调整有效大小提示：`setMinimumSize()`、`setPreferredSize`或`setMaximumSize()`（或两者的组合）。
+该函数缓存每个大小提示，并保证每个`which`值`sizeHint()`仅调用一次——除非未指定`constraint`且已调用`updateGeometry()`。
 
 ### `QRectF QGraphicsLayoutItem::geometry() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::geometry` 用于计算、查询或取得与“几何区域”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该项目的几何形状（例如位置和大小）作为`QRectF`。该函数等价于 `QRectF`（pos()， size()）。
 
 ### `[virtual] void QGraphicsLayoutItem::getContentsMargins(qreal *left, qreal *top, qreal *right, qreal *bottom) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsLayoutItem` 的核心操作 `getContentsMargins`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `left`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `top`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bottom`：类型为 `qreal *`。没有默认值，调用时必须提供。传入 `qreal *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该虚拟函数为该`QGraphicsLayoutItem`提供`left`、`top`、`right`和`bottom`内容边距。默认实现假设所有内容边距均为0。参数指向存储在qreal中的值。如果任何指针被`nullptr`，该值不会更新。
 
 ### `QGraphicsItem *QGraphicsLayoutItem::graphicsItem() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::graphicsItem` 用于计算、查询或取得与“graphics、项目访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该布局项所代表的`QGraphicsItem`。对于`QGraphicsWidget`，它会返回自身。对于自定义物品，它可以返回汇总后的值。
 
 ### `[virtual, since 6.0] bool QGraphicsLayoutItem::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该项目为空，也就是说它是否没有内容且不应占用任何空间，返回`true`。
+默认实现如果该项被隐藏，`true`返回为真，除非其大小策略将 retainSizeWhenHidden 设置为 `true`。
 
 ### `bool QGraphicsLayoutItem::isLayout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLayout`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QGraphicsLayoutItem`是布局（例如，被一个对象继承，该对象排列其他`QGraphicsLayoutItem`对象），返回`true`;否则返回`false`。
 
 ### `qreal QGraphicsLayoutItem::maximumHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::maximumHeight` 用于计算、查询或取得与“最大值、高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最大高度。
 
 ### `QSizeF QGraphicsLayoutItem::maximumSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::maximumSize` 用于计算、查询或取得与“最大值、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最大尺寸。
 
 ### `qreal QGraphicsLayoutItem::maximumWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::maximumWidth` 用于计算、查询或取得与“最大值、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最大宽度。
 
 ### `qreal QGraphicsLayoutItem::minimumHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::minimumHeight` 用于计算、查询或取得与“最小值、高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最低高度。
 
 ### `QSizeF QGraphicsLayoutItem::minimumSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::minimumSize` 用于计算、查询或取得与“最小值、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退回最小尺寸。
 
 ### `qreal QGraphicsLayoutItem::minimumWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::minimumWidth` 用于计算、查询或取得与“最小值、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最小宽度。
 
 ### `bool QGraphicsLayoutItem::ownedByLayout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::ownedByLayout` 用于计算、查询或取得与“owned、By、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回布局是否应该在其结构函数中删除该项。如果为真，则布局会删除它。如果为假，则假设有其他对象拥有该项的所有权，布局不会删除该项。
+如果该物品同时继承了`QGraphicsItem`和 `QGraphicsLayoutItem`（如`QGraphicsWidget`所做），那么该物品实际上属于两个所有权层级。该属性决定了布局在销毁时应如何处理其子项目。对于`QGraphicsWidget`而言，更倾向于在删除布局时不要删除其子项（因为它们也是图形项层级的一部分）。
+默认情况下，该值在`QGraphicsLayoutItem`中初始化为false，但`QGraphicsLayout`覆盖以返回true。这是因为`QGraphicsLayout`通常不属于`QGraphicsItem`层级，因此父布局应将其删除。子类可以通过调用`setOwnedByLayout`（true）来覆盖该默认行为。
 
 ### `QGraphicsLayoutItem *QGraphicsLayoutItem::parentLayoutItem() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::parentLayoutItem` 用于计算、查询或取得与“父对象、Layout、项目访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsLayoutItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsLayoutItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QGraphicsLayoutItem`的父，若无父类或父级未继承`QGraphicsLayoutItem`则返回`nullptr`（`QGraphicsLayoutItem`常通过多重继承与`QObject`派生类使用）。
 
 ### `qreal QGraphicsLayoutItem::preferredHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::preferredHeight` 用于计算、查询或取得与“preferred、高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回首选高度。
 
 ### `QSizeF QGraphicsLayoutItem::preferredSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::preferredSize` 用于计算、查询或取得与“preferred、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退回首选尺寸。
 
 ### `qreal QGraphicsLayoutItem::preferredWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::preferredWidth` 用于计算、查询或取得与“preferred、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回首选宽度。
 
 ### `[virtual] void QGraphicsLayoutItem::setGeometry(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGeometry`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该虚函数将`QGraphicsLayoutItem`的几何形状设置为`rect`，即父坐标（例如，`rect`的左上角等价于该物品在父坐标中的位置）。
+你必须在`QGraphicsLayoutItem`的子类中重新实现这个函数，才能接收几何更新。布局在进行重排时会调用这个函数。
+如果`rect`超出`minimumSize`和`maximumSize`的范围，则会调整到最接近的尺寸，使其在法律范围内。
 
 ### `[protected] void QGraphicsLayoutItem::setGraphicsItem(QGraphicsItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGraphicsItem`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QGraphicsItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QGraphicsLayoutItem`代表`QGraphicsItem`，并且想利用`QGraphicsLayout`的自动重父功能，应该设置这个值。注意，如果你删除`item`但不删除布局项，你需要调用setGraphicsItem（`nullptr`），以避免出现悬挂指针。
 
 ### `void QGraphicsLayoutItem::setMaximumHeight(qreal height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumHeight`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `height`：类型为 `qreal`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最大高度设置为`height`。
 
 ### `void QGraphicsLayoutItem::setMaximumSize(const QSizeF &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumSize`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSizeF &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最大大小设置为`size`。该属性覆盖`Qt::MaximumSize`的`sizeHint()`，并确保`effectiveSizeHint()`永远不会返回大于`size`的大小。要解除最大大小，请使用无效大小。
 
 ### `void QGraphicsLayoutItem::setMaximumSize(qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumSize`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等同于调用 setMaximumSize(`QSizeF`(`w`, `h`))。
 
 ### `void QGraphicsLayoutItem::setMaximumWidth(qreal width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumWidth`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最大宽度设置为`width`。
 
 ### `void QGraphicsLayoutItem::setMinimumHeight(qreal height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumHeight`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `height`：类型为 `qreal`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最低高度设置为`height`。
 
 ### `void QGraphicsLayoutItem::setMinimumSize(const QSizeF &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumSize`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSizeF &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最小大小设置为`size`。该属性覆盖`sizeHint()` `Qt::MinimumSize`，并确保`effectiveSizeHint()`永远不会返回小于`size`的大小。为了解除最小大小，请使用无效大小。
 
 ### `void QGraphicsLayoutItem::setMinimumSize(qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumSize`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等同于调用 setMinimumSize(`QSizeF`(`w`, `h`))。
 
 ### `void QGraphicsLayoutItem::setMinimumWidth(qreal width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumWidth`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最小宽度设置为`width`。
 
 ### `[protected] void QGraphicsLayoutItem::setOwnedByLayout(bool ownership)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOwnedByLayout`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ownership`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置布局是否应该在其结构器中删除该项。`ownership`必须为真，布局才能删除它。
 
 ### `void QGraphicsLayoutItem::setParentLayoutItem(QGraphicsLayoutItem *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setParentLayoutItem`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `QGraphicsLayoutItem *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QGraphicsLayoutItem`的父节点设置为`parent`。
 
 ### `void QGraphicsLayoutItem::setPreferredHeight(qreal height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreferredHeight`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `height`：类型为 `qreal`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将首选高度设置为`height`。
 
 ### `void QGraphicsLayoutItem::setPreferredSize(const QSizeF &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreferredSize`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSizeF &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将首选大小设置为`size`。该属性覆盖`Qt::PreferredSize`的`sizeHint()`，并提供`effectiveSizeHint()`的默认值。要取消首选大小，请使用无效大小。
 
 ### `void QGraphicsLayoutItem::setPreferredSize(qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreferredSize`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便捷函数等同于调用 setPreferredSize(`QSizeF`(`w`, `h`))。
 
 ### `void QGraphicsLayoutItem::setPreferredWidth(qreal width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreferredWidth`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将首选宽度设置为`width`。
 
 ### `void QGraphicsLayoutItem::setSizePolicy(const QSizePolicy &policy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSizePolicy`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `policy`：类型为 `const QSizePolicy &`。没有默认值，调用时必须提供。传入 `const QSizePolicy &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将尺寸策略设置为`policy`。尺寸策略描述了在布局中，物品应如何横向和纵向增长。
+`QGraphicsLayoutItem` 的默认大小策略是 （`QSizePolicy::Fixed`， `QSizePolicy::Fixed`， `QSizePolicy::DefaultType`），但子类通常会更改默认值。例如，`QGraphicsWidget` 默认为 （`QSizePolicy::Preferred`， `QSizePolicy::Preferred`， `QSizePolicy::DefaultType`）。
 
 ### `void QGraphicsLayoutItem::setSizePolicy(QSizePolicy::Policy hPolicy, QSizePolicy::Policy vPolicy, QSizePolicy::ControlType controlType = QSizePolicy::DefaultType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSizePolicy`。调用它会改变 `QGraphicsLayoutItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hPolicy`：类型为 `QSizePolicy::Policy`。没有默认值，调用时必须提供。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vPolicy`：类型为 `QSizePolicy::Policy`。没有默认值，调用时必须提供。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `controlType`：类型为 `QSizePolicy::ControlType`。默认值为 `QSizePolicy::DefaultType`。传入 `QSizePolicy::ControlType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数等同于调用 setSizePolicy（`QSizePolicy`（`hPolicy`， `vPolicy`， `controlType`））。
 
 ### `[pure virtual protected] QSizeF QGraphicsLayoutItem::sizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 `which`、`constraint` 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数 `which`：类型为 `Qt::SizeHint`。没有默认值，调用时必须提供。传入 `Qt::SizeHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `constraint`：类型为 `const QSizeF &`。默认值为 `QSizeF()`。传入 `const QSizeF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该纯虚拟函数返回`QGraphicsLayoutItem` `which`的大小提示，利用`constraint`的宽度或高度来约束输出。
+在`QGraphicsLayoutItem`的一个子类中重新实现这个函数，以提供物品所需的尺寸提示。
 
 ### `QSizePolicy QGraphicsLayoutItem::sizePolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::sizePolicy` 用于计算、查询或取得与“尺寸或数量、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizePolicy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizePolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+恢复当前的尺寸政策。
 
 ### `[virtual] void QGraphicsLayoutItem::updateGeometry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsLayoutItem::updateGeometry` 用于执行与“更新、几何区域”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该虚拟函数会丢弃任何缓存大小提示信息。如果你更改了`sizeHint()`函数的返回值，应始终调用该函数。子类在重新实现该函数时必须始终调用基础实现。
 
 ## 6. 深入实践与常见坑
 

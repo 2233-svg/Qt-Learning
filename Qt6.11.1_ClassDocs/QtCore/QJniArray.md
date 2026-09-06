@@ -97,488 +97,305 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 37 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QJniArray::iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的配置属性。初始化或状态切换时通过 `setIterator(...)` 设置，之后用 `iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:iterator`。
-- 属性名：`QJniArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个随机访问迭代器用于`QJniArray`。/*。
+/*!
+一个随机存取、连续迭代器用于`QJniArray`。
 
 ### `[alias] QJniArray::reverse_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的配置属性。初始化或状态切换时通过 `setReverse_iterator(...)` 设置，之后用 `reverse_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reverse_iterator`。
-- 属性名：`QJniArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QJniArray`的反迭代器，`std::reverse_iterator<iterator>`的同义词。
+注意：使用`operator->()`访问反迭代子元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。/*。
+/*!
+`QJniArray`的反迭代器，`std::reverse_iterator<const_iterator>`的同义词。
+注意：使用`operator->()`访问反迭代器元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。
 
 ### `QJniArray::QJniArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJniArray 的默认构造函数。这不会创建 Java 端数组，实例将无效。
 
 ### `[explicit] template <typename Container, QJniArrayBase::if_compatible_source_container<Container> = true> QJniArray::QJniArray(Container &&container)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `container`：类型为 `Container &&`。没有默认值，调用时必须提供。传入 `Container &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QJniArray，将新创建的Java数组包裹为类型`Container::value_type`的元素，并将`container`的数据填充到Java数组中。
+只有当`Container`是存储JNI类型或等效C类型元素的容器，并提供前向迭代器时，才参与超载解析。
+构造的QJni数组的专用取决于`container`的值类型。对于`Container<T>`（如`QList<T>`），通常为`QJniArray<T>`，但有以下例外：
+- `Container`：专业化
+- `QByteArray`：QJniArray<jbyte>
+- `QStringList`：QJniArray<jstring>
+- `Container::value_type`：专业化
+- `QJniObject`：QJniArray<jobject>
 
 ### `[noexcept] template <typename Other, QJniArrayBase::if_convertible<Other, T> = true> QJniArray::QJniArray(QJniArray<Other> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QJniArray<Other> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从`other`移动构建QJniArray。`other`数组变为`invalid`。
+只有当`other`的元素类型`Other`可转换为正在构建的QJniArray的元素类型`T`时，才参与重载决议。但实际不进行转换。
 
 ### `[explicit, since 6.9] QJniArray::QJniArray(QJniArrayBase::size_type size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `size`：类型为 `QJniArrayBase::size_type`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个大小为 `size` 的空 QJniArray。数组中的元素不会被初始化。
 
 ### `[explicit noexcept] QJniArray::QJniArray(QJniObject &&object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `QJniObject &&`。没有默认值，调用时必须提供。传入 `QJniObject &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从`object`移动构建QJni数组。`QJniObject`变为`invalid`。
+注意：该构造函数不会验证 Java 端对象是否为正确类型的数组。访问不匹配的 QJniArray 会导致行为未定义。
 
 ### `template <typename Other, QJniArrayBase::if_convertible<Other, T> = true> QJniArray::QJniArray(const QJniArray<Other> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QJniArray<Other> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过复制`other`构建 QJniArray。两个 QJniArray 对象将引用同一个 Java 数组对象。
+只有当`other`的元素类型`Other`可转换为正在构建的QJniArray的元素类型`T`时，才参与重载决议。但实际上不会发生转换。
 
 ### `[explicit] QJniArray::QJniArray(const QJniObject &object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个 QJniArray，包裹与 `object` 相同的 Java 数组，创建新的全局引用。要从现有的本地引用构造 QJniArray，可以使用通过 `fromLocalRef()` 构建的`QJniObject`。
+注意：该构造函数不会验证 Java 端对象是否为正确类型的数组。访问不匹配的 QJniArray 会导致行为未定义。
 
 ### `[explicit] QJniArray::QJniArray(jarray array)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `array`：类型为 `jarray`。没有默认值，调用时必须提供。传入 `jarray` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QJniArray，包裹 Java 端数组`array`，创建新的全局引用`array`。
+注意：该构造函数不会验证 Java 端对象是否为正确类型的数组。访问不匹配的 QJniArray 会导致行为未定义。
 
 ### `[default] QJniArray::QJniArray(std::initializer_list<T> &list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `list`：类型为 `std::initializer_list<T> &`。没有默认值，调用时必须提供。传入 `std::initializer_list<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QJniArray，将新创建的Java数组包裹类型为`T`的元素，并将`list`的数据填充到Java数组中。
 
 ### `QJniArray::~QJniArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁`QJniArray`对象，并释放所有对包裹后的 Java 数组的引用。
 
 ### `auto QJniArray::arrayObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArray::arrayObject` 用于计算、查询或取得与“array、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包裹后的 Java 对象，作为与该`QJniArray`对象的元素类型`jarray` `T`匹配的合适类型返回。
+- `T`：jarray型
+- `jbyte`：jbyteArray
+- `jchar`：jcharArray
+- `...`：...
+- `jobject`：jobjectArray
+- `QJniObject`：jobjectArray
+- `Q_DECLARE_JNI_CLASS`：jobjectArray
 
 ### `[noexcept] QJniArray<T>::const_iterator QJniArray::cbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArray::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的const迭代子，指向数组中的第一个项。
+如果数组被`invalid`，则返回与对应`end()`函数相同的迭代器。
 
 ### `[noexcept] QJniArray<T>::const_iterator QJniArray::cend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArray::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向列表中最后一项之后。
 
 ### `[noexcept] QJniArray<T>::const_reverse_iterator QJniArray::crbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArray::crbegin` 用于计算、查询或取得与“crbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向数组中的第一个项，顺序相反。
+如果数组`invalid`，则返回与对应`rend()`函数相同的迭代器。
+注意：使用 `operator->()` 访问反迭代器元素需要 C 20，因为 C 17 `reverse_iterator` 不支持返回代理对象的迭代器。
 
 ### `[noexcept] QJniArray<T>::const_reverse_iterator QJniArray::crend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArray::crend` 用于计算、查询或取得与“crend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向列表中最后一个项之后，顺序相反。
+注意：使用`operator->()`访问反迭代子元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。
 
 ### `template <typename Container = QJniArrayBase::ToContainerType<T>, QJniArrayBase::if_compatible_target_container<T, Container> = true> Container QJniArray::toContainer(Container &&container = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toContainer`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename Container = QJniArrayBase::ToContainerType<T>, QJniArrayBase::if_compatible_target_container<T, Container> = true> Container`。
-- 参数 `container`：类型为 `Container &&`。默认值为 `{}`。传入 `Container &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个容器，填充了包裹后的 Java 数组中的数据。
+如果没有提供`container`，则返回的容器类型取决于该`QJniArray`的元素类型。对于`QJniArray<T>`，通常会是`QList<T>`，但有以下例外：
+- `Specialization`：C型
+- `QJniArray`<jbyte>`: `QByteArray'
+- `QJniArray`<char>`: `QByteArray'
+- `QJniArray`<jstring>`: `QStringList'
+- `QJniArray`<`QString`>`: `QStringList'
+如果你输入一个命名容器（lvalue）作为`container`，那么该容器被填充，并返回对它的引用。如果你传递一个临时容器（r值，包含默认参数），那么该容器被填充，并返回值。
+如果数组`invalid`，该函数会立即返回。
 
 ### `[noexcept] template <typename Other, QJniArrayBase::if_convertible<Other, T> = true> QJniArray<T> &QJniArray::operator=(QJniArray<Other> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Other, QJniArrayBase::if_convertible<Other, T> = true> QJniArray<T> &`。
-- 参数 `other`：类型为 `QJniArray<Other> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`other`移动到该`QJniArray`，并返回对此的引用。`other`数组变为`invalid`。
+只有当`other`的元素类型`Other`可转换为本`QJniArray`的元素类型`T`时，才参与重载决议。但实际不会发生转换。
 
 ### `template <typename Other, QJniArrayBase::if_convertible<Other, T> = true> QJniArray<T> &QJniArray::operator=(const QJniArray<Other> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Other, QJniArrayBase::if_convertible<Other, T> = true> QJniArray<T> &`。
-- 参数 `other`：类型为 `const QJniArray<Other> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`分配到该`QJniArray`，并返回引用。两个`QJniArray`对象将引用同一个Java数组对象。
+只有当`other`的元素类型`Other`可转换为该`QJniArray`的元素类型`T`时，才参与重载决议。但实际不会发生转换。
 
 ### `[since 6.9] QJniArray<T>::reference QJniArray::operator[](QJniArrayBase::size_type i)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+返回一个引用对象，位于包裹后的 Java 数组中位置 `i`。
+`i`必须是列表中有效的索引位置（即0 <= `i` < `size()`）。
+返回的引用对象保持位置`i`的值，在大多数情况下会隐式转换为该值。赋值到返回的引用会覆盖 Java 数组中的该项。然而，调用对象上的变异成员函数不会修改数组中的条目。要调用该操作符的结果的成员函数，请取消引用对象：
+然而，如果不打算修改数组中的值，请将数组设为const，或者改用`at()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniArray<T>::reference`。
-- 参数 `i`：类型为 `QJniArrayBase::size_type`。没有默认值，调用时必须提供。传入 `QJniArrayBase::size_type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniArray<QString> strings = object.callMethod<QString[]>("getStrings");
+ if (!strings.isEmpty()) {
+     if (!(*array[0]).isEmpty()) {
+         // ...
+     }
+ }
+```
 
 ### `QJniArray<T>::const_reference QJniArray::at(QJniArrayBase::size_type i) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QJniArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_reference`。
-- 参数 `i`：类型为 `QJniArrayBase::size_type`。没有默认值，调用时必须提供。传入 `QJniArrayBase::size_type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包裹后的 Java 数组中位置 `i` 的值。
+`i` 必须是列表中有效的索引位置（即 0 <= `i` < `size()`）。
 
 ### `const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的 `const、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个随机访问迭代器用于`QJniArray`。/*。
+/*!
+一个随机存取、连续迭代器用于`QJniArray`。
 
 ### `const_reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的 `const、reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QJniArray`的反迭代器，`std::reverse_iterator<iterator>`的同义词。
+注意：使用`operator->()`访问反迭代子元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。/*。
+/*!
+`QJniArray`的反迭代器，`std::reverse_iterator<const_iterator>`的同义词。
+注意：使用`operator->()`访问反迭代器元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。
 
 ### `iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的 `iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个随机访问迭代器用于`QJniArray`。/*。
+/*!
+一个随机存取、连续迭代器用于`QJniArray`。
 
 ### `reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的 `reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QJniArray`的反迭代器，`std::reverse_iterator<iterator>`的同义词。
+注意：使用`operator->()`访问反迭代子元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。/*。
+/*!
+`QJniArray`的反迭代器，`std::reverse_iterator<const_iterator>`的同义词。
+注意：使用`operator->()`访问反迭代器元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。
 
 ### `QJniArray<T>::iterator begin()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的const迭代子，指向数组中的第一个项。
+如果数组被`invalid`，则返回与对应`end()`函数相同的迭代器。
 
 ### `QJniArray<T>::const_iterator begin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的const迭代子，指向数组中的第一个项。
+如果数组被`invalid`，则返回与对应`end()`函数相同的迭代器。
 
 ### `QJniArray<T>::const_iterator constBegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJniArray::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的const迭代子，指向数组中的第一个项。
+如果数组被`invalid`，则返回与对应`end()`函数相同的迭代器。
 
 ### `QJniArray<T>::const_iterator constEnd() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJniArray::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向列表中最后一项之后。
 
 ### `QJniArray<T>::iterator end()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向列表中最后一项之后。
 
 ### `QJniArray<T>::const_iterator end() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向列表中最后一项之后。
 
 ### `QJniArray<T>::reverse_iterator rbegin()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJniArray::rbegin` 用于计算、查询或取得与“rbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向数组中的第一个项，顺序相反。
+如果数组`invalid`，则返回与对应`rend()`函数相同的迭代器。
+注意：使用 `operator->()` 访问反迭代器元素需要 C 20，因为 C 17 `reverse_iterator` 不支持返回代理对象的迭代器。
 
 ### `QJniArray<T>::const_reverse_iterator rbegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJniArray::rbegin` 用于计算、查询或取得与“rbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向数组中的第一个项，顺序相反。
+如果数组`invalid`，则返回与对应`rend()`函数相同的迭代器。
+注意：使用 `operator->()` 访问反迭代器元素需要 C 20，因为 C 17 `reverse_iterator` 不支持返回代理对象的迭代器。
 
 ### `QJniArray<T>::reverse_iterator rend()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJniArray::rend` 用于计算、查询或取得与“rend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向列表中最后一个项之后，顺序相反。
+注意：使用`operator->()`访问反迭代子元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。
 
 ### `QJniArray<T>::const_reverse_iterator rend() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJniArray::rend` 用于计算、查询或取得与“rend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniArray<T>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向列表中最后一个项之后，顺序相反。
+注意：使用`operator->()`访问反迭代子元素需要C 20，因为C 17 `reverse_iterator`不支持返回代理对象的迭代器。
 
 ### `QJniArray<T>::const_reference operator[](QJniArrayBase::size_type i) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJniArray<T>::const_reference`。
-- 参数 `i`：类型为 `QJniArrayBase::size_type`。没有默认值，调用时必须提供。传入 `QJniArrayBase::size_type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包裹后的 Java 数组中位置 `i` 的值。
+`i` 必须是列表中有效的索引位置（即 0 <= `i` < `size()`）。
 
 ## 6. 深入实践与常见坑
 

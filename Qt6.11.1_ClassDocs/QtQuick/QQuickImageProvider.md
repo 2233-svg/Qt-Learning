@@ -74,107 +74,64 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QQuickImageProvider::QQuickImageProvider(QQmlImageProviderBase::ImageType type, QQmlImageProviderBase::Flags flags = Flags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickImageProvider` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QQmlImageProviderBase::ImageType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `flags`：类型为 `QQmlImageProviderBase::Flags`。默认值为 `Flags()`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个图像提供商，提供给定`type`的图像，并按照给定`flags`行为。
 
 ### `[override virtual noexcept] QQuickImageProvider::~QQuickImageProvider()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickImageProvider` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QQuickImageProvider`。
+注意：你派生类的解构器必须是线程安全的。
 
 ### `[override virtual] QQmlImageProviderBase::Flags QQuickImageProvider::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickImageProvider::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlImageProviderBase::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlImageProviderBase::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QQmlImageProviderBase::flags()` const.
+返回该提供商设置的标志。
 
 ### `[override virtual] QQmlImageProviderBase::ImageType QQuickImageProvider::imageType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickImageProvider::imageType` 用于计算、查询或取得与“image、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlImageProviderBase::ImageType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlImageProviderBase::ImageType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QQmlImageProviderBase::imageType()` const.
+返回该提供商支持的图像类型。
 
 ### `[virtual] QImage QQuickImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickImageProvider` 的核心操作 `requestImage`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QImage`。
-- 参数 `id`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `size`：类型为 `QSize *`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `requestedSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现此方法返回带`id`的图像。默认实现返回的是空图像。
+`id`是请求的图像源，去除了“image：”方案和提供者标识符。例如，如果图像`source`为“image://myprovider/icons/home”，则给定的`id`为“icons/home”。
+`requestedSize`对应于图片项请求的`Image::sourceSize`。如果`requestedSize`是有效大小，返回的图像应为该大小。
+无论哪种情况，`size`都必须设置为图像的原始大小。如果相关`Image`的值未被明确设置，这用于设置相关  的`width`和`height`。
+注意：该方法可能被多个线程调用，因此确保实现为重入。
 
 ### `[virtual] QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickImageProvider` 的核心操作 `requestPixmap`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `id`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `size`：类型为 `QSize *`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `requestedSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现此方法返回带有`id`的像素映射。默认实现返回的是空像素映射。
+`id`是请求的图像源，去除了“image：”方案和提供者标识符。例如，如果图像`source`为“image://myprovider/icons/home”，给定的`id`将是“icons/home”。
+`requestedSize`对应于图片项请求的`Image::sourceSize`。如果`requestedSize`是有效大小，返回的图像应当是该大小。
+无论哪种情况，`size`都必须设置为图像的原始大小。如果相关`Image`的`width`和`height`未被明确设置，则用于设置这些值。
+注意：该方法可能被多个线程调用，因此确保实现为重入。
 
 ### `[virtual] QQuickTextureFactory *QQuickImageProvider::requestTexture(const QString &id, QSize *size, const QSize &requestedSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickImageProvider` 的核心操作 `requestTexture`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QQuickTextureFactory *`。
-- 参数 `id`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `size`：类型为 `QSize *`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `requestedSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现此方法以返回纹理`id`。默认实现返回`nullptr`。
+`id`是请求的图像源，去除了“image：”方案和提供者标识符。例如，如果图像`source`为“image://myprovider/icons/home”，则给定的`id`为“icons/home”。
+`requestedSize`对应于图片项请求的`Image::sourceSize`。如果`requestedSize`是有效大小，返回的图像应当是该大小。
+无论哪种情况，`size`都必须设置为图像的原始大小。如果相关`Image`的`width`和`height`未被明确设置，则用于设置这些值。
+注意：该方法可能被多个线程调用，因此确保实现为重入。
 
 ## 6. 深入实践与常见坑
 

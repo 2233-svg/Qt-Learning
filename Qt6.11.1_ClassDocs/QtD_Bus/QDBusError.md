@@ -72,101 +72,77 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDBusError::ErrorType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusError` 暴露的类型声明 `错误、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ErrorType`。
-- 属性名：`QDBusError`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为了便于验证由D总线实现和总线守护进程本身产生的最常见的D-Bus错误，`QDBusError`可以与一组预定义的值进行比较：
+- `QDBusError::NoError`：`0`;`QDBusError`无效（即调用成功）
+- `QDBusError::Other`：`1`;`QDBusError` 包含一个并非众所周知的错误
+- `QDBusError::Failed`：`2`;调用失败（`org.freedesktop.DBus.Error.Failed`）
+- `QDBusError::NoMemory`：`3`;记忆消失（`org.freedesktop.DBus.Error.NoMemory`）
+- `QDBusError::ServiceUnknown`：`4`;被叫服务未知（`org.freedesktop.DBus.Error.ServiceUnknown`）
+- `QDBusError::NoReply`：`5`;被调用的方法未在指定的超时（`org.freedesktop.DBus.Error.NoReply`）内回复
+- `QDBusError::BadAddress`：`6`;所给地址无效（`org.freedesktop.DBus.Error.BadAddress`）
+- `QDBusError::NotSupported`：`7`;不支持调用/操作（`org.freedesktop.DBus.Error.NotSupported`）
+- `QDBusError::LimitsExceeded`：`8`;分配给该进程/调用/连接的限制超过了预定义的值（`org.freedesktop.DBus.Error.LimitsExceeded`）
+- `QDBusError::AccessDenied`：`9`;调用/操作尝试访问不允许访问的资源（`org.freedesktop.DBus.Error.AccessDenied`）
+- `QDBusError::NoServer`：`10`;文档中没有说明这是什么用途（`org.freedesktop.DBus.Error.NoServer`）
+- `QDBusError::Timeout`：`11`;文档未说明其用途或用途（`org.freedesktop.DBus.Error.Timeout`）
+- `QDBusError::NoNetwork`：`12`;文档未说明用途（`org.freedesktop.DBus.Error.NoNetwork`）
+- `QDBusError::AddressInUse`：`13`;`QDBusServer` 尝试绑定已在使用的地址（`org.freedesktop.DBus.Error.AddressInUse`）
+- `QDBusError::Disconnected`：`14`;调用/进程/消息在`QDBusConnection`断开连接后发送（`org.freedesktop.DBus.Error.Disconnected`）
+- `QDBusError::InvalidArgs`：`15`;传递给该调用/操作的参数无效（`org.freedesktop.DBus.Error.InvalidArgs`）
+- `QDBusError::UnknownMethod`：`16`;调用的方法未在本对象/接口中找不到，且参数如下（`org.freedesktop.DBus.Error.UnknownMethod`）
+- `QDBusError::TimedOut`：`17`;文档里没有说......（`org.freedesktop.DBus.Error.TimedOut`）
+- `QDBusError::InvalidSignature`：`18`;类型签名无效或不兼容（`org.freedesktop.DBus.Error.InvalidSignature`）
+- `QDBusError::UnknownInterface`：`19`;该对象（`org.freedesktop.DBus.Error.UnknownInterface`）中不已知接口
+- `QDBusError::UnknownObject`：`20`;对象路径指向一个不存在的对象（`org.freedesktop.DBus.Error.UnknownObject`）
+- `QDBusError::UnknownProperty`：`21`;该属性在此接口中不存在（`org.freedesktop.DBus.Error.UnknownProperty`）
+- `QDBusError::PropertyReadOnly`：`22`;该属性集合失败，因为该属性是只读的（`org.freedesktop.DBus.Error.PropertyReadOnly`）
+- `QDBusError::InternalError`：`23`;发生内部错误
+- `QDBusError::InvalidObjectPath`：`25`;所提供的对象路径无效。
+- `QDBusError::InvalidService`：`24`;所请求的服务无效。
+- `QDBusError::InvalidMember`：`27`;该成员无效。
+- `QDBusError::InvalidInterface`：`26`;接口无效。
 
 ### `[static] QString QDBusError::errorString(QDBusError::ErrorType error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `errorString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `error`：类型为 `QDBusError::ErrorType`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与错误条件`error`相关的错误名称。
 
 ### `bool QDBusError::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这是一个有效的错误条件（即存在错误），返回`true`，否则返回。
 
 ### `QString QDBusError::message() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusError::message` 用于计算、查询或取得与“message”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被叫方与该错误关联的消息。错误消息是实现定义的，通常包含人类可读的错误代码，但这并不意味着它适合终端用户。
 
 ### `QString QDBusError::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusError::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该错误的名称。错误名称类似于D-Bus接口名称，如`org.freedesktop.DBus.InvalidArgs`。
 
 ### `[noexcept] void QDBusError::swap(QDBusError &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusError::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QDBusError &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该错误与`other`交换。该操作非常快且从未失败。
 
 ### `QDBusError::ErrorType QDBusError::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusError::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDBusError::ErrorType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDBusError::ErrorType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该错误的`ErrorType`。
 
 ## 6. 深入实践与常见坑
 

@@ -90,192 +90,123 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `mirrorVertically : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject` 的配置属性。初始化或状态切换时通过 `setMirrorVertically(...)` 设置，之后用 `mirrorVertically()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性控制绘制时 FBO 内容大小是否应垂直镜像。这使得不符合标准期望的第三方渲染代码易于集成。
+默认值是`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`mirrorVertically`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `mirrorVertically()` 读取当前值；它不会修改应用状态。
 
 ### `textureFollowsItemSize : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject` 的配置属性。初始化或状态切换时通过 `setTextureFollowsItemSize(...)` 设置，之后用 `textureFollowsItemSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性控制 FBO 纹理尺寸是否应与`QQuickFramebufferObject`物品的尺寸相符。当该属性为假时，FBO 将在首次显示时创建一次。如果设置为 true，则每次物品尺寸变化时都会重新创建。
+默认值是`true`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`textureFollowsItemSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textureFollowsItemSize()` 读取当前值；它不会修改应用状态。
 
 ### `QQuickFramebufferObject::QQuickFramebufferObject(QQuickItem *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QQuickItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有父 `parent` 的新 QQuickFrameBufferObject。
 
 ### `[pure virtual] QQuickFramebufferObject::Renderer *QQuickFramebufferObject::createRenderer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::createRenderer` 用于计算、查询或取得与“创建、Renderer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQuickFramebufferObject::Renderer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQuickFramebufferObject::Renderer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现这个函数，创建一个用于渲染到 FBO 的渲染器。
+在GUI线程被阻塞时，该函数会在渲染线程上被调用。
 
 ### `[override virtual] bool QQuickFramebufferObject::isTextureProvider() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTextureProvider`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QQuickItem::isTextureProvider()` const.
+如果该项是纹理提供者，则返回 true。默认实现返回 false。
+该函数可以从任何线程调用。
 
 ### `[override virtual] void QQuickFramebufferObject::releaseResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::releaseResources` 用于执行与“释放、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QQuickItem::releaseResources()`。
+当某个项目需要释放尚未由`QQuickItem::updatePaintNode()`返回节点管理的图形资源时，调用该函数。
+当该项即将从之前渲染的窗口中移除时，就会发生这种情况。当调用该函数时，该项必定会有`window`。
+该函数在图形界面线程中被调用，渲染线程的状态（使用时）未知。对象不应直接删除，而应通过`QQuickWindow::scheduleRenderJob()`调度进行清理。
 
 ### `[override virtual] QSGTextureProvider *QQuickFramebufferObject::textureProvider() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::textureProvider` 用于计算、查询或取得与“texture、Provider”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTextureProvider *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTextureProvider *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QQuickItem::textureProvider()` const.
+返回某个物品的纹理提供者。默认实现返回`nullptr`。
+该函数只能在渲染线程中调用。
 
 ### `class Renderer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject` 暴露的类型声明 `Renderer`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QQuickFramebufferObject::Renderer`类用于实现`QQuickFramebufferObject`的渲染逻辑。
 
 ### `bool mirrorVertically() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::mirrorVertically` 用于计算、查询或取得与“mirror、Vertically”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性控制绘制时 FBO 内容大小是否应垂直镜像。这使得不符合标准期望的第三方渲染代码易于集成。
+默认值是`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `mirrorVertically()` 读取当前值；它不会修改应用状态。
 
 ### `void setMirrorVertically(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMirrorVertically`。调用它会改变 `QQuickFramebufferObject` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性控制绘制时 FBO 内容大小是否应垂直镜像。这使得不符合标准期望的第三方渲染代码易于集成。
+默认值是`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMirrorVertically(...)` 修改 `mirrorVertically`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTextureFollowsItemSize(bool follows)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextureFollowsItemSize`。调用它会改变 `QQuickFramebufferObject` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性控制 FBO 纹理尺寸是否应与`QQuickFramebufferObject`物品的尺寸相符。当该属性为假时，FBO 将在首次显示时创建一次。如果设置为 true，则每次物品尺寸变化时都会重新创建。
+默认值是`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `follows`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTextureFollowsItemSize(...)` 修改 `textureFollowsItemSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool textureFollowsItemSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::textureFollowsItemSize` 用于计算、查询或取得与“texture、Follows、项目访问、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性控制 FBO 纹理尺寸是否应与`QQuickFramebufferObject`物品的尺寸相符。当该属性为假时，FBO 将在首次显示时创建一次。如果设置为 true，则每次物品尺寸变化时都会重新创建。
+默认值是`true`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textureFollowsItemSize()` 读取当前值；它不会修改应用状态。
 
 ### `void mirrorVerticallyChanged(bool)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `mirrorVerticallyChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性控制绘制时 FBO 内容大小是否应垂直镜像。这使得不符合标准期望的第三方渲染代码易于集成。
+默认值是`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bool`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `mirrorVertically` 的变化，不要把它当作普通函数主动调用。
 
 ### `void textureFollowsItemSizeChanged(bool)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `textureFollowsItemSizeChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性控制 FBO 纹理尺寸是否应与`QQuickFramebufferObject`物品的尺寸相符。当该属性为假时，FBO 将在首次显示时创建一次。如果设置为 true，则每次物品尺寸变化时都会重新创建。
+默认值是`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bool`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `textureFollowsItemSize` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

@@ -108,471 +108,329 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 35 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDockWidget::DockWidgetFeatureflags QDockWidget::DockWidgetFeatures`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 暴露的类型声明 `Dock、Widget、Featureflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DockWidgetFeatureflags QDockWidget::DockWidgetFeatures`。
-- 属性名：`QDockWidget`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDockWidget::DockWidgetClosable`：`0x01`;码头小部件可以关闭。
+- `QDockWidget::DockWidgetMovable`：`0x02`;用户可以在多个停靠点之间移动码头组件。
+- `QDockWidget::DockWidgetFloatable`：`0x04`;dock 小部件可以从主窗口分离，并作为独立窗口浮动。
+- `QDockWidget::DockWidgetVerticalTitleBar`：`0x08`;底座小部件左侧显示一个竖直标题栏。这可以用来增加`QMainWindow`中的垂直空间。
+- `QDockWidget::NoDockWidgetFeatures`：`0x00`;停靠坞小部件不能关闭、移动或浮动。
+DockWidgetFeatures 类型是 QFlags 的 typedef<DockWidgetFeature>。它存储 DockWidgetFeature 值的 OR 组合。
 
 ### `allowedAreas : Qt::DockWidgetAreas`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的配置属性。初始化或状态切换时通过 `setDockWidgetAreas(...)` 设置，之后用 `DockWidgetAreas()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+可放置Dock小部件的区域。
+默认是`Qt::AllDockWidgetAreas`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::DockWidgetAreas`。
-- 属性名：`allowedAreas`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `allowedAreas()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.9] dockLocation : Qt::DockWidgetArea`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的配置属性。初始化或状态切换时通过 `setDockWidgetArea(...)` 设置，之后用 `DockWidgetArea()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留当前的码头位置，如果该码头小部件是浮动的或没有主窗口父节点，则该属性表示 Qt：：NoDockLocation。
 
-**签名拆解：**
-
-- 属性类型：`Qt::DockWidgetArea`。
-- 属性名：`dockLocation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dockLocation()` 读取当前值；它不会修改应用状态。
 
 ### `features : DockWidgetFeatures`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的配置属性。初始化或状态切换时通过 `setFeatures(...)` 设置，之后用 `features()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了码头小部件是可移动、可闭合还是可浮动。
+默认情况下，该属性设置为`DockWidgetClosable`、`DockWidgetMovable`和`DockWidgetFloatable`的组合。
 
-**签名拆解：**
-
-- 属性类型：`DockWidgetFeatures`。
-- 属性名：`features`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `features()` 读取当前值；它不会修改应用状态。
 
 ### `floating : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的配置属性。初始化或状态切换时通过 `setFloating(...)` 设置，之后用 `floating()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定dock小部件是否浮动。
+浮动停靠小部件以单个独立窗口的形式呈现给用户，“位于”其父`QMainWindow`之上，而不是停靠在`QMainWindow`或分页插坞小部件组中。
+浮动码头小部件可以单独定位和调整大小，无论是程序化还是鼠标操作。
+默认情况下，该属性为`true`。
+当该属性发生变化时，`topLevelChanged()`信号会被发射。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`floating`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `floating()` 读取当前值；它不会修改应用状态。
 
 ### `windowTitle : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的配置属性。初始化或状态切换时通过 `setWindowTitle(...)` 设置，之后用 `windowTitle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含 dock 小部件标题（说明）。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`windowTitle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `windowTitle()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QDockWidget::QDockWidget(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `flags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有父`parent`和窗口标志的QDockWidget `flags`。Dock小部件将放置在左侧的Dock小部件区域。
 
 ### `[explicit] QDockWidget::QDockWidget(const QString &title, QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `title`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `flags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有父 `parent` 和窗口标志的 QDockWidget `flags`。码头控件将放置在左侧码头控件区域。
+窗口标题设置为`title`。当 QDockWidget 停靠和拔出时使用该标题。它也用于 `QMainWindow` 提供的上下文菜单中。
 
 ### `[virtual noexcept] QDockWidget::~QDockWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了码头小部件。
 
 ### `[signal] void QDockWidget::allowedAreasChanged(Qt::DockWidgetAreas allowedAreas)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 发出的通知信号 `allowedAreasChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+可放置Dock小部件的区域。
+默认是`Qt::AllDockWidgetAreas`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `allowedAreas`：类型为 `Qt::DockWidgetAreas`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetAreas` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `allowedAreas` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual protected] void QDockWidget::changeEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDockWidget::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QWidget::changeEvent`（QEvent *事件）。
+该事件处理程序可以重新实现以处理状态变化。
+该事件中被更改的状态可以通过提供的`event`检索。
+变更事件包括：`QEvent::ToolBarChange`、`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::WindowTitleChange`、`QEvent::IconTextChange`、`QEvent::ModifiedChange`、`QEvent::MouseTrackingChange`、`QEvent::ParentChange`、`QEvent::WindowStateChange`、`QEvent::LanguageChange`、`QEvent::LocaleChange`、`QEvent::LayoutDirectionChange`、`QEvent::ReadOnlyChange`。
 
 ### `[override virtual protected] void QDockWidget::closeEvent(QCloseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `closeEvent`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QCloseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::closeEvent`（QCloseEvent *event）。
+当 Qt 收到来自窗口系统顶层控件的窗口关闭请求时，该事件处理程序会以该`event`调用。
+默认情况下，事件被接受，小部件关闭。你可以重新实现这个函数，改变小部件对窗口关闭请求的响应方式。例如，你可以通过调用所有事件的 `ignore()` 来阻止窗口关闭。
+主窗口应用程序通常会重新实现该函数，以检查用户的工作是否已被保存，并在关闭前请求许可。
 
 ### `[signal] void QDockWidget::dockLocationChanged(Qt::DockWidgetArea area)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 发出的通知信号 `dockLocationChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性保留当前的码头位置，如果该码头小部件是浮动的或没有主窗口父节点，则该属性表示 Qt：：NoDockLocation。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `dockLocation` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual protected] bool QDockWidget::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDockWidget::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `[signal] void QDockWidget::featuresChanged(QDockWidget::DockWidgetFeatures features)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 发出的通知信号 `featuresChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性决定了码头小部件是可移动、可闭合还是可浮动。
+默认情况下，该属性设置为`DockWidgetClosable`、`DockWidgetMovable`和`DockWidgetFloatable`的组合。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `features`：类型为 `QDockWidget::DockWidgetFeatures`。没有默认值，调用时必须提供。传入 `QDockWidget::DockWidgetFeatures` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `features` 的变化，不要把它当作普通函数主动调用。
 
 ### `[virtual protected] void QDockWidget::initStyleOption(QStyleOptionDockWidget *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDockWidget::initStyleOption` 用于执行与“init、Style、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionDockWidget *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用这个`QDockWidget`的值初始化`option`。这种方法适用于子类需要`QStyleOptionDockWidget`但不想自己填满所有信息时。
 
 ### `bool QDockWidget::isAreaAllowed(Qt::DockWidgetArea area) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAreaAllowed`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该 dock 小部件能放置在给定的`area`中，返回`true`;否则返回`false`。
 
 ### `[override virtual protected] void QDockWidget::paintEvent(QPaintEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
+绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
+- `repaint()`或`update()`被援引，
+- 小部件被遮挡，现已被发现，或
+- 还有很多其他原因。
+许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
+Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
+当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
+背景可以用`setBackgroundRole()`和`setPalette()`设置。
+自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
+注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
+警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
 
 ### `[since 6.9] void QDockWidget::setDockLocation(Qt::DockWidgetArea area)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDockLocation`。调用它会改变 `QDockWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留当前的码头位置，如果该码头小部件是浮动的或没有主窗口父节点，则该属性表示 Qt：：NoDockLocation。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDockLocation(...)` 修改 `dockLocation`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QDockWidget::setTitleBarWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTitleBarWidget`。调用它会改变 `QDockWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置一个任意`widget`作为 dock 小部件的标题栏。如果`widget` `nullptr`，之前在 Dock 小部件上设置的任何自定义标题栏小部件都会被移除但不会删除，默认标题栏将被使用。
+如果设置了标题栏小部件，`QDockWidget`在浮动时不会使用原生窗口装饰。
+以下是实现自定义标题栏的一些建议：
+- 标题栏控件未明确处理的鼠标事件必须通过调用`QMouseEvent::ignore()`来忽略。这些事件随后传播到`QDockWidget`父节点，父节点按常规方式处理，拖动标题栏时移动，双击时停靠和脱离，等等。
+- 当`DockWidgetVerticalTitleBar`设置为`QDockWidget`时，标题栏控件会相应地重新定位。在`resizeEvent()`中，标题栏应检查应采取的方向：
+`QDockWidget` *dockWidget = qobject_cast<`QDockWidget`*>（parentWidget()）;
+如果 （dockWidget->features() & `QDockWidget::DockWidgetVerticalTitleBar`） {。
+我需要保持垂直。
+} 否则 {。
+我需要横着。
+}。
+- 标题栏小部件必须具有有效的`QWidget::sizeHint()`和 `QWidget::minimumSizeHint()`。这些功能应考虑标题栏当前的朝向。
+- 无法从Dock小部件中移除标题栏。不过，通过设置默认构造`QWidget`作为标题栏小部件，可以实现类似效果。
+如上所示`qobject_cast()`，标题栏小部件可以使用其父`QDockWidget`的完全访问权限。因此，它可以根据用户操作执行停靠和隐藏等操作。
 
 ### `void QDockWidget::setWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWidget`。调用它会改变 `QDockWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将Dock小部件设置为`widget`。
+如果添加`widget`时dock小部件可见，必须明确`show()`。
+注意，在调用该函数之前，必须先添加`widget`布局;否则，`widget`将不可见。
 
 ### `QWidget *QDockWidget::titleBarWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDockWidget::titleBarWidget` 用于计算、查询或取得与“title、Bar、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QDockWidget`上设置的自定义标题栏控件，如果没有设置自定义标题栏，则返回`nullptr`。
 
 ### `QAction *QDockWidget::toggleViewAction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toggleViewAction`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QAction *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可勾选的操作，可以添加到菜单和工具栏，方便用户显示或关闭该 dock 小部件。
+动作的文本被设置为 dock 小部件的窗口标题。
+`QAction`对象归`QDockWidget`所有。当`QDockWidget`被销毁时，该对象将被自动删除。
+注意：该动作不能用来程序化显示或隐藏dock小部件。请使用`visible`属性。
 
 ### `[signal] void QDockWidget::topLevelChanged(bool topLevel)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 发出的通知信号 `topLevelChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性决定dock小部件是否浮动。
+浮动停靠小部件以单个独立窗口的形式呈现给用户，“位于”其父`QMainWindow`之上，而不是停靠在`QMainWindow`或分页插坞小部件组中。
+浮动码头小部件可以单独定位和调整大小，无论是程序化还是鼠标操作。
+默认情况下，该属性为`true`。
+当该属性发生变化时，`topLevelChanged()`信号会被发射。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `topLevel`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `floating` 的变化，不要把它当作普通函数主动调用。
 
 ### `[signal] void QDockWidget::visibilityChanged(bool visible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 发出的通知信号 `visibilityChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `visible`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当底座小部件变为`visible`（或不可见）时，会发出该信号。当小部件被隐藏或显示，以及当小部件停靠在标签页的底座区域并选择或取消时，都会触发。
+注意：信号可能与`QWidget::isVisible()`不同。如果某个底座小部件被最小化或固定化并关联到未选中或非激活标签页，就会发生这种情况。
 
 ### `QWidget *QDockWidget::widget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDockWidget::widget` 用于计算、查询或取得与“widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 dock 控件的控件。如果控件尚未设置，该函数返回零。
 
 ### `enum DockWidgetFeature { DockWidgetClosable, DockWidgetMovable, DockWidgetFloatable, DockWidgetVerticalTitleBar, NoDockWidgetFeatures }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 暴露的类型声明 `Dock、Widget、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDockWidget::DockWidgetClosable`：`0x01`;码头小部件可以关闭。
+- `QDockWidget::DockWidgetMovable`：`0x02`;用户可以在多个停靠点之间移动码头组件。
+- `QDockWidget::DockWidgetFloatable`：`0x04`;dock 小部件可以从主窗口分离，并作为独立窗口浮动。
+- `QDockWidget::DockWidgetVerticalTitleBar`：`0x08`;底座小部件左侧显示一个竖直标题栏。这可以用来增加`QMainWindow`中的垂直空间。
+- `QDockWidget::NoDockWidgetFeatures`：`0x00`;停靠坞小部件不能关闭、移动或浮动。
+DockWidgetFeatures 类型是 QFlags 的 typedef<DockWidgetFeature>。它存储 DockWidgetFeature 值的 OR 组合。
 
 ### `flags DockWidgetFeatures`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDockWidget` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDockWidget::DockWidgetClosable`：`0x01`;码头小部件可以关闭。
+- `QDockWidget::DockWidgetMovable`：`0x02`;用户可以在多个停靠点之间移动码头组件。
+- `QDockWidget::DockWidgetFloatable`：`0x04`;dock 小部件可以从主窗口分离，并作为独立窗口浮动。
+- `QDockWidget::DockWidgetVerticalTitleBar`：`0x08`;底座小部件左侧显示一个竖直标题栏。这可以用来增加`QMainWindow`中的垂直空间。
+- `QDockWidget::NoDockWidgetFeatures`：`0x00`;停靠坞小部件不能关闭、移动或浮动。
+DockWidgetFeatures 类型是 QFlags 的 typedef<DockWidgetFeature>。它存储 DockWidgetFeature 值的 OR 组合。
 
 ### `Qt::DockWidgetAreas allowedAreas() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDockWidget::allowedAreas` 用于计算、查询或取得与“allowed、Areas”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DockWidgetAreas`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+可放置Dock小部件的区域。
+默认是`Qt::AllDockWidgetAreas`。
 
-**签名拆解：**
-
-- 返回值：`Qt::DockWidgetAreas`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `allowedAreas()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::DockWidgetArea dockLocation() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDockWidget::dockLocation` 用于计算、查询或取得与“dock、Location”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DockWidgetArea`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留当前的码头位置，如果该码头小部件是浮动的或没有主窗口父节点，则该属性表示 Qt：：NoDockLocation。
 
-**签名拆解：**
-
-- 返回值：`Qt::DockWidgetArea`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dockLocation()` 读取当前值；它不会修改应用状态。
 
 ### `QDockWidget::DockWidgetFeatures features() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDockWidget::features` 用于计算、查询或取得与“features”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDockWidget::DockWidgetFeatures`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了码头小部件是可移动、可闭合还是可浮动。
+默认情况下，该属性设置为`DockWidgetClosable`、`DockWidgetMovable`和`DockWidgetFloatable`的组合。
 
-**签名拆解：**
-
-- 返回值：`QDockWidget::DockWidgetFeatures`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `features()` 读取当前值；它不会修改应用状态。
 
 ### `bool isFloating() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFloating`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定dock小部件是否浮动。
+浮动停靠小部件以单个独立窗口的形式呈现给用户，“位于”其父`QMainWindow`之上，而不是停靠在`QMainWindow`或分页插坞小部件组中。
+浮动码头小部件可以单独定位和调整大小，无论是程序化还是鼠标操作。
+默认情况下，该属性为`true`。
+当该属性发生变化时，`topLevelChanged()`信号会被发射。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isFloating()` 读取当前值；它不会修改应用状态。
 
 ### `void setAllowedAreas(Qt::DockWidgetAreas areas)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAllowedAreas`。调用它会改变 `QDockWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+可放置Dock小部件的区域。
+默认是`Qt::AllDockWidgetAreas`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `areas`：类型为 `Qt::DockWidgetAreas`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetAreas` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAllowedAreas(...)` 修改 `allowedAreas`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFeatures(QDockWidget::DockWidgetFeatures features)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFeatures`。调用它会改变 `QDockWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了码头小部件是可移动、可闭合还是可浮动。
+默认情况下，该属性设置为`DockWidgetClosable`、`DockWidgetMovable`和`DockWidgetFloatable`的组合。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `features`：类型为 `QDockWidget::DockWidgetFeatures`。没有默认值，调用时必须提供。传入 `QDockWidget::DockWidgetFeatures` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFeatures(...)` 修改 `features`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFloating(bool floating)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFloating`。调用它会改变 `QDockWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定dock小部件是否浮动。
+浮动停靠小部件以单个独立窗口的形式呈现给用户，“位于”其父`QMainWindow`之上，而不是停靠在`QMainWindow`或分页插坞小部件组中。
+浮动码头小部件可以单独定位和调整大小，无论是程序化还是鼠标操作。
+默认情况下，该属性为`true`。
+当该属性发生变化时，`topLevelChanged()`信号会被发射。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `floating`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFloating(...)` 修改 `floating`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

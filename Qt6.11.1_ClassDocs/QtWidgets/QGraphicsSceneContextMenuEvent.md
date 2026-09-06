@@ -69,101 +69,52 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGraphicsSceneContextMenuEvent::Reason`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsSceneContextMenuEvent` 暴露的类型声明 `Reason`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Reason`。
-- 属性名：`QGraphicsSceneContextMenuEvent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了发送上下文事件的原因。
+- `QGraphicsSceneContextMenuEvent::Mouse`：`0`;鼠标触发事件发送。在大多数平台上，这意味着点击了右键。
+- `QGraphicsSceneContextMenuEvent::Keyboard`：`1`;键盘触发了该事件。在Windows和macOS上，这意味着菜单按钮被按下。
+- `QGraphicsSceneContextMenuEvent::Other`：`2`;事件通过其他方式发送（即非鼠标或键盘）。
 
 ### `[virtual noexcept] QGraphicsSceneContextMenuEvent::~QGraphicsSceneContextMenuEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsSceneContextMenuEvent` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁了整个活动。
 
 ### `Qt::KeyboardModifiers QGraphicsSceneContextMenuEvent::modifiers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneContextMenuEvent::modifiers` 用于计算、查询或取得与“modifiers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::KeyboardModifiers`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::KeyboardModifiers`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当请求使用上下文菜单时，返回正在使用的键盘修饰符。
 
 ### `QPointF QGraphicsSceneContextMenuEvent::pos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneContextMenuEvent::pos` 用于计算、查询或取得与“pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回请求上下文菜单时鼠标光标在项目坐标中的位置。
 
 ### `QGraphicsSceneContextMenuEvent::Reason QGraphicsSceneContextMenuEvent::reason() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneContextMenuEvent::reason` 用于计算、查询或取得与“reason”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsSceneContextMenuEvent::Reason`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsSceneContextMenuEvent::Reason`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上下文菜单事件的理由。
 
 ### `QPointF QGraphicsSceneContextMenuEvent::scenePos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneContextMenuEvent::scenePos` 用于计算、查询或取得与“scene、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景坐标中鼠标光标的位置，提示上下文菜单时的请求。
 
 ### `QPoint QGraphicsSceneContextMenuEvent::screenPos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneContextMenuEvent::screenPos` 用于计算、查询或取得与“screen、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回鼠标光标在屏幕坐标中的位置，提示上下文菜单时的位置。
 
 ## 6. 深入实践与常见坑
 

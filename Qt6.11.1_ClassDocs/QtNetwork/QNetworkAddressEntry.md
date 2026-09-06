@@ -100,350 +100,176 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 26 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkAddressEntry::DnsEligibilityStatus`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 暴露的类型声明 `Dns、Eligibility、状态`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DnsEligibilityStatus`。
-- 属性名：`QNetworkAddressEntry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举表示某一主机地址是否有资格在域名系统（DNS）或其他类似名称解析机制中发布。一般来说，如果该地址是该机器在不确定时间内会被访问的地址，则适合发布，尽管该地址不必是永久的。例如，通过DHCP获得的地址通常符合资格，但通过密码学生成的临时IPv6地址则不符合。
+- `QNetworkAddressEntry::DnsEligibilityUnknown`：`-1`;Qt 和操作系统无法判断该地址是否应发布。如果找不到符合条件的地址，应用程序可能需要应用更多启发式方法。
+- `QNetworkAddressEntry::DnsEligible`：`1`;该地址有资格在DNS中发布。
+- `QNetworkAddressEntry::DnsIneligible`：`0`;该地址不应在DNS中发布，也不应传输给其他方，除非作为发出数据包的源地址。
 
 ### `QNetworkAddressEntry::QNetworkAddressEntry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的 QNetworkAddressEntry 对象。
 
 ### `QNetworkAddressEntry::QNetworkAddressEntry(const QNetworkAddressEntry &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QNetworkAddressEntry &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QNetworkAddressEntry对象，该对象是该对象的复制品`other`。
 
 ### `[noexcept] QNetworkAddressEntry::~QNetworkAddressEntry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了这个`QNetworkAddressEntry`物体。
 
 ### `QHostAddress QNetworkAddressEntry::broadcast() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::broadcast` 用于计算、查询或取得与“broadcast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与IPv4地址和网掩码相关的广播地址。通常可以通过将网罩中包含0的IP地址位设为1来推导出来。（换句话说，通过用网掩码的倒数对IP地址进行位数或处理）。
+对于IPv6地址，该成员总是空的，因为该系统已放弃广播概念，转而采用多播。特别地，对应本地网络所有节点的主机组可以通过“所有节点”特殊组播组（地址FF02：：1）访问。
 
 ### `void QNetworkAddressEntry::clearAddressLifetime()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::clearAddressLifetime` 用于执行与“清空、Address、Lifetime”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重置该地址的首选和有效寿命。通话结束后，`isLifetimeKnown()`返回`false`。
 
 ### `QNetworkAddressEntry::DnsEligibilityStatus QNetworkAddressEntry::dnsEligibility() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::dnsEligibility` 用于计算、查询或取得与“dns、Eligibility”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkAddressEntry::DnsEligibilityStatus`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkAddressEntry::DnsEligibilityStatus`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该地址是否符合在域名系统（DNS）或类似名称解析机制中发布的资格。
+一般来说，如果该地址是该机器在不确定时间内会被访问的地址，则适合公开，尽管不一定是永久性的。例如，通过DHCP获得的地址通常符合资格，但加密生成的临时IPv6地址则不符合。
+在某些系统上，`QNetworkInterface`需要启发式地确定哪些地址符合资格。
 
 ### `QHostAddress QNetworkAddressEntry::ip() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::ip` 用于计算、查询或取得与“ip”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能返回一个在网络接口中找到的IPv4或IPv6地址。
 
 ### `bool QNetworkAddressEntry::isLifetimeKnown() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLifetimeKnown`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知地址寿命，返回`true`;如果不知道，返回`false`。如果未知寿命，`preferredLifetime()`和`validityLifetime()`都会返回`QDeadlineTimer::Forever`。
 
 ### `bool QNetworkAddressEntry::isPermanent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isPermanent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该地址在该接口上是永久的，`false`是否是临时的，返回`true`。永久地址是没有有效期且通常是静态的（手动配置的）。
+如果无法确定该信息，该函数返回`true`。
+注意：根据操作系统和网络配置工具的不同，如果工具未能正确向操作系统提供详细信息，临时地址可能会被解释为永久地址。
 
 ### `bool QNetworkAddressEntry::isTemporary() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTemporary`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该地址在该接口上是临时的，`false`是否永久，返回`true`。
 
 ### `QHostAddress QNetworkAddressEntry::netmask() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::netmask` 用于计算、查询或取得与“netmask”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与IP地址关联的网络掩码。掩码以IP地址的形式表示，例如255.255.0.0。
+对于IPv6地址，前缀长度转换为一个设为1的位数等于前缀长度的地址。对于前缀长度为64位（最常见的数值），网掩码将表示为一个`QHostAddress`，地址为FFFF：FFFF：FFFF：FFFF：：
 
 ### `QDeadlineTimer QNetworkAddressEntry::preferredLifetime() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::preferredLifetime` 用于计算、查询或取得与“preferred、Lifetime”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDeadlineTimer`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知地址被弃用（不再优先），返回截止日期。如果地址寿命未知（见`isLifetimeKnown()`），该函数总是返回`QDeadlineTimer::Forever`。
+虽然优先使用地址，但操作系统可能会将其用作新发送数据包的源地址。弃用后，该地址仍对入站数据包有效一段时间，直到最终移除（参见`validityLifetime()`）。
 
 ### `int QNetworkAddressEntry::prefixLength() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::prefixLength` 用于计算、查询或取得与“prefix、Length”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该IP地址的前缀长度。前缀长度与网掩码中设为1的位数相匹配（参见`netmask()`）。IPv4地址的值介于0到32之间。IPv6地址的值介于0到128之间，是表示地址的首选形式。
+如果无法确定前缀长度（即`netmask()`返回空QHostAddress()），该函数返回-1。
 
 ### `void QNetworkAddressEntry::setAddressLifetime(QDeadlineTimer preferred, QDeadlineTimer validity)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAddressLifetime`。调用它会改变 `QNetworkAddressEntry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `preferred`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `validity`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该地址的首选和有效寿命分别设定为`preferred`和`validity`截止日期。调用后，`isLifetimeKnown()`返回`true`，即使两个参数都`QDeadlineTimer::Forever`。
 
 ### `void QNetworkAddressEntry::setBroadcast(const QHostAddress &newBroadcast)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBroadcast`。调用它会改变 `QNetworkAddressEntry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newBroadcast`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QNetworkAddressEntry`对象的广播IP地址设置为`newBroadcast`。
 
 ### `void QNetworkAddressEntry::setDnsEligibility(QNetworkAddressEntry::DnsEligibilityStatus status)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDnsEligibility`。调用它会改变 `QNetworkAddressEntry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `status`：类型为 `QNetworkAddressEntry::DnsEligibilityStatus`。没有默认值，调用时必须提供。传入 `QNetworkAddressEntry::DnsEligibilityStatus` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该地址的DNS资格标志设置为`status`。
 
 ### `void QNetworkAddressEntry::setIp(const QHostAddress &newIp)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIp`。调用它会改变 `QNetworkAddressEntry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newIp`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QNetworkAddressEntry`对象所包含的IP地址设置为`newIp`。
 
 ### `void QNetworkAddressEntry::setNetmask(const QHostAddress &newNetmask)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNetmask`。调用它会改变 `QNetworkAddressEntry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newNetmask`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QNetworkAddressEntry`对象所包含的网遮罩设置为`newNetmask`。设置网遮罩还会将前缀长度设置为与新的遮罩匹配。
 
 ### `void QNetworkAddressEntry::setPrefixLength(int length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrefixLength`。调用它会改变 `QNetworkAddressEntry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `length`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该IP地址的前缀长度设置为`length`。`length`值必须对此类IP地址有效：IPv4地址应在0到32之间，IPv6地址在0到128之间。设置为任意无效值等同于设置为-1，即“无前缀长度”。
+设置前缀长度也决定了网掩码（参见`netmask()`）。
 
 ### `[noexcept] void QNetworkAddressEntry::swap(QNetworkAddressEntry &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkAddressEntry::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QNetworkAddressEntry &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络地址入口实例与`other`交换。该操作非常快速且从未失败。
 
 ### `QDeadlineTimer QNetworkAddressEntry::validityLifetime() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validityLifetime`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当该地址变得无效且已知时，返回截止日期，并从网络栈中移除。如果地址寿命未知（见 `isLifetimeKnown()`），该函数总是返回`QDeadlineTimer::Forever`。
+地址有效时，操作系统会接受它作为该机器的有效目的地址。是否用作新发包的源地址由包括首选寿命（见`preferredLifetime()`）在内的规则控制。
 
 ### `bool QNetworkAddressEntry::operator!=(const QNetworkAddressEntry &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkAddressEntry &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该网络地址条目与`other`不同，返回`true`。
 
 ### `QNetworkAddressEntry &QNetworkAddressEntry::operator=(const QNetworkAddressEntry &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QNetworkAddressEntry &`。
-- 参数 `other`：类型为 `const QNetworkAddressEntry &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制`QNetworkAddressEntry`对象`other`。
 
 ### `bool QNetworkAddressEntry::operator==(const QNetworkAddressEntry &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkAddressEntry &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该网络地址条目与`other`相同，返回`true`。
 
 ### `[since 6.2] QDebug operator<<(QDebug debug, const QNetworkAddressEntry &entry)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkAddressEntry` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `entry`：类型为 `const QNetworkAddressEntry &`。没有默认值，调用时必须提供。传入 `const QNetworkAddressEntry &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QNetworkAddressEntry` `entry`写入流，并返回`debug`流的引用。
 
 ## 6. 深入实践与常见坑
 

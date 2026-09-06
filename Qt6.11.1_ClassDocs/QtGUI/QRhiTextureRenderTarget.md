@@ -74,138 +74,84 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiTextureRenderTarget::Flagflags QRhiTextureRenderTarget::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTarget` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QRhiTextureRenderTarget::Flags`。
-- 属性名：`QRhiTextureRenderTarget`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述渲染目标加载/存储行为的标志值。加载/存储行为可能在原生资源中内置，具体取决于后端，因此必须事先明确，且不能更改，除非重建（因此需要发布和创建新的原生资源）。
+- `QRhiTextureRenderTarget::PreserveColorContents`：`1 << 0`;表示在开始渲染时加载颜色附件的内容，而不是清除。这在移动（铺砌）GPU上可能更昂贵，但允许在切换之间保留现有内容。在使用解析纹理集进行多采样渲染时，设置该标志也会要求将多采样色彩数据存储（写出）到多采样纹理或渲染缓冲区。（对于非多采样渲染，颜色数据始终被存储，但对于MSAA存储多重采样数据会降低某些GPU架构的效率，因此默认不写出）但请注意，这不可移植：在某些情况下，图形API层面没有中间多采样纹理，例如使用OpenGL ES的`GL_EXT_multisampled_render_to_texture`时，这些纹理都是隐式的，由OpenGL ES实现处理。在这种情况下，PreserveColorContents很可能没有影响。因此，使用多采样渲染时避免依赖该标志，颜色附加是多采样`QRhiTexture`（而非多采样`QRhiRenderBuffer`）。
+- `QRhiTextureRenderTarget::PreserveDepthStencilContents`：`1 << 1`;表示深度纹理的内容应在开始渲染时加载，而非清除。仅适用于纹理作为深度缓冲区（`QRhiTextureRenderTargetDescription::depthTexture()`已设置）时，因为深度/模板渲染缓冲区可能没有任何物理支撑，且数据可能根本不会写入。
+- `QRhiTextureRenderTarget::DoNotStoreDepthStencilContents`：`1 << 2`;表示深度纹理的内容无需写出。仅在深度模板缓冲区使用`QRhiTexture`而非`QRhiRenderBuffer`时相关，因为对`QRhiRenderBuffer`来说这是隐含的。当设置了depthResolveTexture时，该标志不相关，因为行为视同标志被设置。该枚举值在Qt 6.8中引入。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `[pure virtual] bool QRhiTextureRenderTarget::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTarget::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建对应的本地图形资源。如果由于之前的 create() 已有资源存在且没有相应的 `destroy()`，则 `destroy()` 会先隐式调用。
+注意：`renderPassDescriptor()`必须在调用create()之前设置好。要获得与渲染目标兼容的`QRhiRenderPassDescriptor`，请在创建()之前、但在设置所有其他参数（如`description()`和`flags()`）后调用`newCompatibleRenderPassDescriptor()`。为了节省资源，尽可能用多个`QRhiTextureRenderTarget`实例重用同一`QRhiRenderPassDescriptor`。只有当渲染目标拥有相同数量和类型的附件（实际纹理可能不同）以及相同的标志时，才可能共享相同的渲染通行描述符。
+注意：`description()`中引用的资源，如`QRhiTexture`实例，必须已经调用了create()。
+成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终安全。
 
 ### `QRhiTextureRenderTargetDescription QRhiTextureRenderTarget::description() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTarget::description` 用于计算、查询或取得与“description”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTextureRenderTargetDescription`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTextureRenderTargetDescription`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染目标描述。
 
 ### `QRhiTextureRenderTarget::Flags QRhiTextureRenderTarget::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTarget::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTextureRenderTarget::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTextureRenderTarget::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的标志。
 
 ### `[pure virtual] QRhiRenderPassDescriptor *QRhiTextureRenderTarget::newCompatibleRenderPassDescriptor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTarget::newCompatibleRenderPassDescriptor` 用于计算、查询或取得与“new、Compatible、渲染、Pass、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderPassDescriptor *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QRhiRenderPassDescriptor`，它与此渲染目标兼容。 返回值有两种用途：可以传递给 `setRenderPassDescriptor()` 和 `QRhiGraphicsPipeline::setRenderPassDescriptor()`。渲染通道描述符描述了附件（颜色、深度/模板）以及可以由 `flags()` 影响的加载/存储行为。`QRhiGraphicsPipeline` 只能与具有 `compatible` `QRhiRenderPassDescriptor` 设置的渲染目标一起使用。 只要具有相同数量和类型的附件，两个 `QRhiTextureRenderTarget` 实例可以共享同一渲染通道描述符。相关的 `QRhiTexture` 或 `QRhiRenderBuffer` 实例不属于渲染通道描述符，因此在两个 `QRhiTextureRenderTarget` 实例中可以不同。 注意：在 `description()` 中引用的资源（例如 `QRhiTexture` 实例）必须已经调用过 `create()`。
 
 ### `[override virtual] QRhiResource::Type QRhiTextureRenderTarget::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureRenderTarget::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `void QRhiTextureRenderTarget::setDescription(const QRhiTextureRenderTargetDescription &desc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDescription`。调用它会改变 `QRhiTextureRenderTarget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `desc`：类型为 `const QRhiTextureRenderTargetDescription &`。没有默认值，调用时必须提供。传入 `const QRhiTextureRenderTargetDescription &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置渲染目标描述`desc`。
 
 ### `void QRhiTextureRenderTarget::setFlags(QRhiTextureRenderTarget::Flags f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QRhiTextureRenderTarget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiTextureRenderTarget::Flags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把标志设为`f`。
 
 ### `enum Flag { PreserveColorContents, PreserveDepthStencilContents, DoNotStoreDepthStencilContents }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTarget` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述渲染目标加载/存储行为的标志值。加载/存储行为可能在原生资源中内置，具体取决于后端，因此必须事先明确，且不能更改，除非重建（因此需要发布和创建新的原生资源）。
+- `QRhiTextureRenderTarget::PreserveColorContents`：`1 << 0`;表示在开始渲染时加载颜色附件的内容，而不是清除。这在移动（铺砌）GPU上可能更昂贵，但允许在切换之间保留现有内容。在使用解析纹理集进行多采样渲染时，设置该标志也会要求将多采样色彩数据存储（写出）到多采样纹理或渲染缓冲区。（对于非多采样渲染，颜色数据始终被存储，但对于MSAA存储多重采样数据会降低某些GPU架构的效率，因此默认不写出）但请注意，这不可移植：在某些情况下，图形API层面没有中间多采样纹理，例如使用OpenGL ES的`GL_EXT_multisampled_render_to_texture`时，这些纹理都是隐式的，由OpenGL ES实现处理。在这种情况下，PreserveColorContents很可能没有影响。因此，使用多采样渲染时避免依赖该标志，颜色附加是多采样`QRhiTexture`（而非多采样`QRhiRenderBuffer`）。
+- `QRhiTextureRenderTarget::PreserveDepthStencilContents`：`1 << 1`;表示深度纹理的内容应在开始渲染时加载，而非清除。仅适用于纹理作为深度缓冲区（`QRhiTextureRenderTargetDescription::depthTexture()`已设置）时，因为深度/模板渲染缓冲区可能没有任何物理支撑，且数据可能根本不会写入。
+- `QRhiTextureRenderTarget::DoNotStoreDepthStencilContents`：`1 << 2`;表示深度纹理的内容无需写出。仅在深度模板缓冲区使用`QRhiTexture`而非`QRhiRenderBuffer`时相关，因为对`QRhiRenderBuffer`来说这是隐含的。当设置了depthResolveTexture时，该标志不相关，因为行为视同标志被设置。该枚举值在Qt 6.8中引入。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureRenderTarget` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述渲染目标加载/存储行为的标志值。加载/存储行为可能在原生资源中内置，具体取决于后端，因此必须事先明确，且不能更改，除非重建（因此需要发布和创建新的原生资源）。
+- `QRhiTextureRenderTarget::PreserveColorContents`：`1 << 0`;表示在开始渲染时加载颜色附件的内容，而不是清除。这在移动（铺砌）GPU上可能更昂贵，但允许在切换之间保留现有内容。在使用解析纹理集进行多采样渲染时，设置该标志也会要求将多采样色彩数据存储（写出）到多采样纹理或渲染缓冲区。（对于非多采样渲染，颜色数据始终被存储，但对于MSAA存储多重采样数据会降低某些GPU架构的效率，因此默认不写出）但请注意，这不可移植：在某些情况下，图形API层面没有中间多采样纹理，例如使用OpenGL ES的`GL_EXT_multisampled_render_to_texture`时，这些纹理都是隐式的，由OpenGL ES实现处理。在这种情况下，PreserveColorContents很可能没有影响。因此，使用多采样渲染时避免依赖该标志，颜色附加是多采样`QRhiTexture`（而非多采样`QRhiRenderBuffer`）。
+- `QRhiTextureRenderTarget::PreserveDepthStencilContents`：`1 << 1`;表示深度纹理的内容应在开始渲染时加载，而非清除。仅适用于纹理作为深度缓冲区（`QRhiTextureRenderTargetDescription::depthTexture()`已设置）时，因为深度/模板渲染缓冲区可能没有任何物理支撑，且数据可能根本不会写入。
+- `QRhiTextureRenderTarget::DoNotStoreDepthStencilContents`：`1 << 2`;表示深度纹理的内容无需写出。仅在深度模板缓冲区使用`QRhiTexture`而非`QRhiRenderBuffer`时相关，因为对`QRhiRenderBuffer`来说这是隐含的。当设置了depthResolveTexture时，该标志不相关，因为行为视同标志被设置。该枚举值在Qt 6.8中引入。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

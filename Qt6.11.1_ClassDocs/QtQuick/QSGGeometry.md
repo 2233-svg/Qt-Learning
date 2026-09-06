@@ -116,679 +116,370 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 51 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGGeometry::AttributeType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 暴露的类型声明 `Attribute、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AttributeType`。
-- 属性名：`QSGGeometry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举识别了几种属性类型。
+- `QSGGeometry::UnknownAttribute`：`0`;不在乎
+- `QSGGeometry::PositionAttribute`：`1`;位置
+- `QSGGeometry::ColorAttribute`：`2`;颜色
+- `QSGGeometry::TexCoordAttribute`：`3`;纹理坐标
+- `QSGGeometry::TexCoord1Attribute`：`4`;纹理坐标1
+- `QSGGeometry::TexCoord2Attribute`：`5`;纹理坐标2
 
 ### `enum QSGGeometry::DataPattern`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 暴露的类型声明 `数据访问、Pattern`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DataPattern`。
-- 属性名：`QSGGeometry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+DataPattern 枚举用于指定几何对象中顶点和索引数据的使用模式。
+- `QSGGeometry::AlwaysUploadPattern`: `0`；数据总是上传。这意味着用户在修改后无需显式标记索引和顶点数据为脏。此为默认值。
+- `QSGGeometry::DynamicPattern`: `2`；数据被重复修改并绘制多次。这是一个可能提供更好性能的提示。设置此选项时，用户必须确保在修改后标记数据为脏。
+- `QSGGeometry::StaticPattern`: `3`；数据被修改一次并绘制多次。这是一个可能提供更好性能的提示。设置此选项时，用户必须确保在修改后标记数据为脏。
+- `QSGGeometry::StreamPattern`: `1`；数据几乎每次绘制前都会被修改。这是一个可能提供更好性能的提示。设置此选项时，用户必须确保在修改后标记数据为脏。
 
 ### `enum QSGGeometry::DrawingMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 暴露的类型声明 `Drawing、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DrawingMode`。
-- 属性名：`QSGGeometry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定绘图模式，也称为原始拓扑。
+注意：从Qt 6开始，场景图只暴露了所有支持的3D图形API都支持的拓扑。因此，`DrawLineLoop`和`DrawTriangleFan`这两个值在Qt 6的运行时不再支持，尽管枚举值本身仍然存在。
+- `QSGGeometry::DrawPoints`：`0x0000`
+- `QSGGeometry::DrawLines`：`0x0001`
+- `QSGGeometry::DrawLineStrip`：`0x0003`
+- `QSGGeometry::DrawTriangles`：`0x0004`
+- `QSGGeometry::DrawTriangleStrip`：`0x0005`
 
 ### `enum QSGGeometry::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QSGGeometry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定顶点数据中的组件类型。
+- `QSGGeometry::ByteType`：`0x1400`
+- `QSGGeometry::UnsignedByteType`：`0x1401`
+- `QSGGeometry::ShortType`：`0x1402`
+- `QSGGeometry::UnsignedShortType`：`0x1403`
+- `QSGGeometry::IntType`：`0x1404`
+- `QSGGeometry::UnsignedIntType`：`0x1405`
+- `QSGGeometry::FloatType`：`0x1406`
+- `QSGGeometry::Bytes2Type`：`0x1407`;于第5.14节新增。
+- `QSGGeometry::Bytes3Type`：`0x1408`;新增于第5.14节。
+- `QSGGeometry::Bytes4Type`：`0x1409`;第5.14季度新增。
+- `QSGGeometry::DoubleType`：`0x140A`;于第5.14季度新增。
 
 ### `QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes, int vertexCount, int indexCount = 0, int indexType = UnsignedShortType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `attributes`：类型为 `const QSGGeometry::AttributeSet &`。没有默认值，调用时必须提供。传入 `const QSGGeometry::AttributeSet &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vertexCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `indexCount`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `indexType`：类型为 `int`。默认值为 `UnsignedShortType`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于`attributes`构造几何对象。
+对象根据累计大小（`attributes`）和`indexCount`的体积为`vertexCount`顶点分配空间。
+`indexType`可以是`UnsignedShortType`或`UnsignedIntType`。后者的支持取决于运行时使用的图形API实现，且可能并不总是可用。
+几何对象默认以`DrawTriangleStrip`为绘制模式构建。
+注意：`attributes`及其引用的`Attribute`对象必须在整个QSGGeometry生命周期内保持有效。QSGGeometry存储`attributes`的引用，不删除`Attribute`对象。
 
 ### `[virtual noexcept] QSGGeometry::~QSGGeometry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁几何对象及其分配的顶点和索引数据。
 
 ### `void QSGGeometry::allocate(int vertexCount, int indexCount = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::allocate` 用于执行与“allocate”相关的操作。调用时要先确认当前状态和 `vertexCount`、`indexCount` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `vertexCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `indexCount`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调整该几何对象的顶点和索引数据大小，使其适合`vertexCount`顶点和`indexCount`指标，并相应设置顶点和指标的数量。
+使用`setVertexCount()`或`setIndexCount()`来更改顶点或索引的数量，而无需再次调用 allocate()。
+调用后顶点和索引数据将失效，调用者必须通过调用`node->markDirty(QSGNode::DirtyGeometry)`标记关联几何节点为脏节点，以确保渲染器有机会更新内部缓冲区。
 
 ### `int QSGGeometry::attributeCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::attributeCount` 用于计算、查询或取得与“attribute、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何所用的attrbute集合中的属性数量。
 
 ### `const QSGGeometry::Attribute *QSGGeometry::attributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::attributes` 用于计算、查询或取得与“attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QSGGeometry::Attribute *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::Attribute *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个带有该几何属性的数组。数组大小以 `attributeCount()` 表示。
 
 ### `[static] const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultAttributes_ColoredPoint2D`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::AttributeSet &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+便利函数，返回用于每顶点着色的二维绘图属性。
 
 ### `[static] const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_Point2D()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultAttributes_Point2D`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::AttributeSet &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便功能，返回用于二维纯色绘图的属性。
 
 ### `[static] const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_TexturedPoint2D()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultAttributes_TexturedPoint2D`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::AttributeSet &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+便利函数，返回用于纹理二维绘图的属性。
 
 ### `unsigned int QSGGeometry::drawingMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的核心操作 `drawingMode`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`unsigned int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何形状的绘图模式。
+默认值是`DrawTriangleStrip`。
 
 ### `int QSGGeometry::indexCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexCount` 用于计算、查询或取得与“索引、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染几何对象时处理的索引数量。
 
 ### `void *QSGGeometry::indexData()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexData` 用于计算、查询或取得与“索引、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该几何对象原始索引数据的指针。
 
 ### `const void *QSGGeometry::indexData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexData` 用于计算、查询或取得与“索引、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该几何对象原始索引数据的指针。
 
 ### `uint *QSGGeometry::indexDataAsUInt()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexDataAsUInt` 用于计算、查询或取得与“索引、数据访问、As、U、Int”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uint *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uint *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数，将索引数据作为一个可变的32位无符号整数数组访问。
 
 ### `const uint *QSGGeometry::indexDataAsUInt() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexDataAsUInt` 用于计算、查询或取得与“索引、数据访问、As、U、Int”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const uint *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const uint *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数，将索引数据作为一个不可变的32位无符号整数数组访问。
 
 ### `quint16 *QSGGeometry::indexDataAsUShort()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexDataAsUShort` 用于计算、查询或取得与“索引、数据访问、As、U、Short”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16 *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint16 *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数，将索引数据作为可变的16位无符号整数数组访问。
 
 ### `const quint16 *QSGGeometry::indexDataAsUShort() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexDataAsUShort` 用于计算、查询或取得与“索引、数据访问、As、U、Short”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const quint16 *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const quint16 *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数可访问索引数据，作为16位无符号整数的不可变数组。
 
 ### `QSGGeometry::DataPattern QSGGeometry::indexDataPattern() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexDataPattern` 用于计算、查询或取得与“索引、数据访问、Pattern”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGGeometry::DataPattern`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGGeometry::DataPattern`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何中索引的使用模式。默认模式为`AlwaysUploadPattern`。
 
 ### `int QSGGeometry::indexType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::indexType` 用于计算、查询或取得与“索引、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何对象中用于索引的原始类型。
 
 ### `float QSGGeometry::lineWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::lineWidth` 用于计算、查询或取得与“行、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取当前的线或点宽度，或用于该几何形状。该属性仅适用于`drawingMode`为`DrawLines`或`DrawLineStrip`时的线宽。在支持时，当`drawingMode`为`DrawPoints`时，也适用于点的大小。
+默认值为`1.0`。
+注意：根据平台和图形API，对点和线条绘制的支持在运行时可能有限。例如，有些API不支持点精灵，因此无法设置非1的大小。
+注意：`1.0`宽度始终受支持。
 
 ### `void QSGGeometry::markIndexDataDirty()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::markIndexDataDirty` 用于执行与“mark、索引、数据访问、Dirty”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标记该几何体中的顶点发生变化，必须重新上传。
+该函数仅在顶点使用模式为 StaticData 且渲染该几何体的渲染器将几何体上传到顶点缓冲对象（VBO）时才有效。
 
 ### `void QSGGeometry::markVertexDataDirty()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::markVertexDataDirty` 用于执行与“mark、Vertex、数据访问、Dirty”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标记该几何体中的顶点发生变化，必须重新上传。
+该函数仅在顶点使用模式为 StaticData 且渲染该几何体的渲染器将几何体上传到顶点缓冲对象（VBO）时才有效。
 
 ### `void QSGGeometry::setDrawingMode(unsigned int mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDrawingMode`。调用它会改变 `QSGGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `unsigned int`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于绘制该几何形状的 `mode`。
+默认值是`QSGGeometry::DrawTriangleStrip`。
 
 ### `[since 6.10] void QSGGeometry::setIndexCount(int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIndexCount`。调用它会改变 `QSGGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置每次渲染几何对象时要处理的索引数量。
+`count`未经过验证，用户有责任确保仅指定介于零和分配索引数量之间的值。
+此调用后顶点和索引数据不会失效，但调用者必须通过调用`node->markDirty(QSGNode::DirtyGeometry)`标记几何节点为脏节点，以确保渲染器有机会更新内部缓冲区。
 
 ### `void QSGGeometry::setIndexDataPattern(QSGGeometry::DataPattern p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIndexDataPattern`。调用它会改变 `QSGGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `QSGGeometry::DataPattern`。没有默认值，调用时必须提供。传入 `QSGGeometry::DataPattern` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将索引的使用模式设置为`p`。
+默认是`AlwaysUploadPattern`。当设置为非默认值时，用户必须在更改索引数据后调用`markIndexDataDirty()`，同时还要用`QSGNode::DirtyGeometry`调用`QSGNode::markDirty()`。
 
 ### `void QSGGeometry::setLineWidth(float width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLineWidth`。调用它会改变 `QSGGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `float`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该几何体所用的线或点宽度为`width`。该属性仅适用于`drawingMode`为`DrawLines`或`DrawLineStrip`时的线宽。支持时，也适用于`drawingMode` `DrawPoints`时点的大小。
+注意：根据平台和图形API，对点和线条绘制的支持在运行时可能有限。例如，有些API不支持点精灵，因此无法设置非1的大小。
+注意：`1.0`宽度始终受支持。
 
 ### `[since 6.10] void QSGGeometry::setVertexCount(int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVertexCount`。调用它会改变 `QSGGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置要渲染的顶点数。
+`count`不会被验证，用户有责任确保只指定介于零和分配顶点数之间的值。
+调用后顶点数据不会失效，但调用者必须通过调用`node->markDirty(QSGNode::DirtyGeometry)`将几何节点标记为脏节点，以确保渲染器有机会更新内部缓冲区。
 
 ### `void QSGGeometry::setVertexDataPattern(QSGGeometry::DataPattern p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVertexDataPattern`。调用它会改变 `QSGGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `QSGGeometry::DataPattern`。没有默认值，调用时必须提供。传入 `QSGGeometry::DataPattern` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将顶点的使用模式设置为`p`。
+默认是`AlwaysUploadPattern`。当设置为非默认值时，用户必须在更改顶点数据后调用`markVertexDataDirty()`，同时还要用`QSGNode::DirtyGeometry`调用`QSGNode::markDirty()`。
 
 ### `int QSGGeometry::sizeOfIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::sizeOfIndex` 用于计算、查询或取得与“尺寸或数量、Of、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引类型的字节大小。
+当索引类型为`UnsignedShortType`时，该值为`2`;当索引类型为`UnsignedIntType`时为`4`。
 
 ### `int QSGGeometry::sizeOfVertex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::sizeOfVertex` 用于计算、查询或取得与“尺寸或数量、Of、Vertex”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个顶点的字节大小。
+这个数值来自属性。
 
 ### `[static] void QSGGeometry::updateColoredRectGeometry(QSGGeometry *g, const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `updateColoredRectGeometry`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `g`：类型为 `QSGGeometry *`。没有默认值，调用时必须提供。传入 `QSGGeometry *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rect`中更新几何体`g`坐标。
+该函数假设几何对象包含一条由`QSGGeometry::ColoredPoint2D`顶点组成的三角形带。
 
 ### `[static] void QSGGeometry::updateRectGeometry(QSGGeometry *g, const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `updateRectGeometry`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `g`：类型为 `QSGGeometry *`。没有默认值，调用时必须提供。传入 `QSGGeometry *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`rect`中用坐标更新几何`g`。
+该函数假设几何对象包含一条由`QSGGeometry::Point2D`顶点组成的三角形带。
 
 ### `[static] void QSGGeometry::updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &textureRect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `updateTexturedRectGeometry`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `g`：类型为 `QSGGeometry *`。没有默认值，调用时必须提供。传入 `QSGGeometry *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `textureRect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更新几何体`g`，包含`rect`坐标和`textureRect`的纹理坐标。
+`textureRect`应该在归一化坐标内。
+`g`假设为一个由四个顶点组成的`QSGGeometry::TexturedPoint2D`型三角形带。
 
 ### `int QSGGeometry::vertexCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexCount` 用于计算、查询或取得与“vertex、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可渲染的顶点数，或者如果使用索引，则返回通过索引可访问的顶点数。
 
 ### `void *QSGGeometry::vertexData()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexData` 用于计算、查询或取得与“vertex、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该几何对象原始顶点数据的指针。
 
 ### `const void *QSGGeometry::vertexData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexData` 用于计算、查询或取得与“vertex、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该几何对象原始顶点数据的指针。
 
 ### `QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataAsColoredPoint2D` 用于计算、查询或取得与“vertex、数据访问、As、Colored、Point、2、D”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGGeometry::ColoredPoint2D *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGGeometry::ColoredPoint2D *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数以可变数组`QSGGeometry::ColoredPoint2D`访问顶点数据。
 
 ### `const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataAsColoredPoint2D` 用于计算、查询或取得与“vertex、数据访问、As、Colored、Point、2、D”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QSGGeometry::ColoredPoint2D *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::ColoredPoint2D *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数将顶点数据作为不可变的`QSGGeometry::ColoredPoint2D`数组访问。
 
 ### `QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataAsPoint2D` 用于计算、查询或取得与“vertex、数据访问、As、Point、2、D”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGGeometry::Point2D *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGGeometry::Point2D *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数以可变数组`QSGGeometry::Point2D`访问顶点数据。
 
 ### `const QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataAsPoint2D` 用于计算、查询或取得与“vertex、数据访问、As、Point、2、D”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QSGGeometry::Point2D *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::Point2D *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数以不可变数组`QSGGeometry::Point2D`访问顶点数据。
 
 ### `QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataAsTexturedPoint2D` 用于计算、查询或取得与“vertex、数据访问、As、Textured、Point、2、D”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGGeometry::TexturedPoint2D *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGGeometry::TexturedPoint2D *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数以可变数组`QSGGeometry::TexturedPoint2D`访问顶点数据。
 
 ### `const QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataAsTexturedPoint2D` 用于计算、查询或取得与“vertex、数据访问、As、Textured、Point、2、D”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QSGGeometry::TexturedPoint2D *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QSGGeometry::TexturedPoint2D *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数将顶点数据作为不可变的数组访问`QSGGeometry::TexturedPoint2D`。
 
 ### `QSGGeometry::DataPattern QSGGeometry::vertexDataPattern() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGGeometry::vertexDataPattern` 用于计算、查询或取得与“vertex、数据访问、Pattern”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGGeometry::DataPattern`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGGeometry::DataPattern`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何体中顶点的使用模式。默认模式为`AlwaysUploadPattern`。
 
 ### `struct Attribute`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的 `Attribute` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGGeometry：：Attribute 描述了 QSGGeometry 中的单个顶点属性。
+`QSGGeometry::Attribute`结构体描述了属性寄存器的位置、属性元组的大小和属性类型。
+如果该属性是描述位置的属性，它还会向渲染器提供提示。场景图渲染器可能会利用这些信息进行优化。
+它包含若干位，保留以供未来使用。
 
 ### `struct AttributeSet`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的 `Attribute、设置` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGGeometry：：AttributeSet 描述了 QSGGeometry 中顶点的构建方式。
 
 ### `struct ColoredPoint2D`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的 `Colored、Point、2、D` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGGeometry：：ColoredPoint2D 结构体是一个方便访问带有颜色的二维点的结构体。
 
 ### `struct Point2D`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的 `Point、2、D` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGGeometry：:P oint2D struct 是一个方便访问 2D 点的结构体。
 
 ### `struct TexturedPoint2D`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGGeometry` 的 `Textured、Point、2、D` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGGeometry：：TexturedPoint2D 结构体是一个方便的结构体，用于访问带有纹理坐标的二维点。
 
 ## 6. 深入实践与常见坑
 

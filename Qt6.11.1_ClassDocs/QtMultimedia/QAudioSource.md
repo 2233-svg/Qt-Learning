@@ -87,337 +87,181 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QAudioSource::QAudioSource(const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioSource` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `format`：类型为 `const QAudioFormat &`。默认值为 `QAudioFormat()`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的音频输入并将其连接到`parent`。默认音频输入设备与输出`format`参数一起使用。如果`format`为默认初始化，格式将被设置为音频设备的首选格式。
 
 ### `[explicit] QAudioSource::QAudioSource(const QAudioDevice &audioDevice, const QAudioFormat &format = QAudioFormat(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioSource` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `audioDevice`：类型为 `const QAudioDevice &`。没有默认值，调用时必须提供。传入 `const QAudioDevice &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `const QAudioFormat &`。默认值为 `QAudioFormat()`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的音频输入并连接到`parent`。`audioDevice`引用的设备与输入`format`参数一起使用。如果`format`为默认初始化，格式将被设置为`audioDevice`的首选格式。
 
 ### `[override virtual noexcept] QAudioSource::~QAudioSource()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioSource` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁这个音频输入。
 
 ### `qsizetype QAudioSource::bufferFrameCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::bufferFrameCount` 用于计算、查询或取得与“buffer、Frame、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回音频缓冲区大小（帧数）。
+如果在`start()`之前调用，返回平台默认值。如果在`start()`之前调用，但`setBufferSize()`或`setBufferFrameCount()`先被调用，返回由`setBufferSize()`或`setBufferFrameCount()`设定的值。如果在`start()`之后调用，返回实际使用的缓冲区大小。这可能不是之前由`setBufferSize()`或`setBufferFrameCount()`设定的。
 
 ### `[since 6.10] qsizetype QAudioSource::bufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::bufferSize` 用于计算、查询或取得与“buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回音频缓冲区大小（字节单位）。
+如果在`start()`之前调用，返回平台默认值。如果在`start()`之前调用，但之前调用了`setBufferSize()`或`setBufferFrameCount()`，返回由`setBufferSize()`或`setBufferFrameCount()`设定的值。如果在`start()`之后调用，返回实际使用的缓冲区大小。这可能不是之前`setBufferSize()`或`setBufferFrameCount()`设置的。
 
 ### `qsizetype QAudioSource::bytesAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesAvailable`，返回 `QAudioSource` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可用字节计算的音频数据量。
+注意：返回值仅在`QtAudio::ActiveState`或`QtAudio::IdleState`状态时有效，否则返回零。
 
 ### `qint64 QAudioSource::elapsedUSecs() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::elapsedUSecs` 用于计算、查询或取得与“elapsed、U、Secs”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回自调用`start()`以来的微秒，包括闲置和暂停状态的时间。
 
 ### `QtAudio::Error QAudioSource::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QtAudio::Error`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtAudio::Error`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回错误状态。
 
 ### `QAudioFormat QAudioSource::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QAudioFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退还正在使用的`QAudioFormat`。
 
 ### `[since 6.10] qsizetype QAudioSource::framesAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::framesAvailable` 用于计算、查询或取得与“frames、可用量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可读取的音频数据量（帧数）。
+注意：返回的值仅在处于`QtAudio::ActiveState`或`QtAudio::IdleState`状态时有效，否则返回零。
 
 ### `bool QAudioSource::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果音频源`null`，返回`true`，否则返回`false`。
 
 ### `qint64 QAudioSource::processedUSecs() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::processedUSecs` 用于计算、查询或取得与“processed、U、Secs”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回自调用以来处理的音频数据量`start()`以微秒计。
 
 ### `void QAudioSource::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+丢弃缓冲区中的所有音频数据，将缓冲区重置为零。
 
 ### `void QAudioSource::resume()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::resume` 用于执行与“恢复运行”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在一`suspend()`后恢复音频数据处理。
+将`state()`设置为调用时的状态`suspend()`。如果音频接收器的状态不`QtAudio::SuspendedState`，这个函数就没有任何作用。
 
 ### `void QAudioSource::setBufferFrameCount(qsizetype value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBufferFrameCount`。调用它会改变 `QAudioSource` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `qsizetype`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将音频缓冲区大小设置为帧数`value`。
+注意：该函数可以在 `start()` 之前的任何时候调用。`start()` 后对该函数的调用将被忽略。不应假设缓冲区大小设置是实际使用的缓冲区大小——在 `start()` 之后随时调用 `bufferFrameCount()` 以返回实际使用的缓冲区大小。
 
 ### `[since 6.10] void QAudioSource::setBufferSize(qsizetype value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBufferSize`。调用它会改变 `QAudioSource` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `qsizetype`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将音频缓冲区大小设置为`value`字节。
+注意：该函数可以在`start()`之前的任何时候调用，`start()`后调用该函数时会被忽略。不应假设缓冲区大小设置就是实际使用的缓冲区大小，`start()`之后调用`bufferSize()`会返回实际使用的缓冲区大小。
 
 ### `void QAudioSource::setVolume(qreal volume)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVolume`。调用它会改变 `QAudioSource` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `volume`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+输入音量设为`volume`。
+音量从`0.0`（静音）到`1.0`（全音量）线性缩放。超出该范围的数值将被夹紧。
+如果设备不支持调节输入音量，那么`volume`会被忽略，输入音量将保持在1.0。
+默认音量是`1.0`。
+注意：音量调整会改变该音频流的音量，而非全局音量。
 
 ### `QIODevice *QAudioSource::start()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `start`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向用于从系统音频输入传输数据的内部`QIODevice`的指针。设备已经打开，`read()`可以直接从中读取数据。
+注意：当直播被停止或你开始另一个直播时，指针将失效。
+如果`QAudioSource`能够访问系统的音频设备，`state()`返回`QtAudio::IdleState`，`error()`返回`QtAudio::NoError`，`stateChanged()`信号就会被发射。
+如果在此过程中出现问题，`error()`返回`QtAudio::OpenError`，`state()`返回`QtAudio::StoppedState`，`stateChanged()`信号被发射。
 
 ### `[since 6.11] template <typename Callback, QtAudio::if_audio_source_callback<Callback> = true> void QAudioSource::start(Callback &&cb)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `start`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`template <typename Callback, QtAudio::if_audio_source_callback<Callback> = true> void`。
-- 参数 `cb`：类型为 `Callback &&`。没有默认值，调用时必须提供。传入 `Callback &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以一个回调函数启动`QAudioSource`，调用将在软实时音频线程上调用。回调是一个可调用函数，参数为`QSpan`<const SampleType>，SampleType必须匹配`QAudioSource`格式的`QAudioFormat::SampleFormat`。该区间包含交错音频数据。
+如果`QAudioSource`成功启动，`error()`返回`QtAudio::NoError`。
+如果在此过程中出现问题，`error()`返回`QtAudio::OpenError`，`state()`返回`QtAudio::StoppedState`，`stateChanged()`信号被发射。
+注意：该 API 仅支持回调 API 的平台：苹果的 CoreAudio（macOS、iOS 等）、Windows、Linux（使用 PulseAudio 或 PipeWire 后端）和 Android。
+注意：回调将在软实时音频线程中调用。确保回调不会阻塞非常重要，因为这可能导致音频故障或断线。这包括执行阻塞IO、锁定互斥、分配内存或其他可能阻塞的操作。最佳实践请参阅Ross Bencina的文章《实时音频编程101：时间等待无效》。还可考虑使用clang的实时净化工具来验证音频回调。
 
 ### `void QAudioSource::start(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `start`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+开始将音频数据从系统的音频输入传输到`device`。`device`必须在`WriteOnly`、`Append`或`ReadWrite`模式下打开。
+如果`QAudioSource`成功获取音频数据，`state()`返回`QtAudio::ActiveState`或`QtAudio::IdleState`，`error()`返回`QtAudio::NoError`，`stateChanged()`信号被发射。
+如果在此过程中出现问题，`error()`返回`QtAudio::OpenError`，`state()`返回`QtAudio::StoppedState`，并发射`stateChanged()`信号。
 
 ### `QtAudio::State QAudioSource::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QtAudio::State`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtAudio::State`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回音频处理状态。
 
 ### `[signal] void QAudioSource::stateChanged(QtAudio::State state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioSource` 发出的通知信号 `stateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `QtAudio::State`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当设备`state`发生变化时，该信号会发出。
+注意：`QtAudio`命名空间在Qt 6.6之前称为QAudio。基于字符串的连接必须使用`QAudio::State`作为参数类型：`connect(source, SIGNAL(stateChanged(QAudio::State)), ...);`。
 
 ### `void QAudioSource::stop()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `stop`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+停止音频输入，脱离系统资源。
+将`error()`设置为`QtAudio::NoError`，`state()`为`QtAudio::StoppedState`并发出`stateChanged()`信号。
 
 ### `void QAudioSource::suspend()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::suspend` 用于执行与“suspend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+停止处理音频数据，保留缓冲音频数据。
+将`error()`设置为`QtAudio::NoError`，`state()`为`QtAudio::SuspendedState`并发出`stateChanged()`信号。
 
 ### `qreal QAudioSource::volume() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioSource::volume` 用于计算、查询或取得与“volume”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回输入音量。
+如果设备不支持调节输入音量，返回的值将是1.0。
 
 ## 6. 深入实践与常见坑
 

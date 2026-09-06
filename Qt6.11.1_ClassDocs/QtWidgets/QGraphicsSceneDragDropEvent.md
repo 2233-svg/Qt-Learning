@@ -72,178 +72,92 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QGraphicsSceneDragDropEvent::~QGraphicsSceneDragDropEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsSceneDragDropEvent` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了该物体。
 
 ### `void QGraphicsSceneDragDropEvent::acceptProposedAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::acceptProposedAction` 用于执行与“接受、Proposed、Action”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+将拟议动作设置为接受，即将掉落动作设置为拟议动作。这等于：
+使用该函数时，不应调用`accept()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setDropAction(proposedAction());
+```
 
 ### `Qt::MouseButtons QGraphicsSceneDragDropEvent::buttons() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::buttons` 用于计算、查询或取得与“buttons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseButtons`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseButtons`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`Qt::MouseButtons`值，表示在生成该鼠标事件时，鼠标上被按下了哪些按钮。
 
 ### `Qt::DropAction QGraphicsSceneDragDropEvent::dropAction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::dropAction` 用于计算、查询或取得与“drop、Action”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropAction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropAction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回拖拽中执行的动作。该动作应由接收方设置，并由`QDrag::exec()`返回。
 
 ### `const QMimeData *QGraphicsSceneDragDropEvent::mimeData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::mimeData` 用于计算、查询或取得与“mime、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QMimeData *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QMimeData *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回事件的 MIME 数据。
 
 ### `Qt::KeyboardModifiers QGraphicsSceneDragDropEvent::modifiers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::modifiers` 用于计算、查询或取得与“modifiers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::KeyboardModifiers`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::KeyboardModifiers`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回创建拖放事件时按下的键盘修改键。
 
 ### `QPointF QGraphicsSceneDragDropEvent::pos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::pos` 用于计算、查询或取得与“pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回事件相对于发送事件的视图的鼠标位置。
 
 ### `Qt::DropActions QGraphicsSceneDragDropEvent::possibleActions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::possibleActions` 用于计算、查询或取得与“possible、Actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropActions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropActions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回拖拽可能导致的投放动作。
 
 ### `Qt::DropAction QGraphicsSceneDragDropEvent::proposedAction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::proposedAction` 用于计算、查询或取得与“proposed、Action”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropAction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropAction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被提出的落下动作，即优先选择的动作。该动作必须是`possibleActions()`定义的可能动作之一。
 
 ### `QPointF QGraphicsSceneDragDropEvent::scenePos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::scenePos` 用于计算、查询或取得与“scene、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景坐标中鼠标的位置。
 
 ### `QPoint QGraphicsSceneDragDropEvent::screenPos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::screenPos` 用于计算、查询或取得与“screen、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回鼠标相对于屏幕的位置。
 
 ### `void QGraphicsSceneDragDropEvent::setDropAction(Qt::DropAction action)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDropAction`。调用它会改变 `QGraphicsSceneDragDropEvent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `action`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个函数允许接收方将被投放的动作设置为`action`，这应该是可能的动作之一。如果你使用这个函数，请调用`accept()`而不是`acceptProposedAction()`。
 
 ### `QWidget *QGraphicsSceneDragDropEvent::source() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneDragDropEvent::source` 用于计算、查询或取得与“来源”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回创建`QGraphicsSceneDragDropEvent`的`QGraphicsView`。
 
 ## 6. 深入实践与常见坑
 

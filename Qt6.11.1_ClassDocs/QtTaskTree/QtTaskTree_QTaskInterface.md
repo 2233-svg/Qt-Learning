@@ -64,35 +64,37 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 2 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[override virtual protected] bool QTaskInterface::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskInterface::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
 
 ### `void QTaskInterface::reportDone(QtTaskTree::DoneResult result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskInterface::reportDone` 用于执行与“report、Done”相关的操作。调用时要先确认当前状态和 `result` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该方法应在通过自定义适配器适应的任务完成后调用，传递任务执行`result`。
+假设Worker输出的是完成（bool）信号，适配器可能看起来像：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `result`：类型为 `QtTaskTree::DoneResult`。没有默认值，调用时必须提供。传入 `QtTaskTree::DoneResult` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ class WorkerTaskAdapter
+ {
+ public:
+     void operator()(Worker *task, QTaskInterface *iface) {
+         connect(task, &Worker::finished, iface, [iface](bool success) {
+             iface->reportDone(toDoneResult(success));
+         });
+         task->execute();
+     }
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ using WorkerTask = QCustomTask<Worker, WorkerTaskAdapter>;
+```
 
 ## 6. 深入实践与常见坑
 

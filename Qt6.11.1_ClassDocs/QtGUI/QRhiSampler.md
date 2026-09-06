@@ -83,246 +83,132 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiSampler::AddressMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSampler` 暴露的类型声明 `Address、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AddressMode`。
-- 属性名：`QRhiSampler`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定寻址模式。
+- `QRhiSampler::Repeat`：`0`
+- `QRhiSampler::ClampToEdge`：`1`
+- `QRhiSampler::Mirror`：`2`
 
 ### `enum QRhiSampler::CompareOp`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSampler` 暴露的类型声明 `比较、Op`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CompareOp`。
-- 属性名：`QRhiSampler`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定纹理比较函数。
+- `QRhiSampler::Never`: `0`；（默认）
+- `QRhiSampler::Less`: `1`
+- `QRhiSampler::Equal`: `2`
+- `QRhiSampler::LessOrEqual`: `3`
+- `QRhiSampler::Greater`: `4`
+- `QRhiSampler::NotEqual`: `5`
+- `QRhiSampler::GreaterOrEqual`: `6`
+- `QRhiSampler::Always`: `7`
 
 ### `enum QRhiSampler::Filter`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSampler` 暴露的类型声明 `Filter`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Filter`。
-- 属性名：`QRhiSampler`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定了缩小、放大或多重映射滤波。
+- `QRhiSampler::None`：`0`;仅适用于`mipmapMode()`，表示不使用mipmap。
+- `QRhiSampler::Nearest`：`1`
+- `QRhiSampler::Linear`：`2`
 
 ### `QRhiSampler::AddressMode QRhiSampler::addressU() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRhiSampler` 添加依赖、数据或子对象的 API `addressU`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::AddressMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+恢复水平包裹模式。
 
 ### `QRhiSampler::AddressMode QRhiSampler::addressV() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRhiSampler` 添加依赖、数据或子对象的 API `addressV`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::AddressMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回垂直包裹模式。
 
 ### `QRhiSampler::AddressMode QRhiSampler::addressW() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRhiSampler` 添加依赖、数据或子对象的 API `addressW`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::AddressMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回深度包裹模式。
 
 ### `QRhiSampler::Filter QRhiSampler::magFilter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSampler::magFilter` 用于计算、查询或取得与“mag、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSampler::Filter`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::Filter`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回放大滤镜模式。
 
 ### `QRhiSampler::Filter QRhiSampler::minFilter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSampler::minFilter` 用于计算、查询或取得与“min、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSampler::Filter`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::Filter`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回压缩滤波器模式。
 
 ### `QRhiSampler::Filter QRhiSampler::mipmapMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSampler::mipmapMode` 用于计算、查询或取得与“mipmap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSampler::Filter`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::Filter`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回mipmap滤波模式。
 
 ### `[override virtual] QRhiResource::Type QRhiSampler::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSampler::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `void QRhiSampler::setAddressU(QRhiSampler::AddressMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAddressU`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QRhiSampler::AddressMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这样可以`mode`水平包裹。
 
 ### `void QRhiSampler::setAddressV(QRhiSampler::AddressMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAddressV`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QRhiSampler::AddressMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置垂直包裹的`mode`。
 
 ### `void QRhiSampler::setAddressW(QRhiSampler::AddressMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAddressW`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QRhiSampler::AddressMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置深度缠绕`mode`。
 
 ### `void QRhiSampler::setMagFilter(QRhiSampler::Filter f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMagFilter`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiSampler::Filter`。没有默认值，调用时必须提供。传入 `QRhiSampler::Filter` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将放大滤镜模式设置为`f`。
 
 ### `void QRhiSampler::setMinFilter(QRhiSampler::Filter f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinFilter`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiSampler::Filter`。没有默认值，调用时必须提供。传入 `QRhiSampler::Filter` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将缩小滤波器模式设置为`f`。
 
 ### `void QRhiSampler::setMipmapMode(QRhiSampler::Filter f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMipmapMode`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiSampler::Filter`。没有默认值，调用时必须提供。传入 `QRhiSampler::Filter` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将mipmap滤波模式设置为`f`。
+当纹理没有 mip 级别，或者不考虑 mip 级别时，将此设置设置为 None。
 
 ### `void QRhiSampler::setTextureCompareOp(QRhiSampler::CompareOp op)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextureCompareOp`。调用它会改变 `QRhiSampler` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `op`：类型为 `QRhiSampler::CompareOp`。没有默认值，调用时必须提供。传入 `QRhiSampler::CompareOp` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置纹理比较函数`op`。
 
 ### `QRhiSampler::CompareOp QRhiSampler::textureCompareOp() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSampler::textureCompareOp` 用于计算、查询或取得与“texture、比较、Op”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSampler::CompareOp`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler::CompareOp`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回纹理比较函数。
 
 ## 6. 深入实践与常见坑
 

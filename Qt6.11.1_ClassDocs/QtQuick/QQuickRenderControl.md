@@ -89,257 +89,177 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 19 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QQuickRenderControl::QQuickRenderControl(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderControl` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个 QQuickRenderControl 对象，父对象为 `parent`。
 
 ### `[override virtual noexcept] QQuickRenderControl::~QQuickRenderControl()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderControl` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁实例。释放所有场景图资源。
 
 ### `[since 6.0] void QQuickRenderControl::beginFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginFrame`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+指定图形帧的起始时间。调用 `sync()` 或 `render()` 必须用 benstartFrame() 和 `endFrame()` 的调用包围。
+与早期仅支持OpenGL的Qt 5不同，使用其他图形API渲染需要更明确的帧起点和结束点。当手动通过`QQuickRenderControl`驱动渲染环时，现在由`QQuickRenderControl`用户指定这些点。
+典型的更新步骤，包括将渲染初始化为现有纹理，可能如下。示例片段假设使用 Direct3D 11，但同样的概念也适用于其他图形 API。
+注意：使用`software` Quick 适配时，无需也绝不调用该函数。
+注意：内部 berentFrame() 和 `endFrame()` 分别调用 `beginOffscreenFrame()` 和 `endOffscreenFrame()`。这意味着调用该函数时，不能在`QRhi`上记录帧（无论是屏幕外帧还是基于交换链的帧）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ if (!m_quickInitialized) {
+     m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(m_engine->device(), m_engine->context()));
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     if (!m_renderControl->initialize())
+         qWarning("Failed to initialize redirected Qt Quick rendering");
+
+     m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(m_res.texture), 0 },
+                                                                          QSize(QML_WIDTH, QML_HEIGHT),
+                                                                          SAMPLE_COUNT));
+
+     m_quickInitialized = true;
+ }
+
+ m_renderControl->polishItems();
+
+ m_renderControl->beginFrame();
+ m_renderControl->sync();
+ m_renderControl->render();
+ m_renderControl->endFrame(); // Qt Quick's rendering commands are submitted to the device context here
+```
 
 ### `[since 6.6] QRhiCommandBuffer *QQuickRenderControl::commandBuffer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::commandBuffer` 用于计算、查询或取得与“command、Buffer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiCommandBuffer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiCommandBuffer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的命令缓冲区。
+一旦调用`beginFrame()`，会自动设置`QRhiCommandBuffer`。这就是 Qt 快速场景图使用的命令缓冲区，但在某些情况下，应用程序也可能想查询它，例如发送资源更新（例如纹理回读）。
+返回的命令缓冲区引用应仅在`beginFrame()`和`endFrame()`之间使用。有特定例外，例如在`endFrame()`后、下一个`beginFrame()`之前调用命令缓冲区上的`lastCompletedGpuTime()`是有效的。
+注意：该函数不适用，使用Qt Quick的`software`适配时返回空函数。
 
 ### `[since 6.0] void QQuickRenderControl::endFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endFrame`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定图形帧的结尾。调用`sync()`或`render()`必须通过调用`beginFrame()`和endFrame()来包裹。
+当调用该函数时，场景图中排队的任何图形命令都会提交到上下文队列或命令队列中，视情况而定。
+注意：使用`software` Quick 适配时，无需也绝不调用该函数。
 
 ### `[since 6.0] bool QQuickRenderControl::initialize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `initialize`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+初始化场景图资源。当使用 Vulkan、Metal、OpenGL 或 Direct3D 等图形 API 进行 Qt Quick 渲染时，调用该函数时`QQuickRenderControl`会设置合适的渲染引擎。只要`QQuickRenderControl`存在，这个渲染基础设施就存在。
+要控制 Qt Quick 使用哪些图形 API，请用 `QSGRendererInterface`：GraphicsApi 常量调用 `QQuickWindow::setGraphicsApi()`。必须在调用该函数之前完成此操作。
+为了防止场景图创建自己的设备和上下文对象，请指定合适的`QQuickGraphicsDevice`，通过调用`QQuickWindow::setGraphicsDevice()`来包裹现有图形对象。
+要配置启用哪些设备扩展（例如Vulkan），请在此功能之前调用`QQuickWindow::setGraphicsConfiguration()`。
+注意：使用Vulkan时，`QQuickRenderControl`不会自动创建`QVulkanInstance`。相反，应用程序负责创建合适的`QVulkanInstance`并将其与`QQuickWindow`关联。在初始化`QVulkanInstance`之前，强烈建议通过调用静态函数`QQuickGraphicsConfiguration::preferredInstanceExtensions()`查询Qt Quick所需的实例扩展列表，并将返回的列表传递给`QVulkanInstance::setExtensions()`。
+成功时回报`true`，`false`其他情况。
+注意：使用`software` Qt Quick 适配时，无需也绝不调用该函数。
+默认的 Qt Quick 适配功能会创建新的 `QRhi` 对象，类似于未使用 `QQuickRenderControl` 时的屏幕`QQuickWindow`。要让新的 `QRhi` 对象采用某些现有设备或上下文资源（例如使用现有 `QOpenGLContext` 而非创建新资源），如上所述使用 `QQuickWindow::setGraphicsDevice()`。当应用程序希望让 Qt Quick 渲染使用已有的 `QRhi` 对象时，也可以通过 `QQuickGraphicsDevice::fromRhi()` 实现。当这样的`QQuickGraphicsDevice`被设置，引用已存在的`QRhi`时，initialize()中不会创建新的专用`QRhi`对象。
 
 ### `void QQuickRenderControl::invalidate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `invalidate`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+停止渲染，释放资源。
+这相当于真实`QQuickWindow`窗户被隐藏时的清理操作。
+该函数由解构函数调用。因此通常不需要直接调用它。
+一旦调用了 invalidate()，可以通过再次调用 `initialize()` 来重用`QQuickRenderControl`实例。
+注意：该函数不考虑 QQuickWindow：:p ersistentSceneGraph() 或 QQuickWindow：:p ersistentGraphics()这意味着上下文特定的资源始终会被释放。
 
 ### `void QQuickRenderControl::polishItems()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::polishItems` 用于执行与“polish、Items”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数应尽快调用，直到`sync()`。在线程场景中，渲染可以与该函数并行进行。
 
 ### `void QQuickRenderControl::prepareThread(QThread *targetThread)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::prepareThread` 用于执行与“prepare、Thread”相关的操作。调用时要先确认当前状态和 `targetThread` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `targetThread`：类型为 `QThread *`。没有默认值，调用时必须提供。传入 `QThread *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+准备在GUI线程外渲染Qt Quick场景。
+`targetThread` 指定了同步和渲染将进行的线程。在单一线程场景中无需调用该函数。
 
 ### `void QQuickRenderControl::render()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderControl` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用当前上下文渲染场景图。
 
 ### `[signal] void QQuickRenderControl::renderRequested()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderControl` 发出的通知信号 `renderRequested`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当需要渲染场景图时，会发出该信号。无需调用`sync()`。
+注意：避免在该信号发出时直接触发渲染。相反，建议通过使用定时器等方式来延迟渲染。这将带来更好的性能。
 
 ### `[virtual] QWindow *QQuickRenderControl::renderWindow(QPoint *offset)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderControl` 的核心操作 `renderWindow`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QWindow *`。
-- 参数 `offset`：类型为 `QPoint *`。没有默认值，调用时必须提供。传入 `QPoint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在子类中重新实现，返回该渲染控件渲染的真实窗口。
+如果`offset`非空，则设置为窗口内控件的偏移量。
+注意：虽然不是强制的，但重新实现此功能对于支持不同设备像素比例的多屏幕以及正确定位从QML打开的弹窗至关重要。因此强烈建议将其分成子类。
 
 ### `[static] QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `renderWindowFor`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QWindow *`。
-- 参数 `win`：类型为 `QQuickWindow *`。没有默认值，调用时必须提供。传入 `QQuickWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `QPoint *`。默认值为 `nullptr`。传入 `QPoint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染时`win`的真实窗口（如果有的话）。
+如果`offset`非空，则将其设置为窗口内渲染的偏移量。
 
 ### `[since 6.6] QRhi *QQuickRenderControl::rhi() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::rhi` 用于计算、查询或取得与“rhi”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhi *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhi *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QQuickRenderControl`关联的`QRhi`。
+注意：`QRhi`仅在`initialize()`成功完成时存在。在此之前返回值为空。
+注意：该函数不适用，使用Qt Quick的`software`适配时返回空值。
 
 ### `[since 6.0] int QQuickRenderControl::samples() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::samples` 用于计算、查询或取得与“samples”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前采样计数。1或0表示不进行多重采样。
 
 ### `[signal] void QQuickRenderControl::sceneChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderControl` 发出的通知信号 `sceneChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当场景图更新时会发出该信号，意味着需要调用`polishItems()`和`sync()`。如果`sync()`返回为真，则需要调用`render()`。
+注意：避免在发出该信号时直接触发抛光、同步和渲染。相反，建议通过使用定时器等方式延迟。这将带来更好的性能。
 
 ### `[since 6.0] void QQuickRenderControl::setSamples(int sampleCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSamples`。调用它会改变 `QQuickRenderControl` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampleCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于多重采样的采样数量。当`sampleCount`为0或1时，多重采样被禁用。
+注意：该函数总是与多采样渲染目标结合使用，这意味着`sampleCount`必须匹配传递给QQuickRenderTarget：：fromNativeTexture()的采样计数，而QQuickRenderTarget：：fromNativeTexture()又必须与原生纹理的采样计数匹配。
 
 ### `bool QQuickRenderControl::sync()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::sync` 用于计算、查询或取得与“sync”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数用于同步QML场景与渲染场景图。
+如果使用专用渲染线程，应在此调用期间阻塞GUI线程。
+如果同步改变了场景图，则返回为真。
 
 ### `[since 6.0] QQuickWindow *QQuickRenderControl::window() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderControl::window` 用于计算、查询或取得与“window”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQuickWindow *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQuickWindow *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QQuickRenderControl`关联的`QQuickWindow`。
+注意：在构造`QQuickWindow`时，`QQuickRenderControl`会关联到一个`QQuickWindow`。该函数的返回值在此之前为零。
 
 ## 6. 深入实践与常见坑
 

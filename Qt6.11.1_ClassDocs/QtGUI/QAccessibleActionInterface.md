@@ -80,243 +80,121 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QAccessibleActionInterface::~QAccessibleActionInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleActionInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QAccessibleActionInterface`。
 
 ### `[pure virtual] QStringList QAccessibleActionInterface::actionNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleActionInterface::actionNames` 用于计算、查询或取得与“action、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该可访问对象支持的动作列表。返回的动作应按优先顺序排列，即用户最可能触发的动作应优先返回，而最不可能的动作应最后返回。
+列表只包含可调用的操作。它不会返回禁用的操作，也不会返回与禁用的UI控件相关的操作。
+名单可以是空的。
+请注意，该列表并非本地化。对于局部化表示，请重新实现`localizedActionName()`和 `localizedActionDescription()`。
 
 ### `[static] const QString &QAccessibleActionInterface::decreaseAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `decreaseAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回减少默认动作的名称。
 
 ### `[pure virtual] void QAccessibleActionInterface::doAction(const QString &actionName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleActionInterface::doAction` 用于执行与“do、Action”相关的操作。调用时要先确认当前状态和 `actionName` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `actionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用`actionName`指定的操作。注意`actionName`是`actionNames()`返回的非本地化名称。该函数通常通过调用其他用户交互（如点击对象）会触发的相同函数来实现。
 
 ### `[static] const QString &QAccessibleActionInterface::increaseAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `increaseAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回增加默认动作的名称。
 
 ### `[pure virtual] QStringList QAccessibleActionInterface::keyBindingsForAction(const QString &actionName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleActionInterface::keyBindingsForAction` 用于计算、查询或取得与“key、Bindings、For、Action”相关的操作。调用时要先确认当前状态和 `actionName` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `actionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于调用名为`actionName`的动作的快捷键列表。
+这对于让用户通过强调键盘来学习应用的替代使用方式非常重要。
 
 ### `[virtual] QString QAccessibleActionInterface::localizedActionDescription(const QString &actionName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleActionInterface::localizedActionDescription` 用于计算、查询或取得与“localized、Action、Description”相关的操作。调用时要先确认当前状态和 `actionName` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `actionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回动作`actionName`的局部动作描述。
+使用默认名称时，你可以在`QAccessibleActionInterface`调用这个函数获取本地化字符串。
 
 ### `[virtual] QString QAccessibleActionInterface::localizedActionName(const QString &actionName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleActionInterface::localizedActionName` 用于计算、查询或取得与“localized、Action、名称”相关的操作。调用时要先确认当前状态和 `actionName` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `actionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个局部动作名为`actionName`。
+对于自定义动作，这个函数需要重新实现。使用默认名称时，你可以在 `QAccessibleActionInterface` 调用该函数获取本地化字符串。
 
 ### `[static] QString QAccessibleActionInterface::nextPageAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `nextPageAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下一页默认动作的名称。
 
 ### `[static] const QString &QAccessibleActionInterface::pressAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `pressAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回按下默认动作的名称。
 
 ### `[static] QString QAccessibleActionInterface::previousPageAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `previousPageAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上一页默认动作的名称。
 
 ### `[static] QString QAccessibleActionInterface::scrollDownAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `scrollDownAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回向下滚动的默认动作名称。
 
 ### `[static] QString QAccessibleActionInterface::scrollLeftAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `scrollLeftAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回滚动左侧默认动作的名称。
 
 ### `[static] QString QAccessibleActionInterface::scrollRightAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `scrollRightAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回向右滚动的默认动作名称。
 
 ### `[static] QString QAccessibleActionInterface::scrollUpAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `scrollUpAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回向上滚动的默认动作名称。
 
 ### `[static] const QString &QAccessibleActionInterface::setFocusAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setFocusAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回设置焦点的默认动作名称。
 
 ### `[static] const QString &QAccessibleActionInterface::showMenuAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `showMenuAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回显示菜单默认动作的名称。
 
 ### `[static] const QString &QAccessibleActionInterface::toggleAction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `toggleAction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回切换默认动作的名称。
 
 ## 6. 深入实践与常见坑
 

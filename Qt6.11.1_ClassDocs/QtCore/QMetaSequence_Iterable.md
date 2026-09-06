@@ -67,268 +67,151 @@
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 20 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] Iterable::BidirectionalConstIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setBidirectionalConstIterator(...)` 设置，之后用 `BidirectionalConstIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:BidirectionalConstIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用STD暴露const_iterator：：bidirectional_iterator_tag。
 
 ### `[alias] Iterable::BidirectionalIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setBidirectionalIterator(...)` 设置，之后用 `BidirectionalIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:BidirectionalIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用标准化程序暴露迭代器：：bidirectional_iterator_tag。
 
 ### `[alias] Iterable::ForwardConstIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setForwardConstIterator(...)` 设置，之后用 `ForwardConstIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ForwardConstIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用std暴露const_iterator：：forward_iterator_tag。
 
 ### `[alias] Iterable::ForwardIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setForwardIterator(...)` 设置，之后用 `ForwardIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ForwardIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用std：：forward_iterator_tag暴露迭代器。
 
 ### `[alias] Iterable::InputConstIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setInputConstIterator(...)` 设置，之后用 `InputConstIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:InputConstIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 std 暴露const_iterator ：：input_iterator_tag。
 
 ### `[alias] Iterable::InputIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setInputIterator(...)` 设置，之后用 `InputIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:InputIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用 std：：input_iterator_tag 暴露迭代器。
 
 ### `[alias] Iterable::RandomAccessConstIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setRandomAccessConstIterator(...)` 设置，之后用 `RandomAccessConstIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:RandomAccessConstIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 std 暴露const_iterator ：：random_access_iterator_tag。
 
 ### `[alias] Iterable::RandomAccessIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的配置属性。初始化或状态切换时通过 `setRandomAccessIterator(...)` 设置，之后用 `RandomAccessIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:RandomAccessIterator`。
-- 属性名：`Iterable`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用std：：random_access_iterator_tag暴露迭代器。
 
 ### `QVariant Iterable::at(qsizetype idx) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QMetaSequence::Iterable` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `idx`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回容器中位置`idx`的值。
+注意：如果底层容器没有提供原生方式在索引处检索元素，该方法将通过迭代器合成访问。该行为已被弃用，并将在未来 Qt 版本中被移除。
 
 ### `void Iterable::setAt(qsizetype idx, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAt`。调用它会改变 `QMetaSequence::Iterable` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `idx`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将容器中位置`idx`的元素设置为`value`。
 
 ### `(since 6.11) class ConstIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 暴露的类型声明 `Const、Iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+QMetaSequence：：Iterable：：ConstIterator 允许在 QVariant 中的容器上进行迭代。
+`QMetaSequence::Iterable::ConstIterator`只能由`QMetaSequence::Iterable`实例创建，且其使用方式类似于其他STL风格的迭代器。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ QList<int> intList = {7, 11, 42};
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QVariant variant = QVariant::fromValue(intList);
+ if (variant.canConvert<QVariantList>()) {
+     QMetaSequence::Iterable iterable = variant.value<QMetaSequence::Iterable>();
+     // Can use C++11 range-for:
+     for (const QVariant &v : iterable) {
+         qDebug() << v;
+     }
+     // Can use iterators:
+     QMetaSequence::Iterable::const_iterator it = iterable.begin();
+     const QMetaSequence::Iterable::const_iterator end = iterable.end();
+     for ( ; it != end; ++it) {
+         qDebug() << *it;
+     }
+ }
+```
 
 ### `(since 6.11) class Iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 暴露的类型声明 `Iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QMetaSequence：：Iterable：：Iterator 允许在 QVariant 中的容器上进行迭代。
+`QMetaSequence::Iterable::Iterator`只能由`QMetaSequence::Iterable`实例创建，且其使用方式类似于其他STL风格的迭代器。
 
 ### `BidirectionalConstIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Bidirectional、Const、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用STD暴露const_iterator：：bidirectional_iterator_tag。
 
 ### `BidirectionalIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Bidirectional、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用标准化程序暴露迭代器：：bidirectional_iterator_tag。
 
 ### `ForwardConstIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Forward、Const、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用std暴露const_iterator：：forward_iterator_tag。
 
 ### `ForwardIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Forward、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用std：：forward_iterator_tag暴露迭代器。
 
 ### `InputConstIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Input、Const、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 std 暴露const_iterator ：：input_iterator_tag。
 
 ### `InputIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Input、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用 std：：input_iterator_tag 暴露迭代器。
 
 ### `RandomAccessConstIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Random、Access、Const、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 std 暴露const_iterator ：：random_access_iterator_tag。
 
 ### `RandomAccessIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence::Iterable` 的 `Random、Access、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用std：：random_access_iterator_tag暴露迭代器。
 
 ## 6. 深入实践与常见坑
 

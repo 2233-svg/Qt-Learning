@@ -88,360 +88,202 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 27 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QTextOption::Flagflags QTextOption::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QTextOption::Flags`。
-- 属性名：`QTextOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextOption::IncludeTrailingSpaces`：`0x80000000`;当设置此选项时，`QTextLine::naturalTextWidth()` 和 naturalTextRect() 会返回包含文本尾部空格宽度的值;否则该宽度被排除。
+- `QTextOption::ShowTabsAndSpaces`：`0x1`;用小点和带小箭头的标签符号来可视化。非断行空格的显示方式与切断空格不同。
+- `QTextOption::ShowLineAndParagraphSeparators`：`0x2`;用适当的符号字符可视化行分隔符和段落分隔符。
+- `QTextOption::ShowDocumentTerminator (since Qt 5.7)`：`0x10`;用章节符号可视化文档的结尾。
+- `QTextOption::ShowDefaultIgnorables (since Qt 6.9)`：`0x20`;如果字体支持，则渲染通常非视觉字符。
+- `QTextOption::AddSpaceForLineAndParagraphSeparators`：`0x4`;确定换行位置时，要考虑绘制分隔符字符时增加的空间。
+- `QTextOption::SuppressColors`：`0x8`;抑制字符格式中的所有颜色变化（主选择除外）。
+- `QTextOption::DisableEmojiParsing (since Qt 6.9)`：`0x40`;默认情况下，Qt 会检测输入字符串中的表情符号序列，并优先使用彩色字体来显示。如果事先知道不需要 DisableEmojiParsing 标志，可以通过设置 DisableEmojiParsing 来禁用此额外步骤。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QTextOption::TabType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 暴露的类型声明 `Tab、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TabType`。
-- 属性名：`QTextOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含不同类型的计表器。
+- `QTextOption::LeftTab`：`0`;左边的标签
+- `QTextOption::RightTab`：`1`;右指
+- `QTextOption::CenterTab`：`2`;居中标签
+- `QTextOption::DelimiterTab`：`3`;在某个分隔符处停止的制表符
 
 ### `enum QTextOption::WrapMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 暴露的类型声明 `Wrap、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WrapMode`。
-- 属性名：`QTextOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了文本在文档中的包装方式。
+- `QTextOption::NoWrap`：`0`;文本完全没有被包裹。
+- `QTextOption::WordWrap`：`1`;文本在单词边界处被包裹。
+- `QTextOption::ManualWrap`：`2`;与QTextOption：：NoWrap相同
+- `QTextOption::WrapAnywhere`：`3`;文本可以在行中任意点被包裹，即使它出现在单词中间。
+- `QTextOption::WrapAtWordBoundaryOrAnywhere`：`4`;如果可能，包裹发生在单词边界处;否则包裹会在行中适当位置发生，甚至在单词中间。
 
 ### `QTextOption::QTextOption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有文本默认属性的文本选项。文本对齐属性设置为`Qt::AlignLeft`。单词换行属性设置为`QTextOption::WordWrap`。设计指标的使用标志设置为false。
 
 ### `QTextOption::QTextOption(Qt::Alignment alignment)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `alignment`：类型为 `Qt::Alignment`。没有默认值，调用时必须提供。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的文本`alignment`构造文本选项。单词包裹属性设置为`QTextOption::WordWrap`。设计指标的使用标记设置为false。
 
 ### `QTextOption::QTextOption(const QTextOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QTextOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+制作一份`other`文本选项的副本。
 
 ### `[noexcept] QTextOption::~QTextOption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这会破坏文本选项。
 
 ### `Qt::Alignment QTextOption::alignment() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::alignment` 用于计算、查询或取得与“对齐方式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Alignment`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::Alignment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由选项定义的文本对齐。
 
 ### `QTextOption::Flags QTextOption::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextOption::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextOption::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该选项相关的标志。
 
 ### `void QTextOption::setAlignment(Qt::Alignment alignment)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAlignment`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `alignment`：类型为 `Qt::Alignment`。没有默认值，调用时必须提供。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将选项的文本对齐设置为指定的 `alignment`。
 
 ### `void QTextOption::setFlags(QTextOption::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QTextOption::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将与该选项关联到给定`flags`的标志。
 
 ### `void QTextOption::setTabArray(const QList<qreal> &tabStops)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabArray`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tabStops`：类型为 `const QList<qreal> &`。没有默认值，调用时必须提供。传入 `const QList<qreal> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本布局的制表符位置设置为`tabStops`指定的位置。
 
 ### `void QTextOption::setTabStopDistance(qreal tabStopDistance)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabStopDistance`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tabStopDistance`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将制表止音之间的默认距离设置为`tabStopDistance`指定的值。
 
 ### `void QTextOption::setTabs(const QList<QTextOption::Tab> &tabStops)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabs`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tabStops`：类型为 `const QList<QTextOption::Tab> &`。没有默认值，调用时必须提供。传入 `const QList<QTextOption::Tab> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本布局的制表符位置设置为`tabStops`指定的位置。
 
 ### `void QTextOption::setTextDirection(Qt::LayoutDirection direction)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextDirection`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `direction`：类型为 `Qt::LayoutDirection`。没有默认值，调用时必须提供。方向枚举，决定排列、遍历或坐标增长方向；要结合该类定义的枚举值判断实际方向。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将由该选项定义的文本布局方向设定到给定`direction`。
 
 ### `void QTextOption::setUseDesignMetrics(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUseDesignMetrics`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enable`成立，布局将使用设计指标;否则将使用绘图设备的指标（这是默认行为）。
 
 ### `void QTextOption::setWrapMode(QTextOption::WrapMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWrapMode`。调用它会改变 `QTextOption` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QTextOption::WrapMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将选项的文本换行模式设置为给定的 `mode`。
 
 ### `QList<qreal> QTextOption::tabArray() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::tabArray` 用于计算、查询或取得与“tab、Array”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<qreal>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<qreal>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本布局定义的制表表位置列表。
 
 ### `qreal QTextOption::tabStopDistance() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::tabStopDistance` 用于计算、查询或取得与“tab、停止、Distance”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回制表停止点之间的设备单位距离。
 
 ### `QList<QTextOption::Tab> QTextOption::tabs() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::tabs` 用于计算、查询或取得与“tabs”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QTextOption::Tab>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QTextOption::Tab>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本布局定义的制表表位置列表。
 
 ### `Qt::LayoutDirection QTextOption::textDirection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::textDirection` 用于计算、查询或取得与“文本、Direction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::LayoutDirection`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::LayoutDirection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由选项定义的文本布局方向。
 
 ### `bool QTextOption::useDesignMetrics() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::useDesignMetrics` 用于计算、查询或取得与“use、Design、Metrics”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果布局使用设计而非设备度量，返回`true`;否则返回`false`。
 
 ### `QTextOption::WrapMode QTextOption::wrapMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextOption::wrapMode` 用于计算、查询或取得与“wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextOption::WrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextOption::WrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由选项定义的文本换行模式。
 
 ### `QTextOption &QTextOption::operator=(const QTextOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTextOption &`。
-- 参数 `other`：类型为 `const QTextOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果文本选项与`other`文本选项相同，返回`true`;否则返回`false`。
 
 ### `struct Tab`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的 `Tab` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每个标签定义都用这个结构体表示。
 
 ### `enum Flag { IncludeTrailingSpaces, ShowTabsAndSpaces, ShowLineAndParagraphSeparators, ShowDocumentTerminator, ShowDefaultIgnorables, …, DisableEmojiParsing }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextOption::IncludeTrailingSpaces`：`0x80000000`;当设置此选项时，`QTextLine::naturalTextWidth()` 和 naturalTextRect() 会返回包含文本尾部空格宽度的值;否则该宽度被排除。
+- `QTextOption::ShowTabsAndSpaces`：`0x1`;用小点和带小箭头的标签符号来可视化。非断行空格的显示方式与切断空格不同。
+- `QTextOption::ShowLineAndParagraphSeparators`：`0x2`;用适当的符号字符可视化行分隔符和段落分隔符。
+- `QTextOption::ShowDocumentTerminator (since Qt 5.7)`：`0x10`;用章节符号可视化文档的结尾。
+- `QTextOption::ShowDefaultIgnorables (since Qt 6.9)`：`0x20`;如果字体支持，则渲染通常非视觉字符。
+- `QTextOption::AddSpaceForLineAndParagraphSeparators`：`0x4`;确定换行位置时，要考虑绘制分隔符字符时增加的空间。
+- `QTextOption::SuppressColors`：`0x8`;抑制字符格式中的所有颜色变化（主选择除外）。
+- `QTextOption::DisableEmojiParsing (since Qt 6.9)`：`0x40`;默认情况下，Qt 会检测输入字符串中的表情符号序列，并优先使用彩色字体来显示。如果事先知道不需要 DisableEmojiParsing 标志，可以通过设置 DisableEmojiParsing 来禁用此额外步骤。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextOption` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextOption::IncludeTrailingSpaces`：`0x80000000`;当设置此选项时，`QTextLine::naturalTextWidth()` 和 naturalTextRect() 会返回包含文本尾部空格宽度的值;否则该宽度被排除。
+- `QTextOption::ShowTabsAndSpaces`：`0x1`;用小点和带小箭头的标签符号来可视化。非断行空格的显示方式与切断空格不同。
+- `QTextOption::ShowLineAndParagraphSeparators`：`0x2`;用适当的符号字符可视化行分隔符和段落分隔符。
+- `QTextOption::ShowDocumentTerminator (since Qt 5.7)`：`0x10`;用章节符号可视化文档的结尾。
+- `QTextOption::ShowDefaultIgnorables (since Qt 6.9)`：`0x20`;如果字体支持，则渲染通常非视觉字符。
+- `QTextOption::AddSpaceForLineAndParagraphSeparators`：`0x4`;确定换行位置时，要考虑绘制分隔符字符时增加的空间。
+- `QTextOption::SuppressColors`：`0x8`;抑制字符格式中的所有颜色变化（主选择除外）。
+- `QTextOption::DisableEmojiParsing (since Qt 6.9)`：`0x40`;默认情况下，Qt 会检测输入字符串中的表情符号序列，并优先使用彩色字体来显示。如果事先知道不需要 DisableEmojiParsing 标志，可以通过设置 DisableEmojiParsing 来禁用此额外步骤。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

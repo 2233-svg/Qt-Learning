@@ -82,233 +82,291 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGradient::CoordinateMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 暴露的类型声明 `Coordinate、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CoordinateMode`。
-- 属性名：`QGradient`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了梯度坐标如何映射到使用梯度的绘画装置。
+- `QGradient::LogicalMode`：`0`;这是默认模式。梯度坐标与对象坐标一样指定在逻辑空间中。
+- `QGradient::ObjectMode`：`3`;在此模式下，梯度坐标相对于被绘制物体的边界矩形，左上角为（0,0），右下角为（1,1）。该值在Qt 5.12中加入。
+- `QGradient::StretchToDeviceMode`：`1`;在此模式下，梯度坐标相对于绘画装置的边界矩形，左上角为（0,0），右下角为（1,1）。
+- `QGradient::ObjectBoundingMode`：`2`;该模式与ObjectMode相同，不同之处在于{`QBrush::transform()`} {brush transform}（如有）相对于逻辑空间而非对象空间应用。该枚举值已废弃，不应在新代码中使用。
 
 ### `enum QGradient::Preset`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 暴露的类型声明 `Preset`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Preset`。
-- 属性名：`QGradient`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举指定了一组预定义的`QGradient`预设预设，基于 https://webgradients.com/ 梯度。
+- `QGradient::WarmFlame`：`1`
+- `QGradient::NightFade`：`2`
+- `QGradient::SpringWarmth`：`3`
+- `QGradient::JuicyPeach`：`4`
+- `QGradient::YoungPassion`：`5`
+- `QGradient::LadyLips`：`6`
+- `QGradient::SunnyMorning`：`7`
+- `QGradient::RainyAshville`：`8`
+- `QGradient::FrozenDreams`：`9`
+- `QGradient::WinterNeva`：`10`
+- `QGradient::DustyGrass`：`11`
+- `QGradient::TemptingAzure`：`12`
+- `QGradient::HeavyRain`：`13`
+- `QGradient::AmyCrisp`：`14`
+- `QGradient::MeanFruit`：`15`
+- `QGradient::DeepBlue`：`16`
+- `QGradient::RipeMalinka`：`17`
+- `QGradient::CloudyKnoxville`：`18`
+- `QGradient::MalibuBeach`：`19`
+- `QGradient::NewLife`：`20`
+- `QGradient::TrueSunset`：`21`
+- `QGradient::MorpheusDen`：`22`
+- `QGradient::RareWind`：`23`
+- `QGradient::NearMoon`：`24`
+- `QGradient::WildApple`：`25`
+- `QGradient::SaintPetersburg`：`26`
+- `QGradient::PlumPlate`：`28`
+- `QGradient::EverlastingSky`：`29`
+- `QGradient::HappyFisher`：`30`
+- `QGradient::Blessing`：`31`
+- `QGradient::SharpeyeEagle`：`32`
+- `QGradient::LadogaBottom`：`33`
+- `QGradient::LemonGate`：`34`
+- `QGradient::ItmeoBranding`：`35`
+- `QGradient::ZeusMiracle`：`36`
+- `QGradient::OldHat`：`37`
+- `QGradient::StarWine`：`38`
+- `QGradient::HappyAcid`：`41`
+- `QGradient::AwesomePine`：`42`
+- `QGradient::NewYork`：`43`
+- `QGradient::ShyRainbow`：`44`
+- `QGradient::MixedHopes`：`46`
+- `QGradient::FlyHigh`：`47`
+- `QGradient::StrongBliss`：`48`
+- `QGradient::FreshMilk`：`49`
+- `QGradient::SnowAgain`：`50`
+- `QGradient::FebruaryInk`：`51`
+- `QGradient::KindSteel`：`52`
+- `QGradient::SoftGrass`：`53`
+- `QGradient::GrownEarly`：`54`
+- `QGradient::SharpBlues`：`55`
+- `QGradient::ShadyWater`：`56`
+- `QGradient::DirtyBeauty`：`57`
+- `QGradient::GreatWhale`：`58`
+- `QGradient::TeenNotebook`：`59`
+- `QGradient::PoliteRumors`：`60`
+- `QGradient::SweetPeriod`：`61`
+- `QGradient::WideMatrix`：`62`
+- `QGradient::SoftCherish`：`63`
+- `QGradient::RedSalvation`：`64`
+- `QGradient::BurningSpring`：`65`
+- `QGradient::NightParty`：`66`
+- `QGradient::SkyGlider`：`67`
+- `QGradient::HeavenPeach`：`68`
+- `QGradient::PurpleDivision`：`69`
+- `QGradient::AquaSplash`：`70`
+- `QGradient::SpikyNaga`：`72`
+- `QGradient::LoveKiss`：`73`
+- `QGradient::CleanMirror`：`75`
+- `QGradient::PremiumDark`：`76`
+- `QGradient::ColdEvening`：`77`
+- `QGradient::CochitiLake`：`78`
+- `QGradient::SummerGames`：`79`
+- `QGradient::PassionateBed`：`80`
+- `QGradient::MountainRock`：`81`
+- `QGradient::DesertHump`：`82`
+- `QGradient::JungleDay`：`83`
+- `QGradient::PhoenixStart`：`84`
+- `QGradient::OctoberSilence`：`85`
+- `QGradient::FarawayRiver`：`86`
+- `QGradient::AlchemistLab`：`87`
+- `QGradient::OverSun`：`88`
+- `QGradient::PremiumWhite`：`89`
+- `QGradient::MarsParty`：`90`
+- `QGradient::EternalConstance`：`91`
+- `QGradient::JapanBlush`：`92`
+- `QGradient::SmilingRain`：`93`
+- `QGradient::CloudyApple`：`94`
+- `QGradient::BigMango`：`95`
+- `QGradient::HealthyWater`：`96`
+- `QGradient::AmourAmour`：`97`
+- `QGradient::RiskyConcrete`：`98`
+- `QGradient::StrongStick`：`99`
+- `QGradient::ViciousStance`：`100`
+- `QGradient::PaloAlto`：`101`
+- `QGradient::HappyMemories`：`102`
+- `QGradient::MidnightBloom`：`103`
+- `QGradient::Crystalline`：`104`
+- `QGradient::PartyBliss`：`106`
+- `QGradient::ConfidentCloud`：`107`
+- `QGradient::LeCocktail`：`108`
+- `QGradient::RiverCity`：`109`
+- `QGradient::FrozenBerry`：`110`
+- `QGradient::ChildCare`：`112`
+- `QGradient::FlyingLemon`：`113`
+- `QGradient::NewRetrowave`：`114`
+- `QGradient::HiddenJaguar`：`115`
+- `QGradient::AboveTheSky`：`116`
+- `QGradient::Nega`：`117`
+- `QGradient::DenseWater`：`118`
+- `QGradient::Seashore`：`120`
+- `QGradient::MarbleWall`：`121`
+- `QGradient::CheerfulCaramel`：`122`
+- `QGradient::NightSky`：`123`
+- `QGradient::MagicLake`：`124`
+- `QGradient::YoungGrass`：`125`
+- `QGradient::ColorfulPeach`：`126`
+- `QGradient::GentleCare`：`127`
+- `QGradient::PlumBath`：`128`
+- `QGradient::HappyUnicorn`：`129`
+- `QGradient::AfricanField`：`131`
+- `QGradient::SolidStone`：`132`
+- `QGradient::OrangeJuice`：`133`
+- `QGradient::GlassWater`：`134`
+- `QGradient::NorthMiracle`：`136`
+- `QGradient::FruitBlend`：`137`
+- `QGradient::MillenniumPine`：`138`
+- `QGradient::HighFlight`：`139`
+- `QGradient::MoleHall`：`140`
+- `QGradient::SpaceShift`：`142`
+- `QGradient::ForestInei`：`143`
+- `QGradient::RoyalGarden`：`144`
+- `QGradient::RichMetal`：`145`
+- `QGradient::JuicyCake`：`146`
+- `QGradient::SmartIndigo`：`147`
+- `QGradient::SandStrike`：`148`
+- `QGradient::NorseBeauty`：`149`
+- `QGradient::AquaGuidance`：`150`
+- `QGradient::SunVeggie`：`151`
+- `QGradient::SeaLord`：`152`
+- `QGradient::BlackSea`：`153`
+- `QGradient::GrassShampoo`：`154`
+- `QGradient::LandingAircraft`：`155`
+- `QGradient::WitchDance`：`156`
+- `QGradient::SleeplessNight`：`157`
+- `QGradient::AngelCare`：`158`
+- `QGradient::CrystalRiver`：`159`
+- `QGradient::SoftLipstick`：`160`
+- `QGradient::SaltMountain`：`161`
+- `QGradient::PerfectWhite`：`162`
+- `QGradient::FreshOasis`：`163`
+- `QGradient::StrictNovember`：`164`
+- `QGradient::MorningSalad`：`165`
+- `QGradient::DeepRelief`：`166`
+- `QGradient::SeaStrike`：`167`
+- `QGradient::NightCall`：`168`
+- `QGradient::SupremeSky`：`169`
+- `QGradient::LightBlue`：`170`
+- `QGradient::MindCrawl`：`171`
+- `QGradient::LilyMeadow`：`172`
+- `QGradient::SugarLollipop`：`173`
+- `QGradient::SweetDessert`：`174`
+- `QGradient::MagicRay`：`175`
+- `QGradient::TeenParty`：`176`
+- `QGradient::FrozenHeat`：`177`
+- `QGradient::GagarinView`：`178`
+- `QGradient::FabledSunset`：`179`
+- `QGradient::PerfectBlue`：`180`
 
 ### `enum QGradient::Spread`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 暴露的类型声明 `Spread`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Spread`。
-- 属性名：`QGradient`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定梯度区外的区域应如何填充。
+- `QGradient::PadSpread`：`0`;该区域填充最近的止音色。这是默认颜色。
+- `QGradient::RepeatSpread`：`2`;梯度在梯度区域外重复。
+- `QGradient::ReflectSpread`：`1`;梯度反射在梯度区之外。
 
 ### `enum QGradient::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QGradient`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定梯度类型。
+- `QGradient::LinearGradient`：`0`;在起点和终点之间插值颜色（`QLinearGradient`）。
+- `QGradient::RadialGradient`：`1`;在焦点和环绕其周围的圆（`QRadialGradient`）的端点之间插值颜色。
+- `QGradient::ConicalGradient`：`2`;围绕中心点（`QConicalGradient`）插值颜色。
+- `QGradient::NoGradient`：`3`;不使用梯度。
 
 ### `QGradient::QGradient(QGradient::Preset preset)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `preset`：类型为 `QGradient::Preset`。没有默认值，调用时必须提供。传入 `QGradient::Preset` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于预定义的`preset`构造梯度。
+所得梯度的坐标模态`QGradient::ObjectMode`，允许将预设应用于任意对象大小。
 
 ### `QGradient::CoordinateMode QGradient::coordinateMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGradient::coordinateMode` 用于计算、查询或取得与“coordinate、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGradient::CoordinateMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGradient::CoordinateMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该梯度的坐标模态。默认模式为`LogicalMode`。
 
 ### `void QGradient::setColorAt(qreal position, const QColor &color)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorAt`。调用它会改变 `QGradient` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `qreal`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `color`：类型为 `const QColor &`。没有默认值，调用时必须提供。传入 `const QColor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`position`和给定`color`处建立一个停止点。给定`position`必须在0到1之间。
 
 ### `void QGradient::setCoordinateMode(QGradient::CoordinateMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCoordinateMode`。调用它会改变 `QGradient` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QGradient::CoordinateMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该梯度的坐标模式设置为`mode`。默认模式为`LogicalMode`。
 
 ### `void QGradient::setSpread(QGradient::Spread method)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSpread`。调用它会改变 `QGradient` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `method`：类型为 `QGradient::Spread`。没有默认值，调用时必须提供。传入 `QGradient::Spread` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定该梯度应使用何种扩散`method`。
+注意，该函数仅对线性梯度和径向梯度有效。
 
 ### `void QGradient::setStops(const QGradientStops &stopPoints)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStops`。调用它会改变 `QGradient` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stopPoints`：类型为 `const QGradientStops &`。没有默认值，调用时必须提供。传入 `const QGradientStops &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`stopPoints`替换当前的停止点集合。点的位置必须在0到1之间，并且必须先从最低点排序。
 
 ### `QGradient::Spread QGradient::spread() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGradient::spread` 用于计算、查询或取得与“spread”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGradient::Spread`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGradient::Spread`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该梯度所使用的扩散方法。默认为`PadSpread`。
 
 ### `QGradientStops QGradient::stops() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `stops`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QGradientStops`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该梯度的停止点。
+如果没有指定停止点，则使用从0处的黑色到1处的白色渐变。
 
 ### `QGradient::Type QGradient::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGradient::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGradient::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGradient::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回梯度类型。
 
 ### `bool QGradient::operator!=(const QGradient &gradient) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `gradient`：类型为 `const QGradient &`。没有默认值，调用时必须提供。传入 `const QGradient &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果梯度与指定的其他`gradient`相同，返回`true`;否则返回`false`。
 
 ### `bool QGradient::operator==(const QGradient &gradient) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `gradient`：类型为 `const QGradient &`。没有默认值，调用时必须提供。传入 `const QGradient &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果梯度与指定的其他`gradient`相同，返回`true`;否则返回`false`。
 
 ### `QGradientStop`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 的 `Q、Gradient、停止` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类型def用于性病：:p air<`qreal`，`QColor`>。
 
 ### `QGradientStops`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QGradient` 的 `Q、Gradient、Stops` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+渐变停止点列表类型，等价于 `QList<QGradientStop>`；每项由 0 到 1 的位置和该位置的颜色组成。用 `setStops()` 一次设置多个色标时通常按位置升序排列，超出有效范围的位置不应使用。
 
 ## 6. 深入实践与常见坑
 

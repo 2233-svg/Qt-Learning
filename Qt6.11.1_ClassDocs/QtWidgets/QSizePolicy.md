@@ -96,431 +96,265 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSizePolicy::ControlTypeflags QSizePolicy::ControlTypes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 暴露的类型声明 `Control、Typeflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ControlTypeflags QSizePolicy::ControlTypes`。
-- 属性名：`QSizePolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了不同类型的控件在布局交互方面：
+- `QSizePolicy::DefaultType`：`0x00000001`;当未指定时，默认类型。
+- `QSizePolicy::ButtonBox`：`0x00000002`;一个`QDialogButtonBox`实例。
+- `QSizePolicy::CheckBox`：`0x00000004`;一个`QCheckBox`实例。
+- `QSizePolicy::ComboBox`：`0x00000008`;一个`QComboBox`实例。
+- `QSizePolicy::Frame`：`0x00000010`;一个`QFrame`实例。
+- `QSizePolicy::GroupBox`：`0x00000020`;一个`QGroupBox`实例。
+- `QSizePolicy::Label`：`0x00000040`;一个`QLabel`实例。
+- `QSizePolicy::Line`：`0x00000080`;`QFrame` 实例，`QFrame::HLine` 或 `QFrame::VLine`。
+- `QSizePolicy::LineEdit`：`0x00000100`;一个`QLineEdit`实例。
+- `QSizePolicy::PushButton`：`0x00000200`;一个`QPushButton`实例。
+- `QSizePolicy::RadioButton`：`0x00000400`;一个`QRadioButton`实例。
+- `QSizePolicy::Slider`：`0x00000800`;一个`QAbstractSlider`实例。
+- `QSizePolicy::SpinBox`：`0x00001000`;一个`QAbstractSpinBox`实例。
+- `QSizePolicy::TabWidget`：`0x00002000`;一个`QTabWidget`实例。
+- `QSizePolicy::ToolButton`：`0x00004000`;一个`QToolButton`实例。
+ControlTypes 类型是 QFlag 的 typedef<ControlType>。它存储 ControlType 值的 OR 组合。
 
 ### `enum QSizePolicy::Policy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 暴露的类型声明 `Policy`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Policy`。
-- 属性名：`QSizePolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举描述了构建 `QSizePolicy` 时每个维度使用的各种尺寸类型。
+- `QSizePolicy::Fixed`: `0`; `QWidget::sizeHint()` 是唯一可接受的替代方案，因此控件永远不能增长或缩小（例如按钮的垂直方向）。
+- `QSizePolicy::Minimum`: `GrowFlag`; sizeHint() 是最小且足够的。控件可以扩展，但它变大没有优势（例如按钮的水平方向）。它不能小于 sizeHint() 提供的尺寸。
+- `QSizePolicy::Maximum`: `ShrinkFlag`; sizeHint() 是最大值。如果其他控件需要空间，控件可以任意缩小而不会有损（例如分隔线）。它不能大于 sizeHint() 提供的尺寸。
+- `QSizePolicy::Preferred`: `GrowFlag | ShrinkFlag`; sizeHint() 是最佳值，但控件可以缩小且仍然有用。控件可以扩展，但比 sizeHint() 大没有优势（默认的 `QWidget` 策略）。
+- `QSizePolicy::Expanding`: `GrowFlag | ShrinkFlag | ExpandFlag`; sizeHint() 是合理尺寸，但控件可以缩小且仍然有用。控件可以利用额外空间，因此应该尽可能获得更多空间（例如水平滑块的水平方向）。
+- `QSizePolicy::MinimumExpanding`: `GrowFlag | ExpandFlag`; sizeHint() 是最小且足够的。控件可以利用额外空间，因此应该尽可能获得更多空间（例如水平滑块的水平方向）。
+- `QSizePolicy::Ignored`: `ShrinkFlag | GrowFlag | IgnoreFlag`; 忽略 sizeHint()。控件将获得尽可能多的空间。
 
 ### `enum QSizePolicy::PolicyFlag`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 暴露的类型声明 `Policy、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PolicyFlag`。
-- 属性名：`QSizePolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志组合起来形成各种`Policy`值：
+- `QSizePolicy::GrowFlag`：`1`;如有需要，小部件可以超过其尺寸提示。
+- `QSizePolicy::ExpandFlag`：`2`;小部件应尽可能多地获得空间。
+- `QSizePolicy::ShrinkFlag`：`4`;如有需要，小部件可以收缩到低于提示大小。
+- `QSizePolicy::IgnoreFlag`：`8`;忽略控件的大小提示。控件会尽可能多地占用空间。
 
 ### `[constexpr noexcept] QSizePolicy::QSizePolicy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QSizePolicy对象，`Fixed`作为其横向和纵向策略。
+策略可以通过`setHorizontalPolicy()`和`setVerticalPolicy()`函数进行修改。如果控件的首选高度取决于控件的宽度（例如带有行环绕的 `QLabel`），则使用 `setHeightForWidth()` 函数。
 
 ### `[constexpr noexcept] QSizePolicy::QSizePolicy(QSizePolicy::Policy horizontal, QSizePolicy::Policy vertical, QSizePolicy::ControlType type = DefaultType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `horizontal`：类型为 `QSizePolicy::Policy`。没有默认值，调用时必须提供。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vertical`：类型为 `QSizePolicy::Policy`。没有默认值，调用时必须提供。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `QSizePolicy::ControlType`。默认值为 `DefaultType`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个包含给定`horizontal`和`vertical`策略及指定控制`type`的QSizePolicy对象。
+如果小部件的首选高度取决于小部件的宽度（例如带有行`QLabel`），则使用`setHeightForWidth()`。
 
 ### `[noexcept] QSizePolicy::ControlType QSizePolicy::controlType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::controlType` 用于计算、查询或取得与“control、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizePolicy::ControlType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizePolicy::ControlType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该大小策略所适用的小部件关联的控制类型。
 
 ### `[constexpr noexcept] Qt::Orientations QSizePolicy::expandingDirections() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::expandingDirections` 用于计算、查询或取得与“expanding、Directions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Orientations`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::Orientations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个小部件是否能利用超过`QWidget::sizeHint()`函数所显示的空间。
+`Qt::Horizontal`或`Qt::Vertical`的值表示该小部件可以水平或垂直增长（即水平或垂直策略是`Expanding`或`MinimumExpanding`垂直的），而`Qt::Horizontal` |`Qt::Vertical`表示它可以在两个维度上增长。
 
 ### `[constexpr noexcept] bool QSizePolicy::hasHeightForWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasHeightForWidth`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果小部件的首选高度取决于宽度，则返回`true`;否则返回`false`。
 
 ### `[constexpr noexcept] bool QSizePolicy::hasWidthForHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasWidthForHeight`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果小部件的宽度依赖于高度，则返回`true`;否则返回`false`。
 
 ### `[constexpr noexcept] QSizePolicy::Policy QSizePolicy::horizontalPolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::horizontalPolicy` 用于计算、查询或取得与“水平、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizePolicy::Policy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizePolicy::Policy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回规模政策的横向部分。
 
 ### `[constexpr noexcept] int QSizePolicy::horizontalStretch() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::horizontalStretch` 用于计算、查询或取得与“水平、Stretch”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回尺寸政策的水平拉伸因子。
 
 ### `[constexpr noexcept] bool QSizePolicy::retainSizeWhenHidden() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::retainSizeWhenHidden` 用于计算、查询或取得与“retain、尺寸或数量、When、Hidden”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回布局在隐藏时是否应保持控件大小。这是默认的`false`。
 
 ### `[noexcept] void QSizePolicy::setControlType(QSizePolicy::ControlType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setControlType`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QSizePolicy::ControlType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该大小策略适用于`type`的控件控件类型。
+控制类型指定该大小策略适用的小部件类型。某些样式，尤其是 QMacStyle，会用它来在小部件之间插入适当的间距。例如，macOS Aqua 指南规定按钮间距应为 12 像素，而垂直堆叠的单选按钮只需 6 像素。
 
 ### `[constexpr noexcept] void QSizePolicy::setHeightForWidth(bool dependent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeightForWidth`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dependent`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将决定控件首选高度是否依赖于宽度的标志设置为`dependent`。
 
 ### `[constexpr noexcept] void QSizePolicy::setHorizontalPolicy(QSizePolicy::Policy policy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalPolicy`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `policy`：类型为 `QSizePolicy::Policy`。没有默认值，调用时必须提供。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将水平分量设置为给定的`policy`。
 
 ### `[constexpr] void QSizePolicy::setHorizontalStretch(int stretchFactor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalStretch`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stretchFactor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将规模策略的水平拉伸因子设定为给定`stretchFactor`。`stretchFactor`必须在[0,255]区间内。
+当两个小部件在水平布局中相邻时，将左侧小部件的水平拉伸因子设为2，右边小部件的因子设为1，可以确保左边的小部件总是右边小部件的两倍大。
 
 ### `[constexpr noexcept] void QSizePolicy::setRetainSizeWhenHidden(bool retainSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRetainSizeWhenHidden`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `retainSize`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置布局在隐藏时是否应保持小部件的大小。如果`retainSize` `true`，隐藏小部件不会改变布局。
 
 ### `[constexpr noexcept] void QSizePolicy::setVerticalPolicy(QSizePolicy::Policy policy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalPolicy`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `policy`：类型为 `QSizePolicy::Policy`。没有默认值，调用时必须提供。传入 `QSizePolicy::Policy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直分量设置为给定的`policy`。
 
 ### `[constexpr] void QSizePolicy::setVerticalStretch(int stretchFactor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalStretch`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stretchFactor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将尺寸策略的垂直拉伸因子设定为给定`stretchFactor`。`stretchFactor`必须在[0,255]区间内。
+当两个小部件在垂直布局中相邻时，将顶部小部件的垂直拉伸因子设为2，底部小部件的因数设为1，可以确保顶部的小部件总是底部小部件的两倍大。
 
 ### `[constexpr noexcept] void QSizePolicy::setWidthForHeight(bool dependent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWidthForHeight`。调用它会改变 `QSizePolicy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dependent`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将判断小部件宽度是否依赖于高度的标志设置为`dependent`。
+这仅支持`QGraphicsLayout`的子类。不可能同时拥有高度对宽度和宽度对高度的限制。
 
 ### `[constexpr noexcept] void QSizePolicy::transpose()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::transpose` 用于执行与“transpose”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+可以交换水平和垂直政策并拉伸。
 
 ### `[constexpr noexcept] QSizePolicy QSizePolicy::transposed() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::transposed` 用于计算、查询或取得与“transposed”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizePolicy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizePolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个大小策略对象，水平和垂直策略互换，拉伸。
 
 ### `[constexpr noexcept] QSizePolicy::Policy QSizePolicy::verticalPolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::verticalPolicy` 用于计算、查询或取得与“垂直、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizePolicy::Policy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizePolicy::Policy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回规模策略的垂直部分。
 
 ### `[constexpr noexcept] int QSizePolicy::verticalStretch() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::verticalStretch` 用于计算、查询或取得与“垂直、Stretch”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回尺寸保单的垂直拉伸因子。
 
 ### `QSizePolicy::operator QVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还回一个存放该`QSizePolicy`的 `QVariant`。
 
 ### `[constexpr noexcept] bool QSizePolicy::operator!=(const QSizePolicy &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSizePolicy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该政策与`other`不同，则退货`true`;否则退货`false`。
 
 ### `[constexpr noexcept] bool QSizePolicy::operator==(const QSizePolicy &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSizePolicy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该策略等于`other`，则`true`回报;否则返回`false`。
 
 ### `[noexcept] size_t qHash(QSizePolicy key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSizePolicy::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `QSizePolicy`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `QDataStream &operator<<(QDataStream &stream, const QSizePolicy &policy)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `policy`：类型为 `const QSizePolicy &`。没有默认值，调用时必须提供。传入 `const QSizePolicy &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数据流`policy`大小写入数据流`stream`。
 
 ### `QDataStream &operator>>(QDataStream &stream, QSizePolicy &policy)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `policy`：类型为 `QSizePolicy &`。没有默认值，调用时必须提供。传入 `QSizePolicy &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取数据流中`policy`大小`stream`。
 
 ### `enum ControlType { DefaultType, ButtonBox, CheckBox, ComboBox, Frame, …, ToolButton }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 暴露的类型声明 `Control、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了不同类型的控件在布局交互方面：
+- `QSizePolicy::DefaultType`：`0x00000001`;当未指定时，默认类型。
+- `QSizePolicy::ButtonBox`：`0x00000002`;一个`QDialogButtonBox`实例。
+- `QSizePolicy::CheckBox`：`0x00000004`;一个`QCheckBox`实例。
+- `QSizePolicy::ComboBox`：`0x00000008`;一个`QComboBox`实例。
+- `QSizePolicy::Frame`：`0x00000010`;一个`QFrame`实例。
+- `QSizePolicy::GroupBox`：`0x00000020`;一个`QGroupBox`实例。
+- `QSizePolicy::Label`：`0x00000040`;一个`QLabel`实例。
+- `QSizePolicy::Line`：`0x00000080`;`QFrame` 实例，`QFrame::HLine` 或 `QFrame::VLine`。
+- `QSizePolicy::LineEdit`：`0x00000100`;一个`QLineEdit`实例。
+- `QSizePolicy::PushButton`：`0x00000200`;一个`QPushButton`实例。
+- `QSizePolicy::RadioButton`：`0x00000400`;一个`QRadioButton`实例。
+- `QSizePolicy::Slider`：`0x00000800`;一个`QAbstractSlider`实例。
+- `QSizePolicy::SpinBox`：`0x00001000`;一个`QAbstractSpinBox`实例。
+- `QSizePolicy::TabWidget`：`0x00002000`;一个`QTabWidget`实例。
+- `QSizePolicy::ToolButton`：`0x00004000`;一个`QToolButton`实例。
+ControlTypes 类型是 QFlag 的 typedef<ControlType>。它存储 ControlType 值的 OR 组合。
 
 ### `flags ControlTypes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSizePolicy` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了不同类型的控件在布局交互方面：
+- `QSizePolicy::DefaultType`：`0x00000001`;当未指定时，默认类型。
+- `QSizePolicy::ButtonBox`：`0x00000002`;一个`QDialogButtonBox`实例。
+- `QSizePolicy::CheckBox`：`0x00000004`;一个`QCheckBox`实例。
+- `QSizePolicy::ComboBox`：`0x00000008`;一个`QComboBox`实例。
+- `QSizePolicy::Frame`：`0x00000010`;一个`QFrame`实例。
+- `QSizePolicy::GroupBox`：`0x00000020`;一个`QGroupBox`实例。
+- `QSizePolicy::Label`：`0x00000040`;一个`QLabel`实例。
+- `QSizePolicy::Line`：`0x00000080`;`QFrame` 实例，`QFrame::HLine` 或 `QFrame::VLine`。
+- `QSizePolicy::LineEdit`：`0x00000100`;一个`QLineEdit`实例。
+- `QSizePolicy::PushButton`：`0x00000200`;一个`QPushButton`实例。
+- `QSizePolicy::RadioButton`：`0x00000400`;一个`QRadioButton`实例。
+- `QSizePolicy::Slider`：`0x00000800`;一个`QAbstractSlider`实例。
+- `QSizePolicy::SpinBox`：`0x00001000`;一个`QAbstractSpinBox`实例。
+- `QSizePolicy::TabWidget`：`0x00002000`;一个`QTabWidget`实例。
+- `QSizePolicy::ToolButton`：`0x00004000`;一个`QToolButton`实例。
+ControlTypes 类型是 QFlag 的 typedef<ControlType>。它存储 ControlType 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

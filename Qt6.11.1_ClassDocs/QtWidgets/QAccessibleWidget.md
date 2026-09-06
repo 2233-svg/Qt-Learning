@@ -89,324 +89,152 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 24 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QAccessibleWidget::QAccessibleWidget(QWidget *w, QAccessible::Role role = QAccessible::Client)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `w`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `role`：类型为 `QAccessible::Role`。默认值为 `QAccessible::Client`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为控件`w`创建QAccessibleWidget对象。`role`是一个可选参数，用于设置对象的角色属性。
 
 ### `[explicit] QAccessibleWidget::QAccessibleWidget(QWidget *w, QAccessible::Role role, const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `w`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `role`：类型为 `QAccessible::Role`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为控件`w`创建QAccessibleWidget对象。`role`和`name`是可选参数，用于设置对象的角色和名称属性。
 
 ### `[virtual noexcept protected] QAccessibleWidget::~QAccessibleWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleWidget` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁这个物体。
 
 ### `[override virtual] QStringList QAccessibleWidget::actionNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::actionNames` 用于计算、查询或取得与“action、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleActionInterface::actionNames()` const.
 
 ### `[protected] void QAccessibleWidget::addControllingSignal(const QString &signal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QAccessibleWidget` 添加依赖、数据或子对象的 API `addControllingSignal`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `signal`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`signal`视为控制信号。
+对象是连接到控制信号的其他物体的控制器。
 
 ### `[override virtual] QColor QAccessibleWidget::backgroundColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::backgroundColor` 用于计算、查询或取得与“background、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::backgroundColor()` const.
 
 ### `[override virtual] QAccessibleInterface *QAccessibleWidget::child(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::child` 用于计算、查询或取得与“child”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleInterface::child`（int index）const.
 
 ### `[override virtual] int QAccessibleWidget::childCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::childCount` 用于计算、查询或取得与“child、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::childCount()` const.
 
 ### `[override virtual] void QAccessibleWidget::doAction(const QString &actionName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::doAction` 用于执行与“do、Action”相关的操作。调用时要先确认当前状态和 `actionName` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `actionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleActionInterface::doAction`（const QString &actionName）。
 
 ### `[override virtual] QAccessibleInterface *QAccessibleWidget::focusChild() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::focusChild` 用于计算、查询或取得与“focus、Child”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::focusChild()` const.
 
 ### `[override virtual] QColor QAccessibleWidget::foregroundColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::foregroundColor` 用于计算、查询或取得与“foreground、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::foregroundColor()` const.
 
 ### `[override virtual] int QAccessibleWidget::indexOfChild(const QAccessibleInterface *child) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::indexOfChild` 用于计算、查询或取得与“索引、Of、Child”相关的操作。调用时要先确认当前状态和 `child` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `child`：类型为 `const QAccessibleInterface *`。没有默认值，调用时必须提供。子对象或子节点；要确认它是否由父对象接管，以及调用后原指针是否仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `child` 在当前控件可访问子对象列表中的从 0 开始索引；不是直接子对象时返回 -1。传入接口必须仍然有效，结果应与 `childCount()` 和 `child(index)` 使用同一顺序。
 
 ### `[override virtual] void *QAccessibleWidget::interface_cast(QAccessible::InterfaceType t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::interface_cast` 用于计算、查询或取得与“interface、cast”相关的操作。调用时要先确认当前状态和 `t` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `t`：类型为 `QAccessible::InterfaceType`。没有默认值，调用时必须提供。传入 `QAccessible::InterfaceType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleInterface::interface_cast`（QAccessible：：InterfaceType 类型）。
 
 ### `[override virtual] bool QAccessibleWidget::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleObject::isValid()` const.
 
 ### `[override virtual] QStringList QAccessibleWidget::keyBindingsForAction(const QString &actionName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::keyBindingsForAction` 用于计算、查询或取得与“key、Bindings、For、Action”相关的操作。调用时要先确认当前状态和 `actionName` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `actionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：：`QAccessibleActionInterface::keyBindingsForAction`（const QString &actionName） const.
 
 ### `[override virtual] QAccessibleInterface *QAccessibleWidget::parent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::parent` 用于计算、查询或取得与“父对象”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleInterface::parent()` const.
 
 ### `[protected] QObject *QAccessibleWidget::parentObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::parentObject` 用于计算、查询或取得与“父对象、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回关联小部件的父对象，该对象要么是父小部件，要么是顶层小部件的 `qApp`。
 
 ### `[override virtual] QRect QAccessibleWidget::rect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::rect` 用于计算、查询或取得与“rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleObject::rect()` const.
 
 ### `[override virtual] QList<std::pair<QAccessibleInterface *, QAccessible::Relation>> QAccessibleWidget::relations(QAccessible::Relation match = QAccessible::AllRelations) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::relations` 用于计算、查询或取得与“relations”相关的操作。调用时要先确认当前状态和 `match` 的有效范围；返回类型是 `QList<std::pair<QAccessibleInterface *, QAccessible::Relation>>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<std::pair<QAccessibleInterface *, QAccessible::Relation>>`。
-- 参数 `match`：类型为 `QAccessible::Relation`。默认值为 `QAccessible::AllRelations`。传入 `QAccessible::Relation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleInterface::relations`（QAccessible：：Relation match）const.
 
 ### `[override virtual] QAccessible::Role QAccessibleWidget::role() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::role` 用于计算、查询或取得与“角色”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessible::Role`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessible::Role`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::role()` const.
 
 ### `[override virtual] QAccessible::State QAccessibleWidget::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessible::State`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessible::State`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::state()` const.
 
 ### `[override virtual] QString QAccessibleWidget::text(QAccessible::Text t) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::text` 用于计算、查询或取得与“文本”相关的操作。调用时要先确认当前状态和 `t` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `t`：类型为 `QAccessible::Text`。没有默认值，调用时必须提供。传入 `QAccessible::Text` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAccessibleInterface::text`（QAccessible：：Text t） const.
 
 ### `[protected] QWidget *QAccessibleWidget::widget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::widget` 用于计算、查询或取得与“widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回关联的小部件。
 
 ### `[override virtual] QWindow *QAccessibleWidget::window() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleWidget::window` 用于计算、查询或取得与“window”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWindow *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWindow *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAccessibleInterface::window()` const.
 
 ## 6. 深入实践与常见坑
 

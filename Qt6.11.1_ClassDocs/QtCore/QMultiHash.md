@@ -146,953 +146,620 @@ for (const int value : values) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 71 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QMultiHash::const_key_value_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的配置属性。初始化或状态切换时通过 `setConst_key_value_iterator(...)` 设置，之后用 `const_key_value_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_key_value_iterator`。
-- 属性名：`QMultiHash`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QMultiHash：：const_key_value_iterator typedef 提供了一个 STL 风格的 cont 迭代器用于 `QMultiHash`。
+QMultiHash：：const_key_value_iterator 本质上与 `QMultiHash::const_iterator` 相同，区别在于运算符*() 返回的是键值对而非值。
 
 ### `QMultiHash::key_value_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的配置属性。初始化或状态切换时通过 `setKey_value_iterator(...)` 设置，之后用 `key_value_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:key_value_iterator`。
-- 属性名：`QMultiHash`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QMultiHash：：key_value_iterator typedef 提供了一个 STL 风格的迭代器用于`QMultiHash`。
+QMultiHash：：key_value_iterator 本质上与 `QMultiHash::iterator` 相同，区别在于运算符*() 返回的是键值对而非值。
 
 ### `[noexcept] QMultiHash::QMultiHash()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空哈希。
 
 ### `[explicit] QMultiHash::QMultiHash(const QHash<Key, T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QHash<Key, T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`的副本（可以是`QHash`或QMultiHash）。
 
 ### `QMultiHash::QMultiHash(std::initializer_list<std::pair<Key, T>> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `list`：类型为 `std::initializer_list<std::pair<Key, T>>`。没有默认值，调用时必须提供。传入 `std::initializer_list<std::pair<Key, T>>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个多哈希，初始化器列表中的每个元素都副本 `list`。
 
 ### `template <typename InputIterator> QMultiHash::QMultiHash(InputIterator begin, InputIterator end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `begin`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个多重哈希，每个迭代范围中的元素都有一个副本 [`begin`， `end`）。由该范围复制的元素必须是具有`first`和`second`数据成员的对象（如`std::pair`），分别可转换为`Key`和可转换为`T`;或者迭代器必须有`key()`和 `value()`成员函数，分别返回键可转换为`Key`和返回可转换值为 `T`。
 
 ### `[since 6.4] auto QMultiHash::asKeyValueRange() const &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::asKeyValueRange` 用于计算、查询或取得与“as、Key、值访问、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个范围对象，允许对该哈希值进行迭代，作为键值对。例如，该范围对象可以用于基于范围的for循环，结合结构化绑定声明：
+注意，通过这种方式获得的密钥和值都是对哈希中密钥的引用。具体来说，变异值会修改哈希本身。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`auto`。
-- 参数：无。
+```cpp
+ QMultiHash<QString, int> hash;
+ hash.insert("January", 1);
+ hash.insert("February", 2);
+ // ...
+ hash.insert("December", 12);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ for (auto [key, value] : hash.asKeyValueRange()) {
+     cout << qPrintable(key) << ": " << value << endl;
+     --value; // convert to JS month indexing
+ }
+```
 
 ### `QMultiHash<Key, T>::iterator QMultiHash::begin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向哈希中第一个项的STL式迭代器。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::begin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::cbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向哈希中的第一个项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::cend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向哈希中最后一个项之后的虚数项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept(...)] void QMultiHash::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除哈希中的所有项目，释放所有内存。
+注意：该功能仅在`std::is_nothrow_destructible<Node>::value` `true`时才适用。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::constBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向哈希中的第一个项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::constEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向哈希中最后一个项之后的虚数项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::constFind(const Key &key, const T &value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::constFind` 用于计算、查询或取得与“const、查找”相关的操作。调用时要先确认当前状态和 `key`、`value` 的有效范围；返回类型是 `QMultiHash<Key, T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向哈希中`key`和`value`的项目。
+如果哈希中没有此类项，函数返回`constEnd()`。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_key_value_iterator QMultiHash::constKeyValueBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::constKeyValueBegin` 用于计算、查询或取得与“const、Key、值访问、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向哈希中的第一个条目。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_key_value_iterator QMultiHash::constKeyValueEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::constKeyValueEnd` 用于计算、查询或取得与“const、Key、值访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向哈希最后一个条目之后的虚数条目。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] bool QMultiHash::contains(const Key &key, const T &value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果哈希包含`key` 和 `value` 的项，返回 返回 `true`;否则返回 `false`。
 
 ### `[noexcept] qsizetype QMultiHash::count(const Key &key, const T &value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QMultiHash` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有`key`和`value`的物品数量。
 
 ### `template <typename... Args> QMultiHash<Key, T>::iterator QMultiHash::emplace(Key &&key, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::emplace` 用于计算、查询或取得与“emplace”相关的操作。调用时要先确认当前状态和 `key`、`args` 的有效范围；返回类型是 `template <typename... Args> QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `Key &&`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在容器中插入一个新元素。该新元素在原地构造，使用`args`作为其构造的参数。
+如果哈希中已有具有相同键的项，该函数会直接创建一个新的。（这种行为不同于`replace()`，后者会覆盖已有项的值。）。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `template <typename... Args> QMultiHash<Key, T>::iterator QMultiHash::emplaceReplace(Key &&key, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::emplaceReplace` 用于计算、查询或取得与“emplace、替换”相关的操作。调用时要先确认当前状态和 `key`、`args` 的有效范围；返回类型是 `template <typename... Args> QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `Key &&`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将一个新元素插入容器。该新元素在原地构造，使用`args`作为其构造的参数。
+如果哈希中已有具有相同键的项，该项的值会被由`args`构造的值替换。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::iterator QMultiHash::end()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向哈希中最后一个项之后的虚数项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向哈希中最后一个项之后的虚数项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `std::pair<QMultiHash<Key, T>::iterator, QMultiHash<Key, T>::iterator> QMultiHash::equal_range(const Key &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::equal_range` 用于计算、查询或取得与“equal、range”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `std::pair<QMultiHash<Key, T>::iterator, QMultiHash<Key, T>::iterator>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::pair<QMultiHash<Key, T>::iterator, QMultiHash<Key, T>::iterator>`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一对迭代器，界定`[first, second)`值的范围，这些值存储在`key`下。如果范围为空，则两个迭代器均为`end()`。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] std::pair<QMultiHash<Key, T>::const_iterator, QMultiHash<Key, T>::const_iterator> QMultiHash::equal_range(const Key &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::equal_range` 用于计算、查询或取得与“equal、range”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `std::pair<QMultiHash<Key, T>::const_iterator, QMultiHash<Key, T>::const_iterator>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::pair<QMultiHash<Key, T>::const_iterator, QMultiHash<Key, T>::const_iterator>`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `QMultiHash<Key, T>::iterator QMultiHash::erase(QMultiHash<Key, T>::const_iterator pos)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::erase` 用于计算、查询或取得与“erase”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+从哈希中移除与迭代器`pos`关联的（键、值）对，并返回哈希中下一个项的迭代器。
+该函数从不导致`QMultiHash`对其内部数据结构进行重写。这意味着在迭代过程中可以安全地调用它，且不会影响哈希中项的顺序。例如：
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `pos`：类型为 `QMultiHash<Key, T>::const_iterator`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMultiHash<QObject *, int> objectHash;
+ //...
+ QMultiHash<QObject *, int>::iterator i = objectHash.find(obj);
+ while (i != objectHash.end() && i.key() == obj) {
+     if (i.value() == 0) {
+         i = objectHash.erase(i);
+     } else {
+         ++i;
+     }
+ }
+```
 
 ### `QMultiHash<Key, T>::iterator QMultiHash::find(const Key &key, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key`、`value` 的有效范围；返回类型是 `QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向`key`和`value`的项。如果哈希中没有此类项，函数返回`end()`。
+如果哈希包含多个`key`和`value`的项，迭代器返回指向最近插入的项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_iterator QMultiHash::find(const Key &key, const T &value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key`、`value` 的有效范围；返回类型是 `QMultiHash<Key, T>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `QMultiHash<Key, T>::iterator QMultiHash::insert(const Key &key, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMultiHash` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个新项，带有`key`和值为`value`。
+如果哈希中已有具有相同键的项，该函数会直接创建一个新的。（这种行为不同于`replace()`，后者会覆盖已有项的值。）。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[since 6.11] QMultiHash<Key, T>::iterator QMultiHash::insert(Key &&key, T &&value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMultiHash` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `Key &&`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `T &&`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个新项，带有`key`和值为`value`。
+如果哈希中已有具有相同键的项，该函数会直接创建一个新的。（这种行为不同于`replace()`，后者会覆盖已有项的值。）。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] Key QMultiHash::key(const T &value, const Key &defaultKey) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::key` 用于计算、查询或取得与“key”相关的操作。调用时要先确认当前状态和 `value`、`defaultKey` 的有效范围；返回类型是 `Key`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Key`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `defaultKey`：类型为 `const Key &`。没有默认值，调用时必须提供。传入 `const Key &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回映射到`value`的第一个键。如果哈希中没有映射到`value`的项，返回`defaultKey`;如果未提供该参数，则返回默认构造的键。
+该函数可能较慢（线性时间），因为`QMultiHash`的内部数据结构是通过键快速查找而优化的，而不是按值。
 
 ### `[noexcept] QMultiHash<Key, T>::key_iterator QMultiHash::keyBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keyBegin` 用于计算、查询或取得与“key、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::key_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::key_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向哈希中的第一个键。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::key_iterator QMultiHash::keyEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keyEnd` 用于计算、查询或取得与“key、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::key_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::key_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向哈希中最后一个键之后的虚数项。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::key_value_iterator QMultiHash::keyValueBegin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keyValueBegin` 用于计算、查询或取得与“key、值访问、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向哈希第一个条目的STL式迭代器。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_key_value_iterator QMultiHash::keyValueBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keyValueBegin` 用于计算、查询或取得与“key、值访问、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向哈希中的第一个条目。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::key_value_iterator QMultiHash::keyValueEnd()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keyValueEnd` 用于计算、查询或取得与“key、值访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代子，指向哈希中最后一个条目之后的虚数条目。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] QMultiHash<Key, T>::const_key_value_iterator QMultiHash::keyValueEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keyValueEnd` 用于计算、查询或取得与“key、值访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMultiHash<Key, T>::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向哈希最后一个条目之后的虚数条目。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `QList<Key> QMultiHash::keys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::keys` 用于计算、查询或取得与“keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<Key>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<Key>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含哈希中所有键的列表，顺序任意。哈希中多次出现的键也会在列表中多次出现。
+顺序保证与`values()`使用的顺序相同。
+该函数会以线性时间创建一个新的列表。通过从`keyBegin()`迭代到`keyEnd()`可以避免所需的时间和内存消耗。
 
 ### `qsizetype QMultiHash::remove(const Key &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从哈希中移除所有带有`key`的项目。返回被移除的物品数量。
 
 ### `qsizetype QMultiHash::remove(const Key &key, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从哈希中移除所有具有`key`和值`value`的项目。返回移除的物品数量。
 
 ### `[since 6.1] template <typename Predicate> qsizetype QMultiHash::removeIf(Predicate pred)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeIf`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename Predicate> qsizetype`。
-- 参数 `pred`：类型为 `Predicate`。没有默认值，调用时必须提供。传入 `Predicate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从多哈希中移除所有谓词 `pred` 返回为真元素。
+该函数支持的谓词要么是类型为`QMultiHash<Key, T>::iterator`，要么是类型为`std::pair<const Key &, T &>`的参数。
+返回被移除的元素数量（如果有的话）。
 
 ### `QMultiHash<Key, T>::iterator QMultiHash::replace(const Key &key, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::replace` 用于计算、查询或取得与“替换”相关的操作。调用时要先确认当前状态和 `key`、`value` 的有效范围；返回类型是 `QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个新项，带有`key`和值为`value`。
+如果已有`key`的物品，该物品的价值会被替换为`value`。
+如果有多个`key`项，最近插入的项值会被替换为`value`。
+返回一个迭代器，指向新元素/更新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[noexcept] void QMultiHash::swap(QMultiHash<Key, T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QMultiHash<Key, T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将多哈希与`other`交换。该操作非常快且从未失败。
 
 ### `T QMultiHash::take(const Key &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::take` 用于计算、查询或取得与“取出”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从哈希中移除带有`key`的项，并返回与之相关的值。
+如果该项不存在于哈希中，函数仅返回默认构造的值。如果哈希中有多个`key`项，则仅移除最近插入的项。
+如果不使用返回值，`remove()`效率更高。
 
 ### `QList<Key> QMultiHash::uniqueKeys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::uniqueKeys` 用于计算、查询或取得与“unique、Keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<Key>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<Key>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含映射中所有键的列表。映射中出现多次的键在返回列表中只出现一次。
 
 ### `[since 6.0] QMultiHash<Key, T> &QMultiHash::unite(const QHash<Key, T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::unite` 用于计算、查询或取得与“unite”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `QMultiHash<Key, T> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T> &`。
-- 参数 `other`：类型为 `const QHash<Key, T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`哈希中的所有项插入到该哈希中，并返回对该哈希的引用。
 
 ### `QMultiHash<Key, T> &QMultiHash::unite(const QMultiHash<Key, T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::unite` 用于计算、查询或取得与“unite”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `QMultiHash<Key, T> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T> &`。
-- 参数 `other`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`哈希中的所有项插入到该哈希中，并返回对该哈希的引用。
 
 ### `[noexcept] T QMultiHash::value(const Key &key, const T &defaultValue) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QMultiHash` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `defaultValue`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`key`关联的值。
+如果哈希中没有包含`key`项，函数返回`defaultValue`，或者如果未提供该参数，则返回默认构造值。
+如果哈希中有多个`key`项，则返回最近插入的项值。
 
 ### `QList<T> QMultiHash::values() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::values` 用于计算、查询或取得与“values”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<T>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含哈希中所有值的列表，顺序任意。如果一个键关联多个值，则该列表中包含所有值，而不仅仅是最近插入的值。
+顺序保证与`keys()`使用的顺序相同。
+该函数会以线性时间创建一个新的列表。通过从`keyValueBegin()`迭代到`keyValueEnd()`可以避免这所涉及的时间和内存消耗。
 
 ### `QList<T> QMultiHash::values(const Key &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMultiHash::values` 用于计算、查询或取得与“values”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QList<T>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<T>`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`key`相关的所有值列表，从最近插入到最近插入的。
 
 ### `QMultiHash<Key, T> QMultiHash::operator+(const QMultiHash<Key, T> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>`。
-- 参数 `other`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个包含该哈希中所有项以及`other`中所有项的哈希值。如果一个键在两个哈希中都具有，则该哈希会多次包含该键。
 
 ### `QMultiHash<Key, T> &QMultiHash::operator+=(const QMultiHash<Key, T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T> &`。
-- 参数 `other`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`哈希中的所有项插入到该哈希中，并返回对该哈希的引用。
 
 ### `T &QMultiHash::operator[](const Key &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`key`关联的值作为可修改的引用。
+如果哈希中没有`key`项，函数会在哈希中插入一个默认构造的值，并返回`key`的引用。
+如果哈希包含多个带有`key`的项，该函数返回最近插入的值的引用。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `[since 6.1] template < typename Key, typename T, typename Predicate > qsizetype erase_if(QMultiHash<Key, T> &hash, Predicate pred)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QMultiHash::erase_if` 用于计算、查询或取得与“erase、if”相关的操作。调用时要先确认当前状态和 `hash`、`pred` 的有效范围；返回类型是 `template < typename Key, typename T, typename Predicate > qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename Key, typename T, typename Predicate > qsizetype`。
-- 参数 `hash`：类型为 `QMultiHash<Key, T> &`。没有默认值，调用时必须提供。传入 `QMultiHash<Key, T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pred`：类型为 `Predicate`。没有默认值，调用时必须提供。传入 `Predicate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从多哈希`hash`中移除所有谓词返回为真的元素`pred`。
+该函数支持的谓词要么取类型为`QMultiHash<Key, T>::iterator`，要么使用类型为`std::pair<const Key &, T &>`的参数。
+返回被移除的元素数量（如果有的话）。
 
 ### `[noexcept(...)] template <typename Key, typename T> size_t qHash(const QMultiHash<Key, T> &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QMultiHash::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `template <typename Key, typename T> size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Key, typename T> size_t`。
-- 参数 `key`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，并用`seed`来做种子计算。
+qHash()必须支持 类型 `Key` 和 `T`。
+注意：该功能仅在`noexcept(qHash(std::declval<Key&>())) && noexcept(qHash(std::declval<T&>()))` `true`时使用。
 
 ### `[noexcept] bool operator!=(const QMultiHash<Key, T> &lhs, const QMultiHash<Key, T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果`lhs`multihash 不等于`rhs`multihash；否则返回`false`如果两个多哈希包含相同的（键，值）对，它们被认为是相等的。该函数要求值类型实现`operator==()`.
 
 ### `template <typename Key, typename T> QDataStream &operator<<(QDataStream &out, const QMultiHash<Key, T> &hash)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Key, typename T> QDataStream &`。
-- 参数 `out`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hash`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。传入 `const QMultiHash<Key, T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入哈希`hash`流`out`。
+该函数需要键型和值类型来实现`operator<<()`。
 
 ### `[noexcept] bool operator==(const QMultiHash<Key, T> &lhs, const QMultiHash<Key, T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMultiHash<Key, T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 多重哈希等于 `rhs` 多重哈希，则返回 `true`；否则返回 `false`。
+当两个多重哈希包含相同的（键，值）对时，认为它们是相等的。
+此函数要求值类型实现 `operator==()`。
 
 ### `template <typename Key, typename T> QDataStream &operator>>(QDataStream &in, QMultiHash<Key, T> &hash)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Key, typename T> QDataStream &`。
-- 参数 `in`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hash`：类型为 `QMultiHash<Key, T> &`。没有默认值，调用时必须提供。传入 `QMultiHash<Key, T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将流`in`的哈希值读取到`hash`。
+该函数需要键型和值类型来实现`operator>>()`。
 
 ### `class const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 暴露的类型声明 `const、iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+QMultiHash：：const_iterator 类为 QMultiHash 提供了一个 STL 风格的 const 迭代器。
+`QMultiHash`<密钥，T>：：const_iterator 允许你对一个`QMultiHash`进行迭代。如果你想在迭代过程中修改`QMultiHash`，必须用 `QMultiHash::iterator`。通常在非const的`QMultiHash`上使用Const `QMultiHash::const_iterator`是个好习惯，除非你需要通过迭代器更改`QMultiHash`。Const迭代器速度稍快，可以提高代码的可读性。
+默认的`QMultiHash::const_iterator`构造器会创建一个未初始化的迭代器。你必须用`QMultiHash`函数如`QMultiHash::cbegin()`、`QMultiHash::cend()`或`QMultiHash::constFind()`初始化它，才能开始迭代。这里有一个典型的循环，打印了哈希中存储的所有（键、值）对：
+与按键排序的 `QMap` 不同，`QMultiHash` 以任意顺序存储物品。唯一的保证是，共享相同键的项（因为它们是用`QMultiHash`插入的）会依次出现，从最近插入到最近插入的值。
+多个迭代器可以在同一哈希上使用。但请注意，任何直接对`QMultiHash`进行的修改（插入和删除项）都可能导致迭代器失效。
+插入项或调用 QMultiHash：：reserve() 或 QMultiHash：：squeeze() 等方法，可以使所有指向哈希的迭代器失效。迭代器只有在`QMultiHash`不需要增长/缩小内部哈希表时才保证有效。在重排操作 ahs 发生后使用任何迭代器会导致行为未定义。
+如果你需要长时间保持迭代器，我们建议你使用`QMultiMap`而非`QMultiHash`。
+警告：隐式共享容器上的迭代器工作方式与STL迭代器不完全相同。当迭代器在该容器上活跃时，应避免复制该容器。欲了解更多信息，请阅读隐式共享迭代器问题。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+     QHash<QString, int> hash;
+     hash.insert("January", 1);
+     hash.insert("February", 2);
+     //...
+     hash.insert("December", 12);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     for (auto i = hash.cbegin(), end = hash.cend(); i != end; ++i)
+         cout << qPrintable(i.key()) << ": " << i.value() << endl;
+```
 
 ### `class iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 暴露的类型声明 `iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+QMultiHash：：iterator 类为 QMultiHash 提供了一个 STL 风格的非const迭代器。
+`QMultiHash`<密钥，T，T>：：迭代器允许你对某个`QMultiHash`进行迭代，并修改与某个密钥相关的值（但不能修改密钥）。如果你想对const的某个`QMultiHash`进行迭代，应该使用`QMultiHash::const_iterator`。通常在非const的代`QMultiHash`上也使用`QMultiHash::const_iterator`是个好习惯，除非你需要通过迭代器更改`QMultiHash`。const迭代器速度稍快，并且可以提高代码的可读性。
+默认的`QMultiHash::iterator`构造函数会创建一个未初始化的迭代器。你必须用像`QMultiHash::begin()`、`QMultiHash::end()`或`QMultiHash::find()`这样的`QMultiHash`函数初始化它，才能开始迭代。这里有一个典型的循环，它打印了哈希中存储的所有（键、值）对：
+与按键排序的 `QMap` 不同，`QMultiHash` 以任意顺序存储物品。
+这里有一个例子，将`QMultiHash`中存储的每个值递增2：
+要从`QMultiHash`中移除元素，可以使用 `erase_if`（`QMultiHash`<Key， T> &map， Predicate pred）：
+多个迭代器可以用于同一个哈希值。但需要注意，任何直接对`QHash`进行的修改（插入和删除项）都可能导致迭代器失效。
+插入项或调用方法如`QHash::reserve()`或`QHash::squeeze()`都可能导致所有指向哈希的迭代子失效。迭代子只有在`QHash`不需要增长或缩小内部哈希表时才保证有效。在重算操作完成后使用任何迭代器会导致行为未定义。
+如果你需要长时间保持迭代器，我们建议你使用`QMultiMap`而非`QHash`。
+警告：隐式共享容器上的迭代器工作方式与STL迭代器不完全相同。当迭代器在该容器上活跃时，应避免复制该容器。欲了解更多信息，请阅读隐式共享迭代器问题。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ QHash<QString, int> hash;
+ hash.insert("January", 1);
+ hash.insert("February", 2);
+ //...
+ hash.insert("December", 12);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ for (auto i = hash.cbegin(), end = hash.cend(); i != end; ++i)
+     cout << qPrintable(i.key()) << ": " << i.value() << endl;
+```
 
 ### `class key_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 暴露的类型声明 `key、iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+QMultiHash：：key_iterator 类为 QMultiHash 键提供了一个类似 STL 风格的 const 迭代器。
+`QMultiHash::key_iterator` 本质上与 `QMultiHash::const_iterator` 相同，区别在于运算符*() 和运算符->() 返回键而非值。
+对于大多数用途，`QMultiHash::iterator`和`QMultiHash::const_iterator`应使用，您可以通过调用`QMultiHash::iterator::key()`轻松访问密钥：
+然而，为了实现`QMultiHash`键与STL风格算法之间的互操作性，我们需要一个迭代器，它会去引用键而不是值。有了 `QMultiHash::key_iterator`，我们可以对一系列键应用算法而无需调用`QMultiHash::keys()`，但这效率较低，因为创建一个临时`QList` `QMultiHash`需要一次迭代和内存分配。
+`QMultiHash::key_iterator`是const，密钥是无法修改的。
+默认的`QMultiHash::key_iterator`构造器会创建一个未初始化的迭代器。你必须用像`QMultiHash::keyBegin()`或`QMultiHash::keyEnd()`这样的`QMultiHash`函数来初始化它。
+警告：隐式共享容器上的迭代器工作方式与STL迭代器不完全相同。当迭代器在该容器上活跃时，应避免复制该容器。欲了解更多信息，请阅读隐式共享迭代器问题。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ for (auto it = hash.cbegin(), end = hash.cend(); it != end; ++it) {
+     cout << "The key: " << it.key() << endl;
+     cout << "The value: " << qPrintable(it.value()) << endl;
+     cout << "Also the value: " << qPrintable(*it) << endl;
+ }
+```
 
 ### `const_key_value_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的 `const、key、值访问、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QMultiHash：：const_key_value_iterator typedef 提供了一个 STL 风格的 cont 迭代器用于 `QMultiHash`。
+QMultiHash：：const_key_value_iterator 本质上与 `QMultiHash::const_iterator` 相同，区别在于运算符*() 返回的是键值对而非值。
 
 ### `key_value_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMultiHash` 的 `key、值访问、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QMultiHash：：key_value_iterator typedef 提供了一个 STL 风格的迭代器用于`QMultiHash`。
+QMultiHash：：key_value_iterator 本质上与 `QMultiHash::iterator` 相同，区别在于运算符*() 返回的是键值对而非值。
 
 ### `(since 6.4) auto asKeyValueRange() &&`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMultiHash::asKeyValueRange` 用于计算、查询或取得与“as、Key、值访问、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个范围对象，允许对该哈希值进行迭代，作为键值对。例如，该范围对象可以用于基于范围的for循环，结合结构化绑定声明：
+注意，通过这种方式获得的密钥和值都是对哈希中密钥的引用。具体来说，变异值会修改哈希本身。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`auto`。
-- 参数：无。
+```cpp
+ QMultiHash<QString, int> hash;
+ hash.insert("January", 1);
+ hash.insert("February", 2);
+ // ...
+ hash.insert("December", 12);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ for (auto [key, value] : hash.asKeyValueRange()) {
+     cout << qPrintable(key) << ": " << value << endl;
+     --value; // convert to JS month indexing
+ }
+```
 
 ### `QMultiHash<Key, T>::iterator emplace(const Key &key, Args &&... args)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMultiHash::emplace` 用于计算、查询或取得与“emplace”相关的操作。调用时要先确认当前状态和 `key`、`args` 的有效范围；返回类型是 `QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在容器中插入一个新元素。该新元素在原地构造，使用`args`作为其构造的参数。
+如果哈希中已有具有相同键的项，该函数会直接创建一个新的。（这种行为不同于`replace()`，后者会覆盖已有项的值。）。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `QMultiHash<Key, T>::iterator emplaceReplace(const Key &key, Args &&... args)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMultiHash::emplaceReplace` 用于计算、查询或取得与“emplace、替换”相关的操作。调用时要先确认当前状态和 `key`、`args` 的有效范围；返回类型是 `QMultiHash<Key, T>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将一个新元素插入容器。该新元素在原地构造，使用`args`作为其构造的参数。
+如果哈希中已有具有相同键的项，该项的值会被由`args`构造的值替换。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `(since 6.11) QMultiHash<Key, T>::iterator insert(Key &&key, const T &value)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是向 `QMultiHash` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `Key &&`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个新项，带有`key`和值为`value`。
+如果哈希中已有具有相同键的项，该函数会直接创建一个新的。（这种行为不同于`replace()`，后者会覆盖已有项的值。）。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `(since 6.11) QMultiHash<Key, T>::iterator insert(const Key &key, T &&value)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是向 `QMultiHash` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMultiHash<Key, T>::iterator`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `T &&`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个新项，带有`key`和值为`value`。
+如果哈希中已有具有相同键的项，该函数会直接创建一个新的。（这种行为不同于`replace()`，后者会覆盖已有项的值。）。
+返回一个迭代子，指向新元素。
+警告：下次调用哈希的非const函数或哈希被销毁时，返回的迭代子/引用应被视为无效。
 
 ### `Key key(const T &value) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMultiHash::key` 用于计算、查询或取得与“key”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `Key`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Key`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回映射到`value`的第一个键。如果哈希中没有映射到`value`的项，返回`defaultKey`;如果未提供该参数，则返回默认构造的键。
+该函数可能较慢（线性时间），因为`QMultiHash`的内部数据结构是通过键快速查找而优化的，而不是按值。
 
 ### `T value(const Key &key) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QMultiHash` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T`。
-- 参数 `key`：类型为 `const Key &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`key`关联的值。
+如果哈希中没有包含`key`项，函数返回`defaultValue`，或者如果未提供该参数，则返回默认构造值。
+如果哈希中有多个`key`项，则返回最近插入的项值。
 
 ## 6. 深入实践与常见坑
 

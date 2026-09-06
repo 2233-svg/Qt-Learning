@@ -72,1497 +72,421 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ### 静态公有成员
 
-- `(since 6.1) const QOperatingSystemVersion Android10`
-- `(since 6.1) const QOperatingSystemVersion Android11`
-- `(since 6.5) const QOperatingSystemVersionBase Android12`
-- `(since 6.5) const QOperatingSystemVersionBase Android13`
-- `(since 6.7) const QOperatingSystemVersionBase Android14`
-- `(since 6.5) const QOperatingSystemVersionBase Android12L`
-- `const QOperatingSystemVersion AndroidJellyBean`
-- `const QOperatingSystemVersion AndroidJellyBean_MR1`
-- `const QOperatingSystemVersion AndroidJellyBean_MR2`
-- `const QOperatingSystemVersion AndroidKitKat`
-- `const QOperatingSystemVersion AndroidLollipop`
-- `const QOperatingSystemVersion AndroidLollipop_MR1`
-- `const QOperatingSystemVersion AndroidMarshmallow`
-- `const QOperatingSystemVersion AndroidNougat`
-- `const QOperatingSystemVersion AndroidNougat_MR1`
-- `const QOperatingSystemVersion AndroidOreo`
-- `(since 6.1) const QOperatingSystemVersion AndroidOreo_MR1`
-- `(since 6.1) const QOperatingSystemVersion AndroidPie`
-- `(since 6.0) const QOperatingSystemVersion MacOSBigSur`
-- `const QOperatingSystemVersion MacOSCatalina`
-- `const QOperatingSystemVersion MacOSHighSierra`
-- `const QOperatingSystemVersion MacOSMojave`
-- `(since 6.3) const QOperatingSystemVersion MacOSMonterey`
-- `(since 6.8) const QOperatingSystemVersionBase MacOSSequoia`
-- `const QOperatingSystemVersion MacOSSierra`
-- `(since 6.5) const QOperatingSystemVersionBase MacOSSonoma`
-- `(since 6.10) const QOperatingSystemVersionBase MacOSTahoe`
-- `(since 6.4) const QOperatingSystemVersionBase MacOSVentura`
-- `const QOperatingSystemVersion OSXElCapitan`
-- `const QOperatingSystemVersion OSXMavericks`
-- `const QOperatingSystemVersion OSXYosemite`
-- `const QOperatingSystemVersion Windows7`
-- `const QOperatingSystemVersion Windows8`
-- `const QOperatingSystemVersion Windows10`
-- `(since 6.3) const QOperatingSystemVersionBase Windows11`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_1809`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_1903`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_1909`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_20H2`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_2004`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_21H1`
-- `(since 6.3) const QOperatingSystemVersionBase Windows10_21H2`
-- `(since 6.5) const QOperatingSystemVersionBase Windows10_22H2`
-- `(since 6.4) const QOperatingSystemVersionBase Windows11_21H2`
-- `(since 6.4) const QOperatingSystemVersionBase Windows11_22H2`
-- `(since 6.6) const QOperatingSystemVersionBase Windows11_23H2`
-- `(since 6.8.1) const QOperatingSystemVersionBase Windows11_24H2`
-- `(since 6.11) const QOperatingSystemVersionBase Windows11_25H2`
-- `const QOperatingSystemVersion Windows8_1`
 - `QOperatingSystemVersion current()`
 - `QOperatingSystemVersion::OSType currentType()`
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 110 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QOperatingSystemVersion::OSType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 暴露的类型声明 `OS、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OSType`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举为`QOperatingSystemVersion`支持的各种操作系统家族提供了符号名称。
+- `QOperatingSystemVersion::Android`：`6`;谷歌安卓操作系统。
+- `QOperatingSystemVersion::IOS`：`3`;苹果iOS操作系统。
+- `QOperatingSystemVersion::MacOS`：`2`;苹果macOS操作系统。
+- `QOperatingSystemVersion::TvOS`：`4`;Apple tvOS 操作系统。
+- `QOperatingSystemVersion::WatchOS`：`5`;Apple watchOS 操作系统。
+- `QOperatingSystemVersion::VisionOS`：`7`;苹果visionOS操作系统。
+- `QOperatingSystemVersion::Windows`：`1`;Microsoft Windows 操作系统。
+- `QOperatingSystemVersion::Unknown`：`0`;未知或不支持的操作系统。
 
 ### `[constexpr] QOperatingSystemVersion::QOperatingSystemVersion(QOperatingSystemVersion::OSType osType, int vmajor, int vminor = -1, int vmicro = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `osType`：类型为 `QOperatingSystemVersion::OSType`。没有默认值，调用时必须提供。传入 `QOperatingSystemVersion::OSType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vmajor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vminor`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `vmicro`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QOperatingSystemVersion，包含操作系统类型`osType`，以及主、次、微版本号分别为`vmajor`、`vminor`和微型`vmicro`。
 
 ### `[static] QOperatingSystemVersion QOperatingSystemVersion::current()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `current`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QOperatingSystemVersion`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QOperatingSystemVersion`，表示当前操作系统及其版本号。
 
 ### `[static constexpr] QOperatingSystemVersion::OSType QOperatingSystemVersion::currentType()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `currentType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QOperatingSystemVersion::OSType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前操作系统类型，无需构建`QOperatingSystemVersion`实例。
 
 ### `bool QOperatingSystemVersion::isAnyOfType(std::initializer_list<QOperatingSystemVersion::OSType> types) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAnyOfType`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `types`：类型为 `std::initializer_list<QOperatingSystemVersion::OSType>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QOperatingSystemVersion::OSType>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QOperatingSystemVersion`识别的操作系统类型是否匹配`types`中的任何操作系统类型。
 
 ### `[constexpr] int QOperatingSystemVersion::majorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::majorVersion` 用于计算、查询或取得与“major、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主要版本号，即操作系统版本号的第一段。
+请参阅主类文档，了解特定操作系统的主要版本号。
+-1表示版本号组件未知或缺失。
 
 ### `[constexpr] int QOperatingSystemVersion::microVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::microVersion` 用于计算、查询或取得与“micro、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回微版本号，即操作系统版本号的第三段。
+请参阅主类文档，了解某个操作系统的微版本号。
+-1表示版本号组件未知或缺失。
 
 ### `[constexpr] int QOperatingSystemVersion::minorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::minorVersion` 用于计算、查询或取得与“minor、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回次要版本号，即操作系统版本号的第二段。
+请参阅主类文档，了解特定操作系统的次要版本号。
+-1表示版本号组件未知或缺失。
 
 ### `QString QOperatingSystemVersion::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`QOperatingSystemVersion`标识的操作系统类型的字符串表示。
 
 ### `[constexpr] int QOperatingSystemVersion::segmentCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::segmentCount` 用于计算、查询或取得与“segment、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回版本号中存储的整数。
 
 ### `[constexpr] QOperatingSystemVersion::OSType QOperatingSystemVersion::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOperatingSystemVersion::OSType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOperatingSystemVersion::OSType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QOperatingSystemVersion`识别的操作系统类型。
 
 ### `[since 6.1] QVersionNumber QOperatingSystemVersion::version() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOperatingSystemVersion::version` 用于计算、查询或取得与“version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回操作系统的版本号。
+请参阅主类文档，了解某个操作系统的版本号。
 
 ### `[since 6.1] const QOperatingSystemVersion QOperatingSystemVersion::Android10`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroid10(...)` 设置，之后用 `Android10()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Android10`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android 10（版本 10.0，API 级别 29）。
+该变量在Qt 6.1中引入。
 
 ### `[since 6.1] const QOperatingSystemVersion QOperatingSystemVersion::Android11`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroid11(...)` 设置，之后用 `Android11()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Android11`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应于 Android 11（版本 11.0，API 级别 30）的版本。
+该变量在Qt 6.1中引入。
 
 ### `[since 6.5] const QOperatingSystemVersionBase QOperatingSystemVersion::Android12`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroid12(...)` 设置，之后用 `Android12()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Android12`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android 12（版本 12.0，API 级别 31）。
+该变量在Qt 6.5引入。
 
 ### `[since 6.5] const QOperatingSystemVersionBase QOperatingSystemVersion::Android13`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroid13(...)` 设置，之后用 `Android13()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Android13`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android 13（版本 13.0，API 级别 33）。
+该变量在Qt 6.5引入。
 
 ### `[since 6.7] const QOperatingSystemVersionBase QOperatingSystemVersion::Android14`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroid14(...)` 设置，之后用 `Android14()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Android14`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android 14（版本 14.0，API 级别 34）。
+该变量在Qt 6.7中引入。
 
 ### `[since 6.5] const QOperatingSystemVersionBase QOperatingSystemVersion::Android12L`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroid12L(...)` 设置，之后用 `Android12L()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Android12L`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应于 Android 12L（版本 12.0，API 级别 32）的版本。
+该变量在Qt 6.5引入。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidJellyBean`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidJellyBean(...)` 设置，之后用 `AndroidJellyBean()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidJellyBean`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android Jelly Bean（版本 4.1，API 级别 16）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidJellyBean_MR1`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidJellyBean_MR1(...)` 设置，之后用 `AndroidJellyBean_MR1()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidJellyBean_MR1`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android Jelly Bean 维护版本 1（版本 4.2，API 级别 17）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidJellyBean_MR2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidJellyBean_MR2(...)` 设置，之后用 `AndroidJellyBean_MR2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidJellyBean_MR2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android Jelly Bean 维护版本 2（版本 4.3，API 级别 18）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidKitKat`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidKitKat(...)` 设置，之后用 `AndroidKitKat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidKitKat`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android KitKat 的版本（版本 4.4 和 4.4W，API 级别 19 和 20）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidLollipop`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidLollipop(...)` 设置，之后用 `AndroidLollipop()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidLollipop`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应于 Android Lollipop（版本 5.0，API 级别 21）的版本。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidLollipop_MR1`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidLollipop_MR1(...)` 设置，之后用 `AndroidLollipop_MR1()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidLollipop_MR1`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应于 Android Lollipop 维护版本 1（版本 5.1，API 级别 22）的版本。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidMarshmallow`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidMarshmallow(...)` 设置，之后用 `AndroidMarshmallow()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidMarshmallow`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应于 Android Marshmallow（版本 6.0，API 级别 23）的版本。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidNougat`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidNougat(...)` 设置，之后用 `AndroidNougat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidNougat`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android Nougat（版本 7.0，API 级别 24）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidNougat_MR1`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidNougat_MR1(...)` 设置，之后用 `AndroidNougat_MR1()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidNougat_MR1`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android Nougat 维护版本 1（版本 7.0，API 级别 25）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::AndroidOreo`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidOreo(...)` 设置，之后用 `AndroidOreo()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidOreo`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Android Oreo 版本（8.0 版，API 级别 26）。
 
 ### `[since 6.1] const QOperatingSystemVersion QOperatingSystemVersion::AndroidOreo_MR1`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidOreo_MR1(...)` 设置，之后用 `AndroidOreo_MR1()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidOreo_MR1`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应 Android Oreo_MR1（版本 8.1，API 级别 27）的版本。
+该变量在Qt 6.1中引入。
 
 ### `[since 6.1] const QOperatingSystemVersion QOperatingSystemVersion::AndroidPie`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setAndroidPie(...)` 设置，之后用 `AndroidPie()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AndroidPie`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应 Android Pie 版本（版本 9.0，API 级别 28）。
+该变量在Qt 6.1中引入。
 
 ### `[since 6.0] const QOperatingSystemVersion QOperatingSystemVersion::MacOSBigSur`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSBigSur(...)` 设置，之后用 `MacOSBigSur()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSBigSur`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应macOS Big Sur（版本11）。
+该变量在Qt 6.0中引入。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::MacOSCatalina`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSCatalina(...)` 设置，之后用 `MacOSCatalina()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSCatalina`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应于 macOS Catalina（版本 10.15）的版本。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::MacOSHighSierra`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSHighSierra(...)` 设置，之后用 `MacOSHighSierra()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSHighSierra`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS High Sierra（版本 10.13）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::MacOSMojave`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSMojave(...)` 设置，之后用 `MacOSMojave()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSMojave`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应macOS Mojave（版本10.14）的版本。
 
 ### `[since 6.3] const QOperatingSystemVersion QOperatingSystemVersion::MacOSMonterey`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSMonterey(...)` 设置，之后用 `MacOSMonterey()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSMonterey`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS Monterey（版本 12）。
+该变量在Qt 6.3引入。
 
 ### `[since 6.8] const QOperatingSystemVersionBase QOperatingSystemVersion::MacOSSequoia`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSSequoia(...)` 设置，之后用 `MacOSSequoia()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSSequoia`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS Sequoia（版本 15）。
+该变量在Qt 6.8引入。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::MacOSSierra`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSSierra(...)` 设置，之后用 `MacOSSierra()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSSierra`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS Sierra（版本 10.12）。
 
 ### `[since 6.5] const QOperatingSystemVersionBase QOperatingSystemVersion::MacOSSonoma`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSSonoma(...)` 设置，之后用 `MacOSSonoma()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSSonoma`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS Sonoma（版本 14）。
+该变量在Qt 6.5引入。
 
 ### `[since 6.10] const QOperatingSystemVersionBase QOperatingSystemVersion::MacOSTahoe`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSTahoe(...)` 设置，之后用 `MacOSTahoe()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSTahoe`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS Tahoe（版本 26）。
+该变量在Qt 6.10引入。
 
 ### `[since 6.4] const QOperatingSystemVersionBase QOperatingSystemVersion::MacOSVentura`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setMacOSVentura(...)` 设置，之后用 `MacOSVentura()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:MacOSVentura`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 macOS Ventura（版本 13）。
+该变量在Qt 6.4中引入。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::OSXElCapitan`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setOSXElCapitan(...)` 设置，之后用 `OSXElCapitan()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:OSXElCapitan`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应OS X El Capitan（版本10.11）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::OSXMavericks`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setOSXMavericks(...)` 设置，之后用 `OSXMavericks()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:OSXMavericks`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于OS X Mavericks（版本10.9）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::OSXYosemite`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setOSXYosemite(...)` 设置，之后用 `OSXYosemite()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:OSXYosemite`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 OS X Yosemite（版本 10.10）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::Windows7`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows7(...)` 设置，之后用 `Windows7()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows7`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于Windows 7（6.1版本）。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::Windows8`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows8(...)` 设置，之后用 `Windows8()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows8`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应Windows 8（6.2版本）的版本。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::Windows10`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10(...)` 设置，之后用 `Windows10()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应通用Windows 10（版本10.0）的版本。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows11`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows11(...)` 设置，之后用 `Windows11()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows11`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存一个对应Windows 11初始版本（版本10.0.22000）的版本。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_1809`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_1809(...)` 设置，之后用 `Windows10_1809()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_1809`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应Windows 10 2018年10月更新版本1809（版本10.0.17763）的版本。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_1903`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_1903(...)` 设置，之后用 `Windows10_1903()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_1903`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Windows 10 2019 年 5 月更新版本 1903（版本 10.0.18362）。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_1909`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_1909(...)` 设置，之后用 `Windows10_1909()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_1909`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于Windows 10 2019年11月更新版本1909（版本10.0.18363）。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_20H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_20H2(...)` 设置，之后用 `Windows10_20H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_20H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应Windows 10 2020年10月更新版本20H2（版本10.0.19042）。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_2004`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_2004(...)` 设置，之后用 `Windows10_2004()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_2004`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于Windows 10 2020年5月更新版本2004（版本10.0.19041）。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_21H1`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_21H1(...)` 设置，之后用 `Windows10_21H1()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_21H1`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应Windows 10 2021年5月更新版本21H1（版本10.0.19043）的版本。
+该变量在Qt 6.3引入。
 
 ### `[since 6.3] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_21H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_21H2(...)` 设置，之后用 `Windows10_21H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_21H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Windows 10 2021 年 11 月更新版本 21H2（版本 10.0.19044）。
+该变量在Qt 6.3引入。
 
 ### `[since 6.5] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows10_22H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows10_22H2(...)` 设置，之后用 `Windows10_22H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows10_22H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应Windows 10 2022年10月更新版本22H2（版本10.0.19045）的版本。
+该变量在Qt 6.5引入。
 
 ### `[since 6.4] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows11_21H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows11_21H2(...)` 设置，之后用 `Windows11_21H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows11_21H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Windows 11 版本 21H2（版本 10.0.22000）。
+该变量在Qt 6.4中引入。
 
 ### `[since 6.4] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows11_22H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows11_22H2(...)` 设置，之后用 `Windows11_22H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows11_22H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量持有对应Windows 11版本22H2（版本10.0.22621）的版本。
+该变量在Qt 6.4中引入。
 
 ### `[since 6.6] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows11_23H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows11_23H2(...)` 设置，之后用 `Windows11_23H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows11_23H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含一个对应Windows 11版本23H2（版本10.0.22631）的版本。
+该变量在Qt 6.6引入。
 
 ### `[since 6.8.1] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows11_24H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows11_24H2(...)` 设置，之后用 `Windows11_24H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows11_24H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含对应Windows 11版本24H2（版本10.0.26100）的版本。
+该变量在Qt 6.8.1中引入。
 
 ### `[since 6.11] const QOperatingSystemVersionBase QOperatingSystemVersion::Windows11_25H2`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows11_25H2(...)` 设置，之后用 `Windows11_25H2()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows11_25H2`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应于 Windows 11 版本 25H2（版本 10.0.26200）。
+该变量在Qt 6.11中引入。
 
 ### `const QOperatingSystemVersion QOperatingSystemVersion::Windows8_1`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QOperatingSystemVersion` 的配置属性。初始化或状态切换时通过 `setWindows8_1(...)` 设置，之后用 `Windows8_1()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Windows8_1`。
-- 属性名：`QOperatingSystemVersion`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.1) const QOperatingSystemVersion Android10`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.1) const QOperatingSystemVersion Android11`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.5) const QOperatingSystemVersionBase Android12`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.5) const QOperatingSystemVersionBase Android13`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.7) const QOperatingSystemVersionBase Android14`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.5) const QOperatingSystemVersionBase Android12L`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidJellyBean`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidJellyBean_MR1`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidJellyBean_MR2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidKitKat`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidLollipop`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidLollipop_MR1`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidMarshmallow`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidNougat`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidNougat_MR1`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion AndroidOreo`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.1) const QOperatingSystemVersion AndroidOreo_MR1`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.1) const QOperatingSystemVersion AndroidPie`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.0) const QOperatingSystemVersion MacOSBigSur`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion MacOSCatalina`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion MacOSHighSierra`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion MacOSMojave`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersion MacOSMonterey`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.8) const QOperatingSystemVersionBase MacOSSequoia`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion MacOSSierra`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.5) const QOperatingSystemVersionBase MacOSSonoma`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.10) const QOperatingSystemVersionBase MacOSTahoe`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.4) const QOperatingSystemVersionBase MacOSVentura`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion OSXElCapitan`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion OSXMavericks`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion OSXYosemite`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion Windows7`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion Windows8`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion Windows10`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows11`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_1809`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_1903`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_1909`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_20H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_2004`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_21H1`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.3) const QOperatingSystemVersionBase Windows10_21H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.5) const QOperatingSystemVersionBase Windows10_22H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.4) const QOperatingSystemVersionBase Windows11_21H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.4) const QOperatingSystemVersionBase Windows11_22H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.6) const QOperatingSystemVersionBase Windows11_23H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.8.1) const QOperatingSystemVersionBase Windows11_24H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `(since 6.11) const QOperatingSystemVersionBase Windows11_25H2`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `const QOperatingSystemVersion Windows8_1`
-
-**API 类别：** 静态公有成员
-
-**中文解读：** 这是静态工具 API `const`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量对应Windows 8.1（版本6.3）。
 
 ## 6. 深入实践与常见坑
 

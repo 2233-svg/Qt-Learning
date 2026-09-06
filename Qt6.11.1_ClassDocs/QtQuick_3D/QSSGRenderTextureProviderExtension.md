@@ -58,87 +58,47 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `virtual QSSGRenderExtension::RenderMode QSSGRenderExtension::mode() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QSSGRenderTextureProviderExtension::mode` 用于计算、查询或取得与“模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSSGRenderExtension::RenderMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSSGRenderExtension::RenderMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该扩展所使用的渲染模式。
 
 ### `virtual bool QSSGRenderExtension::prepareData(QSSGFrameData &data)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QSSGRenderTextureProviderExtension::prepareData` 用于计算、查询或取得与“prepare、数据访问”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `QSSGFrameData &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在收集场景`data`之后调用，但在当前帧中尚未完成任何渲染数据或渲染之前。
+返回脏状态。如果有脏数据需要渲染，返回`true`。
+注意：在准备和渲染阶段，引擎创建/收集的大部分数据是每帧的，应在下一帧开始时释放或假定发布。
 
 ### `virtual void QSSGRenderExtension::prepareRender(QSSGFrameData &data)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QSSGRenderTextureProviderExtension::prepareRender` 用于执行与“prepare、渲染”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `QSSGFrameData &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+准备渲染数据。构建并收集渲染所需的`data`。在此之前安排的任何渲染扩展都已处理完毕。此外;任何模式`RenderMode::Standalone`的渲染扩展如果成功，将已全部完成。
+注意：在准备和渲染阶段，引擎创建/收集的大部分数据是每帧的，应在下一帧开始时释放或假定发布。
 
 ### `virtual void QSSGRenderExtension::render(QSSGFrameData &data)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderTextureProviderExtension` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `QSSGFrameData &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录渲染通道。根据扩展`mode`该函数将在帧的准备或渲染阶段调用。
+使用`data`获取渲染上下文，从中查询活动`QRhi`对象。
 
 ### `virtual void QSSGRenderExtension::resetForFrame()`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QSSGRenderTextureProviderExtension::resetForFrame` 用于执行与“重置、For、Frame”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每次新帧开始时调用。此时应清除前一帧的数据。
 
 ### `virtual QSSGRenderExtension::RenderStage QSSGRenderExtension::stage() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QSSGRenderTextureProviderExtension::stage` 用于计算、查询或取得与“stage”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSSGRenderExtension::RenderStage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSSGRenderExtension::RenderStage`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 该渲染扩展将被使用的阶段。
 
 ## 6. 深入实践与常见坑
 

@@ -66,77 +66,41 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleHintReturnMask::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleHintReturnMask` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleHintReturnMask`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleHintReturn`子类定义。
+- `QStyleHintReturnMask::Type`：`SH_Mask`;提供样式选项（本类别`SH_Mask`）。
+类型由`QStyleHintReturn`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleHintReturn`子职业和风格，否则不必太担心。
 
 ### `enum QStyleHintReturnMask::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleHintReturnMask` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleHintReturnMask`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleHintReturn`子类定义。
+- `QStyleHintReturnMask::Version`：`1`;1
+该版本被`QStyleHintReturn`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
 
 ### `QStyleHintReturnMask::QStyleHintReturnMask()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleHintReturnMask` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QStyleHintReturnMask。成员变量被初始化为默认值。
 
 ### `[noexcept] QStyleHintReturnMask::~QStyleHintReturnMask()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleHintReturnMask` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `QRegion QStyleHintReturnMask::region`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleHintReturnMask` 的配置属性。初始化或状态切换时通过 `setRegion(...)` 设置，之后用 `region()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:region`。
-- 属性名：`QStyleHintReturnMask`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留返回`QRegion`风格提示的区域。
 
 ## 6. 深入实践与常见坑
 

@@ -205,1745 +205,1133 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 131 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QTextDocument::FindFlagflags QTextDocument::FindFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `查找、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FindFlagflags QTextDocument::FindFlags`。
-- 属性名：`QTextDocument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了`QTextDocument`查找函数可用的选项。这些选项可以从以下列表中进行或运算合成：
+- `QTextDocument::FindBackward`：`0x00001`;向后搜索而非向前搜索。
+- `QTextDocument::FindCaseSensitively`：`0x00002`;默认情况下，查找不区分大小写。指定此选项后，行为将变为大小写区分查找操作。
+- `QTextDocument::FindWholeWords`：`0x00004`;使得查找匹配词仅为完整词。
+FindFlags 类型是 QFlags 的 typedef<FindFlag>。它存储 FindFlag 值的 OR 组合。
 
 ### `enum QTextDocument::MarkdownFeatureflags QTextDocument::MarkdownFeatures`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `Markdown、Featureflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MarkdownFeatureflags QTextDocument::MarkdownFeatures`。
-- 属性名：`QTextDocument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举在读取或写入 Markdown 时选择支持的功能集。
+- `QTextDocument::MarkdownNoHTML`：`0x0020 | 0x0040`;Markdown 文本中的任何 HTML 标签将被丢弃
+- `QTextDocument::MarkdownDialectCommonMark`：`0`;仅限CommonMark标准化的功能
+- `QTextDocument::MarkdownDialectGitHub`：`0x0004 | 0x0008 | 0x0400 | 0x0100 | 0x0200 | 0x0800 | 0x4000 | 0x100000`;大部分功能来自GitHub方言
+具体来说，支持的 GitHub 方言子集包括 CommonMark 的所有内容，以及：
+- 识别URL、www和电子邮件地址并将其转化为链接
+- 划线
+- 下划线（与斜体不同;在CommonMark中相同）
+- 表格
+- 任务列表
+- 前言
+“前置信息”通常是 YAML 格式的元数据。Qt 目前没有包含用于此的解析器;但你可以选择第三方解析器，调用 `QTextDocument::metaInformation()` 获取整个区块，并在 Qt 解析 Markdown 文件后调用自己的解析器。
+注意：目前`toMarkdown()`的 Markdown 输出可能包含 GitHub 功能，即使你通过指定其他枚举值来禁用它们。这可能会在未来的 Qt 版本中得到修复。
+MarkdownFeatures 类型是 QFlag 的 typedef<MarkdownFeature>。它存储 MarkdownFeatures 值的 OR 组合。
 
 ### `enum QTextDocument::MetaInformation`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `Meta、Information`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MetaInformation`。
-- 属性名：`QTextDocument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了可以添加到文档的不同类型的元信息。
+- `QTextDocument::DocumentTitle`：`0`;文件标题。
+- `QTextDocument::DocumentUrl`：`1`;文档的网址。`loadResource()`函数在加载相对资源时以该网址为基础。
+- `QTextDocument::CssMedia`：`2`;当调用`setHtml()`时，该值用于从指定的CSS样式表中选择对应的“@media”规则（如有）。该枚举值在Qt 6.3中引入。
+- `QTextDocument::FrontMatter`：`3`;该值用于选择头部材料，如果在解析源文件时提取了任何内容（目前仅限Markdown格式）。该枚举值在Qt 6.8中引入。
 
 ### `[alias, since 6.1] QTextDocument::ResourceProvider`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setResourceProvider(...)` 设置，之后用 `ResourceProvider()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ResourceProvider`。
-- 属性名：`QTextDocument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+std：：function<`QVariant`（const `QUrl`&）> 的别名类型。
+这种类型防御是在Qt 6.1中引入的。
 
 ### `enum QTextDocument::ResourceType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `Resource、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ResourceType`。
-- 属性名：`QTextDocument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了可通过`QTextDocument` `loadResource()`函数或`QTextBrowser::setSource()`加载的资源类型。
+- `QTextDocument::UnknownResource`：`0`;不加载资源，或资源类型未知。
+- `QTextDocument::HtmlResource`：`1`;该资源包含 HTML。
+- `QTextDocument::ImageResource`：`2`;资源包含图像数据。目前支持的数据类型为`QMetaType::QPixmap`和`QMetaType::QImage`。如果对应变体类型为`QMetaType::QByteArray`，Qt尝试使用`QImage::loadFromData`加载图像。`QMetaType::QIcon`目前不支持。图标需要先转换为支持的类型之一，例如使用`QIcon::pixmap`。
+- `QTextDocument::StyleSheetResource`：`3`;该资源包含CSS。
+- `QTextDocument::MarkdownResource`：`4`;该资源包含Markdown。
+- `QTextDocument::UserResource`：`100`;用户定义资源类型的第一个可用值。
 
 ### `baseUrl : QUrl`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setBaseUrl(...)` 设置，之后用 `baseUrl()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含用于解析文档中相对资源 URL 的基础 URL。
+资源URL被解析为与基础URL目标相同的目录，意味着路径中最后一个“/”之后的任何部分将被忽略。
+- `Base URL`：相对 URL;已解析的 URL
+- `file:///path/to/content`：图片/logo.png;file:///path/to/images/logo.png
+- `file:///path/to/content/`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/index.html`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/images/`：../images/logo.png;file:///path/to/content/images/logo.png
 
-**签名拆解：**
-
-- 属性类型：`QUrl`。
-- 属性名：`baseUrl`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `baseUrl()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] blockCount : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的状态/能力属性。通常通过 `blockCount()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含文档中的文本块数量。
+在带有表格或框架的文档中，该属性的价值未定义。
+默认情况下，如果定义，该属性的值为1。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`blockCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blockCount()` 读取当前值；它不会修改应用状态。
 
 ### `defaultFont : QFont`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setDefaultFont(...)` 设置，之后用 `defaultFont()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留用于显示文档文本的默认字体。
 
-**签名拆解：**
-
-- 属性类型：`QFont`。
-- 属性名：`defaultFont`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `defaultFont()` 读取当前值；它不会修改应用状态。
 
 ### `defaultStyleSheet : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setDefaultStyleSheet(...)` 设置，之后用 `defaultStyleSheet()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+默认样式表应用于文档中插入的所有新 HTML 格式文本，例如使用 `setHtml()` 或 `QTextCursor::insertHtml()`。
+样式表需要符合 CSS 2.1 语法。
+注意：更改默认样式表不会对文档的现有内容产生任何影响。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`defaultStyleSheet`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `defaultStyleSheet()` 读取当前值；它不会修改应用状态。
 
 ### `defaultTextOption : QTextOption`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setDefaultTextOption(...)` 设置，之后用 `defaultTextOption()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示默认文本选项将在文档中所有 `QTextLayout` 上设置。
+当创建 `QTextBlock` 时，会在其 `QTextLayout` 上设置 defaultTextOption。这允许为文档设置全局属性，如默认的单词换行模式。
 
-**签名拆解：**
-
-- 属性类型：`QTextOption`。
-- 属性名：`defaultTextOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `defaultTextOption()` 读取当前值；它不会修改应用状态。
 
 ### `documentMargin : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setDocumentMargin(...)` 设置，之后用 `documentMargin()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+文件周围的边距。默认是4。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`documentMargin`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `documentMargin()` 读取当前值；它不会修改应用状态。
 
 ### `indentWidth : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setIndentWidth(...)` 设置，之后用 `indentWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+返回用于文本列表和文本块缩进的宽度。
+`QTextListFormat` 和 `QTextBlockFormat` 的缩进属性指定了该值的倍数。默认缩进宽度为 40。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`indentWidth`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `indentWidth()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.4] layoutEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setLayoutEnabled(...)` 设置，之后用 `layoutEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了每次变更后`QTextDocument`是否应重新计算布局。
+如果该属性设置为 true，文档的任何更改都会触发布局，使一切正常运行，但需要时间。
+临时禁用排版可以在进行多项修改（不仅是文本内容，还有默认字体、默认文本选项等）时节省时间，使文档在结尾只排版一次。例如，当文本宽度或页面大小尚未确定时，这非常有用。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`layoutEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `layoutEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `maximumBlockCount : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setMaximumBlockCount(...)` 设置，之后用 `maximumBlockCount()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+在文档中指定区块的限制。
+指定文档可拥有的最大块数。如果文档中有更多带有该属性的块，则从文档开头移除块。
+负值或零值表示文档可以包含无限数量的块。
+默认值是0。
+注意，设置此属性会立即将限制应用到文档内容上。
+设置该属性还会禁用撤销重做历史。
+在带有表格或框架的文档中，该属性未定义。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`maximumBlockCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumBlockCount()` 读取当前值；它不会修改应用状态。
 
 ### `modified : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setModified(...)` 设置，之后用 `modified()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定文档是否被用户修改。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`modified`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `modified()` 读取当前值；它不会修改应用状态。
 
 ### `pageSize : QSizeF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setPageSize(...)` 设置，之后用 `pageSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含用于排版的页面尺寸。
+这些单位由底层的绘画设备决定。在绘制到屏幕上时，尺寸以逻辑像素为单位，在绘制到打印机时以点（1/72英寸）为单位。
+默认情况下，对于新创建的空文档，该属性包含未定义的大小。
 
-**签名拆解：**
-
-- 属性类型：`QSizeF`。
-- 属性名：`pageSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `pageSize()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] size : QSizeF`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的状态/能力属性。通常通过 `size()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含文档的实际大小。这相当于 `documentLayout()`->documentSize();
+文档大小可以通过设置文本宽度或整页大小来更改。
+注意宽度始终为 >= `pageSize()`。宽度()。
+默认情况下，对于新创建的空文档，该属性包含一个配置相关的大小。
 
-**签名拆解：**
-
-- 属性类型：`QSizeF`。
-- 属性名：`size`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `size()` 读取当前值；它不会修改应用状态。
 
 ### `textWidth : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setTextWidth(...)` 设置，之后用 `textWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+文本宽度指定文档中文本的首选宽度。如果文本（或内容本身）比指定宽度宽大，则被拆分成多行并垂直增长。如果文本无法分割成多行以符合指定宽度，则文本会变大，`size()`和`idealWidth()`属性会反映这一点。
+如果文本宽度设置为 -1，则文本不会被拆分为多行，除非通过明确的换行或新段落强制执行。
+默认值为-1。
+设置文本宽度也会将页面高度设置为-1，导致文档连续地垂直增长或缩小。如果你想让文档布局将文本拆分成多个页面，就必须设置`pageSize`属性。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`textWidth`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textWidth()` 读取当前值；它不会修改应用状态。
 
 ### `undoRedoEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setUndoRedoEnabled(...)` 设置，之后用 `undoRedoEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了本文档是否启用撤销/重做。
+这默认为true。如果禁用，撤销堆栈会被清除，不会有任何物品被添加到中。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`undoRedoEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `undoRedoEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `useDesignMetrics : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的配置属性。初始化或状态切换时通过 `setUseDesignMetrics(...)` 设置，之后用 `useDesignMetrics()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定文档是否使用字体的设计指标来提升文本布局的准确性。
+如果该属性设置为true，布局将使用设计度量。否则，将使用`QAbstractTextDocumentLayout::setPaintDevice()`上绘制设备的度量。
+使用设计度量使布局的宽度不再依赖提示和像素四舍五入。这意味着所见即所得的文本布局成为可能，因为宽度基于绘图设备度量的线性扩展比平时更为线性。
+默认情况下，该属性是`false`的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`useDesignMetrics`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `useDesignMetrics()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QTextDocument::QTextDocument(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个包含给定`parent`的空 QTextDocument 。
 
 ### `[explicit] QTextDocument::QTextDocument(const QString &text, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建包含指定普通（未格式化）`text`的QText文档，并带有给定的`parent`。
 
 ### `[virtual noexcept] QTextDocument::~QTextDocument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁了文件。
 
 ### `void QTextDocument::addResource(int type, const QUrl &name, const QVariant &resource)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTextDocument` 添加依赖、数据或子对象的 API `addResource`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+将资源`resource`添加到资源缓存中，使用`type`和`name`作为标识符。`type`应是`QTextDocument::ResourceType`的值。
+例如，你可以添加一张图片作为资源，以便在文档中引用：
+该图像可以通过 `QTextCursor` API 插入文档中：
+或者，你也可以使用HTML `img`标签插入图片：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QUrl &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `resource`：类型为 `const QVariant &`。没有默认值，调用时必须提供。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     document->addResource(QTextDocument::ImageResource,
+         QUrl("mydata://image.png"), QVariant(image));
+```
 
 ### `void QTextDocument::adjustSize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::adjustSize` 用于执行与“adjust、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文档调整到合理的大小。
 
 ### `QList<QTextFormat> QTextDocument::allFormats() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::allFormats` 用于计算、查询或取得与“all、Formats”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QTextFormat>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QTextFormat>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档中所有格式的文本格式列表。
 
 ### `int QTextDocument::availableRedoSteps() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::availableRedoSteps` 用于计算、查询或取得与“可用量、重做、Steps”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可用的重做步骤数量。
 
 ### `int QTextDocument::availableUndoSteps() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::availableUndoSteps` 用于计算、查询或取得与“可用量、撤销、Steps”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可用的撤销步骤数。
 
 ### `[since 6.0] qreal QTextDocument::baselineOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::baselineOffset` 用于计算、查询或取得与“baseline、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档布局中使用的基准偏移百分比。
 
 ### `QTextBlock QTextDocument::begin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档的第一个文本块。
 
 ### `[signal] void QTextDocument::blockCountChanged(int newBlockCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `blockCountChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newBlockCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当文档中文本块总数发生变化时，该信号会发出。`newBlockCount`传递的值即为新的总值。
 
 ### `QChar QTextDocument::characterAt(int pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::characterAt` 用于计算、查询或取得与“character、按位置访问”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QChar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QChar`。
-- 参数 `pos`：类型为 `int`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位置`pos`的字符，若位置超出范围则返回空字符。
 
 ### `int QTextDocument::characterCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::characterCount` 用于计算、查询或取得与“character、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本文档的字符数。
+注意：由于`QTextDocument`总是至少包含一个`QChar::ParagraphSeparator`，此方法至少返回1个。
 
 ### `[virtual] void QTextDocument::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除文档。
 
 ### `void QTextDocument::clearUndoRedoStacks(QTextDocument::Stacks stacksToClear = UndoAndRedoStacks)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::clearUndoRedoStacks` 用于执行与“清空、撤销、重做、Stacks”相关的操作。调用时要先确认当前状态和 `stacksToClear` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stacksToClear`：类型为 `QTextDocument::Stacks`。默认值为 `UndoAndRedoStacks`。传入 `QTextDocument::Stacks` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除`stacksToClear`指定的堆叠。
+该方法清除撤销栈、重做栈或两者（默认）上的任何命令。如果命令被清除，会发出相应信号，`QTextDocument::undoAvailable()`或`QTextDocument::redoAvailable()`。
 
 ### `QTextDocument *QTextDocument::clone(QObject *parent = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::clone` 用于计算、查询或取得与“clone”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `QTextDocument *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextDocument *`。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的`QTextDocument`，该是该文本文档的副本。`parent` 是返回文本文档的父文档。
 
 ### `[signal] void QTextDocument::contentsChange(int position, int charsRemoved, int charsAdded)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `contentsChange`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `int`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `charsRemoved`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `charsAdded`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当文档内容发生变化时，都会发出该信号;例如，当文本插入或删除，或格式调整时。
+文件中会提供字符的`position`、删除字符数（`charsRemoved`）和新增字符数（`charsAdded`）的信息。
+该信号在文档布局管理器收到变更通知之前就已发出。这个钩子允许你为文档实现语法高亮。
 
 ### `[signal] void QTextDocument::contentsChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `contentsChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当文档内容发生变化时，都会发出该信号;例如，当文本插入或删除，或格式调整时。
 
 ### `[virtual protected] QTextObject *QTextDocument::createObject(const QTextFormat &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::createObject` 用于计算、查询或取得与“创建、Object”相关的操作。调用时要先确认当前状态和 `format` 的有效范围；返回类型是 `QTextObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextObject *`。
-- 参数 `format`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回一个新的文档对象（`QTextObject`），基于给定的`format`。
+QTextObjects 总是通过这种方法被创建，所以如果你在文档中使用自定义文本对象，必须重新实现它。
 
 ### `[signal] void QTextDocument::cursorPositionChanged(const QTextCursor &cursor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `cursorPositionChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cursor`：类型为 `const QTextCursor &`。没有默认值，调用时必须提供。传入 `const QTextCursor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当光标位置因编辑操作而发生变化时，都会发出该信号。改变的光标会以`cursor`传递。如果文档与`QTextEdit`类一起使用，并且你需要在用方向键移动光标时获得信号，那么可以在`QTextEdit`中使用`cursorPositionChanged()`信号。
 
 ### `Qt::CursorMoveStyle QTextDocument::defaultCursorMoveStyle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::defaultCursorMoveStyle` 用于计算、查询或取得与“default、Cursor、移动、Style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::CursorMoveStyle`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::CursorMoveStyle`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+默认光标移动风格被文档创建的所有对象`QTextCursor`使用。默认是`Qt::LogicalMoveStyle`。
 
 ### `QFont QTextDocument::defaultFont() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::defaultFont` 用于计算、查询或取得与“default、字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档布局中使用的默认字体。
+注意：属性defaultFont的Getter函数。
 
 ### `[static, since 6.1] QTextDocument::ResourceProvider QTextDocument::defaultResourceProvider()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultResourceProvider`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QTextDocument::ResourceProvider`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回默认资源提供者。
 
 ### `QTextOption QTextDocument::defaultTextOption() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::defaultTextOption` 用于计算、查询或取得与“default、文本、Option”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextOption`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextOption`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+文档中的所有 `QTextLayout` 对象都使用默认文本选项。这允许设置文档的全局属性，例如默认换行模式。
+注意：获取属性 defaultTextOption 的 getter 函数。
 
 ### `QAbstractTextDocumentLayout *QTextDocument::documentLayout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::documentLayout` 用于计算、查询或取得与“document、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractTextDocumentLayout *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractTextDocumentLayout *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本文档的文档布局。
 
 ### `[signal] void QTextDocument::documentLayoutChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `documentLayoutChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当设置新的文档布局时，会发出该信号。
 
 ### `void QTextDocument::drawContents(QPainter *p, const QRectF &rect = QRectF())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的核心操作 `drawContents`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `QPainter *`。没有默认值，调用时必须提供。传入 `QPainter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rect`：类型为 `const QRectF &`。默认值为 `QRectF()`。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用画家`p`绘制文档内容，并裁剪到`rect`。如果`rect`是空矩形（默认），则文档绘制为未裁剪。
 
 ### `QTextBlock QTextDocument::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+该函数返回一个块，在迭代文档时测试文档结尾。
+返回的块无效，代表文档中最后一个块之后的块。你可以用`lastBlock()`检索文档中最后一个有效块。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QTextBlock`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ for (QTextBlock it = doc->begin(); it != doc->end(); it = it.next())
+     std::cout << it.text().toStdString() << "\n";
+```
 
 ### `QTextCursor QTextDocument::find(const QRegularExpression &expr, const QTextCursor &cursor, QTextDocument::FindFlags options = FindFlags()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `expr`、`cursor`、`options` 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数 `expr`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cursor`：类型为 `const QTextCursor &`。没有默认值，调用时必须提供。传入 `const QTextCursor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `QTextDocument::FindFlags`。默认值为 `FindFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+找到文档中同一段落内与给定正则表达式`expr`匹配的下一个出现情况。
+搜索从给定`cursor`的位置开始，除非搜索选项另有说明，否则会向前推进文档。`options`控制所执行的搜索类型。
+如果找到匹配，返回带有匹配的光标;否则返回空光标。
+如果给定`cursor`有选区，搜索在选区后开始;否则从光标位置开始。
+默认情况下，搜索不区分大小写，可以匹配文档中任意文本。
 
 ### `QTextCursor QTextDocument::find(const QRegularExpression &expr, int from = 0, QTextDocument::FindFlags options = FindFlags()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `expr`、`from`、`options` 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数 `expr`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `QTextDocument::FindFlags`。默认值为 `FindFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在文档中同一段落内找到与给定正则表达式`expr`匹配的下一个出现。
+搜索从给定的`from`位置开始，除非搜索选项另有说明，否则会向前推进文档。`options`控制所执行的搜索类型。
+如果找到匹配，返回带有匹配的光标;否则返回空光标。
+如果`from`位置为0（默认），搜索从文档开头开始;否则从指定位置开始。
+警告：出于历史原因，`expr`设置的大小写敏感选项被忽略。取而代之的是，`options`用于判断搜索是否具有大小写敏感性。
 
 ### `QTextCursor QTextDocument::find(const QString &subString, const QTextCursor &cursor, QTextDocument::FindFlags options = FindFlags()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `subString`、`cursor`、`options` 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数 `subString`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `cursor`：类型为 `const QTextCursor &`。没有默认值，调用时必须提供。传入 `const QTextCursor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `QTextDocument::FindFlags`。默认值为 `FindFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查找该字符串`subString`在文档中的下一次出现。搜索从给定`cursor`的位置开始，除非搜索选项另有说明，否则会在文档中向前推进。`options`控制所执行的搜索类型。
+如果找到匹配，返回一个光标`subString`;否则返回空光标。
+如果给定`cursor`有选择，搜索在选择后开始;否则从光标位置开始。
+默认情况下，搜索不区分大小写，可以匹配文档中任意文本。
 
 ### `QTextCursor QTextDocument::find(const QString &subString, int position = 0, QTextDocument::FindFlags options = FindFlags()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `subString`、`position`、`options` 的有效范围；返回类型是 `QTextCursor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextCursor`。
-- 参数 `subString`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `position`：类型为 `int`。默认值为 `0`。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `options`：类型为 `QTextDocument::FindFlags`。默认值为 `FindFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查找该字符串在文档中出现的下一次`subString`。搜索从给定的`position`开始，除非搜索选项中另有说明，否则将向前推进文档。`options`控制所执行的搜索类型。
+如果找到匹配，返回一个包含匹配`subString`光标;否则返回空光标。
+如果`position`为0（默认值），搜索从文档开头开始;否则从指定位置开始。
 
 ### `QTextBlock QTextDocument::findBlock(int pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::findBlock` 用于计算、查询或取得与“查找、阻塞或屏蔽”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数 `pos`：类型为 `int`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含第`pos`个字符的文本块。
 
 ### `QTextBlock QTextDocument::findBlockByLineNumber(int lineNumber) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::findBlockByLineNumber` 用于计算、查询或取得与“查找、阻塞或屏蔽、By、行、Number”相关的操作。调用时要先确认当前状态和 `lineNumber` 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数 `lineNumber`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含指定`lineNumber`的文本块。
 
 ### `QTextBlock QTextDocument::findBlockByNumber(int blockNumber) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::findBlockByNumber` 用于计算、查询或取得与“查找、阻塞或屏蔽、By、Number”相关的操作。调用时要先确认当前状态和 `blockNumber` 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数 `blockNumber`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有指定`blockNumber`的文本块。
 
 ### `QTextBlock QTextDocument::firstBlock() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::firstBlock` 用于计算、查询或取得与“首项、阻塞或屏蔽”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档的第一个文本块。
 
 ### `qreal QTextDocument::idealWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::idealWidth` 用于计算、查询或取得与“ideal、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本文档的理想宽度。理想宽度是文档实际使用的宽度，未考虑可选的对齐。它总是 <= `size()`.width()。
 
 ### `bool QTextDocument::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果文档为空，返回`true`;否则返回`false`。
 
 ### `bool QTextDocument::isRedoAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRedoAvailable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以重做，返回`true`;否则返回`false`。
 
 ### `bool QTextDocument::isUndoAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUndoAvailable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以撤销，返回`true`;否则返回`false`。
 
 ### `QTextBlock QTextDocument::lastBlock() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::lastBlock` 用于计算、查询或取得与“末项、阻塞或屏蔽”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档的最后（有效）文本块。
 
 ### `int QTextDocument::lineCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::lineCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本文档的行数（如果布局支持）。否则，这与块数相同。
 
 ### `[virtual protected invokable] QVariant QTextDocument::loadResource(int type, const QUrl &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `loadResource`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QUrl &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定`name`的资源加载指定`type`的数据。
+富文本引擎调用该函数，用于请求`QTextDocument`未直接存储但仍与其关联的数据。例如，图像通过`QTextImageFormat`对象的名称属性间接引用。
+当Qt调用时，`type`是`QTextDocument::ResourceType`的值之一。
+如果`QTextDocument`是`QObject`的子对象，且具有可调用的loadResource方法，如`QTextEdit`、`QTextBrowser`或`QTextDocument`本身，那么默认实现会尝试从父节点获取数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `void QTextDocument::markContentsDirty(int position, int length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::markContentsDirty` 用于执行与“mark、Contents、Dirty”相关的操作。调用时要先确认当前状态和 `position`、`length` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `int`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `length`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将指定`position`和`length`指定的内容标记为“脏”，告知文档需要重新排版。
 
 ### `QString QTextDocument::metaInformation(QTextDocument::MetaInformation info) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::metaInformation` 用于计算、查询或取得与“meta、Information”相关的操作。调用时要先确认当前状态和 `info` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `info`：类型为 `QTextDocument::MetaInformation`。没有默认值，调用时必须提供。传入 `QTextDocument::MetaInformation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`info`指定类型的文档元信息。
 
 ### `[signal] void QTextDocument::modificationChanged(bool changed)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `modificationChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `changed`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当文档内容发生变化，影响修改状态时，该信号就会发出。如果`changed`为真，则说明文档已被修改;否则为假。
+例如，调用文档中的`setModified`（false）然后插入文本，信号就会被发出。如果你撤销该操作，使文档恢复到原始未修改状态，信号就会再次发出。
 
 ### `QTextObject *QTextDocument::object(int objectIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::object` 用于计算、查询或取得与“object”相关的操作。调用时要先确认当前状态和 `objectIndex` 的有效范围；返回类型是 `QTextObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextObject *`。
-- 参数 `objectIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与给定`objectIndex`关联的文本对象。
 
 ### `QTextObject *QTextDocument::objectForFormat(const QTextFormat &f) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::objectForFormat` 用于计算、查询或取得与“object、For、格式化”相关的操作。调用时要先确认当前状态和 `f` 的有效范围；返回类型是 `QTextObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextObject *`。
-- 参数 `f`：类型为 `const QTextFormat &`。没有默认值，调用时必须提供。传入 `const QTextFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与格式关联的文本对象`f`。
 
 ### `int QTextDocument::pageCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::pageCount` 用于计算、查询或取得与“page、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本文档的页数。
 
 ### `void QTextDocument::print(QPagedPaintDevice *printer) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::print` 用于执行与“print”相关的操作。调用时要先确认当前状态和 `printer` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `printer`：类型为 `QPagedPaintDevice *`。没有默认值，调用时必须提供。传入 `QPagedPaintDevice *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文档打印到指定`printer`。`QPagedPaintDevice`必须先设置好才能使用此功能。
+这只是方便地将整份文档打印到打印机上的方法。
+如果文档已经在`pageSize()`属性中按指定高度分页，则按原样打印。
+如果文档没有分页，比如用于`QTextEdit`的文档，则会创建一份临时副本，并根据绘画设备的 paperRect() 大小将副本拆分成多个页面。默认情况下，文档内容周围会设置 2 厘米的页边距。此外，当前页码会印在每页底部。
 
 ### `void QTextDocument::redo(QTextCursor *cursor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::redo` 用于执行与“重做”相关的操作。调用时要先确认当前状态和 `cursor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cursor`：类型为 `QTextCursor *`。没有默认值，调用时必须提供。传入 `QTextCursor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以重做，可以重新做一次编辑操作。
+提供的`cursor`位于重新进行版面操作地点的末端。
 
 ### `[slot] void QTextDocument::redo()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `redo`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+如果可以重做，可以重新做一次编辑操作。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数：无。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+textDocument， qOverload<>（&QTextDocument：：redo））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+textDocument， [接收器 = textDocument]() { receiver->redo(); }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[signal] void QTextDocument::redoAvailable(bool available)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `redoAvailable`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `available`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当重做操作可用（`available`为真）或不可用（`available`为假）时，该信号就会发出。
 
 ### `QVariant QTextDocument::resource(int type, const QUrl &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::resource` 用于计算、查询或取得与“resource”相关的操作。调用时要先确认当前状态和 `type`、`name` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `const QUrl &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定`type`的数据，并由给定`name`返回资源。
+富文本引擎调用该函数，以请求那些不直接由`QTextDocument`存储但仍与之关联的数据。例如，图像通过`QTextImageFormat`对象的名称属性间接引用。
+资源缓存在文档内部。如果缓存中找不到资源，调用`loadResource`尝试加载该资源。`loadResource`应使用`addResource`将该资源添加到缓存中。
+如果`loadResource`未加载资源，则调用`resourceProvider`，最后是`defaultResourceProvider`，前提是设置。注意，提供者的结果不会自动添加到缓存中。
 
 ### `[since 6.1] QTextDocument::ResourceProvider QTextDocument::resourceProvider() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::resourceProvider` 用于计算、查询或取得与“resource、Provider”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextDocument::ResourceProvider`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextDocument::ResourceProvider`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本文本文档的资源提供者。
 
 ### `int QTextDocument::revision() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::revision` 用于计算、查询或取得与“revision”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用撤销，返回文档的版本。
+当未被修改的文档被编辑时，修订量必定会增加。
 
 ### `QTextFrame *QTextDocument::rootFrame() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::rootFrame` 用于计算、查询或取得与“root、Frame”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextFrame *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextFrame *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档的根框架。
 
 ### `[since 6.0] void QTextDocument::setBaselineOffset(qreal baseline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBaselineOffset`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `baseline`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将基准行设置为字体高度的百分比，用于文档布局`baseline`。默认值为0。正值会按相应比例向上移动;负值则向下移动。
 
 ### `void QTextDocument::setDefaultCursorMoveStyle(Qt::CursorMoveStyle style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultCursorMoveStyle`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `Qt::CursorMoveStyle`。没有默认值，调用时必须提供。传入 `Qt::CursorMoveStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置默认光标移动风格为给定的`style`。
 
 ### `void QTextDocument::setDefaultFont(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultFont`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留用于显示文档文本的默认字体。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDefaultFont(...)` 修改 `defaultFont`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[static, since 6.1] void QTextDocument::setDefaultResourceProvider(const QTextDocument::ResourceProvider &provider)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setDefaultResourceProvider`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `provider`：类型为 `const QTextDocument::ResourceProvider &`。没有默认值，调用时必须提供。传入 `const QTextDocument::ResourceProvider &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将默认资源提供者设置为`provider`。
+所有没有明确设置提供者的 QTextDocuments 都会使用默认提供者。
 
 ### `void QTextDocument::setDefaultTextOption(const QTextOption &option)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultTextOption`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示默认文本选项将在文档中所有 `QTextLayout` 上设置。
+当创建 `QTextBlock` 时，会在其 `QTextLayout` 上设置 defaultTextOption。这允许为文档设置全局属性，如默认的单词换行模式。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `const QTextOption &`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDefaultTextOption(...)` 修改 `defaultTextOption`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QTextDocument::setDocumentLayout(QAbstractTextDocumentLayout *layout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocumentLayout`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `layout`：类型为 `QAbstractTextDocumentLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置文档使用给定的`layout`。之前的布局被删除。
 
 ### `void QTextDocument::setHtml(const QString &html)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHtml`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `html`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`html`字符串中指定的HTML格式文本替换文档的全部内容。调用该函数时，撤销/重做历史会被重置。
+尽可能尊重HTML格式;例如，“<b>加粗</b>文本”会生成第一个单词带有粗体字重的文本，使其看起来加粗：“加粗文本”。
+要选择除默认“屏幕”规则外的CSS媒体规则，使用`setMetaInformation()`，“`CssMedia`”作为“信息”参数。
+注意：当创建包含HTML的`QString`并传递给setHtml()时，调用者有责任确保文本正确解码。
 
 ### `void QTextDocument::setIndentWidth(qreal width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIndentWidth`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+返回用于文本列表和文本块缩进的宽度。
+`QTextListFormat` 和 `QTextBlockFormat` 的缩进属性指定了该值的倍数。默认缩进宽度为 40。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setIndentWidth(...)` 修改 `indentWidth`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QTextDocument::setMarkdown(const QString &markdown, QTextDocument::MarkdownFeatures features = MarkdownDialectGitHub)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMarkdown`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `markdown`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `features`：类型为 `QTextDocument::MarkdownFeatures`。默认值为 `MarkdownDialectGitHub`。传入 `QTextDocument::MarkdownFeatures` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`markdown`字符串中给定的Markdown格式文本替换文档的全部内容，并支持相应`features`。默认情况下，包含所有支持的GitHub风格Markdown功能;通过 Pass `MarkdownDialectCommonMark` 进行更基础的解析。
+尽可能尊重Markdown格式;例如，“加粗*文本”会生成第一个单词带有字体粗重的文本，使其看起来更突出。
+`markdown`字符串中包含的HTML的解析方式与`setHtml`相同;但不支持HTML块内的Markdown格式化。
+解析器的某些功能可以通过`features`参数启用或禁用。默认是`MarkdownDialectGitHub`。
+当调用该函数时，撤销/重做历史会被重置。
 
 ### `void QTextDocument::setMetaInformation(QTextDocument::MetaInformation info, const QString &string)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMetaInformation`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `info`：类型为 `QTextDocument::MetaInformation`。没有默认值，调用时必须提供。传入 `QTextDocument::MetaInformation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `string`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文档中由`info`指定类型的元信息设置为给定的`string`。
 
 ### `void QTextDocument::setPlainText(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPlainText`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的明`text`替换文档的全部内容。调用该函数时，撤销/重做历史会被重置。
 
 ### `[since 6.1] void QTextDocument::setResourceProvider(const QTextDocument::ResourceProvider &provider)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setResourceProvider`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `provider`：类型为 `const QTextDocument::ResourceProvider &`。没有默认值，调用时必须提供。传入 `const QTextDocument::ResourceProvider &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本文档资源提供者设置为`provider`。
 
 ### `[since 6.0] void QTextDocument::setSubScriptBaseline(qreal baseline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSubScriptBaseline`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `baseline`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将默认下标的基准行设置为字体高度的百分比，用于文档布局`baseline`。默认值为16.67%（高度的1/6）。
 
 ### `[since 6.0] void QTextDocument::setSuperScriptBaseline(qreal baseline)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSuperScriptBaseline`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `baseline`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将默认上标的基准行设置为字体高度的百分比，用于文档布局`baseline`。默认值为50%（高度的一半）。
 
 ### `[since 6.0] qreal QTextDocument::subScriptBaseline() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::subScriptBaseline` 用于计算、查询或取得与“sub、Script、Baseline”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上标的基行，表示文档布局中使用的字体高度百分比。
 
 ### `[since 6.0] qreal QTextDocument::superScriptBaseline() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::superScriptBaseline` 用于计算、查询或取得与“super、Script、Baseline”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上标的基行，表示文档布局中使用的字体高度百分比。
 
 ### `QString QTextDocument::toHtml() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toHtml`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含文档HTML表示的字符串。
+文档内容指定其编码为 UTF-8。如果你以后将返回的 HTML 字符串转换为字节数组以便通过网络传输或保存到磁盘时，应使用 `QString::toUtf8()` 将字符串转换为 `QByteArray`。
 
 ### `QString QTextDocument::toMarkdown(QTextDocument::MarkdownFeatures features = MarkdownDialectGitHub) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toMarkdown`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `features`：类型为 `QTextDocument::MarkdownFeatures`。默认值为 `MarkdownDialectGitHub`。传入 `QTextDocument::MarkdownFeatures` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含文档Markdown表示的字符串，包含给定`features`，或如果写入失败则返回空字符串。
 
 ### `QString QTextDocument::toPlainText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPlainText`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档中的纯文本。如果你需要格式信息，可以用`QTextCursor`。
+该函数返回与`toRawText()`相同，但会用ASCII替代部分Unicode字符。特别是，无间断空格（U 00A0）被普通空格（U 0020）取代，段落分隔符（U 2029）和行分隔符（U 2028）被换行符（U 000A）取代。如果你需要文档的精确内容，可以用`toRawText()`。
+注意：嵌入对象，如图像，由Unicode值U FFFC（对象替换字符）表示。
 
 ### `QString QTextDocument::toRawText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toRawText`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档中的原始文本，但没有任何格式信息。如果你需要格式信息，可以用`QTextCursor`。
 
 ### `void QTextDocument::undo(QTextCursor *cursor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTextDocument::undo` 用于执行与“撤销”相关的操作。调用时要先确认当前状态和 `cursor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cursor`：类型为 `QTextCursor *`。没有默认值，调用时必须提供。传入 `QTextCursor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有撤销功能，则撤销文档上最后一次编辑操作。提供的`cursor`位于编辑操作撤销位置的末尾。
+详情请参见 Qt Undo 框架文档。
 
 ### `[slot] void QTextDocument::undo()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `undo`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数：无。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+textDocument， qOverload<>（&QTextDocument：：undo））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+textDocument， [接收器 = textDocument]() { receiver->undo(); }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[signal] void QTextDocument::undoAvailable(bool available)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `undoAvailable`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `available`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当撤销操作可用（`available`为真）或不可用（`available`为假）时，该信号就会发出。
+详情请参见 Qt Undo 框架文档。
 
 ### `[signal] void QTextDocument::undoCommandAdded()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 发出的通知信号 `undoCommandAdded`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当`QTextDocument`中新增一个撤销级别时，都会发出该信号。
 
 ### `enum FindFlag { FindBackward, FindCaseSensitively, FindWholeWords }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `查找、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了`QTextDocument`查找函数可用的选项。这些选项可以从以下列表中进行或运算合成：
+- `QTextDocument::FindBackward`：`0x00001`;向后搜索而非向前搜索。
+- `QTextDocument::FindCaseSensitively`：`0x00002`;默认情况下，查找不区分大小写。指定此选项后，行为将变为大小写区分查找操作。
+- `QTextDocument::FindWholeWords`：`0x00004`;使得查找匹配词仅为完整词。
+FindFlags 类型是 QFlags 的 typedef<FindFlag>。它存储 FindFlag 值的 OR 组合。
 
 ### `flags FindFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了`QTextDocument`查找函数可用的选项。这些选项可以从以下列表中进行或运算合成：
+- `QTextDocument::FindBackward`：`0x00001`;向后搜索而非向前搜索。
+- `QTextDocument::FindCaseSensitively`：`0x00002`;默认情况下，查找不区分大小写。指定此选项后，行为将变为大小写区分查找操作。
+- `QTextDocument::FindWholeWords`：`0x00004`;使得查找匹配词仅为完整词。
+FindFlags 类型是 QFlags 的 typedef<FindFlag>。它存储 FindFlag 值的 OR 组合。
 
 ### `enum MarkdownFeature { MarkdownNoHTML, MarkdownDialectCommonMark, MarkdownDialectGitHub }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `Markdown、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举在读取或写入 Markdown 时选择支持的功能集。
+- `QTextDocument::MarkdownNoHTML`：`0x0020 | 0x0040`;Markdown 文本中的任何 HTML 标签将被丢弃
+- `QTextDocument::MarkdownDialectCommonMark`：`0`;仅限CommonMark标准化的功能
+- `QTextDocument::MarkdownDialectGitHub`：`0x0004 | 0x0008 | 0x0400 | 0x0100 | 0x0200 | 0x0800 | 0x4000 | 0x100000`;大部分功能来自GitHub方言
+具体来说，支持的 GitHub 方言子集包括 CommonMark 的所有内容，以及：
+- 识别URL、www和电子邮件地址并将其转化为链接
+- 划线
+- 下划线（与斜体不同;在CommonMark中相同）
+- 表格
+- 任务列表
+- 前言
+“前置信息”通常是 YAML 格式的元数据。Qt 目前没有包含用于此的解析器;但你可以选择第三方解析器，调用 `QTextDocument::metaInformation()` 获取整个区块，并在 Qt 解析 Markdown 文件后调用自己的解析器。
+注意：目前`toMarkdown()`的 Markdown 输出可能包含 GitHub 功能，即使你通过指定其他枚举值来禁用它们。这可能会在未来的 Qt 版本中得到修复。
+MarkdownFeatures 类型是 QFlag 的 typedef<MarkdownFeature>。它存储 MarkdownFeatures 值的 OR 组合。
 
 ### `flags MarkdownFeatures`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举在读取或写入 Markdown 时选择支持的功能集。
+- `QTextDocument::MarkdownNoHTML`：`0x0020 | 0x0040`;Markdown 文本中的任何 HTML 标签将被丢弃
+- `QTextDocument::MarkdownDialectCommonMark`：`0`;仅限CommonMark标准化的功能
+- `QTextDocument::MarkdownDialectGitHub`：`0x0004 | 0x0008 | 0x0400 | 0x0100 | 0x0200 | 0x0800 | 0x4000 | 0x100000`;大部分功能来自GitHub方言
+具体来说，支持的 GitHub 方言子集包括 CommonMark 的所有内容，以及：
+- 识别URL、www和电子邮件地址并将其转化为链接
+- 划线
+- 下划线（与斜体不同;在CommonMark中相同）
+- 表格
+- 任务列表
+- 前言
+“前置信息”通常是 YAML 格式的元数据。Qt 目前没有包含用于此的解析器;但你可以选择第三方解析器，调用 `QTextDocument::metaInformation()` 获取整个区块，并在 Qt 解析 Markdown 文件后调用自己的解析器。
+注意：目前`toMarkdown()`的 Markdown 输出可能包含 GitHub 功能，即使你通过指定其他枚举值来禁用它们。这可能会在未来的 Qt 版本中得到修复。
+MarkdownFeatures 类型是 QFlag 的 typedef<MarkdownFeature>。它存储 MarkdownFeatures 值的 OR 组合。
 
 ### `(since 6.1) ResourceProvider`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 的 `Resource、Provider` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+std：：function<`QVariant`（const `QUrl`&）> 的别名类型。
+这种类型防御是在Qt 6.1中引入的。
 
 ### `enum Stacks { UndoStack, RedoStack, UndoAndRedoStacks }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTextDocument` 暴露的类型声明 `Stacks`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QTextDocument::UndoStack`：`0x01`;撤销堆栈。
+- `QTextDocument::RedoStack`：`0x02`;重做堆栈。
+- `QTextDocument::UndoAndRedoStacks`：`UndoStack | RedoStack`;撤销和重做堆栈。
 
 ### `QUrl baseUrl() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::baseUrl` 用于计算、查询或取得与“base、Url”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含用于解析文档中相对资源 URL 的基础 URL。
+资源URL被解析为与基础URL目标相同的目录，意味着路径中最后一个“/”之后的任何部分将被忽略。
+- `Base URL`：相对 URL;已解析的 URL
+- `file:///path/to/content`：图片/logo.png;file:///path/to/images/logo.png
+- `file:///path/to/content/`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/index.html`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/images/`：../images/logo.png;file:///path/to/content/images/logo.png
 
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `baseUrl()` 读取当前值；它不会修改应用状态。
 
 ### `int blockCount() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::blockCount` 用于计算、查询或取得与“阻塞或屏蔽、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含文档中的文本块数量。
+在带有表格或框架的文档中，该属性的价值未定义。
+默认情况下，如果定义，该属性的值为1。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blockCount()` 读取当前值；它不会修改应用状态。
 
 ### `QString defaultStyleSheet() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::defaultStyleSheet` 用于计算、查询或取得与“default、Style、Sheet”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+默认样式表应用于文档中插入的所有新 HTML 格式文本，例如使用 `setHtml()` 或 `QTextCursor::insertHtml()`。
+样式表需要符合 CSS 2.1 语法。
+注意：更改默认样式表不会对文档的现有内容产生任何影响。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `defaultStyleSheet()` 读取当前值；它不会修改应用状态。
 
 ### `qreal documentMargin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::documentMargin` 用于计算、查询或取得与“document、Margin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+文件周围的边距。默认是4。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `documentMargin()` 读取当前值；它不会修改应用状态。
 
 ### `qreal indentWidth() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::indentWidth` 用于计算、查询或取得与“indent、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回用于文本列表和文本块缩进的宽度。
+`QTextListFormat` 和 `QTextBlockFormat` 的缩进属性指定了该值的倍数。默认缩进宽度为 40。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `indentWidth()` 读取当前值；它不会修改应用状态。
 
 ### `bool isLayoutEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLayoutEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定了每次变更后`QTextDocument`是否应重新计算布局。
+如果该属性设置为 true，文档的任何更改都会触发布局，使一切正常运行，但需要时间。
+临时禁用排版可以在进行多项修改（不仅是文本内容，还有默认字体、默认文本选项等）时节省时间，使文档在结尾只排版一次。例如，当文本宽度或页面大小尚未确定时，这非常有用。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isLayoutEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `bool isModified() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isModified`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定文档是否被用户修改。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isModified()` 读取当前值；它不会修改应用状态。
 
 ### `bool isUndoRedoEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUndoRedoEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定了本文档是否启用撤销/重做。
+这默认为true。如果禁用，撤销堆栈会被清除，不会有任何物品被添加到中。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isUndoRedoEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `int maximumBlockCount() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::maximumBlockCount` 用于计算、查询或取得与“最大值、阻塞或屏蔽、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在文档中指定区块的限制。
+指定文档可拥有的最大块数。如果文档中有更多带有该属性的块，则从文档开头移除块。
+负值或零值表示文档可以包含无限数量的块。
+默认值是0。
+注意，设置此属性会立即将限制应用到文档内容上。
+设置该属性还会禁用撤销重做历史。
+在带有表格或框架的文档中，该属性未定义。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumBlockCount()` 读取当前值；它不会修改应用状态。
 
 ### `QSizeF pageSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::pageSize` 用于计算、查询或取得与“page、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含用于排版的页面尺寸。
+这些单位由底层的绘画设备决定。在绘制到屏幕上时，尺寸以逻辑像素为单位，在绘制到打印机时以点（1/72英寸）为单位。
+默认情况下，对于新创建的空文档，该属性包含未定义的大小。
 
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `pageSize()` 读取当前值；它不会修改应用状态。
 
 ### `void setBaseUrl(const QUrl &url)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBaseUrl`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含用于解析文档中相对资源 URL 的基础 URL。
+资源URL被解析为与基础URL目标相同的目录，意味着路径中最后一个“/”之后的任何部分将被忽略。
+- `Base URL`：相对 URL;已解析的 URL
+- `file:///path/to/content`：图片/logo.png;file:///path/to/images/logo.png
+- `file:///path/to/content/`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/index.html`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/images/`：../images/logo.png;file:///path/to/content/images/logo.png
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setBaseUrl(...)` 修改 `baseUrl`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDefaultStyleSheet(const QString &sheet)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultStyleSheet`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+默认样式表应用于文档中插入的所有新 HTML 格式文本，例如使用 `setHtml()` 或 `QTextCursor::insertHtml()`。
+样式表需要符合 CSS 2.1 语法。
+注意：更改默认样式表不会对文档的现有内容产生任何影响。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sheet`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDefaultStyleSheet(...)` 修改 `defaultStyleSheet`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDocumentMargin(qreal margin)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocumentMargin`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+文件周围的边距。默认是4。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `margin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDocumentMargin(...)` 修改 `documentMargin`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setLayoutEnabled(bool b)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLayoutEnabled`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了每次变更后`QTextDocument`是否应重新计算布局。
+如果该属性设置为 true，文档的任何更改都会触发布局，使一切正常运行，但需要时间。
+临时禁用排版可以在进行多项修改（不仅是文本内容，还有默认字体、默认文本选项等）时节省时间，使文档在结尾只排版一次。例如，当文本宽度或页面大小尚未确定时，这非常有用。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setLayoutEnabled(...)` 修改 `layoutEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaximumBlockCount(int maximum)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaximumBlockCount`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+在文档中指定区块的限制。
+指定文档可拥有的最大块数。如果文档中有更多带有该属性的块，则从文档开头移除块。
+负值或零值表示文档可以包含无限数量的块。
+默认值是0。
+注意，设置此属性会立即将限制应用到文档内容上。
+设置该属性还会禁用撤销重做历史。
+在带有表格或框架的文档中，该属性未定义。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `maximum`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaximumBlockCount(...)` 修改 `maximumBlockCount`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setPageSize(const QSizeF &size)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageSize`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含用于排版的页面尺寸。
+这些单位由底层的绘画设备决定。在绘制到屏幕上时，尺寸以逻辑像素为单位，在绘制到打印机时以点（1/72英寸）为单位。
+默认情况下，对于新创建的空文档，该属性包含未定义的大小。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSizeF &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPageSize(...)` 修改 `pageSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTextWidth(qreal width)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextWidth`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+文本宽度指定文档中文本的首选宽度。如果文本（或内容本身）比指定宽度宽大，则被拆分成多行并垂直增长。如果文本无法分割成多行以符合指定宽度，则文本会变大，`size()`和`idealWidth()`属性会反映这一点。
+如果文本宽度设置为 -1，则文本不会被拆分为多行，除非通过明确的换行或新段落强制执行。
+默认值为-1。
+设置文本宽度也会将页面高度设置为-1，导致文档连续地垂直增长或缩小。如果你想让文档布局将文本拆分成多个页面，就必须设置`pageSize`属性。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `qreal`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTextWidth(...)` 修改 `textWidth`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setUndoRedoEnabled(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUndoRedoEnabled`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了本文档是否启用撤销/重做。
+这默认为true。如果禁用，撤销堆栈会被清除，不会有任何物品被添加到中。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUndoRedoEnabled(...)` 修改 `undoRedoEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setUseDesignMetrics(bool b)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUseDesignMetrics`。调用它会改变 `QTextDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定文档是否使用字体的设计指标来提升文本布局的准确性。
+如果该属性设置为true，布局将使用设计度量。否则，将使用`QAbstractTextDocumentLayout::setPaintDevice()`上绘制设备的度量。
+使用设计度量使布局的宽度不再依赖提示和像素四舍五入。这意味着所见即所得的文本布局成为可能，因为宽度基于绘图设备度量的线性扩展比平时更为线性。
+默认情况下，该属性是`false`的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUseDesignMetrics(...)` 修改 `useDesignMetrics`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QSizeF size() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QTextDocument` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
+该属性包含文档的实际大小。这相当于 `documentLayout()`->documentSize();
+文档大小可以通过设置文本宽度或整页大小来更改。
+注意宽度始终为 >= `pageSize()`。宽度()。
+默认情况下，对于新创建的空文档，该属性包含一个配置相关的大小。
 
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `size()` 读取当前值；它不会修改应用状态。
 
 ### `qreal textWidth() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::textWidth` 用于计算、查询或取得与“文本、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+文本宽度指定文档中文本的首选宽度。如果文本（或内容本身）比指定宽度宽大，则被拆分成多行并垂直增长。如果文本无法分割成多行以符合指定宽度，则文本会变大，`size()`和`idealWidth()`属性会反映这一点。
+如果文本宽度设置为 -1，则文本不会被拆分为多行，除非通过明确的换行或新段落强制执行。
+默认值为-1。
+设置文本宽度也会将页面高度设置为-1，导致文档连续地垂直增长或缩小。如果你想让文档布局将文本拆分成多个页面，就必须设置`pageSize`属性。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textWidth()` 读取当前值；它不会修改应用状态。
 
 ### `bool useDesignMetrics() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTextDocument::useDesignMetrics` 用于计算、查询或取得与“use、Design、Metrics”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定文档是否使用字体的设计指标来提升文本布局的准确性。
+如果该属性设置为true，布局将使用设计度量。否则，将使用`QAbstractTextDocumentLayout::setPaintDevice()`上绘制设备的度量。
+使用设计度量使布局的宽度不再依赖提示和像素四舍五入。这意味着所见即所得的文本布局成为可能，因为宽度基于绘图设备度量的线性扩展比平时更为线性。
+默认情况下，该属性是`false`的。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `useDesignMetrics()` 读取当前值；它不会修改应用状态。
 
 ### `void setModified(bool m = true)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setModified`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性决定文档是否被用户修改。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `m`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setModified(...)` 修改 `modified`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void baseUrlChanged(const QUrl &url)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `baseUrlChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含用于解析文档中相对资源 URL 的基础 URL。
+资源URL被解析为与基础URL目标相同的目录，意味着路径中最后一个“/”之后的任何部分将被忽略。
+- `Base URL`：相对 URL;已解析的 URL
+- `file:///path/to/content`：图片/logo.png;file:///path/to/images/logo.png
+- `file:///path/to/content/`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/index.html`：图片/logo.png;file:///path/to/content/images/logo.png
+- `file:///path/to/content/images/`：../images/logo.png;file:///path/to/content/images/logo.png
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `baseUrl` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

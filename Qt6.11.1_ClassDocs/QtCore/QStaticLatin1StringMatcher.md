@@ -66,63 +66,47 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] qsizetype QStaticLatin1StringMatcher::indexIn(QStringView haystack, qsizetype from = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `indexIn`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `haystack`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从字节位置`from`（默认0，即从第一个字节开始）搜索`QLatin1StringView` `haystack`中构造函数中设置的`QLatin1StringView`模式()。使用构造函数中也设置的大小写区分。
+返回`haystack`中模式()匹配的位置，若未匹配则返回-1。
 
 ### `[constexpr noexcept, since 6.7] template <size_t N> auto qMakeStaticCaseInsensitiveLatin1StringMatcher(const char (&)[N] patternToMatch)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `qMakeStaticCaseInsensitiveLatin1StringMatcher`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回一个`QStaticLatin1StringMatcher`，并根据经过的`patternToMatch`自动确定正确`N`，且不考虑大小写敏感性。
+为了充分利用该函数，将结果赋值为`static constexpr auto`变量：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <size_t N> auto`。
-- 参数 `patternToMatch`：类型为 `const char (&)[N]`。没有默认值，调用时必须提供。传入 `const char (&)[N]` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ static constexpr auto matcher = qMakeStaticCaseInsensitiveLatin1StringMatcher("needle");
+```
 
 ### `[constexpr noexcept, since 6.7] template <size_t N> auto qMakeStaticCaseSensitiveLatin1StringMatcher(const char (&)[N] patternToMatch)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `qMakeStaticCaseSensitiveLatin1StringMatcher`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回一个`QStaticLatin1StringMatcher`，其正确`N`由通过的`patternToMatch`自动确定，并且具有大小写区分。
+为了充分利用该函数，将结果赋值为`static constexpr auto`变量：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <size_t N> auto`。
-- 参数 `patternToMatch`：类型为 `const char (&)[N]`。没有默认值，调用时必须提供。传入 `const char (&)[N]` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ static constexpr auto matcher = qMakeStaticCaseSensitiveLatin1StringMatcher("needle");
+```
 
 ### `qsizetype indexIn(QLatin1StringView haystack, qsizetype from = 0) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStaticLatin1StringMatcher::indexIn` 用于计算、查询或取得与“索引、In”相关的操作。调用时要先确认当前状态和 `haystack`、`from` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `haystack`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。传入 `QLatin1StringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从字节位置`from`（默认0，即从第一个字节开始）搜索`QLatin1StringView` `haystack`中构造函数中设置的`QLatin1StringView`模式()。使用构造函数中也设置的大小写区分。
+返回`haystack`中模式()匹配的位置，若未匹配则返回-1。
 
 ## 6. 深入实践与常见坑
 

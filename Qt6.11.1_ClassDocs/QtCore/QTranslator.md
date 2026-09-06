@@ -68,138 +68,103 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QTranslator::QTranslator(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTranslator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有父 `parent`、不与任何文件相连的空消息文件对象。
 
 ### `[virtual noexcept] QTranslator::~QTranslator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTranslator` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放所有分配的资源。
 
 ### `QString QTranslator::filePath() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTranslator::filePath` 用于计算、查询或取得与“file、Path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回加载的翻译文件路径。
+如果还没有加载翻译、加载失败，或没有从文件加载转换，则该文件路径为空。
 
 ### `[virtual] bool QTranslator::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此翻译器为空，则返回 `true`，否则返回 `false`。
 
 ### `QString QTranslator::language() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTranslator::language` 用于计算、查询或取得与“language”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回翻译文件中存储的目标语言。
 
 ### `bool QTranslator::load(const QString &filename, const QString &directory = QString(), const QString &search_delimiters = QString(), const QString &suffix = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `load`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `filename`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `directory`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `search_delimiters`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `suffix`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+加载`filename` `suffix`（“如果未指定`suffix`则为”.qm“），该文件名可以是绝对文件名或相对于`directory`。如果翻译成功加载，返回`true`;否则返回`false`。
+如果未指定`directory`，则使用当前目录（即`currentPath()`）。
+该翻译器对象的先前内容被丢弃。
+如果该文件名不存在，则按以下顺序尝试其他文件名：
+- 文件名，不加附加`suffix`。
+- 文件名中字符后带文本`search_delimiters`剥离（“如果是空字符串，则默认用_.”作为`search_delimiters`）并`suffix`。
+- 文件名剥离且未添加`suffix`。
+- 进一步剥离文件名等。
+例如，在fr_CA地区（法语区加拿大）运行的应用程序可能会调用 load（“foo.fr_ca”， “/opt/foolib”）。load() 则会尝试从该列表中打开第一个可读的文件：
+- `/opt/foolib/foo.fr_ca.qm`
+- `/opt/foolib/foo.fr_ca`
+- `/opt/foolib/foo.fr.qm`
+- `/opt/foolib/foo.fr`
+- `/opt/foolib/foo.qm`
+- `/opt/foolib/foo`
+通常，更好的做法是使用 QTranslator：：load（const `QLocale` &， const `QString` &， const `QString` &， const `QString` &， const `QString` &） 函数，因为它使用`QLocale::uiLanguages()`而不仅仅是地方名，后者指的是日期和数字的格式化，而不一定是界面语言。
 
 ### `bool QTranslator::load(const QLocale &locale, const QString &filename, const QString &prefix = QString(), const QString &directory = QString(), const QString &suffix = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `load`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `locale`：类型为 `const QLocale &`。没有默认值，调用时必须提供。传入 `const QLocale &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `filename`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `prefix`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `directory`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `suffix`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+加载`filename` `prefix` ui 语言名称 `suffix`（“如果未指定`suffix`则为”.qm“），该名称可以是绝对文件名或相对于 `directory` 的。如果翻译成功加载，返回 `true`;否则返回 `false`。
+该翻译器对象的先前内容被丢弃。
+如果该文件名不存在，则按以下顺序尝试其他文件名：
+- 文件名无`suffix`。
+- 文件名，带有 UI 语言部分，后面是“_”字符，去除并`suffix`。
+- 文件名，去除 UI 语言部分，不附加`suffix`。
+- 文件名，UI语言部分进一步简化，等等。
+例如，在`locale`中运行的应用程序使用以下 ui 语言——“es”、“fr-CA”、“de”，可能会调用 load（QLocale()、“foo”、“.”、“/opt/foolib”、“.qm”。load() 会将 UI 语言中的 '-'（破折号）替换为 '_'（下划线），然后尝试打开该列表中第一个可读的文件：
+- `/opt/foolib/foo.es.qm`
+- `/opt/foolib/foo.es`
+- `/opt/foolib/foo.fr_CA.qm`
+- `/opt/foolib/foo.fr_CA`
+- `/opt/foolib/foo.fr.qm`
+- `/opt/foolib/foo.fr`
+- `/opt/foolib/foo.de.qm`
+- `/opt/foolib/foo.de`
+- `/opt/foolib/foo.qm`
+- `/opt/foolib/foo`。
+- `/opt/foolib/foo`
+在文件系统区分大小写的操作系统上，`QTranslator` 还会尝试加载小写版本的本地名称。
 
 ### `bool QTranslator::load(const uchar *data, int len, const QString &directory = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `load`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `const uchar *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `directory`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将长度为`len`的量子力学文件数据`data`加载到翻译器中。
+数据不会被复制。调用者必须能够保证`data`不会被删除或修改。
+`directory` 仅用于在加载量子管理文件的依赖时指定基础目录。如果文件没有依赖，则忽略该参数。
+注意：此功能会让`QTranslator::load()`重载。
 
 ### `[virtual] QString QTranslator::translate(const char *context, const char *sourceText, const char *disambiguation = nullptr, int n = -1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `translate`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `context`：类型为 `const char *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `sourceText`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `disambiguation`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `n`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回键的平移（`context`， `sourceText`， `disambiguation`）。如果未找到，也尝试 （`context`， `sourceText`， “）。如果仍失败，返回空字符串。
+注意：不完整的翻译可能导致意外行为：如果没有提供 （`context`， `sourceText`， “”）的翻译，方法在这种情况下可能会返回不同`disambiguation`的翻译。
+如果`n`不是-1，则用于选择合适的翻译形式（例如“找到了 %n 个文件”与“找到了 %n 个文件”）。
+如果你需要在`QTranslator`中程序化插入翻译，这个函数可以重新实现。
+注意：该功能是线程安全的。
 
 ## 6. 深入实践与常见坑
 

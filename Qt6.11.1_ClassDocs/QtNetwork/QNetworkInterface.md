@@ -101,335 +101,216 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkInterface::InterfaceFlagflags QNetworkInterface::InterfaceFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 暴露的类型声明 `Interface、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:InterfaceFlagflags QNetworkInterface::InterfaceFlags`。
-- 属性名：`QNetworkInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定与该网络接口关联的标志。可能的值为：
+- `QNetworkInterface::IsUp`：`0x1`;网络接口“上线”——由管理员操作启用
+- `QNetworkInterface::IsRunning`：`0x2`;网络接口处于操作状态：配置为“上行”，并（通常）物理连接到网络
+- `QNetworkInterface::CanBroadcast`：`0x4`;网络接口以广播模式工作
+- `QNetworkInterface::IsLoopBack`：`0x8`;网络接口是环回接口：即一个虚拟接口，其目的地是主机本身
+- `QNetworkInterface::IsPointToPoint`：`0x10`;网络接口是点对点接口：即只有一个可直接访问的另一个地址。
+- `QNetworkInterface::CanMulticast`：`0x20`;网络接口支持多播
+注意，一个网络接口不能同时是基于广播和点对点的。
+InterfaceFlags 类型是 QFlags 的 typedef<InterfaceFlag>。它存储 InterfaceFlag 值的 OR 组合。
 
 ### `enum QNetworkInterface::InterfaceType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 暴露的类型声明 `Interface、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:InterfaceType`。
-- 属性名：`QNetworkInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定该接口的硬件类型（PHY层，OSI层1，如果可以确定的话）。不在下文列出的接口类型通常会显示为未知，尽管Qt的未来版本可能会添加新的枚举值。
+可能的数值如下：
+- `QNetworkInterface::Unknown`：`0`;接口类型无法确定，或者不是其他列出的类型之一。
+- `QNetworkInterface::Loopback`：`1`;虚拟环回接口，分配环回IP地址（127.0.0.1，：：1）。
+- `QNetworkInterface::Virtual`：`2`;一种被确定为虚拟接口，但不包括其他可能类型的接口。例如，隧道接口（目前）被检测为虚拟接口。
+- `QNetworkInterface::Ethernet`：`3`;IEEE 802.3 以太网接口，尽管在许多系统中，其他类型的 IEEE 802 接口也可能被检测为以太网（尤其是 Wi-Fi）。
+- `QNetworkInterface::Wifi`：`8`;IEEE 802.11 Wi-Fi 接口。注意，在某些系统中，`QNetworkInterface`可能无法区分普通以太网和 Wi-Fi，因此不会返回该枚举值。
+- `QNetworkInterface::Ieee80211`：`Wifi`;WiFi的别名。
+- `QNetworkInterface::CanBus`：`5`;ISO 11898控制器区域网络总线接口，通常用于汽车系统。
+- `QNetworkInterface::Fddi`：`7`;ANSI X3T12光纤分布式数据接口，基于光纤的局域网。
+- `QNetworkInterface::Ppp`：`6`;点对点协议接口，通过较低的传输层（通常通过无线或物理线路串行）建立两个节点之间的直接连接。
+- `QNetworkInterface::Slip`：`4`;串行线路互联网协议接口。
+- `QNetworkInterface::Phonet`：`9`;使用 Linux Phonet 套接字系列的接口，用于与蜂巢调制解调器通信。更多信息请参见 Linux 内核文档。
+- `QNetworkInterface::Ieee802154`：`10`;IEEE 802.15.4 个人区域网络接口（除6LoWPAN外）（见下文）。
+- `QNetworkInterface::SixLoWPAN`：`11`;6LoWPAN（低功耗无线个人局网上的IPv6）接口，运行在IEEE 802.15.4 PHY上，但对IPv6和UDP有特定的头部压缩方案。这种接口常用于网状网络。
+- `QNetworkInterface::Ieee80216`：`12`;IEEE 802.16无线都市区网，也被称为“WiMAX”商业名称。
+- `QNetworkInterface::Ieee1394`：`13`;IEEE 1394接口（又称“FireWire”）。
 
 ### `QNetworkInterface::QNetworkInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的网络接口对象。
 
 ### `QNetworkInterface::QNetworkInterface(const QNetworkInterface &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QNetworkInterface &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建包含在`other`中的QNetworkInterface对象的副本。
 
 ### `[noexcept] QNetworkInterface::~QNetworkInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放了与`QNetworkInterface`对象相关的资源。
 
 ### `QList<QNetworkAddressEntry> QNetworkInterface::addressEntries() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QNetworkInterface` 添加依赖、数据或子对象的 API `addressEntries`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkAddressEntry>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该接口所拥有的IP地址列表及其相关的网掩码和广播地址。
+如果不需要网掩码、广播地址或其他信息，你可以调用`allAddresses()`函数，只获取活动接口的IP地址。
 
 ### `[static] QList<QHostAddress> QNetworkInterface::allAddresses()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `allAddresses`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QHostAddress>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个便利函数返回主机上找到的所有IP地址。它等价于对处于`QNetworkInterface::IsUp`状态的`allInterfaces()`返回的所有对象调用`addressEntries()`以获取`QNetworkAddressEntry`对象的列表，然后对这些对象中的每一个调用`QNetworkAddressEntry::ip()`。
 
 ### `[static] QList<QNetworkInterface> QNetworkInterface::allInterfaces()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `allInterfaces`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkInterface>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主机上所有网络接口的列表。如果发生故障，则返回一个元素为零的列表。
 
 ### `QNetworkInterface::InterfaceFlags QNetworkInterface::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkInterface::InterfaceFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInterface::InterfaceFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该网络接口相关的标志。
 
 ### `QString QNetworkInterface::hardwareAddress() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::hardwareAddress` 用于计算、查询或取得与“hardware、Address”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该接口的低级硬件地址。在以太网接口上，该地址以字符串表示，中间用冒号分隔。
+其他接口类型可能拥有其他类型的硬件地址。实现不应依赖该函数返回有效的MAC地址。
 
 ### `QString QNetworkInterface::humanReadableName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::humanReadableName` 用于计算、查询或取得与“human、Readable、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果能确定该名称，则返回该网络接口的人类可读名称，例如“局域连接”。如果无法确定，该功能返回与`name()`相同。人类可读名称是用户可在Windows控制面板中修改的名称，因此在程序执行过程中可能会发生变化。
+在Unix上，这个函数目前总是返回与`name()`相同，因为Unix系统不存储人类可读名称的配置。
 
 ### `int QNetworkInterface::index() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知，返回接口系统索引。这是操作系统分配的一个整数，用于识别该接口，通常不会改变。它与IPv6地址中的作用域ID字段匹配。
+如果索引未知，该函数返回0。
 
 ### `[static] QNetworkInterface QNetworkInterface::interfaceFromIndex(int index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `interfaceFromIndex`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInterface`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QNetworkInterface`对象，代表内部ID为`index`的接口。网络接口有一个唯一的标识符，称为“接口索引”，以区别于系统中的其他接口。通常，这个值是逐步分配的，每次移除又添加的接口都会得到不同的值。
+该索引也出现在IPv6地址的范围ID字段中。
 
 ### `[static] QNetworkInterface QNetworkInterface::interfaceFromName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `interfaceFromName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInterface`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回名为`name`的接口的`QNetworkInterface`对象。如果不存在这样的接口，该函数返回一个无效的`QNetworkInterface`对象。
+字符串`name`可以是实际的接口名称（如“eth0”或“en1”）或字符串形式的接口索引（“1”、“2”等）。
 
 ### `[static] int QNetworkInterface::interfaceIndexFromName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `interfaceIndexFromName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回名称为`name`的接口索引，若无该名称接口则为0。该函数应产生与后续代码相同的结果，但执行速度可能更快。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`int`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QNetworkInterface::interfaceFromName(name).index()
+```
 
 ### `[static] QString QNetworkInterface::interfaceNameFromIndex(int index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `interfaceNameFromIndex`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回索引为`index`的接口名称，若无该索引接口则返回空字符串。该函数应产生与后续代码相同的结果，但执行速度可能更快。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QNetworkInterface::interfaceFromIndex(index).name()
+```
 
 ### `bool QNetworkInterface::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QNetworkInterface`对象包含关于网络接口的有效信息，返回`true`。
 
 ### `int QNetworkInterface::maximumTransmissionUnit() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::maximumTransmissionUnit` 用于计算、查询或取得与“最大值、Transmission、Unit”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知，返回该接口的最大传输单元，否则返回0。
+最大传输单元是指在该接口上可发送的最大数据包，且不会产生链路级碎片化。应用程序可以使用该值计算能够容纳未分片UDP数据报的有效载荷大小。在计算可传输的有效载荷大小时，记得减去接口通信中使用的头部大小，例如TCP（20字节）或UDP（12字节）、IPv4（20字节）或IPv6（40字节，若无某种头部压缩）。还要注意，沿完整路径到目的节点的MTU（路径MTU）可能小于接口的MTU。
 
 ### `QString QNetworkInterface::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络接口的名称。在Unix系统中，这是一个包含接口类型和可选择序列号的字符串，如“eth0”、“lo”或“pcn0”。在Windows中，它是用户无法更改的内部ID。
 
 ### `[noexcept] void QNetworkInterface::swap(QNetworkInterface &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QNetworkInterface &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络接口实例与`other`交换。该操作非常快且从未失败。
 
 ### `QNetworkInterface::InterfaceType QNetworkInterface::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInterface::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkInterface::InterfaceType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInterface::InterfaceType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以确定该接口，返回该接口的类型。如果无法确定，该函数返回`QNetworkInterface::Unknown`。
 
 ### `QNetworkInterface &QNetworkInterface::operator=(const QNetworkInterface &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInterface &`。
-- 参数 `other`：类型为 `const QNetworkInterface &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`中`QNetworkInterface`对象的内容复制到这个中。
 
 ### `QDebug operator<<(QDebug debug, const QNetworkInterface &networkInterface)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `networkInterface`：类型为 `const QNetworkInterface &`。没有默认值，调用时必须提供。传入 `const QNetworkInterface &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QNetworkInterface` `networkInterface`写入流，并返回`debug`流的引用。
 
 ### `enum InterfaceFlag { IsUp, IsRunning, CanBroadcast, IsLoopBack, IsPointToPoint, CanMulticast }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 暴露的类型声明 `Interface、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定与该网络接口关联的标志。可能的值为：
+- `QNetworkInterface::IsUp`：`0x1`;网络接口“上线”——由管理员操作启用
+- `QNetworkInterface::IsRunning`：`0x2`;网络接口处于操作状态：配置为“上行”，并（通常）物理连接到网络
+- `QNetworkInterface::CanBroadcast`：`0x4`;网络接口以广播模式工作
+- `QNetworkInterface::IsLoopBack`：`0x8`;网络接口是环回接口：即一个虚拟接口，其目的地是主机本身
+- `QNetworkInterface::IsPointToPoint`：`0x10`;网络接口是点对点接口：即只有一个可直接访问的另一个地址。
+- `QNetworkInterface::CanMulticast`：`0x20`;网络接口支持多播
+注意，一个网络接口不能同时是基于广播和点对点的。
+InterfaceFlags 类型是 QFlags 的 typedef<InterfaceFlag>。它存储 InterfaceFlag 值的 OR 组合。
 
 ### `flags InterfaceFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInterface` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定与该网络接口关联的标志。可能的值为：
+- `QNetworkInterface::IsUp`：`0x1`;网络接口“上线”——由管理员操作启用
+- `QNetworkInterface::IsRunning`：`0x2`;网络接口处于操作状态：配置为“上行”，并（通常）物理连接到网络
+- `QNetworkInterface::CanBroadcast`：`0x4`;网络接口以广播模式工作
+- `QNetworkInterface::IsLoopBack`：`0x8`;网络接口是环回接口：即一个虚拟接口，其目的地是主机本身
+- `QNetworkInterface::IsPointToPoint`：`0x10`;网络接口是点对点接口：即只有一个可直接访问的另一个地址。
+- `QNetworkInterface::CanMulticast`：`0x20`;网络接口支持多播
+注意，一个网络接口不能同时是基于广播和点对点的。
+InterfaceFlags 类型是 QFlags 的 typedef<InterfaceFlag>。它存储 InterfaceFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

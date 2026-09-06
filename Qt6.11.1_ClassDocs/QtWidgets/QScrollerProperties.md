@@ -78,182 +78,116 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QScrollerProperties::FrameRates`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 暴露的类型声明 `Frame、Rates`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FrameRates`。
-- 属性名：`QScrollerProperties`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了拖曳或滚动时可用的帧率。
+- `QScrollerProperties::Fps60`：`1`;每秒60帧
+- `QScrollerProperties::Fps30`：`2`;每秒30帧
+- `QScrollerProperties::Fps20`：`3`;每秒20帧
+- `QScrollerProperties::Standard`：`0`;默认值为每秒60帧（对应`QAbstractAnimation`帧）。
 
 ### `enum QScrollerProperties::OvershootPolicy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 暴露的类型声明 `Overshoot、Policy`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OvershootPolicy`。
-- 属性名：`QScrollerProperties`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举描述了各种超出滚动范围的模式。
+- `QScrollerProperties::OvershootWhenScrollable`: `0`; 当内容可滚动时，可能发生超出滚动。这是默认设置。
+- `QScrollerProperties::OvershootAlwaysOff`: `1`; 即使内容可滚动，也永远不会启用超出滚动。
+- `QScrollerProperties::OvershootAlwaysOn`: `2`; 始终启用超出滚动，即使内容不可滚动。
 
 ### `enum QScrollerProperties::ScrollMetric`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 暴露的类型声明 `Scroll、Metric`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ScrollMetric`。
-- 属性名：`QScrollerProperties`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含不同的滚动度量类型。若未另有说明，`setScrollMetric`函数期望`QVariant`为qreal。
+有关不同数值背后的更多概念，请参见`QScroller`文档。
+- `QScrollerProperties::MousePressEventDelay`：`0`;这是指在`[s]`中开始弹动手势时，鼠标按键事件被延迟的时间。如果手势在该时间内触发，则不会向滚动对象发送鼠标按压或释放。如果延迟后触发，则发送延迟鼠标按压加上全局位置`QPoint(-QWIDGETSIZE_MAX, -QWIDGETSIZE_MAX)`的假释放事件。如果手势被取消，则延迟鼠标按压和真实释放事件都会同时传递。
+- `QScrollerProperties::DragStartDistance`：`1`;这是触发`m`弹动手势前，触摸或鼠标点移动的最小距离。
+- `QScrollerProperties::DragVelocitySmoothingFactor`：`2`;一个描述新阻力速度被纳入最终滚动速度的程度的值。该值应在`0`到`1`之间。值越低，拖拽速度被施加的平滑处理越多。
+- `QScrollerProperties::AxisLockThreshold`：`3`;如果移动在绕轴的角度内，则限制运动仅在一个轴上。阈值必须在`0`到`1`范围内。
+- `QScrollerProperties::ScrollingCurve`：`4`;用户发起弹动后减速滚动速度时使用的`QEasingCurve`。请注意，这是位置的缓慢曲线，而非速度：默认为`QEasingCurve::OutQuad`，导致速度线性下降（一阶导数）和恒定减速（二阶导数）。
+- `QScrollerProperties::DecelerationFactor`：`5`;该因素影响滚动器减速至0速度所需的时间。实际值取决于所选的滚动曲线。对于大多数类型，该值应在`0.1`到`2.0`之间
+- `QScrollerProperties::MinimumVelocity`：`6`;结束触控或松开鼠标后，开始滚动所需的最低速度`m/s`。
+- `QScrollerProperties::MaximumVelocity`：`7`;这是`m/s`中能达到的最大速度。
+- `QScrollerProperties::MaximumClickThroughVelocity`：`8`;这是`m/s`中点击时允许的最大滚动速度。这意味着点击当前（缓慢）滚动对象不仅会停止滚动，点击事件也会传递到UI控件。这在使用指数式滚动曲线时非常有用。
+- `QScrollerProperties::AcceleratingFlickMaximumTime`：`9`;这是弹动手势被识别为加速弹动的最`seconds`长时间。如果设置为零，则不会检测到该手势。“加速弹动”是指在已经滚动的物体上执行的弹动手势。在这种情况下，滚动速度乘以AcceleratingFlickSpeedupFactor以加速。
+- `QScrollerProperties::AcceleratingFlickSpeedupFactor`：`10`;如果检测到加速的弹跳，将当前速度乘以该数值。应为`>= 1`。
+- `QScrollerProperties::SnapPositionRatio`：`11`;这是用户必须拖动两个吸附点之间的距离，才能吸附到下一个位置。`0.33`意味着卷轴只需拖到两个吸附点之间距离的三分之一即可吸附到下一个。比例必须在`0`和`1`之间。
+- `QScrollerProperties::SnapTime`：`12`;这是滚动曲线的时间因子。值越小表示滚动时间越长。滚动距离与该值无关。
+- `QScrollerProperties::OvershootDragResistanceFactor`：`13`;该值是拖动鼠标与实际滚动区域移动（超冲时）之间的系数。系数必须介于`0`到`1`之间。
+- `QScrollerProperties::OvershootDragDistanceFactor`：`14`;这是拖曳时超冲移动的最大距离。实际超跃距离是通过将该值乘以卷动对象的视口大小计算得出的。因子必须介于`0`和`1`之间。
+- `QScrollerProperties::OvershootScrollDistanceFactor`：`15`;这是滚动时超冲移动的最大距离。实际超冲距离是通过将该值乘以被滚动物体的视口大小计算得出的。该因子必须介于`0`到`1`之间。
+- `QScrollerProperties::OvershootScrollTime`：`16`;这是用于播放完整超跃动画的 `seconds` 时间。
+- `QScrollerProperties::HorizontalOvershootPolicy`：`17`;这就是水平超转策略（见`OvershootPolicy`）。
+- `QScrollerProperties::VerticalOvershootPolicy`：`18`;这是水平超转策略（见`OvershootPolicy`）。
+- `QScrollerProperties::FrameRate`：`19`;这是拖动或滚动时应使用的帧率。`QScroller` 内部使用`QAbstractAnimation`计时器，将所有滚动操作同步到可能同时激活的其他动画。如果标准的 60 帧每秒过快，可以用此设置降低帧率，同时保持与 `QAbstractAnimation` 同步。请注意，这里只允许使用`FrameRates`枚举的值。
+- `QScrollerProperties::ScrollMetricCount`：`20`;这总是最后一篇。
 
 ### `QScrollerProperties::QScrollerProperties()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建新的滚动器属性。
 
 ### `QScrollerProperties::QScrollerProperties(const QScrollerProperties &sp)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `sp`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建了`sp`的复制品。
 
 ### `[virtual noexcept] QScrollerProperties::~QScrollerProperties()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏滚动器的属性。
 
 ### `QVariant QScrollerProperties::scrollMetric(QScrollerProperties::ScrollMetric metric) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QScrollerProperties::scrollMetric` 用于计算、查询或取得与“scroll、Metric”相关的操作。调用时要先确认当前状态和 `metric` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `metric`：类型为 `QScrollerProperties::ScrollMetric`。没有默认值，调用时必须提供。传入 `QScrollerProperties::ScrollMetric` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+查询滚动器属性的 `metric` 值。
 
 ### `[static] void QScrollerProperties::setDefaultScrollerProperties(const QScrollerProperties &sp)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setDefaultScrollerProperties`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sp`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有新`QScrollerProperties`对象的滚动属性设置为`sp`。
+使用这个函数来覆盖默认构造函数返回的平台默认属性。如果你只想更改单个滚动器的滚动属性，可以使用`QScroller::setScrollerProperties()`。
+注意：调用该函数不会改变已有`QScrollerProperties`对象的内容。
 
 ### `void QScrollerProperties::setScrollMetric(QScrollerProperties::ScrollMetric metric, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setScrollMetric`。调用它会改变 `QScrollerProperties` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `metric`：类型为 `QScrollerProperties::ScrollMetric`。没有默认值，调用时必须提供。传入 `QScrollerProperties::ScrollMetric` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`metric`滚动计量的具体值设置为`value`。
 
 ### `[static] void QScrollerProperties::unsetDefaultScrollerProperties()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `unsetDefaultScrollerProperties`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将默认构造函数返回的滚动器属性设回平台默认属性。
 
 ### `bool QScrollerProperties::operator!=(const QScrollerProperties &sp) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `sp`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这些滚动器属性与`sp`不同，返回`true`;否则返回`false`。
 
 ### `QScrollerProperties &QScrollerProperties::operator=(const QScrollerProperties &sp)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QScrollerProperties &`。
-- 参数 `sp`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`sp`分配给这些滚动属性，并返回对这些滚动属性的引用。
 
 ### `bool QScrollerProperties::operator==(const QScrollerProperties &sp) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QScrollerProperties` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `sp`：类型为 `const QScrollerProperties &`。没有默认值，调用时必须提供。传入 `const QScrollerProperties &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这些滚动器属性等于 `sp`，返回`true`;否则返回 `false`。
 
 ## 6. 深入实践与常见坑
 

@@ -71,130 +71,61 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QRhiDepthStencilClearValue::QRhiDepthStencilClearValue()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiDepthStencilClearValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建深度/模板清除值，深度清除值为1.0f，模板清除值为0。
 
 ### `QRhiDepthStencilClearValue::QRhiDepthStencilClearValue(float d, quint32 s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiDepthStencilClearValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `d`：类型为 `float`。没有默认值，调用时必须提供。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `s`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建深度/模板清除值，使用深度清晰值`d`和模板清晰值`s`。
 
 ### `float QRhiDepthStencilClearValue::depthClearValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiDepthStencilClearValue::depthClearValue` 用于计算、查询或取得与“depth、清空、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回深度净值。大多数情况下，这会是1.0华氏度。
 
 ### `void QRhiDepthStencilClearValue::setDepthClearValue(float d)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthClearValue`。调用它会改变 `QRhiDepthStencilClearValue` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `d`：类型为 `float`。没有默认值，调用时必须提供。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将深度清除值设为`d`。
 
 ### `void QRhiDepthStencilClearValue::setStencilClearValue(quint32 s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilClearValue`。调用它会改变 `QRhiDepthStencilClearValue` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `s`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模板清除值设置为`s`。
 
 ### `quint32 QRhiDepthStencilClearValue::stencilClearValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiDepthStencilClearValue::stencilClearValue` 用于计算、查询或取得与“stencil、清空、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模板清除值。大多数情况下，这个值是0。
 
 ### `[noexcept] size_t qHash(const QRhiDepthStencilClearValue &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRhiDepthStencilClearValue::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRhiDepthStencilClearValue &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRhiDepthStencilClearValue &a, const QRhiDepthStencilClearValue &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiDepthStencilClearValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiDepthStencilClearValue &`。没有默认值，调用时必须提供。传入 `const QRhiDepthStencilClearValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiDepthStencilClearValue &`。没有默认值，调用时必须提供。传入 `const QRhiDepthStencilClearValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QRhiDepthStencilClearValue` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QRhiDepthStencilClearValue &a, const QRhiDepthStencilClearValue &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiDepthStencilClearValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiDepthStencilClearValue &`。没有默认值，调用时必须提供。传入 `const QRhiDepthStencilClearValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiDepthStencilClearValue &`。没有默认值，调用时必须提供。传入 `const QRhiDepthStencilClearValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QRhiDepthStencilClearValue`对象`a`和`b`的值相等，返回`true`。
 
 ## 6. 深入实践与常见坑
 

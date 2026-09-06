@@ -76,248 +76,118 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QAccessibleTextInterface::~QAccessibleTextInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleTextInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QAccessibleTextInterface`。
 
 ### `[pure virtual] void QAccessibleTextInterface::addSelection(int startOffset, int endOffset)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QAccessibleTextInterface` 添加依赖、数据或子对象的 API `addSelection`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `startOffset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`startOffset`到`endOffset`选择文本。`startOffset`是第一个被选中的字符。`endOffset`是第一个不会被选中的字符。
+当对象支持多个选择（例如在文字处理器中），这会添加一个新的选择，否则会替换之前的选择。
+选角将`endOffset` `startOffset`字。
 
 ### `[pure virtual] QString QAccessibleTextInterface::attributes(int offset, int *startOffset, int *endOffset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::attributes` 用于计算、查询或取得与“attributes”相关的操作。调用时要先确认当前状态和 `offset`、`startOffset`、`endOffset` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `startOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位于位置`offset`的文本属性。此外，属性的范围以 `startOffset` 和 `endOffset` 返回。
 
 ### `[pure virtual] int QAccessibleTextInterface::characterCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::characterCount` 用于计算、查询或取得与“character、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本长度（包含空格的总大小）。
 
 ### `[pure virtual] QRect QAccessibleTextInterface::characterRect(int offset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::characterRect` 用于计算、查询或取得与“character、Rect”相关的操作。调用时要先确认当前状态和 `offset` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回角色在屏幕坐标中位置`offset`的位置和大小。
 
 ### `[pure virtual] int QAccessibleTextInterface::cursorPosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::cursorPosition` 用于计算、查询或取得与“cursor、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前光标位置。
 
 ### `[pure virtual] int QAccessibleTextInterface::offsetAtPoint(const QPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::offsetAtPoint` 用于计算、查询或取得与“offset、按位置访问、Point”相关的操作。调用时要先确认当前状态和 `point` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `point`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`point`位置字符的偏移量，映射屏幕坐标。
 
 ### `[pure virtual] void QAccessibleTextInterface::removeSelection(int selectionIndex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeSelection`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selectionIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用索引`selectionIndex`清除选择。
 
 ### `[pure virtual] void QAccessibleTextInterface::scrollToSubstring(int startIndex, int endIndex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::scrollToSubstring` 用于执行与“scroll、转换输出、Substring”相关的操作。调用时要先确认当前状态和 `startIndex`、`endIndex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `startIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+确保`startIndex`与`endIndex`之间的文字是可见的。
 
 ### `[pure virtual] void QAccessibleTextInterface::selection(int selectionIndex, int *startOffset, int *endOffset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::selection` 用于执行与“selection”相关的操作。调用时要先确认当前状态和 `selectionIndex`、`startOffset`、`endOffset` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selectionIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `startOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个选择。选择的大小以 `startOffset` 和 `endOffset` 返回。如果没有选择，`startOffset` 和 `endOffset` 都`nullptr`。
+无障碍API支持多重选择。但大多数控件只支持一个选择，且`selectionIndex`等于0。
 
 ### `[pure virtual] int QAccessibleTextInterface::selectionCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::selectionCount` 用于计算、查询或取得与“selection、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本文本中的选段数量。
 
 ### `[pure virtual] void QAccessibleTextInterface::setCursorPosition(int position)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCursorPosition`。调用它会改变 `QAccessibleTextInterface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `int`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将光标移到`position`。
 
 ### `[pure virtual] void QAccessibleTextInterface::setSelection(int selectionIndex, int startOffset, int endOffset)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelection`。调用它会改变 `QAccessibleTextInterface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selectionIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `startOffset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择`selectionIndex`设置为`startOffset`到`endOffset`的范围。
 
 ### `[pure virtual] QString QAccessibleTextInterface::text(int startOffset, int endOffset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::text` 用于计算、查询或取得与“文本”相关的操作。调用时要先确认当前状态和 `startOffset`、`endOffset` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `startOffset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本从`startOffset`到`endOffset`。`startOffset`是第一个返回的字符。`endOffset`是第一个不会返回的字符。
 
 ### `[virtual] QString QAccessibleTextInterface::textAfterOffset(int offset, QAccessible::TextBoundaryType boundaryType, int *startOffset, int *endOffset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::textAfterOffset` 用于计算、查询或取得与“文本、After、Offset”相关的操作。调用时要先确认当前状态和 `offset`、`boundaryType`、`startOffset`、`endOffset` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `boundaryType`：类型为 `QAccessible::TextBoundaryType`。没有默认值，调用时必须提供。传入 `QAccessible::TextBoundaryType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `startOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回偏移`offset`之后的类型`boundaryType`文本项，并将`startOffset`和`endOffset`值设置为该项的起始和结束位置;如果没有空项，则返回空字符串。错误时将`startOffset`和`endOffset`值设为-1。
+该默认实现用于小范围文本编辑。文字处理器或文本编辑器应提供其高效的实现。该功能不区分段落和行。
+注意：该函数无法考虑光标位置。按照惯例，`offset`为-2意味着该函数应使用光标位置作为偏移。因此，在调用该函数之前，必须将偏移转换为光标位置。偏移量为-1用于文本长度，该函数的自定义实现必须返回结果，就像长度作为偏移传递一样。
 
 ### `[virtual] QString QAccessibleTextInterface::textAtOffset(int offset, QAccessible::TextBoundaryType boundaryType, int *startOffset, int *endOffset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::textAtOffset` 用于计算、查询或取得与“文本、按位置访问、Offset”相关的操作。调用时要先确认当前状态和 `offset`、`boundaryType`、`startOffset`、`endOffset` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `boundaryType`：类型为 `QAccessible::TextBoundaryType`。没有默认值，调用时必须提供。传入 `QAccessible::TextBoundaryType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `startOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回偏移`offset`的类型为`boundaryType`的文本项，并将`startOffset`和`endOffset`值设为该项的起始和结束位置;如果没有空项，则返回空字符串。错误时将`startOffset`和`endOffset`值设为-1。
+该默认实现用于小范围文本编辑。文字处理器或文本编辑器应提供其高效的实现。该功能不区分段落和行。
+注意：该函数无法考虑光标位置。按照惯例，`offset`为-2意味着该函数应使用光标位置作为偏移。因此，在调用该函数之前，必须将偏移量为-2的光标位置。偏移量为-1用于文本长度，该函数的自定义实现必须返回结果，就像长度作为偏移传递一样。
 
 ### `[virtual] QString QAccessibleTextInterface::textBeforeOffset(int offset, QAccessible::TextBoundaryType boundaryType, int *startOffset, int *endOffset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleTextInterface::textBeforeOffset` 用于计算、查询或取得与“文本、Before、Offset”相关的操作。调用时要先确认当前状态和 `offset`、`boundaryType`、`startOffset`、`endOffset` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `boundaryType`：类型为 `QAccessible::TextBoundaryType`。没有默认值，调用时必须提供。传入 `QAccessible::TextBoundaryType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `startOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endOffset`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回类型为`boundaryType`且接近偏移`offset`的文本项，并将`startOffset`和`endOffset`值设置为该项的起始和结束位置;如果没有空项，返回空字符串。错误时将`startOffset`和`endOffset`值设为-1。
+该默认实现用于小范围文本编辑。文字处理器或文本编辑器应提供其高效的实现。该功能不区分段落和行。
+注意：该函数无法考虑光标位置。按照惯例，`offset`为-2意味着该函数应使用光标位置作为偏移。因此，必须先将偏移转换为光标位置，才能调用该函数。偏移量为-1用于文本长度，该函数的自定义实现必须返回结果，就像长度作为偏移传递一样。
 
 ## 6. 深入实践与常见坑
 

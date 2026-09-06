@@ -102,467 +102,234 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 34 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QMetaSequence::addValue(void *container, const void *value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMetaSequence` 添加依赖、数据或子对象的 API `addValue`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，将`value`加到`container`上。如果`canAddValue()`返回`false`，则不加`value`。否则，如果`canAddValueAtEnd()`返回`true`，则`value`会加到`container`末尾。否则，如果`canAddValueAtBegin()`返回`true`，`value`会被添加到容器的开头。否则，值会被添加到未指定的位置，或者根本不添加。后者适用于向无序容器添加值的情况，例如，`QSet`。
 
 ### `void QMetaSequence::addValueAtBegin(void *container, const void *value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMetaSequence` 添加依赖、数据或子对象的 API `addValueAtBegin`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，`container`开头加`value`。如果`canAddValueAtBegin()`返回`false`，则不添加`value`。
 
 ### `void QMetaSequence::addValueAtEnd(void *container, const void *value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMetaSequence` 添加依赖、数据或子对象的 API `addValueAtEnd`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，会在`container`末加`value`。如果`canAddValueAtEnd()`返回`false`，则不加`value`。
 
 ### `bool QMetaSequence::canAddValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canAddValue`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`是否可以向容器添加值，否则`false`返回。
 
 ### `bool QMetaSequence::canAddValueAtBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canAddValueAtBegin`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果用 `addValue()` 添加的值可以放在容器开头，返回`true`，否则返回`false`。
 
 ### `bool QMetaSequence::canAddValueAtEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canAddValueAtEnd`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果用 `addValue()` 添加的值可以放在容器末端，返回`true`，否则返回`false`。
 
 ### `bool QMetaSequence::canEraseRangeAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canEraseRangeAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个迭代器之间的区间可以从容器中抹除，返回`true`，否则`false`。
 
 ### `bool QMetaSequence::canEraseValueAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canEraseValueAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果非const迭代子指向的值可以被擦除，返回`true`，否则`false`。
 
 ### `bool QMetaSequence::canGetValueAtConstIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetValueAtConstIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器能够检索到const迭代器指向的值，返回`true`，否则`false`返回。
 
 ### `bool QMetaSequence::canGetValueAtIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetValueAtIndex`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以通过索引从容器中检索值，否则返回`true`，否则`false`。
 
 ### `bool QMetaSequence::canGetValueAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canGetValueAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器能够检索非const迭代器指向的值，返回则`true`，否则`false`返回。
 
 ### `bool QMetaSequence::canInsertValueAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canInsertValueAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`底层容器是否能插入一个新值，并考虑非const迭代器指向的位置。
 
 ### `bool QMetaSequence::canRemoveValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canRemoveValue`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`是否可以从容器中移除值，否则`false`。
 
 ### `bool QMetaSequence::canRemoveValueAtBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canRemoveValueAtBegin`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`removeValue()`从容器开头移除值，返回`true`，否则返回`false`。
 
 ### `bool QMetaSequence::canRemoveValueAtEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canRemoveValueAtEnd`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以用`removeValue()`从容器末端移除值，返回`true`，否则返回`false`。
 
 ### `bool QMetaSequence::canSetValueAtIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canSetValueAtIndex`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果能通过索引写入容器，返回`true`，否则`false`。
 
 ### `bool QMetaSequence::canSetValueAtIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canSetValueAtIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器能够写入非const迭代器指向的值，返回`true`，否则`false`。
 
 ### `void QMetaSequence::eraseRangeAtIterator(void *container, const void *iterator1, const void *iterator2) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaSequence::eraseRangeAtIterator` 用于执行与“erase、Range、按位置访问、Iterator”相关的操作。调用时要先确认当前状态和 `container`、`iterator1`、`iterator2` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `iterator1`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `iterator2`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，消除迭代器`iterator1`和`iterator2`之间的值范围，从`container`中消失。
 
 ### `void QMetaSequence::eraseValueAtIterator(void *container, const void *iterator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaSequence::eraseValueAtIterator` 用于执行与“erase、值访问、按位置访问、Iterator”相关的操作。调用时要先确认当前状态和 `container`、`iterator` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，从`container`中抹去非连续`iterator`所指向的值。
 
 ### `[static constexpr, since 6.0] template <typename T> QMetaSequence QMetaSequence::fromContainer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromContainer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QMetaSequence`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与模板参数类型对应的`QMetaSequence`。
 
 ### `void QMetaSequence::insertValueAtIterator(void *container, const void *iterator, const void *value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMetaSequence` 添加依赖、数据或子对象的 API `insertValueAtIterator`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，将`value`插入到`container`中，考虑非恒定的`iterator`。如果`canInsertValueAtIterator()`返回`false`，则该`value`未入。否则，如果`isSortable()`返回`true`，则将该值插入于`iterator`指向的值之前。否则，`value`将入在未指定位置或根本不插入。在后一种情况下，`iterator`被视为提示。如果它指向`value`的正确位置，操作可能比没有迭代器的`addValue()`更快。
 
 ### `bool QMetaSequence::isSortable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSortable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器可排序，返回`true`，否则返回`false`。如果添加的值被放置在定义位置，则该容器被视为可排序。插入或添加可排序容器总是成功。插入或添加不可排序容器可能不成功，例如当容器是已包含入值的`QSet`时。
 
 ### `void QMetaSequence::removeValue(void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeValue`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，从`container`中移除一个值。如果`canRemoveValue()`返回`false`，则不移除任何值。否则，如果`canRemoveValueAtEnd()`返回`true`，则移除`container`中的最后一个值。否则，如果`canRemoveValueAtBegin()`返回`true`，则移除`container`中的第一个值。否则，移除未指定值或无值。
 
 ### `void QMetaSequence::removeValueAtBegin(void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeValueAtBegin`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，移除`container`开头的一个值。如果`canRemoveValueAtBegin()`返回`false`，则该值不会被移除。
 
 ### `void QMetaSequence::removeValueAtEnd(void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeValueAtEnd`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能，移除`container`末尾的一个值。如果`canRemoveValueAtEnd()`返回`false`，则该值不会被移除。
 
 ### `void QMetaSequence::setValueAtIndex(void *container, qsizetype index, const void *value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValueAtIndex`。调用它会改变 `QMetaSequence` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，使用作为参数传递的`value`覆盖`container`中`index`处的值。
 
 ### `void QMetaSequence::setValueAtIterator(const void *iterator, const void *value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValueAtIterator`。调用它会改变 `QMetaSequence` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可能的话，写入`value`到非条件的`iterator`所指向的值。
 
 ### `void QMetaSequence::valueAtConstIterator(const void *iterator, void *result) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaSequence::valueAtConstIterator` 用于执行与“值访问、按位置访问、Const、Iterator”相关的操作。调用时要先确认当前状态和 `iterator`、`result` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `result`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索const `iterator`指向的值，并尽可能将其存储在`result`指向的内存位置中。
 
 ### `void QMetaSequence::valueAtIndex(const void *container, qsizetype index, void *result) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaSequence::valueAtIndex` 用于执行与“值访问、按位置访问、索引”相关的操作。调用时要先确认当前状态和 `container`、`index`、`result` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `result`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`container`中检索到`index`的值，并将其放置在`result`指向的内存位置（如果可能的话）。
 
 ### `void QMetaSequence::valueAtIterator(const void *iterator, void *result) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaSequence::valueAtIterator` 用于执行与“值访问、按位置访问、Iterator”相关的操作。调用时要先确认当前状态和 `iterator`、`result` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `result`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检索非条件 `iterator` 指向的值，并尽可能将其存储在 `result` 指向的内存位置。
 
 ### `QMetaType QMetaSequence::valueMetaType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaSequence::valueMetaType` 用于计算、查询或取得与“值访问、Meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储在容器中的值的元类型。
 
 ### `[noexcept, since 6.0] bool operator!=(const QMetaSequence &lhs, const QMetaSequence &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaSequence &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaSequence &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果`QMetaSequence` `lhs`表示与 {} 不同的容器类型`QMetaSequence` `rhs`，否则返回`false`.
 
 ### `[noexcept, since 6.0] bool operator==(const QMetaSequence &lhs, const QMetaSequence &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaSequence &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaSequence &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`如果`QMetaSequence` `lhs`表示与…相同的容器类型`QMetaSequence` `rhs`，否则返回`false`.
 
 ### `(since 6.11) class Iterable`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaSequence` 暴露的类型声明 `Iterable`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+QMetaSequence：：Iterable 类是 QVariant 中容器的可循环接口。
+该类允许多种方法访问`QVariant`中容器的值。如果`QMetaSequence::Iterable`实例可以转换为`QVariantList`，或者其容器通过`Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE`注册，就可以从`QVariant`中提取。Qt中大多数顺序容器和部分C标准库中的容器都会自动注册。
+容器本身在迭代之前不会被复制。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ QList<int> intList = {7, 11, 42};
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QVariant variant = QVariant::fromValue(intList);
+ if (variant.canConvert<QVariantList>()) {
+     QMetaSequence::Iterable iterable = variant.value<QMetaSequence::Iterable>();
+     // Can use C++11 range-for:
+     for (const QVariant &v : iterable) {
+         qDebug() << v;
+     }
+     // Can use iterators:
+     QMetaSequence::Iterable::const_iterator it = iterable.begin();
+     const QMetaSequence::Iterable::const_iterator end = iterable.end();
+     for ( ; it != end; ++it) {
+         qDebug() << *it;
+     }
+ }
+```
 
 ## 6. 深入实践与常见坑
 

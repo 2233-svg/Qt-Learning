@@ -65,93 +65,53 @@ target_link_libraries(mytarget PRIVATE Qt6::Test)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QTouchEventSequence::~QTouchEventSequence()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTest::QTouchEventSequence` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提交这组触碰事件，除非自动提交被禁用，并释放分配的资源。
 
 ### `[virtual] bool QTouchEventSequence::commit(bool processEvents = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventSequence::commit` 用于计算、查询或取得与“提交”相关的操作。调用时要先确认当前状态和 `processEvents` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `processEvents`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该触碰事件提交到事件系统，并在交付后返回是否被接受。
+通常不需要调用该函数，因为它是从结构函数中调用的。然而，如果禁用了自动提交，事件只有在显式调用该函数时才会被提交。显式调用的另一个原因是检查返回值。
+在特殊情况下，测试可能希望禁用事件处理。这可以通过将 `processEvents` 设置为 false 来实现。这实际上只是排队事件：事件循环不会被强制处理。
+是否在交付后事件被接受，返回。
 
 ### `QTest::QTouchEventSequence &QTouchEventSequence::move(int touchId, const QPoint &pt, QWindow *window = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventSequence::move` 用于计算、查询或取得与“移动”相关的操作。调用时要先确认当前状态和 `touchId`、`pt`、`window` 的有效范围；返回类型是 `QTest::QTouchEventSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `window`：类型为 `QWindow *`。默认值为 `nullptr`。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该序列中添加`pt`位置触点`touchId`的移动事件，并返回该`QTouchEventSequence`的引用。
+位置`pt`相对于`window`解释为相对于。如果`window`是空指针，那么`pt`相对于实例化该`QTouchEventSequence`时提供的窗口。
+模拟用户移动了`touchId`识别的手指。
 
 ### `QTest::QTouchEventSequence &QTouchEventSequence::press(int touchId, const QPoint &pt, QWindow *window = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventSequence::press` 用于计算、查询或取得与“press”相关的操作。调用时要先确认当前状态和 `touchId`、`pt`、`window` 的有效范围；返回类型是 `QTest::QTouchEventSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `window`：类型为 `QWindow *`。默认值为 `nullptr`。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该序列中添加一个`pt`位置触点`touchId`的按键事件，并返回该`QTouchEventSequence`的引用。
+位置`pt`相对于`window`解释为相对于。如果`window`是空指针，那么`pt`相对于实例化该`QTouchEventSequence`时所提供的窗口。
+模拟用户用`touchId`识别的手指按下触摸屏或触摸板。
 
 ### `QTest::QTouchEventSequence &QTouchEventSequence::release(int touchId, const QPoint &pt, QWindow *window = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventSequence::release` 用于计算、查询或取得与“释放”相关的操作。调用时要先确认当前状态和 `touchId`、`pt`、`window` 的有效范围；返回类型是 `QTest::QTouchEventSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `window`：类型为 `QWindow *`。默认值为 `nullptr`。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该序列中添加`pt`位置触点`touchId`的释放事件，并返回该`QTouchEventSequence`的引用。
+位置`pt`相对于`window`被解释为相对于。如果`window`是空指针，那么`pt`相对于实例化该`QTouchEventSequence`时所提供的窗口。
+模拟用户抬起`touchId`识别的手指。
 
 ### `[virtual] QTest::QTouchEventSequence &QTouchEventSequence::stationary(int touchId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventSequence::stationary` 用于计算、查询或取得与“stationary”相关的操作。调用时要先确认当前状态和 `touchId` 的有效范围；返回类型是 `QTest::QTouchEventSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该序列添加一个平稳事件作为触点`touchId`，并返回该`QTouchEventSequence`的引用。
+模拟用户没有移动`touchId`识别的手指。
 
 ## 6. 深入实践与常见坑
 

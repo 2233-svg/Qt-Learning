@@ -97,437 +97,207 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QJSPrimitiveValue::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QJSPrimitiveValue`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举指定了 `QJSPrimitiveValue` 可能包含的类型。
+- `QJSPrimitiveValue::Undefined`: `0`; JavaScript 的 Undefined 值。
+- `QJSPrimitiveValue::Null`: `1`; JavaScript 的 null 值。事实上，这并不是一个独立的 JavaScript 类型，而是 Object 类型的一个特殊值。由于它非常常见且无需 JavaScript 引擎即可存储，因此仍然被支持。
+- `QJSPrimitiveValue::Boolean`: `2`; JavaScript 的 Boolean 值。
+- `QJSPrimitiveValue::Integer`: `3`; 一个整数。这是 JavaScript Number 类型的一个特殊情况。JavaScript 并没有实际的整数类型，但 ECMA-262 标准包含了一些规则，用于将一个 Number 转换，以便为某些只适用于整数的运算符做准备，特别是位移运算符。`QJSPrimitiveValue` 的 Integer 类型表示这种转换后的结果。
+- `QJSPrimitiveValue::Double`: `4`; 一个 JavaScript Number 值。
+- `QJSPrimitiveValue::String`: `5`; 一个 JavaScript String 值。
 
 ### `[constexpr noexcept] QJSPrimitiveValue::QJSPrimitiveValue()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建 QJSPrimitiveValue 类型为 Undefined。
 
 ### `[constexpr noexcept] QJSPrimitiveValue::QJSPrimitiveValue(QJSPrimitiveNull null)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `null`：类型为 `QJSPrimitiveNull`。没有默认值，调用时必须提供。传入 `QJSPrimitiveNull` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建 QJSPrimitiveValue 值为 `null`，类型为 Null。
 
 ### `[constexpr noexcept] QJSPrimitiveValue::QJSPrimitiveValue(QJSPrimitiveUndefined undefined)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `undefined`：类型为 `QJSPrimitiveUndefined`。没有默认值，调用时必须提供。传入 `QJSPrimitiveUndefined` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建价值`undefined`的QJSPrimitiveValue，类型为Undefined。
 
 ### `[noexcept] QJSPrimitiveValue::QJSPrimitiveValue(QString value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `QString`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建 QJSPrimitiveValue 值 `value` 和类型 String。
 
 ### `[constexpr noexcept] QJSPrimitiveValue::QJSPrimitiveValue(bool value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `bool`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QJSPrimitiveValue，值为 和 类型为 Boolean `value`。
 
 ### `[explicit noexcept] QJSPrimitiveValue::QJSPrimitiveValue(const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`value`的内容可以存储在 QJSPrimtiveValue 中，则从 QJSPrimitiveValue 创建 QJSPrimitiveValue。否则，这会导致 QJSPrimitiveValue 类型为 Undefined。
 
 ### `[constexpr noexcept] QJSPrimitiveValue::QJSPrimitiveValue(double value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `double`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建 QJS 的 `value` 的 QJSPrimitiveValue ，类型为 Double。
 
 ### `[constexpr noexcept] QJSPrimitiveValue::QJSPrimitiveValue(int value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `value`：类型为 `int`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QJSPrimitiveValue 的值为 `value`，类型为整数。
 
 ### `[noexcept default, since 6.4] QJSPrimitiveValue::QJSPrimitiveValue(QMetaType type, const void *value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QMetaType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `value`：类型为 `const void *`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建类型为`type`的QJSPrimitiveValue，如果`type`可以存储在QJSPrimtiveValue中，则初始化为`value`。在这种情况下，`value`不能是nullptr。如果无法存储`type`，则生成一个类型为未定义的QJSPrimitiveValue。
+注意你必须传递你想存储变量的地址。
+通常你不必使用这个构造函数，而是用取`QVariant`的那个构造函数。
 
 ### `[constexpr, since 6.6] const void *QJSPrimitiveValue::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QJSPrimitiveValue` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向所包含值的指针，作为一个无法写入的通用空洞*。
 
 ### `[constexpr, since 6.6] void *QJSPrimitiveValue::data()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QJSPrimitiveValue` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向所含数据的指针，作为一个可写入的通用空洞*。
 
 ### `[constexpr] bool QJSPrimitiveValue::equals(const QJSPrimitiveValue &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSPrimitiveValue::equals` 用于计算、查询或取得与“equals”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对该`QJSPrimitiveValue`和`other`执行JavaScript的“==”操作，并返回结果。
 
 ### `[constexpr, since 6.6] QMetaType QJSPrimitiveValue::metaType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSPrimitiveValue::metaType` 用于计算、查询或取得与“meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储在`QJSPrimitiveValue`中的`QMetaType`值。
 
 ### `[constexpr] bool QJSPrimitiveValue::strictlyEquals(const QJSPrimitiveValue &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSPrimitiveValue::strictlyEquals` 用于计算、查询或取得与“strictly、Equals”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对该`QJSPrimitiveValue`和`other`执行JavaScript的“===”操作，并返回结果。
 
 ### `[since 6.6] template <QJSPrimitiveValue::Type type> QJSPrimitiveValue QJSPrimitiveValue::to() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `to`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <QJSPrimitiveValue::Type type> QJSPrimitiveValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+强制将值强制到指定类型，并将结果作为新`QJSPrimitiveValue`返回。
 
 ### `[constexpr] bool QJSPrimitiveValue::toBoolean() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toBoolean`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由JavaScript规则强制生成的布尔值。
 
 ### `[constexpr] double QJSPrimitiveValue::toDouble() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDouble`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`double`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回根据JavaScript规则强制到的JavaScript编号值。
 
 ### `[constexpr] int QJSPrimitiveValue::toInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toInteger`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回根据JavaScript准备位移操作时应用的规则强制为整数32位数的值。
 
 ### `QString QJSPrimitiveValue::toString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被 JavaScript 规则强制到的 JavaScript 字符串值。
 
 ### `[constexpr] QJSPrimitiveValue::Type QJSPrimitiveValue::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSPrimitiveValue::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSPrimitiveValue::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSPrimitiveValue::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QJSPrimitiveValue`类型。
 
 ### `[constexpr, since 6.1] bool operator!=(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“！==”操作，并返回结果。
 
 ### `[since 6.1] QJSPrimitiveValue operator*(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJSPrimitiveValue`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“*”操作，并返回结果。
 
 ### `[since 6.1] QJSPrimitiveValue operator+(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJSPrimitiveValue`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`lhs`和`rhs`上执行JavaScript的“ ''操作，并返回结果。
 
 ### `[since 6.1] QJSPrimitiveValue operator-(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJSPrimitiveValue`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“-”操作，并返回结果。
 
 ### `[since 6.1] QJSPrimitiveValue operator/(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJSPrimitiveValue`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在 `lhs` 和 `rhs` 之间执行 JavaScript 的 '/' 操作，并返回结果。
 
 ### `[constexpr, since 6.1] bool operator<(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“<”操作，并返回结果。
 
 ### `[constexpr, since 6.1] bool operator<=(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“<=”操作，并返回结果。
 
 ### `[constexpr, since 6.1] bool operator==(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对 `lhs` 和 `rhs` 执行 JavaScript 的 '===' 操作，并返回结果。
 
 ### `[constexpr, since 6.1] bool operator>(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“>”操作，并返回结果。
 
 ### `[constexpr, since 6.1] bool operator>=(const QJSPrimitiveValue &lhs, const QJSPrimitiveValue &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJSPrimitiveValue` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对`lhs`和`rhs`执行JavaScript的“>=”操作，并返回结果。
 
 ### `(since 6.6) const void * constData() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `constData`，用于取得 `QJSPrimitiveValue` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const void *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向所包含值的指针，作为一个无法写入的通用空洞*。
 
 ## 6. 深入实践与常见坑
 

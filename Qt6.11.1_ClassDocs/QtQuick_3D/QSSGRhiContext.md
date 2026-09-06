@@ -63,157 +63,82 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QSSGRhiContext::checkAndAdjustForNPoT(QRhiTexture *texture, QSSGRhiSamplerDescription *samplerDescription)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::checkAndAdjustForNPoT` 用于执行与“check、And、Adjust、For、N、Po、T”相关的操作。调用时要先确认当前状态和 `texture`、`samplerDescription` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `texture`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `samplerDescription`：类型为 `QSSGRhiSamplerDescription *`。没有默认值，调用时必须提供。传入 `QSSGRhiSamplerDescription *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`texture`像素大小调整`samplerDescription`的平铺和过滤模式。
+在大多数情况下，`samplerDescription`不会被更改。然而，在使用较旧的旧版3D API时，对于宽度或高度非幂的纹理，`QRhiSampler::Repeat`可能不支持平铺模式。
+这一便利功能有助于创建稳健的应用程序，即使在运行时 OpenGL ES 2.0 或 WebGL 1 实现不支持 `QRhi::NPOTTextureRepeat` 等功能时，也能正常运行。
 
 ### `QRhiCommandBuffer *QSSGRhiContext::commandBuffer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::commandBuffer` 用于计算、查询或取得与“command、Buffer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiCommandBuffer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiCommandBuffer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前帧的命令缓冲区，用于Qt Quick 3D渲染器。
 
 ### `QRhiCommandBuffer::BeginPassFlags QSSGRhiContext::commonPassFlags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::commonPassFlags` 用于计算、查询或取得与“common、Pass、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiCommandBuffer::BeginPassFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiCommandBuffer::BeginPassFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退货 调用`QRhiCommandBuffer::beginPass()`时推荐的标志。
 
 ### `QRhiTexture *QSSGRhiContext::dummyTexture(QRhiTexture::Flags flags, QRhiResourceUpdateBatch *rub, const QSize &size = QSize(64, 64), const QColor &fillColor = Qt::black, int arraySize = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::dummyTexture` 用于计算、查询或取得与“dummy、Texture”相关的操作。调用时要先确认当前状态和 `flags`、`rub`、`size`、`fillColor`、`arraySize` 的有效范围；返回类型是 `QRhiTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture *`。
-- 参数 `flags`：类型为 `QRhiTexture::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-- 参数 `rub`：类型为 `QRhiResourceUpdateBatch *`。没有默认值，调用时必须提供。传入 `QRhiResourceUpdateBatch *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `const QSize &`。默认值为 `QSize(64, 64)`。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `fillColor`：类型为 `const QColor &`。默认值为 `Qt::black`。传入 `const QColor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arraySize`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个纹理，其`flags`和像素`size`都符合指定。
+这旨在高效访问填充给定`fillColor`的“虚拟”纹理，并在渲染堆栈的不同位置重复使用。
+`rub`必须是有效的`QRhiResourceUpdateBatch`，因为如果找不到合适的缓存对象，该函数会创建新的纹理并为其生成内容。必要的上传操作随后会被排在该更新批次中。
+当`arraySize`为2或更多时，返回一个二维纹理数组。
+归还的贴图归 Qt Quick 3D 所有。
 
 ### `bool QSSGRhiContext::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果渲染器成功初始化，则返回 true。
 
 ### `int QSSGRhiContext::mainPassSampleCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::mainPassSampleCount` 用于计算、查询或取得与“main、Pass、Sample、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主渲染时使用的采样计数。
 
 ### `int QSSGRhiContext::mainPassViewCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::mainPassViewCount` 用于计算、查询或取得与“main、Pass、View、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主渲染时使用的多视角计数。当使用多视角渲染时，这可能是2，或者1（无多视角）。
 
 ### `QRhiRenderPassDescriptor *QSSGRhiContext::mainRenderPassDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::mainRenderPassDescriptor` 用于计算、查询或取得与“main、渲染、Pass、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderPassDescriptor *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回Qt Quick 3D渲染器主渲染通道所用的`QRhiRenderPassDescriptor`。
 
 ### `QRhiRenderTarget *QSSGRhiContext::renderTarget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiContext` 的核心操作 `renderTarget`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderTarget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 Qt Quick 3D 渲染器在当前帧中用于主渲染通道的渲染目标。
+如果`View3D`使用非“屏幕外”的渲染模式，这实际上可以是交换链中的渲染目标。更常见的是，渲染目标指的是纹理（即`QRhiTextureRenderTarget`），例如因为renderMode是默认的屏幕外，或者因为使用了后期处理效果。
 
 ### `QRhi *QSSGRhiContext::rhi() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::rhi` 用于计算、查询或取得与“rhi”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhi *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhi *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 Qt Quick 3D 渲染器使用的`QRhi`对象。
 
 ### `QRhiSampler *QSSGRhiContext::sampler(const QSSGRhiSamplerDescription &samplerDescription)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRhiContext::sampler` 用于计算、查询或取得与“sampler”相关的操作。调用时要先确认当前状态和 `samplerDescription` 的有效范围；返回类型是 `QRhiSampler *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSampler *`。
-- 参数 `samplerDescription`：类型为 `const QSSGRhiSamplerDescription &`。没有默认值，调用时必须提供。传入 `const QSSGRhiSamplerDescription &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个采样器，包含`samplerDescription`中指定的滤波器和铺砖模式。
+生成的`QRhiSampler`对象会被缓存并重复使用。因此，这是一种方便的方式，可以利用给定设置访问`QRhiSampler`，而无需频繁创建新的专用对象。
+归还`QRhiSampler`的所有权仍归 Qt Quick 3D 所有。
 
 ## 6. 深入实践与常见坑
 

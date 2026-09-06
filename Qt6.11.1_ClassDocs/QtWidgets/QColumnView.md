@@ -107,447 +107,262 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 33 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.11] previewColumnVisible : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColumnView` 的配置属性。初始化或状态切换时通过 `setPreviewColumnVisible(...)` 设置，之后用 `previewColumnVisible()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定预览列是否可见。
+默认情况下，`visible` 设置为 true（真）。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`previewColumnVisible`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `previewColumnVisible()` 读取当前值；它不会修改应用状态。
 
 ### `resizeGripsVisible : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColumnView` 的配置属性。初始化或状态切换时通过 `setResizeGripsVisible(...)` 设置，之后用 `resizeGripsVisible()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这个特性可以指定列表视图是否会被调整大小的握持。
+默认情况下，`visible` 设置为 true。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`resizeGripsVisible`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resizeGripsVisible()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QColumnView::QColumnView(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColumnView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有`parent`的列视图以表示模型数据。使用`setModel()`设置模型。
 
 ### `[virtual noexcept] QColumnView::~QColumnView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColumnView` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了柱状视角。
 
 ### `QList<int> QColumnView::columnWidths() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::columnWidths` 用于计算、查询或取得与“列、Widths”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<int>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视图中所有列的宽度列表。
 
 ### `[virtual protected] QAbstractItemView *QColumnView::createColumn(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::createColumn` 用于计算、查询或取得与“创建、列”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QAbstractItemView *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemView *`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果要在选择项目时使用自定义控件作为最后一列，请使用该函数并返回控件。`index` 是将被分配给视图的根索引。
+返回新视图。`QColumnView`会自动获得该小部件的所有权。
 
 ### `[override virtual protected] void QColumnView::currentChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `currentChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimpations： `QAbstractItemView::currentChanged`（const QModelIndex ¤t， const QModelIndex &previous）.
+当新项目变成当前项目时，调用该槽位。之前的当前项目由`previous`索引指定，新项目由`current`索引指定。
+如果你想知道物品的变化，请查看`dataChanged()`信号。
 
 ### `[override virtual protected] int QColumnView::horizontalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::horizontalOffset` 用于计算、查询或取得与“水平、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::horizontalOffset()` const.
+返回视角的水平偏移。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] QModelIndex QColumnView::indexAt(const QPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::indexAt` 用于计算、查询或取得与“索引、按位置访问”相关的操作。调用时要先确认当前状态和 `point` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `point`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::indexAt`（const QPoint & point） const.
+返回视口坐标处的模型索引`point`。
+在基类中，这是一个纯虚拟函数。
 
 ### `[protected] void QColumnView::initializeColumn(QAbstractItemView *column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::initializeColumn` 用于执行与“initialize、列”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `QAbstractItemView *`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制列视图的行为和选项，并将其应用到`column`如`iconSize()`、`textElideMode()`和`alternatingRowColors()`上。这在重新实现`createColumn()`时非常有用。
 
 ### `[override virtual protected] bool QColumnView::isIndexHidden(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isIndexHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::isIndexHidden`（const QModelIndex & index） const.
+如果给定`index`所引用的项目隐藏在视图中，返回`true`;否则返回`false`。
+隐藏是视图特定的功能。例如`TableView`中可以标记为隐藏列或`TreeView`中的一行。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QModelIndex QColumnView::moveCursor(QAbstractItemView::CursorAction cursorAction, Qt::KeyboardModifiers modifiers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::moveCursor` 用于计算、查询或取得与“移动、Cursor”相关的操作。调用时要先确认当前状态和 `cursorAction`、`modifiers` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `cursorAction`：类型为 `QAbstractItemView::CursorAction`。没有默认值，调用时必须提供。传入 `QAbstractItemView::CursorAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::moveCursor`（QAbstractItemView：：CursorAction cursorAction， Qt：：KeyboardModifiers modifiers）。
+向左移动应指向父索引，向右移动应指向子索引，若没有子节点则向下移动。
+返回一个指向视图中下一个对象的`QModelIndex`对象，基于`modifiers`指定的`cursorAction`和键盘修饰符。
+在基类中，这是一个纯虚拟函数。
 
 ### `QWidget *QColumnView::previewWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::previewWidget` 用于计算、查询或取得与“preview、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回预览小部件，或者如果没有就返回`nullptr`。
 
 ### `[override virtual protected] void QColumnView::resizeEvent(QResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::resizeEvent`（QResizeEvent *event）。
 
 ### `[override virtual protected] void QColumnView::rowsInserted(const QModelIndex &parent, int start, int end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::rowsInserted` 用于执行与“行、Inserted”相关的操作。调用时要先确认当前状态和 `parent`、`start`、`end` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::rowsInserted`（const QModelIndex & parent， int start， int end）。
+插入行时调用该槽位。新行为`parent`下，从`start`到`end`包含。基类实现调用模型中的fetchMore()以检查更多数据。
 
 ### `[override virtual protected] void QColumnView::scrollContentsBy(int dx, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::scrollContentsBy` 用于执行与“scroll、Contents、By”相关的操作。调用时要先确认当前状态和 `dx`、`dy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::scrollContentsBy`（智力 dx，智力 dy）。
+当滚动条被移动`dx`、`dy`时调用，因此视口内容应相应滚动。
+默认实现只需调用整个`viewport()`的`update()`，子类可以重新实现该处理程序以优化，或者像`QScrollArea`一样移动内容控件。参数`dx`和`dy`是为了方便，让类知道应该滚动多少（比如像素移动时很有用）。你也可以忽略这些值，直接滚动到滚动条指示的位置。
+调用该函数进行程序滚动是错误，建议使用滚动条（例如直接调用`QScrollBar::setValue()`）。
 
 ### `[override virtual] void QColumnView::scrollTo(const QModelIndex &index, QAbstractItemView::ScrollHint hint = EnsureVisible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::scrollTo` 用于执行与“scroll、转换输出”相关的操作。调用时要先确认当前状态和 `index`、`hint` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `hint`：类型为 `QAbstractItemView::ScrollHint`。默认值为 `EnsureVisible`。传入 `QAbstractItemView::ScrollHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::scrollTo`（const QModelIndex & index， QAbstractItemView：：ScrollHint 提示）。
+如有必要，滚动视图以确保该物品在`index`可见。视图会尝试根据给定的`hint`定位该物品。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] void QColumnView::selectAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::selectAll` 用于执行与“select、All”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::selectAll()`。
+选择视图中的所有项目。该函数在选择时会使用视图中的选择行为。
 
 ### `void QColumnView::setColumnWidths(const QList<int> &list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColumnWidths`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `const QList<int> &`。没有默认值，调用时必须提供。传入 `const QList<int> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将列宽设置为`list`中给出的值。列表中多余的值保留并在创建列时使用。
+如果列表中值过少，只有其余列的宽度不会被修改。
 
 ### `[override virtual] void QColumnView::setModel(QAbstractItemModel *model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModel`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::setModel`（QAbstractItemModel *model）。
+将视图的`model`设定为呈现。
+该函数将创建并设置新的选择模型，替换之前用`setSelectionModel()`设置的模型。不过，旧的选择模型不会被删除，因为它可能在多个视图之间共享。如果旧的选择模型不再需要，我们建议你删除它。这可以通过以下代码完成：
+如果旧模型和旧选择模型都没有父模型，或者它们的父对象是长寿命对象，可能更倾向于调用它们的`deleteLater()`函数来显式删除它们。
+视图不会拥有该模型的所有权，除非它是模型的父对象，因为模型可能在多个不同视图之间共享。
 
 ### `void QColumnView::setPreviewWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreviewWidget`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定了预览的基础`widget`。
+该`widget`会成为列视图的子节点，当列区域被删除或设置新控件时，会被销毁。
 
 ### `[override virtual] void QColumnView::setRootIndex(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRootIndex`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::setRootIndex`（const QModelIndex & index）。
+将根项设置为给定`index`的项。
 
 ### `[override virtual protected] void QColumnView::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelection`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `command`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::setSelection`（const QRect &rect， QItemSelectionModel：：SelectionFlags flags）。
+将选择`flags`应用于矩形内或被触及的物品，`rect`。
+在实现自己的 itemview 时，setSelection 应调用 `selectionModel()`->select（selection， flags），其中 selection 要么是空的 `QModelIndex`，要么是包含所有 `rect` 中的项的 `QItemSelection`。
 
 ### `[override virtual] void QColumnView::setSelectionModel(QItemSelectionModel *newSelectionModel)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionModel`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newSelectionModel`：类型为 `QItemSelectionModel *`。没有默认值，调用时必须提供。传入 `QItemSelectionModel *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemView::setSelectionModel`（QItemSelectionModel *selectionModel）.
+将当前选择模型设定为给定的`selectionModel`。
+注意，如果你在该函数后调用`setModel()`，给定的`selectionModel`将被视图创建的替代。
+注意：如果旧的选择模型不再需要，应用程序自行删除;即当它不再被其他视图使用时。当其父对象被删除时，这会自动发生。然而，如果它没有父对象，或者父对象是长期存在的对象，可能更倾向于调用其`deleteLater()`函数显式删除它。
 
 ### `[override virtual] QSize QColumnView::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractScrollArea::sizeHint()` const.
 
 ### `[signal] void QColumnView::updatePreviewWidget(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColumnView` 发出的通知信号 `updatePreviewWidget`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+当预览小部件需要更新以提供丰富的信息时，会发出该信号`index`。
 
 ### `[override virtual protected] int QColumnView::verticalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::verticalOffset` 用于计算、查询或取得与“垂直、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::verticalOffset()` const.
+返回视图的垂直偏移量。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] QRect QColumnView::visualRect(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::visualRect` 用于计算、查询或取得与“visual、Rect”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::visualRect`（const QModelIndex & index） const.
+返回该物品在视口上的矩形，该物体在`index`。
+如果你的项目显示在多个区域，visualRect 应该返回包含索引的主要区域，而不是索引可能涵盖、触摸或导致绘图的全部区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QRegion QColumnView::visualRegionForSelection(const QItemSelection &selection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColumnView::visualRegionForSelection` 用于计算、查询或取得与“visual、Region、For、Selection”相关的操作。调用时要先确认当前状态和 `selection` 的有效范围；返回类型是 `QRegion`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegion`。
-- 参数 `selection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::visualRegionForSelection`（const QItemSelection &selection） const.
+从视口返回给定`selection`中物品的区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `bool isPreviewColumnVisible() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isPreviewColumnVisible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定预览列是否可见。
+默认情况下，`visible` 设置为 true（真）。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isPreviewColumnVisible()` 读取当前值；它不会修改应用状态。
 
 ### `bool resizeGripsVisible() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QColumnView::resizeGripsVisible` 用于计算、查询或取得与“调整尺寸、Grips、可见状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+这个特性可以指定列表视图是否会被调整大小的握持。
+默认情况下，`visible` 设置为 true。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resizeGripsVisible()` 读取当前值；它不会修改应用状态。
 
 ### `void setPreviewColumnVisible(bool visible)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreviewColumnVisible`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定预览列是否可见。
+默认情况下，`visible` 设置为 true（真）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `visible`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPreviewColumnVisible(...)` 修改 `previewColumnVisible`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setResizeGripsVisible(bool visible)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setResizeGripsVisible`。调用它会改变 `QColumnView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+这个特性可以指定列表视图是否会被调整大小的握持。
+默认情况下，`visible` 设置为 true。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `visible`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setResizeGripsVisible(...)` 修改 `resizeGripsVisible`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

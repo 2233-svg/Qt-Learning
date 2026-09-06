@@ -69,143 +69,74 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QWaitCondition::QWaitCondition()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWaitCondition` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的等待条件对象。
 
 ### `[noexcept] QWaitCondition::~QWaitCondition()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWaitCondition` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏等待条件对象。
 
 ### `void QWaitCondition::notify_all()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::notify_all` 用于执行与“notify、all”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能是为了STL兼容性而提供。它等同于`wakeAll()`。
 
 ### `void QWaitCondition::notify_one()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::notify_one` 用于执行与“notify、one”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能是为了STL兼容性而提供。它等同于`wakeOne()`。
 
 ### `bool QWaitCondition::wait(QMutex *lockedMutex, QDeadlineTimer deadline = QDeadlineTimer(QDeadlineTimer::Forever))`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::wait` 用于计算、查询或取得与“等待”相关的操作。调用时要先确认当前状态和 `lockedMutex`、`deadline` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lockedMutex`：类型为 `QMutex *`。没有默认值，调用时必须提供。传入 `QMutex *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deadline`：类型为 `QDeadlineTimer`。默认值为 `QDeadlineTimer(QDeadlineTimer::Forever)`。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放`lockedMutex`并在等待条件下等待。调用线程必须先锁定`lockedMutex`。如果`lockedMutex`未处于锁定状态，行为未定义。如果`lockedMutex`是递归互斥组，该函数立即返回。`lockedMutex`将被解锁，调用线程会阻塞，直到满足以下任一条件：
+- 另一线程用`wakeOne()`或`wakeAll()`来表示信号。此时该函数返回为真。
+- 达到`deadline`给出的截止时间。如果`deadline`是`QDeadlineTimer::Forever`（默认），则等待永远不会超时（事件必须被通知）。如果等待超时，该函数将返回false。
+`lockedMutex`会返回到相同的锁定状态。该函数旨在实现从锁定状态到等待状态的原子级转换。
 
 ### `bool QWaitCondition::wait(QReadWriteLock *lockedReadWriteLock, QDeadlineTimer deadline = QDeadlineTimer(QDeadlineTimer::Forever))`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::wait` 用于计算、查询或取得与“等待”相关的操作。调用时要先确认当前状态和 `lockedReadWriteLock`、`deadline` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lockedReadWriteLock`：类型为 `QReadWriteLock *`。没有默认值，调用时必须提供。传入 `QReadWriteLock *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deadline`：类型为 `QDeadlineTimer`。默认值为 `QDeadlineTimer(QDeadlineTimer::Forever)`。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放`lockedReadWriteLock`并在等待条件下等待。`lockedReadWriteLock`必须被调用线程最初锁定。如果`lockedReadWriteLock`未处于锁定状态，该函数立即返回。`lockedReadWriteLock`不能递归锁定，否则该函数无法正确释放锁。`lockedReadWriteLock`将被解锁，调用线程会阻塞，直到满足以下任一条件：
+- 另一线程通过`wakeOne()`或`wakeAll()`来发信号。此时该函数返回为真。
+- 达到`deadline`给出的截止时间。如果`deadline`是`QDeadlineTimer::Forever`（默认），则等待永远不会超时（事件必须被通知）。如果等待超时，该函数将返回false。
+`lockedReadWriteLock`将返回相同的锁定状态。该函数旨在实现从锁定状态向等待状态的原子转换。
 
 ### `bool QWaitCondition::wait(QMutex *lockedMutex, unsigned long time)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::wait` 用于计算、查询或取得与“等待”相关的操作。调用时要先确认当前状态和 `lockedMutex`、`time` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lockedMutex`：类型为 `QMutex *`。没有默认值，调用时必须提供。传入 `QMutex *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `time`：类型为 `unsigned long`。没有默认值，调用时必须提供。传入 `unsigned long` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放`lockedMutex`，等待状态持续`time`毫秒。
 
 ### `bool QWaitCondition::wait(QReadWriteLock *lockedReadWriteLock, unsigned long time)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::wait` 用于计算、查询或取得与“等待”相关的操作。调用时要先确认当前状态和 `lockedReadWriteLock`、`time` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lockedReadWriteLock`：类型为 `QReadWriteLock *`。没有默认值，调用时必须提供。传入 `QReadWriteLock *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `time`：类型为 `unsigned long`。没有默认值，调用时必须提供。传入 `unsigned long` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放`lockedReadWriteLock`，并在等待状态下等待`time`毫秒。
 
 ### `void QWaitCondition::wakeAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::wakeAll` 用于执行与“wake、All”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+唤醒所有等待等待条件的线程。线程被唤醒的顺序取决于操作系统的调度策略，无法控制或预测。
 
 ### `void QWaitCondition::wakeOne()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWaitCondition::wakeOne` 用于执行与“wake、One”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+唤醒一个等待条件的线程。被唤醒的线程取决于操作系统的调度策略，无法控制或预测。
+如果你想唤醒某个特定线程，通常的解决办法是使用不同的等待条件，让不同的线程在不同条件下等待。
 
 ## 6. 深入实践与常见坑
 

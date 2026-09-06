@@ -72,62 +72,43 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[read-only, since 6.10] contrastPreference : Qt::ContrastPreference`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibilityHints` 的状态/能力属性。通常通过 `ContrastPreference()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性表示系统设定的对比模态。
+应用程序可以利用该属性来确定系统当前使用的对比度设置。
+Qt样式利用这一特性来调整调色板颜色和轮廓。
 
-**签名拆解：**
-
-- 属性类型：`Qt::ContrastPreference`。
-- 属性名：`contrastPreference`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `contrastPreference()` 读取当前值；它不会修改应用状态。
 
 ### `[override virtual protected] bool QAccessibilityHints::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibilityHints::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
 
 ### `Qt::ContrastPreference contrastPreference() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAccessibilityHints::contrastPreference` 用于计算、查询或取得与“contrast、Preference”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::ContrastPreference`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示系统设定的对比模态。
+应用程序可以利用该属性来确定系统当前使用的对比度设置。
+Qt样式利用这一特性来调整调色板颜色和轮廓。
 
-**签名拆解：**
-
-- 返回值：`Qt::ContrastPreference`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `contrastPreference()` 读取当前值；它不会修改应用状态。
 
 ### `void contrastPreferenceChanged(Qt::ContrastPreference contrastPreference)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `contrastPreferenceChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性表示系统设定的对比模态。
+应用程序可以利用该属性来确定系统当前使用的对比度设置。
+Qt样式利用这一特性来调整调色板颜色和轮廓。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `contrastPreference`：类型为 `Qt::ContrastPreference`。没有默认值，调用时必须提供。传入 `Qt::ContrastPreference` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `contrastPreference` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

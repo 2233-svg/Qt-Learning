@@ -95,458 +95,303 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 34 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.5] enum class QDomDocument::ParseOptionflags QDomDocument::ParseOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ParseOptionflags QDomDocument::ParseOptions`。
-- 属性名：`QDomDocument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了使用`setContent()`方法解析XML文档时可能使用的选项。
+- `QDomDocument::ParseOption::Default`：`0x00`;不设置解析选项。
+- `QDomDocument::ParseOption::UseNamespaceProcessing`：`0x01`;启用命名空间处理。
+- `QDomDocument::ParseOption::PreserveSpacingOnlyNodes`：`0x02`;仅包含间隔字符的文本节点被保留。
+这个枚举是在Qt 6.5引入的。
+ParseOptions 类型是 QFlags 的 typedef<ParseOption>。它存储 ParseOption 值的 OR 组合。
 
 ### `QDomDocument::QDomDocument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空白文档。
 
 ### `[explicit] QDomDocument::QDomDocument(const QDomDocumentType &doctype)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `doctype`：类型为 `const QDomDocumentType &`。没有默认值，调用时必须提供。传入 `const QDomDocumentType &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个具有文档类型`doctype`的文档。
 
 ### `[explicit] QDomDocument::QDomDocument(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个文档并将文档类型名称设置为`name`。
 
 ### `QDomDocument::QDomDocument(const QDomDocument &document)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `document`：类型为 `const QDomDocument &`。没有默认值，调用时必须提供。传入 `const QDomDocument &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`document`。
+复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
 
 ### `[noexcept] QDomDocument::~QDomDocument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放其资源。
 
 ### `QDomAttr QDomDocument::createAttribute(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createAttribute` 用于计算、查询或取得与“创建、Attribute”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QDomAttr`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomAttr`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个称为`name`的新属性，可以插入元素中，例如使用`QDomElement::setAttributeNode()`。
+如果 `name` 不是有效的 XML 名称，该函数的行为将由 `QDomImplementation::InvalidDataPolicy` 控制。
 
 ### `QDomAttr QDomDocument::createAttributeNS(const QString &nsURI, const QString &qName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createAttributeNS` 用于计算、查询或取得与“创建、Attribute、NS”相关的操作。调用时要先确认当前状态和 `nsURI`、`qName` 的有效范围；返回类型是 `QDomAttr`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomAttr`。
-- 参数 `nsURI`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `qName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个支持命名空间的新属性，可以插入元素中。属性名称为`qName`，命名空间URI为`nsURI`。该函数还将`QDomNode::prefix()`和`QDomNode::localName()`设置为适当的值（取决于`qName`）。
+如果 `qName` 不是有效的 XML 名称，该函数的行为将由 `QDomImplementation::InvalidDataPolicy` 控制。
 
 ### `QDomCDATASection QDomDocument::createCDATASection(const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createCDATASection` 用于计算、查询或取得与“创建、CDATA、Section”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `QDomCDATASection`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomCDATASection`。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为字符串`value`创建新的 CDATA 部分，可插入文档，例如使用 `QDomNode::appendChild()`。
+如果`value`包含无法存储在 CDATA 部分的字符，该函数的行为由 `QDomImplementation::InvalidDataPolicy` 控制。
 
 ### `QDomComment QDomDocument::createComment(const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createComment` 用于计算、查询或取得与“创建、Comment”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `QDomComment`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomComment`。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为字符串`value`创建一个新的注释，可以插入到文档中，例如使用`QDomNode::appendChild()`。
+如果`value`包含无法存储在XML注释中的字符，该函数的行为由`QDomImplementation::InvalidDataPolicy`控制。
 
 ### `QDomDocumentFragment QDomDocument::createDocumentFragment()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createDocumentFragment` 用于计算、查询或取得与“创建、Document、Fragment”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomDocumentFragment`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomDocumentFragment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的文档片段，可用于保存文档的部分，例如在对文档树进行复杂操作时。
 
 ### `QDomElement QDomDocument::createElement(const QString &tagName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createElement` 用于计算、查询或取得与“创建、Element”相关的操作。调用时要先确认当前状态和 `tagName` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `tagName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个称为`tagName`的新元素，可以插入到DOM树中，例如使用`QDomNode::appendChild()`。
+如果`tagName`不是有效的XML名称，该函数的行为将受`QDomImplementation::InvalidDataPolicy`控制。
 
 ### `QDomElement QDomDocument::createElementNS(const QString &nsURI, const QString &qName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createElementNS` 用于计算、查询或取得与“创建、Element、NS”相关的操作。调用时要先确认当前状态和 `nsURI`、`qName` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `nsURI`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `qName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个支持命名空间的新元素，可以插入到 DOM 树中。元素的名称为 `qName`，命名空间 URI 为 `nsURI`。该函数还将 `QDomNode::prefix()` 和 `QDomNode::localName()` 设定为合适的值（取决于`qName`）。
+如果`qName`是空字符串，无论无效的数据策略是否被设置，都返回一个空元素。
 
 ### `QDomEntityReference QDomDocument::createEntityReference(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createEntityReference` 用于计算、查询或取得与“创建、Entity、Reference”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QDomEntityReference`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomEntityReference`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个名为 `name` 的新实体引用，可以插入文档中，例如使用 `QDomNode::appendChild()`。
+如果`name`不是有效的 XML 名称，该函数的行为将由 `QDomImplementation::InvalidDataPolicy` 控制。
 
 ### `QDomProcessingInstruction QDomDocument::createProcessingInstruction(const QString &target, const QString &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createProcessingInstruction` 用于计算、查询或取得与“创建、Processing、Instruction”相关的操作。调用时要先确认当前状态和 `target`、`data` 的有效范围；返回类型是 `QDomProcessingInstruction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomProcessingInstruction`。
-- 参数 `target`：类型为 `const QString &`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `data`：类型为 `const QString &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一条新的处理指令，可以插入文档中，例如使用`QDomNode::appendChild()`。该函数将处理指令的目标设置为`target`，数据设置为`data`。
+如果 `target` 不是有效的 XML 名称，或者数据中不包含无法出现在处理指令中的字符，该函数的行为由 `QDomImplementation::InvalidDataPolicy` 控制。
 
 ### `QDomText QDomDocument::createTextNode(const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::createTextNode` 用于计算、查询或取得与“创建、文本、Node”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `QDomText`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomText`。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为字符串`value`创建文本节点，可插入文档树，例如使用`QDomNode::appendChild()`。
+如果`value`包含无法作为XML文档字符数据存储的字符（即使是字符引用形式），该函数的行为由`QDomImplementation::InvalidDataPolicy`控制。
 
 ### `QDomDocumentType QDomDocument::doctype() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::doctype` 用于计算、查询或取得与“doctype”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomDocumentType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomDocumentType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该文档的文档类型。
 
 ### `QDomElement QDomDocument::documentElement() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::documentElement` 用于计算、查询或取得与“document、Element”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文档的根元素。
 
 ### `QDomElement QDomDocument::elementById(const QString &elementId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::elementById` 用于计算、查询或取得与“element、By、Id”相关的操作。调用时要先确认当前状态和 `elementId` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `elementId`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回ID等于`elementId`的元素。如果未找到带有该ID的元素，该函数返回一个空元素。
+由于QDomClasses不知道哪些属性是元素ID，该函数总是返回一个空元素。未来版本可能会改变这一点。
 
 ### `QDomNodeList QDomDocument::elementsByTagName(const QString &tagname) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::elementsByTagName` 用于计算、查询或取得与“elements、By、Tag、名称”相关的操作。调用时要先确认当前状态和 `tagname` 的有效范围；返回类型是 `QDomNodeList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNodeList`。
-- 参数 `tagname`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QDomNodeList`，包含文档中所有名为 `tagname` 的元素。节点列表的顺序是它们在元素树预排序遍历中遇到的顺序。
 
 ### `QDomNodeList QDomDocument::elementsByTagNameNS(const QString &nsURI, const QString &localName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::elementsByTagNameNS` 用于计算、查询或取得与“elements、By、Tag、名称、NS”相关的操作。调用时要先确认当前状态和 `nsURI`、`localName` 的有效范围；返回类型是 `QDomNodeList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNodeList`。
-- 参数 `nsURI`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `localName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个包含文档中所有元素的 `QDomNodeList`，其本地名为 `localName`，命名空间 URI 为 `nsURI`。节点列表的顺序是它们在元素树预序遍历中遇到的顺序。
 
 ### `QDomImplementation QDomDocument::implementation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::implementation` 用于计算、查询或取得与“implementation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomImplementation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomImplementation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QDomImplementation`对象。
 
 ### `QDomNode QDomDocument::importNode(const QDomNode &importedNode, bool deep)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::importNode` 用于计算、查询或取得与“import、Node”相关的操作。调用时要先确认当前状态和 `importedNode`、`deep` 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `importedNode`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deep`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将节点`importedNode`从另一个文档导入到该文档。`importedNode` 仍然保留在原始文档中;该函数创建一个可以在该文档中使用的副本。
+该函数返回属于本文档的导入节点。返回的节点没有父节点。无法导入`QDomDocument`节点和`QDomDocumentType`节点。在这种情况下，该函数返回一个空节点。
+如果`importedNode`是空节点，则返回空节点。
+如果`deep`为真，该函数不仅导入节点`importedNode`，还导入整个子树;如果为假，则仅导入`importedNode`。`deep` 参数对`QDomAttr`和`QDomEntityReference`节点无影响，因为`QDomAttr`节点的后代总是被导入，`QDomEntityReference`节点的后代永远不会被导入。
+该函数的行为会根据节点类型略有不同：
+- `Node Type`：行为
+- `QDomAttr`：所有者元素设置为0，生成属性中指定的标志为真。属性节点的整个子树`importedNode`始终导入：`deep`无影响。
+- `QDomDocument`：文档节点无法导入。
+- `QDomDocumentFragment`：如果`deep`为真，该函数导入整个文档片段;否则只生成一个空文档片段。
+- `QDomDocumentType`：文档类型的节点无法导入。
+- `QDomElement`：`QDomAttr::specified()`为真的属性也会被导入，其他属性则不导入。如果`deep`为真，该函数还会导入`importedNode`的子树;否则只导入元素节点（以及部分属性，见上文）。
+- `QDomEntity`：实体节点可以导入，但目前无法使用，因为DOM级别中文档类型为只读。
+- `QDomEntityReference`：实体引用节点的后代永远不会导入：`deep` 没有影响。
+- `QDomNotation`：符号节点可以导入，但目前无法使用，因为DOM级别2的文档类型是只读的。
+- `QDomProcessingInstruction`：处理指令的目标和值被复制到新节点。
+- `QDomText`：文本被复制到新节点。
+- `QDomCDATASection`：文本被复制到新节点。
+- `QDomComment`：文本被复制到新节点。
 
 ### `QDomNode::NodeType QDomDocument::nodeType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomDocument::nodeType` 用于计算、查询或取得与“node、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode::NodeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode::NodeType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`DocumentNode`。
 
 ### `[since 6.5] QDomDocument::ParseResult QDomDocument::setContent(QXmlStreamReader *reader, QDomDocument::ParseOptions options = ParseOption::Default)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContent`。调用它会改变 `QDomDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument::ParseResult`。
-- 参数 `reader`：类型为 `QXmlStreamReader *`。没有默认值，调用时必须提供。传入 `QXmlStreamReader *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `QDomDocument::ParseOptions`。默认值为 `ParseOption::Default`。传入 `QDomDocument::ParseOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数从字节数组`data`、字符串视图`text`、输入输出（IO）`device`或流`reader`中解析XML文档，并将其设置为文档内容。它尝试检测文档的编码，符合XML规范。返回解析结果，并以`ParseResult`形式显式转换为`bool`。
+你可以用`options`参数指定不同的解析选项，比如启用命名空间处理等。
+默认情况下，命名空间处理是被禁用的。如果禁用了命名空间处理，解析器在读取XML文件时就不会进行命名空间处理。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`返回一个空字符串。
+如果通过解析`options`启用命名空间处理，解析器会识别XML文件中的命名空间，并将前缀名、本地名和命名空间URI设置为合适的值。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`为所有元素和属性返回字符串，如果元素或属性没有前缀则返回空字符串。
+仅由空白组成的文本节点会被剥离，不会出现在`QDomDocument`中。自Qt 6.5起，可以将`QDomDocument::ParseOption::PreserveSpacingOnlyNodes`作为解析选项，指定必须保留仅间距的文本节点。
+实体引用的处理方式如下：
+- 包含内容中对内部通用实体和字符实体的引用。结果是一个`QDomText`节点，引用被对应的实体值替换。
+- 包含对内部子集中中参数实体的引用。结果是一个包含实体声明和符号声明的`QDomDocumentType`节点，引用被对应的实体值替换。
+- 任何未在内部子集中定义且出现在内容中的一般解析实体引用，都表示为`QDomEntityReference`节点。
+- 任何未在内部子集定义且出现在内容之外的解析实体引用，都被替换为空字符串。
+- 任何未解析的实体引用都被替换为空字符串。
+注意：重载的 IO 接管 `device` 会尝试以只读模式打开，前提是设备尚未打开。在这种情况下，调用者负责调用关闭。这种情况将在Qt 7 发生变化，届时不再打开 IO `device`。因此，应用程序应在调用 `setContent()` 前自行打开设备。
 
 ### `QByteArray QDomDocument::toByteArray(int indent = 1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toByteArray`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `indent`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将解析后的文档转换回文本表示，并返回包含 UTF-8 编码数据的 `QByteArray`。
+该函数使用 `indent` 作为缩进子元素的空间量。
 
 ### `QString QDomDocument::toString(int indent = 1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `indent`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将解析后的文档转换回文本表示。
+该函数使用 `indent` 作为缩进子元素的空间。
+如果`indent`为-1，则不添加任何空白。
 
 ### `QDomDocument &QDomDocument::operator=(const QDomDocument &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument &`。
-- 参数 `other`：类型为 `const QDomDocument &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`分配到此DOM文档中。
+复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
 
 ### `(since 6.5) struct ParseResult`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的 `Parse、结果` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该结构用于存储QDomDocument::setContent()的结果。
+`QDomDocument::ParseResult`结构用于存储`QDomDocument::setContent()`的结果。如果在解析XML文档时发现错误，错误的消息、行号和列号将存储在`ParseResult`中。
 
 ### `(since 6.5) enum class ParseOption { Default, UseNamespaceProcessing, PreserveSpacingOnlyNodes }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了使用`setContent()`方法解析XML文档时可能使用的选项。
+- `QDomDocument::ParseOption::Default`：`0x00`;不设置解析选项。
+- `QDomDocument::ParseOption::UseNamespaceProcessing`：`0x01`;启用命名空间处理。
+- `QDomDocument::ParseOption::PreserveSpacingOnlyNodes`：`0x02`;仅包含间隔字符的文本节点被保留。
+这个枚举是在Qt 6.5引入的。
+ParseOptions 类型是 QFlags 的 typedef<ParseOption>。它存储 ParseOption 值的 OR 组合。
 
 ### `flags ParseOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDomDocument` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了使用`setContent()`方法解析XML文档时可能使用的选项。
+- `QDomDocument::ParseOption::Default`：`0x00`;不设置解析选项。
+- `QDomDocument::ParseOption::UseNamespaceProcessing`：`0x01`;启用命名空间处理。
+- `QDomDocument::ParseOption::PreserveSpacingOnlyNodes`：`0x02`;仅包含间隔字符的文本节点被保留。
+这个枚举是在Qt 6.5引入的。
+ParseOptions 类型是 QFlags 的 typedef<ParseOption>。它存储 ParseOption 值的 OR 组合。
 
 ### `(since 6.5) QDomDocument::ParseResult setContent(QAnyStringView text, QDomDocument::ParseOptions options = ParseOption::Default)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContent`。调用它会改变 `QDomDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument::ParseResult`。
-- 参数 `text`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `options`：类型为 `QDomDocument::ParseOptions`。默认值为 `ParseOption::Default`。传入 `QDomDocument::ParseOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数从字节数组`data`、字符串视图`text`、输入输出（IO）`device`或流`reader`中解析XML文档，并将其设置为文档内容。它尝试检测文档的编码，符合XML规范。返回解析结果，并以`ParseResult`形式显式转换为`bool`。
+你可以用`options`参数指定不同的解析选项，比如启用命名空间处理等。
+默认情况下，命名空间处理是被禁用的。如果禁用了命名空间处理，解析器在读取XML文件时就不会进行命名空间处理。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`返回一个空字符串。
+如果通过解析`options`启用命名空间处理，解析器会识别XML文件中的命名空间，并将前缀名、本地名和命名空间URI设置为合适的值。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`为所有元素和属性返回字符串，如果元素或属性没有前缀则返回空字符串。
+仅由空白组成的文本节点会被剥离，不会出现在`QDomDocument`中。自Qt 6.5起，可以将`QDomDocument::ParseOption::PreserveSpacingOnlyNodes`作为解析选项，指定必须保留仅间距的文本节点。
+实体引用的处理方式如下：
+- 包含内容中对内部通用实体和字符实体的引用。结果是一个`QDomText`节点，引用被对应的实体值替换。
+- 包含对内部子集中中参数实体的引用。结果是一个包含实体声明和符号声明的`QDomDocumentType`节点，引用被对应的实体值替换。
+- 任何未在内部子集中定义且出现在内容中的一般解析实体引用，都表示为`QDomEntityReference`节点。
+- 任何未在内部子集定义且出现在内容之外的解析实体引用，都被替换为空字符串。
+- 任何未解析的实体引用都被替换为空字符串。
+注意：重载的 IO 接管 `device` 会尝试以只读模式打开，前提是设备尚未打开。在这种情况下，调用者负责调用关闭。这种情况将在Qt 7 发生变化，届时不再打开 IO `device`。因此，应用程序应在调用 `setContent()` 前自行打开设备。
 
 ### `(since 6.5) QDomDocument::ParseResult setContent(QIODevice *device, QDomDocument::ParseOptions options = ParseOption::Default)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContent`。调用它会改变 `QDomDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument::ParseResult`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `options`：类型为 `QDomDocument::ParseOptions`。默认值为 `ParseOption::Default`。传入 `QDomDocument::ParseOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数从字节数组`data`、字符串视图`text`、输入输出（IO）`device`或流`reader`中解析XML文档，并将其设置为文档内容。它尝试检测文档的编码，符合XML规范。返回解析结果，并以`ParseResult`形式显式转换为`bool`。
+你可以用`options`参数指定不同的解析选项，比如启用命名空间处理等。
+默认情况下，命名空间处理是被禁用的。如果禁用了命名空间处理，解析器在读取XML文件时就不会进行命名空间处理。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`返回一个空字符串。
+如果通过解析`options`启用命名空间处理，解析器会识别XML文件中的命名空间，并将前缀名、本地名和命名空间URI设置为合适的值。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`为所有元素和属性返回字符串，如果元素或属性没有前缀则返回空字符串。
+仅由空白组成的文本节点会被剥离，不会出现在`QDomDocument`中。自Qt 6.5起，可以将`QDomDocument::ParseOption::PreserveSpacingOnlyNodes`作为解析选项，指定必须保留仅间距的文本节点。
+实体引用的处理方式如下：
+- 包含内容中对内部通用实体和字符实体的引用。结果是一个`QDomText`节点，引用被对应的实体值替换。
+- 包含对内部子集中中参数实体的引用。结果是一个包含实体声明和符号声明的`QDomDocumentType`节点，引用被对应的实体值替换。
+- 任何未在内部子集中定义且出现在内容中的一般解析实体引用，都表示为`QDomEntityReference`节点。
+- 任何未在内部子集定义且出现在内容之外的解析实体引用，都被替换为空字符串。
+- 任何未解析的实体引用都被替换为空字符串。
+注意：重载的 IO 接管 `device` 会尝试以只读模式打开，前提是设备尚未打开。在这种情况下，调用者负责调用关闭。这种情况将在Qt 7 发生变化，届时不再打开 IO `device`。因此，应用程序应在调用 `setContent()` 前自行打开设备。
 
 ### `(since 6.5) QDomDocument::ParseResult setContent(const QByteArray &data, QDomDocument::ParseOptions options = ParseOption::Default)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContent`。调用它会改变 `QDomDocument` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument::ParseResult`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `options`：类型为 `QDomDocument::ParseOptions`。默认值为 `ParseOption::Default`。传入 `QDomDocument::ParseOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数从字节数组`data`、字符串视图`text`、输入输出（IO）`device`或流`reader`中解析XML文档，并将其设置为文档内容。它尝试检测文档的编码，符合XML规范。返回解析结果，并以`ParseResult`形式显式转换为`bool`。
+你可以用`options`参数指定不同的解析选项，比如启用命名空间处理等。
+默认情况下，命名空间处理是被禁用的。如果禁用了命名空间处理，解析器在读取XML文件时就不会进行命名空间处理。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`返回一个空字符串。
+如果通过解析`options`启用命名空间处理，解析器会识别XML文件中的命名空间，并将前缀名、本地名和命名空间URI设置为合适的值。函数`QDomNode::prefix()`、`QDomNode::localName()`和`QDomNode::namespaceURI()`为所有元素和属性返回字符串，如果元素或属性没有前缀则返回空字符串。
+仅由空白组成的文本节点会被剥离，不会出现在`QDomDocument`中。自Qt 6.5起，可以将`QDomDocument::ParseOption::PreserveSpacingOnlyNodes`作为解析选项，指定必须保留仅间距的文本节点。
+实体引用的处理方式如下：
+- 包含内容中对内部通用实体和字符实体的引用。结果是一个`QDomText`节点，引用被对应的实体值替换。
+- 包含对内部子集中中参数实体的引用。结果是一个包含实体声明和符号声明的`QDomDocumentType`节点，引用被对应的实体值替换。
+- 任何未在内部子集中定义且出现在内容中的一般解析实体引用，都表示为`QDomEntityReference`节点。
+- 任何未在内部子集定义且出现在内容之外的解析实体引用，都被替换为空字符串。
+- 任何未解析的实体引用都被替换为空字符串。
+注意：重载的 IO 接管 `device` 会尝试以只读模式打开，前提是设备尚未打开。在这种情况下，调用者负责调用关闭。这种情况将在Qt 7 发生变化，届时不再打开 IO `device`。因此，应用程序应在调用 `setContent()` 前自行打开设备。
 
 ## 6. 深入实践与常见坑
 

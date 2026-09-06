@@ -65,115 +65,65 @@
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPolarChart::PolarOrientationflags QPolarChart::PolarOrientations`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPolarChart` 暴露的类型声明 `Polar、Orientationflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PolarOrientationflags QPolarChart::PolarOrientations`。
-- 属性名：`QPolarChart`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型指定轴的极轴方向。
+- `QPolarChart::PolarOrientationRadial`：`0x1`;一个径向轴，数值沿图表半径排列，从极点开始。
+- `QPolarChart::PolarOrientationAngular`：`0x2`;一个角轴，数值分布在图表周围。
+PolarOrientations 类型是 QFlags 的 typedef<PolarOrientation>。它存储 PolarOrientation 值的 OR 组合。
 
 ### `[explicit] QPolarChart::QPolarChart(QGraphicsItem *parent = nullptr, Qt::WindowFlags wFlags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPolarChart` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QGraphicsItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `wFlags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造极坐标图，作为`parent`的子节点。`wFlags`指定的属性传递给`QChart`构造函数。
 
 ### `[virtual noexcept] QPolarChart::~QPolarChart()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPolarChart` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除极坐标图对象及其子对象，如添加到它的系列和轴对象。
 
 ### `void QPolarChart::addAxis(QAbstractAxis *axis, QPolarChart::PolarOrientation polarOrientation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QPolarChart` 添加依赖、数据或子对象的 API `addAxis`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `axis`：类型为 `QAbstractAxis *`。没有默认值，调用时必须提供。传入 `QAbstractAxis *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `polarOrientation`：类型为 `QPolarChart::PolarOrientation`。没有默认值，调用时必须提供。传入 `QPolarChart::PolarOrientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此便利方法将轴`axis`添加到具有极坐标方向`polarOrientation`的极坐标图表中。图表将拥有该轴的所有权。
+注意：轴也可以通过`QChart::addAxis()`添加到极坐标图表中。指定的对齐方式决定极坐标方向：水平对齐表示角度轴，垂直对齐表示径向轴。
 
 ### `QList<QAbstractAxis *> QPolarChart::axes(QPolarChart::PolarOrientations polarOrientation = PolarOrientations(PolarOrientationRadial | PolarOrientationAngular), QAbstractSeries *series = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPolarChart::axes` 用于计算、查询或取得与“axes”相关的操作。调用时要先确认当前状态和 `polarOrientation`、`series` 的有效范围；返回类型是 `QList<QAbstractAxis *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QAbstractAxis *>`。
-- 参数 `polarOrientation`：类型为 `QPolarChart::PolarOrientations`。默认值为 `PolarOrientations(PolarOrientationRadial | PolarOrientationAngular)`。传入 `QPolarChart::PolarOrientations` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `series`：类型为 `QAbstractSeries *`。默认值为 `nullptr`。传入 `QAbstractSeries *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与极坐标方向`polarOrientation`的系列`series`加的轴。如果没有提供系列，则返回任何具有指定极坐标方向的轴。
 
 ### `[static] QPolarChart::PolarOrientation QPolarChart::axisPolarOrientation(QAbstractAxis *axis)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `axisPolarOrientation`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QPolarChart::PolarOrientation`。
-- 参数 `axis`：类型为 `QAbstractAxis *`。没有默认值，调用时必须提供。传入 `QAbstractAxis *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+极坐标图的角向轴报告水平方向，径向轴报告垂直方向。此函数是一个便捷函数，用于将轴 `axis` 的方向转换为对应的极坐标方向。如果 `axis` 为 null 或未添加到极坐标图中，则返回值是无意义的。
 
 ### `enum PolarOrientation { PolarOrientationRadial, PolarOrientationAngular }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPolarChart` 暴露的类型声明 `Polar、Orientation`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型指定轴的极轴方向。
+- `QPolarChart::PolarOrientationRadial`：`0x1`;一个径向轴，数值沿图表半径排列，从极点开始。
+- `QPolarChart::PolarOrientationAngular`：`0x2`;一个角轴，数值分布在图表周围。
+PolarOrientations 类型是 QFlags 的 typedef<PolarOrientation>。它存储 PolarOrientation 值的 OR 组合。
 
 ### `flags PolarOrientations`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPolarChart` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型指定轴的极轴方向。
+- `QPolarChart::PolarOrientationRadial`：`0x1`;一个径向轴，数值沿图表半径排列，从极点开始。
+- `QPolarChart::PolarOrientationAngular`：`0x2`;一个角轴，数值分布在图表周围。
+PolarOrientations 类型是 QFlags 的 typedef<PolarOrientation>。它存储 PolarOrientation 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

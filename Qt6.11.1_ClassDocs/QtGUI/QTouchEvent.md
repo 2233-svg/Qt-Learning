@@ -68,90 +68,43 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QTouchEvent::QTouchEvent(QEvent::Type eventType, const QPointingDevice *device = nullptr, Qt::KeyboardModifiers modifiers = Qt::NoModifier, const QList<QEventPoint> &touchPoints = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTouchEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `eventType`：类型为 `QEvent::Type`。没有默认值，调用时必须提供。传入 `QEvent::Type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `device`：类型为 `const QPointingDevice *`。默认值为 `nullptr`。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `touchPoints`：类型为 `const QList<QEventPoint> &`。默认值为 `{}`。传入 `const QList<QEventPoint> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QTouchEvent，使用事件发生时给定的`eventType`、`device`、`touchPoints`和当前键盘`modifiers`。
 
 ### `[override virtual] bool QTouchEvent::isBeginEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBeginEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该事件包含至少一个新按的触点，则返回为真。
 
 ### `[override virtual] bool QTouchEvent::isEndEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEndEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该事件包含至少一个新发布的触点，则返回为真。
 
 ### `[override virtual] bool QTouchEvent::isUpdateEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUpdateEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该事件不包括新发布或新发布的触点，则返回为真。
 
 ### `QObject *QTouchEvent::target() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTouchEvent::target` 用于计算、查询或取得与“目标”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回事件发生窗口内的目标对象。通常是`QWidget`或`QQuickItem`。当没有特定目标可用时，可能是0。
 
 ### `QEventPoint::States QTouchEvent::touchPointStates() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `touchPointStates`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QEventPoint::States`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以一个位元返回该事件所有触点状态的 OR。
 
 ## 6. 深入实践与常见坑
 

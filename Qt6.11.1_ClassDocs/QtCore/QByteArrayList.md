@@ -67,72 +67,39 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.3] QByteArray QByteArrayList::join(QByteArrayView separator = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QByteArrayList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `separator`：类型为 `QByteArrayView`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有字节数组合并为一个单一字节数组，每个元素之间由给定的`separator`分隔（如果有的话）。
 
 ### `QByteArray QByteArrayList::join(char separator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QByteArrayList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `separator`：类型为 `char`。没有默认值，调用时必须提供。传入 `char` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有字节数组合并为单一字节数组，每个元素之间由给定的`separator`分隔。
 
 ### `QByteArray QByteArrayList::join(const QByteArray &separator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QByteArrayList::join` 用于计算、查询或取得与“join”相关的操作。调用时要先确认当前状态和 `separator` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `separator`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有字节数组合并为单一字节数组，每个元素之间由给定的`separator`分隔。
 
 ### `QByteArrayListIterator`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QByteArrayList` 的 `Q、Byte、Array、List、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QByteArrayListIterator 类型定义为 `QByteArrayList` 提供了一个类似 Java 的 const 迭代器。
+`QByteArrayList` 既提供 Java 风格的迭代器，也提供 STL 风格的叠代器。Java 风格的 const 迭代器只是 `QListIterator` 的类型定义<`QByteArray`>。
 
 ### `QMutableByteArrayListIterator`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QByteArrayList` 的 `Q、Mutable、Byte、Array、List、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QByteArrayListIterator`类型定义为`QByteArrayList`提供了一个类似Java的非const迭代器。
+`QByteArrayList` 既提供 Java 风格的迭代器，也提供 STL 风格的叠代器。Java 风格的非const迭代器只是`QMutableListIterator`的类型定义<`QByteArray`>。
 
 ## 6. 深入实践与常见坑
 

@@ -63,64 +63,41 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `extern const QtTaskTree::ExecutionMode QtTaskTree::sequential`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutionMode` 的配置属性。初始化或状态切换时通过 `setSequential(...)` 设置，之后用 `sequential()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ExecutionMode QtTaskTree::sequential`。
-- 属性名：`QtTaskTree`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个方便的全局群元素，描述顺序执行模式。
+这是组元素的默认执行模式。
+当一个组没有执行模式时，它会以顺序模式运行。一个组的所有直接子任务都以链条形式启动，这样一个任务结束后，下一个任务就会开始。这样你可以在上一个任务开始前，将结果作为输入传递给下一个任务。该模式保证只有在上一个任务结束后才会启动下一个任务。
 
 ### `extern const QtTaskTree::ExecutionMode QtTaskTree::parallel`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutionMode` 的配置属性。初始化或状态切换时通过 `setParallel(...)` 设置，之后用 `parallel()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ExecutionMode QtTaskTree::parallel`。
-- 属性名：`QtTaskTree`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个方便的全局群元素，描述并行执行模式。
+组中的所有直接子任务在组启动后启动，不等待前一个子任务完成。在此模式下，所有子任务同时运行。
 
 ### `extern const QtTaskTree::ExecutionMode QtTaskTree::parallelIdealThreadCountLimit`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutionMode` 的配置属性。初始化或状态切换时通过 `setParallelIdealThreadCountLimit(...)` 设置，之后用 `parallelIdealThreadCountLimit()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+一个方便的全局组元素，描述并行执行模式，同时运行的任务数量有限。该限制等于排除调用线程的理想线程数。
+这是通往以下的捷径：
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:ExecutionMode QtTaskTree::parallelIdealThreadCountLimit`。
-- 属性名：`QtTaskTree`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ ParallelLimit(qMax(QThread::idealThreadCount() - 1, 1))
+```
 
 ### `QtTaskTree::ParallelLimit::ParallelLimit(int limit)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::ExecutionMode::ParallelLimit` 用于执行与“Parallel、Limit”相关的操作。调用时要先确认当前状态和 `limit` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `limit`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个并行执行模式，`limit`。
 
 ## 6. 深入实践与常见坑
 

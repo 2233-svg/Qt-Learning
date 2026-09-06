@@ -88,351 +88,200 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 26 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGTexture::AnisotropyLevel`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTexture` 暴露的类型声明 `Anisotropy、Level`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AnisotropyLevel`。
-- 属性名：`QSGTexture`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定当纹理未与屏幕对齐时，应采用的各向异性过滤水平。
+- `QSGTexture::AnisotropyNone`：`0`;无各向异性过滤。
+- `QSGTexture::Anisotropy2x`：`1`;2个各向异性滤波。
+- `QSGTexture::Anisotropy4x`：`2`;4倍各向异性滤波。
+- `QSGTexture::Anisotropy8x`：`3`;8倍各向异性滤波。
+- `QSGTexture::Anisotropy16x`：`4`;16倍各向异性滤波。
 
 ### `enum QSGTexture::Filtering`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTexture` 暴露的类型声明 `Filtering`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Filtering`。
-- 属性名：`QSGTexture`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+规定当纹理坐标未对齐时，采样纹素应如何过滤。
+- `QSGTexture::None`：`0`;不应进行过滤。该值仅与`setMipmapFiltering()`一起使用。
+- `QSGTexture::Nearest`：`1`;采样返回最近的像素。
+- `QSGTexture::Linear`：`2`;采样返回邻近纹素的线性插值。
 
 ### `enum QSGTexture::WrapMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTexture` 暴露的类型声明 `Wrap、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WrapMode`。
-- 属性名：`QSGTexture`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定采样器应如何处理纹理坐标。
+- `QSGTexture::Repeat`：`0`;仅使用纹理坐标的分数部分，导致大于1和低于0的值重复出现。
+- `QSGTexture::ClampToEdge`：`1`;大于1的数值被夹为1，低于0的数值被夹为0。
+- `QSGTexture::MirroredRepeat`：`2`;当纹理坐标为偶数时，仅使用小数部分。当为奇数时，纹理坐标设置为`1 - fractional part`。该值在Qt 5.10中引入。
 
 ### `QSGTexture::QSGTexture()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTexture` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造QSGTexture基类。
 
 ### `[override virtual noexcept] QSGTexture::~QSGTexture()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTexture` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QSGTexture`。
 
 ### `QSGTexture::AnisotropyLevel QSGTexture::anisotropyLevel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::anisotropyLevel` 用于计算、查询或取得与“anisotropy、Level”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::AnisotropyLevel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::AnisotropyLevel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于过滤该纹理的各向异性水平。
 
 ### `[virtual, since 6.0] void QSGTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::commitTextureOperations` 用于执行与“提交、Texture、Operations”相关的操作。调用时要先确认当前状态和 `rhi`、`resourceUpdates` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rhi`：类型为 `QRhi *`。没有默认值，调用时必须提供。传入 `QRhi *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `resourceUpdates`：类型为 `QRhiResourceUpdateBatch *`。没有默认值，调用时必须提供。传入 `QRhiResourceUpdateBatch *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该函数将图像上传操作排队到`resourceUpdates`，以防有待处理操作。当没有新数据（例如，自上次调用该函数以来没有setImage()时，该函数不做任何操作。
+涉及`rhi`纹理的材质通常会从`updateSampledImage()`实现中调用该函数，通常没有任何条件，从`QSGMaterialShader::RenderState`传递`state.rhi()`和`state.resourceUpdateBatch()`。
+警告：该函数只能从渲染线程中调用。
 
 ### `[pure virtual] qint64 QSGTexture::comparisonKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::comparisonKey` 用于计算、查询或取得与“comparison、Key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个适合比较纹理的键。通常用于`QSGMaterial::compare()`实现。
+仅仅比较`QSGTexture`指针并不总是足够，因为两个引用同一原生纹理对象的`QSGTexture`实例也应被视为相等。因此需要这个函数。
+如果目前还没有图形资源（原生纹理对象），该函数的实现通常不会创建，也不应生成。
+没有原生纹理对象的`QSGTexture`通常不等于其他`QSGTexture`，因此返回值必须相应设计。有例外，特别是当使用图集（多个纹理共享同一个图集纹理时），这就由子类实现根据情况处理。
+警告：该函数只能从渲染线程中调用。
 
 ### `QRectF QSGTexture::convertToNormalizedSourceRect(const QRectF &rect) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `convertToNormalizedSourceRect`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`rect`转换为归一化坐标。
 
 ### `QSGTexture::Filtering QSGTexture::filtering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::filtering` 用于计算、查询或取得与“filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于该纹理的采样模式。
 
 ### `[pure virtual] bool QSGTexture::hasAlphaChannel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAlphaChannel`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果纹理数据包含alpha通道，则返回为true。
 
 ### `[pure virtual] bool QSGTexture::hasMipmaps() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasMipmaps`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果纹理数据包含 mipmap 级别，则返回为真。
 
 ### `QSGTexture::WrapMode QSGTexture::horizontalWrapMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::horizontalWrapMode` 用于计算、查询或取得与“水平、Wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::WrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::WrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于该纹理的水平包裹模式。
 
 ### `[virtual] bool QSGTexture::isAtlasTexture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAtlasTexture`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+无论该纹理是否属于图谱，都会返回。
+默认实现会返回false。
 
 ### `QSGTexture::Filtering QSGTexture::mipmapFiltering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::mipmapFiltering` 用于计算、查询或取得与“mipmap、Filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从该纹理采样时是否应使用多重映射。
 
 ### `template <typename QNativeInterface> QNativeInterface *QSGTexture::nativeInterface() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::nativeInterface` 用于计算、查询或取得与“native、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename QNativeInterface> QNativeInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename QNativeInterface> QNativeInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定类型的原生纹理接口。
+该功能提供访问`QSGTexture`平台特定功能，具体内容在`QNativeInterface`命名空间中声明：
+- `QNativeInterface::QSGD3D11Texture`：提供访问并支持采用 Direct3D 11 纹理对象
+- `QNativeInterface::QSGD3D12Texture`：提供访问并支持采用Direct3D 12纹理对象
+- `QNativeInterface::QSGMetalTexture`：提供访问并支持采用金属纹理对象
+- `QNativeInterface::QSGOpenGLTexture`：提供访问并支持采用 OpenGL 纹理对象
+- `QNativeInterface::QSGVulkanTexture`：提供访问并支持采用 Vulkan 图像对象
+这允许访问底层的原生纹理对象，例如用OpenGL访问`GLuint`纹理ID，或用Vulkan访问`VkImage`句柄。
+如果请求的接口不可用，则返回`nullptr`。
 
 ### `[virtual] QRectF QSGTexture::normalizedTextureSubRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::normalizedTextureSubRect` 用于计算、查询或取得与“normalized、Texture、Sub、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`textureSize()`内的矩形，该纹理在归一化坐标下表示。
+默认实现返回位置为0， 0的rect，宽度和高度均为1。
 
 ### `[virtual] QSGTexture *QSGTexture::removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removedFromAtlas`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture *`。
-- 参数 `resourceUpdates`：类型为 `QRhiResourceUpdateBatch *`。默认值为 `nullptr`。传入 `QRhiResourceUpdateBatch *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回当前纹理的副本，从其图集中移除。
+当前纹理保持不变，因此纹理坐标无需更新。
+从图集中移除纹理主要适用于将其传递给操作纹理坐标0-1的着色器，而不是图集内部纹理子rect。
+如果纹理不属于纹理图集，该函数返回为0。
+建议实现该函数时多次调用返回同一实例，以限制内存使用。
+`resourceUpdates` 是一个可选的资源更新批次，纹理操作（如有）会被排队。Material 可以从 `QSGMaterialShader::RenderState` 获取实例。当 null 时，removedFromAtlas() 实现会创建自己的批次并立即提交。但当指定有效实例时，该函数不会提交更新批次。
+警告：该函数只能从渲染线程中调用。
 
 ### `[virtual, since 6.0] QRhiTexture *QSGTexture::rhiTexture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::rhiTexture` 用于计算、查询或取得与“rhi、Texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRhiTexture` `QSGTexture`，若无则返回空（可能是内部尚未创建有效纹理，或该概念不适用于当前场景图后端）。
+如果没有新 Null `QRhiTexture`，这个函数不应该创建。在这种情况下，它应该返回 null。渲染器的期望是，null 纹理会导致使用透明的虚拟纹理。
+警告：该函数只能从渲染线程中调用。
 
 ### `void QSGTexture::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAnisotropyLevel`。调用它会改变 `QSGTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `level`：类型为 `QSGTexture::AnisotropyLevel`。没有默认值，调用时必须提供。传入 `QSGTexture::AnisotropyLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将各向异性过滤设置为`level`。默认值为`QSGTexture::AnisotropyNone`，意味着不启用各向异性过滤。
+注意：根据所使用的图形 API，请求可能会被忽略。运行时并不保证支持各向异性过滤。
 
 ### `void QSGTexture::setFiltering(QSGTexture::Filtering filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFiltering`。调用它会改变 `QSGTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将采样模式设置为`filter`。
 
 ### `void QSGTexture::setHorizontalWrapMode(QSGTexture::WrapMode hwrap)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalWrapMode`。调用它会改变 `QSGTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hwrap`：类型为 `QSGTexture::WrapMode`。没有默认值，调用时必须提供。传入 `QSGTexture::WrapMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将水平包裹模式设置为`hwrap`。
 
 ### `void QSGTexture::setMipmapFiltering(QSGTexture::Filtering filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMipmapFiltering`。调用它会改变 `QSGTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将mipmap采样模式设置为`filter`。
+设置 mipmap 过滤没有效果，只要纹理没有 mipmaps。
 
 ### `void QSGTexture::setVerticalWrapMode(QSGTexture::WrapMode vwrap)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalWrapMode`。调用它会改变 `QSGTexture` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `vwrap`：类型为 `QSGTexture::WrapMode`。没有默认值，调用时必须提供。传入 `QSGTexture::WrapMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直包裹模式设置为`vwrap`。
 
 ### `[pure virtual] QSize QSGTexture::textureSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::textureSize` 用于计算、查询或取得与“texture、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回纹理的像素大小。
 
 ### `QSGTexture::WrapMode QSGTexture::verticalWrapMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTexture::verticalWrapMode` 用于计算、查询或取得与“垂直、Wrap、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::WrapMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::WrapMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于该纹理的垂直包裹模式。
 
 ## 6. 深入实践与常见坑
 

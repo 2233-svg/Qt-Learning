@@ -110,609 +110,368 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 45 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.10] enum class QXmlStreamWriter::Error`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Error`。
-- 属性名：`QXmlStreamWriter`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了在编写带有`QXmlStreamWriter`的XML时可能出现的不同错误情况。
+- `QXmlStreamWriter::Error::None`：`0`;未发生错误。
+- `QXmlStreamWriter::Error::IO`：`1`;写入设备时发生I/O错误。
+- `QXmlStreamWriter::Error::Encoding`：`2`;在将字符转换为输出格式时发生编码错误。
+- `QXmlStreamWriter::Error::InvalidCharacter`：`3`;在写入过程中遇到了XML 1.0中不允许的字符。
+- `QXmlStreamWriter::Error::Custom`：`4`;`raiseError()` 时出现了自定义错误。
+这个枚举是在Qt 6.10引入的。
 
 ### `autoFormatting : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的配置属性。初始化或状态切换时通过 `setAutoFormatting(...)` 设置，之后用 `autoFormatting()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含流写器的自动格式化标志。
+该属性控制流写入器是否自动格式化生成的XML数据。启用后，写入者会自动在元素间的空部分添加换行和缩进（可忽略的空白）。自动格式化的主要目的是将数据拆分为多行，并提高人类阅读者的可读性。缩进深度可以通过`autoFormattingIndent`属性控制。
+默认情况下，自动格式化是被禁用的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`autoFormatting`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoFormatting()` 读取当前值；它不会修改应用状态。
 
 ### `autoFormattingIndent : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的配置属性。初始化或状态切换时通过 `setAutoFormattingIndent(...)` 设置，之后用 `autoFormattingIndent()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示启用自动格式时用于缩进的空格或制表符数。正数表示空格，负数表示制表表。
+默认缩进是4。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`autoFormattingIndent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoFormattingIndent()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.10] stopWritingOnError : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的配置属性。初始化或状态切换时通过 `setStopWritingOnError(...)` 设置，之后用 `stopWritingOnError()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性允许在遇到错误后停止写入设备。
+如果该属性设置为`true`，写入者在遇到任何错误时立即停止写入，并忽略所有后续写入操作。当该属性设为`false`时，写入者可以在错误后继续写入，跳过无效写入但允许继续输出。
+注意这包括`Error::InvalidCharacter`、`Error::Encoding`和`Error::Custom`。无论设置如何，`Error::IO`始终被视为终端，停止写入。
+默认值是`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`stopWritingOnError`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `stopWritingOnError()` 读取当前值；它不会修改应用状态。
 
 ### `QXmlStreamWriter::QXmlStreamWriter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个流媒体写手。
 
 ### `[explicit] QXmlStreamWriter::QXmlStreamWriter(QByteArray *array)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `array`：类型为 `QByteArray *`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个流写入`array`。这与创建一个运行在`QBuffer`设备上的XML写入器是相同的，而该设备又运行于`array`。
 
 ### `[explicit] QXmlStreamWriter::QXmlStreamWriter(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个流写入器，写入`device`;
 
 ### `[explicit] QXmlStreamWriter::QXmlStreamWriter(QString *string)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `string`：类型为 `QString *`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个流写入器，写入`string`。
 
 ### `[noexcept] QXmlStreamWriter::~QXmlStreamWriter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `bool QXmlStreamWriter::autoFormatting() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamWriter::autoFormatting` 用于计算、查询或取得与“auto、Formatting”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了自动格式化，返回`true`，否则会`false`。
+注意：属性自动格式化的获取函数。
 
 ### `QIODevice *QXmlStreamWriter::device() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamWriter::device` 用于计算、查询或取得与“device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`QXmlStreamWriter`关联的当前设备，若未分配设备则返回`nullptr`。
 
 ### `[since 6.10] QXmlStreamWriter::Error QXmlStreamWriter::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamWriter::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QXmlStreamWriter::Error`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QXmlStreamWriter::Error`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回写入者的当前错误状态。
+如果没有发生错误，该函数返回`QXmlStreamWriter::Error::None`。
 
 ### `[since 6.10] QString QXmlStreamWriter::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamWriter::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果发生错误，返回其相关的错误信息。
+错误消息要么由`QXmlStreamWriter`内部设置，要么由用户通过`raiseError()`提供。如果没有发生错误，该函数返回一个空字符串。
 
 ### `bool QXmlStreamWriter::hasError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果在尝试写入数据时发生错误，返回`true`。
+如果错误`Error::IO`，后续对底层`QIODevice`的写入将失败。在其他情况下，数据可能会写入文档，数据形式错误。
+错误状态永远不会被重置。错误发生后发生的写入可以被忽略，即使错误条件已被清除。
 
 ### `[since 6.10] void QXmlStreamWriter::raiseError(QAnyStringView message)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QXmlStreamWriter::raiseError` 用于执行与“raise、错误”相关的操作。调用时要先确认当前状态和 `message` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `message`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`message`下会引发自定义错误。
+此功能用于手动指示写入过程中发生错误，例如应用层验证失败。
 
 ### `void QXmlStreamWriter::setAutoFormatting(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoFormatting`。调用它会改变 `QXmlStreamWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含流写器的自动格式化标志。
+该属性控制流写入器是否自动格式化生成的XML数据。启用后，写入者会自动在元素间的空部分添加换行和缩进（可忽略的空白）。自动格式化的主要目的是将数据拆分为多行，并提高人类阅读者的可读性。缩进深度可以通过`autoFormattingIndent`属性控制。
+默认情况下，自动格式化是被禁用的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoFormatting(...)` 修改 `autoFormatting`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QXmlStreamWriter::setDevice(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDevice`。调用它会改变 `QXmlStreamWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前设备设置为`device`。如果你想让流写入`QByteArray`，可以创建一个`QBuffer`设备。
 
 ### `void QXmlStreamWriter::writeAttribute(QAnyStringView namespaceUri, QAnyStringView name, QAnyStringView value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeAttribute`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+编写带有 `name` 和 `value` 的属性，并在指定`namespaceUri`前缀。如果命名空间尚未声明，`QXmlStreamWriter` 会为其生成命名空间声明。
+该函数只能在内容写入前`writeStartElement()`之后或内容写入后调用`writeEmptyElement()`。
+注意：在6.5之前的Qt版本中，该功能需要的是`QString`，而不是`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeAttribute(const QXmlStreamAttribute &attribute)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeAttribute`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribute`：类型为 `const QXmlStreamAttribute &`。没有默认值，调用时必须提供。传入 `const QXmlStreamAttribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`attribute`写道。
+该函数只能在内容写入前`writeStartElement()`之后或`writeEmptyElement()`之后调用。
 
 ### `void QXmlStreamWriter::writeAttribute(QAnyStringView qualifiedName, QAnyStringView value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeAttribute`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qualifiedName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写一个带有`qualifiedName`和`value`属性的。
+该函数只能在内容写入前`writeStartElement()`或内容写入后调用`writeEmptyElement()`。
+注意：在6.5之前的Qt版本中，该功能采用`QString`，而非取`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeAttributes(const QXmlStreamAttributes &attributes)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeAttributes`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attributes`：类型为 `const QXmlStreamAttributes &`。没有默认值，调用时必须提供。传入 `const QXmlStreamAttributes &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入属性向量 `attributes`。如果属性中引用的命名空间尚未声明，`QXmlStreamWriter` 将为其生成命名空间声明。此函数只能在 `writeStartElement()` 之后且在写入任何内容之前调用，或在 `writeEmptyElement()` 之后调用。
 
 ### `void QXmlStreamWriter::writeCDATA(QAnyStringView text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeCDATA`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`text`写入为 CDATA 部分。如果`text`包含禁用字符序列“]]>”，则被拆分为不同的 CDATA 部分。
+这个函数主要是为了完整性。通常你不需要使用它，因为`writeCharacters()`会自动转义出所有非内容字符。
+注意：在6.5之前的Qt版本中，该函数采用了`QString`，而非`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeCharacters(QAnyStringView text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeCharacters`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入`text`。字符“<”、“&”和“”“作为实体引用”<“、”&“和”“”逃逸。为避免禁用序列“]]>”，“>”也被转为“>”。
+注意：在6.5之前的Qt版本中，这个功能是用了`QString`，而不是用`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeComment(QAnyStringView text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeComment`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`text`写成XML注释，其中`text`不得包含禁止的序列`--`或以`-`结尾。注意，XML不提供任何在注释中逃逸`-`的方法。
+注意：在 6.5 之前的 Qt 版本中，这个功能是用 `QString` 而不是 `QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeCurrentToken(const QXmlStreamReader &reader)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeCurrentToken`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `reader`：类型为 `const QXmlStreamReader &`。没有默认值，调用时必须提供。传入 `const QXmlStreamReader &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入当前`reader`状态。支持所有可能的有效状态。
+该函数的目的是支持XML数据的链式处理。
 
 ### `void QXmlStreamWriter::writeDTD(QAnyStringView dtd)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeDTD`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dtd`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+编写DTD部分。`dtd`代表XML 1.0规范中完整的doctypedecl生成。
+注意：在 6.5 之前的 Qt 版本中，该功能采用了 `QString` 的使用，而非 `QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeDefaultNamespace(QAnyStringView namespaceUri)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeDefaultNamespace`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`namespaceUri`写一个默认命名空间声明。
+如果调用了`writeStartElement()`或`writeEmptyElement()`，声明适用于当前元素;否则则适用于下一个子元素。
+请注意，命名空间 http://www.w3.org/XML/1998/namespace（绑定于 xmlns）和 http://www.w3.org/2000/xmlns/（绑定于 xml）按定义不能被默认声明。
+注意：在6.5之前的Qt版本中，该功能采用了`QString`，而非`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeEmptyElement(QAnyStringView namespaceUri, QAnyStringView name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeEmptyElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入一个空元素，前缀为`name`，前缀为指定`namespaceUri`。如果命名空间尚未声明，`QXmlStreamWriter`将为其生成命名空间声明。后续调用`writeAttribute()`会为该元素添加属性。
+注意：在6.5之前的Qt版本中，该功能需要`QString`，而非 `QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeEmptyElement(QAnyStringView qualifiedName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeEmptyElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qualifiedName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写一个带有限定名称 `qualifiedName` 的空元素。后续调用 `writeAttribute()` 会为该元素添加属性。
+注意：在6.5之前的Qt版本中，该函数采用`QString`，而非取`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeEndDocument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeEndDocument`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭所有剩余的开起始元素并写入换行。
 
 ### `void QXmlStreamWriter::writeEndElement()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeEndElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭之前的起始元素。
 
 ### `void QXmlStreamWriter::writeEntityReference(QAnyStringView name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeEntityReference`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将实体引用写成“&`name`;”，对流`name`。
+注意：在6.5之前的Qt版本中，该功能采用了`QString`，而非被`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeNamespace(QAnyStringView namespaceUri, QAnyStringView prefix = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeNamespace`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `prefix`：类型为 `QAnyStringView`。默认值为 `{}`。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`namespaceUri`写入命名空间声明，`prefix`。如果`prefix`空，`QXmlStreamWriter`赋予一个唯一前缀，由字母“n”和数字组成。
+如果调用了`writeStartElement()`或`writeEmptyElement()`，声明适用于当前元素;否则则适用于下一个子元素。
+注意，前缀 xml 既预定义又保留给 http://www.w3.org/XML/1998/namespace，而  又不能绑定到任何其他前缀。前缀 xmlns 及其 URI http://www.w3.org/2000/xmlns/ 用于命名空间机制本身，因此在声明中完全禁止。
+注意：在6.5之前的Qt版本中，该功能采用`QString`，而非`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeProcessingInstruction(QAnyStringView target, QAnyStringView data = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeProcessingInstruction`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `data`：类型为 `QAnyStringView`。默认值为 `{}`。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+编写带有 `target` 和 `data` 的 XML 处理指令，其中 `data` 中不得包含序列“？>”。
+注意：在6.5之前的Qt版本中，这个功能是`QString`的，而不是`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeStartDocument(QAnyStringView version)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeStartDocument`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `version`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+编写以XML版本号开端的文档`version`。
+注意：该函数不验证版本字符串，允许手动设置。然而，`QXmlStreamWriter`仅支持 XML 1.0。设置非“1.0”版本字符串不会改变写入者的行为或转义规则。确保声明版本与实际内容之间的一致性是调用者的责任。
+注意：在6.5之前的Qt版本中，该功能采用了`QString`，而非`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeStartDocument(QAnyStringView version, bool standalone)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeStartDocument`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `version`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `standalone`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+编写以XML版本号`version`和独立属性`standalone`开头的文档。
+注意：该函数不验证版本字符串，允许手动设置。然而，`QXmlStreamWriter`仅支持 XML 1.0。设置非“1.0”版本字符串不会改变写作者的行为或逃逸规则。确保声明版本与实际内容之间的一致性是调用者的责任。
+注意：在6.5之前的Qt版本中，该功能采用了`QString`，而非`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeStartDocument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeStartDocument`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+编写以XML版本号“1.0”开头的文档。
 
 ### `void QXmlStreamWriter::writeStartElement(QAnyStringView namespaceUri, QAnyStringView name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeStartElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入带有 `name` 的起始元素，前缀为指定`namespaceUri`。如果命名空间尚未声明，`QXmlStreamWriter` 会为其生成命名空间声明。后续调用 `writeAttribute()` 会为该元素添加属性。
+注意：在6.5之前的Qt版本中，该功能采用`QString`，而非取`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeStartElement(QAnyStringView qualifiedName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeStartElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qualifiedName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写一个带有`qualifiedName`的起始元素。后续调用`writeAttribute()`会为该元素添加属性。
+注意：在6.5之前的Qt版本中，该功能采用了`QString`，而非`QAnyStringView`。
 
 ### `void QXmlStreamWriter::writeTextElement(QAnyStringView namespaceUri, QAnyStringView name, QAnyStringView text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeTextElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+编写一个带有`name`的文本元素，前缀为指定`namespaceUri`，`text`。如果命名空间尚未声明，`QXmlStreamWriter`将为其生成命名空间声明。
+这是一个便利函数，等价于：
+注意：在6.5之前的Qt版本中，该功能采用了`QString`，而非`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `text`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ stream.writeStartElement(namespaceUri, name);
+ stream.writeCharacters(text);
+ stream.writeEndElement();
+```
 
 ### `void QXmlStreamWriter::writeTextElement(QAnyStringView qualifiedName, QAnyStringView text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamWriter` 的核心操作 `writeTextElement`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+写一个带有`qualifiedName`和`text`的文本元素。
+这是一个便利函数，等价于：
+注意：在6.5之前的Qt版本中，该功能采用`QString`，而非`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `qualifiedName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `text`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ stream.writeStartElement(qualifiedName);
+ stream.writeCharacters(text);
+ stream.writeEndElement();
+```
 
 ### `int autoFormattingIndent() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QXmlStreamWriter::autoFormattingIndent` 用于计算、查询或取得与“auto、Formatting、Indent”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示启用自动格式时用于缩进的空格或制表符数。正数表示空格，负数表示制表表。
+默认缩进是4。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoFormattingIndent()` 读取当前值；它不会修改应用状态。
 
 ### `void setAutoFormattingIndent(int spacesOrTabs)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoFormattingIndent`。调用它会改变 `QXmlStreamWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示启用自动格式时用于缩进的空格或制表符数。正数表示空格，负数表示制表表。
+默认缩进是4。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `spacesOrTabs`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoFormattingIndent(...)` 修改 `autoFormattingIndent`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setStopWritingOnError(bool stop)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStopWritingOnError`。调用它会改变 `QXmlStreamWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该特性允许在遇到错误后停止写入设备。
+如果该属性设置为`true`，写入者在遇到任何错误时立即停止写入，并忽略所有后续写入操作。当该属性设为`false`时，写入者可以在错误后继续写入，跳过无效写入但允许继续输出。
+注意这包括`Error::InvalidCharacter`、`Error::Encoding`和`Error::Custom`。无论设置如何，`Error::IO`始终被视为终端，停止写入。
+默认值是`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stop`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setStopWritingOnError(...)` 修改 `stopWritingOnError`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool stopWritingOnError() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `stopWritingOnError`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+该特性允许在遇到错误后停止写入设备。
+如果该属性设置为`true`，写入者在遇到任何错误时立即停止写入，并忽略所有后续写入操作。当该属性设为`false`时，写入者可以在错误后继续写入，跳过无效写入但允许继续输出。
+注意这包括`Error::InvalidCharacter`、`Error::Encoding`和`Error::Custom`。无论设置如何，`Error::IO`始终被视为终端，停止写入。
+默认值是`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `stopWritingOnError()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

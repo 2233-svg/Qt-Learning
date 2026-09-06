@@ -76,101 +76,50 @@ void Widget::paintEvent(QPaintEvent *)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QPainterStateGuard::QPainterStateGuard(QPainter *painter, QPainterStateGuard::InitialState state = InitialState::Save)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPainterStateGuard` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `state`：类型为 `QPainterStateGuard::InitialState`。默认值为 `InitialState::Save`。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QPainterStateGuard，并在`state`被`InitialState::Save`时调用`painter` `save()`（默认为默认）。当 QPainterStateGuard 被销毁时，`restore()` 调用频率与恢复`QPainter`状态时`save()`调用次数相同。
 
 ### `[noexcept] QPainterStateGuard::QPainterStateGuard(QPainterStateGuard &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPainterStateGuard` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QPainterStateGuard &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动构建一个画家州卫队，从`other`。
 
 ### `[noexcept] QPainterStateGuard::~QPainterStateGuard()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPainterStateGuard` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QPainterStateGuard`实例，召唤`restore()`频率与恢复`QPainter`状态的频率相当`save()`。
 
 ### `void QPainterStateGuard::restore()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPainterStateGuard::restore` 用于执行与“恢复”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当内部保存/恢复计数器大于零时，调用`QPainter::restore()`。
+注意：在调试构建中，如果计数器已经归零，该函数会断言。
 
 ### `void QPainterStateGuard::save()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPainterStateGuard::save` 用于执行与“保存”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用`QPainter::save()`，并使内部存档/恢复计数器增加一级。
 
 ### `[noexcept] void QPainterStateGuard::swap(QPainterStateGuard &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPainterStateGuard::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QPainterStateGuard &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与这位画家州卫队交换`other`。这个操作非常快，从未失败过。
 
 ### `[noexcept] QPainterStateGuard &QPainterStateGuard::operator=(QPainterStateGuard &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPainterStateGuard` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QPainterStateGuard &`。
-- 参数 `other`：类型为 `QPainterStateGuard &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动——分配`other`给这位画家州卫队。
 
 ## 6. 深入实践与常见坑
 

@@ -73,49 +73,31 @@ if (instance.create()) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QVulkanDeviceFunctions *QVulkanInstance::deviceFunctions(VkDevice device)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `deviceFunctions` 属于 Vulkan 动态函数取得或调用过程。先保证 QVulkanInstance 有效、核心版本/扩展已启用，再区分实例级与设备级函数并检查 VkResult 或返回指针。
-
-**签名拆解：**
-
-- 返回值：`QVulkanDeviceFunctions *`。
-- 参数 `device`：类型为 `VkDevice`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回暴露设备级核心 Vulkan 命令集的 `QVulkanDeviceFunctions` 对象，且保证跨平台功能正常。
+注意：返回对象中的 Vulkan 函数只能以 `device` 或 `device` 的子对象（VkQueue、VkCommandBuffer）作为首参数调用。这是因为这些函数通过 vkGetDeviceProcAddr 解析，以避免内部调度的潜在开销。
+注意：归还物品归`QVulkanInstance`所有和管理。请勿销毁或更改。
+注意：该对象是缓存的，因此再次用相同`device`调用该函数是一种廉价操作。然而，当设备被摧毁时，应用程序需通过调用`resetDeviceFunctions()`通知`QVulkanInstance`。
+核心 Vulkan 1.0 API 的功能将始终可用。对于更高版本的 Vulkan，如 1.1 和 1.2，`QVulkanDeviceFunctions` 对象会尝试解析这些核心 API 函数，但如果运行时 Vulkan 物理设备不支持这些功能，调用任何不支持函数会导致未指定行为。为了正确启用对 1.0 以上版本的支持，可能需要在 `create()` 前调用 `setApiVersion()` 来设置合适的实例 API 版本。此外，应用程序还应在 VkPhysicalDeviceProperties 中检查物理设备的 `apiVersion`。
 
 ### `void QVulkanInstance::resetDeviceFunctions(VkDevice device)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `resetDeviceFunctions` 属于 Vulkan 动态函数取得或调用过程。先保证 QVulkanInstance 有效、核心版本/扩展已启用，再区分实例级与设备级函数并检查 VkResult 或返回指针。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `VkDevice`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使给定`device`的`QVulkanDeviceFunctions`对象失效并销毁。
+当调用`deviceFunctions()`的VkDevice在应用计划继续运行时被销毁，可能在后续创建新的逻辑Vulkan设备时，必须调用该函数。
+在销毁`QVulkanInstance`之前无需调用，因为清理工作会自动完成。
 
 ### `PFN_vkVoidFunction QVulkanDeviceFunctions::vkGetDeviceProcAddr(VkDevice device, const char *name)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `vkGetDeviceProcAddr` 属于 Vulkan 动态函数取得或调用过程。先保证 QVulkanInstance 有效、核心版本/扩展已启用，再区分实例级与设备级函数并检查 VkResult 或返回指针。
-
-**签名拆解：**
-
-- 返回值：`PFN_vkVoidFunction`。
-- 参数 `device`：类型为 `VkDevice`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `name`：类型为 `const char *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对有效的 `VkDevice` 查询名为 `name` 的设备级 Vulkan 命令地址。命令不存在、扩展未启用或不能用于该设备时返回 `nullptr`；返回函数指针的签名和使用条件必须以对应 Vulkan 命令规范为准。
 
 ## 6. 深入实践与常见坑
 

@@ -98,489 +98,278 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 36 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[static, since 6.9] void QFontDatabase::addApplicationEmojiFontFamily(const QString &familyName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addApplicationEmojiFontFamily`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `familyName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+新增`familyName`作为应用定义的表情字体。
+对于显示多色表情符号或表情符号序列，Qt 默认会优先使用系统默认的表情符号字体。有时应用程序可能想要覆盖默认字体，以实现特定的视觉风格或显示系统不支持的表情符号。
 
 ### `[static, since 6.8] void QFontDatabase::addApplicationFallbackFontFamily(QChar::Script script, const QString &familyName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addApplicationFallbackFontFamily`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `script`：类型为 `QChar::Script`。没有默认值，调用时必须提供。传入 `QChar::Script` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `familyName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+新增`familyName`作为应用定义的`script`备用字体。
+当 Qt 遇到所选字体不支持的字符时，它会搜索备用字体列表以匹配它们。这确保即使主字体不支持，也能将多个脚本组合在一个字符串中。
+备选字体列表基于字符串的文字以及其他条件，如系统语言。
+虽然系统备份列表通常已足够，但在某些情况下，覆盖默认行为是有用的。其中一种情况是使用应用程序字体作为备份以确保跨平台一致性。
+在另一种情况下，应用可能使用具有区域差异的脚本编写，并希望在多个区域以未翻译方式运行。在这种情况下，用与应用语言匹配的备份覆盖本地区域的备份可能很有用。
+通过将`familyName`传递给 addApplicationFallbackFontFamily()，当匹配 `script` 缺失字符时，该族将成为首选族。`script`必须是有效脚本（`QChar::Script_Latin` 或更高）。当为同一脚本添加多个字体时，它们会按相反顺序优先排序，因此最后添加的字体族优先检查，依此类推。
+注意：Qt的字体匹配算法考虑`QChar::Script_Common`（未确定的文字）和`QChar::Script_Latin`相同。为其中任一添加后备也会适用于另一方。
 
 ### `[static] int QFontDatabase::addApplicationFont(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addApplicationFont`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`fileName`指定的文件加载字体并向应用程序开放。返回一个 ID，可用于再次用 `removeApplicationFont()` 移除字体或检索字体中包含的族名列表。
+如果字体无法加载，函数返回 -1。
+目前仅支持TrueType字体、TrueType字体集合和OpenType字体。
 
 ### `[static] int QFontDatabase::addApplicationFontFromData(const QByteArray &fontData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addApplicationFontFromData`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `fontData`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`fontData`指定的二进制数据加载字体，并向应用程序开放。返回一个 ID，可用于再次用 `removeApplicationFont()` 移除字体或检索字体中包含的族名列表。
+如果字体无法加载，函数返回 -1。
+目前仅支持TrueType字体、TrueType字体集合和OpenType字体。
 
 ### `[static, since 6.9] QStringList QFontDatabase::applicationEmojiFontFamilies()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `applicationEmojiFontFamilies`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用程序定义的表情符号字体家族列表。
 
 ### `[static, since 6.8] QStringList QFontDatabase::applicationFallbackFontFamilies(QChar::Script script)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `applicationFallbackFontFamilies`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `script`：类型为 `QChar::Script`。没有默认值，调用时必须提供。传入 `QChar::Script` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`addApplicationFallbackFontFamily()`函数之前添加用于`script`的应用定义的退回字体族列表。
 
 ### `[static] QStringList QFontDatabase::applicationFontFamilies(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `applicationFontFamilies`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`id`标识的给定应用字体的字体家族列表。
 
 ### `[static] bool QFontDatabase::bold(const QString &family, const QString &style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bold`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果带有家族 `family` 和样式 `style` 的字体加粗，返回 `true`;否则返回 `false`。
 
 ### `[static] QStringList QFontDatabase::families(QFontDatabase::WritingSystem writingSystem = Any)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `families`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `writingSystem`：类型为 `QFontDatabase::WritingSystem`。默认值为 `Any`。传入 `QFontDatabase::WritingSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回支持该`writingSystem`的可用字体家族的排序列表。
+如果一个家族存在于多个铸造厂，该字体的返回名称为“family [foundry]”。示例：“Times [Adobe]”、“Times [Cronyx]”、“Palatino”。
 
 ### `[static] QFont QFontDatabase::font(const QString &family, const QString &style, int pointSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `font`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pointSize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个具有族`family`、样式`style`和点大小`pointSize`的 `QFont` 对象。如果无法创建匹配的字体，则返回使用应用程序默认字体的 `QFont` 对象。
 
 ### `[static] bool QFontDatabase::isBitmapScalable(const QString &family, const QString &style = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isBitmapScalable`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果具有家族 `family` 和样式 `style` 的字体是可缩放的位图字体，返回 `true`;否则返回 `false`。缩放位图字体通常会产生不美观且几乎难以阅读的结果，因为字体的像素是按比例缩放的。如果需要缩放位图字体，最好将其缩放到`smoothSizes()`返回的固定大小之一。
 
 ### `[static] bool QFontDatabase::isFixedPitch(const QString &family, const QString &style = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isFixedPitch`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字体具有家族`family`和样式`style`是固定音高，则返回`true`;否则返回`false`。
 
 ### `[static] bool QFontDatabase::isPrivateFamily(const QString &family)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isPrivateFamily`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`当且仅当`family`字体家族是私有的。
+例如，macOS 和 iOS 上就会出现这种情况，系统界面的字体对用户来说是无法访问的。为了完整起见，`QFontDatabase::families()` 返回所有字体家族，包括私有字体。如果你正在开发字体选择控制，应该使用这个功能来隐藏私有字体。
 
 ### `[static] bool QFontDatabase::isScalable(const QString &family, const QString &style = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isScalable`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果具有家族 `family` 和样式 `style` 的字体可扩展，返回 `true`;否则返回 `false`。
 
 ### `[static] bool QFontDatabase::isSmoothlyScalable(const QString &family, const QString &style = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isSmoothlyScalable`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果具有家族 `family` 和样式 `style` 的字体可平滑缩放，返回 `true`;否则返回 `false`。如果该函数返回 `true`，可以安全地将该字体缩放到任意大小，且最终效果始终具有吸引力。
 
 ### `[static] bool QFontDatabase::italic(const QString &family, const QString &style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `italic`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果具有家族 `family` 和样式 `style` 的字体为斜体，返回 `true`;否则返回 `false`。
 
 ### `[static] QList<int> QFontDatabase::pointSizes(const QString &family, const QString &styleName = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `pointSizes`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `styleName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回具有家族 `family` 和样式`styleName`的字体可用点大小列表。列表可能是空的。
 
 ### `[static] bool QFontDatabase::removeAllApplicationFonts()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `removeAllApplicationFonts`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除之前使用 `addApplicationFont()` 和 `addApplicationFontFromData()` 添加的所有本地应用字体。
+如果字体卸载成功，返回`true`;否则返回`false`。
 
 ### `[static, since 6.9] bool QFontDatabase::removeApplicationEmojiFontFamily(const QString &familyName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `removeApplicationEmojiFontFamily`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `familyName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`familyName`从应用程序定义的表情符号字体列表中，前提是之前已随`addApplicationEmojiFontFamily()`添加。
+如果姓氏在列表中，则返回 true;如果不在列表中，则返回 false。
 
 ### `[static, since 6.8] bool QFontDatabase::removeApplicationFallbackFontFamily(QChar::Script script, const QString &familyName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `removeApplicationFallbackFontFamily`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `script`：类型为 `QChar::Script`。没有默认值，调用时必须提供。传入 `QChar::Script` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `familyName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只要`familyName`之前已随`addApplicationFallbackFontFamily()`添加，则从`script`的应用自定义备用字体列表中移除。
+如果姓氏在列表中，则返回 true;如果不在列表中，则返回 false。
 
 ### `[static] bool QFontDatabase::removeApplicationFont(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `removeApplicationFont`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除之前加载的应用程序字体，由`id`识别。如果字体卸载成功，返回`true`;否则返回`false`。
 
 ### `[static, since 6.9] void QFontDatabase::setApplicationEmojiFontFamilies(const QStringList &familyNames)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setApplicationEmojiFontFamilies`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `familyNames`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将应用程序定义的表情字体列表设置为`familyNames`。
 
 ### `[static, since 6.8] void QFontDatabase::setApplicationFallbackFontFamilies(QChar::Script script, const QStringList &familyNames)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setApplicationFallbackFontFamilies`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `script`：类型为 `QChar::Script`。没有默认值，调用时必须提供。传入 `QChar::Script` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `familyNames`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置应用程序定义的`script` to `familyNames` 的备用字体列表。
+当 Qt 在 `script` 中遇到当前字体不支持的字符时，它会按`familyNames`的族顺序从头到尾检查，直到找到匹配的字符。更多详情请参见 `addApplicationFallbackFontFamily()`。
+该函数覆盖当前应用程序定义的备用字体列表，用于`script`。
 
 ### `[static] QList<int> QFontDatabase::smoothSizes(const QString &family, const QString &styleName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `smoothSizes`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `styleName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回具有族`family`和样式`styleName`且外观吸引人的字体点大小。列表可能是空的。对于不可缩放字体和位图可扩展字体，该函数等价于`pointSizes()`。
 
 ### `[static] QList<int> QFontDatabase::standardSizes()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `standardSizes`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回标准字体大小列表。
 
 ### `[static] QString QFontDatabase::styleString(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `styleString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述 `font` 样式的字符串。例如，“粗体 斜体”、“粗体”、“斜体”或“常规”。可能返回空字符串。
 
 ### `[static] QString QFontDatabase::styleString(const QFontInfo &fontInfo)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `styleString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `fontInfo`：类型为 `const QFontInfo &`。没有默认值，调用时必须提供。传入 `const QFontInfo &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述 `fontInfo` 风格的字符串。例如，“加粗斜体”、“加粗”、“斜体”或“常规”。可能返回空字符串。
 
 ### `[static] QStringList QFontDatabase::styles(const QString &family)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `styles`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该字体家族可用的样式列表`family`。一些示例样式：“Light”、“Light Italic”、“Brun”、“Oblique”、“Demi”。该列表可能是空白的。
 
 ### `[static] QFont QFontDatabase::systemFont(QFontDatabase::SystemFont type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `systemFont`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数 `type`：类型为 `QFontDatabase::SystemFont`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最适合特定`type`的字体，确保与系统的外观和感觉完美集成。
 
 ### `[static] int QFontDatabase::weight(const QString &family, const QString &style)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `weight`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `style`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回具有家族`family`和样式`style`的字体权重。如果没有此类家族和样式组合，返回为-1。
 
 ### `[static] QString QFontDatabase::writingSystemName(QFontDatabase::WritingSystem writingSystem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `writingSystemName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `writingSystem`：类型为 `QFontDatabase::WritingSystem`。没有默认值，调用时必须提供。传入 `QFontDatabase::WritingSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`writingSystem`的名称（例如用于在对话框中显示给用户）。
 
 ### `[static] QString QFontDatabase::writingSystemSample(QFontDatabase::WritingSystem writingSystem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `writingSystemSample`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `writingSystem`：类型为 `QFontDatabase::WritingSystem`。没有默认值，调用时必须提供。传入 `QFontDatabase::WritingSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含`writingSystem`示例字符的字符串。
 
 ### `[static] QList<QFontDatabase::WritingSystem> QFontDatabase::writingSystems()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `writingSystems`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QFontDatabase::WritingSystem>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个排序的可用书写系统列表。这是根据系统上所有已安装字体的信息生成的列表。
 
 ### `[static] QList<QFontDatabase::WritingSystem> QFontDatabase::writingSystems(const QString &family)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `writingSystems`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QFontDatabase::WritingSystem>`。
-- 参数 `family`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定字体支持的书写系统排序列表`family`。
 
 ### `enum SystemFont { GeneralFont, FixedFont, TitleFont, SmallestReadableFont }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDatabase` 暴露的类型声明 `System、字体`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QFontDatabase::GeneralFont`：`0`;默认系统字体。
+- `QFontDatabase::FixedFont`：`1`;系统推荐的固定字体。
+- `QFontDatabase::TitleFont`：`2`;系统标准字体用于标题。
+- `QFontDatabase::SmallestReadableFont`：`3`;最小的系统可读字体。
 
 ### `enum WritingSystem { Any, Latin, Greek, Cyrillic, Armenian, …, Nko }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDatabase` 暴露的类型声明 `Writing、System`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QFontDatabase::Any`：`0`
+- `QFontDatabase::Latin`：`1`
+- `QFontDatabase::Greek`：`2`
+- `QFontDatabase::Cyrillic`：`3`
+- `QFontDatabase::Armenian`：`4`
+- `QFontDatabase::Hebrew`：`5`
+- `QFontDatabase::Arabic`：`6`
+- `QFontDatabase::Syriac`：`7`
+- `QFontDatabase::Thaana`：`8`
+- `QFontDatabase::Devanagari`：`9`
+- `QFontDatabase::Bengali`：`10`
+- `QFontDatabase::Gurmukhi`：`11`
+- `QFontDatabase::Gujarati`：`12`
+- `QFontDatabase::Oriya`：`13`
+- `QFontDatabase::Tamil`：`14`
+- `QFontDatabase::Telugu`：`15`
+- `QFontDatabase::Kannada`：`16`
+- `QFontDatabase::Malayalam`：`17`
+- `QFontDatabase::Sinhala`：`18`
+- `QFontDatabase::Thai`：`19`
+- `QFontDatabase::Lao`：`20`
+- `QFontDatabase::Tibetan`：`21`
+- `QFontDatabase::Myanmar`：`22`
+- `QFontDatabase::Georgian`：`23`
+- `QFontDatabase::Khmer`：`24`
+- `QFontDatabase::SimplifiedChinese`：`25`
+- `QFontDatabase::TraditionalChinese`：`26`
+- `QFontDatabase::Japanese`：`27`
+- `QFontDatabase::Korean`：`28`
+- `QFontDatabase::Vietnamese`：`29`
+- `QFontDatabase::Symbol`：`30`
+- `QFontDatabase::Other`：`Symbol`;（与符号相同）
+- `QFontDatabase::Ogham`：`31`
+- `QFontDatabase::Runic`：`32`
+- `QFontDatabase::Nko`：`33`
 
 ## 6. 深入实践与常见坑
 

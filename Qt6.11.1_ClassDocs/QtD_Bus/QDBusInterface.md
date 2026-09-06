@@ -61,39 +61,21 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 2 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QDBusInterface::QDBusInterface(const QString &service, const QString &path, const QString &interface = QString(), const QDBusConnection &connection = QDBusConnection::sessionBus(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusInterface` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `service`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `interface`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `connection`：类型为 `const QDBusConnection &`。默认值为 `QDBusConnection::sessionBus()`。传入 `const QDBusConnection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在服务`service`路径`path`的对象上创建与接口`interface`关联的动态QDBusInterface对象，使用给定的`connection`。如果`interface`是空字符串，创建的对象将指向通过内省该对象找到的所有接口合并。否则，如果`interface`不是空的，QDBusInterface对象将被缓存以加快对同一接口的进一步创建。
+`parent`传递给基类构造函数。
+如果远程服务`service`不存在，或者在尝试获取远程接口描述`interface`时发生错误，所创建的对象将无效（见`isValid()`）。
 
 ### `[virtual noexcept] QDBusInterface::~QDBusInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁对象接口，释放所有资源。
 
 ## 6. 深入实践与常见坑
 

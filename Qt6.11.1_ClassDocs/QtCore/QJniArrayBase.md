@@ -76,126 +76,70 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QJniArrayBase::size_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArrayBase` 的配置属性。初始化或状态切换时通过 `setSize_type(...)` 设置，之后用 `size_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:size_type`。
-- 属性名：`QJniArrayBase`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个32位整数。
 
 ### `[static] template <typename Container, QJniArrayBase::if_compatible_source_container<Container> = true> auto QJniArrayBase::fromContainer(Container &&container)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromContainer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Container, QJniArrayBase::if_compatible_source_container<Container> = true> auto`。
-- 参数 `container`：类型为 `Container &&`。没有默认值，调用时必须提供。传入 `Container &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 Java 数组，`container`中存储数据，并返回一个`QJniArray`实例进行包裹。
+只有当`Container`是存储JNI类型或等效C类型元素的容器，并提供前向迭代器时，才参与超载解析。
+构造`QJniArray`的专化取决于`container`的值类型。对于`Container<T>`（例如，`QList<T>`），通常为`QJniArray<T>`，但有以下例外：
+- `Container`：专业化
+- `QByteArray`：`QJniArray`<jbyte>
+- `QStringList`：`QJniArray`<jstring>
+- `Container::value_type`：专业化
+- `QJniObject`：`QJniArray`<jobject>
 
 ### `bool QJniArrayBase::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数组大小为0，返回`true`;否则返回`false`。
+`invalid`数组总是空的。
+`isValid()`，`size()`。
 
 ### `bool QJniArrayBase::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QJniArray`对象是否包裹有效`jobject`。对于无效的`QJniArray`实例，`object()`返回`nullptr`。对无效对象进行循环是安全的（bestart() 返回与 end()相同），调用无效数组的 `toContainer()` 返回空容器。
 
 ### `template <typename T = jobject> T QJniArrayBase::object() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArrayBase::object` 用于计算、查询或取得与“object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename T = jobject> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T = jobject> T`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QJniArray`持有的对象类型为T，这可以是JNI对象类型之一。
 
 ### `QJniArrayBase::size_type QJniArrayBase::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QJniArrayBase` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`QJniArrayBase::size_type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组大小。
 
 ### `[noexcept protected] void QJniArrayBase::swap(QJniArrayBase &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniArrayBase::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QJniArrayBase &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该数组对象与`other`交换。此操作非常快速且从未失败。
 
 ### `QJniArrayBase::operator QJniObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArrayBase` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QJniObject`，包裹的与`QJniArray`实例相同的`jobject`。
 
 ### `size_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJniArrayBase` 的 `尺寸或数量、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个32位整数。
 
 ## 6. 深入实践与常见坑
 

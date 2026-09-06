@@ -75,218 +75,115 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[default] QThreadFunction::QThreadFunction(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QThreadFunction` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个具有给定`parent`的QThreadFunction。
 
 ### `[override virtual] QThreadFunction::~QThreadFunction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QThreadFunction` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁`QThreadFunction`。如果`QThreadFunction`未运行，则不执行其他操作，否则相关未来被取消，根据自动延迟同步执行以下操作：
+- `Automatic Delayed Synchronization`：行动
+- `On`：关联的 `QFuture` 存储在全局注册表中。在应用退出时使用 `QThreadFunctionBase::syncAll()` 同步之前存储在全局注册表中的所有未来。
+- `Off`：直接执行对`QFuture::waitForFinished()`的阻塞调用。
+当自动延迟同步开启时，未来的取消可以在仍在运行的独立线程中拦截，以便尽快完成任务而不完成任务。
+最后，在应用退出时，应调用`QThreadFunctionBase::syncAll()`以同步所有可能在独立线程中运行的函数。调用`QThreadFunctionBase::syncAll()`是阻塞，以防部分函数仍在最终确定。
+注意：当自动延迟同步开启时，函数在`QThreadFunction`的解构器完成后仍会运行一段时间，因此用户有责任确保该函数可能操作的所有数据仍然可用。如果无法保证，请通过`QThreadFunction::setAutoDelayedSync`（false）将自动延迟同步设置为关闭。此时`QThreadFunction`解构器会阻塞等待函数完成后再删除`QThreadFunction`。请参阅`QCustomTask`文档了解`Deleter`模板参数的更多信息。
 
 ### `QFuture<ResultType> QThreadFunction::future() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::future` 用于计算、查询或取得与“future”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFuture<ResultType>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFuture<ResultType>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回<ResultType>与该函数相关的`QFuture`，在独立线程中执行。
 
 ### `QFutureWatcher<ResultType> *QThreadFunction::futureWatcher()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::futureWatcher` 用于计算、查询或取得与“future、Watcher”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFutureWatcher<ResultType> *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFutureWatcher<ResultType> *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向与该函数关联的`QFutureWatcher<ResultType>`的指针，该函数在独立线程中执行。返回的监视者的生命周期绑定到`QThreadFunction`实例。
+例如，如果你需要对未来执行有更多控制，比如连接返回观察者的进度信号，可以使用这个函数。
 
 ### `const QFutureWatcher<ResultType> *QThreadFunction::futureWatcher() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::futureWatcher` 用于计算、查询或取得与“future、Watcher”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QFutureWatcher<ResultType> *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QFutureWatcher<ResultType> *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该函数相关的`QFutureWatcher<ResultType>`的`const`指针，在独立线程中执行。
 
 ### `bool QThreadFunction::isAutoDelayedSync() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAutoDelayedSync`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回自动延迟同步是否开启。
 
 ### `bool QThreadFunction::isDone() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDone`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回函数是否已完成。
 
 ### `bool QThreadFunction::isResultAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isResultAvailable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回结果是否准备好。
 
 ### `ResultType QThreadFunction::result() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::result` 用于计算、查询或取得与“结果”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `ResultType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`ResultType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回在独立线程中执行的函数报告的结果类型。
+注意：请通过调用 `isResultAvailable()` 确保结果已准备好，否则调用 result() 可能会阻塞，如果结果尚未报告，甚至函数执行完成时未报告任何结果也会崩溃。
 
 ### `ResultType QThreadFunction::resultAt(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::resultAt` 用于计算、查询或取得与“结果、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `ResultType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`ResultType`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由在 `index` 处执行的独立线程中函数报告的结果类型。
 
 ### `QList<ResultType> QThreadFunction::results() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::results` 用于计算、查询或取得与“results”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<ResultType>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<ResultType>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由在独立线程中执行的函数报告的 ResultType 列表。
 
 ### `void QThreadFunction::setAutoDelayedSync(bool on)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoDelayedSync`。调用它会改变 `QtTaskTree::QThreadFunction` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `on`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将自动延迟同步设置为`on`。
+默认情况下，自动延迟同步是开启的，这意味着运行中的`QThreadFunction`对象不会阻塞等待，直到在独立线程中运行的函数完成。相反，关联的`QFuture`会被取消，函数会一直运行直到完成。通过`QPromise`参数，函数可以在独立线程中运行，从而提前完成，从而完成工作。如果自动延迟同步开启，需要在应用退出时调用`QThreadFunctionBase::syncAll()`，以同步所有可能运行的独立线程函数。
+当自动延迟同步关闭时，同步发生在`QThreadFunction`的销毁时，这可能会阻断调用线程相当长的时间。
+自动同步仅在主线程执行`QThreadFunction`时使用。
 
 ### `template <typename Function, typename... Args> void QThreadFunction::setThreadFunctionData(Function &&function, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setThreadFunctionData`。调用它会改变 `QtTaskTree::QThreadFunction` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename Function, typename... Args> void`。
-- 参数 `function`：类型为 `Function &&`。没有默认值，调用时必须提供。传入 `Function &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在调用start()时，将要执行的`function`设置在一个独立线程中，传递`args`。
 
 ### `void QThreadFunction::setThreadPool(QThreadPool *pool)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setThreadPool`。调用它会改变 `QtTaskTree::QThreadFunction` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pool`：类型为 `QThreadPool *`。没有默认值，调用时必须提供。传入 `QThreadPool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置执行调用时使用的`QThreadPool` `pool`。如果传递的`pool` `nullptr`，则使用该`QThreadPool::globalInstance()`。
 
 ### `ResultType QThreadFunction::takeResult() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::takeResult` 用于计算、查询或取得与“取出、结果”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `ResultType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`ResultType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会在独立线程中执行函数报告的结果类型。
+注意：确保结果已准备好，方法是调用 `isResultAvailable()`，否则调用 takeResult() 可能会阻塞，如果结果尚未报告，甚至函数执行完成时未报告任何结果，可能会崩溃。
 
 ### `QThreadPool *QThreadFunction::threadPool() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QThreadFunction::threadPool` 用于计算、查询或取得与“thread、Pool”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QThreadPool *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QThreadPool *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回执行调用时使用的线程池。如果返回`nullptr`，则使用该`QThreadPool::globalInstance()`。
 
 ## 6. 深入实践与常见坑
 

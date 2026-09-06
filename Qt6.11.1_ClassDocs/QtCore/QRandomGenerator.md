@@ -104,503 +104,339 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 37 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QRandomGenerator::result_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的配置属性。初始化或状态切换时通过 `setResult_type(...)` 设置，之后用 `result_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:result_type`。
-- 属性名：`QRandomGenerator`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个类型def到`operator()`返回的类型。也就是quint32。
 
 ### `QRandomGenerator::QRandomGenerator(quint32 seedValue = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `seedValue`：类型为 `quint32`。默认值为 `1`。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该QRandomGenerator对象初始化为`seedValue`作为种子。两个用相同种子值构建或重新种子的对象会产生相同的数字序列。
 
 ### `template <qsizetype N> QRandomGenerator::QRandomGenerator(const quint32 (&)[N] seedBuffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `seedBuffer`：类型为 `const quint32 (&)[N]`。没有默认值，调用时必须提供。传入 `const quint32 (&)[N]` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用数组`seedBuffer`中的值作为种子初始化该QRandomGenerator对象。两个用相同种子值构建或重新种子的对象会产生相同的数字序列。
 
 ### `[noexcept] QRandomGenerator::QRandomGenerator(std::seed_seq &sseq)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `sseq`：类型为 `std::seed_seq &`。没有默认值，调用时必须提供。传入 `std::seed_seq &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+初始化该 QRandomGenerator 对象时，种子序列为 `sseq` 作为种子。两个用相同种子值构建或重新种种的对象会产生相同的数字序列。
 
 ### `QRandomGenerator::QRandomGenerator(const quint32 *begin, const quint32 *end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+初始化该QRandomGenerator对象时，使用`begin`到`end`之间的值作为种子。两个用相同种子值构建或重新种种的对象会产生相同的数字序列。
+该构造函数等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `begin`：类型为 `const quint32 *`。没有默认值，调用时必须提供。传入 `const quint32 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `const quint32 *`。没有默认值，调用时必须提供。传入 `const quint32 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     std::seed_seq sseq(begin, end);
+     QRandomGenerator generator(sseq);
+```
 
 ### `QRandomGenerator::QRandomGenerator(const quint32 *seedBuffer, qsizetype len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+用数组`seedBuffer`中找到的`len`值初始化该QRandomGenerator对象作为种子。两个用相同种子值构建或重新种种的对象会产生相同的数字序列。
+该构造函数等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `seedBuffer`：类型为 `const quint32 *`。没有默认值，调用时必须提供。传入 `const quint32 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `len`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     std::seed_seq sseq(seedBuffer, seedBuffer + len);
+     QRandomGenerator generator(sseq);
+```
 
 ### `QRandomGenerator::QRandomGenerator(const QRandomGenerator &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QRandomGenerator &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`other`对象中创建生成元状态的副本。如果`other` `QRandomGenerator::system()`或其副本，该对象也会读取操作系统的随机生成设施。在这种情况下，两个对象生成的序列将不同。
+在其他所有情况下，新的QRandomGenerator对象将从确定性序列中与`other`对象相同的位置开始。从此，两个对象将生成相同的序列。
+因此，不建议创建`QRandomGenerator::global()`的副本。如果需要一个排他确定性生成器，可以考虑用`securelySeeded()`获得一个与`QRandomGenerator::global()`无关系的新对象。
 
 ### `double QRandomGenerator::bounded(double highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `highest` 的有效范围；返回类型是 `double`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成一个介于0（含）和`highest`（独占）之间的随机双重。该函数等价于和，实现为：
+如果`highest`参数为负，结果也会为负;如果是无限或NaN，结果也会是无限或NaN（即非随机）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`double`。
-- 参数 `highest`：类型为 `double`。没有默认值，调用时必须提供。传入 `double` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return generateDouble() * highest;
+```
 
 ### `int QRandomGenerator::bounded(int highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `highest` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `highest`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个随机的32位量，范围介于0（含）到`highest`（独占）。`highest`必须是正的。
+注意，该函数无法获得整数 32 位范围内的值。相反，使用 `generate()` 并 cast 为整数。
 
 ### `qint64 QRandomGenerator::bounded(qint64 highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `highest` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `highest`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个介于0（含）和`highest`（排斥）之间的随机64位量。`highest`必须是正的。
+注意，该函数无法获得`qint64` 64位范围内的值。相反，使用`generate64()`并cast为qint64，或者使用该函数的无符号版本。
+注意：该函数以循环形式实现，取决于获得的随机值。长期运行平均应接近2次，但如果随机生成器有缺陷，该函数执行时间可能明显延长。
 
 ### `quint32 QRandomGenerator::bounded(quint32 highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `highest` 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成一个介于0（含）和`highest`（排他）之间的随机32位量。同样的结果也可以通过使用参数为0和`highest - 1`的`std::uniform_int_distribution`获得。该类也可以用于获得大于32位的量;对于64位，也可以使用64位有界()重载。
+例如，要得到0到255（含）之间的值，可以写成：
+当然，也可以通过只将`generate()`结果掩蔽到较低的8位来实现同样的效果。无论哪种解法，效率都一样。
+注意，该函数无法获得quint32完整32位范围的值。相反，使用`generate()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`quint32`。
-- 参数 `highest`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     quint32 v = QRandomGenerator::global()->bounded(256);
+```
 
 ### `quint64 QRandomGenerator::bounded(quint64 highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `highest` 的有效范围；返回类型是 `quint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数 `highest`：类型为 `quint64`。没有默认值，调用时必须提供。传入 `quint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个介于0（含）和`highest`（排他）之间的随机64位量。同样的结果也可以通过使用参数为0和`highest - 1`的`std::uniform_int_distribution<quint64>`获得。
+注意，该函数无法获得`quint64` 64位范围内的值。相反，请使用`generate64()`。
+注意：该函数以循环形式实现，取决于获得的随机值。长期运行平均应接近2次，但如果随机生成器有缺陷，该函数执行时间可能明显延长。
 
 ### `int QRandomGenerator::bounded(int lowest, int highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `lowest`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个随机的32位量，介于`lowest`（含）和`highest`（独占）之间，这两个数值都可能是负数，但`highest`必须大于`lowest`。
+注意，该函数无法获得整数值的完整32位范围。相反，使用 `generate()` 并转换为整数。
 
 ### `quint64 QRandomGenerator::bounded(quint64 lowest, unsigned int highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `quint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数 `lowest`：类型为 `quint64`。没有默认值，调用时必须提供。传入 `quint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `unsigned int`。没有默认值，调用时必须提供。传入 `unsigned int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当参数类型不完全匹配时，该函数的存在是为了帮助超载解析。它们会将较小的类型提升为较大类型，并调用正确的超载。
 
 ### `qint64 QRandomGenerator::bounded(qint64 lowest, qint64 highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `lowest`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当参数类型不完全匹配时，该函数的存在是为了帮助超载解析。它们会将较小的类型提升为较大类型，并调用正确的超载。
 
 ### `quint32 QRandomGenerator::bounded(quint32 lowest, quint32 highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数 `lowest`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当参数类型不完全匹配时，该函数的存在是为了帮助超载解析。它们会将较小的类型提升为较大类型，并调用正确的超载。
 
 ### `quint64 QRandomGenerator::bounded(quint64 lowest, quint64 highest)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `quint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数 `lowest`：类型为 `quint64`。没有默认值，调用时必须提供。传入 `quint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `quint64`。没有默认值，调用时必须提供。传入 `quint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当参数类型不完全匹配时，该函数的存在是为了帮助超载解析。它们会将较小的类型提升为较大类型，并调用正确的超载。
 
 ### `void QRandomGenerator::discard(unsigned long long z)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::discard` 用于执行与“discard”相关的操作。调用时要先确认当前状态和 `z` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+丢弃序列中的接下来的`z`条。该方法等同于调用`generate()` `z`次并丢弃结果，具体如下：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `z`：类型为 `unsigned long long`。没有默认值，调用时必须提供。传入 `unsigned long long` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     while (z--)
+         generator.generate();
+```
 
 ### `template < typename UInt, size_t N, QRandomGenerator::IfValidUInt<UInt> = true > void QRandomGenerator::fillRange(UInt (&)[N] buffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::fillRange` 用于计算、查询或取得与“fill、Range”相关的操作。调用时要先确认当前状态和 `buffer` 的有效范围；返回类型是 `template < typename UInt, size_t N, QRandomGenerator::IfValidUInt<UInt> = true > void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成`N` 32位或64位的数量（取决于类型`UInt`），并将其存储在`buffer`数组中。这是一次获得多个数量的最高效方法，因为它减少了随机数生成器源的调用次数。
+例如，为了生成两个32位量，可以写成：
+也可以调用一次`generate64()`，然后将64位值的两半拆分。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template < typename UInt, size_t N, QRandomGenerator::IfValidUInt<UInt> = true > void`。
-- 参数 `buffer`：类型为 `UInt (&)[N]`。没有默认值，调用时必须提供。传入 `UInt (&)[N]` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     quint32 array[2];
+     QRandomGenerator::global()->fillRange(array);
+```
 
 ### `template <typename UInt, QRandomGenerator::IfValidUInt<UInt> = true> void QRandomGenerator::fillRange(UInt *buffer, qsizetype count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::fillRange` 用于计算、查询或取得与“fill、Range”相关的操作。调用时要先确认当前状态和 `buffer`、`count` 的有效范围；返回类型是 `template <typename UInt, QRandomGenerator::IfValidUInt<UInt> = true> void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成`count` 32位或64位的数量（取决于类型`UInt`），并将其存储在指向`buffer`的缓冲区中。这是一次获得多个数量的最高效方法，因为它减少了随机数生成器源的调用次数。
+例如，为了用随机值填充一个包含16个条目的列表，可以写成：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename UInt, QRandomGenerator::IfValidUInt<UInt> = true> void`。
-- 参数 `buffer`：类型为 `UInt *`。没有默认值，调用时必须提供。传入 `UInt *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QList<quint32> list;
+     list.resize(16);
+     QRandomGenerator::global()->fillRange(list.data(), list.size());
+```
 
 ### `quint64 QRandomGenerator::generate64()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::generate64` 用于计算、查询或取得与“generate、64”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个64位随机量并返回。
 
 ### `quint32 QRandomGenerator::generate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::generate` 用于计算、查询或取得与“generate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个32位随机量并返回。
 
 ### `template <typename ForwardIterator> void QRandomGenerator::generate(ForwardIterator begin, ForwardIterator end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::generate` 用于计算、查询或取得与“generate”相关的操作。调用时要先确认当前状态和 `begin`、`end` 的有效范围；返回类型是 `template <typename ForwardIterator> void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成32位量，并存储在`begin`到`end`之间的范围内。该函数等价于（并实现为）：
+该函数符合函数`std::seed_seq::generate`的要求，该函数要求无符号的32位整数值。
+注意，如果[开始，结束]范围指的是每个元素可存储超过32位的区域，元素初始化时仍仅包含32位数据。其他位为零。为了填满64位量，可以写成：
+如果区间指的是连续内存（如数组或`QList`数据），也可以使用`fillRange()`函数。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename ForwardIterator> void`。
-- 参数 `begin`：类型为 `ForwardIterator`。没有默认值，调用时必须提供。传入 `ForwardIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `ForwardIterator`。没有默认值，调用时必须提供。传入 `ForwardIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     std::generate(begin, end, [this]() { return generate(); });
+```
 
 ### `double QRandomGenerator::generateDouble()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::generateDouble` 用于计算、查询或取得与“generate、Double”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `double`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成一个典型值域[0， 1]的随机qreal（即包含零且排斥1）。
+该函数等价于：
+同样的方法也可以通过参数为0和1的`std::uniform_real_distribution`得到。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`double`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QRandomGenerator64 rd;
+     return std::generate_canonical<qreal, std::numeric_limits<qreal>::digits>(rd);
+```
 
 ### `[static] QRandomGenerator *QRandomGenerator::global()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `global`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回一个指向通过`securelySeeded()`做种的共享`QRandomGenerator`的指针。该函数应用于创建随机数据，而无需为特定用途创建高昂的安全种子`QRandomGenerator`或存储较大的`QRandomGenerator`对象。
+例如，以下方法生成随机的RGB颜色：
+对该对象的访问是线程安全的，因此可以在任何无锁线程中使用。该对象也可以被复制，复制产生的序列将与共享对象生成的序列相同。但请注意，如果有其他线程访问全局对象，这些线程可能会在不可预测的间隔中获得样本。
+注意：该功能是线程安全的。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QRandomGenerator *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return QColor::fromRgb(QRandomGenerator::global()->generate());
+```
 
 ### `[static constexpr] QRandomGenerator::result_type QRandomGenerator::max()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `max`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRandomGenerator::result_type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QRandomGenerator`可能产生的最大值。也就是说，`std::numeric_limits<result_type>::max()`。
 
 ### `[static constexpr] QRandomGenerator::result_type QRandomGenerator::min()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `min`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRandomGenerator::result_type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QRandomGenerator`可能产生的最小值。也就是0。
 
 ### `[static] QRandomGenerator QRandomGenerator::securelySeeded()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `securelySeeded`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRandomGenerator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个已安全种种`QRandomGenerator::system()`的新`QRandomGenerator`对象。该函数将获得`QRandomGenerator`所用算法的理想种子大小，因此是创建新`QRandomGenerator`对象并保留一段时间的推荐方法。
+鉴于安全种子确定性引擎所需的数据量，该函数成本较高，不应用于短期使用`QRandomGenerator`（用它生成少于2600字节的随机数据实际上是资源浪费）。如果使用方式不需要那么多数据，考虑使用`QRandomGenerator::global()`而不是存储`QRandomGenerator`对象。
 
 ### `void QRandomGenerator::seed(quint32 seed = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::seed` 用于执行与“seed”相关的操作。调用时要先确认当前状态和 `seed` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `seed`：类型为 `quint32`。默认值为 `1`。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用值 `seed` 作为种子重新种子。
 
 ### `[noexcept] void QRandomGenerator::seed(std::seed_seq &seed)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::seed` 用于执行与“seed”相关的操作。调用时要先确认当前状态和 `seed` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `seed`：类型为 `std::seed_seq &`。没有默认值，调用时必须提供。传入 `std::seed_seq &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用种子序列`seed`作为种子重新种种该对象。
 
 ### `[static] QRandomGenerator *QRandomGenerator::system()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `system`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRandomGenerator *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向共享`QRandomGenerator`的指针，该始终使用操作系统提供的设施生成随机数。系统设施在至少以下操作系统上被认为是加密学安全的：苹果操作系统（Darwin）、BSD、Linux、Windows。其他操作系统也可能如此。
+它们也可能由真正的硬件随机数生成器支持。因此，该函数返回的`QRandomGenerator`不应用于批量数据生成。相反，应用它从头部中播种`QRandomGenerator`或随机引擎<random>。
+该函数返回的对象是线程安全的，可以在任何没有锁的线程中使用。它也可以被复制，生成的`QRandomGenerator`也会访问操作系统的设施，但它们不会生成相同的序列。
+注意：该功能是线程安全的。
 
 ### `QRandomGenerator::result_type QRandomGenerator::operator()()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRandomGenerator::result_type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个32位随机量并返回。
 
 ### `bool operator!=(const QRandomGenerator &rng1, const QRandomGenerator &rng2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `rng1`：类型为 `const QRandomGenerator &`。没有默认值，调用时必须提供。传入 `const QRandomGenerator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rng2`：类型为 `const QRandomGenerator &`。没有默认值，调用时必须提供。传入 `const QRandomGenerator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个引擎`rng1`和`rng2`处于不同状态，或者其中一个引擎读取操作系统功能而另一个没有，返回`true`，否则`false`。
 
 ### `result_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRandomGenerator` 的 `结果、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个类型def到`operator()`返回的类型。也就是quint32。
 
 ### `qint64 bounded(int lowest, qint64 highest)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `lowest`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个介于`lowest`（含）和`highest`（独占）之间的随机64位量，这两个值都可以为负，但`highest`必须大于`lowest`。
+注意，该函数无法获得`qint64` 64位范围内的值。相反，使用 `generate64()` 并转换为 qint64。
+注意：该函数以循环形式实现，取决于获得的随机值。长期运行平均应接近2次，但如果随机生成器有缺陷，该函数执行时间可能明显延长。
 
 ### `qint64 bounded(qint64 lowest, int highest)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+生成一个随机的32位量，范围介于`lowest`（含）和`highest`（独占）。`highest`参数必须大于`lowest`。
+同样的结果也可以通过使用参数为`lowest`和`\a highest - 1`的`std::uniform_int_distribution`获得。该类还可以获得大于32位的数量。
+例如，要得到介于1000（含）和2000（不包括）之间的值，可以写成：
+注意，该函数无法获得quint32完整32位范围的值。相反，使用`generate()` 49。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`qint64`。
-- 参数 `lowest`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     quint32 v = QRandomGenerator::global()->bounded(1000, 2000);
+```
 
 ### `quint64 bounded(unsigned int lowest, quint64 highest)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRandomGenerator::bounded` 用于计算、查询或取得与“bounded”相关的操作。调用时要先确认当前状态和 `lowest`、`highest` 的有效范围；返回类型是 `quint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数 `lowest`：类型为 `unsigned int`。没有默认值，调用时必须提供。传入 `unsigned int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `highest`：类型为 `quint64`。没有默认值，调用时必须提供。传入 `quint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个介于`lowest`（含）和`highest`（排他）之间的随机64位量。`highest`参数必须大于`lowest`。
+同样的结果也可以通过使用参数为`lowest`和`\a highest - 1`的`std::uniform_int_distribution<quint64>`得到。
+注意，该函数无法获得`quint64` 64位范围内的值。相反，使用`generate64()`。
+注意：该函数以循环形式实现，取决于获得的随机值。长期运行平均应接近2次，但如果随机生成器有缺陷，该函数执行时间可能明显延长。
 
 ## 6. 深入实践与常见坑
 

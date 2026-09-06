@@ -89,368 +89,210 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 27 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QWeakPointer::QWeakPointer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个指向无物的QWeakPointer。
 
 ### `QWeakPointer::QWeakPointer(const QSharedPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QWeakPointer，保留对`other`所引用指针的弱引用。
+如果`T`是该类模板参数的派生类型，QWeakPointer会自动执行cast。否则，你会遇到编译器错误。
 
 ### `[noexcept] QWeakPointer::QWeakPointer(const QWeakPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QWeakPointer，保留对`other`所引用指针的弱引用。
+如果`T`是该类模板参数的派生类型，QWeakPointer会自动执行cast。否则，你会遇到编译器错误。
 
 ### `QWeakPointer::~QWeakPointer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁该`QWeakPointer`对象。该对象引用的指针不会被删除。
 
 ### `void QWeakPointer::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除该`QWeakPointer`对象，丢弃它可能指向指针的引用。
 
 ### `bool QWeakPointer::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该对象指向`nullptr`，返回`true`。
+注意，由于弱引用的特性，`QWeakPointer`引用的指针随时可能变`nullptr`，因此该函数返回的值可以从假变真，从一个调用到另一个调用。
 
 ### `QSharedPointer<T> QWeakPointer::lock() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::lock` 用于计算、查询或取得与“lock”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSharedPointer<T>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSharedPointer<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`toStrongRef()`一样。
+该功能是为了与 std：：weak_ptr 的 API 兼容性而提供。
 
 ### `[noexcept, since 6.7] template <typename X> bool QWeakPointer::owner_before(const QWeakPointer<X> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::owner_before` 用于计算、查询或取得与“owner、before”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> bool`。
-- 参数 `other`：类型为 `const QWeakPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `true`当且仅当该智能指针在实现定义的基于所有者的排序中先于`other`。该排序使得两个智能指针如果都是空的，或者它们都拥有同一对象（即使它们的表观类型和指针不同），则视为等价的。
 
 ### `[noexcept, since 6.7] template <typename X> bool QWeakPointer::owner_equal(const QWeakPointer<X> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::owner_equal` 用于计算、查询或取得与“owner、equal”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> bool`。
-- 参数 `other`：类型为 `const QWeakPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回报`true`当且仅当该智能指针和`other`持股时才会有回报。
 
 ### `[noexcept, since 6.7] size_t QWeakPointer::owner_hash() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::owner_hash` 用于计算、查询或取得与“owner、hash”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于所有者的该智能指针对象的哈希值。比较相等（如`owner_equal`）的智能指针将拥有相同的基于所有者的哈希值。
 
 ### `[noexcept] void QWeakPointer::swap(QWeakPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QWeakPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这个弱指针实例与`other`交换。该操作非常快且从未失败。
 
 ### `QSharedPointer<T> QWeakPointer::toStrongRef() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toStrongRef`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+将这个弱引用提升为强引用，并返回一个包含该引用的`QSharedPointer`对象。当升`QSharedPointer`时，该函数会验证该对象是否已经被删除。如果还没有，这个函数会增加对共享对象的引用数量，从而确保它不会被删除。
+由于该函数可能无法获得对共享对象的有效强引用，你应始终通过调用返回对象的`QSharedPointer::isNull()`来验证转换是否成功。
+例如，以下代码将被强引用的`QWeakPointer`提升，如果成功，则打印该索引的整数值：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QSharedPointer<T>`。
-- 参数：无。
+```cpp
+ QWeakPointer<int> weakref;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // ...
+
+ QSharedPointer<int> strong = weakref.toStrongRef();
+ if (strong)
+     qDebug() << "The value is:" << *strong;
+ else
+     qDebug() << "The value has already been deleted";
+```
 
 ### `QWeakPointer::operator bool() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果包含的指针不`nullptr`，返回`true`。该函数适用于`if-constructs`，例如：
+注意，由于弱引用的特性，`QWeakPointer`引用的指针随时可能变`nullptr`，因此该函数返回的值可能从真变假。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (weakref) { /*...*/ }
+```
 
 ### `bool QWeakPointer::operator!() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果该对象指向`nullptr`，返回`true`。该函数适合用于`if-constructs`，如：
+注意，由于弱引用的特性，`QWeakPointer`引用的指针随时可能变`nullptr`，因此该函数返回的值可以从假变真。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (!weakref) { /*...*/ }
+```
 
 ### `QWeakPointer<T> &QWeakPointer::operator=(const QSharedPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QWeakPointer<T> &`。
-- 参数 `other`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使该对象共享`other`的指针。当前指针引用被丢弃但未被删除。
+如果`T`是该类模板参数的派生类型，`QWeakPointer`会执行自动cast。否则，编译器会出错。
 
 ### `[noexcept] QWeakPointer<T> &QWeakPointer::operator=(const QWeakPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QWeakPointer<T> &`。
-- 参数 `other`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使该对象共享`other`的指针。当前指针引用被丢弃但未被删除。
+如果`T`是该类模板参数的派生类型，`QWeakPointer`会执行自动cast。否则，编译器会出错。
 
 ### `template <typename X, typename T> QWeakPointer<X> qWeakPointerCast(const QWeakPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::qWeakPointerCast` 用于计算、查询或取得与“q、Weak、Pointer、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QWeakPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QWeakPointer<X>`。
-- 参数 `src`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个弱指针指向`src`持有的指针，投射为类型`X`。类型`T`和`X`必须属于一个层级结构，`static_cast`才能成功。
+注意`X`必须使用与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用`qSharedPointerConstCast`来去除一致性。
 
 ### `template <typename T, typename X> bool operator!=(const QSharedPointer<T> &ptr1, const QWeakPointer<X> &ptr2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `ptr1`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ptr2`：类型为 `const QWeakPointer<X> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<X> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `ptr1` 和 `ptr2` 指向不同的指针，则返回 `true`。
+如果 `ptr2` 的模板参数不同于 `ptr1` 的，`QSharedPointer` 将尝试执行自动 `static_cast`，以确保正在比较的指针相等。如果 `ptr2` 的模板参数既不是 `ptr1` 的基类也不是派生类类型，你将得到编译错误。
 
 ### `template <typename T, typename X> bool operator!=(const QWeakPointer<T> &ptr1, const QSharedPointer<X> &ptr2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `ptr1`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ptr2`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<X> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `ptr1` 和 `ptr2` 指向不同的指针，则返回 `true`。
+如果 `ptr2` 的模板参数不同于 `ptr1` 的，`QSharedPointer` 将尝试执行自动 `static_cast`，以确保正在比较的指针相等。如果 `ptr2` 的模板参数既不是 `ptr1` 的基类也不是派生类类型，你将得到编译错误。
 
 ### `template <typename T> bool operator!=(const QWeakPointer<T> &lhs, std::nullptr_t)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `lhs`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`指的是有效（即非空）指针，返回`true`。
 
 ### `template <typename T> bool operator!=(std::nullptr_t, const QWeakPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rhs`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `rhs` 指向一个有效（即非空）指针，则返回 `true`。
 
 ### `template <typename T, typename X> bool operator==(const QSharedPointer<T> &ptr1, const QWeakPointer<X> &ptr2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `ptr1`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ptr2`：类型为 `const QWeakPointer<X> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<X> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `ptr1` 和 `ptr2` 指向相同的指针，则返回 `true`。
+如果 `ptr2` 的模板参数与 `ptr1` 的不同，`QSharedPointer` 将尝试执行自动 `static_cast` 以确保被比较的指针相等。如果 `ptr2` 的模板参数既不是 `ptr1` 的基类类型，也不是派生类型，你将得到编译错误。
 
 ### `template <typename T, typename X> bool operator==(const QWeakPointer<T> &ptr1, const QSharedPointer<X> &ptr2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `ptr1`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ptr2`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<X> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `ptr1` 和 `ptr2` 指向相同的指针，则返回 `true`。
+如果 `ptr2` 的模板参数与 `ptr1` 的不同，`QSharedPointer` 将尝试执行自动 `static_cast` 以确保被比较的指针相等。如果 `ptr2` 的模板参数既不是 `ptr1` 的基类类型，也不是派生类型，你将得到编译错误。
 
 ### `template <typename T> bool operator==(const QWeakPointer<T> &lhs, std::nullptr_t)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `lhs`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`指`nullptr`，返回会`true`。
 
 ### `template <typename T> bool operator==(std::nullptr_t, const QWeakPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QWeakPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rhs`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `rhs` 指的是 `nullptr`，则返回 `true`。
 
 ### `(since 6.7) bool owner_before(const QSharedPointer<X> &other) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::owner_before` 用于计算、查询或取得与“owner、before”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `true`当且仅当该智能指针在实现定义的基于所有者的排序中先于`other`。该排序使得两个智能指针如果都是空的，或者它们都拥有同一对象（即使它们的表观类型和指针不同），则视为等价的。
 
 ### `(since 6.7) bool owner_equal(const QSharedPointer<X> &other) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWeakPointer::owner_equal` 用于计算、查询或取得与“owner、equal”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回报`true`当且仅当该智能指针和`other`持股时才会有回报。
 
 ## 6. 深入实践与常见坑
 

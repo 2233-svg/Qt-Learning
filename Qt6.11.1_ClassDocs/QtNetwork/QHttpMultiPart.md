@@ -70,115 +70,60 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QHttpMultiPart::ContentType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHttpMultiPart` 暴露的类型声明 `Content、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ContentType`。
-- 属性名：`QHttpMultiPart`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+RFC 2046及其他文献中描述的多部分子类型的已知内容类型列表。
+- `QHttpMultiPart::MixedType`：`0`;对应“多部分/混合”子类型，意味着身体各部位彼此独立，详见RFC 2046。
+- `QHttpMultiPart::RelatedType`：`1`;对应“多部分/相关”子类型，即身体部位彼此相关，详见RFC 2387。
+- `QHttpMultiPart::FormDataType`：`2`;对应“多部分/表单-数据”子类型，即正体部分包含形态元素，如RFC 2388所述。
+- `QHttpMultiPart::AlternativeType`：`3`;对应“多部分/替代”子类型，意味着身体部位是同一信息的不同表示，如RFC 2046所述。
 
 ### `[explicit] QHttpMultiPart::QHttpMultiPart(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHttpMultiPart` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造内容类型为`MixedType`的QHttpMultiPart，并将`parent`设为父对象。
 
 ### `[explicit] QHttpMultiPart::QHttpMultiPart(QHttpMultiPart::ContentType contentType, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHttpMultiPart` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `contentType`：类型为 `QHttpMultiPart::ContentType`。没有默认值，调用时必须提供。传入 `QHttpMultiPart::ContentType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建内容类型为`contentType`的QHttpMultiPart，并将父对象设置为父对象。
 
 ### `[virtual noexcept] QHttpMultiPart::~QHttpMultiPart()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHttpMultiPart` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏多部件。
 
 ### `void QHttpMultiPart::append(const QHttpPart &httpPart)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QHttpMultiPart` 添加依赖、数据或子对象的 API `append`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `httpPart`：类型为 `const QHttpPart &`。没有默认值，调用时必须提供。传入 `const QHttpPart &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+附录`httpPart`本多部分。
 
 ### `QByteArray QHttpMultiPart::boundary() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHttpMultiPart::boundary` 用于计算、查询或取得与“boundary”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回边界。
 
 ### `void QHttpMultiPart::setBoundary(const QByteArray &boundary)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBoundary`。调用它会改变 `QHttpMultiPart` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `boundary`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将边界设为`boundary`。
+通常，你不需要自己生成边界;在构建时，边界以字符串“boundary_.oOo._”和随机字符启动，并提供足够的唯一性以确保边界不会出现在各个部分内部。
 
 ### `void QHttpMultiPart::setContentType(QHttpMultiPart::ContentType contentType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContentType`。调用它会改变 `QHttpMultiPart` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `contentType`：类型为 `QHttpMultiPart::ContentType`。没有默认值，调用时必须提供。传入 `QHttpMultiPart::ContentType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将内容类型设置为`contentType`。通过`QNetworkAccessManager::post()`发送多部分消息时，内容类型会用于HTTP头部部分。如果你想使用`QHttpMultiPart::ContentType`中不包含的多部分子类型，可以手动在`QNetworkRequest`中添加“Content-Type”头字段，然后将此请求与多部分消息一起用于发布。
 
 ## 6. 深入实践与常见坑
 

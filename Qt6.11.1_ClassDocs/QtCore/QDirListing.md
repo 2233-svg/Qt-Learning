@@ -86,242 +86,311 @@ if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QDirListing::IteratorFlagflags QDirListing::IteratorFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:IteratorFlagflags QDirListing::IteratorFlags`。
-- 属性名：`QDirListing`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类描述了可用于配置`QDirListing`行为的标志。该枚举器的值可以按位或组合。
+- `QDirListing::IteratorFlag::Default`：`0x000000`;列出所有条目，即文件、目录、符号链接（包括失效的符号链接（目标不存在）和特殊（其他）系统文件，详情请参见“排除其他”。隐藏文件和目录以及特殊条目`.`和`..`默认不列出。
+- `QDirListing::IteratorFlag::ExcludeFiles`：`0x000004`;不要列出普通文件。与 ResolveSymlinks 结合时，也会排除指向普通文件的符号链接。
+- `QDirListing::IteratorFlag::ExcludeDirs`：`0x000008`;不要列出目录。与 ResolveSymlinks 结合时，指向目录的符号链接也会被排除。
+- `QDirListing::IteratorFlag::ExcludeOther`：`0x000010`;[自6.10版本起]不要列出非目录、非普通文件或符号链接的文件系统条目。
+在Unix上，一个特殊的（其他）文件系统条目是FIFO、套接字、字符设备或块设备。更多细节请参见`mknod`手册页面。
+在Windows上（出于历史原因），`.lnk`文件被视为特殊的（其他）文件系统条目。
+- `QDirListing::IteratorFlag::ResolveSymlinks`：`0x000020`;根据链接目标类型过滤符号链接，而非符号链接本身。不存在目标的断裂符号链接被排除，设置 IncludeBrokenSymlinks 以包含它们。该标志在不支持符号链接的操作系统上被忽略。
+- `QDirListing::IteratorFlag::IncludeBrokenSymlinks`：`0x001000`;[自6.11起]列出断裂的符号链接，目标不存在，无论ResolveSymlinks标志的状态如何。该标志在不支持符号链接的操作系统上被忽略。
+- `QDirListing::IteratorFlag::FilesOnly`：`ExcludeDirs | ExcludeOther`;只列出普通文件。与 ResolveSymlinks 结合时，也会列出指向文件的符号链接。
+- `QDirListing::IteratorFlag::DirsOnly`：`ExcludeFiles | ExcludeOther`;仅列出目录。与 ResolveSymlinks 结合时，符号链接也会被列出。
+- `QDirListing::IteratorFlag::IncludeHidden`：`0x000040`;列出隐藏条目。当与递归结合时，迭代也会递归到隐藏子目录。
+- `QDirListing::IteratorFlag::IncludeDotAndDotDot`：`0x000080`;列出`.`和`..`特别条目。
+- `QDirListing::IteratorFlag::CaseSensitive`：`0x000100`;传给 `QDirListing` 构造函数的名称过滤器中的文件 glob 模式将以大小写区分匹配（详情见 `QDir::setNameFilters()`）。
+- `QDirListing::IteratorFlag::Recursive`：`0x000400`;所有子目录中的条目也包含列表。结合FollowDirSymlinks时，符号链接也会迭代。
+- `QDirListing::IteratorFlag::FollowDirSymlinks`：`0x000800`;与递归结合时，符号链接到目录也会被迭代。符号链环（例如，link => .或link =>..）会自动检测并忽略。
+IteratorFlags 类型是 QFlags 的 typedef<IteratorFlag>。它存储 IteratorFlag 值的 OR 组合。
 
 ### `[explicit] QDirListing::QDirListing(const QString &path, QDirListing::IteratorFlags flags = IteratorFlag::Default)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `flags`：类型为 `QDirListing::IteratorFlags`。默认值为 `IteratorFlag::Default`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个可以迭代 `path` 的 QDirListing。
+你可以通过`flags`传递选项，控制目录的迭代方式。
+默认情况下，`flags`是`IteratorFlag::Default`。
 
 ### `[explicit] QDirListing::QDirListing(const QString &path, const QStringList &nameFilters, QDirListing::IteratorFlags flags = IteratorFlag::Default)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个可以迭代`path`的QDirListing。
+你可以通过`flags`传递选项，控制目录的迭代方式。默认情况下，`flags`是`IteratorFlag::Default`。
+列出的条目将根据文件中的`nameFilters`颗粒模式进行过滤，这些模式通过`QRegularExpression::fromWildcard`转换为正则表达式（详见 `QDir::setNameFilters()` 详情）。
+例如，以下迭代器可用于对音频文件进行迭代：
+有时通过使用范围的 for 循环，使用字符串比较，可以更高效地按名称过滤。例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `nameFilters`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `flags`：类型为 `QDirListing::IteratorFlags`。默认值为 `IteratorFlag::Default`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QDirListing audioFileIt(u"/home/johndoe/"_s, QStringList{u"*.mp3"_s, u"*.wav"_s},
+                         QDirListing::IteratorFlag::FilesOnly);
+```
 
 ### `[noexcept] QDirListing::QDirListing(QDirListing &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QDirListing &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动构造器。移动`other`进入此QDirListing。
+注意：移出对象 `other` 处于部分成形状态，唯一有效的操作是销毁和赋值。
 
 ### `[noexcept] QDirListing::~QDirListing()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QDirListing`。
 
 ### `QDirListing::sentinel QDirListing::cend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirListing::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDirListing::sentinel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+(c)`begin()` 返回一个可用于遍历目录条目的 `QDirListing::const_iterator`。
+- 这是一个只能向前的、单次遍历迭代器（不能逆向遍历目录条目）
+- 不能复制，只能 `std::move()`。
+- 对模拟 `std::input_iterator` 的对象进行后置递增操作的返回值是部分构造的（一个已经前进的迭代器的副本），对这种对象的唯一有效操作是销毁和赋值一个新的迭代器。因此后置递增操作会前进迭代器并返回 `void`。
+- 不允许随机访问
+- 可用于范围 for 循环；或与不要求随机访问迭代器的 C 20 std::ranges 算法一起使用
+- 对有效迭代器解引用返回 `const DirEntry &`
+- (c)`end()` 返回一个表示迭代结束的 `QDirListing::sentinel`。解引用一个与 `end()` 相等的迭代器是未定义行为
+注意：每次在同一 `QDirListing` 对象上调用 (c)`begin()` 时，内部状态都会被重置，迭代从头开始。
+（上述一些限制由底层系统库函数的实现决定）。
+以下是如何递归查找并读取按名称过滤的所有文件：
+注意：“经典”STL 算法不支持迭代器/哨兵，因此需要使用 C 20 std::ranges 算法进行 `QDirListing`，或者使用提供基于范围算法的 C 17 第三方库。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDirListing::sentinel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     qDebug() << dirEntry.filePath();
+     // /etc/.
+     // /etc/..
+     // /etc/X11
+     // /etc/X11/fs
+     // ...
+ }
+```
 
 ### `QDirListing::IteratorFlags QDirListing::iteratorFlags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirListing::iteratorFlags` 用于计算、查询或取得与“iterator、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDirListing::IteratorFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDirListing::IteratorFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于构造该`QDirListing`的`IteratorFlags`集合。
 
 ### `QString QDirListing::iteratorPath() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirListing::iteratorPath` 用于计算、查询或取得与“iterator、Path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于构建该`QDirListing`的目录路径。
 
 ### `QStringList QDirListing::nameFilters() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirListing::nameFilters` 用于计算、查询或取得与“名称、Filters”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于构造该`QDirListing`的文件名glob过滤器列表。
 
 ### `[noexcept] QDirListing &QDirListing::operator=(QDirListing &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDirListing &`。
-- 参数 `other`：类型为 `QDirListing &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-Assign `other`到这个`QDirListing`。
+注意：移出对象 `other` 处于部分成形状态，唯一有效的操作是销毁和赋予新值。
 
 ### `class DirEntry`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 暴露的类型声明 `Dir、Entry`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+解引用有效`QDirListing::const_iterator`返回一个 DirEntry 对象。
+DirEntry 提供了 `QFileInfo` API 的一个子集（例如 `fileName()`、`filePath()`、`exists()`）。在内部，DirEntry 只有在需要时才构建一个`QFileInfo`对象，也就是说，当信息尚未被其他系统函数获取时。你可以用 `DirEntry::fileInfo()` 来获取一个`QFileInfo`。例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     // Faster
+     if (dirEntry.fileName().endsWith(u".conf")) { /* ... */ }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     // This works, but might be potentially slower, since it has to construct a
+     // QFileInfo, whereas (depending on the implementation) the fileName could
+     // be known already
+     if (dirEntry.fileInfo().fileName().endsWith(u".conf")) { /* ... */ }
+ }
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     // Both approaches are the same, because DirEntry will have to construct
+     // a QFileInfo to get this info (for example, by calling system stat())
+
+     if (dirEntry.size() >= 4'000 /* 4KB */) { /* ...*/ }
+     if (dirEntry.fileInfo().size() >= 4'000 /* 4KB */) { /* ... */ }
+ }
+```
 
 ### `(since 6.8) class const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 暴露的类型声明 `const、iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+迭代类型返回`QDirListing::cbegin()`。
+- 这是一个仅前向、单次遍历的迭代器（不能按反向顺序迭代目录条目）
+- 无法复制，只能复制`std::move()`d。
+- 对`std::input_iterator`建模对象的后增值返回值是部分形成的（即已推进迭代器的复制品），此类对象唯一有效的操作是销毁和赋予新的迭代器。因此，增量后算符推进迭代器并返回`void`。
+- 不允许随机访问
+- 可用于 ranged-for 循环;或用于不需要随机访问迭代器的 C 20 std：：range 算法
+- 取消引用有效的迭代器返回`const DirEntry &`
+- （c）`end()` 返回一个`QDirListing::sentinel`，表示迭代结束。取消引用一个迭代器比较等于 `end()` 是未定义行为
+注意：“经典”STL算法不支持迭代器/哨兵，因此你需要使用C 20标准：：ranges算法来处理`QDirListing`，或者使用第三方库提供基于范围的C 17算法。
 
 ### `(since 6.8) class sentinel`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 暴露的类型声明 `sentinel`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QDirListing`返回此类对象，表示迭代结束。对等于 `sentinel{}` 的`QDirListing::const_iterator`进行解引用是未定义行为。
+注意：“经典”STL算法不支持迭代器/哨兵，因此你需要使用C 20标准：：ranges算法来进行`QDirListing`，或者使用第三方库提供基于范围的C 17算法。
 
 ### `enum class IteratorFlag { Default, ExcludeFiles, ExcludeDirs, ExcludeOther, ResolveSymlinks, …, FollowDirSymlinks }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类描述了可用于配置`QDirListing`行为的标志。该枚举器的值可以按位或组合。
+- `QDirListing::IteratorFlag::Default`：`0x000000`;列出所有条目，即文件、目录、符号链接（包括失效的符号链接（目标不存在）和特殊（其他）系统文件，详情请参见“排除其他”。隐藏文件和目录以及特殊条目`.`和`..`默认不列出。
+- `QDirListing::IteratorFlag::ExcludeFiles`：`0x000004`;不要列出普通文件。与 ResolveSymlinks 结合时，也会排除指向普通文件的符号链接。
+- `QDirListing::IteratorFlag::ExcludeDirs`：`0x000008`;不要列出目录。与 ResolveSymlinks 结合时，指向目录的符号链接也会被排除。
+- `QDirListing::IteratorFlag::ExcludeOther`：`0x000010`;[自6.10版本起]不要列出非目录、非普通文件或符号链接的文件系统条目。
+在Unix上，一个特殊的（其他）文件系统条目是FIFO、套接字、字符设备或块设备。更多细节请参见`mknod`手册页面。
+在Windows上（出于历史原因），`.lnk`文件被视为特殊的（其他）文件系统条目。
+- `QDirListing::IteratorFlag::ResolveSymlinks`：`0x000020`;根据链接目标类型过滤符号链接，而非符号链接本身。不存在目标的断裂符号链接被排除，设置 IncludeBrokenSymlinks 以包含它们。该标志在不支持符号链接的操作系统上被忽略。
+- `QDirListing::IteratorFlag::IncludeBrokenSymlinks`：`0x001000`;[自6.11起]列出断裂的符号链接，目标不存在，无论ResolveSymlinks标志的状态如何。该标志在不支持符号链接的操作系统上被忽略。
+- `QDirListing::IteratorFlag::FilesOnly`：`ExcludeDirs | ExcludeOther`;只列出普通文件。与 ResolveSymlinks 结合时，也会列出指向文件的符号链接。
+- `QDirListing::IteratorFlag::DirsOnly`：`ExcludeFiles | ExcludeOther`;仅列出目录。与 ResolveSymlinks 结合时，符号链接也会被列出。
+- `QDirListing::IteratorFlag::IncludeHidden`：`0x000040`;列出隐藏条目。当与递归结合时，迭代也会递归到隐藏子目录。
+- `QDirListing::IteratorFlag::IncludeDotAndDotDot`：`0x000080`;列出`.`和`..`特别条目。
+- `QDirListing::IteratorFlag::CaseSensitive`：`0x000100`;传给 `QDirListing` 构造函数的名称过滤器中的文件 glob 模式将以大小写区分匹配（详情见 `QDir::setNameFilters()`）。
+- `QDirListing::IteratorFlag::Recursive`：`0x000400`;所有子目录中的条目也包含列表。结合FollowDirSymlinks时，符号链接也会迭代。
+- `QDirListing::IteratorFlag::FollowDirSymlinks`：`0x000800`;与递归结合时，符号链接到目录也会被迭代。符号链环（例如，link => .或link =>..）会自动检测并忽略。
+IteratorFlags 类型是 QFlags 的 typedef<IteratorFlag>。它存储 IteratorFlag 值的 OR 组合。
 
 ### `flags IteratorFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类描述了可用于配置`QDirListing`行为的标志。该枚举器的值可以按位或组合。
+- `QDirListing::IteratorFlag::Default`：`0x000000`;列出所有条目，即文件、目录、符号链接（包括失效的符号链接（目标不存在）和特殊（其他）系统文件，详情请参见“排除其他”。隐藏文件和目录以及特殊条目`.`和`..`默认不列出。
+- `QDirListing::IteratorFlag::ExcludeFiles`：`0x000004`;不要列出普通文件。与 ResolveSymlinks 结合时，也会排除指向普通文件的符号链接。
+- `QDirListing::IteratorFlag::ExcludeDirs`：`0x000008`;不要列出目录。与 ResolveSymlinks 结合时，指向目录的符号链接也会被排除。
+- `QDirListing::IteratorFlag::ExcludeOther`：`0x000010`;[自6.10版本起]不要列出非目录、非普通文件或符号链接的文件系统条目。
+在Unix上，一个特殊的（其他）文件系统条目是FIFO、套接字、字符设备或块设备。更多细节请参见`mknod`手册页面。
+在Windows上（出于历史原因），`.lnk`文件被视为特殊的（其他）文件系统条目。
+- `QDirListing::IteratorFlag::ResolveSymlinks`：`0x000020`;根据链接目标类型过滤符号链接，而非符号链接本身。不存在目标的断裂符号链接被排除，设置 IncludeBrokenSymlinks 以包含它们。该标志在不支持符号链接的操作系统上被忽略。
+- `QDirListing::IteratorFlag::IncludeBrokenSymlinks`：`0x001000`;[自6.11起]列出断裂的符号链接，目标不存在，无论ResolveSymlinks标志的状态如何。该标志在不支持符号链接的操作系统上被忽略。
+- `QDirListing::IteratorFlag::FilesOnly`：`ExcludeDirs | ExcludeOther`;只列出普通文件。与 ResolveSymlinks 结合时，也会列出指向文件的符号链接。
+- `QDirListing::IteratorFlag::DirsOnly`：`ExcludeFiles | ExcludeOther`;仅列出目录。与 ResolveSymlinks 结合时，符号链接也会被列出。
+- `QDirListing::IteratorFlag::IncludeHidden`：`0x000040`;列出隐藏条目。当与递归结合时，迭代也会递归到隐藏子目录。
+- `QDirListing::IteratorFlag::IncludeDotAndDotDot`：`0x000080`;列出`.`和`..`特别条目。
+- `QDirListing::IteratorFlag::CaseSensitive`：`0x000100`;传给 `QDirListing` 构造函数的名称过滤器中的文件 glob 模式将以大小写区分匹配（详情见 `QDir::setNameFilters()`）。
+- `QDirListing::IteratorFlag::Recursive`：`0x000400`;所有子目录中的条目也包含列表。结合FollowDirSymlinks时，符号链接也会迭代。
+- `QDirListing::IteratorFlag::FollowDirSymlinks`：`0x000800`;与递归结合时，符号链接到目录也会被迭代。符号链环（例如，link => .或link =>..）会自动检测并忽略。
+IteratorFlags 类型是 QFlags 的 typedef<IteratorFlag>。它存储 IteratorFlag 值的 OR 组合。
 
 ### `QDirListing::const_iterator begin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+(c)`begin()` 返回一个可用于遍历目录条目的 `QDirListing::const_iterator`。
+- 这是一个只能向前的、单次遍历迭代器（不能逆向遍历目录条目）
+- 不能复制，只能 `std::move()`。
+- 对模拟 `std::input_iterator` 的对象进行后置递增操作的返回值是部分构造的（一个已经前进的迭代器的副本），对这种对象的唯一有效操作是销毁和赋值一个新的迭代器。因此后置递增操作会前进迭代器并返回 `void`。
+- 不允许随机访问
+- 可用于范围 for 循环；或与不要求随机访问迭代器的 C 20 std::ranges 算法一起使用
+- 对有效迭代器解引用返回 `const DirEntry &`
+- (c)`end()` 返回一个表示迭代结束的 `QDirListing::sentinel`。解引用一个与 `end()` 相等的迭代器是未定义行为
+注意：每次在同一 `QDirListing` 对象上调用 (c)`begin()` 时，内部状态都会被重置，迭代从头开始。
+（上述一些限制由底层系统库函数的实现决定）。
+以下是如何递归查找并读取按名称过滤的所有文件：
+注意：“经典”STL 算法不支持迭代器/哨兵，因此需要使用 C 20 std::ranges 算法进行 `QDirListing`，或者使用提供基于范围算法的 C 17 第三方库。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDirListing::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     qDebug() << dirEntry.filePath();
+     // /etc/.
+     // /etc/..
+     // /etc/X11
+     // /etc/X11/fs
+     // ...
+ }
+```
 
 ### `QDirListing::const_iterator cbegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDirListing::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDirListing::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+(c)`begin()` 返回一个可用于遍历目录条目的 `QDirListing::const_iterator`。
+- 这是一个只能向前的、单次遍历迭代器（不能逆向遍历目录条目）
+- 不能复制，只能 `std::move()`。
+- 对模拟 `std::input_iterator` 的对象进行后置递增操作的返回值是部分构造的（一个已经前进的迭代器的副本），对这种对象的唯一有效操作是销毁和赋值一个新的迭代器。因此后置递增操作会前进迭代器并返回 `void`。
+- 不允许随机访问
+- 可用于范围 for 循环；或与不要求随机访问迭代器的 C 20 std::ranges 算法一起使用
+- 对有效迭代器解引用返回 `const DirEntry &`
+- (c)`end()` 返回一个表示迭代结束的 `QDirListing::sentinel`。解引用一个与 `end()` 相等的迭代器是未定义行为
+注意：每次在同一 `QDirListing` 对象上调用 (c)`begin()` 时，内部状态都会被重置，迭代从头开始。
+（上述一些限制由底层系统库函数的实现决定）。
+以下是如何递归查找并读取按名称过滤的所有文件：
+注意：“经典”STL 算法不支持迭代器/哨兵，因此需要使用 C 20 std::ranges 算法进行 `QDirListing`，或者使用提供基于范围算法的 C 17 第三方库。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDirListing::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     qDebug() << dirEntry.filePath();
+     // /etc/.
+     // /etc/..
+     // /etc/X11
+     // /etc/X11/fs
+     // ...
+ }
+```
 
 ### `QDirListing::sentinel end() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+(c)`begin()` 返回一个可用于遍历目录条目的 `QDirListing::const_iterator`。
+- 这是一个只能向前的、单次遍历迭代器（不能逆向遍历目录条目）
+- 不能复制，只能 `std::move()`。
+- 对模拟 `std::input_iterator` 的对象进行后置递增操作的返回值是部分构造的（一个已经前进的迭代器的副本），对这种对象的唯一有效操作是销毁和赋值一个新的迭代器。因此后置递增操作会前进迭代器并返回 `void`。
+- 不允许随机访问
+- 可用于范围 for 循环；或与不要求随机访问迭代器的 C 20 std::ranges 算法一起使用
+- 对有效迭代器解引用返回 `const DirEntry &`
+- (c)`end()` 返回一个表示迭代结束的 `QDirListing::sentinel`。解引用一个与 `end()` 相等的迭代器是未定义行为
+注意：每次在同一 `QDirListing` 对象上调用 (c)`begin()` 时，内部状态都会被重置，迭代从头开始。
+（上述一些限制由底层系统库函数的实现决定）。
+以下是如何递归查找并读取按名称过滤的所有文件：
+注意：“经典”STL 算法不支持迭代器/哨兵，因此需要使用 C 20 std::ranges 算法进行 `QDirListing`，或者使用提供基于范围算法的 C 17 第三方库。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDirListing::sentinel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     qDebug() << dirEntry.filePath();
+     // /etc/.
+     // /etc/..
+     // /etc/X11
+     // /etc/X11/fs
+     // ...
+ }
+```
 
 ## 6. 深入实践与常见坑
 

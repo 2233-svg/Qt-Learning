@@ -83,329 +83,159 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 24 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QMetaContainer::advanceConstIterator(void *iterator, qsizetype step) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::advanceConstIterator` 用于执行与“advance、Const、Iterator”相关的操作。调用时要先确认当前状态和 `iterator`、`step` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `step`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将const的前进`iterator`步`step`步。如果`step`为负，`iterator`会向后移动，靠近容器的起始位置。如果`hasBidirectionalIterator()`返回false，则`step`负值的行为未明确说明。
 
 ### `void QMetaContainer::advanceIterator(void *iterator, qsizetype step) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::advanceIterator` 用于执行与“advance、Iterator”相关的操作。调用时要先确认当前状态和 `iterator`、`step` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `step`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将非const的 `iterator` 前进`step`步。如果 `step`为负，则`iterator`会向后移动，靠近容器的起始位置。如果`hasBidirectionalIterator()`返回假，则对负值`step`行为未明确说明。
 
 ### `void *QMetaContainer::begin(void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回一个指向`container`起始的非const迭代器。迭代器通过new在堆上分配。最终必须用`destroyIterator`销毁它，以回收内存。
+如果容器没有提供非连续迭代器，返回`nullptr`。
 
 ### `bool QMetaContainer::canClear() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canClear`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果容器能被清理，`false` `true`退货。
 
 ### `void QMetaContainer::clear(void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果能清除的话，`container`会清除。
 
 ### `bool QMetaContainer::compareConstIterator(const void *i, const void *j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::compareConstIterator` 用于计算、查询或取得与“比较、Const、Iterator”相关的操作。调用时要先确认当前状态和 `i`、`j` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `i`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `j`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果const迭代器`i`和`j`指向它们正在迭代的容器中的相同值，返回`true`，否则返回`false`。
 
 ### `bool QMetaContainer::compareIterator(const void *i, const void *j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::compareIterator` 用于计算、查询或取得与“比较、Iterator”相关的操作。调用时要先确认当前状态和 `i`、`j` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `i`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `j`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果非常量迭代器 `i` 和 `j` 指向它们所迭代的容器中的相同值，则返回 `true`，否则返回 `false`。
 
 ### `void *QMetaContainer::constBegin(const void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 `container` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回指向 `container` 起始的 cont 迭代器。迭代器通过 new 在堆上分配。最终必须用 `destroyConstIterator` 销毁它，以回收内存。
+如果容器没有提供任何连续迭代器，返回`nullptr`。
 
 ### `void *QMetaContainer::constEnd(const void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 `container` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回指向`container`末尾的const迭代器。该迭代器通过new在堆上分配。最终必须用`destroyConstIterator`销毁它，以回收内存。
+如果容器没有提供任何连续迭代器，返回`nullptr`。
 
 ### `void QMetaContainer::copyConstIterator(void *target, const void *source) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::copyConstIterator` 用于执行与“copy、Const、Iterator”相关的操作。调用时要先确认当前状态和 `target`、`source` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `void *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `source`：类型为 `const void *`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 const 迭代器`source`复制到 const 迭代器 `target`。之后 `compareConstIterator`（目标，源）返回 `true`。
 
 ### `void QMetaContainer::copyIterator(void *target, const void *source) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::copyIterator` 用于执行与“copy、Iterator”相关的操作。调用时要先确认当前状态和 `target`、`source` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `void *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `source`：类型为 `const void *`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将非const迭代器`source`复制到非const迭代器`target`。之后`compareIterator`（target， source）返回`true`。
 
 ### `void QMetaContainer::destroyConstIterator(const void *iterator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::destroyConstIterator` 用于执行与“destroy、Const、Iterator”相关的操作。调用时要先确认当前状态和 `iterator` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁之前用`constBegin()`或`constEnd()`创建`iterator`的函数。
 
 ### `void QMetaContainer::destroyIterator(const void *iterator) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::destroyIterator` 用于执行与“destroy、Iterator”相关的操作。调用时要先确认当前状态和 `iterator` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iterator`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁之前用`begin()`或`end()`创建的非连续`iterator`。
 
 ### `qsizetype QMetaContainer::diffConstIterator(const void *i, const void *j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::diffConstIterator` 用于计算、查询或取得与“diff、Const、Iterator”相关的操作。调用时要先确认当前状态和 `i`、`j` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `i`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `j`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回集合迭代子`i`和`j`之间的距离，相当于 `i` `-` `j`。如果`j`比`i`更接近容器末端，则返回值为负。如果`hasBidirectionalIterator()`返回为假，则行为未明确说明。
 
 ### `qsizetype QMetaContainer::diffIterator(const void *i, const void *j) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaContainer::diffIterator` 用于计算、查询或取得与“diff、Iterator”相关的操作。调用时要先确认当前状态和 `i`、`j` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `i`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `j`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回非const迭代子`i`和`j`之间的距离，相当于于4 `i` `-` `j`。如果`j`比`i`更接近容器末端，返回的值为负。如果`hasBidirectionalIterator()`返回false，则行为未指定。
 
 ### `void *QMetaContainer::end(void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `container`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回指向`container`末尾的非const迭代子。该迭代子通过new在堆上分配。最终必须用`destroyIterator`销毁它，以回收内存。
+如果容器没有提供任何非连续迭代，返回`nullptr`。
 
 ### `bool QMetaContainer::hasBidirectionalIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasBidirectionalIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器提供双向迭代器或随机访问迭代器，分别由 std：：bidirectional_iterator_tag 和 std：：random_access_iterator_tag 定义，则返回 `true`。否则返回 `false`。
+`QMetaContainer`假设同一容器的const和非const迭代器具有相同的迭代特征。
 
 ### `bool QMetaContainer::hasConstIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasConstIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器提供 const 迭代器，则返回`true`，否则`false`。
 
 ### `bool QMetaContainer::hasForwardIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasForwardIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器至少提供了 std：：forward_iterator_tag 定义的前向迭代器，返回 `true`，否则返回 `false`。双向迭代器和随机访问迭代器是前向迭代器的专用化。如果容器提供此类迭代，该方法也会返回`true`。
+`QMetaContainer`假设同一容器的const和非const迭代子具有相同的迭代特征。
 
 ### `bool QMetaContainer::hasInputIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasInputIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器至少提供 std：：input_iterator_tag 定义的输入迭代器，返回 `true`，否则返回 `false`。前向、双向和随机访问迭代器是输入迭代器的专用化。如果容器提供其中一个，该方法也会返回`true`。
+`QMetaContainer`假设同一容器的const和非const迭代器具有相同的迭代特征。
 
 ### `bool QMetaContainer::hasIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器提供非一致性迭代器，返回`true`，否则`false`。
 
 ### `bool QMetaContainer::hasRandomAccessIterator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasRandomAccessIterator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果底层容器提供了由 std：：random_access_iterator_tag 定义的随机访问迭代器，则返回`true`;否则返回 `false`。
+`QMetaContainer`假设同一容器的const和非const迭代器具有相同的迭代特征。
 
 ### `bool QMetaContainer::hasSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasSize`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果容器可以查询尺寸，`true`返回，否则`false`。
 
 ### `qsizetype QMetaContainer::size(const void *container) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QMetaContainer` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `container`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以查询给定`container`的大小，返回该中的值数。否则返回`-1`。
 
 ## 6. 深入实践与常见坑
 

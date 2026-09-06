@@ -104,339 +104,298 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QNetworkInformation::Featureflags QNetworkInformation::Features`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Featureflags QNetworkInformation::Features`。
-- 属性名：`QNetworkInformation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+列出插件目前可能支持的所有功能。这可以在`QNetworkInformation::loadBackendByFeatures()`中使用。
+- `QNetworkInformation::Feature::Reachability`：`0x1`;如果插件支持此功能，那么`reachability`属性将提供有用的结果。否则它总是返回`Reachability::Unknown`。另见`QNetworkInformation::Reachability`。
+- `QNetworkInformation::Feature::CaptivePortal`：`0x2`;如果插件支持此功能，那么`isBehindCaptivePortal`属性将提供有用的结果。否则它总是返回`false`。
+- `QNetworkInformation::Feature::TransportMedium`：`0x4`;如果插件支持此功能，那么`transportMedium`属性将提供有用的结果。否则它总是返回`TransportMedium::Unknown`。另见`QNetworkInformation::TransportMedium`。
+- `QNetworkInformation::Feature::Metered`：`0x8`;如果插件支持此功能，那么`isMetered`属性将提供有用的结果。否则它总是返回`false`。
+特征类型是QFlag的typedef<Feature>。它存储了特征值的或组合。
 
 ### `enum class QNetworkInformation::Reachability`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Reachability`。
-- 属性名：`QNetworkInformation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QNetworkInformation::Reachability::Unknown`：`0`;如果返回该值，则可能已连接，但操作系统尚未确认完全连接，或者该功能不支持。
+- `QNetworkInformation::Reachability::Disconnected`：`1`;表示系统可能完全没有连接。
+- `QNetworkInformation::Reachability::Local`：`2`;表示系统已连接到网络，但可能只能访问局域网络上的设备。
+- `QNetworkInformation::Reachability::Site`：`3`;表示系统已连接到网络，但可能只能访问本地子网或内网上的设备。
+- `QNetworkInformation::Reachability::Online`：`4`;表示系统已连接到网络并能够访问互联网。
 
 ### `[since 6.3] enum class QNetworkInformation::TransportMedium`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TransportMedium`。
-- 属性名：`QNetworkInformation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+列出目前可连接互联网的已知媒体。
+- `QNetworkInformation::TransportMedium::Unknown`：`0`;如果操作系统报告没有活动介质、Qt未识别该活跃介质，或不支持TransportMedium功能，则返回。
+- `QNetworkInformation::TransportMedium::Ethernet`：`1`;表示当前激活连接正在使用以太网。注意：当Windows连接到蓝牙个人局网时，该值也可能返回。
+- `QNetworkInformation::TransportMedium::Cellular`：`2`;表示当前活跃连接正在使用蜂窝网络。
+- `QNetworkInformation::TransportMedium::WiFi`：`3`;表示当前激活连接正在使用Wi-Fi。
+- `QNetworkInformation::TransportMedium::Bluetooth`：`4`;表示当前激活连接通过蓝牙连接。
+这个枚举是在Qt 6.3引入的。
 
 ### `[read-only, since 6.2] isBehindCaptivePortal : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 的状态/能力属性。通常通过 `isBehindCaptivePortal()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+它会告诉你用户的设备是否在囚禁门户后面。
+该属性表明用户设备是否已知位于禁闭门户后。此功能依赖操作系统检测禁闭门户，不支持不报告此功能的系统。在不支持此功能的系统中，该功能始终返回`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`isBehindCaptivePortal`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isBehindCaptivePortal()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only, since 6.3] isMetered : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 的状态/能力属性。通常通过 `isMetered()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+检查当前连接是否被计量。
+该属性会返回当前连接是否（已知）计量。你可以以此作为决定应用是否执行某些网络请求或上传的指导因素。例如，在此属性`true`期间，您可能不想上传日志或诊断数据。
 
-**签名拆解：**
+**如何使用：** 调用 `isMetered()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`bool`。
-- 属性名：`isMetered`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void uploadLogFile()
+ {
+     ...
+ }
+
+ int main(int argc, char *argv[])
+ {
+     QCoreApplication app(argc, argv);
+     ...
+         if (netInfo->isMetered()) {
+             qWarning() << "Log upload skipped: Current network is metered.";
+             app.quit();
+         } else {
+             uploadLogFile();
+         }
+     ...
+ }
+```
 
 ### `[read-only] reachability : Reachability`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 的状态/能力属性。通常通过 `reachability()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性决定了系统网络连接的当前状态。
+表示可预期的连接水平。请注意，这仅基于插件/操作系统报告的数据。在某些情况下，这种检查是已知错误的。例如，在Windows上，默认情况下，Windows通过连接Microsoft拥有的服务器进行“在线”检查。如果该服务器因任何原因被阻挡，系统会假设它没有在线可达性。因此，你不应在尝试连接前先用此检查。
 
-**签名拆解：**
-
-- 属性类型：`Reachability`。
-- 属性名：`reachability`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `reachability()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only, since 6.3] transportMedium : TransportMedium`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 的状态/能力属性。通常通过 `transportMedium()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该特性为当前应用的主动传输介质提供了支持。
+该属性返回应用程序当前的活跃传输介质，在操作系统中提供此类信息。
+当当前传输介质发生变化时，信号会发出，例如用户离开`WiFi`网络范围、拔掉以太网线或启用飞行模式时。
 
-**签名拆解：**
-
-- 属性类型：`TransportMedium`。
-- 属性名：`transportMedium`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `transportMedium()` 读取当前值；它不会修改应用状态。
 
 ### `[static] QStringList QNetworkInformation::availableBackends()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `availableBackends`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有当前可用后端的名称列表。
 
 ### `QString QNetworkInformation::backendName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInformation::backendName` 用于计算、查询或取得与“backend、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前加载后端的名称。
 
 ### `[static] QNetworkInformation *QNetworkInformation::instance()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `instance`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInformation *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向`QNetworkInformation`实例的指针（如果有的话）。如果在后端加载前调用该方法，则返回空指针。
 
 ### `[static, since 6.4] bool QNetworkInformation::loadBackendByFeatures(QNetworkInformation::Features features)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `loadBackendByFeatures`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `features`：类型为 `QNetworkInformation::Features`。没有默认值，调用时必须提供。传入 `QNetworkInformation::Features` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+加载支持 `features` 的后端。
+如果成功加载所请求的后端或其已经被加载，则返回 `true`。否则返回 `false`。
 
 ### `[static, since 6.4] bool QNetworkInformation::loadBackendByName(QStringView backend)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `loadBackendByName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `backend`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试加载名称与`backend`匹配的后端（大写不敏感）。
+返回`true`是否加载了请求的后端，或者是否已经加载。否则返回`false`。
 
 ### `[static, since 6.3] bool QNetworkInformation::loadDefaultBackend()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `loadDefaultBackend`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试加载平台默认后端。
+注意：从6.7开始，如果平台默认后端不可用或加载失败，它会尝试加载支持`Reachability`的后端。如果也失败，它将退回到只返回所有属性默认值的后端。
+这种平台到插件的映射如下：
+- `Platform`：插件名称
+- `Windows`：networklistmanager
+- `Apple (macOS/iOS)`：AppleNetworkInformation
+- `Android`：安卓
+- `Linux`：网络经理
+这个函数是为了方便，之前的逻辑已经足够好了。如果你需要特定插件，应该直接调用`loadBackendByName()`或`loadBackendByFeatures()`。
+确定合适的后端加载，并在该后端已加载或成功加载时返回`true`。`false`返回的是其他后端已被加载，或所选后端加载失败。
 
 ### `[since 6.3] QNetworkInformation::Features QNetworkInformation::supportedFeatures() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkInformation::supportedFeatures` 用于计算、查询或取得与“supported、Features”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkInformation::Features`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkInformation::Features`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前后端支持的所有功能。
 
 ### `bool QNetworkInformation::supports(QNetworkInformation::Features features) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `supports`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `features`：类型为 `QNetworkInformation::Features`。没有默认值，调用时必须提供。传入 `QNetworkInformation::Features` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前加载的后端支持`features`，返回`true`。
 
 ### `enum class Feature { Reachability, CaptivePortal, TransportMedium, Metered }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+列出插件目前可能支持的所有功能。这可以在`QNetworkInformation::loadBackendByFeatures()`中使用。
+- `QNetworkInformation::Feature::Reachability`：`0x1`;如果插件支持此功能，那么`reachability`属性将提供有用的结果。否则它总是返回`Reachability::Unknown`。另见`QNetworkInformation::Reachability`。
+- `QNetworkInformation::Feature::CaptivePortal`：`0x2`;如果插件支持此功能，那么`isBehindCaptivePortal`属性将提供有用的结果。否则它总是返回`false`。
+- `QNetworkInformation::Feature::TransportMedium`：`0x4`;如果插件支持此功能，那么`transportMedium`属性将提供有用的结果。否则它总是返回`TransportMedium::Unknown`。另见`QNetworkInformation::TransportMedium`。
+- `QNetworkInformation::Feature::Metered`：`0x8`;如果插件支持此功能，那么`isMetered`属性将提供有用的结果。否则它总是返回`false`。
+特征类型是QFlag的typedef<Feature>。它存储了特征值的或组合。
 
 ### `flags Features`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkInformation` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+列出插件目前可能支持的所有功能。这可以在`QNetworkInformation::loadBackendByFeatures()`中使用。
+- `QNetworkInformation::Feature::Reachability`：`0x1`;如果插件支持此功能，那么`reachability`属性将提供有用的结果。否则它总是返回`Reachability::Unknown`。另见`QNetworkInformation::Reachability`。
+- `QNetworkInformation::Feature::CaptivePortal`：`0x2`;如果插件支持此功能，那么`isBehindCaptivePortal`属性将提供有用的结果。否则它总是返回`false`。
+- `QNetworkInformation::Feature::TransportMedium`：`0x4`;如果插件支持此功能，那么`transportMedium`属性将提供有用的结果。否则它总是返回`TransportMedium::Unknown`。另见`QNetworkInformation::TransportMedium`。
+- `QNetworkInformation::Feature::Metered`：`0x8`;如果插件支持此功能，那么`isMetered`属性将提供有用的结果。否则它总是返回`false`。
+特征类型是QFlag的typedef<Feature>。它存储了特征值的或组合。
 
 ### `bool isBehindCaptivePortal() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBehindCaptivePortal`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+它会告诉你用户的设备是否在囚禁门户后面。
+该属性表明用户设备是否已知位于禁闭门户后。此功能依赖操作系统检测禁闭门户，不支持不报告此功能的系统。在不支持此功能的系统中，该功能始终返回`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isBehindCaptivePortal()` 读取当前值；它不会修改应用状态。
 
 ### `bool isMetered() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isMetered`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+检查当前连接是否被计量。
+该属性会返回当前连接是否（已知）计量。你可以以此作为决定应用是否执行某些网络请求或上传的指导因素。例如，在此属性`true`期间，您可能不想上传日志或诊断数据。
 
-**签名拆解：**
+**如何使用：** 调用 `isMetered()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`bool`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void uploadLogFile()
+ {
+     ...
+ }
+
+ int main(int argc, char *argv[])
+ {
+     QCoreApplication app(argc, argv);
+     ...
+         if (netInfo->isMetered()) {
+             qWarning() << "Log upload skipped: Current network is metered.";
+             app.quit();
+         } else {
+             uploadLogFile();
+         }
+     ...
+ }
+```
 
 ### `QNetworkInformation::Reachability reachability() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QNetworkInformation::reachability` 用于计算、查询或取得与“reachability”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkInformation::Reachability`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了系统网络连接的当前状态。
+表示可预期的连接水平。请注意，这仅基于插件/操作系统报告的数据。在某些情况下，这种检查是已知错误的。例如，在Windows上，默认情况下，Windows通过连接Microsoft拥有的服务器进行“在线”检查。如果该服务器因任何原因被阻挡，系统会假设它没有在线可达性。因此，你不应在尝试连接前先用此检查。
 
-**签名拆解：**
-
-- 返回值：`QNetworkInformation::Reachability`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `reachability()` 读取当前值；它不会修改应用状态。
 
 ### `QNetworkInformation::TransportMedium transportMedium() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QNetworkInformation::transportMedium` 用于计算、查询或取得与“transport、Medium”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkInformation::TransportMedium`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该特性为当前应用的主动传输介质提供了支持。
+该属性返回应用程序当前的活跃传输介质，在操作系统中提供此类信息。
+当当前传输介质发生变化时，信号会发出，例如用户离开`WiFi`网络范围、拔掉以太网线或启用飞行模式时。
 
-**签名拆解：**
-
-- 返回值：`QNetworkInformation::TransportMedium`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `transportMedium()` 读取当前值；它不会修改应用状态。
 
 ### `void isBehindCaptivePortalChanged(bool state)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBehindCaptivePortalChanged`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+它会告诉你用户的设备是否在囚禁门户后面。
+该属性表明用户设备是否已知位于禁闭门户后。此功能依赖操作系统检测禁闭门户，不支持不报告此功能的系统。在不支持此功能的系统中，该功能始终返回`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `bool`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isBehindCaptivePortalChanged()` 读取当前值；它不会修改应用状态。
 
 ### `void isMeteredChanged(bool isMetered)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isMeteredChanged`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+检查当前连接是否被计量。
+该属性会返回当前连接是否（已知）计量。你可以以此作为决定应用是否执行某些网络请求或上传的指导因素。例如，在此属性`true`期间，您可能不想上传日志或诊断数据。
 
-**签名拆解：**
+**如何使用：** 调用 `isMeteredChanged()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`void`。
-- 参数 `isMetered`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void uploadLogFile()
+ {
+     ...
+ }
+
+ int main(int argc, char *argv[])
+ {
+     QCoreApplication app(argc, argv);
+     ...
+         if (netInfo->isMetered()) {
+             qWarning() << "Log upload skipped: Current network is metered.";
+             app.quit();
+         } else {
+             uploadLogFile();
+         }
+     ...
+ }
+```
 
 ### `void reachabilityChanged(QNetworkInformation::Reachability newReachability)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `reachabilityChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性决定了系统网络连接的当前状态。
+表示可预期的连接水平。请注意，这仅基于插件/操作系统报告的数据。在某些情况下，这种检查是已知错误的。例如，在Windows上，默认情况下，Windows通过连接Microsoft拥有的服务器进行“在线”检查。如果该服务器因任何原因被阻挡，系统会假设它没有在线可达性。因此，你不应在尝试连接前先用此检查。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newReachability`：类型为 `QNetworkInformation::Reachability`。没有默认值，调用时必须提供。传入 `QNetworkInformation::Reachability` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `reachability` 的变化，不要把它当作普通函数主动调用。
 
 ### `void transportMediumChanged(QNetworkInformation::TransportMedium current)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `transportMediumChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该特性为当前应用的主动传输介质提供了支持。
+该属性返回应用程序当前的活跃传输介质，在操作系统中提供此类信息。
+当当前传输介质发生变化时，信号会发出，例如用户离开`WiFi`网络范围、拔掉以太网线或启用飞行模式时。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `QNetworkInformation::TransportMedium`。没有默认值，调用时必须提供。传入 `QNetworkInformation::TransportMedium` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `transportMedium` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

@@ -143,1054 +143,595 @@ Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 78 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `cornerButtonEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的配置属性。初始化或状态切换时通过 `setCornerButtonEnabled(...)` 设置，之后用 `cornerButtonEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定左上角按钮是否被启用。
+如果`true`该属性，则表视图左上角的按钮将被启用。点击该按钮即可选择表视图中的所有单元格。
+该属性默认`true`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`cornerButtonEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `cornerButtonEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `gridStyle : Qt::PenStyle`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的配置属性。初始化或状态切换时通过 `setPenStyle(...)` 设置，之后用 `PenStyle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了绘制网格的笔式。
+该属性表示绘制网格时所使用的样式（见`showGrid`）。
 
-**签名拆解：**
-
-- 属性类型：`Qt::PenStyle`。
-- 属性名：`gridStyle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `gridStyle()` 读取当前值；它不会修改应用状态。
 
 ### `showGrid : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的配置属性。初始化或状态切换时通过 `setShowGrid(...)` 设置，之后用 `showGrid()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性在网格被显示时成立。
+如果该属性`true`，则为表绘制网格;如果该属性为`false`，则不绘制网格。默认值为真。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`showGrid`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+**如何使用：** 调用 `showGrid()` 读取当前值；它不会修改应用状态。
 
 ### `sortingEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的配置属性。初始化或状态切换时通过 `setSortingEnabled(...)` 设置，之后用 `sortingEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否启用排序。
+如果该属性`true`，表的排序是启用的。如果该属性是`false`，则不启用排序。默认值为 false。
+注意： 。将属性设置为 true，且 `setSortingEnabled()` 会立即触发调用当前排序部分和顺序的 `sortByColumn()`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`sortingEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortingEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `wordWrap : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的配置属性。初始化或状态切换时通过 `setWordWrap(...)` 设置，之后用 `wordWrap()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含项目文本单词打包策略。
+如果`true`该属性，则在需要时对项目文本进行装帧;否则则完全不进行装帧。该属性默认`true`。
+注意，即使启用了换装，单元格也不会展开以容纳所有文本。省略号将根据当前`textElideMode`插入。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`wordWrap`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wordWrap()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QTableView::QTableView(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建带有`parent`表示数据的表格视图。
 
 ### `[virtual noexcept] QTableView::~QTableView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了桌面视图。
 
 ### `void QTableView::clearSpans()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::clearSpans` 用于执行与“清空、Spans”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除表格视图中的所有行和列跨。
 
 ### `int QTableView::columnAt(int x) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::columnAt` 用于计算、查询或取得与“列、按位置访问”相关的操作。调用时要先确认当前状态和 `x` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的 x-坐标 `x` 在目录坐标所在的列。
+注意：如果给定坐标无列，该函数返回-1。
 
 ### `[protected slot] void QTableView::columnCountChanged(int oldCount, int newCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `columnCountChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `oldCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当添加或删除列时，都会调用该槽位。之前的列数由`oldCount`指定，新的列数由`newCount`决定。
 
 ### `[protected slot] void QTableView::columnMoved(int column, int oldIndex, int newIndex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::columnMoved` 用于执行与“列、Moved”相关的操作。调用时要先确认当前状态和 `column`、`oldIndex`、`newIndex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `oldIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该槽位以更改表格视图中给定`column`的索引。旧索引由`oldIndex`指定，新索引由`newIndex`表示。
 
 ### `[protected slot] void QTableView::columnResized(int column, int oldWidth, int newWidth)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::columnResized` 用于执行与“列、Resized”相关的操作。调用时要先确认当前状态和 `column`、`oldWidth`、`newWidth` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `oldWidth`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newWidth`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该槽用于更改给定`column`的宽度。旧宽度由`oldWidth`指定，新宽度由`newWidth`表示。
 
 ### `int QTableView::columnSpan(int row, int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::columnSpan` 用于计算、查询或取得与“列、Span”相关的操作。调用时要先确认当前状态和 `row`、`column` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表元素在（`row`， `column`）处的列张成。默认值为1。
 
 ### `int QTableView::columnViewportPosition(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::columnViewportPosition` 用于计算、查询或取得与“列、Viewport、Position”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`column`的 x-坐标，包含内容坐标。
 
 ### `int QTableView::columnWidth(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::columnWidth` 用于计算、查询或取得与“列、宽度”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`column`的宽度。
 
 ### `[override virtual protected] void QTableView::currentChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `currentChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimpations： `QAbstractItemView::currentChanged`（const QModelIndex ¤t， const QModelIndex &previous）.
+当新项目变成当前项目时，调用该槽位。之前的当前项目由`previous`索引指定，新项目由`current`索引指定。
+如果你想知道物品的变化，请查看`dataChanged()`信号。
 
 ### `[override virtual protected] void QTableView::dropEvent(QDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::dropEvent`（QDropEvent *event）。
 
 ### `[slot] void QTableView::hideColumn(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `hideColumn`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+隐藏给定的`column`。
 
 ### `[slot] void QTableView::hideRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `hideRow`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+隐藏给定的`row`。
 
 ### `QHeaderView *QTableView::horizontalHeader() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::horizontalHeader` 用于计算、查询或取得与“水平、Header”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHeaderView *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHeaderView *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表视图的横向头部。
 
 ### `[override virtual protected] int QTableView::horizontalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::horizontalOffset` 用于计算、查询或取得与“水平、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::horizontalOffset()` const.
+返回表格视图中项目的水平偏移量。
+请注意，表格视图使用水平头部部分位置来确定视图中列的位置。
+返回视角的水平偏移。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] QModelIndex QTableView::indexAt(const QPoint &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::indexAt` 用于计算、查询或取得与“索引、按位置访问”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `pos`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::indexAt`（const QPoint & point）const.
+返回模型项的索引位置，对应于目录坐标中位置`pos`的表项。
+返回视口坐标处的模型索引`point`。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] void QTableView::initViewItemOption(QStyleOptionViewItem *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::initViewItemOption` 用于执行与“init、View、项目访问、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionViewItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemView::initViewItemOption`（QStyleOptionViewItem *option） const.
+用视图的调色板、字体、状态、对齐等初始化`option`结构。
+注意：该方法的实现应检查接收结构的 `version`，填充实现熟悉的所有成员，并将版本成员设置为实现支持的版本，然后返回。
 
 ### `bool QTableView::isColumnHidden(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isColumnHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果给定`column`隐藏，返回`true`;否则返回`false`。
 
 ### `[override virtual protected] bool QTableView::isIndexHidden(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isIndexHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::isIndexHidden`（const QModelIndex & index） const.
+如果给定`index`所引用的项目隐藏在视图中，返回`true`;否则返回`false`。
+隐藏是视图特定的功能。例如`TableView`中可以标记为隐藏列或`TreeView`中的一行。
+在基类中，这是一个纯虚拟函数。
 
 ### `bool QTableView::isRowHidden(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRowHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果给定`row`隐藏，返回`true`;否则返回`false`。
 
 ### `[override virtual protected] QModelIndex QTableView::moveCursor(QAbstractItemView::CursorAction cursorAction, Qt::KeyboardModifiers modifiers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::moveCursor` 用于计算、查询或取得与“移动、Cursor”相关的操作。调用时要先确认当前状态和 `cursorAction`、`modifiers` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `cursorAction`：类型为 `QAbstractItemView::CursorAction`。没有默认值，调用时必须提供。传入 `QAbstractItemView::CursorAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::moveCursor`（QAbstractItemView：：CursorAction cursorAction， Qt：：KeyboardModifiers modifiers）。
+根据给定的`cursorAction`，利用`modifiers`提供的信息移动光标。
+返回一个`QModelIndex`对象，指向视图中的下一个对象，基于`modifiers`指定的`cursorAction`和键盘修饰符。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] void QTableView::paintEvent(QPaintEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTableView` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::paintEvent`（QPaintEvent *event）。
+收到给定的涂装事件`event`后涂装桌面。
 
 ### `[slot] void QTableView::resizeColumnToContents(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `resizeColumnToContents`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据代表用来渲染每个项目的大小提示，调整给定`column`大小。
+注意：只有可见列的大小会被调整。重新实现`sizeHintForColumn()`以调整隐藏列的大小。
 
 ### `[slot] void QTableView::resizeColumnsToContents()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `resizeColumnsToContents`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据代表在渲染每个列中项目时的大小提示，调整所有列的大小。
 
 ### `[slot] void QTableView::resizeRowToContents(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `resizeRowToContents`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据代表用来渲染每条物品的大小提示，调整给定`row`的大小。
 
 ### `[slot] void QTableView::resizeRowsToContents()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `resizeRowsToContents`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据用来渲染每行物品的代理大小提示，调整所有行的大小。
 
 ### `int QTableView::rowAt(int y) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::rowAt` 用于计算、查询或取得与“行、按位置访问”相关的操作。调用时要先确认当前状态和 `y` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定 y 坐标 `y` in contents 坐标所在的行。
+注意：如果给定坐标无效（无行），该函数返回-1。
 
 ### `[protected slot] void QTableView::rowCountChanged(int oldCount, int newCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `rowCountChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `oldCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当添加或删除行时调用该槽位。之前的行数由`oldCount`指定，新的行数由`newCount`决定。
 
 ### `int QTableView::rowHeight(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::rowHeight` 用于计算、查询或取得与“行、高度”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`row`的高度。
 
 ### `[protected slot] void QTableView::rowMoved(int row, int oldIndex, int newIndex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::rowMoved` 用于执行与“行、Moved”相关的操作。调用时要先确认当前状态和 `row`、`oldIndex`、`newIndex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `oldIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该槽位以更改表格视图中给定`row`的索引。旧索引由`oldIndex`指定，新索引由`newIndex`指定。
 
 ### `[protected slot] void QTableView::rowResized(int row, int oldHeight, int newHeight)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::rowResized` 用于执行与“行、Resized”相关的操作。调用时要先确认当前状态和 `row`、`oldHeight`、`newHeight` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `oldHeight`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newHeight`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该槽位用于改变给定`row`的高度。旧高度由`oldHeight`指定，新高度由`newHeight`表示。
 
 ### `int QTableView::rowSpan(int row, int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::rowSpan` 用于计算、查询或取得与“行、Span”相关的操作。调用时要先确认当前状态和 `row`、`column` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表元素在（`row`， `column`）处的行张成。默认值为1。
 
 ### `int QTableView::rowViewportPosition(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::rowViewportPosition` 用于计算、查询或取得与“行、Viewport、Position”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`row`的 y 坐标，包含内容坐标。
 
 ### `[override virtual protected] void QTableView::scrollContentsBy(int dx, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::scrollContentsBy` 用于执行与“scroll、Contents、By”相关的操作。调用时要先确认当前状态和 `dx`、`dy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::scrollContentsBy`（智力 dx， int dy）。
+将表格视图内容滚动到（`dx`，`dy`）。
+当滚动条被`dx`、`dy`移动时调用了这个虚拟处理程序，因此应相应地滚动视口内容。
+默认实现会调用整个`viewport()`的`update()`，子类可以重新实现该处理程序以优化，或者像`QScrollArea`一样移动内容组件。参数`dx`和`dy`是为了方便，让类知道应该滚动多少（比如像素移动时很有用）。你也可以忽略这些值，直接滚动到滚动条指示的位置。
+调用该函数以进行程序滚动是错误的，建议使用滚动条（例如直接调用`QScrollBar::setValue()`）。
 
 ### `[override virtual] void QTableView::scrollTo(const QModelIndex &index, QAbstractItemView::ScrollHint hint = EnsureVisible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::scrollTo` 用于执行与“scroll、转换输出”相关的操作。调用时要先确认当前状态和 `index`、`hint` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `hint`：类型为 `QAbstractItemView::ScrollHint`。默认值为 `EnsureVisible`。传入 `QAbstractItemView::ScrollHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::scrollTo`（const QModelIndex & index， QAbstractItemView：：ScrollHint 提示）。
+确保给定`index`在表格视图中可见，必要时滚动。
+如有需要，滚动视图以确保`index`的物品可见。视图会根据给定的`hint`尝试定位该物品。
+在基类中，这是一个纯虚拟函数。
 
 ### `[slot] void QTableView::selectColumn(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `selectColumn`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前的 SelectionMode 和 SelectionBehavior 允许选择列，则在表格视图中选择给定的`column`。
 
 ### `[slot] void QTableView::selectRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `selectRow`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前的 SelectionMode 和 SelectionBehavior 允许选择行，则在表格视图中选择给定的`row`。
 
 ### `[override virtual protected] QModelIndexList QTableView::selectedIndexes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::selectedIndexes` 用于计算、查询或取得与“selected、Indexes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::selectedIndexes()` const.
+这个便利函数返回视图中所有已选中和非隐藏的项目索引列表。该列表没有重复，也没有排序。
 
 ### `[override virtual protected] void QTableView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `selectionChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deselected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::selectionChanged`（const QItemSelection &selected， const QItemSelection &deselected）.
+当选择发生变化时，该槽函数被调用。之前的选择（可能是空的）由`deselected`指定，新选择由`selected`表示。
 
 ### `void QTableView::setColumnHidden(int column, bool hide)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColumnHidden`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `hide`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`hide`为真，给定`column`将被隐藏;否则会显示。
 
 ### `void QTableView::setColumnWidth(int column, int width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColumnWidth`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `width`：类型为 `int`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`column`的宽度设为`width`。
 
 ### `void QTableView::setHorizontalHeader(QHeaderView *header)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalHeader`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `header`：类型为 `QHeaderView *`。没有默认值，调用时必须提供。传入 `QHeaderView *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于水平头部的小部件设置为`header`。
 
 ### `[override virtual] void QTableView::setModel(QAbstractItemModel *model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModel`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::setModel`（QAbstractItemModel *model）。
+将视图的`model`设定为呈现。
+该函数将创建并设置新的选择模型，替换之前用`setSelectionModel()`设置的模型。不过，旧的选择模型不会被删除，因为它可能在多个视图之间共享。如果旧的选择模型不再需要，我们建议你删除它。这可以通过以下代码完成：
+如果旧模型和旧选择模型都没有父模型，或者它们的父对象是长寿命对象，可能更倾向于调用它们的`deleteLater()`函数来显式删除它们。
+视图不会拥有该模型的所有权，除非它是模型的父对象，因为模型可能在多个不同视图之间共享。
 
 ### `[override virtual] void QTableView::setRootIndex(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRootIndex`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::setRootIndex`（const QModelIndex & index）。
+将根项设置为给定`index`的项。
 
 ### `void QTableView::setRowHeight(int row, int height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRowHeight`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `height`：类型为 `int`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`row`的高度设置为`height`。
 
 ### `void QTableView::setRowHidden(int row, bool hide)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRowHidden`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `hide`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`hide`是真的，`row`会被隐藏，否则会被显示出来。
 
 ### `[override virtual protected] void QTableView::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelection`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `flags`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::setSelection`（const QRect &rect， QItemSelectionModel：：SelectionFlags flags）。
+根据指定`rect`并根据指定的选择`flags`选择项目。
+对矩形内或被触及的物品应用选择`flags`，`rect`。
+在实现自己的 itemview 时，setSelection 应调用 `selectionModel()`->select（selection， flags），其中 selection 要么是空的 `QModelIndex`，要么是包含所有 `rect` 中元素的 `QItemSelection`。
 
 ### `[override virtual] void QTableView::setSelectionModel(QItemSelectionModel *selectionModel)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionModel`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selectionModel`：类型为 `QItemSelectionModel *`。没有默认值，调用时必须提供。传入 `QItemSelectionModel *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemView::setSelectionModel`（QItemSelectionModel *selectionModel）.
+将当前选择模型设定为给定的`selectionModel`。
+注意，如果你在该函数后调用`setModel()`，给定的`selectionModel`将被视图创建的替代。
+注意：如果旧的选择模型不再需要，应用程序自行删除;即当它不再被其他视图使用时。当其父对象被删除时，这会自动发生。然而，如果它没有父对象，或者父对象是长期存在的对象，可能更倾向于调用其`deleteLater()`函数显式删除它。
 
 ### `void QTableView::setSortingEnabled(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSortingEnabled`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否启用排序。
+如果该属性`true`，表的排序是启用的。如果该属性是`false`，则不启用排序。默认值为 false。
+注意： 。将属性设置为 true，且 `setSortingEnabled()` 会立即触发调用当前排序部分和顺序的 `sortByColumn()`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSortingEnabled(...)` 修改 `sortingEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QTableView::setSpan(int row, int column, int rowSpanCount, int columnSpanCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSpan`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `rowSpanCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `columnSpanCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将表元素在（`row`， `column`）的张成设置为由（`rowSpanCount`， `columnSpanCount`）指定的行和列数。
 
 ### `void QTableView::setVerticalHeader(QHeaderView *header)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalHeader`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `header`：类型为 `QHeaderView *`。没有默认值，调用时必须提供。传入 `QHeaderView *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直头部的控件设置为`header`。
 
 ### `[slot] void QTableView::showColumn(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `showColumn`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+展示给出的`column`。
 
 ### `[slot] void QTableView::showRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `showRow`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+展示给出的给定`row`。
 
 ### `[override virtual protected] int QTableView::sizeHintForColumn(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::sizeHintForColumn` 用于计算、查询或取得与“尺寸或数量、Hint、For、列”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::sizeHintForColumn`（int column） const.
+返回给定`column`宽度的尺寸提示，若无模型则返回-1。
+如果你需要将某列的宽度设置为固定值，可以在表的横向页头调用`QHeaderView::resizeSection()`。
+如果你在子类中重新实现该函数，请注意调用 `resizeColumnToContents()` 或 `QHeaderView::resizeSections()` 时，你返回的值将被使用。如果水平头部或项目代理需要更大的列宽，则会使用较宽的列。
+返回指定`column`的宽度尺寸提示，若无模型则返回-1。
+该函数用于带有水平头部的视图，根据给定`column`的内容查找头部部分的大小提示。
 
 ### `[override virtual protected] int QTableView::sizeHintForRow(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::sizeHintForRow` 用于计算、查询或取得与“尺寸或数量、Hint、For、行”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::sizeHintForRow`（int row） const.
+返回给定`row`高度的尺寸提示，若无模型则返回-1。
+如果你需要将某行的高度设置为固定值，可以在表的垂直首部调用`QHeaderView::resizeSection()`。
+如果你在子类中重新实现这个函数，注意你返回的值只有在调用 `resizeRowToContents()` 时才会被使用。在这种情况下，如果垂直头部或项目代理需要更大的行高，则会使用该宽度。
+返回指定`row`的高度尺寸提示，若无模型则返回-1。
+返回的高度是根据给定`row`项的大小提示计算的，也就是返回的值是所有项中的最大高度。注意，要控制行的高度，必须重新实现`QAbstractItemDelegate::sizeHint()`函数。
+该函数用于带有垂直头部的视图，根据给定`row`的内容查找头部部分的大小提示。
 
 ### `[slot] void QTableView::sortByColumn(int column, Qt::SortOrder order)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `sortByColumn`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。没有默认值，调用时必须提供。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据给定`column`和`order`的值对模型进行排序。
+`column`可能为-1，此时不会显示排序指示器，模型会恢复到自然的未排序顺序。注意，并非所有模型都支持此功能，这种情况下甚至可能崩溃。
 
 ### `[override virtual protected] void QTableView::timerEvent(QTimerEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::timerEvent` 用于执行与“timer、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QTimerEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::timerEvent`（QTimerEvent *event）。
 
 ### `[override virtual protected] void QTableView::updateGeometries()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::updateGeometries` 用于执行与“更新、Geometries”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+重装：`QAbstractItemView::updateGeometries()`。
+更新视图子控件的几何体。
 
 ### `QHeaderView *QTableView::verticalHeader() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::verticalHeader` 用于计算、查询或取得与“垂直、Header”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHeaderView *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHeaderView *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表视图的垂直头部。
 
 ### `[override virtual protected] int QTableView::verticalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::verticalOffset` 用于计算、查询或取得与“垂直、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::verticalOffset()` const.
+返回表格视图中项目的垂直偏移量。
+注意，表格视图使用垂直头部部分位置来确定视图中行的位置。
+返回视图的垂直偏移量。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QSize QTableView::viewportSizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::viewportSizeHint` 用于计算、查询或取得与“viewport、尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::viewportSizeHint()` const.
 
 ### `[override virtual] QRect QTableView::visualRect(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::visualRect` 用于计算、查询或取得与“visual、Rect”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::visualRect`（const QModelIndex & index） const.
+返回视口上被指定`index`占据的矩形。如果索引在视图中隐藏，则返回空`QRect`。
+返回该物品在视口中所在的矩形`index`。
+如果你的项目显示在多个区域，visualRect 应该返回包含索引的主要区域，而不是索引可能涵盖、触摸或导致绘图的全部区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QRegion QTableView::visualRegionForSelection(const QItemSelection &selection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTableView::visualRegionForSelection` 用于计算、查询或取得与“visual、Region、For、Selection”相关的操作。调用时要先确认当前状态和 `selection` 的有效范围；返回类型是 `QRegion`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegion`。
-- 参数 `selection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::visualRegionForSelection`（const QItemSelection &selection） const.
+返回该`selection`中物品的视口矩形。
+自4.7版本起，返回区域仅包含与视口相交（或包含）的矩形。
+从视口返回给定`selection`中物品的区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `Qt::PenStyle gridStyle() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTableView::gridStyle` 用于计算、查询或取得与“grid、Style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::PenStyle`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了绘制网格的笔式。
+该属性表示绘制网格时所使用的样式（见`showGrid`）。
 
-**签名拆解：**
-
-- 返回值：`Qt::PenStyle`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `gridStyle()` 读取当前值；它不会修改应用状态。
 
 ### `bool isCornerButtonEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCornerButtonEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定左上角按钮是否被启用。
+如果`true`该属性，则表视图左上角的按钮将被启用。点击该按钮即可选择表视图中的所有单元格。
+该属性默认`true`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isCornerButtonEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `bool isSortingEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSortingEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性是否启用排序。
+如果该属性`true`，表的排序是启用的。如果该属性是`false`，则不启用排序。默认值为 false。
+注意： 。将属性设置为 true，且 `setSortingEnabled()` 会立即触发调用当前排序部分和顺序的 `sortByColumn()`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isSortingEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `void setCornerButtonEnabled(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCornerButtonEnabled`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定左上角按钮是否被启用。
+如果`true`该属性，则表视图左上角的按钮将被启用。点击该按钮即可选择表视图中的所有单元格。
+该属性默认`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCornerButtonEnabled(...)` 修改 `cornerButtonEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setGridStyle(Qt::PenStyle style)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGridStyle`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了绘制网格的笔式。
+该属性表示绘制网格时所使用的样式（见`showGrid`）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `Qt::PenStyle`。没有默认值，调用时必须提供。传入 `Qt::PenStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setGridStyle(...)` 修改 `gridStyle`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWordWrap(bool on)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWordWrap`。调用它会改变 `QTableView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含项目文本单词打包策略。
+如果`true`该属性，则在需要时对项目文本进行装帧;否则则完全不进行装帧。该属性默认`true`。
+注意，即使启用了换装，单元格也不会展开以容纳所有文本。省略号将根据当前`textElideMode`插入。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `on`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWordWrap(...)` 修改 `wordWrap`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool showGrid() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTableView::showGrid` 用于计算、查询或取得与“显示、Grid”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性在网格被显示时成立。
+如果该属性`true`，则为表绘制网格;如果该属性为`false`，则不绘制网格。默认值为真。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+**如何使用：** 调用 `showGrid()` 读取当前值；它不会修改应用状态。
 
 ### `bool wordWrap() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QTableView::wordWrap` 用于计算、查询或取得与“word、Wrap”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含项目文本单词打包策略。
+如果`true`该属性，则在需要时对项目文本进行装帧;否则则完全不进行装帧。该属性默认`true`。
+注意，即使启用了换装，单元格也不会展开以容纳所有文本。省略号将根据当前`textElideMode`插入。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wordWrap()` 读取当前值；它不会修改应用状态。
 
 ### `void setShowGrid(bool show)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setShowGrid`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性在网格被显示时成立。
+如果该属性`true`，则为表绘制网格;如果该属性为`false`，则不绘制网格。默认值为真。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `show`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setShowGrid(...)` 修改 `showGrid`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

@@ -71,229 +71,126 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum RenderState::DirtyStateflags RenderState::DirtyStates`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader::RenderState` 暴露的类型声明 `Dirty、Stateflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DirtyStateflags RenderState::DirtyStates`。
-- 属性名：`RenderState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGMaterialShader::RenderState::DirtyMatrix`：`0x0001`;用于表示矩阵发生变化，需要更新。
+- `QSGMaterialShader::RenderState::DirtyOpacity`：`0x0002`;用于表示不透明度发生变化，需要更新。
+- `QSGMaterialShader::RenderState::DirtyCachedMaterialData`：`0x0004`;用于表示缓存材料状态发生变化，必须更新。
+- `QSGMaterialShader::RenderState::DirtyAll`：`0xFFFF`;用于表示所有内容都需要更新。
+DirtyStates类型是QFlag的typedef<DirtyState>。它存储DirtyState值的OR组合。
 
 ### `QMatrix4x4 RenderState::combinedMatrix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::combinedMatrix` 用于计算、查询或取得与“combined、Matrix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMatrix4x4`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMatrix4x4`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由模型视图矩阵和项目矩阵合并后的矩阵。
 
 ### `float RenderState::determinant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::determinant` 用于计算、查询或取得与“determinant”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于渲染的模型视图行列式。
 
 ### `float RenderState::devicePixelRatio() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::devicePixelRatio` 用于计算、查询或取得与“device、Pixel、Ratio”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于渲染的物理像素与设备无关像素的比例。
 
 ### `QRect RenderState::deviceRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::deviceRect` 用于计算、查询或取得与“device、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回正在渲染表面的设备rect。
 
 ### `QSGMaterialShader::RenderState::DirtyStates RenderState::dirtyStates() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::dirtyStates` 用于计算、查询或取得与“dirty、States”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGMaterialShader::RenderState::DirtyStates`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGMaterialShader::RenderState::DirtyStates`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回了渲染状态的变化，需要更新，以便用该材质渲染的几何体符合当前渲染状态。
 
 ### `bool RenderState::isMatrixDirty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isMatrixDirty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `dirtyStates()` 包含脏矩阵状态，则返回 `true`，否则返回 `false`。
 
 ### `bool RenderState::isOpacityDirty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOpacityDirty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `dirtyStates()` 包含脏不透明状态，则返回 `true`，否则返回 `false`。
 
 ### `QMatrix4x4 RenderState::modelViewMatrix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::modelViewMatrix` 用于计算、查询或取得与“model、View、Matrix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMatrix4x4`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMatrix4x4`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型视图矩阵。
+如果材质设置了 RequiresFullMatrix 标志，则保证是从场景图计算出的完整变换矩阵。
+然而，如果该标志未被设置，渲染器可能会选择修改该矩阵。例如，它可以在CPU上预先变换顶点并将该矩阵设置为恒例。
+在上述情况下，仍可通过在材料中设置RequiresDeterminant标志并调用`determinant()`访问器来获取实际矩阵行列式。
 
 ### `float RenderState::opacity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::opacity` 用于计算、查询或取得与“opacity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于渲染的累计不透明度。
 
 ### `QMatrix4x4 RenderState::projectionMatrix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::projectionMatrix` 用于计算、查询或取得与“projection、Matrix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMatrix4x4`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMatrix4x4`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回投影矩阵。
 
 ### `QRhiResourceUpdateBatch *RenderState::resourceUpdateBatch()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::resourceUpdateBatch` 用于计算、查询或取得与“resource、更新、Batch”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResourceUpdateBatch *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResourceUpdateBatch *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个资源更新批次，可以排队上传和复制操作。通常`QSGMaterialShader::updateSampledImage()`用来排队纹理图像内容更新。
 
 ### `QRhi *RenderState::rhi()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::rhi` 用于计算、查询或取得与“rhi”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhi *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhi *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前`QRhi`。
 
 ### `QByteArray *RenderState::uniformData()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::uniformData` 用于计算、查询或取得与“uniform、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回着色器中均匀（常量）缓冲区的数据指针。统一数据只需从`QSGMaterialShader::updateUniformData()`更新。返回值在其他可重实现函数中为空，如`QSGMaterialShader::updateSampledImage()`。
+注意：强烈建议在着色器中声明带有`std140`的统一块，并仔细研究OpenGL规范7.6.2.2节中描述的标准统一块布局。确保数据在`QByteArray`中正确放置，`QSGMaterialShader`实现需考虑对齐要求。翻译成其他着色语言的着色器代码应使用相同的块成员偏移量，即使目标语言默认使用不同的打包规则。
+注意：为了同时更新多个成员，避免从C POD类型（如struct）复制，除非已验证C结构体的布局与GLSL统一块一致。
 
 ### `QRect RenderState::viewportRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGMaterialShader::RenderState::viewportRect` 用于计算、查询或取得与“viewport、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被渲染表面的视口矩形。
 
 ### `enum DirtyState { DirtyMatrix, DirtyOpacity, DirtyCachedMaterialData, DirtyAll }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader::RenderState` 暴露的类型声明 `Dirty、State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGMaterialShader::RenderState::DirtyMatrix`：`0x0001`;用于表示矩阵发生变化，需要更新。
+- `QSGMaterialShader::RenderState::DirtyOpacity`：`0x0002`;用于表示不透明度发生变化，需要更新。
+- `QSGMaterialShader::RenderState::DirtyCachedMaterialData`：`0x0004`;用于表示缓存材料状态发生变化，必须更新。
+- `QSGMaterialShader::RenderState::DirtyAll`：`0xFFFF`;用于表示所有内容都需要更新。
+DirtyStates类型是QFlag的typedef<DirtyState>。它存储DirtyState值的OR组合。
 
 ### `flags DirtyStates`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGMaterialShader::RenderState` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSGMaterialShader::RenderState::DirtyMatrix`：`0x0001`;用于表示矩阵发生变化，需要更新。
+- `QSGMaterialShader::RenderState::DirtyOpacity`：`0x0002`;用于表示不透明度发生变化，需要更新。
+- `QSGMaterialShader::RenderState::DirtyCachedMaterialData`：`0x0004`;用于表示缓存材料状态发生变化，必须更新。
+- `QSGMaterialShader::RenderState::DirtyAll`：`0xFFFF`;用于表示所有内容都需要更新。
+DirtyStates类型是QFlag的typedef<DirtyState>。它存储DirtyState值的OR组合。
 
 ## 6. 深入实践与常见坑
 

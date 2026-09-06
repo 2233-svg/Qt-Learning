@@ -93,356 +93,182 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 26 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QAbstractEventDispatcher::Duration`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 的配置属性。初始化或状态切换时通过 `setDuration(...)` 设置，之后用 `Duration()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Duration`。
-- 属性名：`QAbstractEventDispatcher`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是该类API中使用的`std::chrono::duration`类型。该类型存在的目的是促进向更高或更低粒度的可能过渡。
+在所有现有站台中，它都被`nanoseconds`。
 
 ### `[explicit] QAbstractEventDispatcher::QAbstractEventDispatcher(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`构建一个新的事件调度器。
 
 ### `[virtual noexcept] QAbstractEventDispatcher::~QAbstractEventDispatcher()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁事件调度器。
 
 ### `[signal] void QAbstractEventDispatcher::aboutToBlock()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 发出的通知信号 `aboutToBlock`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在事件循环调用可能阻塞的函数之前发出。
 
 ### `[signal] void QAbstractEventDispatcher::awake()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 发出的通知信号 `awake`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在事件循环返回后，可能被阻挡的函数返回。
 
 ### `bool QAbstractEventDispatcher::filterNativeEvent(const QByteArray &eventType, void *message, qintptr *result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::filterNativeEvent` 用于计算、查询或取得与“filter、Native、Event”相关的操作。调用时要先确认当前状态和 `eventType`、`message`、`result` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `eventType`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `message`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `result`：类型为 `qintptr *`。没有默认值，调用时必须提供。传入 `qintptr *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`installNativeEventFilter()`设置的事件过滤器发送`message`。该函数在事件过滤器返回 `true` 时返回 `true`，否则返回 false 表示事件处理应继续。
+`QAbstractEventDispatcher`的子类必须对系统收到的所有消息调用该函数，以确保与应用中可能使用的扩展兼容。事件`eventType`的类型特定于运行时选择的平台插件，可用于将消息投射到正确的类型。`result`指针仅在Windows上使用，对应于LRESULT指针。
+请注意，`message`类型取决于平台。详情请参见 `QAbstractNativeEventFilter`。
 
 ### `void QAbstractEventDispatcher::installNativeEventFilter(QAbstractNativeEventFilter *filterObj)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QAbstractEventDispatcher` 添加依赖、数据或子对象的 API `installNativeEventFilter`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filterObj`：类型为 `QAbstractNativeEventFilter *`。没有默认值，调用时必须提供。传入 `QAbstractNativeEventFilter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安装一个事件过滤器`filterObj`，涵盖应用程序接收的所有本地事件。
+事件过滤器 `filterObj` 通过其 `nativeEventFilter()` 函数接收事件，调用所有线程接收的所有事件。
+如果事件需要被过滤（在此情况下是停止），`nativeEventFilter()`函数应返回true。它应返回false以允许正常的Qt处理继续：本地事件随后可以转换为`QEvent`，并由标准的Qt过滤`event`处理，例如`QObject::installEventFilter()`。
+如果安装了多个事件过滤器，最后安装的过滤器会先被激活。
+注意：这里的过滤函数集接收本地消息，即 MSG 或 XEvent 结构。
+为了最大化便携性，你应该尽量使用`QEvent`物品和`QObject::installEventFilter()`。
 
 ### `[static] QAbstractEventDispatcher *QAbstractEventDispatcher::instance(QThread *thread = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `instance`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QAbstractEventDispatcher *`。
-- 参数 `thread`：类型为 `QThread *`。默认值为 `nullptr`。传入 `QThread *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定 `thread` 的事件调度器对象的指针。如果 `thread` `nullptr`，则使用当前线程。如果指定线程不存在事件调度器，该函数返回 `nullptr`。
+注意：如果 Qt 是在不支持线程的情况下构建的，`thread` 论点将被忽略。
 
 ### `[pure virtual] void QAbstractEventDispatcher::interrupt()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::interrupt` 用于执行与“interrupt”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+中断事件调度。事件调度员会尽快从 `processEvents()` 返回。
 
 ### `[pure virtual] bool QAbstractEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::processEvents` 用于计算、查询或取得与“处理、Events”相关的操作。调用时要先确认当前状态和 `flags` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `flags`：类型为 `QEventLoop::ProcessEventsFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理与`flags`匹配的待处理事件，直到没有更多事件可处理。如果事件被处理，返回`true`;否则返回`false`。
+这个函数尤其适用于运行时间较长的操作，并且希望通过 `QEventLoop::ExcludeUserInputEvents` 标志显示其进度而不允许用户输入。
+如果`QEventLoop::WaitForMoreEvents`标志设置为`flags`，该函数的行为如下：
+- 如果事件可用，处理后该函数返回。
+- 如果没有可用的事件，该函数会等待更多事件可用，并在处理新事件后返回。
+如果`flags`中未设置`QEventLoop::WaitForMoreEvents`标志且无事件可用，该函数将立即返回。
+注意：该函数不会连续处理事件;在处理完所有可用事件后返回。
 
 ### `[pure virtual] void QAbstractEventDispatcher::registerSocketNotifier(QSocketNotifier *notifier)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::registerSocketNotifier` 用于执行与“注册、Socket、Notifier”相关的操作。调用时要先确认当前状态和 `notifier` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `notifier`：类型为 `QSocketNotifier *`。没有默认值，调用时必须提供。传入 `QSocketNotifier *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+寄存器`notifier`事件循环。子类必须实现此方法，将套接字通知符与另一个事件循环绑定。
 
 ### `[since 6.8] void QAbstractEventDispatcher::registerTimer(Qt::TimerId timerId, QAbstractEventDispatcher::Duration interval, Qt::TimerType timerType, QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::registerTimer` 用于执行与“注册、Timer”相关的操作。调用时要先确认当前状态和 `timerId`、`interval`、`timerType`、`object` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timerId`：类型为 `Qt::TimerId`。没有默认值，调用时必须提供。传入 `Qt::TimerId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `interval`：类型为 `QAbstractEventDispatcher::Duration`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-- 参数 `timerType`：类型为 `Qt::TimerType`。没有默认值，调用时必须提供。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册一个定时器，包含指定`timerId`、`interval`和`timerType`，针对给定`object`。
 
 ### `[pure virtual] void QAbstractEventDispatcher::registerTimer(int timerId, qint64 interval, Qt::TimerType timerType, QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::registerTimer` 用于执行与“注册、Timer”相关的操作。调用时要先确认当前状态和 `timerId`、`interval`、`timerType`、`object` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timerId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `interval`：类型为 `qint64`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-- 参数 `timerType`：类型为 `Qt::TimerType`。没有默认值，调用时必须提供。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册一个定时器，包含指定`timerId`、`interval`和`timerType`，针对给定`object`。
 
 ### `[since 6.8] Qt::TimerId QAbstractEventDispatcher::registerTimer(QAbstractEventDispatcher::Duration interval, Qt::TimerType timerType, QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::registerTimer` 用于计算、查询或取得与“注册、Timer”相关的操作。调用时要先确认当前状态和 `interval`、`timerType`、`object` 的有效范围；返回类型是 `Qt::TimerId`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::TimerId`。
-- 参数 `interval`：类型为 `QAbstractEventDispatcher::Duration`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-- 参数 `timerType`：类型为 `Qt::TimerType`。没有默认值，调用时必须提供。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册指定定时器，`interval`和`timerType`对应给定`object`，并返回计时器ID。
 
 ### `[pure virtual] QList<QAbstractEventDispatcher::TimerInfo> QAbstractEventDispatcher::registeredTimers(QObject *object) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::registeredTimers` 用于计算、查询或取得与“registered、Timers”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `QList<QAbstractEventDispatcher::TimerInfo>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QAbstractEventDispatcher::TimerInfo>`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`object`注册计时器的列表。TimerInfo结构体有`timerId`、`interval`和`timerType`成员。
 
 ### `[pure virtual] int QAbstractEventDispatcher::remainingTime(int timerId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::remainingTime` 用于计算、查询或取得与“剩余、时间”相关的操作。调用时要先确认当前状态和 `timerId` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `timerId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回剩余时间（以毫秒计），并返回给定`timerId`。如果计时器不活跃，返回的值为-1。如果计时器逾期，返回的值为0。
 
 ### `QAbstractEventDispatcher::Duration QAbstractEventDispatcher::remainingTime(Qt::TimerId timerId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::remainingTime` 用于计算、查询或取得与“剩余、时间”相关的操作。调用时要先确认当前状态和 `timerId` 的有效范围；返回类型是 `QAbstractEventDispatcher::Duration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractEventDispatcher::Duration`。
-- 参数 `timerId`：类型为 `Qt::TimerId`。没有默认值，调用时必须提供。传入 `Qt::TimerId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回计时器剩余时间，并返回给定`timerId`。如果计时器处于非激活状态，返回的值为负数。如果计时器逾期，返回的值为0。
 
 ### `void QAbstractEventDispatcher::removeNativeEventFilter(QAbstractNativeEventFilter *filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeNativeEventFilter`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `QAbstractNativeEventFilter *`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除该对象中的事件过滤器`filter`。如果未安装此类事件过滤器，请求将被忽略。
+当该对象被销毁时，所有针对该对象的事件过滤器都会自动移除。
+即使在激活事件过滤器时（即在`nativeEventFilter()`函数内），移除事件过滤器始终是安全的。
 
 ### `[since 6.8] QList<QAbstractEventDispatcher::TimerInfoV2> QAbstractEventDispatcher::timersForObject(QObject *object) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::timersForObject` 用于计算、查询或取得与“timers、For、Object”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `QList<QAbstractEventDispatcher::TimerInfoV2>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QAbstractEventDispatcher::TimerInfoV2>`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`object`注册计时器的列表。`TimerInfoV2`结构体有`timerId`、`interval`和`timerType`成员。
 
 ### `[pure virtual] void QAbstractEventDispatcher::unregisterSocketNotifier(QSocketNotifier *notifier)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::unregisterSocketNotifier` 用于执行与“取消注册、Socket、Notifier”相关的操作。调用时要先确认当前状态和 `notifier` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `notifier`：类型为 `QSocketNotifier *`。没有默认值，调用时必须提供。传入 `QSocketNotifier *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从事件调度器中卸载`notifier`。子类必须重新实现该方法，将套接字通知符绑定到另一个事件循环中。重实现必须调用基础实现。
 
 ### `[since 6.8] bool QAbstractEventDispatcher::unregisterTimer(Qt::TimerId timerId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::unregisterTimer` 用于计算、查询或取得与“取消注册、Timer”相关的操作。调用时要先确认当前状态和 `timerId` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `timerId`：类型为 `Qt::TimerId`。没有默认值，调用时必须提供。传入 `Qt::TimerId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消对定时器的注册，并用给定的 `timerId`。如果成功，返回 `true`;否则返回 `false`。
 
 ### `[pure virtual] bool QAbstractEventDispatcher::unregisterTimer(int timerId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::unregisterTimer` 用于计算、查询或取得与“取消注册、Timer”相关的操作。调用时要先确认当前状态和 `timerId` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `timerId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消对定时器的注册，并用给定的 `timerId`。如果成功，返回 `true`;否则返回 `false`。
 
 ### `[pure virtual] bool QAbstractEventDispatcher::unregisterTimers(QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::unregisterTimers` 用于计算、查询或取得与“取消注册、Timers”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消注册与给定`object`相关的所有计时器。如果所有计时器都被成功移除，返回`true`;否则返回`false`。
 
 ### `[pure virtual] void QAbstractEventDispatcher::wakeUp()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractEventDispatcher::wakeUp` 用于执行与“wake、Up”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+唤醒事件循环。
+注意：该功能是线程安全的。
 
 ### `struct TimerInfoV2`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 的 `Timer、Info、V、2` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该结构表示关于计时器的信息：`timerId`、`interval`和`timerType`。
 
 ### `Duration`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractEventDispatcher` 的 `持续时间` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是该类API中使用的`std::chrono::duration`类型。该类型存在的目的是促进向更高或更低粒度的可能过渡。
+在所有现有站台中，它都被`nanoseconds`。
 
 ## 6. 深入实践与常见坑
 

@@ -73,88 +73,107 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QQuickAttachedPropertyPropagator::QQuickAttachedPropertyPropagator(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickAttachedPropertyPropagator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QQuickAttachedPropertyPropagator，其给定`parent`。
+`parent`将用于查找该对象的附着父节点。
+派生类应在其构造函数中调用`initialize()`。
 
 ### `[virtual noexcept] QQuickAttachedPropertyPropagator::~QQuickAttachedPropertyPropagator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickAttachedPropertyPropagator` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉`QQuickAttachedPropertyPropagator`。
 
 ### `QList<QQuickAttachedPropertyPropagator *> QQuickAttachedPropertyPropagator::attachedChildren() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuickAttachedPropertyPropagator` 添加依赖、数据或子对象的 API `attachedChildren`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+该函数返回该附加对象的子节点。
+附加的子节点用于传播属性值：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QList<QQuickAttachedPropertyPropagator *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MyStyle::propagateTheme()
+ {
+     const auto styles = attachedChildren();
+     for (QQuickAttachedPropertyPropagator *child : styles) {
+         MyStyle *myStyle = qobject_cast<MyStyle *>(child);
+         if (myStyle)
+             myStyle->inheritTheme(m_theme);
+     }
+ }
+```
 
 ### `QQuickAttachedPropertyPropagator *QQuickAttachedPropertyPropagator::attachedParent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuickAttachedPropertyPropagator` 添加依赖、数据或子对象的 API `attachedParent`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+该函数返回该附加对象的父函数。
+附加的父节点用于继承属性值：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QQuickAttachedPropertyPropagator *`。
-- 参数：无。
+```cpp
+ void MyStyle::resetTheme()
+ {
+     if (!m_explicitTheme)
+         return;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     m_explicitTheme = false;
+     MyStyle *myStyle = qobject_cast<MyStyle *>(attachedParent());
+     inheritTheme(myStyle ? myStyle->theme() : globalTheme);
+ }
+```
 
 ### `[virtual protected] void QQuickAttachedPropertyPropagator::attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuickAttachedPropertyPropagator` 添加依赖、数据或子对象的 API `attachedParentChange`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+每当该`QQuickAttachedPropertyPropagator`的附属父节点从`oldParent`变为`newParent`时，都会调用该函数。
+子类应重新实现该函数，继承`newParent`附带的属性。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `newParent`：类型为 `QQuickAttachedPropertyPropagator *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `oldParent`：类型为 `QQuickAttachedPropertyPropagator *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MyStyle::attachedParentChange(QQuickAttachedPropertyPropagator *newParent, QQuickAttachedPropertyPropagator *oldParent)
+ {
+     Q_UNUSED(oldParent);
+     MyStyle *attachedParentStyle = qobject_cast<MyStyle *>(newParent);
+     if (attachedParentStyle) {
+         inheritTheme(attachedParentStyle->theme());
+         // Do any other inheriting here...
+     }
+ }
+```
 
 ### `[protected] void QQuickAttachedPropertyPropagator::initialize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `initialize`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
+找到并设置该附加对象的父节点，然后对其子节点执行同样的操作。必须在构建附加对象时调用此程序，传播才能有效。
+在调用该函数之前，先读取全局/默认值会很有用。例如，在调用 `initialize()` 之前，Imagine 风格会检查一个静态的“globalsInitialized” 标志，看看是否应该从`QSettings`读取默认值。该文件中的值构成了任何未显式设置的附加属性值的基础。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ MyStyle::MyStyle(QObject *parent)
+     : QQuickAttachedPropertyPropagator(parent)
+     , m_theme(globalTheme)
+ {
+     // A static function could be called here that reads globalTheme from a
+     // settings file once at startup. That value would override the global
+     // value. This is similar to what the Imagine and Material styles do, for
+     // example.
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     initialize();
+ }
+```
 
 ## 6. 深入实践与常见坑
 

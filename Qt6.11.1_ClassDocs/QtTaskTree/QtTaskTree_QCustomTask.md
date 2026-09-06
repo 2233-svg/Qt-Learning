@@ -75,172 +75,149 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QCustomTask::TaskDoneHandler`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的配置属性。初始化或状态切换时通过 `setTaskDoneHandler(...)` 设置，之后用 `TaskDoneHandler()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:TaskDoneHandler`。
-- 属性名：`QCustomTask`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类型别名用于`std::function<QtTaskTree::DoneResult(const Task &, QtTaskTree::DoneWith)>`或 `DoneResult`。
+TaskDoneHandler 是自定义任务元素构造函数的一个可选参数。任何带有上述签名的函数，作为任务已完成的处理程序传递时，运行中的任务树会在任务执行结束后、最终结果报告给父组之前调用。
+在处理器内部，你可以从完成任务中获取最终数据。额外参数，包括存储，可以通过 lambda 捕获传递给处理器。也可以动态决定任务是否应以返回值结束，或调整最终结果。
+`DoneWith`参数是可选的，完成处理程序可以省略它。当参数提供时，它保存任务最终结果的信息，并将报告给其父任务。
+如果你不打算从完成的任务中读取任何数据，可以省略`const Task &`论点。
+返回的`DoneResult`值是可选的，你的处理器可以返回`void`。在这种情况下，任务的最终结果将等于`DoneResult`参数所指示的值。当处理器返回`DoneResult`值时，任务的最终结果可以在完成处理程序的主体内通过返回值进行调整。
+对于`DoneResult`类型的TaskDoneHandler，不执行额外的处理，任务无条件结束时传递值为`DoneResult`。
 
 ### `[alias] QCustomTask::TaskSetupHandler`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的配置属性。初始化或状态切换时通过 `setTaskSetupHandler(...)` 设置，之后用 `TaskSetupHandler()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:TaskSetupHandler`。
-- 属性名：`QCustomTask`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`std::function<SetupResult(Task &)>`的别名。
+TaskSetupHandler 是自定义任务元素构造函数的一个可选参数。任何带有上述特征的函数，作为任务设置处理程序传递时，任务树会在任务创建后且启动前调用。
+在处理器内部，你可以根据需求配置任务。额外参数，包括存储，可以通过 lambda 捕获传递给处理器。你可以动态决定任务是成功启动还是跳过。
+注意：不要自己在启动处理器内启动任务。留给`QTaskTree`，否则行为未定义。`QTaskTree`已经知道如何启动任务，这要归功于传递给`QCustomTask`<任务、适配器、删除器>构造程序的适配器模板参数。
+处理程序的返回值指示正在运行的任务树在处理程序调用完成后如何继续。`SetupResult::Continue` 的返回值指示任务树继续运行，即执行相关的 `Task`。返回值 `SetupResult::StopWithSuccess` 或 `SetupResult::StopWithError` 分别指示任务树跳过任务执行并立即成功或错误完成任务。
+当返回类型为`SetupResult::StopWithSuccess`或`SetupResult::StopWithError`时，任务已完成处理程序（如果提供了）之后不会被调用。
+自定义任务的构造函数也接受`std::function<void(Task &)>`的简化形式，即返回值为`void`。在这种情况下，假设返回值是`SetupResult::Continue`。
 
 ### `[explicit] template < typename SetupHandler = QtTaskTree::QCustomTask<Task, Adapter, Deleter>::TaskSetupHandler, typename DoneHandler = QtTaskTree::QCustomTask<Task, Adapter, Deleter>::TaskDoneHandler, std::enable_if_t<!std::is_same_v<q20::remove_cvref_t<SetupHandler>, QCustomTask<Task, Adapter, Deleter>>, bool> = true > QCustomTask::QCustomTask(SetupHandler &&setup = QCustomTask::TaskSetupHandler(), DoneHandler &&done = QCustomTask::TaskDoneHandler(), QtTaskTree::CallDone callDone = QtTaskTree::CallDoneFlag::Always)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个QCustomTask实例，并将`setup`和`done`处理器附加到任务上。当运行中的任务树即将启动任务时，实例化关联的`Task`对象，调用`setup`处理程序并引用已创建任务，并启动该任务。当运行任务结束时，任务树调用一个`done`处理程序，并`const`引用已创建任务。
+传递的`setup`处理器属于`TaskSetupHandler`类型。例如：
+`done` handler 属于 `TaskDoneHandler` 类型。默认情况下，每当任务完成时调用 `done` 处理器。当你希望处理程序仅在成功、失败或取消执行时调用时，传递一个非默认值作为 `callDone` 参数。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `setup`：类型为 `SetupHandler &&`。默认值为 `QCustomTask::TaskSetupHandler()`。传入 `SetupHandler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `done`：类型为 `DoneHandler &&`。默认值为 `QCustomTask::TaskDoneHandler()`。传入 `DoneHandler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `callDone`：类型为 `QtTaskTree::CallDone`。默认值为 `QtTaskTree::CallDoneFlag::Always`。传入 `QtTaskTree::CallDone` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ static void parseAndLog(const QString &input);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ ...
+
+ const QString input = ...;
+
+ const auto onFirstSetup = [input](QThreadFunction<void> &task) {
+     if (input == "Skip")
+         return SetupResult::StopWithSuccess; // This task won't start, the next one will
+     if (input == "Error")
+         return SetupResult::StopWithError; // This task and the next one won't start
+     task.setThreadFunctionData(parseAndLog, input);
+     // This task will start, and the next one will start after this one finished with success
+     return SetupResult::Continue;
+ };
+
+ const auto onSecondSetup = [input](QThreadFunction<void> &task) {
+     task.setThreadFunctionData(parseAndLog, input);
+ };
+
+ const Group group {
+     QThreadFunctionTask<void>(onFirstSetup),
+     QThreadFunctionTask<void>(onSecondSetup)
+ };
+```
 
 ### `[alias] QBarrierTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、Barrier、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QCustomTask`的别名<`QBarrier`>类型，用于配方内。
 
 ### `[alias] QNetworkReplyWrapperTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、Network、Reply、Wrapper、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QCustomTask`的别名类型<`QNetworkReplyWrapper`>，用于配方中。
 
 ### `[alias] QProcessTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、处理、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QCustomTask`用`QProcessTaskDeleter`输入别名，<`QProcess`>用于配方中。
 
 ### `[alias] QTaskTreeTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、Task、Tree、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QCustomTask`的别名<`QTaskTree`>类型，用于配方中。
 
 ### `[alias] QTcpSocketWrapperTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、Tcp、Socket、Wrapper、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `[alias] template <typename ResultType> QThreadFunctionTask`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `template` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QCustomTask`的别名<`QTcpSocketWrapper`>类型，用于配方中。
 
 ### `[alias] QTimeoutTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、超时、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+为`QCustomTask`<`std::chrono::milliseconds>`类型别名，用于配方中。`std::chrono::milliseconds`用于设置超时时间。默认超时是`std::chrono::milliseconds::zero()`，即QTimeout任务在控制返回运行事件循环时立即完成。
+用例：
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ using namespace std::chrono;
+ using namespace std::chrono_literals;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ const auto onSetup = [](milliseconds &timeout) { timeout = 1000ms; }
+ const auto onDone = [] { qDebug() << "Timed out."; }
+
+ const Group root {
+     QTimeoutTask(onSetup, onDone)
+ };
+```
 
 ### `TaskDoneHandler`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Task、Done、Handler` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类型别名用于`std::function<QtTaskTree::DoneResult(const Task &, QtTaskTree::DoneWith)>`或 `DoneResult`。
+TaskDoneHandler 是自定义任务元素构造函数的一个可选参数。任何带有上述签名的函数，作为任务已完成的处理程序传递时，运行中的任务树会在任务执行结束后、最终结果报告给父组之前调用。
+在处理器内部，你可以从完成任务中获取最终数据。额外参数，包括存储，可以通过 lambda 捕获传递给处理器。也可以动态决定任务是否应以返回值结束，或调整最终结果。
+`DoneWith`参数是可选的，完成处理程序可以省略它。当参数提供时，它保存任务最终结果的信息，并将报告给其父任务。
+如果你不打算从完成的任务中读取任何数据，可以省略`const Task &`论点。
+返回的`DoneResult`值是可选的，你的处理器可以返回`void`。在这种情况下，任务的最终结果将等于`DoneResult`参数所指示的值。当处理器返回`DoneResult`值时，任务的最终结果可以在完成处理程序的主体内通过返回值进行调整。
+对于`DoneResult`类型的TaskDoneHandler，不执行额外的处理，任务无条件结束时传递值为`DoneResult`。
 
 ### `TaskSetupHandler`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Task、Setup、Handler` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`std::function<SetupResult(Task &)>`的别名。
+TaskSetupHandler 是自定义任务元素构造函数的一个可选参数。任何带有上述特征的函数，作为任务设置处理程序传递时，任务树会在任务创建后且启动前调用。
+在处理器内部，你可以根据需求配置任务。额外参数，包括存储，可以通过 lambda 捕获传递给处理器。你可以动态决定任务是成功启动还是跳过。
+注意：不要自己在启动处理器内启动任务。留给`QTaskTree`，否则行为未定义。`QTaskTree`已经知道如何启动任务，这要归功于传递给`QCustomTask`<任务、适配器、删除器>构造程序的适配器模板参数。
+处理程序的返回值指示正在运行的任务树在处理程序调用完成后如何继续。`SetupResult::Continue` 的返回值指示任务树继续运行，即执行相关的 `Task`。返回值 `SetupResult::StopWithSuccess` 或 `SetupResult::StopWithError` 分别指示任务树跳过任务执行并立即成功或错误完成任务。
+当返回类型为`SetupResult::StopWithSuccess`或`SetupResult::StopWithError`时，任务已完成处理程序（如果提供了）之后不会被调用。
+自定义任务的构造函数也接受`std::function<void(Task &)>`的简化形式，即返回值为`void`。在这种情况下，假设返回值是`SetupResult::Continue`。
 
 ### `QThreadFunctionTask`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QCustomTask` 的 `Q、Thread、Function、Task` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QCustomTask`<`QThreadFunction`> 的别名，用于<ResultType>配方中。
 
 ## 6. 深入实践与常见坑
 

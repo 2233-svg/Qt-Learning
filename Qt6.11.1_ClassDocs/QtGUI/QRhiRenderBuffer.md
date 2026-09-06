@@ -80,216 +80,120 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiRenderBuffer::Flagflags QRhiRenderBuffer::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiRenderBuffer` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QRhiRenderBuffer::Flags`。
-- 属性名：`QRhiRenderBuffer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+旗值用于`flags()`和`setFlags()`。
+- `QRhiRenderBuffer::UsedWithSwapChainOnly`：`1 << 0`;对于`DepthStencil`渲染缓冲区，这表明渲染缓冲区仅与`QRhiSwapChain`结合使用，绝不以其他方式使用。这提供了自动的大小调整和资源重建，因此在设置该标志时无需调用`setPixelSize()`或`create()`。该标志值也可能触发后端特定行为，例如在OpenGL中，使用独立的窗口系统接口API（如EGL、GLX等），该标志尤为重要，因为它避免创建实际的渲染缓冲区资源，因为已有窗口系统根据`QSurfaceFormat`的要求提供深度/模板缓冲区。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QRhiRenderBuffer::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiRenderBuffer` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QRhiRenderBuffer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定渲染缓冲器的类型。
+- `QRhiRenderBuffer::DepthStencil`：`0`;深度/模板合成
+- `QRhiRenderBuffer::Color`：`1`;颜色
 
 ### `[pure virtual] bool QRhiRenderBuffer::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建对应的本地图形资源。如果由于之前的 create() 存在资源且没有相应的`destroy()`，则 `destroy()` 会先隐式调用。
+成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终安全。
 
 ### `[virtual] bool QRhiRenderBuffer::createFrom(QRhiRenderBuffer::NativeRenderBuffer src)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::createFrom` 用于计算、查询或取得与“创建、转换进入”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `src`：类型为 `QRhiRenderBuffer::NativeRenderBuffer`。没有默认值，调用时必须提供。传入 `QRhiRenderBuffer::NativeRenderBuffer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类似于`create()`，但不会创建新的原生渲染缓冲对象。取而代之的是使用`src`指定的原生渲染缓冲对象。
+这允许从外部图形引擎导入现有的渲染缓冲区对象（该对象必须属于同一设备或共享上下文，具体取决于图形API）。
+注意：目前仅适用于 OpenGL。该函数仅用于导入绑定到某些特殊外部对象（如 EGLImageKHR）的渲染缓冲对象。一旦应用程序执行了 glEGLImageTargetRenderbufferStorageOES 调用，渲染缓冲对象可以传递给该函数以创建包裹`QRhiRenderBuffer`，然后作为颜色附件传递到`QRhiTextureRenderTarget`上，从而实现向 EGLImage 的渲染。
+注意：`pixelSize()`、`sampleCount()`和`flags()`仍需正确设置。将错误的大小和其他值传递给`QRhi::newRenderBuffer()`，然后再用createFrom()，期望仅凭本地渲染缓冲对象推断这些值，这是错误的，会导致问题。
+注意：`QRhiRenderBuffer`不拥有本地对象的所有权，`destroy()`也不会释放该对象。
+注意：该函数仅在`QRhi::RenderBufferImport`特性报告为`supported`时实现。否则，函数不做任何操作，返回值为`false`。
+成功时`true`退货，`false`不支持时退货。
 
 ### `QRhiRenderBuffer::Flags QRhiRenderBuffer::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderBuffer::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderBuffer::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还旗子。
 
 ### `QSize QRhiRenderBuffer::pixelSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::pixelSize` 用于计算、查询或取得与“pixel、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回像素大小。
 
 ### `[override virtual] QRhiResource::Type QRhiRenderBuffer::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `int QRhiRenderBuffer::sampleCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::sampleCount` 用于计算、查询或取得与“sample、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回采样计数。1表示没有多采样抗锯齿。
 
 ### `void QRhiRenderBuffer::setFlags(QRhiRenderBuffer::Flags f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QRhiRenderBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiRenderBuffer::Flags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把标志设为`f`。
 
 ### `void QRhiRenderBuffer::setPixelSize(const QSize &sz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPixelSize`。调用它会改变 `QRhiRenderBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sz`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将像素大小设置为`sz`。
 
 ### `void QRhiRenderBuffer::setSampleCount(int s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleCount`。调用它会改变 `QRhiRenderBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `s`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将样本计数设置为`s`。
 
 ### `void QRhiRenderBuffer::setType(QRhiRenderBuffer::Type t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setType`。调用它会改变 `QRhiRenderBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `QRhiRenderBuffer::Type`。没有默认值，调用时必须提供。传入 `QRhiRenderBuffer::Type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型设置为`t`。
 
 ### `QRhiRenderBuffer::Type QRhiRenderBuffer::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderBuffer::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderBuffer::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderBuffer::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染缓冲区类型。
 
 ### `struct NativeRenderBuffer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiRenderBuffer` 的 `Native、渲染、Buffer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+包裹一个原生渲染缓冲对象。
 
 ### `enum Flag { UsedWithSwapChainOnly }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiRenderBuffer` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+旗值用于`flags()`和`setFlags()`。
+- `QRhiRenderBuffer::UsedWithSwapChainOnly`：`1 << 0`;对于`DepthStencil`渲染缓冲区，这表明渲染缓冲区仅与`QRhiSwapChain`结合使用，绝不以其他方式使用。这提供了自动的大小调整和资源重建，因此在设置该标志时无需调用`setPixelSize()`或`create()`。该标志值也可能触发后端特定行为，例如在OpenGL中，使用独立的窗口系统接口API（如EGL、GLX等），该标志尤为重要，因为它避免创建实际的渲染缓冲区资源，因为已有窗口系统根据`QSurfaceFormat`的要求提供深度/模板缓冲区。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiRenderBuffer` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+旗值用于`flags()`和`setFlags()`。
+- `QRhiRenderBuffer::UsedWithSwapChainOnly`：`1 << 0`;对于`DepthStencil`渲染缓冲区，这表明渲染缓冲区仅与`QRhiSwapChain`结合使用，绝不以其他方式使用。这提供了自动的大小调整和资源重建，因此在设置该标志时无需调用`setPixelSize()`或`create()`。该标志值也可能触发后端特定行为，例如在OpenGL中，使用独立的窗口系统接口API（如EGL、GLX等），该标志尤为重要，因为它避免创建实际的渲染缓冲区资源，因为已有窗口系统根据`QSurfaceFormat`的要求提供深度/模板缓冲区。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

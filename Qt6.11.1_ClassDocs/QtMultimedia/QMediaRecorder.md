@@ -148,1029 +148,712 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 77 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMediaRecorder::EncodingMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 暴露的类型声明 `Encoding、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:EncodingMode`。
-- 属性名：`QMediaRecorder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举编码模式。
+- `QMediaRecorder::ConstantQualityEncoding`：`0`;编码旨在保持恒定的质量，并调整码率以适应。
+- `QMediaRecorder::ConstantBitRateEncoding`：`1`;编码时使用恒定比特率，并调整质量以适应。
+- `QMediaRecorder::AverageBitRateEncoding`：`2`;编码会尝试保持平均码率设置，但根据需要使用更多或更少的码率。
+- `QMediaRecorder::TwoPassEncoding`：`3`;介质先被处理以确定特性，然后第二次处理，分配更多位给需要的区域。
 
 ### `enum QMediaRecorder::Quality`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 暴露的类型声明 `Quality`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Quality`。
-- 属性名：`QMediaRecorder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举质量编码级别。
+- `QMediaRecorder::VeryLowQuality`：`0`
+- `QMediaRecorder::LowQuality`：`1`
+- `QMediaRecorder::NormalQuality`：`2`
+- `QMediaRecorder::HighQuality`：`3`
+- `QMediaRecorder::VeryHighQuality`：`4`
 
 ### `[read-only] actualLocation : QUrl`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的状态/能力属性。通常通过 `actualLocation()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含了最后媒体内容的实际位置。
+当分配新的`outputLocation`或非空`outputDevice`时，实际位置会被重置。当调用`record()`且`outputDevice` `null`或不可写时，记录器会根据以下规则生成实际位置。
+- 如果`outputLocation`空、目录或无扩展名的文件，录制器会根据所选媒体格式和系统MIME类型生成相应的扩展名。
+- 如果`outputLocation`是目录，录音机会在其中生成一个新文件名。
+- 如果`outputLocation`为空，录音机会在系统特定目录中生成新的音频或视频文件名。
+- 录制器在发射 `recorderStateChanged(RecordingState)` 前先生成实际位置。
 
-**签名拆解：**
-
-- 属性类型：`QUrl`。
-- 属性名：`actualLocation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `actualLocation()` 读取当前值；它不会修改应用状态。
 
 ### `audioBitRate : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setAudioBitRate(...)` 设置，之后用 `audioBitRate()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示压缩音频流的比特率（比特每秒）。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`audioBitRate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `audioBitRate()` 读取当前值；它不会修改应用状态。
 
 ### `audioChannelCount : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setAudioChannelCount(...)` 设置，之后用 `audioChannelCount()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+此属性保存音频通道的数量。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`audioChannelCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `audioChannelCount()` 读取当前值；它不会修改应用状态。
 
 ### `audioSampleRate : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setAudioSampleRate(...)` 设置，之后用 `audioSampleRate()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性保持音频采样率以Hz为单位。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`audioSampleRate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `audioSampleRate()` 读取当前值；它不会修改应用状态。
 
 ### `autoStop : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setAutoStop(...)` 设置，之后用 `autoStop()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性控制媒体录制器是否在所有媒体输入报告流结束或被关闭时自动停止。
+流结束时会通过发送一个空媒体帧来报告，你可以通过`QVideoFrameInput`或`QAudioBufferInput`显式发送。
+视频输入，特别是 `QCamera`、`QScreenCapture` 和 `QWindowCapture`，可以通过功能`setActive`关闭。
+默认是`false`。
+QMediaRecorder：：autoStop 仅支持 FFmpeg 后端。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`autoStop`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoStop()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] duration : qint64`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的状态/能力属性。通常通过 `duration()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该特性将录制的介质时长保持在毫秒级。
 
-**签名拆解：**
-
-- 属性类型：`qint64`。
-- 属性名：`duration`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `duration()` 读取当前值；它不会修改应用状态。
 
 ### `encodingMode : QMediaRecorder::EncodingMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setEncodingMode(...)` 设置，之后用 `EncodingMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示编码模式。
 
-**签名拆解：**
-
-- 属性类型：`QMediaRecorder::EncodingMode`。
-- 属性名：`encodingMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `encodingMode()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] error : QMediaRecorder::Error`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的状态/能力属性。通常通过 `Error()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+返回当前错误状态。
 
-**签名拆解：**
-
-- 属性类型：`QMediaRecorder::Error`。
-- 属性名：`error`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `error()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] errorString : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的状态/能力属性。通常通过 `errorString()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+返回描述当前错误状态的字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`errorString`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `errorString()` 读取当前值；它不会修改应用状态。
 
 ### `mediaFormat : QMediaFormat`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setMediaFormat(...)` 设置，之后用 `mediaFormat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性承载着录制器当前的`QMediaFormat`。
+当调用`record()`时，该属性的值可能会发生变化。如果发生这种情况，就会发出 mediaFormatChanged() 信号。如果 `QMediaFormat::audioCodec` 或 `QMediaFormat::fileFormat` 属性设置为未指定，这种情况总是会发生。如果视频源（`QCamera`、`QScreenCapture` 或 `QVideoFrameInput`）连接到了`QMediaCaptureSession`，也必须指定 `QMediaFormat::videoCodec`。如果媒体后端不支持所选的文件格式或编解码器，`QMediaFormat::audioCodec`和`QMediaFormat::videoCodec`属性值也可能发生变化。
+如果请求视频格式但未连接视频源，则`QMediaFormat::fileFormat`属性值也可能变为仅`audio`格式，`QMediaCaptureSession`则不连接视频源。例如，如果`QMediaFormat::fileFormat`设置为`QMediaFormat::MPEG4`，则可能改为`QMediaFormat::Mpeg4Audio`。
+应用程序可以通过调用`QMediaFormat::isSupported()`函数来判断录制开始前`mediaFormat`是否会变更。在无视频输入录制时，如果满足以下情况，`record()` `QMediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 被指定
+- `QMediaFormat::videoCodec`未具体说明
+- `QMediaFormat::isSupported()` `true`
+在使用视频输入录制时，如果满足以下情况，`mediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 指定
+- `QMediaFormat::videoCodec` 被指定
+- `QMediaFormat::isSupported()` 返回`true`
+注意：`QMediaRecorder`在确定`QMediaFormat::fileFormat`时不会考虑`outputLocation`属性中的文件扩展名，且如果指定了扩展名，也不会调整`outputLocation` `QUrl`的扩展名以匹配所选文件格式。因此，应用程序应确保将`QMediaRecorder::mediaFormat::fileFormat`设置为与文件扩展名匹配，或不指定文件扩展名。如果未指定文件扩展名，`actualLocation`文件扩展名将更新为与录制时使用的文件格式一致。
 
-**签名拆解：**
-
-- 属性类型：`QMediaFormat`。
-- 属性名：`mediaFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `mediaFormat()` 读取当前值；它不会修改应用状态。
 
 ### `metaData : QMediaMetaData`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setMetaData(...)` 设置，之后用 `metaData()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+返回与录制相关的元数据。
 
-**签名拆解：**
-
-- 属性类型：`QMediaMetaData`。
-- 属性名：`metaData`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `metaData()` 读取当前值；它不会修改应用状态。
 
 ### `outputLocation : QUrl`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setOutputLocation(...)` 设置，之后用 `outputLocation()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+此属性保存媒体内容的目标位置。
+设置位置可能失败，例如当服务仅支持本地文件系统位置，但传入了网络 URL 时。如果操作失败，将发出 `errorOccurred()` 信号。
+如果已为录制器分配可写 `outputDevice`，则输出位置将被忽略。此行为将来可能更改，因此建议只设置一个输出，即 `outputLocation` 或 `outputDevice`。
+输出位置可以为空、为目录或文件。目录或文件路径可以是相对路径或绝对路径。`record()` 方法根据指定的输出位置和系统特定设置生成实际位置。详细信息请参阅 `actualLocation` 属性描述。
 
-**签名拆解：**
-
-- 属性类型：`QUrl`。
-- 属性名：`outputLocation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `outputLocation()` 读取当前值；它不会修改应用状态。
 
 ### `quality : Quality`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setQuality(...)` 设置，之后用 `quality()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+恢复了录制质量。
 
-**签名拆解：**
-
-- 属性类型：`Quality`。
-- 属性名：`quality`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `quality()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] recorderState : QMediaRecorder::RecorderState`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的状态/能力属性。通常通过 `RecorderState()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性保存了媒体记录器的现状。
+状态属性代表用户请求，在`record()`、`pause()`或`stop()`调用时同步变化。录制失败时，录音器状态也可能异步变化。
 
-**签名拆解：**
-
-- 属性类型：`QMediaRecorder::RecorderState`。
-- 属性名：`recorderState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `recorderState()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.6] videoBitRate : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setVideoBitRate(...)` 设置，之后用 `videoBitRate()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示压缩视频流的比特率（比特每秒）。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`videoBitRate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `videoBitRate()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.6] videoFrameRate : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setVideoFrameRate(...)` 设置，之后用 `videoFrameRate()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示视频帧率。
+值为0表示录制设备应根据视频源可用的内容和编解码器的限制做出最优选择。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`videoFrameRate`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `videoFrameRate()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.6] videoResolution : QSize`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的配置属性。初始化或状态切换时通过 `setVideoResolution(...)` 设置，之后用 `videoResolution()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了编码视频的分辨率。
+空的`QSize`表示录像机会根据视频源可用的分辨率和编解码器的限制选择最优分辨率。
 
-**签名拆解：**
-
-- 属性类型：`QSize`。
-- 属性名：`videoResolution`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `videoResolution()` 读取当前值；它不会修改应用状态。
 
 ### `QMediaRecorder::QMediaRecorder(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个媒体记录器。媒体记录器是`parent`的产物。
 
 ### `[override virtual noexcept] QMediaRecorder::~QMediaRecorder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁一个媒体记录器。
 
 ### `[signal] void QMediaRecorder::actualLocationChanged(const QUrl &location)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `actualLocationChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含了最后媒体内容的实际位置。
+当分配新的`outputLocation`或非空`outputDevice`时，实际位置会被重置。当调用`record()`且`outputDevice` `null`或不可写时，记录器会根据以下规则生成实际位置。
+- 如果`outputLocation`空、目录或无扩展名的文件，录制器会根据所选媒体格式和系统MIME类型生成相应的扩展名。
+- 如果`outputLocation`是目录，录音机会在其中生成一个新文件名。
+- 如果`outputLocation`为空，录音机会在系统特定目录中生成新的音频或视频文件名。
+- 录制器在发射 `recorderStateChanged(RecordingState)` 前先生成实际位置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `const QUrl &`。没有默认值，调用时必须提供。传入 `const QUrl &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `actualLocation` 的变化，不要把它当作普通函数主动调用。
 
 ### `void QMediaRecorder::addMetaData(const QMediaMetaData &metaData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMediaRecorder` 添加依赖、数据或子对象的 API `addMetaData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `metaData`：类型为 `const QMediaMetaData &`。没有默认值，调用时必须提供。传入 `const QMediaMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为录制的媒体增添一些`metaData`。
 
 ### `int QMediaRecorder::audioBitRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::audioBitRate` 用于计算、查询或取得与“audio、Bit、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回压缩音频流的比特率（比特每秒）。
+注意：音频比特率属性的获取函数。
 
 ### `[signal] void QMediaRecorder::audioBitRateChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `audioBitRateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示压缩音频流的比特率（比特每秒）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `audioBitRate` 的变化，不要把它当作普通函数主动调用。
 
 ### `int QMediaRecorder::audioChannelCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::audioChannelCount` 用于计算、查询或取得与“audio、Channel、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回音频通道数量。
+注意：属性audioChannelCount的Getter函数。
 
 ### `[signal] void QMediaRecorder::audioChannelCountChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `audioChannelCountChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+此属性保存音频通道的数量。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `audioChannelCount` 的变化，不要把它当作普通函数主动调用。
 
 ### `int QMediaRecorder::audioSampleRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::audioSampleRate` 用于计算、查询或取得与“audio、Sample、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回音频采样率（Hz）。
+注意：属性audioSampleRate的获取函数。
 
 ### `[signal] void QMediaRecorder::audioSampleRateChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `audioSampleRateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该特性保持音频采样率以Hz为单位。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `audioSampleRate` 的变化，不要把它当作普通函数主动调用。
 
 ### `QMediaCaptureSession *QMediaRecorder::captureSession() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::captureSession` 用于计算、查询或取得与“capture、Session”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaCaptureSession *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMediaCaptureSession *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回媒体捕获会话。
 
 ### `[signal] void QMediaRecorder::durationChanged(qint64 duration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `durationChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该特性将录制的介质时长保持在毫秒级。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `duration`：类型为 `qint64`。没有默认值，调用时必须提供。持续时间，通常以毫秒表示；要确认 0、负数、循环和平台精度。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `duration` 的变化，不要把它当作普通函数主动调用。
 
 ### `QMediaRecorder::EncodingMode QMediaRecorder::encodingMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::encodingMode` 用于计算、查询或取得与“encoding、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaRecorder::EncodingMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMediaRecorder::EncodingMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回编码模式。
+注意：属性编码模式的获取函数。
 
 ### `[signal] void QMediaRecorder::encodingModeChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `encodingModeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示编码模式。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `encodingMode` 的变化，不要把它当作普通函数主动调用。
 
 ### `[signal] void QMediaRecorder::errorOccurred(QMediaRecorder::Error error, const QString &errorString)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `errorOccurred`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `QMediaRecorder::Error`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-- 参数 `errorString`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`error`发生的信号，`errorString`包含错误描述。
 
 ### `bool QMediaRecorder::isAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAvailable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退货 `true` 媒体录制服务已准备好使用。
 
 ### `[signal] void QMediaRecorder::metaDataChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `metaDataChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+返回与录制相关的元数据。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `metaData` 的变化，不要把它当作普通函数主动调用。
 
 ### `QIODevice *QMediaRecorder::outputDevice() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::outputDevice` 用于计算、查询或取得与“output、Device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回媒体内容的输出输入输出设备。
 
 ### `[slot] void QMediaRecorder::pause()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `pause`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+暂停录制。
+录制器状态变为`QMediaRecorder::PausedState`。
+根据平台，暂停录制可能不支持。此时录音状态保持不变。
 
 ### `[signal] void QMediaRecorder::qualityChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `qualityChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+恢复了录制质量。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `quality` 的变化，不要把它当作普通函数主动调用。
 
 ### `[slot] void QMediaRecorder::record()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `record`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+开始录音。
+虽然录音状态立即切换为c{`QMediaRecorder::RecordingState`}，但录制可以异步开始。
+如果录音失败`error()`信号会发出，录音机状态会被重置回`QMediaRecorder::StoppedState`。
+该方法根据生成规则更新`actualLocation`。
+注意：在移动设备上，录制会按照设备在录制时的方向进行，并在录制期间保持锁定。为避免用户界面出现瑕疵，我们建议只要录制仍在进行，用户界面就保持在同一方向，使用`QWindow`的contentOrientation属性，录制结束后再解锁。
 
 ### `QMediaRecorder::RecorderState QMediaRecorder::recorderState() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::recorderState` 用于计算、查询或取得与“recorder、State”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaRecorder::RecorderState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMediaRecorder::RecorderState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的媒体记录状态。
+注意：property recorderState的获取函数。
 
 ### `[signal] void QMediaRecorder::recorderStateChanged(QMediaRecorder::RecorderState state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `recorderStateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性保存了媒体记录器的现状。
+状态属性代表用户请求，在`record()`、`pause()`或`stop()`调用时同步变化。录制失败时，录音器状态也可能异步变化。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `QMediaRecorder::RecorderState`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `recorderState` 的变化，不要把它当作普通函数主动调用。
 
 ### `void QMediaRecorder::setAudioBitRate(int bitRate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAudioBitRate`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示压缩音频流的比特率（比特每秒）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bitRate`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAudioBitRate(...)` 修改 `audioBitRate`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setAudioChannelCount(int channels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAudioChannelCount`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+此属性保存音频通道的数量。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `channels`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAudioChannelCount(...)` 修改 `audioChannelCount`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setAudioSampleRate(int sampleRate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAudioSampleRate`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该特性保持音频采样率以Hz为单位。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sampleRate`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAudioSampleRate(...)` 修改 `audioSampleRate`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setEncodingMode(QMediaRecorder::EncodingMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEncodingMode`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示编码模式。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QMediaRecorder::EncodingMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setEncodingMode(...)` 修改 `encodingMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setMetaData(const QMediaMetaData &metaData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMetaData`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+返回与录制相关的元数据。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `metaData`：类型为 `const QMediaMetaData &`。没有默认值，调用时必须提供。传入 `const QMediaMetaData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMetaData(...)` 修改 `metaData`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setOutputDevice(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOutputDevice`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置媒体内容的输出输入设备。
+`device`必须在录制开始前以`WriteOnly`或`ReadWrite`模式打开。
+媒体录制器不拥有指定的`device`。如果录制已经开始，设备必须保持活跃并保持开启，直到信号`recorderStateChanged(StoppedState)`发出。
+除非`null`指定的`device`，否则该方法会立即重置`actualLocation`。
+如果录音机被分配了可写输出设备，`outputLocation`会被忽略，录制开始时不会生成`actualLocation`。这种行为未来可能会改变，因此我们建议只设置一个输出，分别是`outputLocation`或`outputDevice`。
+`QMediaRecorder::setOutputDevice`只支持FFmpeg后端。
 
 ### `void QMediaRecorder::setVideoBitRate(int bitRate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVideoBitRate`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示压缩视频流的比特率（比特每秒）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bitRate`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setVideoBitRate(...)` 修改 `videoBitRate`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setVideoFrameRate(qreal frameRate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVideoFrameRate`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示视频帧率。
+值为0表示录制设备应根据视频源可用的内容和编解码器的限制做出最优选择。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameRate`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setVideoFrameRate(...)` 修改 `videoFrameRate`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setVideoResolution(const QSize &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVideoResolution`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了编码视频的分辨率。
+空的`QSize`表示录像机会根据视频源可用的分辨率和编解码器的限制选择最优分辨率。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setVideoResolution(...)` 修改 `videoResolution`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaRecorder::setVideoResolution(int width, int height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVideoResolution`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了编码视频的分辨率。
+空的`QSize`表示录像机会根据视频源可用的分辨率和编解码器的限制选择最优分辨率。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `int`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `int`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setVideoResolution(...)` 修改 `videoResolution`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[slot] void QMediaRecorder::stop()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `stop`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+录制器会停止录制。处理待处理的视频和音频数据仍可能需要一些时间。一旦媒体录制器状态变为`QMediaRecorder::StoppedState`，录制就完成了。
 
 ### `int QMediaRecorder::videoBitRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::videoBitRate` 用于计算、查询或取得与“video、Bit、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回压缩视频流的比特率（比特每秒）。
+注意：属性 videoBitRate 的 Getter 函数。
 
 ### `[signal] void QMediaRecorder::videoBitRateChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `videoBitRateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示压缩视频流的比特率（比特每秒）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `videoBitRate` 的变化，不要把它当作普通函数主动调用。
 
 ### `qreal QMediaRecorder::videoFrameRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::videoFrameRate` 用于计算、查询或取得与“video、Frame、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频帧率。
+注意：属性 videoFrameRate 的获取函数。
 
 ### `[signal] void QMediaRecorder::videoFrameRateChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `videoFrameRateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示视频帧率。
+值为0表示录制设备应根据视频源可用的内容和编解码器的限制做出最优选择。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `videoFrameRate` 的变化，不要把它当作普通函数主动调用。
 
 ### `QSize QMediaRecorder::videoResolution() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::videoResolution` 用于计算、查询或取得与“video、Resolution”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回编码视频的分辨率。
+注意：属性视频分辨率的获取函数。
 
 ### `[signal] void QMediaRecorder::videoResolutionChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 发出的通知信号 `videoResolutionChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性决定了编码视频的分辨率。
+空的`QSize`表示录像机会根据视频源可用的分辨率和编解码器的限制选择最优分辨率。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `videoResolution` 的变化，不要把它当作普通函数主动调用。
 
 ### `enum Error { NoError, ResourceError, FormatError, OutOfSpaceError, LocationNotWritable }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 暴露的类型声明 `错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QMediaRecorder::NoError`：`0`;无错误。
+- `QMediaRecorder::ResourceError`：`1`;设备尚未准备好或不可用。
+- `QMediaRecorder::FormatError`：`2`;不支持当前格式。
+- `QMediaRecorder::OutOfSpaceError`：`3`;设备无剩余空间。
+- `QMediaRecorder::LocationNotWritable`：`4`;输出位置不可写。
 
 ### `enum RecorderState { StoppedState, RecordingState, PausedState }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaRecorder` 暴露的类型声明 `Recorder、State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QMediaRecorder::StoppedState`：`0`;录音机不激活。
+- `QMediaRecorder::RecordingState`：`1`;录音请求。
+- `QMediaRecorder::PausedState`：`2`;录音机暂停。
 
 ### `QUrl actualLocation() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::actualLocation` 用于计算、查询或取得与“actual、Location”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了最后媒体内容的实际位置。
+当分配新的`outputLocation`或非空`outputDevice`时，实际位置会被重置。当调用`record()`且`outputDevice` `null`或不可写时，记录器会根据以下规则生成实际位置。
+- 如果`outputLocation`空、目录或无扩展名的文件，录制器会根据所选媒体格式和系统MIME类型生成相应的扩展名。
+- 如果`outputLocation`是目录，录音机会在其中生成一个新文件名。
+- 如果`outputLocation`为空，录音机会在系统特定目录中生成新的音频或视频文件名。
+- 录制器在发射 `recorderStateChanged(RecordingState)` 前先生成实际位置。
 
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `actualLocation()` 读取当前值；它不会修改应用状态。
 
 ### `bool autoStop() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::autoStop` 用于计算、查询或取得与“auto、停止”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该特性控制媒体录制器是否在所有媒体输入报告流结束或被关闭时自动停止。
+流结束时会通过发送一个空媒体帧来报告，你可以通过`QVideoFrameInput`或`QAudioBufferInput`显式发送。
+视频输入，特别是 `QCamera`、`QScreenCapture` 和 `QWindowCapture`，可以通过功能`setActive`关闭。
+默认是`false`。
+QMediaRecorder：：autoStop 仅支持 FFmpeg 后端。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoStop()` 读取当前值；它不会修改应用状态。
 
 ### `qint64 duration() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::duration` 用于计算、查询或取得与“持续时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该特性将录制的介质时长保持在毫秒级。
 
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `duration()` 读取当前值；它不会修改应用状态。
 
 ### `QMediaRecorder::Error error() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaRecorder::Error`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回当前错误状态。
 
-**签名拆解：**
-
-- 返回值：`QMediaRecorder::Error`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `error()` 读取当前值；它不会修改应用状态。
 
 ### `QString errorString() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回描述当前错误状态的字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `errorString()` 读取当前值；它不会修改应用状态。
 
 ### `QMediaFormat mediaFormat() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::mediaFormat` 用于计算、查询或取得与“media、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性承载着录制器当前的`QMediaFormat`。
+当调用`record()`时，该属性的值可能会发生变化。如果发生这种情况，就会发出 mediaFormatChanged() 信号。如果 `QMediaFormat::audioCodec` 或 `QMediaFormat::fileFormat` 属性设置为未指定，这种情况总是会发生。如果视频源（`QCamera`、`QScreenCapture` 或 `QVideoFrameInput`）连接到了`QMediaCaptureSession`，也必须指定 `QMediaFormat::videoCodec`。如果媒体后端不支持所选的文件格式或编解码器，`QMediaFormat::audioCodec`和`QMediaFormat::videoCodec`属性值也可能发生变化。
+如果请求视频格式但未连接视频源，则`QMediaFormat::fileFormat`属性值也可能变为仅`audio`格式，`QMediaCaptureSession`则不连接视频源。例如，如果`QMediaFormat::fileFormat`设置为`QMediaFormat::MPEG4`，则可能改为`QMediaFormat::Mpeg4Audio`。
+应用程序可以通过调用`QMediaFormat::isSupported()`函数来判断录制开始前`mediaFormat`是否会变更。在无视频输入录制时，如果满足以下情况，`record()` `QMediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 被指定
+- `QMediaFormat::videoCodec`未具体说明
+- `QMediaFormat::isSupported()` `true`
+在使用视频输入录制时，如果满足以下情况，`mediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 指定
+- `QMediaFormat::videoCodec` 被指定
+- `QMediaFormat::isSupported()` 返回`true`
+注意：`QMediaRecorder`在确定`QMediaFormat::fileFormat`时不会考虑`outputLocation`属性中的文件扩展名，且如果指定了扩展名，也不会调整`outputLocation` `QUrl`的扩展名以匹配所选文件格式。因此，应用程序应确保将`QMediaRecorder::mediaFormat::fileFormat`设置为与文件扩展名匹配，或不指定文件扩展名。如果未指定文件扩展名，`actualLocation`文件扩展名将更新为与录制时使用的文件格式一致。
 
-**签名拆解：**
-
-- 返回值：`QMediaFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `mediaFormat()` 读取当前值；它不会修改应用状态。
 
 ### `QMediaMetaData metaData() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::metaData` 用于计算、查询或取得与“meta、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaMetaData`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回与录制相关的元数据。
 
-**签名拆解：**
-
-- 返回值：`QMediaMetaData`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `metaData()` 读取当前值；它不会修改应用状态。
 
 ### `QUrl outputLocation() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::outputLocation` 用于计算、查询或取得与“output、Location”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+此属性保存媒体内容的目标位置。
+设置位置可能失败，例如当服务仅支持本地文件系统位置，但传入了网络 URL 时。如果操作失败，将发出 `errorOccurred()` 信号。
+如果已为录制器分配可写 `outputDevice`，则输出位置将被忽略。此行为将来可能更改，因此建议只设置一个输出，即 `outputLocation` 或 `outputDevice`。
+输出位置可以为空、为目录或文件。目录或文件路径可以是相对路径或绝对路径。`record()` 方法根据指定的输出位置和系统特定设置生成实际位置。详细信息请参阅 `actualLocation` 属性描述。
 
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `outputLocation()` 读取当前值；它不会修改应用状态。
 
 ### `QMediaRecorder::Quality quality() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaRecorder::quality` 用于计算、查询或取得与“quality”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaRecorder::Quality`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+恢复了录制质量。
 
-**签名拆解：**
-
-- 返回值：`QMediaRecorder::Quality`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `quality()` 读取当前值；它不会修改应用状态。
 
 ### `void setAutoStop(bool autoStop)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoStop`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该特性控制媒体录制器是否在所有媒体输入报告流结束或被关闭时自动停止。
+流结束时会通过发送一个空媒体帧来报告，你可以通过`QVideoFrameInput`或`QAudioBufferInput`显式发送。
+视频输入，特别是 `QCamera`、`QScreenCapture` 和 `QWindowCapture`，可以通过功能`setActive`关闭。
+默认是`false`。
+QMediaRecorder：：autoStop 仅支持 FFmpeg 后端。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `autoStop`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoStop(...)` 修改 `autoStop`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMediaFormat(const QMediaFormat &format)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMediaFormat`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性承载着录制器当前的`QMediaFormat`。
+当调用`record()`时，该属性的值可能会发生变化。如果发生这种情况，就会发出 mediaFormatChanged() 信号。如果 `QMediaFormat::audioCodec` 或 `QMediaFormat::fileFormat` 属性设置为未指定，这种情况总是会发生。如果视频源（`QCamera`、`QScreenCapture` 或 `QVideoFrameInput`）连接到了`QMediaCaptureSession`，也必须指定 `QMediaFormat::videoCodec`。如果媒体后端不支持所选的文件格式或编解码器，`QMediaFormat::audioCodec`和`QMediaFormat::videoCodec`属性值也可能发生变化。
+如果请求视频格式但未连接视频源，则`QMediaFormat::fileFormat`属性值也可能变为仅`audio`格式，`QMediaCaptureSession`则不连接视频源。例如，如果`QMediaFormat::fileFormat`设置为`QMediaFormat::MPEG4`，则可能改为`QMediaFormat::Mpeg4Audio`。
+应用程序可以通过调用`QMediaFormat::isSupported()`函数来判断录制开始前`mediaFormat`是否会变更。在无视频输入录制时，如果满足以下情况，`record()` `QMediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 被指定
+- `QMediaFormat::videoCodec`未具体说明
+- `QMediaFormat::isSupported()` `true`
+在使用视频输入录制时，如果满足以下情况，`mediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 指定
+- `QMediaFormat::videoCodec` 被指定
+- `QMediaFormat::isSupported()` 返回`true`
+注意：`QMediaRecorder`在确定`QMediaFormat::fileFormat`时不会考虑`outputLocation`属性中的文件扩展名，且如果指定了扩展名，也不会调整`outputLocation` `QUrl`的扩展名以匹配所选文件格式。因此，应用程序应确保将`QMediaRecorder::mediaFormat::fileFormat`设置为与文件扩展名匹配，或不指定文件扩展名。如果未指定文件扩展名，`actualLocation`文件扩展名将更新为与录制时使用的文件格式一致。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QMediaFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMediaFormat(...)` 修改 `mediaFormat`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setOutputLocation(const QUrl &location)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOutputLocation`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+此属性保存媒体内容的目标位置。
+设置位置可能失败，例如当服务仅支持本地文件系统位置，但传入了网络 URL 时。如果操作失败，将发出 `errorOccurred()` 信号。
+如果已为录制器分配可写 `outputDevice`，则输出位置将被忽略。此行为将来可能更改，因此建议只设置一个输出，即 `outputLocation` 或 `outputDevice`。
+输出位置可以为空、为目录或文件。目录或文件路径可以是相对路径或绝对路径。`record()` 方法根据指定的输出位置和系统特定设置生成实际位置。详细信息请参阅 `actualLocation` 属性描述。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `location`：类型为 `const QUrl &`。没有默认值，调用时必须提供。传入 `const QUrl &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOutputLocation(...)` 修改 `outputLocation`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setQuality(QMediaRecorder::Quality quality)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setQuality`。调用它会改变 `QMediaRecorder` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+恢复了录制质量。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `quality`：类型为 `QMediaRecorder::Quality`。没有默认值，调用时必须提供。传入 `QMediaRecorder::Quality` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setQuality(...)` 修改 `quality`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void autoStopChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `autoStopChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该特性控制媒体录制器是否在所有媒体输入报告流结束或被关闭时自动停止。
+流结束时会通过发送一个空媒体帧来报告，你可以通过`QVideoFrameInput`或`QAudioBufferInput`显式发送。
+视频输入，特别是 `QCamera`、`QScreenCapture` 和 `QWindowCapture`，可以通过功能`setActive`关闭。
+默认是`false`。
+QMediaRecorder：：autoStop 仅支持 FFmpeg 后端。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `autoStop` 的变化，不要把它当作普通函数主动调用。
 
 ### `void errorChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `errorChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+返回当前错误状态。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `error` 的变化，不要把它当作普通函数主动调用。
 
 ### `void mediaFormatChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `mediaFormatChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性承载着录制器当前的`QMediaFormat`。
+当调用`record()`时，该属性的值可能会发生变化。如果发生这种情况，就会发出 mediaFormatChanged() 信号。如果 `QMediaFormat::audioCodec` 或 `QMediaFormat::fileFormat` 属性设置为未指定，这种情况总是会发生。如果视频源（`QCamera`、`QScreenCapture` 或 `QVideoFrameInput`）连接到了`QMediaCaptureSession`，也必须指定 `QMediaFormat::videoCodec`。如果媒体后端不支持所选的文件格式或编解码器，`QMediaFormat::audioCodec`和`QMediaFormat::videoCodec`属性值也可能发生变化。
+如果请求视频格式但未连接视频源，则`QMediaFormat::fileFormat`属性值也可能变为仅`audio`格式，`QMediaCaptureSession`则不连接视频源。例如，如果`QMediaFormat::fileFormat`设置为`QMediaFormat::MPEG4`，则可能改为`QMediaFormat::Mpeg4Audio`。
+应用程序可以通过调用`QMediaFormat::isSupported()`函数来判断录制开始前`mediaFormat`是否会变更。在无视频输入录制时，如果满足以下情况，`record()` `QMediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 被指定
+- `QMediaFormat::videoCodec`未具体说明
+- `QMediaFormat::isSupported()` `true`
+在使用视频输入录制时，如果满足以下情况，`mediaFormat`不会改变：
+- `QMediaFormat::fileFormat` 指定
+- `QMediaFormat::audioCodec` 指定
+- `QMediaFormat::videoCodec` 被指定
+- `QMediaFormat::isSupported()` 返回`true`
+注意：`QMediaRecorder`在确定`QMediaFormat::fileFormat`时不会考虑`outputLocation`属性中的文件扩展名，且如果指定了扩展名，也不会调整`outputLocation` `QUrl`的扩展名以匹配所选文件格式。因此，应用程序应确保将`QMediaRecorder::mediaFormat::fileFormat`设置为与文件扩展名匹配，或不指定文件扩展名。如果未指定文件扩展名，`actualLocation`文件扩展名将更新为与录制时使用的文件格式一致。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `mediaFormat` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

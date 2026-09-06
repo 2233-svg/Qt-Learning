@@ -107,537 +107,516 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 41 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QShaderDescription::BuiltinType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Builtin、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:BuiltinType`。
-- 属性名：`QShaderDescription`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+内置变量类型。
+- `QShaderDescription::PositionBuiltin`：`0`
+- `QShaderDescription::PointSizeBuiltin`：`1`
+- `QShaderDescription::ClipDistanceBuiltin`：`3`
+- `QShaderDescription::CullDistanceBuiltin`：`4`
+- `QShaderDescription::VertexIdBuiltin`：`5`
+- `QShaderDescription::InstanceIdBuiltin`：`6`
+- `QShaderDescription::PrimitiveIdBuiltin`：`7`
+- `QShaderDescription::InvocationIdBuiltin`：`8`
+- `QShaderDescription::LayerBuiltin`：`9`
+- `QShaderDescription::ViewportIndexBuiltin`：`10`
+- `QShaderDescription::TessLevelOuterBuiltin`：`11`
+- `QShaderDescription::TessLevelInnerBuiltin`：`12`
+- `QShaderDescription::TessCoordBuiltin`：`13`
+- `QShaderDescription::PatchVerticesBuiltin`：`14`
+- `QShaderDescription::FragCoordBuiltin`：`15`
+- `QShaderDescription::PointCoordBuiltin`：`16`
+- `QShaderDescription::FrontFacingBuiltin`：`17`
+- `QShaderDescription::SampleIdBuiltin`：`18`
+- `QShaderDescription::SamplePositionBuiltin`：`19`
+- `QShaderDescription::SampleMaskBuiltin`：`20`
+- `QShaderDescription::FragDepthBuiltin`：`22`
+- `QShaderDescription::NumWorkGroupsBuiltin`：`24`
+- `QShaderDescription::WorkgroupSizeBuiltin`：`25`
+- `QShaderDescription::WorkgroupIdBuiltin`：`26`
+- `QShaderDescription::LocalInvocationIdBuiltin`：`27`
+- `QShaderDescription::GlobalInvocationIdBuiltin`：`28`
+- `QShaderDescription::LocalInvocationIndexBuiltin`：`29`
+- `QShaderDescription::VertexIndexBuiltin`：`42`
+- `QShaderDescription::InstanceIndexBuiltin`：`43`
+- `QShaderDescription::ViewIndexBuiltin`：`4440`
 
 ### `enum QShaderDescription::ImageFlagflags QShaderDescription::ImageFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Image、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ImageFlagflags QShaderDescription::ImageFlags`。
-- 属性名：`QShaderDescription`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+图片标记。
+- `QShaderDescription::ReadOnlyImage`：`1 << 0`
+- `QShaderDescription::WriteOnlyImage`：`1 << 1`
+ImageFlags 类型是 QFlags 的 typedef<ImageFlag>。它存储 ImageFlag 值的 OR 组合。
 
 ### `enum QShaderDescription::ImageFormat`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Image、格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ImageFormat`。
-- 属性名：`QShaderDescription`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+图片格式。
+- `QShaderDescription::ImageFormatUnknown`：`0`
+- `QShaderDescription::ImageFormatRgba32f`：`1`
+- `QShaderDescription::ImageFormatRgba16f`：`2`
+- `QShaderDescription::ImageFormatR32f`：`3`
+- `QShaderDescription::ImageFormatRgba8`：`4`
+- `QShaderDescription::ImageFormatRgba8Snorm`：`5`
+- `QShaderDescription::ImageFormatRg32f`：`6`
+- `QShaderDescription::ImageFormatRg16f`：`7`
+- `QShaderDescription::ImageFormatR11fG11fB10f`：`8`
+- `QShaderDescription::ImageFormatR16f`：`9`
+- `QShaderDescription::ImageFormatRgba16`：`10`
+- `QShaderDescription::ImageFormatRgb10A2`：`11`
+- `QShaderDescription::ImageFormatRg16`：`12`
+- `QShaderDescription::ImageFormatRg8`：`13`
+- `QShaderDescription::ImageFormatR16`：`14`
+- `QShaderDescription::ImageFormatR8`：`15`
+- `QShaderDescription::ImageFormatRgba16Snorm`：`16`
+- `QShaderDescription::ImageFormatRg16Snorm`：`17`
+- `QShaderDescription::ImageFormatRg8Snorm`：`18`
+- `QShaderDescription::ImageFormatR16Snorm`：`19`
+- `QShaderDescription::ImageFormatR8Snorm`：`20`
+- `QShaderDescription::ImageFormatRgba32i`：`21`
+- `QShaderDescription::ImageFormatRgba16i`：`22`
+- `QShaderDescription::ImageFormatRgba8i`：`23`
+- `QShaderDescription::ImageFormatR32i`：`24`
+- `QShaderDescription::ImageFormatRg32i`：`25`
+- `QShaderDescription::ImageFormatRg16i`：`26`
+- `QShaderDescription::ImageFormatRg8i`：`27`
+- `QShaderDescription::ImageFormatR16i`：`28`
+- `QShaderDescription::ImageFormatR8i`：`29`
+- `QShaderDescription::ImageFormatRgba32ui`：`30`
+- `QShaderDescription::ImageFormatRgba16ui`：`31`
+- `QShaderDescription::ImageFormatRgba8ui`：`32`
+- `QShaderDescription::ImageFormatR32ui`：`33`
+- `QShaderDescription::ImageFormatRgb10a2ui`：`34`
+- `QShaderDescription::ImageFormatRg32ui`：`35`
+- `QShaderDescription::ImageFormatRg16ui`：`36`
+- `QShaderDescription::ImageFormatRg8ui`：`37`
+- `QShaderDescription::ImageFormatR16ui`：`38`
+- `QShaderDescription::ImageFormatR8ui`：`39`
 
 ### `enum QShaderDescription::QualifierFlagflags QShaderDescription::QualifierFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Qualifier、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:QualifierFlagflags QShaderDescription::QualifierFlags`。
-- 属性名：`QShaderDescription`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+资格赛标志。
+- `QShaderDescription::QualifierReadOnly`：`1 << 0`
+- `QShaderDescription::QualifierWriteOnly`：`1 << 1`
+- `QShaderDescription::QualifierCoherent`：`1 << 2`
+- `QShaderDescription::QualifierVolatile`：`1 << 3`
+- `QShaderDescription::QualifierRestrict`：`1 << 4`
+QualifierFlags 类型是 QFlags 的 typedef<QualifierFlag>。它存储 QualifierFlag 值的 OR 组合。
 
 ### `enum QShaderDescription::VariableType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Variable、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:VariableType`。
-- 属性名：`QShaderDescription`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示变量或块成员的类型。
+- `QShaderDescription::Unknown`：`0`
+- `QShaderDescription::Float`：`1`
+- `QShaderDescription::Vec2`：`2`
+- `QShaderDescription::Vec3`：`3`
+- `QShaderDescription::Vec4`：`4`
+- `QShaderDescription::Mat2`：`5`
+- `QShaderDescription::Mat2x3`：`6`
+- `QShaderDescription::Mat2x4`：`7`
+- `QShaderDescription::Mat3`：`8`
+- `QShaderDescription::Mat3x2`：`9`
+- `QShaderDescription::Mat3x4`：`10`
+- `QShaderDescription::Mat4`：`11`
+- `QShaderDescription::Mat4x2`：`12`
+- `QShaderDescription::Mat4x3`：`13`
+- `QShaderDescription::Int`：`14`
+- `QShaderDescription::Int2`：`15`
+- `QShaderDescription::Int3`：`16`
+- `QShaderDescription::Int4`：`17`
+- `QShaderDescription::Uint`：`18`
+- `QShaderDescription::Uint2`：`19`
+- `QShaderDescription::Uint3`：`20`
+- `QShaderDescription::Uint4`：`21`
+- `QShaderDescription::Bool`：`22`
+- `QShaderDescription::Bool2`：`23`
+- `QShaderDescription::Bool3`：`24`
+- `QShaderDescription::Bool4`：`25`
+- `QShaderDescription::Double`：`26`
+- `QShaderDescription::Double2`：`27`
+- `QShaderDescription::Double3`：`28`
+- `QShaderDescription::Double4`：`29`
+- `QShaderDescription::DMat2`：`30`
+- `QShaderDescription::DMat2x3`：`31`
+- `QShaderDescription::DMat2x4`：`32`
+- `QShaderDescription::DMat3`：`33`
+- `QShaderDescription::DMat3x2`：`34`
+- `QShaderDescription::DMat3x4`：`35`
+- `QShaderDescription::DMat4`：`36`
+- `QShaderDescription::DMat4x2`：`37`
+- `QShaderDescription::DMat4x3`：`38`
+- `QShaderDescription::Sampler1D`：`39`
+- `QShaderDescription::Sampler2D`：`40`
+- `QShaderDescription::Sampler2DMS`：`41`
+- `QShaderDescription::Sampler3D`：`42`
+- `QShaderDescription::SamplerCube`：`43`
+- `QShaderDescription::Sampler1DArray`：`44`
+- `QShaderDescription::Sampler2DArray`：`45`
+- `QShaderDescription::Sampler2DMSArray`：`46`
+- `QShaderDescription::Sampler3DArray`：`47`
+- `QShaderDescription::SamplerCubeArray`：`48`
+- `QShaderDescription::SamplerRect`：`49`
+- `QShaderDescription::SamplerBuffer`：`50`
+- `QShaderDescription::SamplerExternalOES`：`51`
+- `QShaderDescription::Sampler`：`52`;用于独立采样器。
+- `QShaderDescription::Image1D`：`53`
+- `QShaderDescription::Image2D`：`54`
+- `QShaderDescription::Image2DMS`：`55`
+- `QShaderDescription::Image3D`：`56`
+- `QShaderDescription::ImageCube`：`57`
+- `QShaderDescription::Image1DArray`：`58`
+- `QShaderDescription::Image2DArray`：`59`
+- `QShaderDescription::Image2DMSArray`：`60`
+- `QShaderDescription::Image3DArray`：`61`
+- `QShaderDescription::ImageCubeArray`：`62`
+- `QShaderDescription::ImageRect`：`63`
+- `QShaderDescription::ImageBuffer`：`64`
+- `QShaderDescription::Struct`：`65`
+- `QShaderDescription::Half`：`66`
+- `QShaderDescription::Half2`：`67`
+- `QShaderDescription::Half3`：`68`
+- `QShaderDescription::Half4`：`69`
 
 ### `QShaderDescription::QShaderDescription()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的空 QShaderDescription。
+注意：空意味着`isValid()`为新构建的实例返回`false`。
 
 ### `QShaderDescription::QShaderDescription(const QShaderDescription &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QShaderDescription &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[noexcept] QShaderDescription::~QShaderDescription()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `QList<QShaderDescription::InOutVariable> QShaderDescription::combinedImageSamplers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::combinedImageSamplers` 用于计算、查询或取得与“combined、Image、Samplers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::InOutVariable>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回合并图像采样器的列表。
+以GLSL/Vulkan着色器为源，`layout(binding = 1) uniform sampler2D tex;`统一生成如下内容：（此处以文本JSON形式显示）。
+这并不意味着其他语言版本的着色器也必须使用组合图像采样器，尤其是考虑到该概念可能并非处处存在。例如，HLSL 版本很可能仅使用分别为寄存器 t1 和 s1 的 Texture2D 和 SamplerState 对象。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QList<QShaderDescription::InOutVariable>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ "combinedImageSamplers": [
+      {
+          "binding": 1,
+          "name": "tex",
+          "set": 0,
+          "type": "sampler2D"
+      }
+  ]
+```
 
 ### `std::array<uint, 3> QShaderDescription::computeShaderLocalSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::computeShaderLocalSize` 用于计算、查询或取得与“compute、Shader、Local、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::array<uint, 3>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回计算着色器的局部大小。
+例如，对于带有以下声明的计算着色器，函数返回 { 256， 16， 1}。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`std::array<uint, 3>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ layout(local_size_x = 256, local_size_y = 16, local_size_z = 1) in;
+```
 
 ### `[static] QShaderDescription QShaderDescription::deserialize(QDataStream *stream, int version)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `deserialize`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QShaderDescription`。
-- 参数 `stream`：类型为 `QDataStream *`。没有默认值，调用时必须提供。传入 `QDataStream *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `version`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从`stream`加载的新`QShaderDescription`。`version` 指定了 QSB 版本。
 
 ### `QList<QShaderDescription::BuiltinVariable> QShaderDescription::inputBuiltinVariables() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::inputBuiltinVariables` 用于计算、查询或取得与“input、Builtin、Variables”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::BuiltinVariable>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QShaderDescription::BuiltinVariable>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用作输入的活动内置物列表。例如，一个晶面分析着色器读取gl_TessCoord和gl_Position的值时，这里会列出`TessCoordBuiltin`和`PositionBuiltin`。
 
 ### `QList<QShaderDescription::InOutVariable> QShaderDescription::inputVariables() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::inputVariables` 用于计算、查询或取得与“input、Variables”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::InOutVariable>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QShaderDescription::InOutVariable>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回输入变量列表。这包括顶点阶段的顶点输入（有时称为属性）以及其他阶段的输入（有时称为变量）。
 
 ### `bool QShaderDescription::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QShaderDescription`中至少包含一个变量和块列表中的一条，则返回为真。
 
 ### `QList<QShaderDescription::BuiltinVariable> QShaderDescription::outputBuiltinVariables() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::outputBuiltinVariables` 用于计算、查询或取得与“output、Builtin、Variables”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::BuiltinVariable>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QShaderDescription::BuiltinVariable>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用作输入的活跃内置变量列表。例如，顶点着色器通常会内置`PositionBuiltin`作为输出。
 
 ### `QList<QShaderDescription::InOutVariable> QShaderDescription::outputVariables() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::outputVariables` 用于计算、查询或取得与“output、Variables”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::InOutVariable>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QShaderDescription::InOutVariable>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回输出变量列表。
 
 ### `QList<QShaderDescription::PushConstantBlock> QShaderDescription::pushConstantBlocks() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QShaderDescription` 添加依赖、数据或子对象的 API `pushConstantBlocks`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QList<QShaderDescription::PushConstantBlock>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回推送常数块的列表。
+注意：避免依赖推送常量块来搭配Qt渲染硬件接口使用，因为目前Qt硬件接口不支持。
 
 ### `void QShaderDescription::serialize(QDataStream *stream, int version) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::serialize` 用于执行与“serialize”相关的操作。调用时要先确认当前状态和 `stream`、`version` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stream`：类型为 `QDataStream *`。没有默认值，调用时必须提供。传入 `QDataStream *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `version`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将此`QShaderDescription`序列化为`stream`。`version` 规定了 QSB 版本。
 
 ### `QList<QShaderDescription::StorageBlock> QShaderDescription::storageBlocks() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::storageBlocks` 用于计算、查询或取得与“storage、Blocks”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::StorageBlock>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回着色器存储块列表。
+例如，使用 GLSL/Vulkan 着色器作为源代码时，声明。
+生成以下内容：（此处以文本JSON形式显示）。
+注意：存储块中最后一个成员的大小未定义。该大小显示为`size` 0，数组维度为`[0]`。存储块的 `knownSize` 排除最后一个成员的大小，因为该大小仅在运行时已知。对于未定义数组大小的最后一个成员，数组项之间的字节步幅为 `runtimeArrayStride`。该值根据指定的缓冲区内存布局标准（std140， std430）规则确定。
+注意：SSBO不适用于某些图形API，如OpenGL 2.x或3.1之前的OpenGL ES。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QList<QShaderDescription::StorageBlock>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ struct Stuff {
+     vec2 a;
+     vec2 b;
+ };
+ layout(std140, binding = 0) buffer StuffSsbo {
+     vec4 whatever;
+     Stuff stuff[];
+ } buf;
+```
 
 ### `QList<QShaderDescription::InOutVariable> QShaderDescription::storageImages() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::storageImages` 用于计算、查询或取得与“storage、Images”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::InOutVariable>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回图像变量列表。
+这些问题很可能出现在计算着色器中。例如，`layout (binding = 0, rgba8) uniform readonly image2D inputImage;`生成以下内容：（此处以文本JSON形式显示）。
+注意：独立的图像对象与某些图形API（如3.1之前的OpenGL 2.x或OpenGL ES）不兼容。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QList<QShaderDescription::InOutVariable>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ "storageImages": [
+      {
+          "binding": 0,
+          "imageFormat": "rgba8",
+          "name": "inputImage",
+          "set": 0,
+          "type": "image2D"
+      }
+  ]
+```
 
 ### `QShaderDescription::TessellationMode QShaderDescription::tessellationMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::tessellationMode` 用于计算、查询或取得与“tessellation、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QShaderDescription::TessellationMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回镶嵌控制或评估着色器的镶嵌执行模式。
+未设置时返回的值为`UnknownTessellationMode`。
+例如，对于带有以下声明的镶嵌评估着色器，函数返回`TrianglesTessellationMode`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QShaderDescription::TessellationMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ layout(triangles) in;
+```
 
 ### `uint QShaderDescription::tessellationOutputVertexCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::tessellationOutputVertexCount` 用于计算、查询或取得与“tessellation、Output、Vertex、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回输出顶点的数量。
+例如，对于带有以下声明的镶嵌控制着色器，函数返回3。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`uint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ layout(vertices = 3) out;
+```
 
 ### `QShaderDescription::TessellationPartitioning QShaderDescription::tessellationPartitioning() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::tessellationPartitioning` 用于计算、查询或取得与“tessellation、Partitioning”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QShaderDescription::TessellationPartitioning`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回镶嵌控制或评估着色器的镶嵌分区模式。
+未设置时返回的值为`UnknownTessellationPartitioning`。
+例如，对于带有以下声明的镶嵌评估着色器，函数返回`FractionalOddTessellationPartitioning`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QShaderDescription::TessellationPartitioning`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ layout(triangles, fractional_odd_spacing, ccw) in;
+```
 
 ### `QShaderDescription::TessellationWindingOrder QShaderDescription::tessellationWindingOrder() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::tessellationWindingOrder` 用于计算、查询或取得与“tessellation、Winding、Order”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QShaderDescription::TessellationWindingOrder`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回镶嵌控制或评估着色器的镶嵌绕线顺序。
+未设置时返回的值为`UnknownTessellationWindingOrder`。
+例如，对于带有以下声明的镶嵌评估着色器，函数返回`CcwTessellationWindingOrder`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QShaderDescription::TessellationWindingOrder`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ layout(triangles, fractional_odd_spacing, ccw) in;
+```
 
 ### `QByteArray QShaderDescription::toJson() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toJson`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回序列化的JSON文本版本。
+注意：JSON文本没有提供反序列化方法。
 
 ### `QList<QShaderDescription::UniformBlock> QShaderDescription::uniformBlocks() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShaderDescription::uniformBlocks` 用于计算、查询或取得与“uniform、Blocks”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QShaderDescription::UniformBlock>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QShaderDescription::UniformBlock>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回均匀块列表。
 
 ### `QShaderDescription &QShaderDescription::operator=(const QShaderDescription &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QShaderDescription &`。
-- 参数 `other`：类型为 `const QShaderDescription &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该对象分配`other`。
 
 ### `[noexcept] bool operator==(const QShaderDescription &lhs, const QShaderDescription &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QShaderDescription &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QShaderDescription &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QShaderDescription`对象相等，返回`true` `lhs` 和 `rhs`。
 
 ### `(since 6.6) struct BlockVariable`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `阻塞或屏蔽、Variable` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述均匀或推常数块的成员。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QShaderDescription`。
 
 ### `(since 6.6) struct BuiltinVariable`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `Builtin、Variable` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述一个内置变量。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QShaderDescription`。
 
 ### `(since 6.6) struct InOutVariable`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `In、Out、Variable` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述着色器中的输入或输出变量。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QShaderDescription`。
 
 ### `(since 6.6) struct PushConstantBlock`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `Push、Constant、阻塞或屏蔽` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述了推送恒定阻挡。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QShaderDescription`。
 
 ### `(since 6.6) struct StorageBlock`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `Storage、阻塞或屏蔽` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述一个着色器存储块。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QShaderDescription`。
 
 ### `(since 6.6) struct UniformBlock`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `Uniform、阻塞或屏蔽` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述均匀的块状结构。
+注意：当转换为不支持统一块的着色语言（如GLSL 120或GLSL/ES 100）时，结构体中的统一块被普通统一块替代。结构体名称，以及由块成员生成的统一前缀，由`structName`给出。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QShaderDescription`。
 
 ### `enum ImageFlag { ReadOnlyImage, WriteOnlyImage }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Image、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+图片标记。
+- `QShaderDescription::ReadOnlyImage`：`1 << 0`
+- `QShaderDescription::WriteOnlyImage`：`1 << 1`
+ImageFlags 类型是 QFlags 的 typedef<ImageFlag>。它存储 ImageFlag 值的 OR 组合。
 
 ### `flags ImageFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+图片标记。
+- `QShaderDescription::ReadOnlyImage`：`1 << 0`
+- `QShaderDescription::WriteOnlyImage`：`1 << 1`
+ImageFlags 类型是 QFlags 的 typedef<ImageFlag>。它存储 ImageFlag 值的 OR 组合。
 
 ### `enum QualifierFlag { QualifierReadOnly, QualifierWriteOnly, QualifierCoherent, QualifierVolatile, QualifierRestrict }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Qualifier、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+资格赛标志。
+- `QShaderDescription::QualifierReadOnly`：`1 << 0`
+- `QShaderDescription::QualifierWriteOnly`：`1 << 1`
+- `QShaderDescription::QualifierCoherent`：`1 << 2`
+- `QShaderDescription::QualifierVolatile`：`1 << 3`
+- `QShaderDescription::QualifierRestrict`：`1 << 4`
+QualifierFlags 类型是 QFlags 的 typedef<QualifierFlag>。它存储 QualifierFlag 值的 OR 组合。
 
 ### `flags QualifierFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+资格赛标志。
+- `QShaderDescription::QualifierReadOnly`：`1 << 0`
+- `QShaderDescription::QualifierWriteOnly`：`1 << 1`
+- `QShaderDescription::QualifierCoherent`：`1 << 2`
+- `QShaderDescription::QualifierVolatile`：`1 << 3`
+- `QShaderDescription::QualifierRestrict`：`1 << 4`
+QualifierFlags 类型是 QFlags 的 typedef<QualifierFlag>。它存储 QualifierFlag 值的 OR 组合。
 
 ### `enum TessellationMode { UnknownTessellationMode, TrianglesTessellationMode, QuadTessellationMode, IsolineTessellationMode }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Tessellation、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定细分着色器生成图元的形状：`UnknownTessellationMode` 表示未知，`TrianglesTessellationMode` 生成三角形，`QuadTessellationMode` 生成四边形，`IsolineTessellationMode` 生成等值线。读取反射信息后应先排除未知值。
 
 ### `enum TessellationPartitioning { UnknownTessellationPartitioning, EqualTessellationPartitioning, FractionalEvenTessellationPartitioning, FractionalOddTessellationPartitioning }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Tessellation、Partitioning`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定细分级别如何取整和分割：`EqualTessellationPartitioning` 使用等距整数分割，`FractionalEvenTessellationPartitioning` 和 `FractionalOddTessellationPartitioning` 分别使用偶数、奇数分数分割；`UnknownTessellationPartitioning` 表示着色器未提供可识别模式。
 
 ### `enum TessellationWindingOrder { UnknownTessellationWindingOrder, CwTessellationWindingOrder, CcwTessellationWindingOrder }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QShaderDescription` 暴露的类型声明 `Tessellation、Winding、Order`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定细分后图元的顶点绕序。`CwTessellationWindingOrder` 为顺时针，`CcwTessellationWindingOrder` 为逆时针，`UnknownTessellationWindingOrder` 表示未知；绕序会影响正反面判断和背面剔除。
 
 ## 6. 深入实践与常见坑
 

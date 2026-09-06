@@ -54,243 +54,127 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QSSGRhiGraphicsPipelineState::Flagflags QSSGRhiGraphicsPipelineState::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QSSGRhiGraphicsPipelineState::Flags`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled`: `0x1`
+- `QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled`: `0x2`
+- `QSSGRhiGraphicsPipelineState::Flag::BlendEnabled`: `0x4`
+- `QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef`: `0x8`
+- `QSSGRhiGraphicsPipelineState::Flag::UsesScissor`: `0x10`
+Flags 类型是 QFlags<Flag> 的 typedef。它存储 Flag 值的按位或组合。
 
 ### `int QSSGRhiGraphicsPipelineState::colorAttachmentCount`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setColorAttachmentCount(...)` 设置，之后用 `colorAttachmentCount()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:colorAttachmentCount`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+颜色附件的数量。默认是1。
 
 ### `QRhiGraphicsPipeline::CullMode QSSGRhiGraphicsPipelineState::cullMode`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setCullMode(...)` 设置，之后用 `cullMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:CullMode QSSGRhiGraphicsPipelineState::cullMode`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定剔除模式。
 
 ### `int QSSGRhiGraphicsPipelineState::depthBias`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setDepthBias(...)` 设置，之后用 `depthBias()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:depthBias`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+深度偏移。默认值为 0。
 
 ### `QRhiGraphicsPipeline::CompareOp QSSGRhiGraphicsPipelineState::depthFunc`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setDepthFunc(...)` 设置，之后用 `depthFunc()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:CompareOp QSSGRhiGraphicsPipelineState::depthFunc`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+深度比较函数。
 
 ### `float QSSGRhiGraphicsPipelineState::lineWidth`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setLineWidth(...)` 设置，之后用 `lineWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:lineWidth`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+所用线宽。默认是1.0。
+注意：对于1.0以外的数值，必须在运行时报告功能`QRhi::WideLines`支持。
 
 ### `QRhiGraphicsPipeline::PolygonMode QSSGRhiGraphicsPipelineState::polygonMode`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setPolygonMode(...)` 设置，之后用 `polygonMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:PolygonMode QSSGRhiGraphicsPipelineState::polygonMode`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+多边形模式值。默认是`Fill`。
 
 ### `int QSSGRhiGraphicsPipelineState::samples`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setSamples(...)` 设置，之后用 `samples()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:samples`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+样本数量。
+注意：采样计数为1意味着没有多重采样抗锯齿。
 
 ### `QRhiScissor QSSGRhiGraphicsPipelineState::scissor`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setScissor(...)` 设置，之后用 `scissor()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:scissor`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+剪刀，没错。
+注意：仅在`UsesScissor`设置时使用。
 
 ### `float QSSGRhiGraphicsPipelineState::slopeScaledDepthBias`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setSlopeScaledDepthBias(...)` 设置，之后用 `slopeScaledDepthBias()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:slopeScaledDepthBias`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+斜率缩放深度偏移。默认值为0。
 
 ### `QRhiGraphicsPipeline::StencilOpState QSSGRhiGraphicsPipelineState::stencilOpFrontState`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setStencilOpFrontState(...)` 设置，之后用 `stencilOpFrontState()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:StencilOpState QSSGRhiGraphicsPipelineState::stencilOpFrontState`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述模板操作状态。
 
 ### `quint32 QSSGRhiGraphicsPipelineState::stencilRef`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setStencilRef(...)` 设置，之后用 `stencilRef()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:stencilRef`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+活动模板参考值。 注意：只有在设置了 `UsesStencilRef` 时才使用。
 
 ### `quint32 QSSGRhiGraphicsPipelineState::stencilWriteMask`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setStencilWriteMask(...)` 设置，之后用 `stencilWriteMask()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:stencilWriteMask`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+模板写入掩码值。默认值为`0xFF`。
 
 ### `std::array<QRhiGraphicsPipeline::TargetBlend, 8> QSSGRhiGraphicsPipelineState::targetBlend`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setTargetBlend(...)` 设置，之后用 `targetBlend()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:array<QRhiGraphicsPipeline::TargetBlend, 8> QSSGRhiGraphicsPipelineState::targetBlend`。
-- 属性名：`std`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个颜色附件的混合状态。
 
 ### `QRhiViewport QSSGRhiGraphicsPipelineState::viewport`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的配置属性。初始化或状态切换时通过 `setViewport(...)` 设置，之后用 `viewport()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:viewport`。
-- 属性名：`QSSGRhiGraphicsPipelineState`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于渲染的视口尺寸。
 
 ### `enum class Flag { DepthTestEnabled, DepthWriteEnabled, BlendEnabled, UsesStencilRef, UsesScissor }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled`: `0x1`
+- `QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled`: `0x2`
+- `QSSGRhiGraphicsPipelineState::Flag::BlendEnabled`: `0x4`
+- `QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef`: `0x8`
+- `QSSGRhiGraphicsPipelineState::Flag::UsesScissor`: `0x10`
+Flags 类型是 QFlags<Flag> 的 typedef。它存储 Flag 值的按位或组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRhiGraphicsPipelineState` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSSGRhiGraphicsPipelineState::Flag::DepthTestEnabled`: `0x1`
+- `QSSGRhiGraphicsPipelineState::Flag::DepthWriteEnabled`: `0x2`
+- `QSSGRhiGraphicsPipelineState::Flag::BlendEnabled`: `0x4`
+- `QSSGRhiGraphicsPipelineState::Flag::UsesStencilRef`: `0x8`
+- `QSSGRhiGraphicsPipelineState::Flag::UsesScissor`: `0x10`
+Flags 类型是 QFlags<Flag> 的 typedef。它存储 Flag 值的按位或组合。
 
 ## 6. 深入实践与常见坑
 

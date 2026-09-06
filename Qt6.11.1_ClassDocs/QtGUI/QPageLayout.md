@@ -108,584 +108,315 @@ Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 43 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPageLayout::Mode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 暴露的类型声明 `模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Mode`。
-- 属性名：`QPageLayout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义页面布局模式。
+- `QPageLayout::StandardMode`：`0`;Paint Rect 包含边距，边距必须位于最小和最大之间。
+- `QPageLayout::FullPageMode`：`1`;Paint Rect 排除边距，边距可以是任意值，必须手动管理。
+在StandardMode中，设置裕量时，使用`Clamp`自动夹紧裕量，使其落在最小允许值和最大值之间。
 
 ### `enum QPageLayout::Orientation`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 暴露的类型声明 `Orientation`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Orientation`。
-- 属性名：`QPageLayout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型定义了页面方向。
+- `QPageLayout::Portrait`：`0`;页面大小以其默认方向使用
+- `QPageLayout::Landscape`：`1`;页面尺寸旋转90度
+注意，一些标准页面尺寸定义宽度大于其高度，因此方向相对于标准页面尺寸定义，而非使用相对页面尺寸。
 
 ### `[since 6.8] enum class QPageLayout::OutOfBoundsPolicy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OutOfBoundsPolicy`。
-- 属性名：`QPageLayout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义了边界外的政策。
+- `QPageLayout::OutOfBoundsPolicy::Reject`：`0`;边距必须落在最小值和最大值内，否则将被拒绝。
+- `QPageLayout::OutOfBoundsPolicy::Clamp`：`1`;边缘被夹在最小值和最大值之间，以确保其有效。
+注意：该政策在接受所有保证金的 `FullPageMode` 中无效。
+这个枚举是在Qt 6.8引入的。
 
 ### `enum QPageLayout::Unit`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 暴露的类型声明 `Unit`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Unit`。
-- 属性名：`QPageLayout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型用于指定页面布局和边距的计量单位。
+- `QPageLayout::Millimeter`：`0`
+- `QPageLayout::Point`：`1`;1/72英寸
+- `QPageLayout::Inch`：`2`
+- `QPageLayout::Pica`：`3`;1/72英尺，1/6英寸，12分
+- `QPageLayout::Didot`：`4`;1/72法式英寸，0.375毫米
+- `QPageLayout::Cicero`：`5`;1/6英镑，12迪多特，4.5毫米
 
 ### `QPageLayout::QPageLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个无效的QPageLayout。
 
 ### `QPageLayout::QPageLayout(const QPageSize &pageSize, QPageLayout::Orientation orientation, const QMarginsF &margins, QPageLayout::Unit units = Point, const QMarginsF &minMargins = QMarginsF(0, 0, 0, 0))`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `pageSize`：类型为 `const QPageSize &`。没有默认值，调用时必须提供。传入 `const QPageSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `QPageLayout::Orientation`。没有默认值，调用时必须提供。传入 `QPageLayout::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `margins`：类型为 `const QMarginsF &`。没有默认值，调用时必须提供。传入 `const QMarginsF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `units`：类型为 `QPageLayout::Unit`。默认值为 `Point`。传入 `QPageLayout::Unit` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minMargins`：类型为 `const QMarginsF &`。默认值为 `QMarginsF(0, 0, 0, 0)`。传入 `const QMarginsF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建包含给定`pageSize`、`orientation`和`margins`的QPageLayout，`units`中。
+可选地定义最小允许的边际，例如物理打印设备能打印的最小边际`minMargins`。
+构建好的QPageLayout将会在`StandardMode`中。
+所给`margins`将根据页面大小限制在最小边距和最大边距。
 
 ### `QPageLayout::QPageLayout(const QPageLayout &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制构造器，复制`other`到这里。
 
 ### `[noexcept] QPageLayout::~QPageLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这会破坏页面布局。
 
 ### `QRectF QPageLayout::fullRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::fullRect` 用于计算、查询或取得与“full、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前布局单元中的整页矩形。
+页面矩形考虑了页面大小和页面方向，但不考虑页边距。
 
 ### `QRectF QPageLayout::fullRect(QPageLayout::Unit units) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::fullRect` 用于计算、查询或取得与“full、Rect”相关的操作。调用时要先确认当前状态和 `units` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `units`：类型为 `QPageLayout::Unit`。没有默认值，调用时必须提供。传入 `QPageLayout::Unit` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以所需`units`返回整页矩形。
+页面矩形考虑了页面大小和页面方向，但不考虑页边距。
 
 ### `QRect QPageLayout::fullRectPixels(int resolution) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::fullRectPixels` 用于计算、查询或取得与“full、Rect、Pixels”相关的操作。调用时要先确认当前状态和 `resolution` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `resolution`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`resolution`的整页矩形（单位为设备像素）。
+页面矩形考虑了页面大小和页面方向，但不考虑页边距。
 
 ### `QRect QPageLayout::fullRectPoints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::fullRectPoints` 用于计算、查询或取得与“full、Rect、Points”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回整页矩形（Postscript Points，1/72英寸）。
+页面矩形考虑了页面大小和页面方向，但不考虑页边距。
 
 ### `bool QPageLayout::isEquivalentTo(const QPageLayout &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEquivalentTo`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`，如果该页面布局与`other`版面布局等价，即页面大小、边距和方向是否相同。
 
 ### `bool QPageLayout::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该页面布局有效，返回`true`。
 
 ### `QMarginsF QPageLayout::margins() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::margins` 用于计算、查询或取得与“margins”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMarginsF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMarginsF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回使用当前设置单位的页面布局页边距。
 
 ### `QMarginsF QPageLayout::margins(QPageLayout::Unit units) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::margins` 用于计算、查询或取得与“margins”相关的操作。调用时要先确认当前状态和 `units` 的有效范围；返回类型是 `QMarginsF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMarginsF`。
-- 参数 `units`：类型为 `QPageLayout::Unit`。没有默认值，调用时必须提供。传入 `QPageLayout::Unit` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面布局的页边距，使用请求的 `units`。
 
 ### `QMargins QPageLayout::marginsPixels(int resolution) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::marginsPixels` 用于计算、查询或取得与“margins、Pixels”相关的操作。调用时要先确认当前状态和 `resolution` 的有效范围；返回类型是 `QMargins`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMargins`。
-- 参数 `resolution`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定 `resolution` 页面布局的边距（设备像素）。
 
 ### `QMargins QPageLayout::marginsPoints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::marginsPoints` 用于计算、查询或取得与“margins、Points”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMargins`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMargins`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面布局的边距（Postscript Points，1/72英寸）。
 
 ### `QMarginsF QPageLayout::maximumMargins() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::maximumMargins` 用于计算、查询或取得与“最大值、Margins”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMarginsF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMarginsF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回如果页面布局为`StandardMode`时应用的最大边距。
+允许的最大边距计算为页面总尺寸减去设定的最小边距。例如，如果页宽为100分，右边距最小为10分，那么左边距最大为90分。
 
 ### `QMarginsF QPageLayout::minimumMargins() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::minimumMargins` 用于计算、查询或取得与“最小值、Margins”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMarginsF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMarginsF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面布局的最小边距。
 
 ### `QPageLayout::Mode QPageLayout::mode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::mode` 用于计算、查询或取得与“模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPageLayout::Mode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPageLayout::Mode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面布局模式。
 
 ### `QPageLayout::Orientation QPageLayout::orientation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::orientation` 用于计算、查询或取得与“orientation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPageLayout::Orientation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPageLayout::Orientation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面布局的页面方向。
 
 ### `QPageSize QPageLayout::pageSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::pageSize` 用于计算、查询或取得与“page、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPageSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPageSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面布局的页面大小。
+注意`QPageSize`始终以竖向方向定义。要获得考虑该集合方向的尺寸，必须使用`fullRect()`。
 
 ### `QRectF QPageLayout::paintRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的核心操作 `paintRect`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前布局单元中的页面矩形。
+可绘制的矩形会考虑页面大小、方向和边距。
+如果设置了`FullPageMode`模式，则`fullRect()`返回，边距必须手动管理。
 
 ### `QRectF QPageLayout::paintRect(QPageLayout::Unit units) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的核心操作 `paintRect`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `units`：类型为 `QPageLayout::Unit`。没有默认值，调用时必须提供。传入 `QPageLayout::Unit` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面矩形，按要求的`units`返回。
+可绘制的矩形会考虑页面大小、方向和边距。
+如果设置了`FullPageMode`模式，则`fullRect()`返回，边距必须手动管理。
 
 ### `QRect QPageLayout::paintRectPixels(int resolution) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的核心操作 `paintRectPixels`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `resolution`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`resolution`下返回可绘制的矩形，以圆角的设备像素表示。
+可绘制的矩形会考虑页面大小、方向和边距。
+如果设置了`FullPageMode`模式，则返回`fullRect()`，且必须手动管理边距。
 
 ### `QRect QPageLayout::paintRectPoints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的核心操作 `paintRectPoints`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可绘制的矩形，以圆角的后记点（1/72英寸）表示。
+可绘制的矩形会考虑页面大小、方向和边距。
+如果设置了`FullPageMode`模式，则返回`fullRect()`，边距必须手动管理。
 
 ### `bool QPageLayout::setBottomMargin(qreal bottomMargin, QPageLayout::OutOfBoundsPolicy outOfBoundsPolicy = OutOfBoundsPolicy::Reject)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBottomMargin`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `bottomMargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `outOfBoundsPolicy`：类型为 `QPageLayout::OutOfBoundsPolicy`。默认值为 `OutOfBoundsPolicy::Reject`。传入 `QPageLayout::OutOfBoundsPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的底部页距设置为`bottomMargin`。如果边界成功设置，则返回为真。
+所使用的单位是当前为布局定义的单位。要使用不同单位，请先调用`setUnits()`。
+自Qt 6.8起，可选`outOfBoundsPolicy`可用于指定边界外的处理方式。
 
 ### `bool QPageLayout::setLeftMargin(qreal leftMargin, QPageLayout::OutOfBoundsPolicy outOfBoundsPolicy = OutOfBoundsPolicy::Reject)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLeftMargin`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `leftMargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `outOfBoundsPolicy`：类型为 `QPageLayout::OutOfBoundsPolicy`。默认值为 `OutOfBoundsPolicy::Reject`。传入 `QPageLayout::OutOfBoundsPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的左侧页距设为`leftMargin`。如果页距成功设置，则返回为真。
+所用单位为当前布局中定义的单位。要使用不同单位，请先调用`setUnits()`。
+自Qt 6.8起，可选`outOfBoundsPolicy`可用于指定边界外的处理方式。
 
 ### `bool QPageLayout::setMargins(const QMarginsF &margins, QPageLayout::OutOfBoundsPolicy outOfBoundsPolicy = OutOfBoundsPolicy::Reject)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMargins`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `margins`：类型为 `const QMarginsF &`。没有默认值，调用时必须提供。传入 `const QMarginsF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `outOfBoundsPolicy`：类型为 `QPageLayout::OutOfBoundsPolicy`。默认值为 `OutOfBoundsPolicy::Reject`。传入 `QPageLayout::OutOfBoundsPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的页边距设置为`margins`。如果边距成功设置，则返回为真。
+所用单位为当前布局定义的单位。如需使用不同单位，请先联系`setUnits()`。
+自Qt 6.8起，可选`outOfBoundsPolicy`可用于指定边界外的处理方式。
 
 ### `void QPageLayout::setMinimumMargins(const QMarginsF &minMargins)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinimumMargins`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `minMargins`：类型为 `const QMarginsF &`。没有默认值，调用时必须提供。传入 `const QMarginsF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的最小页距设置为`minMargins`。
+不建议覆盖页面尺寸的默认值，因为这可能是物理打印设备的最小可打印区域。
+如果设置了`StandardMode`模式，则现有边距将被固定到新`minMargins`和页面大小允许的最大值上。如果`FullPageMode`设置好，则现有边距保持不变。
 
 ### `void QPageLayout::setMode(QPageLayout::Mode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMode`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QPageLayout::Mode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局模式设置为`mode`。
 
 ### `void QPageLayout::setOrientation(QPageLayout::Orientation orientation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOrientation`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `orientation`：类型为 `QPageLayout::Orientation`。没有默认值，调用时必须提供。传入 `QPageLayout::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的页面方向设置为`orientation`。
+改变方向不会影响当前的裕度或最小的裕度。
 
 ### `void QPageLayout::setPageSize(const QPageSize &pageSize, const QMarginsF &minMargins = QMarginsF(0, 0, 0, 0))`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageSize`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pageSize`：类型为 `const QPageSize &`。没有默认值，调用时必须提供。传入 `const QPageSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minMargins`：类型为 `const QMarginsF &`。默认值为 `QMarginsF(0, 0, 0, 0)`。传入 `const QMarginsF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的页面大小设置为`pageSize`。
+可选地定义最小允许边距`minMargins`，例如物理打印设备可打印的最小边际，否则最小边距默认为0。
+如果`StandardMode`设置，现有边距将被固定为新的最小边距和页码允许的最大边距。如果`FullPageMode`设定，则现有边距保持不变。
 
 ### `bool QPageLayout::setRightMargin(qreal rightMargin, QPageLayout::OutOfBoundsPolicy outOfBoundsPolicy = OutOfBoundsPolicy::Reject)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRightMargin`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `rightMargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `outOfBoundsPolicy`：类型为 `QPageLayout::OutOfBoundsPolicy`。默认值为 `OutOfBoundsPolicy::Reject`。传入 `QPageLayout::OutOfBoundsPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的右页边距设置为`rightMargin`。如果边距成功设置，则返回为真。
+所使用的单位是当前布局中定义的单位。要使用不同单位，首先调用`setUnits()`。
+自Qt 6.8起，可选`outOfBoundsPolicy`可用于指定边界外的处理方式。
 
 ### `bool QPageLayout::setTopMargin(qreal topMargin, QPageLayout::OutOfBoundsPolicy outOfBoundsPolicy = OutOfBoundsPolicy::Reject)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTopMargin`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `topMargin`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `outOfBoundsPolicy`：类型为 `QPageLayout::OutOfBoundsPolicy`。默认值为 `OutOfBoundsPolicy::Reject`。传入 `QPageLayout::OutOfBoundsPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局的顶页边距设置为`topMargin`。如果边距成功设置，则返回真。
+所用单位为当前布局定义的单位。要使用不同单位，请先调用`setUnits()`。
+自Qt 6.8起，可选`outOfBoundsPolicy`可用于指定边界外的管理方式。
 
 ### `void QPageLayout::setUnits(QPageLayout::Unit units)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUnits`。调用它会改变 `QPageLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `units`：类型为 `QPageLayout::Unit`。没有默认值，调用时必须提供。传入 `QPageLayout::Unit` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于定义页面布局的`units`。
 
 ### `[noexcept] void QPageLayout::swap(QPageLayout &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QPageLayout &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局与`other`互换。这个操作非常快，从未出错。
 
 ### `QPageLayout::Unit QPageLayout::units() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPageLayout::units` 用于计算、查询或取得与“units”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPageLayout::Unit`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPageLayout::Unit`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前定义页面布局的单位。
 
 ### `[noexcept] QPageLayout &QPageLayout::operator=(QPageLayout &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QPageLayout &`。
-- 参数 `other`：类型为 `QPageLayout &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-Assign `other`到该`QPageLayout`实例，将管理指针的所有权转移到该实例。
 
 ### `QPageLayout &QPageLayout::operator=(const QPageLayout &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QPageLayout &`。
-- 参数 `other`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+赋值操作员，将`other`分配到这里。
 
 ### `bool operator!=(const QPageLayout &lhs, const QPageLayout &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果页面布局`lhs`与页面布局`rhs`不相同，即任何属性不同，返回`true`。
+注意，这是一个严格的等值，尤其是在页面大小上，`QPageSize` ID、名称和大小必须完全匹配，边距也必须匹配单位。
 
 ### `bool operator==(const QPageLayout &lhs, const QPageLayout &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QPageLayout` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`：如果页面布局`lhs`等于页面布局`rhs`，即所有属性完全相等。
+注意这是一个严格的等式，尤其是在页面大小中，`QPageSize` ID、名称和大小必须完全匹配，边距也必须单位匹配。
 
 ## 6. 深入实践与常见坑
 

@@ -100,608 +100,279 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 - `enum class QDtlsError { NoError, InvalidInputParameters, InvalidOperation, UnderlyingSocketError, RemoteClosedConnectionError, …, TlsNonFatalError }`
 
-### 相关非成员函数
-
-- `Constant Value Description`
-- `QDtls::QDtlsError::NoError 0 No error occurred, the last operation was successful.`
-- `QDtls::QDtlsError::InvalidInputParameters 1 Input parameters provided by a caller were invalid.`
-- `QDtls::QDtlsError::InvalidOperation 2 An operation was attempted in a state that did not permit it.`
-- `QDtls::QDtlsError::UnderlyingSocketError 3 QUdpSocket::writeDatagram() failed, QUdpSocket::error() and QUdpSocket::errorString() can provide more specific information.`
-- `QDtls::QDtlsError::RemoteClosedConnectionError 4 TLS shutdown alert message was received.`
-- `QDtls::QDtlsError::PeerVerificationError 5 Peer's identity could not be verified during the TLS handshake.`
-- `QDtls::QDtlsError::TlsInitializationError 6 An error occurred while initializing an underlying TLS backend.`
-- `QDtls::QDtlsError::TlsFatalError 7 A fatal error occurred during TLS handshake, other than peer verification error or TLS initialization error.`
-- `QDtls::QDtlsError::TlsNonFatalError 8 A failure to encrypt or decrypt a datagram, non-fatal, meaning QDtls can continue working after this error.`
-
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 44 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDtls::HandshakeState`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 暴露的类型声明 `Handshake、State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:HandshakeState`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述了当前DTLS握手的状态。
+本枚举描述了`QDtls`连接DTLS握手的当前状态。
+- `QDtls::HandshakeNotStarted`：`0`;还没做成。
+- `QDtls::HandshakeInProgress`：`1`;已启动握手，目前未发现错误。
+- `QDtls::PeerVerificationFailed`：`2`;无法确定对等者的身份。
+- `QDtls::HandshakeComplete`：`3`;握手成功完成，加密连接建立。
 
 ### `[explicit] QDtls::QDtls(QSslSocket::SslMode mode, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `mode`：类型为 `QSslSocket::SslMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建QDtls对象，`parent`传递给`QObject`构造函数。`mode` `QSslSocket::SslServerMode`用于服务器端的DTLS连接，或`QSslSocket::SslClientMode`客户端。
 
 ### `[virtual noexcept] QDtls::~QDtls()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QDtls`物体。
 
 ### `bool QDtls::abortHandshake(QUdpSocket *socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `abortHandshake`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+中止正在进行的握手。如果有握手正在进行`socket`，则返回true;否则，设置合适的错误并返回false。
 
 ### `QDtls::GeneratorParameters QDtls::cookieGeneratorParameters() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::cookieGeneratorParameters` 用于计算、查询或取得与“cookie、Generator、Parameters”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDtls::GeneratorParameters`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDtls::GeneratorParameters`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的哈希算法和秘密，要么是默认的，要么是之前通过调用`setCookieGeneratorParameters()`设置的。
+如果 Qt 配置支持默认哈希算法，则`QCryptographicHash::Sha256`，否则`QCryptographicHash::Sha1`。默认秘密来自后端专用的强密码学伪随机数生成器。
 
 ### `QByteArray QDtls::decryptDatagram(QUdpSocket *socket, const QByteArray &dgram)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::decryptDatagram` 用于计算、查询或取得与“decrypt、Datagram”相关的操作。调用时要先确认当前状态和 `socket`、`dgram` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dgram`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解密`dgram`并返回其内容为明文。必须完成握手后，数据报才能解密。根据TLS消息的类型，连接可能会写入`socket`，而必须是有效的指针。
 
 ### `bool QDtls::doHandshake(QUdpSocket *socket, const QByteArray &dgram = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::doHandshake` 用于计算、查询或取得与“do、Handshake”相关的操作。调用时要先确认当前状态和 `socket`、`dgram` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+启动或继续 DTLS 握手。`socket` 必须是有效的指针。启动服务器端 DTLS 握手时，`dgram` 必须包含从 `QUdpSocket` 读取的初始 ClientHello 消息。如果未发现错误，该函数返回`true`。握手状态可以用 `handshakeState()` 测试。返回`false`表示发生了错误，请使用`dtlsError()`获取更详细的信息。
+注意：如果无法确认对等端的身份，错误设置为`QDtlsError::PeerVerificationError`。如果你想忽略验证错误并继续连接，必须先调用`ignoreVerificationErrors()`然后`resumeHandshake()`。如果无法忽略错误，则必须调用`abortHandshake()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dgram`：类型为 `const QByteArray &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (!dtls.doHandshake(&socket, dgram)) {
+     if (dtls.dtlsError() == QDtlsError::PeerVerificationError)
+         dtls.abortAfterError(&socket);
+ }
+```
 
 ### `QSslConfiguration QDtls::dtlsConfiguration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::dtlsConfiguration` 用于计算、查询或取得与“dtls、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslConfiguration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslConfiguration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回默认的DTLS配置或之前调用`setDtlsConfiguration()`时设置的配置。
 
 ### `QDtlsError QDtls::dtlsError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::dtlsError` 用于计算、查询或取得与“dtls、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDtlsError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDtlsError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接或`QDtlsError::NoError`遇到的最后一次错误。
 
 ### `QString QDtls::dtlsErrorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::dtlsErrorString` 用于计算、查询或取得与“dtls、错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接或空字符串遇到的最后错误的文本描述。
 
 ### `bool QDtls::handleTimeout(QUdpSocket *socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::handleTimeout` 用于计算、查询或取得与“handle、超时”相关的操作。调用时要先确认当前状态和 `socket` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果握手过程中发生超时，`handshakeTimeout()`信号会被发出。应用程序必须调用handleTimeout()来重传握手消息;handleTimeout() 返回超时时`true`，否则返回false。`socket`必须是有效的指针。
 
 ### `QDtls::HandshakeState QDtls::handshakeState() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::handshakeState` 用于计算、查询或取得与“handshake、State”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDtls::HandshakeState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDtls::HandshakeState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前握手状态，`QDtls`。
 
 ### `[signal] void QDtls::handshakeTimeout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 发出的通知信号 `handshakeTimeout`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+丢包可能导致握手阶段超时。此时`QDtls`发出握手Timeout()信号。调用`handleTimeout()`以重传握手消息：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ DtlsClient::DtlsClient()
+ {
+     // Some initialization code here ...
+     connect(&clientDtls, &QDtls::handshakeTimeout, this, &DtlsClient::handleTimeout);
+ }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void DtlsClient::handleTimeout()
+ {
+     clientDtls.handleTimeout(&clientSocket);
+ }
+```
 
 ### `void QDtls::ignoreVerificationErrors(const QList<QSslError> &errorsToIgnore)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::ignoreVerificationErrors` 用于执行与“ignore、Verification、Errors”相关的操作。调用时要先确认当前状态和 `errorsToIgnore` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该方法只`QDtls`忽略`errorsToIgnore`中给出的错误。
+例如，如果你想连接到使用自签名证书的服务器，请考虑以下片段：
+你也可以在遇到`QDtlsError::PeerVerificationError`错误后调用该函数`doHandshake()`，然后通过调用`resumeHandshake()`恢复握手。
+后续调用该函数会替换之前调用中传递的错误列表。你可以通过调用该函数时用空列表清除你想忽略的错误列表。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `errorsToIgnore`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QList<QSslCertificate> cert = QSslCertificate::fromPath("server-certificate.pem"_L1);
+ QSslError error(QSslError::SelfSignedCertificate, cert.at(0));
+ QList<QSslError> expectedSslErrors;
+ expectedSslErrors.append(error);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QDtls dtls;
+ dtls.ignoreVerificationErrors(expectedSslErrors);
+ dtls.doHandshake(udpSocket);
+```
 
 ### `bool QDtls::isConnectionEncrypted() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isConnectionEncrypted`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 DTLS 握手成功完成，则返回 `true`。
 
 ### `quint16 QDtls::mtuHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::mtuHint` 用于计算、查询或取得与“mtu、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回之前由`setMtuHint()`设定的值。默认值为0。
 
 ### `QHostAddress QDtls::peerAddress() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::peerAddress` 用于计算、查询或取得与“peer、Address”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`setPeer()`或`QHostAddress::Null`设置的对等端地址。
 
 ### `quint16 QDtls::peerPort() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::peerPort` 用于计算、查询或取得与“peer、Port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对等端的端口号，设置为`setPeer()`，即0。
 
 ### `QList<QSslError> QDtls::peerVerificationErrors() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::peerVerificationErrors` 用于计算、查询或取得与“peer、Verification、Errors”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QSslError>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslError>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回在确定对等端身份时发现的错误。
+如果你想在发生错误的情况下继续连接，必须致电`ignoreVerificationErrors()`。
 
 ### `QString QDtls::peerVerificationName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::peerVerificationName` 用于计算、查询或取得与“peer、Verification、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`setPeer()`或`setPeerVerificationName()`设置的主机名。默认值为空字符串。
 
 ### `[signal] void QDtls::pskRequired(QSslPreSharedKeyAuthenticator *authenticator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 发出的通知信号 `pskRequired`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `authenticator`：类型为 `QSslPreSharedKeyAuthenticator *`。没有默认值，调用时必须提供。传入 `QSslPreSharedKeyAuthenticator *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QDtls`在协商PSK密码套件时会发出该信号，因此需要PSK认证。
+使用PSK时，客户端必须向服务器发送有效的身份和有效的预共享密钥，以便TLS握手继续。应用程序可以通过根据需求填写传递的`authenticator`对象，在连接到该信号的槽中提供这些信息。
+注意：忽视该信号或未提供所需凭证，将导致握手失败，连接将被终止。
+注意：`authenticator`对象归`QDtls`所有，应用程序不得删除。
 
 ### `bool QDtls::resumeHandshake(QUdpSocket *socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::resumeHandshake` 用于计算、查询或取得与“恢复运行、Handshake”相关的操作。调用时要先确认当前状态和 `socket` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果握手过程中忽略了对等验证错误，resumeHandshake() 会恢复并完成握手并返回`true`。`socket` 必须是有效的指针。如果握手无法恢复，返回`false`。
 
 ### `QSslCipher QDtls::sessionCipher() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::sessionCipher` 用于计算、查询或取得与“session、Cipher”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslCipher`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslCipher`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该连接所使用的密码学`cipher`，若连接未加密则返回空密码。会话密码在握手阶段选择。密码用于加密和解密数据。
+`QSslConfiguration` 提供了设置有序密码列表的函数，握手阶段最终将从中选择会话密码。该有序列表必须在握手阶段开始前就已存在。
 
 ### `QSsl::SslProtocol QDtls::sessionProtocol() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::sessionProtocol` 用于计算、查询或取得与“session、Protocol”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSsl::SslProtocol`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSsl::SslProtocol`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该连接使用的DTLS协议版本，或如果连接尚未加密，则返回UnknownProtocol。连接的协议在握手阶段选择。
+`setDtlsConfiguration()`可以在握手开始前设置首选版本。
 
 ### `bool QDtls::setCookieGeneratorParameters(const QDtls::GeneratorParameters &params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCookieGeneratorParameters`。调用它会改变 `QDtls` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `params`：类型为 `const QDtls::GeneratorParameters &`。没有默认值，调用时必须提供。传入 `const QDtls::GeneratorParameters &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置密码学哈希算法和`params`的秘密。该函数仅用于服务器端`QDtls`连接。成功时返回`true`。
+注意：该函数必须在握手开始前调用。
 
 ### `bool QDtls::setDtlsConfiguration(const QSslConfiguration &configuration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDtlsConfiguration`。调用它会改变 `QDtls` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `configuration`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`configuration`设置连接的TLS配置，成功时返回`true`。
+注意：该函数必须在握手开始前调用。
 
 ### `void QDtls::setMtuHint(quint16 mtuHint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMtuHint`。调用它会改变 `QDtls` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mtuHint`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`mtuHint` 是最大传输单元（MTU），由应用程序发现或猜测。应用程序无需设置此值。
 
 ### `bool QDtls::setPeer(const QHostAddress &address, quint16 port, const QString &verificationName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeer`。调用它会改变 `QDtls` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `address`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `verificationName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置对等端的地址、`port`和主机名，成功时返回`true`。`address`不得为空、多播或广播。`verificationName`是用于证书验证的主机名。
 
 ### `bool QDtls::setPeerVerificationName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerVerificationName`。调用它会改变 `QDtls` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于证书验证的主机`name`，成功时返回`true`。
+注意：该函数必须在握手开始前调用。
 
 ### `bool QDtls::shutdown(QUdpSocket *socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::shutdown` 用于计算、查询或取得与“shutdown”相关的操作。调用时要先确认当前状态和 `socket` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+发送加密的关机警报消息并关闭DTLS连接。握手状态变为`QDtls::HandshakeNotStarted`。`socket`必须是有效的指针。该函数成功时返回`true`。
 
 ### `QSslSocket::SslMode QDtls::sslMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtls::sslMode` 用于计算、查询或取得与“ssl、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslSocket::SslMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslSocket::SslMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+服务器端连接返回`QSslSocket::SslServerMode`，客户端返回`QSslSocket::SslClientMode`。
 
 ### `qint64 QDtls::writeDatagramEncrypted(QUdpSocket *socket, const QByteArray &dgram)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 的核心操作 `writeDatagramEncrypted`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dgram`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+加密`dgram`并将加密数据写入`socket`。返回写入字节数，错误时返回-1字节数。必须完成握手后才能写入加密数据。`socket`必须是有效的指针。
 
 ### `enum class QDtlsError`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述了可以通过 `QDtls` 和 `QDtlsClientVerifier` 发现的错误。
+该枚举描述了`QDtlsClientVerifier`类和`QDtls`类对象可能遇到的一般性和TLS特有错误。
+- `QDtls::QDtlsError::NoError`：`0`;未发生错误，最后一次操作成功。
+- `QDtls::QDtlsError::InvalidInputParameters`：`1`;调用者提供的输入参数无效。
+- `QDtls::QDtlsError::InvalidOperation`：`2`;在不允许的状态下尝试了一次手术。
+- `QDtls::QDtlsError::UnderlyingSocketError`：`3`;`QUdpSocket::writeDatagram()`未通过，`QUdpSocket::error()`和`QUdpSocket::errorString()`可以提供更具体的信息。
+- `QDtls::QDtlsError::RemoteClosedConnectionError`：`4`;收到TLS关闭警报信息。
+- `QDtls::QDtlsError::PeerVerificationError`：`5`;在TLS握手过程中无法验证对等端的身份。
+- `QDtls::QDtlsError::TlsInitializationError`：`6`;初始化底层TLS后端时发生错误。
+- `QDtls::QDtlsError::TlsFatalError`：`7`;在TLS握手过程中发生了致命错误，除了对等验证错误或TLS初始化错误外。
+- `QDtls::QDtlsError::TlsNonFatalError`：`8`;数据报未能加密或解密，非致命，意味着`QDtls`在此错误后仍可继续工作。
 
 ### `GeneratorParameters`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDtls` 的 `Generator、Parameters` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `Constant Value Description`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的 `Constant` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::NoError 0 No error occurred, the last operation was successful.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::NoError 0 No error occurred, the last operation was successful.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::InvalidInputParameters 1 Input parameters provided by a caller were invalid.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::InvalidInputParameters 1 Input parameters provided by a caller were invalid.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::InvalidOperation 2 An operation was attempted in a state that did not permit it.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::InvalidOperation 2 An operation was attempted in a state that did not permit it.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::UnderlyingSocketError 3 QUdpSocket::writeDatagram() failed, QUdpSocket::error() and QUdpSocket::errorString() can provide more specific information.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的核心操作 `writeDatagram`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QDtls::QDtlsError::UnderlyingSocketError 3`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::RemoteClosedConnectionError 4 TLS shutdown alert message was received.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::RemoteClosedConnectionError 4 TLS shutdown alert message was received.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::PeerVerificationError 5 Peer's identity could not be verified during the TLS handshake.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::PeerVerificationError 5 Peer's identity could not be verified during the TLS handshake.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::TlsInitializationError 6 An error occurred while initializing an underlying TLS backend.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::TlsInitializationError 6 An error occurred while initializing an underlying TLS backend.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::TlsFatalError 7 A fatal error occurred during TLS handshake, other than peer verification error or TLS initialization error.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::TlsFatalError 7 A fatal error occurred during TLS handshake, other than peer verification error or TLS initialization error.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QDtls::QDtlsError::TlsNonFatalError 8 A failure to encrypt or decrypt a datagram, non-fatal, meaning QDtls can continue working after this error.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QDtls` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:QDtlsError::TlsNonFatalError 8 A failure to encrypt or decrypt a datagram, non-fatal, meaning QDtls can continue working after this error.`。
-- 属性名：`QDtls`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是 `QDtlsClientVerifier::GeneratorParameters` 的别名，保存 DTLS Cookie 生成所用的哈希算法和密钥。它只用于服务器端，并应在握手开始前传给 `setCookieGeneratorParameters()`；密钥应由密码学安全随机源生成并定期轮换。
 
 ## 6. 深入实践与常见坑
 

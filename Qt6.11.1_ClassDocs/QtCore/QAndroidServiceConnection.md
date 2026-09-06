@@ -64,75 +64,40 @@ target_link_libraries(mytarget PRIVATE Qt6::CorePrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QAndroidServiceConnection::QAndroidServiceConnection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidServiceConnection` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新对象。
 
 ### `[explicit] QAndroidServiceConnection::QAndroidServiceConnection(const QJniObject &serviceConnection)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidServiceConnection` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `serviceConnection`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从已有`serviceConnection`创建一个新对象。
+当你有自己的Java实现时，它非常有用。当然，`onServiceConnected()`/`onServiceDisconnected()`将不再被调用。
 
 ### `QJniObject QAndroidServiceConnection::handle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidServiceConnection::handle` 用于计算、查询或取得与“handle”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniObject`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniObject`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下划线`QJniObject`。
 
 ### `[pure virtual] void QAndroidServiceConnection::onServiceConnected(const QString &name, const QAndroidBinder &serviceBinder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidServiceConnection::onServiceConnected` 用于执行与“on、Service、Connected”相关的操作。调用时要先确认当前状态和 `name`、`serviceBinder` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `serviceBinder`：类型为 `const QAndroidBinder &`。没有默认值，调用时必须提供。传入 `const QAndroidBinder &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当客户端成功连接到服务时，会调用此通知。`name` 包含服务器名称，`serviceBinder` 是客户端用于执行 IPC 操作的 binder。
+警告：此方法从 Binder 的线程调用，该线程与创建此对象的线程不同。
+返回下划线 `QJniObject`。
 
 ### `[pure virtual] void QAndroidServiceConnection::onServiceDisconnected(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidServiceConnection::onServiceDisconnected` 用于执行与“on、Service、Disconnected”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当与服务的连接丢失时调用。 `name` 参数指定丢失的连接。 警告：此方法从 Binder 的线程调用，该线程与创建此对象的线程不同。 返回底层 `QJniObject`。
 
 ## 6. 深入实践与常见坑
 

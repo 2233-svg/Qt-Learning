@@ -121,599 +121,383 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 45 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMdiSubWindow::SubWindowOptionflags QMdiSubWindow::SubWindowOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 暴露的类型声明 `Sub、Window、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SubWindowOptionflags QMdiSubWindow::SubWindowOptions`。
-- 属性名：`QMdiSubWindow`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了可以自定义`QMdiSubWindow`行为的选项。
+- `QMdiSubWindow::RubberBandResize`：`0x4`;如果你启用此选项，会使用橡皮筋控件来表示子窗口的轮廓，用户可以调整其大小，而不是子窗口本身。因此，子窗口保持其原始位置和大小，直到调整大小操作完成，届时它会收到一个`QResizeEvent`。默认情况下，该选项被禁用。
+- `QMdiSubWindow::RubberBandMove`：`0x8`;如果你启用此选项，会用橡皮筋控制来表示子窗口的轮廓，用户移动的是子窗口，而不是子窗口本身。因此，子窗口会保持在原来的位置，直到移动操作完成，届时会向窗口发送`QMoveEvent`。默认情况下，该选项被禁用。
+SubWindowOptions 类型是 QFlags 的 typedef<SubWindowOption>。它存储 SubWindowOption 值的 OR 组合。
 
 ### `keyboardPageStep : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 的配置属性。初始化或状态切换时通过 `setKeyboardPageStep(...)` 设置，之后用 `keyboardPageStep()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+设置使用键盘页面键时，控件的移动或大小。
+在键盘交互模式下，您可以使用方向键和页面键来移动或调整窗口大小。该特性控制页面键。进入键盘交互模式的常见方法是进入子窗口菜单，选择“缩小”或“移动”。
+默认的键盘页面步长值是20像素。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`keyboardPageStep`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardPageStep()` 读取当前值；它不会修改应用状态。
 
 ### `keyboardSingleStep : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 的配置属性。初始化或状态切换时通过 `setKeyboardSingleStep(...)` 设置，之后用 `keyboardSingleStep()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+设置使用键盘方向键时小部件应移动或调整大小。
+在键盘交互模式下，您可以使用方向键和页面键来移动或调整窗口大小。该特性控制方向键。进入键盘交互模式的常见方法是进入子窗口菜单，选择“缩小”或“移动”。
+默认的键盘单步数值是5像素。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`keyboardSingleStep`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardSingleStep()` 读取当前值；它不会修改应用状态。
 
 ### `QMdiSubWindow::QMdiSubWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构造一个新的QMdiSubWindow组件。`parent`和`flags`参数传递给`QWidget`的构造器。
+除了使用 addSubWindow()，也可以在`QMdiArea`添加子窗口时直接使用 `setParent()`。
+注意，只有 `QMdiSubWindow` 可以设置为 `QMdiArea` 的子节点;例如，你不能写：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `flags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ //bad code
+ QMdiArea mdiArea;
+ QTextEdit editor(&mdiArea); // invalid child widget
+```
 
 ### `[virtual noexcept] QMdiSubWindow::~QMdiSubWindow()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏子窗。
 
 ### `[signal] void QMdiSubWindow::aboutToActivate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 发出的通知信号 `aboutToActivate`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QMdiSubWindow`在激活前立即发出该信号。子窗口激活后，管理子窗口的`QMdiArea`也会发出`subWindowActivated()`信号。
 
 ### `[override virtual protected] void QMdiSubWindow::changeEvent(QEvent *changeEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `changeEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `changeEvent`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QWidget::changeEvent`（QEvent *事件）。
+该事件处理程序可以重新实现以处理状态变化。
+该事件中被更改的状态可以通过提供的`event`检索。
+变更事件包括：`QEvent::ToolBarChange`、`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::WindowTitleChange`、`QEvent::IconTextChange`、`QEvent::ModifiedChange`、`QEvent::MouseTrackingChange`、`QEvent::ParentChange`、`QEvent::WindowStateChange`、`QEvent::LanguageChange`、`QEvent::LocaleChange`、`QEvent::LayoutDirectionChange`、`QEvent::ReadOnlyChange`。
 
 ### `[override virtual protected] void QMdiSubWindow::childEvent(QChildEvent *childEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::childEvent` 用于执行与“child、Event”相关的操作。调用时要先确认当前状态和 `childEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `childEvent`：类型为 `QChildEvent *`。没有默认值，调用时必须提供。传入 `QChildEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::childEvent`（QChildEvent *event）。
 
 ### `[override virtual protected] void QMdiSubWindow::closeEvent(QCloseEvent *closeEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `closeEvent`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `closeEvent`：类型为 `QCloseEvent *`。没有默认值，调用时必须提供。传入 `QCloseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::closeEvent`（QCloseEvent *event）。
+当 Qt 收到来自窗口系统顶层控件的窗口关闭请求时，该事件处理程序会以该`event`调用。
+默认情况下，事件被接受，小部件关闭。你可以重新实现这个函数，改变小部件对窗口关闭请求的响应方式。例如，你可以通过调用所有事件的 `ignore()` 来阻止窗口关闭。
+主窗口应用程序通常会重新实现该函数，以检查用户的工作是否已被保存，并在关闭前请求许可。
 
 ### `[override virtual protected] void QMdiSubWindow::contextMenuEvent(QContextMenuEvent *contextMenuEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `contextMenuEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `contextMenuEvent`：类型为 `QContextMenuEvent *`。没有默认值，调用时必须提供。传入 `QContextMenuEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
+当控件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用处理器。
+默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
 
 ### `[override virtual protected] bool QMdiSubWindow::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `[override virtual protected] bool QMdiSubWindow::eventFilter(QObject *object, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::eventFilter` 用于计算、查询或取得与“event、Filter”相关的操作。调用时要先确认当前状态和 `object`、`event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
 
 ### `[override virtual protected] void QMdiSubWindow::focusInEvent(QFocusEvent *focusInEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `focusInEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `focusInEvent`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::focusInEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点接收）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] void QMdiSubWindow::focusOutEvent(QFocusEvent *focusOutEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `focusOutEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `focusOutEvent`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QWidget::focusOutEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] void QMdiSubWindow::hideEvent(QHideEvent *hideEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::hideEvent` 用于执行与“隐藏、Event”相关的操作。调用时要先确认当前状态和 `hideEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hideEvent`：类型为 `QHideEvent *`。没有默认值，调用时必须提供。传入 `QHideEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::hideEvent`（QHideEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件隐藏事件。事件通过`event`参数传递。
+隐藏事件会在小部件被隐藏后立即发送。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，恢复窗口时自发显示事件。收到自发隐藏事件后，小部件仍被视为可见，意义`isVisible()`。
 
 ### `bool QMdiSubWindow::isShaded() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isShaded`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该窗口有阴影，返回`true`;否则返回`false`。
+如果窗口被折叠，只显示标题栏，则称为遮蔽。
 
 ### `[override virtual protected] void QMdiSubWindow::keyPressEvent(QKeyEvent *keyEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `keyEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keyEvent`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyPressEvent`（QKeyEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的按键事件。
+一个小部件必须调用`setFocusPolicy()`先接受焦点，并且必须有焦点才能接收按键事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现会关闭弹出小部件，如果用户按下`QKeySequence::Cancel`的按键序列（通常是 Escape 键）。否则事件会被忽略，以便小部件的父节点能够解释。
+注意`QKeyEvent`以 isAccepted() == true 开头，所以你不需要调用 `QKeyEvent::accept()`——只要你对该键执行时不要调用基类实现即可。
 
 ### `[override virtual protected] void QMdiSubWindow::leaveEvent(QEvent *leaveEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::leaveEvent` 用于执行与“leave、Event”相关的操作。调用时要先确认当前状态和 `leaveEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `leaveEvent`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QWidget::leaveEvent`（QEvent *事件）。
+该事件处理程序可以被子类重新实现，以接收通过 `event` 参数传递的控件离开事件。
+当鼠标光标离开控件时，会向控件发送一个离开事件。
 
 ### `QMdiArea *QMdiSubWindow::mdiArea() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::mdiArea` 用于计算、查询或取得与“mdi、Area”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMdiArea *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMdiArea *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含该子窗口的区域，若无则返回`nullptr`。
 
 ### `[override virtual] QSize QMdiSubWindow::minimumSizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::minimumSizeHint` 用于计算、查询或取得与“最小值、尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现属性的访问函数：`QWidget::minimumSizeHint`。
 
 ### `[override virtual protected] void QMdiSubWindow::mouseDoubleClickEvent(QMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseDoubleClickEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收小部件的鼠标双击事件。
+默认实现调用`mousePressEvent()`。
+注意：该小部件除了双击事件外，还会接收鼠标按键和鼠标释放事件。如果与该小部件重叠的其他小部件在新闻发布事件后消失，则该小部件只会接收双击事件。开发者有责任确保应用程序正确解读这些事件。
 
 ### `[override virtual protected] void QMdiSubWindow::mouseMoveEvent(QMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseMoveEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标移动事件。
+如果关闭鼠标追踪，只有在鼠标移动过程中按下鼠标按钮时才会发生鼠标移动事件。如果开启鼠标追踪，即使未按键，鼠标移动事件也会发生。
+`QMouseEvent::position()`报告鼠标光标相对于该小部件的位置。对于按下和释放事件，位置通常与最后一次鼠标移动事件的位置相同，但如果用户的手握手，可能会有所不同。这是底层窗口系统的功能，而非Qt。
+如果你想在鼠标移动时立即显示提示（例如，获取鼠标坐标与`QMouseEvent::position()`并显示为提示），你必须先启用上述的鼠标追踪功能。然后，为了确保提示立即更新，你必须在鼠标移动事件（mouseMoveEvent）实现中调用`QToolTip::showText()`而不是`setToolTip()`。
 
 ### `[override virtual protected] void QMdiSubWindow::mousePressEvent(QMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mousePressEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标按键事件。
+如果你在 mousePressEvent() 创建新控件，`mouseReleaseEvent()`可能不会出现在你预期的位置，这取决于底层窗口系统（或 X11 窗口管理器）、控件的位置，甚至可能还有其他因素。
+默认实现实现了当你点击窗口外时关闭弹出小部件的功能。对于其他小部件类型，它没有任何作用。
 
 ### `[override virtual protected] void QMdiSubWindow::mouseReleaseEvent(QMouseEvent *mouseEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `mouseEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mouseEvent`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseReleaseEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标释放事件。
 
 ### `[override virtual protected] void QMdiSubWindow::moveEvent(QMoveEvent *moveEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::moveEvent` 用于执行与“移动、Event”相关的操作。调用时要先确认当前状态和 `moveEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `moveEvent`：类型为 `QMoveEvent *`。没有默认值，调用时必须提供。传入 `QMoveEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::moveEvent`（QMoveEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收通过 `event` 参数传递的控件移动事件。当控件接收该事件时，它已经处于新位置。
+旧职位可通过`QMoveEvent::oldPos()`进入。
 
 ### `[override virtual protected] void QMdiSubWindow::paintEvent(QPaintEvent *paintEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `paintEvent`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。传入 `QPaintEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
+绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
+- `repaint()`或`update()`被援引，
+- 小部件被遮挡，现已被发现，或
+- 还有很多其他原因。
+许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
+Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
+当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
+背景可以用`setBackgroundRole()`和`setPalette()`设置。
+自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
+注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
+警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
 
 ### `[override virtual protected] void QMdiSubWindow::resizeEvent(QResizeEvent *resizeEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `resizeEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `resizeEvent`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。传入 `QResizeEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::resizeEvent`（QResizeEvent *event）。
+警告：在最大化或恢复子窗口时，对该函数的调用可能有无效`QResizeEvent::oldSize()`。
+该事件处理程序可以在子类中重新实现，以接收通过 `event` 参数传递的控件调整大小事件。当调用 resizeEvent() 时，控件已经拥有新的几何体。旧的大小可以通过 `QResizeEvent::oldSize()` 访问。
+控件会被擦除，并在处理调整尺寸事件后立即接收绘图事件。不需要（也不应该）在这个处理程序中进行绘图。
 
 ### `void QMdiSubWindow::setOption(QMdiSubWindow::SubWindowOption option, bool on = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOption`。调用它会改变 `QMdiSubWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QMdiSubWindow::SubWindowOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `on`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`on`为真，子窗口`option`启用;否则禁用。请参见`SubWindowOption`，了解每个选项的影响。
 
 ### `void QMdiSubWindow::setSystemMenu(QMenu *systemMenu)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSystemMenu`。调用它会改变 `QMdiSubWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `systemMenu`：类型为 `QMenu *`。没有默认值，调用时必须提供。传入 `QMenu *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`systemMenu`设置为该子窗口当前的系统菜单。
+默认情况下，每个`QMdiSubWindow`都有标准的系统菜单。
+`QMdiSubWindow`创建的系统菜单的QAction会根据当前窗口状态自动更新;例如，最小化操作在窗口最小化后会被禁用。
+用户添加的QAction不会被`QMdiSubWindow`更新。
+`QMdiSubWindow`拥有`systemMenu`;你不必删除它。所有现有菜单都会被删除。
 
 ### `void QMdiSubWindow::setWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWidget`。调用它会改变 `QMdiSubWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`widget`设置为该子窗口的内部控件。内部控件显示在子窗口的标题栏下方中央。
+`QMdiSubWindow`会暂时拥有`widget`;你不必删除它。任何现有的内部小部件都会被移除并重新子系到根窗口。
 
 ### `[override virtual protected] void QMdiSubWindow::showEvent(QShowEvent *showEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::showEvent` 用于执行与“显示、Event”相关的操作。调用时要先确认当前状态和 `showEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `showEvent`：类型为 `QShowEvent *`。没有默认值，调用时必须提供。传入 `QShowEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+重实现自：`QWidget::showEvent`（QShowEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收传递给 `event` 参数的控件显示事件。
+非自发的展示事件会在展示前立即发送到小部件。窗口的自发展示事件则在展示之后交付。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，窗口恢复时自发显示事件。收到自发隐藏事件后，小部件仍被视为`isVisible()`可见。
 
 ### `[slot] void QMdiSubWindow::showShaded()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `showShaded`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+调用该函数会使子窗口进入着色模式。当子窗口被着色时，只有标题栏可见。
+虽然并非所有样式都支持着色，但无论是否支持着色，该功能仍会显示子窗口为着色状态。然而，当使用不支持着色的样式时，用户将无法通过用户界面（例如标题栏中的着色按钮）返回着色模式。
 
 ### `[slot] void QMdiSubWindow::showSystemMenu()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `showSystemMenu`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+在标题栏系统菜单图标下方显示系统菜单。
 
 ### `[override virtual] QSize QMdiSubWindow::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现了属性的访问函数：`QWidget::sizeHint`。
 
 ### `QMenu *QMdiSubWindow::systemMenu() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::systemMenu` 用于计算、查询或取得与“system、Menu”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMenu *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMenu *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前系统菜单的指针，若未设置系统菜单则返回为零。`QMdiSubWindow`提供默认系统菜单，但你也可以用`setSystemMenu()`设置菜单。
 
 ### `bool QMdiSubWindow::testOption(QMdiSubWindow::SubWindowOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::testOption` 用于计算、查询或取得与“test、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `option`：类型为 `QMdiSubWindow::SubWindowOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用`option`，返回`true`;否则返回`false`。
 
 ### `[override virtual protected] void QMdiSubWindow::timerEvent(QTimerEvent *timerEvent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::timerEvent` 用于执行与“timer、Event”相关的操作。调用时要先确认当前状态和 `timerEvent` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timerEvent`：类型为 `QTimerEvent *`。没有默认值，调用时必须提供。传入 `QTimerEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::timerEvent`（QTimerEvent *event）。
 
 ### `QWidget *QMdiSubWindow::widget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::widget` 用于计算、查询或取得与“widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的内部控件。
 
 ### `[signal] void QMdiSubWindow::windowStateChanged(Qt::WindowStates oldState, Qt::WindowStates newState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 发出的通知信号 `windowStateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `oldState`：类型为 `Qt::WindowStates`。没有默认值，调用时必须提供。传入 `Qt::WindowStates` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `newState`：类型为 `Qt::WindowStates`。没有默认值，调用时必须提供。传入 `Qt::WindowStates` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QMdiSubWindow`在窗口状态变化后发出该信号。`oldState`是窗口状态变化前的状态，`newState`是新的当前状态。
 
 ### `enum SubWindowOption { RubberBandResize, RubberBandMove }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 暴露的类型声明 `Sub、Window、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了可以自定义`QMdiSubWindow`行为的选项。
+- `QMdiSubWindow::RubberBandResize`：`0x4`;如果你启用此选项，会使用橡皮筋控件来表示子窗口的轮廓，用户可以调整其大小，而不是子窗口本身。因此，子窗口保持其原始位置和大小，直到调整大小操作完成，届时它会收到一个`QResizeEvent`。默认情况下，该选项被禁用。
+- `QMdiSubWindow::RubberBandMove`：`0x8`;如果你启用此选项，会用橡皮筋控制来表示子窗口的轮廓，用户移动的是子窗口，而不是子窗口本身。因此，子窗口会保持在原来的位置，直到移动操作完成，届时会向窗口发送`QMoveEvent`。默认情况下，该选项被禁用。
+SubWindowOptions 类型是 QFlags 的 typedef<SubWindowOption>。它存储 SubWindowOption 值的 OR 组合。
 
 ### `flags SubWindowOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMdiSubWindow` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了可以自定义`QMdiSubWindow`行为的选项。
+- `QMdiSubWindow::RubberBandResize`：`0x4`;如果你启用此选项，会使用橡皮筋控件来表示子窗口的轮廓，用户可以调整其大小，而不是子窗口本身。因此，子窗口保持其原始位置和大小，直到调整大小操作完成，届时它会收到一个`QResizeEvent`。默认情况下，该选项被禁用。
+- `QMdiSubWindow::RubberBandMove`：`0x8`;如果你启用此选项，会用橡皮筋控制来表示子窗口的轮廓，用户移动的是子窗口，而不是子窗口本身。因此，子窗口会保持在原来的位置，直到移动操作完成，届时会向窗口发送`QMoveEvent`。默认情况下，该选项被禁用。
+SubWindowOptions 类型是 QFlags 的 typedef<SubWindowOption>。它存储 SubWindowOption 值的 OR 组合。
 
 ### `int keyboardPageStep() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::keyboardPageStep` 用于计算、查询或取得与“keyboard、Page、Step”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+设置使用键盘页面键时，控件的移动或大小。
+在键盘交互模式下，您可以使用方向键和页面键来移动或调整窗口大小。该特性控制页面键。进入键盘交互模式的常见方法是进入子窗口菜单，选择“缩小”或“移动”。
+默认的键盘页面步长值是20像素。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardPageStep()` 读取当前值；它不会修改应用状态。
 
 ### `int keyboardSingleStep() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMdiSubWindow::keyboardSingleStep` 用于计算、查询或取得与“keyboard、Single、Step”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+设置使用键盘方向键时小部件应移动或调整大小。
+在键盘交互模式下，您可以使用方向键和页面键来移动或调整窗口大小。该特性控制方向键。进入键盘交互模式的常见方法是进入子窗口菜单，选择“缩小”或“移动”。
+默认的键盘单步数值是5像素。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardSingleStep()` 读取当前值；它不会修改应用状态。
 
 ### `void setKeyboardPageStep(int step)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeyboardPageStep`。调用它会改变 `QMdiSubWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置使用键盘页面键时，控件的移动或大小。
+在键盘交互模式下，您可以使用方向键和页面键来移动或调整窗口大小。该特性控制页面键。进入键盘交互模式的常见方法是进入子窗口菜单，选择“缩小”或“移动”。
+默认的键盘页面步长值是20像素。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `step`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setKeyboardPageStep(...)` 修改 `keyboardPageStep`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setKeyboardSingleStep(int step)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeyboardSingleStep`。调用它会改变 `QMdiSubWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置使用键盘方向键时小部件应移动或调整大小。
+在键盘交互模式下，您可以使用方向键和页面键来移动或调整窗口大小。该特性控制方向键。进入键盘交互模式的常见方法是进入子窗口菜单，选择“缩小”或“移动”。
+默认的键盘单步数值是5像素。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `step`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setKeyboardSingleStep(...)` 修改 `keyboardSingleStep`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

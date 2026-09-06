@@ -121,634 +121,401 @@ const QByteArray data = file.readAll();
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 47 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QFile::QFile()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QFile对象。
 
 ### `[explicit] QFile::QFile(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的 `parent` 构建一个新的文件对象。
 
 ### `[explicit] QFile::QFile(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个新的文件对象，以表示该文件的给定`name`。
+注意：在包括Qt 6.8在内的版本中，该构造函数为隐式，以保证向后兼容。从Qt 6.9开始，该构造函数无条件`explicit`。用户即使在早期版本的Qt中，也可以通过在包含任何Qt头部前定义`QT_EXPLICIT_QFILE_CONSTRUCTION_FROM_PATH`宏，强制`explicit`该构造函数。
 
 ### `[explicit, since 6.0] QFile::QFile(const std::filesystem::path &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个新的文件对象，以表示该文件的给定`name`。
+注意：在包括Qt 6.8在内的版本中，该构造函数为隐式，以保证向后兼容。从Qt 6.9开始，该构造函数无条件`explicit`。用户即使在早期版本的Qt中，也可以通过在包含任何Qt头部前定义`QT_EXPLICIT_QFILE_CONSTRUCTION_FROM_PATH`宏，强制`explicit`该构造函数。
 
 ### `QFile::QFile(const QString &name, QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有指定`parent`的新文件对象，以表示指定`name`的文件。
 
 ### `[since 6.0] QFile::QFile(const std::filesystem::path &name, QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有指定`parent`的新文件对象，以表示指定`name`的文件。
 
 ### `[virtual noexcept] QFile::~QFile()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFile` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁文件对象，必要时关闭。
 
 ### `bool QFile::copy(const QString &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::copy` 用于计算、查询或取得与“copy”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制名为`fileName()`的文件`newName`。
+该文件在复制前会关闭。
+如果复制的文件是符号链接（symlink），则复制的是它所指的文件，而不是链接本身。除了权限外（权限会被复制），其他文件元数据不会被复制。
+成功时返回`true`;否则返回`false`。
+注意，如果已有名为 `newName` 的文件存在，copy() 返回 `false`。这意味着`QFile`不会覆盖它。
+注意：在 Android 平台上，`content`协议 URI 尚未支持该操作。
 
 ### `[since 6.0] bool QFile::copy(const std::filesystem::path &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::copy` 用于计算、查询或取得与“copy”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。传入 `const std::filesystem::path &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制名为`fileName()`的文件`newName`。
+该文件在复制前会关闭。
+如果复制的文件是符号链接（symlink），则复制的是它所指的文件，而不是链接本身。除了权限外（权限会被复制），其他文件元数据不会被复制。
+成功时返回`true`;否则返回`false`。
+注意，如果已有名为 `newName` 的文件存在，copy() 返回 `false`。这意味着`QFile`不会覆盖它。
+注意：在 Android 平台上，`content`协议 URI 尚未支持该操作。
 
 ### `[static] bool QFile::copy(const QString &fileName, const QString &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `copy`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `newName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将名为`fileName`的文件复制给`newName`。
+如果复制的文件是符号链接（symlink），则复制的是它所指的文件，而不是链接本身。除了权限外（权限会被复制），其他文件元数据不会被复制。
+成功时返回`true`;否则返回`false`。
+注意，如果已有名为 `newName` 的文件存在，copy() 返回 `false`。这意味着`QFile`不会覆盖该文件。
+注意：在 Android 平台上，`content` 协议 URI 尚未支持此操作。
 
 ### `[static] QString QFile::decodeName(const QByteArray &localFileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `decodeName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `localFileName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这和`QFile::encodeName()`用`localFileName`相反。
 
 ### `[static] QString QFile::decodeName(const char *localFileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `decodeName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `localFileName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`localFileName`的Unicode版本。详情请参见 `encodeName()`。
 
 ### `[static] QByteArray QFile::encodeName(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `encodeName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`fileName`转换为 8 位编码，可以在原生 API 中使用。在 Windows 上，编码来自 Windows 活跃 Windows 代码页（ANSI）。在其他平台上，macOS 的分解形式（NFD）是 UTF-8。
 
 ### `[static] bool QFile::exists(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `exists`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`fileName`指定的文件存在，返回`true`;否则返回`false`。
+注意：如果`fileName`是一个指向不存在文件的符号链接，则返回false。
 
 ### `bool QFile::exists() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `exists`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`fileName()`指定的文件存在，返回`true`;否则返回`false`。
 
 ### `[override virtual] QString QFile::fileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::fileName` 用于计算、查询或取得与“file、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QFileDevice::fileName()` const.
+返回文件名称，由`setFileName()`、`rename()`或`QFile`构造函数设置。
+返回文件名称。`QFileDevice` 的默认实现返回一个空字符串。
 
 ### `[since 6.0] std::filesystem::path QFile::filesystemFileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::filesystemFileName` 用于计算、查询或取得与“filesystem、File、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::filesystem::path`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::filesystem::path`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回归`fileName()`为`std::filesystem::path`。
 
 ### `[since 6.3] std::filesystem::path QFile::filesystemSymLinkTarget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::filesystemSymLinkTarget` 用于计算、查询或取得与“filesystem、Sym、Link、目标”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::filesystem::path`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::filesystem::path`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以`std::filesystem::path`的身份`symLinkTarget()`回归。
 
 ### `[static, since 6.3] std::filesystem::path QFile::filesystemSymLinkTarget(const std::filesystem::path &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `filesystemSymLinkTarget`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`std::filesystem::path`。
-- 参数 `fileName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`symLinkTarget()`回归，作为`std::filesystem::path` `fileName`。
 
 ### `bool QFile::link(const QString &linkName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::link` 用于计算、查询或取得与“link”相关的操作。调用时要先确认当前状态和 `linkName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `linkName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建名为 `linkName` 的链接，指向当前由 `fileName()` 指定的文件。链接的定义取决于底层文件系统（无论是 Windows 上的快捷方式，还是 Unix 上的符号链接）。如果成功，返回 `true`;否则返回 `false`。
+该函数不会覆盖文件系统中已存在的实体;此时，`link()` 返回 false，并将 `error()` 返回 `RenameError`。
+注意：要在Windows上创建有效的链接，`linkName`必须有`.lnk`的文件扩展名。
 
 ### `[since 6.0] bool QFile::link(const std::filesystem::path &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::link` 用于计算、查询或取得与“link”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。传入 `const std::filesystem::path &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建名为 `linkName` 的链接，指向当前由 `fileName()` 指定的文件。链接的定义取决于底层文件系统（无论是 Windows 上的快捷方式，还是 Unix 上的符号链接）。如果成功，返回 `true`;否则返回 `false`。
+该函数不会覆盖文件系统中已存在的实体;此时，`link()` 返回 false，并将 `error()` 返回 `RenameError`。
+注意：要在Windows上创建有效的链接，`linkName`必须有`.lnk`的文件扩展名。
 
 ### `[static] bool QFile::link(const QString &fileName, const QString &linkName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `link`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `linkName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个名为 `linkName` 的链接，指向文件 `fileName`。链接的含义取决于底层文件系统（无论是 Windows 上的快捷方式，还是 Unix 上的符号链接）。成功时返回 `true`;否则返回 `false`。
 
 ### `bool QFile::moveToTrash()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::moveToTrash` 用于计算、查询或取得与“移动、转换输出、Trash”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`fileName()`指定的文件移入垃圾桶。成功返回`true`，并将`fileName()`设置为文件在垃圾桶中可找到的路径;否则返回`false`。
+该函数运行时间与被丢弃文件大小无关。如果在目录中调用该函数，可能与被丢弃文件数量成正比。如果当前`fileName()`指向符号链接，该函数会将链接移动到垃圾桶，甚至可能破坏它，而不是链接的目标。
+该函数使用 Windows 和 macOS API 在这两个操作系统上执行垃圾处理。在其他地方（Unix 系统），该功能实现了 FreeDesktop.org 垃圾规范 1.0 版本。
+注意：使用 FreeDesktop.org 垃圾桶实现时，如果无法通过文件重命名和硬链接将文件移动到垃圾桶位置，该功能将失败。这种情况发生在被垃圾文件位于当前用户无权创建`.Trash`目录的卷（挂载点），或存在一些特殊文件系统类型或配置（如子卷本身不是挂载点）时。
+注意：在系统API不报告垃圾桶中文件位置的系统中，文件移动后`fileName()`将被设置为空字符串。在没有垃圾桶的系统中，该函数总是返回`false`（参见 `supportsMoveToTrash()`）。
 
 ### `[static] bool QFile::moveToTrash(const QString &fileName, QString *pathInTrash = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `moveToTrash`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `pathInTrash`：类型为 `QString *`。默认值为 `nullptr`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`fileName`指定的文件移入垃圾桶。如果成功返回`true`，并将`pathInTrash`设置为文件在垃圾桶中可找到的路径;否则返回`false`。
+该函数运行时间与被丢弃文件大小无关。如果在目录中调用该函数，可能与被丢弃文件数量成正比。如果当前`fileName()`指向符号链接，该函数会将链接移动到垃圾堆，甚至可能破坏它，而不是链接的目标。
+该函数使用 Windows 和 macOS API 在这两个操作系统上执行垃圾处理。在其他地方（Unix 系统），该功能实现了 FreeDesktop.org 垃圾规范 1.0 版本。
+注意：使用 FreeDesktop.org 垃圾桶实现时，如果无法通过文件重命名和硬链接将文件移动到垃圾桶位置，该功能将失败。这种情况发生在被垃圾文件位于当前用户无权创建`.Trash`目录的卷（挂载点），或存在某些特殊文件系统类型或配置（如子卷本身不是挂载点）。
+注意：在系统 API 不报告垃圾桶中文件路径的系统上，文件移动后 `pathInTrash` 将设置为空字符串。在没有垃圾桶的系统中，这个函数总是返回 false。
 
 ### `[override virtual] bool QFile::open(QIODeviceBase::OpenMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 成功后才能 read/write/seek；失败时检查 `errorString()`，结束时 close 或让对象安全析构。
+重实现自：`QIODevice::open`（QIODeviceBase：：OpenMode 模式）。
+使用`mode`标志打开文件，成功时返回`true`;否则返回`false`。
+`mode`的标志必须包括`QIODeviceBase::ReadOnly`、`WriteOnly`或`ReadWrite`。还可以有额外的标志，如`Text`和`Unbuffered`。
+注意：在`WriteOnly`或`ReadWrite`模式下，如果相关文件不存在，该功能会尝试在打开前创建新文件。该文件创建时模式为0666，在POSIX系统中由umask掩蔽，且在Windows上权限继承自父目录。在Android中，预期拥有访问文件名父文件的权限，否则无法创建这个不存在的文件。
+打开设备并将其 OpenMode 设置为 `mode`。成功时返回 `true`;否则返回 `false`。该函数应从任何重新实现的 open() 或其他打开设备的函数中调用。
 
 ### `[since 6.3] bool QFile::open(QIODeviceBase::OpenMode mode, QFileDevice::Permissions permissions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `permissions`：类型为 `QFileDevice::Permissions`。没有默认值，调用时必须提供。传入 `QFileDevice::Permissions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 成功后才能 read/write/seek；失败时检查 `errorString()`，结束时 close 或让对象安全析构。
+如果文件不存在且`mode`意味着创建它，则以指定的`permissions`创建。
+在POSIX系统中，实际权限受`umask`值影响。
+在Windows上，这些权限是通过ACL模拟的。当该组获得的权限比其他组少时，这些ACL可能处于非规范顺序。当打开属性对话框的安全标签时，带有此类权限的文件和目录会生成警告。将所有授予他人的权限授予该组可以避免此类警告。
 
 ### `bool QFile::open(FILE *fh, QIODeviceBase::OpenMode mode, QFileDevice::FileHandleFlags handleFlags = DontCloseHandle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+在给定`mode`中打开现有的文件句柄`fh`。`handleFlags` 可用于指定额外选项。成功时返回`true`;否则返回`false`。
+当使用该函数打开`QFile`时，`close()`的行为由 AutoCloseHandle 标志控制。如果指定了 autoCloseHandle，且该函数成功，则调用 `close()` 关闭已采用的句柄。否则，`close()` 实际上并不会关闭文件，只是清除文件。
+警告：
+- 如果`fh`不指普通文件，例如`stdin`、`stdout`或`stderr`，您可能无法进行`seek()`。`size()`在这些情况下返回`0`。更多信息请参见 `QIODevice::isSequential()`。
+- 由于该函数在未指定文件名的情况下打开文件，因此无法将该`QFile`与`QFileInfo`使用。
+关于Windows平台的说明。
+访问文件和其他随机访问设备时，`fh`必须以二进制模式打开（即模式字符串必须包含“b”，如“rb”或“wb”）。如果你将QIODevice：：Text传给`mode`，Qt会将行尾字符转换。顺序设备，如stdin和stdout不受此限制影响。
+你需要启用对控制台应用的支持，才能在控制台上使用 stdin、stdout 和 stderr 流。为此，请在你的应用程序项目文件中添加以下声明：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `fh`：类型为 `FILE *`。没有默认值，调用时必须提供。传入 `FILE *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `handleFlags`：类型为 `QFileDevice::FileHandleFlags`。默认值为 `DontCloseHandle`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
+```cpp
+ #include <stdio.h>
 
-**正确调用组合：** 成功后才能 read/write/seek；失败时检查 `errorString()`，结束时 close 或让对象安全析构。
+ void printError(const char* msg)
+ {
+     QFile file;
+     file.open(stderr, QIODevice::WriteOnly);
+     file.write(msg, qstrlen(msg));        // write to stderr
+     file.close();
+ }
+```
 
 ### `bool QFile::open(int fd, QIODeviceBase::OpenMode mode, QFileDevice::FileHandleFlags handleFlags = DontCloseHandle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fd`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `handleFlags`：类型为 `QFileDevice::FileHandleFlags`。默认值为 `DontCloseHandle`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 成功后才能 read/write/seek；失败时检查 `errorString()`，结束时 close 或让对象安全析构。
+在给定`mode`中打开现有文件描述符`fd`。`handleFlags`可用于指定额外选项。成功时返回`true`;否则返回`false`。
+当使用该函数打开`QFile`时，`close()`的行为由 AutoCloseHandle 标志控制。如果指定了 autoCloseHandle，且该函数成功，则调用 `close()` 关闭所采用的句柄。否则，`close()` 实际上并不会关闭文件，只是清除文件。
+警告：如果`fd`不是普通文件，例如0（`stdin`）、1（`stdout`）或2（`stderr`），你可能无法进行`seek()`。在这种情况下，`size()`返回`0`。更多信息请参见 `QIODevice::isSequential()`。
+警告：由于该函数在未指定文件名的情况下打开文件，因此无法使用`QFileInfo`的该`QFile`。
 
 ### `[override virtual] QFileDevice::Permissions QFile::permissions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::permissions` 用于计算、查询或取得与“permissions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFileDevice::Permissions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFileDevice::Permissions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QFileDevice::permissions()` const.
+返回文件中 QFile：:P ermission 的完整 OR ed 组合。
 
 ### `[static] QFileDevice::Permissions QFile::permissions(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `permissions`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QFileDevice::Permissions`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回完整的 QFile：:P ermission 组合，用于`fileName`。
 
 ### `[static, since 6.0] QFileDevice::Permissions QFile::permissions(const std::filesystem::path &filename)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `permissions`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QFileDevice::Permissions`。
-- 参数 `filename`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QFileDevice::permissions()` const.
+返回文件中 QFile：:P ermission 的完整 OR ed 组合。
 
 ### `bool QFile::remove()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`fileName()`指定的文件。
+如果文件被成功移除，返回`true`;否则返回`false`。
+如果文件是打开的，则在移除前就已经关闭了。
 
 ### `[static] bool QFile::remove(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `remove`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`fileName`指定的文件。
+如果文件被成功移除，返回`true`;否则返回`false`。
 
 ### `bool QFile::rename(const QString &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::rename` 用于计算、查询或取得与“rename”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前由`fileName()`指定的文件重命名为`newName`。成功时返回`true`;否则返回`false`。
+如果已有名为 `newName` 的文件，rename() 返回 `false`（即 `QFile` 不会覆盖该文件）。
+文件在重命名前就已关闭。
+如果重命名操作失败，Qt 会尝试将该文件内容复制到 `newName`，然后删除该文件，只保留 `newName`。如果复制操作失败或无法移除该文件，则移除目标文件 `newName`，恢复旧状态。
 
 ### `[since 6.0] bool QFile::rename(const std::filesystem::path &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::rename` 用于计算、查询或取得与“rename”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。传入 `const std::filesystem::path &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前由`fileName()`指定的文件重命名为`newName`。成功时返回`true`;否则返回`false`。
+如果已有名为 `newName` 的文件，rename() 返回 `false`（即 `QFile` 不会覆盖该文件）。
+文件在重命名前就已关闭。
+如果重命名操作失败，Qt 会尝试将该文件内容复制到 `newName`，然后删除该文件，只保留 `newName`。如果复制操作失败或无法移除该文件，则移除目标文件 `newName`，恢复旧状态。
 
 ### `[static] bool QFile::rename(const QString &oldName, const QString &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `rename`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `oldName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `newName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文件重命名为`oldName`为`newName`。成功时返回`true`;否则返回`false`。
+如果已有名为 `newName` 的文件，rename() 返回 `false`（即 `QFile` 不会覆盖它）。
 
 ### `[override virtual] bool QFile::resize(qint64 sz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::resize` 用于计算、查询或取得与“调整尺寸”相关的操作。调用时要先确认当前状态和 `sz` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `sz`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QFileDevice::resize`（qint64 sz）。
+设置文件大小（字节为单位）`sz`。如果调整大小成功，返回 `true`;否则为假。如果`sz`比当前文件大，则新字节设为0;如果`sz`小，则文件被简单截断。
+警告：如果文件不存在，该功能可能会失败。
 
 ### `[static] bool QFile::resize(const QString &fileName, qint64 sz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `resize`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `sz`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 `fileName` 设置为大小（以字节为单位）`sz`。如果调整大小成功，返回 `true`;否则为假。如果 `sz` 大于当前 `fileName`，则新字节设为 0，若 `sz` 较小，则文件被简单截断。
+警告：如果文件不存在，该功能可能会失败。
 
 ### `void QFile::setFileName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileName`。调用它会改变 `QFile` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置文件的`name`。名称可以是无路径、相对路径或绝对路径。
+如果文件已经被打开，不要调用该函数。
+如果文件名没有路径或相对路径，所使用的路径将是调用`open()`时应用程序当前的目录路径。
+注意，目录分隔符“/”适用于Qt支持的所有操作系统。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QFile file;
+ QDir::setCurrent("/tmp");
+ file.setFileName("readme.txt");
+ QDir::setCurrent("/home");
+ file.open(QIODevice::ReadOnly);      // opens "/home/readme.txt" under Unix
+```
 
 ### `[since 6.0] void QFile::setFileName(const std::filesystem::path &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileName`。调用它会改变 `QFile` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置文件的`name`。名称可以是无路径、相对路径或绝对路径。
+如果文件已经被打开，不要调用该函数。
+如果文件名没有路径或相对路径，所使用的路径将是调用`open()`时应用程序当前的目录路径。
+注意，目录分隔符“/”适用于Qt支持的所有操作系统。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `name`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QFile file;
+ QDir::setCurrent("/tmp");
+ file.setFileName("readme.txt");
+ QDir::setCurrent("/home");
+ file.open(QIODevice::ReadOnly);      // opens "/home/readme.txt" under Unix
+```
 
 ### `[override virtual] bool QFile::setPermissions(QFileDevice::Permissions permissions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPermissions`。调用它会改变 `QFile` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `permissions`：类型为 `QFileDevice::Permissions`。没有默认值，调用时必须提供。传入 `QFileDevice::Permissions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QFileDevice::setPermissions`（QFileDevice：:P ermissions permissions）。
+将文件权限设置为指定的`permissions`。如果成功，返回`true`;如果权限无法修改，则返回`false`。
+警告：该功能不操控前交叉韧带，这可能会限制其效果。
+将文件权限设置为指定的`permissions`。如果成功，返回`true`;如果权限无法修改，则返回`false`。
+警告：该功能不操控前交叉韧带，这可能会限制其效果。
 
 ### `[static] bool QFile::setPermissions(const QString &fileName, QFileDevice::Permissions permissions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setPermissions`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `permissions`：类型为 `QFileDevice::Permissions`。没有默认值，调用时必须提供。传入 `QFileDevice::Permissions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`fileName`文件权限设置为`permissions`。
 
 ### `[static, since 6.0] bool QFile::setPermissions(const std::filesystem::path &filename, QFileDevice::Permissions permissionSpec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setPermissions`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `filename`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `permissionSpec`：类型为 `QFileDevice::Permissions`。没有默认值，调用时必须提供。传入 `QFileDevice::Permissions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QFileDevice::setPermissions`（QFileDevice：:P ermissions permissions）。
+将文件权限设置为指定的`permissions`。如果成功，返回`true`;如果权限无法修改，则返回`false`。
+警告：该功能不操控前交叉韧带，这可能会限制其效果。
+将文件权限设置为指定的`permissions`。如果成功，返回`true`;如果权限无法修改，则返回`false`。
+警告：该功能不操控前交叉韧带，这可能会限制其效果。
 
 ### `[override virtual] qint64 QFile::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QFile` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QFileDevice::size()` const.
 
 ### `[static, since 6.9] bool QFile::supportsMoveToTrash()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportsMoveToTrash`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 Qt 支持使用 `moveToTrash()` 函数将文件移到当前操作系统中的垃圾桶（回收站），返回`true`，否则`false`。注意，返回 `true` 并不意味着`moveToTrash()`一定成功。特别是，该函数不会检查用户是否在设置中禁用了该功能。
 
 ### `[static] QString QFile::symLinkTarget(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `symLinkTarget`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`fileName`指定的符号链接（或Windows上的快捷方式）所引用的文件或目录的绝对路径;如果`fileName`不对应符号链接，则返回空字符串。
+这个名称可能不代表已有的文件;它只是字符串。如果符号链接指向已有文件，`QFile::exists()`返回`true`。
 
 ### `QString QFile::symLinkTarget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFile::symLinkTarget` 用于计算、查询或取得与“sym、Link、目标”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回符号链接（或 Windows 上的快捷方式）指向的文件或目录的绝对路径，如果对象不是符号链接，则返回空字符串。
+该名称可能不代表已有文件;它只是字符串。`QFile::exists()`返回 `true`，如果符号链接指向已有文件。
 
 ## 6. 深入实践与常见坑
 

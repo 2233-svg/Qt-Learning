@@ -71,63 +71,37 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QQmlAbstractUrlInterceptor::DataType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlAbstractUrlInterceptor` 暴露的类型声明 `数据访问、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DataType`。
-- 属性名：`QQmlAbstractUrlInterceptor`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定URL拦截发生的位置。
+由于QML加载qmldir文件用于定位类型，加载QML类型涉及两个URL。用于定位类型（可能隐含的）qmldir的URL和定义类型的文件URL。两者被拦截会导致同一文件的复杂URL替换或双重URL替换。
+- `QQmlAbstractUrlInterceptor::QmldirFile`：`2`;被拦截的URL是Qmldir文件。拦截该URL但不拦截QmlFile，允许交换整个子树。
+- `QQmlAbstractUrlInterceptor::JavaScriptFile`：`1`;被拦截的URL是Javascript文件的导入。
+- `QQmlAbstractUrlInterceptor::QmlFile`：`0`;被拦截的URL是Qml文件的URL。拦截该URL但不拦截Qmldir文件，则保持QML文件的基础dir不动，类似于用另一个文件替换该文件。
+- `QQmlAbstractUrlInterceptor::UrlString`：`0x1000`;被拦截的URL是QML文件中的URL属性，不用于通过引擎加载文件。
 
 ### `[constexpr noexcept] QQmlAbstractUrlInterceptor::QQmlAbstractUrlInterceptor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlAbstractUrlInterceptor` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QQmlAbstractUrlInterceptor 的构造器。
 
 ### `[virtual constexpr noexcept] QQmlAbstractUrlInterceptor::~QQmlAbstractUrlInterceptor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlAbstractUrlInterceptor` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者给`QQmlAbstractUrlInterceptor`。
 
 ### `[pure virtual] QUrl QQmlAbstractUrlInterceptor::intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlAbstractUrlInterceptor::intercept` 用于计算、查询或取得与“intercept”相关的操作。调用时要先确认当前状态和 `url`、`type` 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-- 参数 `type`：类型为 `QQmlAbstractUrlInterceptor::DataType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一个纯虚拟函数，你可以拦截`url`。返回的值被取为URL的新值。被拦截的URL类型由`type`变量给出。
+你对该函数的实现必须是线程安全的，因为它可以同时从多个线程调用。
 
 ## 6. 深入实践与常见坑
 

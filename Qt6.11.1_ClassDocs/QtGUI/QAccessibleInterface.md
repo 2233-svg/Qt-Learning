@@ -87,336 +87,181 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept protected] QAccessibleInterface::~QAccessibleInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QAccessibleInterface`。
 
 ### `[virtual] QColor QAccessibleInterface::backgroundColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::backgroundColor` 用于计算、查询或取得与“background、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果适用，返回可访问者的背景色，或者返回无效`QColor`。
 
 ### `[pure virtual] QAccessibleInterface *QAccessibleInterface::child(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::child` 用于计算、查询或取得与“child”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引为`index`的可访问子节点。基于0的索引。对象的子节点数可以用`childCount`检查。
+当请求无效子嗣时（例如子嗣在此期间变得无效时），返回`nullptr`。
 
 ### `[pure virtual] QAccessibleInterface *QAccessibleInterface::childAt(int x, int y) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::childAt` 用于计算、查询或取得与“child、按位置访问”相关的操作。调用时要先确认当前状态和 `x`、`y` 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数 `x`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含屏幕坐标（`x`，`y`）的子节点的子节点`QAccessibleInterface`。如果该位置没有子节点，该函数返回`nullptr`。返回的可访问对象必须是子节点，但不一定是直接子节点。
+该函数仅对可见物体可靠（隐形物体可能布局不正确）。
+所有视觉对象都能提供这些信息。
+为继承`QAccessibleObject`的对象提供了默认实现。这将遍历所有子节点。如果控件管理其子节点（例如表），编写专用实现将更高效。
 
 ### `[pure virtual] int QAccessibleInterface::childCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::childCount` 用于计算、查询或取得与“child、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回属于该对象的子节点数量。子节点可以单独提供可访问性信息（例如子控件），也可以作为该可访问对象的子元素。
+所有对象都提供这些信息。
 
 ### `[virtual] QAccessibleInterface *QAccessibleInterface::focusChild() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::focusChild` 用于计算、查询或取得与“focus、Child”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有键盘焦点的对象。
+返回的对象可以是任何后代，包括它自己。
 
 ### `[virtual] QColor QAccessibleInterface::foregroundColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::foregroundColor` 用于计算、查询或取得与“foreground、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果适用，返回可达的前景颜色，或者返回无效`QColor`。
 
 ### `[pure virtual] int QAccessibleInterface::indexOfChild(const QAccessibleInterface *child) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::indexOfChild` 用于计算、查询或取得与“索引、Of、Child”相关的操作。调用时要先确认当前状态和 `child` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `child`：类型为 `const QAccessibleInterface *`。没有默认值，调用时必须提供。子对象或子节点；要确认它是否由父对象接管，以及调用后原指针是否仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象子列表中`child`的基于0的索引，如果`child`不是该对象的子节点，则返回-1。
+所有物体都会提供关于其子女的信息。
 
 ### `[virtual] void *QAccessibleInterface::interface_cast(QAccessible::InterfaceType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::interface_cast` 用于计算、查询或取得与“interface、cast”相关的操作。调用时要先确认当前状态和 `type` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `type`：类型为 `QAccessible::InterfaceType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`type`通用`QAccessibleInterface`的专用无障碍界面。
+当通过专用接口提供关于控件或对象的更多信息时，必须重新实现该函数。例如，行编辑应实现`QAccessibleTextInterface`。
 
 ### `[pure virtual] bool QAccessibleInterface::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果使用该接口实现所需的所有数据都有效（例如所有指针非空），返回`true`;否则返回`false`。
 
 ### `[pure virtual] QObject *QAccessibleInterface::object() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::object` 用于计算、查询或取得与“object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向该接口实现所提供信息的`QObject`的指针。
 
 ### `[pure virtual] QAccessibleInterface *QAccessibleInterface::parent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::parent` 用于计算、查询或取得与“父对象”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可访问对象层级中父节点的 `QAccessibleInterface`。
+如果没有父对象（例如顶层应用对象），返回`nullptr`。
 
 ### `[pure virtual] QRect QAccessibleInterface::rect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::rect` 用于计算、查询或取得与“rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回物体的几何形状。几何体以屏幕坐标表示。
+该功能仅对可见物体可靠（隐形物体可能布局不正确）。
+所有视觉对象都能提供这些信息。
 
 ### `[virtual] QList<std::pair<QAccessibleInterface *, QAccessible::Relation>> QAccessibleInterface::relations(QAccessible::Relation match = QAccessible::AllRelations) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::relations` 用于计算、查询或取得与“relations”相关的操作。调用时要先确认当前状态和 `match` 的有效范围；返回类型是 `QList<std::pair<QAccessibleInterface *, QAccessible::Relation>>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<std::pair<QAccessibleInterface *, QAccessible::Relation>>`。
-- 参数 `match`：类型为 `QAccessible::Relation`。默认值为 `QAccessible::AllRelations`。传入 `QAccessible::Relation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回有意义的关系到其他控件。通常这不会返回父/子关系，除非它们以特定方式处理，比如树视图中。它通常会返回标签-by和label关系。
+可以通过可选参数`match`来过滤关系。它不应返回自身。
 
 ### `[pure virtual] QAccessible::Role QAccessibleInterface::role() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::role` 用于计算、查询或取得与“角色”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessible::Role`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessible::Role`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对象的角色。对象的角色通常是静态的。
+所有可访问的对象都有其角色。
 
 ### `[since 6.5] QAccessibleSelectionInterface *QAccessibleInterface::selectionInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::selectionInterface` 用于计算、查询或取得与“selection、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleSelectionInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleSelectionInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得当前可访问对象的选择专用接口。对象支持这项能力时返回相应接口指针，否则返回 `nullptr`；调用专用方法前必须判空，返回指针由可访问性对象管理，不要自行删除。
 
 ### `[pure virtual] void QAccessibleInterface::setText(QAccessible::Text t, const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setText`。调用它会改变 `QAccessibleInterface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `QAccessible::Text`。没有默认值，调用时必须提供。传入 `QAccessible::Text` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将对象`t`的文本属性设置为`text`。
+注意，大多数对象的文本属性是只读的，因此调用该函数可能没有影响。
 
 ### `[pure virtual] QAccessible::State QAccessibleInterface::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessible::State`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessible::State`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对象当前状态。返回的值是 QAccessible：：StateFlag 枚举中标志的组合。
+所有可访问对象都有一个状态。
 
 ### `[pure virtual] QString QAccessibleInterface::text(QAccessible::Text t) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::text` 用于计算、查询或取得与“文本”相关的操作。调用时要先确认当前状态和 `t` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `t`：类型为 `QAccessible::Text`。没有默认值，调用时必须提供。传入 `QAccessible::Text` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对象文本属性`t`值。
+`QAccessible::Name`是客户端用来识别、查找或向用户宣布可访问对象的字符串。所有对象必须在其容器内拥有唯一的名称。客户端的名称可能不同，因此名称应既能简短描述对象，又应当是唯一。
+可访问物体的`QAccessible::Description`提供关于物体视觉外观的文本信息。该描述主要用于为视障用户提供更丰富的上下文，也用于上下文搜索或其他应用。并非所有物体都有描述。“确定”按钮不需要描述，但显示笑脸图片的工具按钮则需要。
+可访问对象的 `QAccessible::Value` 表示对象中包含的视觉信息，例如行编辑中的文本。通常，用户可以修改该值。并非所有对象都有值，例如静态文本标签没有，有些对象的状态已经是该值，例如切换按钮。
+`QAccessible::Help`文本提供了关于可访问对象功能和用途的信息。并非所有对象都提供这些信息。
+`QAccessible::Accelerator`是激活对象默认动作的键盘快捷方式。键盘快捷键是菜单、菜单项或小部件文本中划线的字符，可以是字符本身，也可以是该字符与修饰键（如Alt、Ctrl或Shift）的组合。命令控件如工具按钮也有快捷键，通常会在提示中显示。
+`QAccessible::Identifier`可以被显式设置为为辅助技术提供ID。这在UI测试中尤其有用。如果没有明确设置标识符，相应接口会根据`QObject::objectName`或其类名以及父链中父的`QObject::objectName`或类名，将标识符设置为ID。
+所有对象都为`QAccessible::Name`提供字符串。
 
 ### `[virtual] QWindow *QAccessibleInterface::window() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::window` 用于计算、查询或取得与“window”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWindow *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWindow *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与底层对象关联的窗口。例如，`QAccessibleWidget` 重新实现了该窗口，返回了`QWidget`的 windowHandle()。
+在某些平台上，它用于通知AT客户端状态变化。后端会遍历所有祖先，直到找到窗口。（这意味着祖先中至少有一个接口应返回有效的`QWindow`指针。）。
+默认实现返回`nullptr`。
 
 ### `QAccessibleActionInterface * actionInterface()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::actionInterface` 用于计算、查询或取得与“action、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleActionInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleActionInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得当前可访问对象的动作专用接口。对象支持这项能力时返回相应接口指针，否则返回 `nullptr`；调用专用方法前必须判空，返回指针由可访问性对象管理，不要自行删除。
 
 ### `QAccessibleTableCellInterface * tableCellInterface()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::tableCellInterface` 用于计算、查询或取得与“table、Cell、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleTableCellInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleTableCellInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得当前可访问对象的表格单元格专用接口。对象支持这项能力时返回相应接口指针，否则返回 `nullptr`；调用专用方法前必须判空，返回指针由可访问性对象管理，不要自行删除。
 
 ### `QAccessibleTableInterface * tableInterface()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::tableInterface` 用于计算、查询或取得与“table、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleTableInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleTableInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得当前可访问对象的表格专用接口。对象支持这项能力时返回相应接口指针，否则返回 `nullptr`；调用专用方法前必须判空，返回指针由可访问性对象管理，不要自行删除。
 
 ### `QAccessibleTextInterface * textInterface()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::textInterface` 用于计算、查询或取得与“文本、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleTextInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleTextInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得当前可访问对象的文本专用接口。对象支持这项能力时返回相应接口指针，否则返回 `nullptr`；调用专用方法前必须判空，返回指针由可访问性对象管理，不要自行删除。
 
 ### `QAccessibleValueInterface * valueInterface()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAccessibleInterface::valueInterface` 用于计算、查询或取得与“值访问、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessibleValueInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleValueInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取得当前可访问对象的数值专用接口。对象支持这项能力时返回相应接口指针，否则返回 `nullptr`；调用专用方法前必须判空，返回指针由可访问性对象管理，不要自行删除。
 
 ## 6. 深入实践与常见坑
 

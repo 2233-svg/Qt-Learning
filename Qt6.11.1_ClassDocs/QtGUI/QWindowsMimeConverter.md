@@ -71,133 +71,72 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QWindowsMimeConverter::QWindowsMimeConverter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWindowsMimeConverter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QWindowsMimeConverter实例。
+该实例会自动注册，并在剪贴板或拖放操作中被调用以转换数据。
+创建`QGuiApplication`后再调用这个构造器。
 
 ### `[virtual noexcept] QWindowsMimeConverter::~QWindowsMimeConverter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWindowsMimeConverter` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个`QWindowsMimeConverter`实例。
+该实例会自动取消注册。
 
 ### `[pure virtual] bool QWindowsMimeConverter::canConvertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canConvertFromMime`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `formatetc`：类型为 `const FORMATETC &`。没有默认值，调用时必须提供。传入 `const FORMATETC &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mimeData`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。传入 `const QMimeData *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果转换器能从`mimeData`转换为 `formatetc` 指定的格式，返回`true`。
+所有子类都必须重新实现这个纯虚拟函数。
 
 ### `[pure virtual] bool QWindowsMimeConverter::canConvertToMime(const QString &mimeType, IDataObject *pDataObj) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canConvertToMime`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `mimeType`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pDataObj`：类型为 `IDataObject *`。没有默认值，调用时必须提供。传入 `IDataObject *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退货`true`转换器能否从现有格式转换为`pDataObj` `mimeType`。
+所有子类都必须重新实现这个纯虚拟函数。
 
 ### `[pure virtual] bool QWindowsMimeConverter::convertFromMime(const FORMATETC &formatetc, const QMimeData *mimeData, STGMEDIUM *pmedium) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `convertFromMime`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `formatetc`：类型为 `const FORMATETC &`。没有默认值，调用时必须提供。传入 `const FORMATETC &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mimeData`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。传入 `const QMimeData *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pmedium`：类型为 `STGMEDIUM *`。没有默认值，调用时必须提供。传入 `STGMEDIUM *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`mimeData`转换为`formatetc`指定格式。转换后的数据应被放入`pmedium`结构中。
+如果转换成功，则返回true。
+所有子类都必须重新实现这个纯虚拟函数。
 
 ### `[pure virtual] QVariant QWindowsMimeConverter::convertToMime(const QString &mimeType, IDataObject *pDataObj, QMetaType preferredType) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `convertToMime`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `mimeType`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pDataObj`：类型为 `IDataObject *`。没有默认值，调用时必须提供。传入 `IDataObject *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `preferredType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含`pDataObj`转换后数据的`QVariant`，`mimeType`。如果可能，`QVariant`应`preferredType`以避免不必要的转换。
+所有子类都必须重新实现这个纯虚拟函数。
 
 ### `[pure virtual] QList<FORMATETC> QWindowsMimeConverter::formatsForMime(const QString &mimeType, const QMimeData *mimeData) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `formatsForMime`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QList<FORMATETC>`。
-- 参数 `mimeType`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `mimeData`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。传入 `const QMimeData *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QList` FORMATETC 结构，代表`mimeData`中可为`mimeType`提供的不同 Windows 剪贴板格式。
+所有子类都必须重新实现这个纯虚拟函数。
 
 ### `[pure virtual] QString QWindowsMimeConverter::mimeForFormat(const FORMATETC &formatetc) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWindowsMimeConverter::mimeForFormat` 用于计算、查询或取得与“mime、For、格式化”相关的操作。调用时要先确认当前状态和 `formatetc` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `formatetc`：类型为 `const FORMATETC &`。没有默认值，调用时必须提供。传入 `const FORMATETC &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回将根据 `formatetc` 中指定格式创建的 mime 类型，或者如果该转换器不支持 `formatetc`，则返回空字符串。
+所有子类都必须重新实现这个纯虚拟函数。
 
 ### `[static] int QWindowsMimeConverter::registerMimeType(const QString &mimeType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerMimeType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `mimeType`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册MIME类型`mimeType`，并返回识别Windows格式的ID编号。
+哑剧类型的`application/x-qt-windows-mime;value="WindowsType"`将被注册为`WindowsType`的剪贴板格式。
 
 ## 6. 深入实践与常见坑
 

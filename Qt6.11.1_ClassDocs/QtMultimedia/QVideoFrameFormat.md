@@ -110,599 +110,348 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 45 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QVideoFrameFormat::ColorRange`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 暴露的类型声明 `Color、Range`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ColorRange`。
-- 属性名：`QVideoFrameFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述视频数据所使用的色彩范围。视频数据通常分为全色域，即所有数值均被使用，或为传统YUV视频格式中较有限的范围，使用所有数值的子集。
+- `QVideoFrameFormat::ColorRange_Unknown`：`0`;视频的色彩范围未知。
+- `QVideoFrameFormat::ColorRange_Video`：`1`
+这是大多数YUV视频格式传统使用的色彩范围。对于8位格式，Y分量限制在16到235之间。U和V分量限制在16到240之间。
+对于更高的位深，将这些数值乘以2^（depth-8）。
+- `QVideoFrameFormat::ColorRange_Full`：`2`
+全色域。所有从0到2^深度-1的值均有效。
 
 ### `enum QVideoFrameFormat::ColorSpace`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 暴露的类型声明 `Color、Space`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ColorSpace`。
-- 属性名：`QVideoFrameFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举视频帧的颜色空间。
+- `QVideoFrameFormat::ColorSpace_Undefined`: `0`; 未指定颜色空间。
+- `QVideoFrameFormat::ColorSpace_BT601`: `1`; 由 ITU-R 推荐 BT.601 定义的颜色空间，Y 值范围从 16 到 235，Cb/Cr 范围从 16 到 240。主要用于针对 CRT 显示器的老视频。
+- `QVideoFrameFormat::ColorSpace_BT709`: `2`; 由 ITU-R BT.709 定义的颜色空间，其值范围与 ColorSpace_BT601 相同。是目前最常用的颜色空间。
+- `QVideoFrameFormat::ColorSpace_AdobeRgb`: `5`; 大多数 JPEG 文件使用的全范围 YUV 颜色空间。
+- `QVideoFrameFormat::ColorSpace_BT2020`: `6`; 由 ITU-R BT.2020 定义的颜色空间。主要用于 HDR 视频。
 
 ### `enum QVideoFrameFormat::Direction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 暴露的类型声明 `Direction`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Direction`。
-- 属性名：`QVideoFrameFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举视频扫描线的排列方向。
+- `QVideoFrameFormat::TopToBottom`: `0`; 扫描线从帧的顶部到底部排列。
+- `QVideoFrameFormat::BottomToTop`: `1`; 扫描线从帧的底部到顶部排列。
 
 ### `enum QVideoFrameFormat::PixelFormat`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 暴露的类型声明 `Pixel、格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PixelFormat`。
-- 属性名：`QVideoFrameFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举视频数据类型。
+- `QVideoFrameFormat::Format_Invalid`：`0`;该框架无效。
+- `QVideoFrameFormat::Format_ARGB8888`：`1`;帧采用ARGB格式存储，每个分量为8位。
+- `QVideoFrameFormat::Format_ARGB8888_Premultiplied`：`2`;采用预乘ARGB格式存储的帧，每个分量为8位。
+- `QVideoFrameFormat::Format_XRGB8888`：`3`;采用每像素32位RGB格式（0xff、R、G、B）存储的帧。
+- `QVideoFrameFormat::Format_BGRA8888`：`4`;帧使用32位BGRA格式（0xBBGGRRAA）存储。
+- `QVideoFrameFormat::Format_BGRA8888_Premultiplied`：`5`;帧使用预乘法的32位BGRA格式存储。
+- `QVideoFrameFormat::Format_ABGR8888`：`7`;帧采用32位ABGR格式（0xAABBGGRR）存储。
+- `QVideoFrameFormat::Format_XBGR8888`：`8`;帧使用32位BGR格式（0xffBBGGRR）存储。
+- `QVideoFrameFormat::Format_RGBA8888`：`9`;帧以字节 R、G、B、A/X 的形式存储在内存中，R 位于最低地址，A/X 位于最高地址。
+- `QVideoFrameFormat::Format_BGRX8888`：`6`;帧以32位BGRx格式存储，[31：0] B：G：R：x 8：8：8：8：8小端序
+- `QVideoFrameFormat::Format_RGBX8888`：`10`;帧存储在内存中，字节为 R、G、B、A/X，R 位于最低地址，A/X 位于最高地址。
+- `QVideoFrameFormat::Format_AYUV`：`11`;帧使用打包的32位AYUV格式（0xAAYYUUVV）存储。
+- `QVideoFrameFormat::Format_AYUV_Premultiplied`：`12`;帧使用打包预乘的32位AYUV格式（0xAAYYUUVV）存储。
+- `QVideoFrameFormat::Format_YUV420P`：`13`;帧采用8位每组件平面YUV格式存储，U和V平面在水平和垂直上都被子采样，即U和V平面的高度和宽度均为Y平面的一半。
+- `QVideoFrameFormat::Format_YUV422P`：`14`;帧采用8位每分量平面YUV格式存储，U和V平面水平子采样，即U和V平面宽度为Y平面的一半，U平面和V平面高度与Y相同。
+- `QVideoFrameFormat::Format_YV12`：`15`;帧采用每组件8位平面YVU格式存储，V和U平面水平和垂直均有子采样，即V和U平面的高度和宽度为Y平面的一半。
+- `QVideoFrameFormat::Format_UYVY`：`16`;帧采用8位每组件打包的YUV格式存储，U平面和V平面水平子采样（U-Y-V-Y），即两个水平相邻像素存储为32位宏像素，每个像素有Y值，且有常见的U和V值。
+- `QVideoFrameFormat::Format_YUYV`：`17`;帧采用每组件8位打包的YUV格式存储，U平面和V平面水平子采样（Y-U-Y-V），即两个水平相邻像素存储为32位宏像素，每个像素有Y值，且有常见的U和V值。
+- `QVideoFrameFormat::Format_NV12`：`18`;帧采用每组件8位半平面YUV格式存储，Y平面（Y），随后是水平和垂直采样的子采样、填充的UV平面（U-V）。
+- `QVideoFrameFormat::Format_NV21`：`19`;帧采用每组件8位半平面YUV格式存储，Y平面（Y），随后是水平和垂直采样的打包VU平面（V-U）。
+- `QVideoFrameFormat::Format_IMC1`：`20`;帧采用8位每组件平面YUV格式存储，U平面和V平面水平和垂直均被子采样。这与Format_YUV420P类型类似，但U和V平面每行字节填充至与Y平面相同的步幅。
+- `QVideoFrameFormat::Format_IMC2`：`21`;帧采用每组件8位平面YUV格式存储，U和V平面水平和垂直均有子采样。这与Format_YUV420P类型类似，但U和V平面的线是交错的，即每行U数据后面跟一行V数据，形成与Y数据步幅相同的单行。
+- `QVideoFrameFormat::Format_IMC3`：`22`;帧采用8位每分量平面YVU格式存储，V和U平面在水平和垂直上进行子采样。这与Format_YV12类型类似，但V和U平面每行字节的填充步幅与Y平面相同。
+- `QVideoFrameFormat::Format_IMC4`：`23`;帧采用8位每分量平面YVU格式存储，V和U平面水平和垂直均有子采样。这与Format_YV12类型类似，但V和U平面的线是交错的，即每行V数据后面跟一行U数据，形成与Y数据步幅相同的单行。
+- `QVideoFrameFormat::Format_P010`：`26`;帧采用每成分16位半平面YUV格式存储，Y平面（Y），后面是水平和垂直采样的子采样、填充的UV平面（U-V）。每个组件仅使用10位最高有效位。
+- `QVideoFrameFormat::Format_P016`：`27`;帧采用每分量16位半平面YUV格式存储，Y平面（Y），后面是水平和垂直采样的打包UV平面（U-V）。
+- `QVideoFrameFormat::Format_Y8`：`24`;帧采用8位灰度格式存储。
+- `QVideoFrameFormat::Format_Y16`：`25`;帧采用16位线性灰度格式存储。小端序。
+- `QVideoFrameFormat::Format_Jpeg`：`29`;帧以压缩后的Jpeg格式存储。
+- `QVideoFrameFormat::Format_SamplerExternalOES`：`28`;帧以外部OES纹理格式存储。目前仅在Android上使用。
+- `QVideoFrameFormat::Format_SamplerRect`：`30`;帧以矩形纹理格式（GL_TEXTURE_RECTANGLE）存储。该格式仅在macOS上使用基于OpenGL的渲染硬件接口。纹理中存储的底层像素格式为Format_BRGA8888。
+- `QVideoFrameFormat::Format_YUV420P10`：`31`;类似于YUV420，但每个组件使用16位，其中10位为显著。
 
 ### `QVideoFrameFormat::QVideoFrameFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一种零视频流格式。
 
 ### `QVideoFrameFormat::QVideoFrameFormat(const QSize &size, QVideoFrameFormat::PixelFormat format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `format`：类型为 `QVideoFrameFormat::PixelFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建具有给定帧 `size` 和像素`format`的视频流。
 
 ### `QVideoFrameFormat::QVideoFrameFormat(const QVideoFrameFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QVideoFrameFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[constexpr noexcept] QVideoFrameFormat::QVideoFrameFormat(QVideoFrameFormat &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QVideoFrameFormat &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从`other`移动构建QVideoFrameFormat。
 
 ### `[noexcept] QVideoFrameFormat::~QVideoFrameFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏视频流描述。
 
 ### `QVideoFrameFormat::ColorRange QVideoFrameFormat::colorRange() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::colorRange` 用于计算、查询或取得与“color、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVideoFrameFormat::ColorRange`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat::ColorRange`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用于渲染视频流的色彩范围。
 
 ### `QVideoFrameFormat::ColorSpace QVideoFrameFormat::colorSpace() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::colorSpace` 用于计算、查询或取得与“color、Space”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVideoFrameFormat::ColorSpace`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat::ColorSpace`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流的色彩空间。
 
 ### `QVideoFrameFormat::ColorTransfer QVideoFrameFormat::colorTransfer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::colorTransfer` 用于计算、查询或取得与“color、Transfer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVideoFrameFormat::ColorTransfer`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat::ColorTransfer`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用于渲染视频流的颜色传递函数。
 
 ### `int QVideoFrameFormat::frameHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::frameHeight` 用于计算、查询或取得与“frame、高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流中的帧高度。
 
 ### `qreal QVideoFrameFormat::frameRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::frameRate` 用于计算、查询或取得与“frame、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流的帧率（帧每秒）。
 
 ### `QSize QVideoFrameFormat::frameSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::frameSize` 用于计算、查询或取得与“frame、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流中帧的尺寸。
 
 ### `int QVideoFrameFormat::frameWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::frameWidth` 用于计算、查询或取得与“frame、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流中的帧宽度。
 
 ### `[static] QImage::Format QVideoFrameFormat::imageFormatFromPixelFormat(QVideoFrameFormat::PixelFormat format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `imageFormatFromPixelFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QImage::Format`。
-- 参数 `format`：类型为 `QVideoFrameFormat::PixelFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回的图像格式相当于视频帧像素`format`。如果没有等效格式，则返回`QImage::Format_Invalid`。
+注意：一般来说`QImage`不处理YUV格式。
 
 ### `bool QVideoFrameFormat::isMirrored() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isMirrored`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果曲面绕垂直轴镜像，返回`true`。
+`QVideoFrameFormat`的变换，特别是旋转和镜像，可以通过摄像传感器的方向、摄像机设置或视频流的方向来确定。
+镜像处理是在旋转后应用的。
+注意：这里的镜像与`QImage::mirrored`不同，垂直镜像`QImage`会围绕其横轴进行镜像。
 
 ### `bool QVideoFrameFormat::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+识别视频表面格式是否具有有效的像素格式和帧大小。
+如果格式有效，则返回 true;否则返回 false。
 
 ### `QVideoFrameFormat::PixelFormat QVideoFrameFormat::pixelFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::pixelFormat` 用于计算、查询或取得与“pixel、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVideoFrameFormat::PixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat::PixelFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流中帧的像素格式。
 
 ### `[static] QVideoFrameFormat::PixelFormat QVideoFrameFormat::pixelFormatFromImageFormat(QImage::Format format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `pixelFormatFromImageFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat::PixelFormat`。
-- 参数 `format`：类型为 `QImage::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回相当于图像`format`的视频像素格式。如果没有等效格式，则返回`QVideoFrameFormat::Format_Invalid`。
+注意：一般来说`QImage`不处理YUV格式。
 
 ### `[static] QString QVideoFrameFormat::pixelFormatToString(QVideoFrameFormat::PixelFormat pixelFormat)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `pixelFormatToString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `pixelFormat`：类型为 `QVideoFrameFormat::PixelFormat`。没有默认值，调用时必须提供。传入 `QVideoFrameFormat::PixelFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定 `pixelFormat` 的字符串表示。
 
 ### `int QVideoFrameFormat::planeCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::planeCount` 用于计算、查询或取得与“plane、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回使用的平面数。该数字取决于像素格式，基于RGB格式为1，基于YUV格式为1至3。
 
 ### `QtVideo::Rotation QVideoFrameFormat::rotation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::rotation` 用于计算、查询或取得与“rotation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QtVideo::Rotation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtVideo::Rotation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回顺时针旋转曲面的角度。
+`QVideoFrameFormat`的变换，特别是旋转和镜像，可以通过摄像传感器的朝向、摄像机设置或视频流的朝向来确定。
+旋转在镜像之前进行。
 
 ### `QVideoFrameFormat::Direction QVideoFrameFormat::scanLineDirection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::scanLineDirection` 用于计算、查询或取得与“scan、行、Direction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVideoFrameFormat::Direction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat::Direction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回扫描线的方向。
 
 ### `void QVideoFrameFormat::setColorRange(QVideoFrameFormat::ColorRange range)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorRange`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `range`：类型为 `QVideoFrameFormat::ColorRange`。没有默认值，调用时必须提供。传入 `QVideoFrameFormat::ColorRange` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将渲染视频流的颜色传输范围设置为`range`。
 
 ### `void QVideoFrameFormat::setColorSpace(QVideoFrameFormat::ColorSpace colorSpace)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorSpace`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `colorSpace`：类型为 `QVideoFrameFormat::ColorSpace`。没有默认值，调用时必须提供。传入 `QVideoFrameFormat::ColorSpace` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置视频流的 `colorSpace`。
 
 ### `void QVideoFrameFormat::setColorTransfer(QVideoFrameFormat::ColorTransfer colorTransfer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorTransfer`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `colorTransfer`：类型为 `QVideoFrameFormat::ColorTransfer`。没有默认值，调用时必须提供。传入 `QVideoFrameFormat::ColorTransfer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于渲染视频流的颜色传递函数设置为`colorTransfer`。
 
 ### `void QVideoFrameFormat::setFrameRate(qreal rate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFrameRate`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rate`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视频流的帧`rate`数设置为每秒帧数。
 
 ### `void QVideoFrameFormat::setFrameSize(const QSize &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFrameSize`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视频流中的帧大小设置为`size`。
+这会重置`viewport()`，填满整个画面。
 
 ### `void QVideoFrameFormat::setFrameSize(int width, int height)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFrameSize`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `int`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-- 参数 `height`：类型为 `int`。没有默认值，调用时必须提供。高度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置视频流中帧的帧数`width`和帧数`height`。
+这会重置`viewport()`，填满整个画面。
 
 ### `void QVideoFrameFormat::setMaxLuminance(float lum)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaxLuminance`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `lum`：类型为 `float`。没有默认值，调用时必须提供。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最大亮度设置为给定值`lum`。
 
 ### `void QVideoFrameFormat::setMirrored(bool mirrored)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMirrored`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mirrored`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果曲面绕垂直轴`mirrored`，则集合。
+`QVideoFrameFormat`的变换，特别是旋转和镜像，可以通过摄像传感器的朝向、摄像机设置或视频流的朝向来确定。
+镜像处理是在旋转后应用的。
+默认数值是`false`。
+注意：这里的镜像与`QImage::mirrored`不同，垂直镜像`QImage`会围绕其横轴进行镜像。
 
 ### `void QVideoFrameFormat::setRotation(QtVideo::Rotation angle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRotation`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `angle`：类型为 `QtVideo::Rotation`。没有默认值，调用时必须提供。传入 `QtVideo::Rotation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定顺时针旋转表面的转`angle`。
+`QVideoFrameFormat`的变换，特别是旋转和镜像，可以通过摄像传感器的方向、摄像机设置或视频流的方向来确定。
+旋转在镜像之前进行。
+默认值是`QtVideo::Rotation::None`。
 
 ### `void QVideoFrameFormat::setScanLineDirection(QVideoFrameFormat::Direction direction)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setScanLineDirection`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `direction`：类型为 `QVideoFrameFormat::Direction`。没有默认值，调用时必须提供。方向枚举，决定排列、遍历或坐标增长方向；要结合该类定义的枚举值判断实际方向。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置扫描线的 `direction`。
 
 ### `void QVideoFrameFormat::setStreamFrameRate(qreal rate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStreamFrameRate`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rate`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视频流的帧`rate`数设置为每秒帧数。
 
 ### `void QVideoFrameFormat::setViewport(const QRect &viewport)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setViewport`。调用它会改变 `QVideoFrameFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `viewport`：类型为 `const QRect &`。没有默认值，调用时必须提供。传入 `const QRect &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视频流的视口设置为`viewport`。
 
 ### `qreal QVideoFrameFormat::streamFrameRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::streamFrameRate` 用于计算、查询或取得与“stream、Frame、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流的帧率（帧每秒）。
 
 ### `[noexcept] void QVideoFrameFormat::swap(QVideoFrameFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QVideoFrameFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前的视频帧格式与`other`交换。
 
 ### `QRect QVideoFrameFormat::viewport() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVideoFrameFormat::viewport` 用于计算、查询或取得与“viewport”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视频流的视口。
+视口是视频帧中实际显示的区域。
+默认情况下，视口覆盖整帧。
 
 ### `bool QVideoFrameFormat::operator!=(const QVideoFrameFormat &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QVideoFrameFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`与该视频格式不同，则返回真;如果相同，则返回假。
 
 ### `[noexcept] QVideoFrameFormat &QVideoFrameFormat::operator=(QVideoFrameFormat &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat &`。
-- 参数 `other`：类型为 `QVideoFrameFormat &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`other`进入这个`QVideoFrameFormat`。
 
 ### `QVideoFrameFormat &QVideoFrameFormat::operator=(const QVideoFrameFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVideoFrameFormat &`。
-- 参数 `other`：类型为 `const QVideoFrameFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`值赋予该对象。
 
 ### `bool QVideoFrameFormat::operator==(const QVideoFrameFormat &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QVideoFrameFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`与该视频格式相同，则返回true;如果不同，则返回false。
 
 ### `enum ColorTransfer { ColorTransfer_Unknown, ColorTransfer_BT709, ColorTransfer_BT601, ColorTransfer_Linear, ColorTransfer_Gamma22, …, ColorTransfer_STD_B67 }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVideoFrameFormat` 暴露的类型声明 `Color、Transfer`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QVideoFrameFormat::ColorTransfer_Unknown`：`0`;颜色传递函数未知。
+- `QVideoFrameFormat::ColorTransfer_BT709`：`1`;颜色值按照BT709编码。另见 https://www.itu.int/rec/R-REC-BT.709/en。这接近但不完全相同的伽马曲线为2.2，且传输曲线与sRGB中使用相同。
+- `QVideoFrameFormat::ColorTransfer_BT601`：`2`;颜色值按照BT601编码。参见 https://www.itu.int/rec/R-REC-BT.601/en。
+- `QVideoFrameFormat::ColorTransfer_Linear`：`3`;颜色值为线性
+- `QVideoFrameFormat::ColorTransfer_Gamma22`：`4`;颜色值编码为2.2的伽马
+- `QVideoFrameFormat::ColorTransfer_Gamma28`：`5`;颜色值编码为2.8的伽马
+- `QVideoFrameFormat::ColorTransfer_ST2084`：`6`;颜色值使用STME ST 2084编码。该传递函数是最常见的HDR传递函数，常被称为“感知量化器”。另见 https://www.itu.int/rec/R-REC-BT.2100 和 https://en.wikipedia.org/wiki/Perceptual_quantizer。
+- `QVideoFrameFormat::ColorTransfer_STD_B67`：`7`;颜色值使用ARIB STD B67编码。该传递函数也常被称为“混合对数伽马”。另见 https://www.itu.int/rec/R-REC-BT.2100 和 https://en.wikipedia.org/wiki/Hybrid_log-伽马。
 
 ## 6. 深入实践与常见坑
 

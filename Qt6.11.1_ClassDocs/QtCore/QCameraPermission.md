@@ -82,50 +82,39 @@ int main(int argc, char *argv[])
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `Qt::PermissionStatus QCoreApplication::checkPermission(const QCameraPermission &permission) const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `checkPermission()` 只查询当前授权状态，不弹出系统授权框。返回 Granted 可继续创建设备，返回 Undetermined 才进入 requestPermission；Denied 要给用户可理解的降级路径。
-
-**签名拆解：**
-
-- 返回值：`Qt::PermissionStatus`。
-- 参数 `permission`：类型为 `const QCameraPermission &`。没有默认值，调用时必须提供。传入 `const QCameraPermission &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检查给定的状态`permission`。
+如果结果`Qt::PermissionStatus::Undetermined`，则应通过`requestPermission()`请求许可以确定用户意图。
 
 ### `void QCoreApplication::requestPermission(const QCameraPermission &permission, QObject *context, Functor callback)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `requestPermission()` 异步请求系统权限，结果通过回调返回。把有效的 context 传入以约束回调生命周期；回调到达前不能创建或启动依赖该权限的设备。
+请求给出的`permission`。
+当请求准备好时，`functor`将被调用为`functor(const QPermission &permission)`，`permission`描述请求的结果。
+`functor`可以是独立的或静态的成员函数：
+或一个λ：
+如果用户明确授予应用程序请求的`permission`，或者该`permission`已知在指定平台上不需要用户授权，状态将变为`Qt::PermissionStatus::Granted`。
+如果用户明确拒绝应用请求的`permission`，或已知该`permission`无法访问或适用于该平台上的应用程序，状态将`Qt::PermissionStatus::Denied`。
+请求的结果永远不会`Qt::PermissionStatus::Undetermined`。
+注意：权限只能向主线程请求。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `permission`：类型为 `const QCameraPermission &`。没有默认值，调用时必须提供。传入 `const QCameraPermission &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `context`：类型为 `QObject *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `callback`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ qApp->requestPermission(QCameraPermission{}, &permissionUpdated);
+```
 
 ### `Qt::PermissionStatus QPermission::status() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `QPermission::status()` 读取请求结果中的 Granted、Denied 或 Undetermined。它描述平台授权状态，不保证摄像头/麦克风设备一定存在或初始化成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::PermissionStatus`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回权限状态。
 
 ## 6. 深入实践与常见坑
 

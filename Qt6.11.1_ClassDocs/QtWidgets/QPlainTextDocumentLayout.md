@@ -82,196 +82,97 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `cursorWidth : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextDocumentLayout` 的配置属性。初始化或状态切换时通过 `setCursorWidth(...)` 设置，之后用 `cursorWidth()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性指定光标的宽度（像素单位）。默认值为1。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`cursorWidth`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `cursorWidth()` 读取当前值；它不会修改应用状态。
 
 ### `QPlainTextDocumentLayout::QPlainTextDocumentLayout(QTextDocument *document)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextDocumentLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `document`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。传入 `QTextDocument *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为文本`document`构建纯文本文档布局。
 
 ### `[virtual noexcept] QPlainTextDocumentLayout::~QPlainTextDocumentLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextDocumentLayout` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏纯文本文档布局。
 
 ### `[override virtual] QRectF QPlainTextDocumentLayout::blockBoundingRect(const QTextBlock &block) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::blockBoundingRect` 用于计算、查询或取得与“阻塞或屏蔽、Bounding、Rect”相关的操作。调用时要先确认当前状态和 `block` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `block`：类型为 `const QTextBlock &`。没有默认值，调用时必须提供。传入 `const QTextBlock &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractTextDocumentLayout::blockBoundingRect`（const QTextBlock & block） const.
 
 ### `[override virtual protected] void QPlainTextDocumentLayout::documentChanged(int from, int charsRemoved, int charsAdded)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `documentChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `from`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `charsRemoved`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `charsAdded`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractTextDocumentLayout::documentChanged`（int position，int charsRemoved，int 字符添加）。
 
 ### `[override virtual] QSizeF QPlainTextDocumentLayout::documentSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::documentSize` 用于计算、查询或取得与“document、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractTextDocumentLayout::documentSize()` const.
 
 ### `[override virtual] void QPlainTextDocumentLayout::draw(QPainter *, const QAbstractTextDocumentLayout::PaintContext &)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextDocumentLayout` 的核心操作 `draw`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `QPainter *`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `const QAbstractTextDocumentLayout::PaintContext &`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractTextDocumentLayout::draw`（QPainter *painter，cont QAbstractTextDocumentLayout：:P aintContext & context）。
 
 ### `void QPlainTextDocumentLayout::ensureBlockLayout(const QTextBlock &block) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::ensureBlockLayout` 用于执行与“ensure、阻塞或屏蔽、Layout”相关的操作。调用时要先确认当前状态和 `block` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `block`：类型为 `const QTextBlock &`。没有默认值，调用时必须提供。传入 `const QTextBlock &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+确保`block`布局有效。
 
 ### `[override virtual] QRectF QPlainTextDocumentLayout::frameBoundingRect(QTextFrame *) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::frameBoundingRect` 用于计算、查询或取得与“frame、Bounding、Rect”相关的操作。调用时要先确认当前状态和 `QTextFrame *` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `QTextFrame *`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractTextDocumentLayout::frameBoundingRect`（QTextFrame *frame）const.
 
 ### `[override virtual] int QPlainTextDocumentLayout::hitTest(const QPointF &, Qt::HitTestAccuracy) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::hitTest` 用于计算、查询或取得与“hit、Test”相关的操作。调用时要先确认当前状态和 `const QPointF &`、`HitTestAccuracy` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `const QPointF &`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `HitTestAccuracy`：类型为 `Qt::`。没有默认值，调用时必须提供。传入 `Qt::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QAbstractTextDocumentLayout::hitTest`（const QPointF & point， Qt：：HitTestAccuracy accuracy）const.
 
 ### `[override virtual] int QPlainTextDocumentLayout::pageCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::pageCount` 用于计算、查询或取得与“page、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractTextDocumentLayout::pageCount()` const.
 
 ### `void QPlainTextDocumentLayout::requestUpdate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlainTextDocumentLayout` 的核心操作 `requestUpdate`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+请求对所有观点进行全面更新。
 
 ### `int cursorWidth() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPlainTextDocumentLayout::cursorWidth` 用于计算、查询或取得与“cursor、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性指定光标的宽度（像素单位）。默认值为1。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `cursorWidth()` 读取当前值；它不会修改应用状态。
 
 ### `void setCursorWidth(int width)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCursorWidth`。调用它会改变 `QPlainTextDocumentLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性指定光标的宽度（像素单位）。默认值为1。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `int`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCursorWidth(...)` 修改 `cursorWidth`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

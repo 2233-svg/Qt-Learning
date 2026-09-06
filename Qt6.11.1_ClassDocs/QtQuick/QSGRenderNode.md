@@ -80,266 +80,225 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 20 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGRenderNode::RenderingFlagflags QSGRenderNode::RenderingFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 暴露的类型声明 `Rendering、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RenderingFlagflags QSGRenderNode::RenderingFlags`。
-- 属性名：`QSGRenderNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`flags()`返回的位掩码可能值。
+- `QSGRenderNode::BoundedRectRendering`：`0x01`;表示`render()`的实现不会渲染超出`rect()`项目坐标报告的区域。这类节点实现可以带来更高效的渲染，具体取决于场景图后端。例如，当场景中所有渲染节点都设置了该标志时，`software`后端可以继续使用更优的部分更新路径。
+- `QSGRenderNode::DepthAwareRendering`：`0x02`;表示`render()`的实现符合场景图预期，仅生成场景坐标中的Z值为0，然后通过从`RenderState::projectionMatrix()`和`matrix()`检索的矩阵进行转换，详见`render()`注释。此类节点实现可提升渲染效率，具体取决于场景图后端。例如，当场景中所有渲染节点都设置该标志时，批处理的OpenGL渲染器仍可继续使用更优路径。
+- `QSGRenderNode::OpaqueRendering`：`0x04`;表示`render()`的实现会写出`rect()`报告的整个区域的不透明像素。默认情况下，渲染器必须假设`render()`也能输出半透明或完全透明的像素。设置该标志在某些情况下可以提升性能。
+- `QSGRenderNode::NoExternalRendering`：`0x08`;表示`prepare()`和`render()`的实现仅使用`QRhi`族API，而非直接调用OpenGL、Vulkan或Metal等3D API。
+RenderingFlags 类型是 QFlags 的 typedef<RenderingFlag>。它存储 RenderingFlag 值的 OR 组合。
 
 ### `enum QSGRenderNode::StateFlagflags QSGRenderNode::StateFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 暴露的类型声明 `State、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StateFlagflags QSGRenderNode::StateFlags`。
-- 属性名：`QSGRenderNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含了从`changedStates()`返回的位掩码中可能使用的值。
+- `QSGRenderNode::ViewportState`：`0x40`;视窗
+- `QSGRenderNode::ScissorState`：`0x04`;开启剪刀测试的状态，剪刀矩形
+- `QSGRenderNode::DepthState`：`0x01`;该值在第6量子中无影响。
+- `QSGRenderNode::StencilState`：`0x02`;该值在第6量子中无效。
+- `QSGRenderNode::ColorState`：`0x08`;该值在第6量子中无影响。
+- `QSGRenderNode::BlendState`：`0x10`;该值在第6量子中无效。
+- `QSGRenderNode::CullState`：`0x20`;该值在第6量子中无效。
+- `QSGRenderNode::RenderTargetState`：`0x80`;该值在第6量子中无影响。
+StateFlags 类型是 QFlags 的 typedef<StateFlag>。它存储 StateFlag 值的 OR 组合。
 
 ### `[override virtual noexcept] QSGRenderNode::~QSGRenderNode()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解构渲染节点。派生类预计会执行类似这里`releaseResources()`的清理。
+对于`QRhi`和资源如`QRhiBuffer`、`QRhiTexture`、`QRhiGraphicsPipeline`等，使用智能指针（如std：：unique_ptr）通常是个好习惯，这通常可以避免实现结构化器，并使源代码更紧凑。不过请记住，实现`releaseResources()`（unique_ptrs上可能包含多个reset()调用，仍然很重要。
 
 ### `[virtual] QSGRenderNode::StateFlags QSGRenderNode::changedStates() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::changedStates` 用于计算、查询或取得与“changed、States”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGRenderNode::StateFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGRenderNode::StateFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数应返回一个遮罩，每个位代表由`render()`函数改变的图形状态。
+注意：在Qt 6和基于`QRhi`的渲染中，唯一相关的值是`ViewportState`和`ScissorState`。其他值可以返回，但实际中会忽略。
+- `ViewportState`：视口
+- `ScissorState`：启用剪刀测试的状态，剪刀矩形
+- `DepthState`：该值在第6量子无影响。
+- `StencilState`：该值在第6量子中无影响。
+- `ColorState`：该值在Qt 6中无影响。
+- `BlendState`：该值在Qt 6中无影响。
+- `CullState`：该值在第6量子中无影响。
+- `RenderTargetState`：该值在Qt 6中无影响。
+注意：`software`后端会暴露其`QPainter`，并在调用`render()`前后保存和恢复。因此，无需报告这里的任何状态变化。
+默认实现返回0，意味着`render()`中没有发生任何相关状态的更改。
+注意：该函数可在`render()`之前调用。
 
 ### `const QSGClipNode *QSGRenderNode::clipList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::clipList` 用于计算、查询或取得与“clip、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QSGClipNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QSGClipNode *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的剪辑列表。
 
 ### `[since 6.6] QRhiCommandBuffer *QSGRenderNode::commandBuffer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::commandBuffer` 用于计算、查询或取得与“command、Buffer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiCommandBuffer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiCommandBuffer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的命令缓冲区。
 
 ### `[virtual] QSGRenderNode::RenderingFlags QSGRenderNode::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGRenderNode::RenderingFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGRenderNode::RenderingFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述该渲染节点行为的标志。
+默认实现返回 0。
 
 ### `qreal QSGRenderNode::inheritedOpacity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::inheritedOpacity` 用于计算、查询或取得与“inherited、Opacity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前有效不透明度。
 
 ### `const QMatrix4x4 *QSGRenderNode::matrix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::matrix` 用于计算、查询或取得与“matrix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QMatrix4x4 *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QMatrix4x4 *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前模型视图矩阵的指针。
 
 ### `[virtual, since 6.0] void QSGRenderNode::prepare()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::prepare` 用于执行与“prepare”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在帧准备阶段调用。每次调用`render()`前都会调用该函数。
+与`render()`不同，该函数在场景图开始在底层命令缓冲区记录当前帧的渲染通道之前就被调用。这在使用图形 API（如 Vulkan）进行渲染时非常有用，因为需要在渲染通道前记录复制类操作。
+默认实现是空的。
+在实现使用`QRhi`渲染的`QSGRenderNode`时，通过`QQuickWindow::rhi()`查询`QQuickWindow`中的`QRhi`对象。要获得提交工作的`QRhiCommandBuffer`，请调用`commandBuffer()`。如需查询当前渲染目标的信息，请调用`renderTarget()`。详情请参见{Scene Graph - Custom QSGRenderNode}示例。
 
 ### `[since 6.5] const QMatrix4x4 *QSGRenderNode::projectionMatrix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::projectionMatrix` 用于计算、查询或取得与“projection、Matrix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QMatrix4x4 *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QMatrix4x4 *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向当前投影矩阵的指针。
+`render()`这与从`RenderState::projectionMatrix()`返回的矩阵相同。这个getter的存在是为了让`prepare()`也能查询投影矩阵。
+使用现代图形 API 或 Qt 自身的图形抽象层时，很可能会想将`*projectionMatrix() * *matrix()`加载到统一缓冲区。不过这需要在渲染过程之外完成，`prepare()`。这就是为什么两个矩阵都可以直接从`QSGRenderNode`查询，无论是在`prepare()`还是在`render()`中。
 
 ### `[virtual] QRectF QSGRenderNode::rect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::rect` 用于计算、查询或取得与“rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`render()`接触区域的物品坐标边界矩形。该值仅在包含`BoundedRectRendering`时使用，否则忽略`flags()`。
+在`software`后端，将矩形与`BoundedRectRendering`结合报告尤其重要，否则场景中有渲染节点会触发全屏更新，跳过所有部分更新优化。
+对于覆盖对应`QQuickItem`全部区域的渲染节点，返回值为 （0， 0， item->width()， item->height()）。
+注意：节点也可以自由渲染超出物品宽度和高度所指定的边界，因为场景图节点不受`QQuickItem`几何体限制，只要该函数正确报告这一点。
 
 ### `[virtual] void QSGRenderNode::releaseResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGRenderNode::releaseResources` 用于执行与“释放、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当该节点必须立即释放所有自定义图形资源时，调用了该函数。如果该节点没有通过正在使用的图形 API 直接分配图形资源（缓冲区、纹理、渲染目标、围栏等），这里就无需处理。
+未能释放所有自定义资源可能导致某些系统在图形设备丢失场景中出现错误行为，因为后续的图形系统初始化可能失败。
+注意：一些场景图后端可能选择不调用该函数。因此，预期`QSGRenderNode`实现会在其解构器和 releaseResources() 中同时执行清理。
+与解构函数不同，期望在调用 releaseResources() 后调用 `render()` 重新初始化所有所需资源。
+使用 OpenGL 时，场景图的 OpenGL 上下文在调用 destructor 和该函数时都是最新的。
 
 ### `[pure virtual] void QSGRenderNode::render(const QSGRenderNode::RenderState *state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `const QSGRenderNode::RenderState *`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数由渲染器调用，应通过`QRhi`或直接通过底层图形API（OpenGL、Direct3D等）直接调用命令来绘制该节点。
+有效不透明度可以通过`inheritedOpacity()`恢复。
+投影矩阵通过`state`获得，而模型-视图矩阵则可用`matrix()`取。合并矩阵即投影矩阵乘以模型-视图矩阵。投影矩阵确保场景中物品的正确堆叠。
+使用提供的矩阵时，顶点数据的坐标系遵循通常的`QQuickItem`约定：左上为（0， 0），右下为对应`QQuickItem`的宽度()和高度()减一。例如，假设每个顶点坐标布局为两浮点（x-y），覆盖物体一半的三角形可以用逆时针方向指定为（宽度-1，高度-1）、（0,0）、（0，高度-1）。
+注意：`QSGRenderNode` 是作为实现自定义 2D 或 2.5D Qt 快速项目的一种方式提供。它并非用于将真正的 3D 内容集成到 Qt 快速场景中。这种使用场景更适合其他集成自定义渲染的方法。
+注意：`QSGRenderNode` 的表现明显优于基于纹理的方法（如 `QQuickRhiItem`），尤其是在片段处理能力有限的系统中。这是因为它避免了先渲染到纹理再绘制纹理四边形。相反，`QSGRenderNode`允许记录与场景图其他命令一致的绘制调用，避免额外的渲染目标以及可能昂贵的纹理和混合。
+在调用函数之前，先计算剪辑信息。希望考虑剪裁的实现可以根据`state`中的信息设置剪刀或模板。模板缓冲区填充了必要的剪辑形状，但模板测试的实现取决于实现。
+一些场景图后端，尤其是软件，不使用剪刀或模板。在那里，剪辑区域作为普通`QRegion`提供。
+在实现使用`QRhi`渲染的`QSGRenderNode`时，通过`QQuickWindow::rhi()`查询`QQuickWindow`中的`QRhi`对象。要获得提交工作的`QRhiCommandBuffer`，请调用`commandBuffer()`。要查询关于当前渲染目标的信息，请调用`renderTarget()`。详情请参见{Scene Graph - Custom QSGRenderNode}示例。
+在Qt 6及其基于`QRhi`的场景图渲染器中，调用该函数时不应对激活状态（OpenGL）做任何假设，即使使用OpenGL。调用该函数时，也不应假设命令列表/缓冲区绑定的流水线和动态状态。
+注意：深度写入应被禁用。启用深度写入可能导致意想不到的结果，这取决于所使用的场景图后端和场景内容，因此需谨慎处理。
+注意：在第6问中，`changedStates()`使用有限。更多信息请参见文档`changedStates()`。
+对于某些图形API，包括直接使用`QRhi`时，可能需要额外重新实现`prepare()`，或者连接`QQuickWindow::beforeRendering()`信号。这些操作是在命令缓冲区录制渲染通道开始前调用/发出的（Vulkan的vkCmdBeginRenderPass，金属的경우 通过MTLRenderCommandEncoder开始编码）。在render()中无法通过此类API进行复制操作。相反，这些操作可以在`prepare()`或连接的foreRendering槽（使用DirectConnection）中完成。
 
 ### `[since 6.6] QRhiRenderTarget *QSGRenderNode::renderTarget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 的核心操作 `renderTarget`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+返回当前渲染目标。
+这主要用于使 `prepare()` 和 `render()` 的实现能够使用 `QRhi` 访问 `QRhiRenderTarget` 的 `renderPassDescriptor` 或像素大小。
+要构建 `QRhiGraphicsPipeline`，这意味着必须提供 `QRhiRenderPassDescriptor`，可从渲染目标查询 renderPassDescriptor。然而，需要注意的是，自定义 `QQuickItem` 和 `QSGRenderNode` 生命周期内渲染目标可能会变化。例如，考虑动态在该项目或其祖先上设置 `layer.enabled: true` 时会发生什么：这会触发渲染到纹理，而不是直接渲染到窗口，这意味着从那时起 `QSGRenderNode` 将使用不同的渲染目标。新的渲染目标可能会有不同的像素格式，这可能会导致已构建的图形管线不兼容。这可以通过以下逻辑来处理：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QRhiRenderTarget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (m_pipeline && renderTarget()->renderPassDescriptor()->serializedFormat() != m_renderPassFormat) {
+     delete m_pipeline;
+     m_pipeline = nullptr;
+ }
+ if (!m_pipeline) {
+     // Build a new QRhiGraphicsPipeline.
+     // ...
+     // Store the serialized format for fast and simple comparisons later on.
+     m_renderPassFormat = renderTarget()->renderPassDescriptor()->serializedFormat();
+ }
+```
 
 ### `struct RenderState`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 的 `渲染、State` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供关于投影矩阵和裁剪的信息。
+渲染状态包含渲染器在调用场景图后端命令时的信息。
 
 ### `enum RenderingFlag { BoundedRectRendering, DepthAwareRendering, OpaqueRendering, NoExternalRendering }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 暴露的类型声明 `Rendering、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`flags()`返回的位掩码可能值。
+- `QSGRenderNode::BoundedRectRendering`：`0x01`;表示`render()`的实现不会渲染超出`rect()`项目坐标报告的区域。这类节点实现可以带来更高效的渲染，具体取决于场景图后端。例如，当场景中所有渲染节点都设置了该标志时，`software`后端可以继续使用更优的部分更新路径。
+- `QSGRenderNode::DepthAwareRendering`：`0x02`;表示`render()`的实现符合场景图预期，仅生成场景坐标中的Z值为0，然后通过从`RenderState::projectionMatrix()`和`matrix()`检索的矩阵进行转换，详见`render()`注释。此类节点实现可提升渲染效率，具体取决于场景图后端。例如，当场景中所有渲染节点都设置该标志时，批处理的OpenGL渲染器仍可继续使用更优路径。
+- `QSGRenderNode::OpaqueRendering`：`0x04`;表示`render()`的实现会写出`rect()`报告的整个区域的不透明像素。默认情况下，渲染器必须假设`render()`也能输出半透明或完全透明的像素。设置该标志在某些情况下可以提升性能。
+- `QSGRenderNode::NoExternalRendering`：`0x08`;表示`prepare()`和`render()`的实现仅使用`QRhi`族API，而非直接调用OpenGL、Vulkan或Metal等3D API。
+RenderingFlags 类型是 QFlags 的 typedef<RenderingFlag>。它存储 RenderingFlag 值的 OR 组合。
 
 ### `flags RenderingFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`flags()`返回的位掩码可能值。
+- `QSGRenderNode::BoundedRectRendering`：`0x01`;表示`render()`的实现不会渲染超出`rect()`项目坐标报告的区域。这类节点实现可以带来更高效的渲染，具体取决于场景图后端。例如，当场景中所有渲染节点都设置了该标志时，`software`后端可以继续使用更优的部分更新路径。
+- `QSGRenderNode::DepthAwareRendering`：`0x02`;表示`render()`的实现符合场景图预期，仅生成场景坐标中的Z值为0，然后通过从`RenderState::projectionMatrix()`和`matrix()`检索的矩阵进行转换，详见`render()`注释。此类节点实现可提升渲染效率，具体取决于场景图后端。例如，当场景中所有渲染节点都设置该标志时，批处理的OpenGL渲染器仍可继续使用更优路径。
+- `QSGRenderNode::OpaqueRendering`：`0x04`;表示`render()`的实现会写出`rect()`报告的整个区域的不透明像素。默认情况下，渲染器必须假设`render()`也能输出半透明或完全透明的像素。设置该标志在某些情况下可以提升性能。
+- `QSGRenderNode::NoExternalRendering`：`0x08`;表示`prepare()`和`render()`的实现仅使用`QRhi`族API，而非直接调用OpenGL、Vulkan或Metal等3D API。
+RenderingFlags 类型是 QFlags 的 typedef<RenderingFlag>。它存储 RenderingFlag 值的 OR 组合。
 
 ### `enum StateFlag { ViewportState, ScissorState, DepthState, StencilState, ColorState, …, RenderTargetState }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 暴露的类型声明 `State、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含了从`changedStates()`返回的位掩码中可能使用的值。
+- `QSGRenderNode::ViewportState`：`0x40`;视窗
+- `QSGRenderNode::ScissorState`：`0x04`;开启剪刀测试的状态，剪刀矩形
+- `QSGRenderNode::DepthState`：`0x01`;该值在第6量子中无影响。
+- `QSGRenderNode::StencilState`：`0x02`;该值在第6量子中无效。
+- `QSGRenderNode::ColorState`：`0x08`;该值在第6量子中无影响。
+- `QSGRenderNode::BlendState`：`0x10`;该值在第6量子中无效。
+- `QSGRenderNode::CullState`：`0x20`;该值在第6量子中无效。
+- `QSGRenderNode::RenderTargetState`：`0x80`;该值在第6量子中无影响。
+StateFlags 类型是 QFlags 的 typedef<StateFlag>。它存储 StateFlag 值的 OR 组合。
 
 ### `flags StateFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGRenderNode` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含了从`changedStates()`返回的位掩码中可能使用的值。
+- `QSGRenderNode::ViewportState`：`0x40`;视窗
+- `QSGRenderNode::ScissorState`：`0x04`;开启剪刀测试的状态，剪刀矩形
+- `QSGRenderNode::DepthState`：`0x01`;该值在第6量子中无影响。
+- `QSGRenderNode::StencilState`：`0x02`;该值在第6量子中无效。
+- `QSGRenderNode::ColorState`：`0x08`;该值在第6量子中无影响。
+- `QSGRenderNode::BlendState`：`0x10`;该值在第6量子中无效。
+- `QSGRenderNode::CullState`：`0x20`;该值在第6量子中无效。
+- `QSGRenderNode::RenderTargetState`：`0x80`;该值在第6量子中无影响。
+StateFlags 类型是 QFlags 的 typedef<StateFlag>。它存储 StateFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

@@ -69,60 +69,43 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual] bool QRhiShadingRateMap::createFrom(QRhiShadingRateMap::NativeShadingRateMap src)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShadingRateMap::createFrom` 用于计算、查询或取得与“创建、转换进入”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `src`：类型为 `QRhiShadingRateMap::NativeShadingRateMap`。没有默认值，调用时必须提供。传入 `QRhiShadingRateMap::NativeShadingRateMap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置着色率映射，使用原生的3D API着色率对象 `src`。
+成功时退货`true`，`false`不支持时退货。
+注意：这只有在`QRhi::VariableRateShadingMap`功能被报告为支持，而 QRhi：：VariableShadingRateMapWithTexture 功能不支持时才有效。目前 Metal 版本在 GPU 支持可变速率着色的情况下，这一点仍然适用。
+注意：在 Metal 中，`src` 的`object`字段预期包含 id<MTLRasterizationRateMap>。注意，Qt 除了将 MTLRasterizationRateMap 传递到 MTLRenderPassDescriptor 外，没有其他功能。如果需要特殊缩放，则由应用程序（或 XR 合成器）自行执行。
 
 ### `[virtual] bool QRhiShadingRateMap::createFrom(QRhiTexture *src)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShadingRateMap::createFrom` 用于计算、查询或取得与“创建、转换进入”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `src`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置着色率映射，使纹理`src`作为包含每格着色率的图像。
+成功时`true`退货，`false`不支持时退货。
+`QRhiShadingRateMap`不承担`src`的所有权。
+注意：只有当`QRhi::VariableRateShadingMapWithTexture`功能被报告为支持时，此功能才可行。实际上，使用现代显卡时，Vulkan和Direct 3D 12可能会支持。例如，OpenGL或Metal平台永远不会支持此功能。
+注意：`src`必须有`QRhiTexture::R8UI`格式。
+注意：`src`图块宽度必须为`ceil(render_target_pixel_width / (float)tile_width)`，高度为`ceil(render_target_pixel_height / (float)tile_height)`。应用程序需始终确保纹理大小符合预期，使用上述公式。图块尺寸可以通过`QRhi::resourceLimit()`和`QRhi::ShadingRateImageTileSize`查询。
+纹理中的每个字节（texel）对应一个瓦片的着色率值。0表示1x1,10表示4x4。其他可能的值请参见 D3D12_SHADING_RATE。
 
 ### `[override virtual] QRhiResource::Type QRhiShadingRateMap::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShadingRateMap::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `(since 6.9) struct NativeShadingRateMap`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShadingRateMap` 的 `Native、Shading、Rate、映射` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它包裹了一个原生着色率贴图。
+一个例子是 MTLRasterizationRateMap 与 Metal 的结合。其他用于基于图像的 VR 的 3D API 不使用该结构，因为它们可以通过基于 `QRhiTexture` 的 QRhiShadingRate：：createFrom 来运行。
 
 ## 6. 深入实践与常见坑
 

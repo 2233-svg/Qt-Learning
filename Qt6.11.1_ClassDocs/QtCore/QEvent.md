@@ -83,206 +83,275 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QEvent::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEvent` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QEvent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型定义了 Qt 中的有效事件类型。事件类型及每种类型的专用类如下：
+- `QEvent::None`：`0`;不是事件。
+- `QEvent::ActionAdded`：`114`;新增了一个动作（`QActionEvent`）。
+- `QEvent::ActionChanged`：`113`;动作被更改（`QActionEvent`）。
+- `QEvent::ActionRemoved`：`115`;一个动作已被移除（`QActionEvent`）。
+- `QEvent::ActivationChange`：`99`;小部件的顶层窗口激活状态发生变化。
+- `QEvent::ApplicationActivate`：`121`;该枚举已被弃用。请使用ApplicationStateChange。
+- `QEvent::ApplicationActivated`：`ApplicationActivate`;该枚举已被弃用。请使用 ApplicationStateChange。
+- `QEvent::ApplicationDeactivate`：`122`;该枚举已被弃用。请使用ApplicationStateChange。
+- `QEvent::ApplicationFontChange`：`36`;默认应用字体发生了变化。
+- `QEvent::ApplicationLayoutDirectionChange`：`37`;默认应用布局方向已更改。
+- `QEvent::ApplicationPaletteChange`：`38`;默认应用调色板已更改。
+- `QEvent::ApplicationStateChange`：`214`;申请状态发生变化。
+- `QEvent::ApplicationWindowIconChange`：`35`;应用程序图标发生了变化。
+- `QEvent::ChildAdded`：`68`;一个对象得到一个子节点（`QChildEvent`）。
+- `QEvent::ChildPolished`：`69`;一个小部件子被抛光（`QChildEvent`）。
+- `QEvent::ChildRemoved`：`71`;物体失去一个子（`QChildEvent`）。
+- `QEvent::ChildWindowAdded (since Qt 6.7)`：`223`;在窗口中添加了一个子窗口。
+- `QEvent::ChildWindowRemoved (since Qt 6.7)`：`224`;窗户上的子窗被移除。
+- `QEvent::Clipboard`：`40`;剪贴板内容已更改。
+- `QEvent::Close`：`19`;小工具关闭（`QCloseEvent`）。
+- `QEvent::CloseSoftwareInputPanel`：`200`;一个小部件想要关闭软件输入面板（SIP）。
+- `QEvent::ContentsRectChange`：`178`;小部件内容的边界rect发生变化。
+- `QEvent::ContextMenu`：`82`;上下文弹出菜单（`QContextMenuEvent`）。
+- `QEvent::CursorChange`：`183`;控件的光标发生变化。
+- `QEvent::DeferredDelete`：`52`;该对象在清理完成后将被删除（QDeferredDeleteEvent）
+- `QEvent::DevicePixelRatioChange (since Qt 6.6)`：`222`;该小部件或窗口底层存储的 devicePixelRatio 发生了变化。
+- `QEvent::DragEnter`：`60`;光标在拖拽操作（`QDragEnterEvent`）中进入小部件。
+- `QEvent::DragLeave`：`62`;光标在拖拽操作（`QDragLeaveEvent`）中离开小部件。
+- `QEvent::DragMove`：`61`;正在进行拖拽操作（`QDragMoveEvent`）。
+- `QEvent::Drop`：`63`;完成拖放操作（`QDropEvent`）。
+- `QEvent::DynamicPropertyChange`：`170`;对象中添加、更改或移除动态属性。
+- `QEvent::EnabledChange`：`98`;控件的启用状态发生了变化。
+- `QEvent::Enter`：`10`;鼠标进入控件边界（`QEnterEvent`）。
+- `QEvent::EnterEditFocus`：`150`;编辑小部件获得编辑焦点。`QT_KEYPAD_NAVIGATION`必须被定义。
+- `QEvent::EnterWhatsThisMode`：`124`;当应用程序进入“这是什么？”模式时，发送到顶层控件。
+- `QEvent::Expose`：`206`;当窗口的屏幕内容失效并需要从备份存储中清除时，发送到窗口。
+- `QEvent::FileOpen`：`116`;文件开放请求（`QFileOpenEvent`）。
+- `QEvent::FocusIn`：`8`;控件或窗口获得键盘焦点（`QFocusEvent`）。
+- `QEvent::FocusOut`：`9`;控件或窗口失去键盘焦点（`QFocusEvent`）。
+- `QEvent::FocusAboutToChange`：`23`;控件或窗口焦点即将更改（`QFocusEvent`）
+- `QEvent::FontChange`：`97`;小部件的字体发生了变化。
+- `QEvent::Gesture`：`198`;触发了一个手势（`QGestureEvent`）。
+- `QEvent::GestureOverride`：`202`;触发了手势覆盖（`QGestureEvent`）。
+- `QEvent::GrabKeyboard`：`188`;物品获得键盘抓取（仅限`QGraphicsItem`）。
+- `QEvent::GrabMouse`：`186`;物品获得鼠标抓取（仅限`QGraphicsItem`）。
+- `QEvent::GraphicsSceneContextMenu`：`159`;图形场景（`QGraphicsSceneContextMenuEvent`）上的上下文弹窗菜单。
+- `QEvent::GraphicsSceneDragEnter`：`164`;光标在拖拽操作（`QGraphicsSceneDragDropEvent`）中进入图形场景。
+- `QEvent::GraphicsSceneDragLeave`：`166`;在拖拽操作（`QGraphicsSceneDragDropEvent`）期间，光标会离开图形场景。
+- `QEvent::GraphicsSceneDragMove`：`165`;场景（`QGraphicsSceneDragDropEvent`）正在进行拖拽操作。
+- `QEvent::GraphicsSceneDrop`：`167`;在场景（`QGraphicsSceneDragDropEvent`）上完成拖放操作。
+- `QEvent::GraphicsSceneHelp`：`163`;用户请求图形场景（`QHelpEvent`）的帮助。
+- `QEvent::GraphicsSceneHoverEnter`：`160`;鼠标光标进入图形场景中的悬浮物品（`QGraphicsSceneHoverEvent`）。
+- `QEvent::GraphicsSceneHoverLeave`：`162`;鼠标光标在图形场景中停留一个悬浮物品（`QGraphicsSceneHoverEvent`）。
+- `QEvent::GraphicsSceneHoverMove`：`161`;鼠标光标在图形场景（`QGraphicsSceneHoverEvent`）中的悬浮物体内移动。
+- `QEvent::GraphicsSceneMouseDoubleClick`：`158`;在图形场景（`QGraphicsSceneMouseEvent`）中再次按鼠标（双击）。
+- `QEvent::GraphicsSceneMouseMove`：`155`;在图形场景中移动鼠标（`QGraphicsSceneMouseEvent`）。
+- `QEvent::GraphicsSceneMousePress`：`156`;图形场景中的鼠标按压（`QGraphicsSceneMouseEvent`）。
+- `QEvent::GraphicsSceneMouseRelease`：`157`;图形场景中的鼠标释放（`QGraphicsSceneMouseEvent`）。
+- `QEvent::GraphicsSceneMove`：`182`;小部件被移动（`QGraphicsSceneMoveEvent`）。
+- `QEvent::GraphicsSceneResize`：`181`;小部件大小调整（`QGraphicsSceneResizeEvent`）。
+- `QEvent::GraphicsSceneWheel`：`168`;在图形场景中滚动的鼠标轮（`QGraphicsSceneWheelEvent`）。
+- `QEvent::GraphicsSceneLeave`：`220`;光标离开一个图形场景（`QGraphicsSceneWheelEvent`）。
+- `QEvent::Hide`：`18`;小部件被隐藏（`QHideEvent`）。
+- `QEvent::HideToParent`：`27`;一个子控件被隐藏了。
+- `QEvent::HoverEnter`：`127`;鼠标光标进入一个悬浮小部件（`QHoverEvent`）。
+- `QEvent::HoverLeave`：`128`;鼠标光标留下一个悬浮小部件（`QHoverEvent`）。
+- `QEvent::HoverMove`：`129`;鼠标光标在悬浮小部件（`QHoverEvent`）内移动。
+- `QEvent::IconDrag`：`96`;窗户的主图标被拖走了（`QIconDragEvent`）。
+- `QEvent::IconTextChange`：`101`;小部件的图标文本已更改。（已弃用）
+- `QEvent::InputMethod`：`83`;正在使用输入法（`QInputMethodEvent`）。
+- `QEvent::InputMethodQuery`：`207`;输入法查询事件（`QInputMethodQueryEvent`）
+- `QEvent::KeyboardLayoutChange`：`169`;键盘布局发生了变化。
+- `QEvent::KeyPress`：`6`;按键（`QKeyEvent`）。
+- `QEvent::KeyRelease`：`7`;密钥释放（`QKeyEvent`）。
+- `QEvent::LanguageChange`：`89`;应用翻译发生了变化。
+- `QEvent::LayoutDirectionChange`：`90`;布局方向发生了变化。
+- `QEvent::LayoutRequest`：`76`;小部件布局需要重新设计。
+- `QEvent::Leave`：`11`;鼠标离开控件的边界。
+- `QEvent::LeaveEditFocus`：`151`;编辑小部件在编辑时失去焦点。QT_KEYPAD_NAVIGATION必须被定义。
+- `QEvent::LeaveWhatsThisMode`：`125`;当应用程序离开“这是什么？”模式时，发送到顶层控件。
+- `QEvent::LocaleChange`：`88`;系统所在地发生变化。
+- `QEvent::NonClientAreaMouseButtonDblClick`：`176`;客户端区域外发生了鼠标双击（`QMouseEvent`）。
+- `QEvent::NonClientAreaMouseButtonPress`：`174`;鼠标按键发生在客户端区域（`QMouseEvent`）之外。
+- `QEvent::NonClientAreaMouseButtonRelease`：`175`;鼠标按键释放发生在客户端区域外（`QMouseEvent`）。
+- `QEvent::NonClientAreaMouseMove`：`173`;鼠标移动发生在客户端区域（`QMouseEvent`）之外。
+- `QEvent::MacSizeChange`：`177`;用户更改了他的控件大小（仅限macOS）。
+- `QEvent::MetaCall`：`43`;通过`QMetaObject::invokeMethod()`进行异步方法调用。
+- `QEvent::ModifiedChange`：`102`;控件的修改状态已更改。
+- `QEvent::MouseButtonDblClick`：`4`;再次按键（`QMouseEvent`）。
+- `QEvent::MouseButtonPress`：`2`;鼠标压制机（`QMouseEvent`）。
+- `QEvent::MouseButtonRelease`：`3`;老鼠释放（`QMouseEvent`）。
+- `QEvent::MouseMove`：`5`;鼠标移动（`QMouseEvent`）。
+- `QEvent::MouseTrackingChange`：`109`;鼠标追踪状态发生变化。
+- `QEvent::Move`：`13`;小部件位置发生变化（`QMoveEvent`）。
+- `QEvent::NativeGesture`：`197`;系统检测到一个手势（`QNativeGestureEvent`）。
+- `QEvent::OrientationChange`：`208`;屏幕的方向会发生变化（QScreenOrientationChangeEvent）。
+- `QEvent::Paint`：`12`;屏幕更新必要（`QPaintEvent`）。
+- `QEvent::PaletteChange`：`39`;控件的调色板发生了变化。
+- `QEvent::ParentAboutToChange`：`131`;对象父节点即将更改。仅发送给某些对象类型，如`QWidget`。
+- `QEvent::ParentChange`：`21`;对象父节点发生了变化。仅发送给某些对象类型，如`QWidget`。
+- `QEvent::ParentWindowAboutToChange (since Qt 6.7)`：`225`;父窗口即将变换。
+- `QEvent::ParentWindowChange (since Qt 6.7)`：`226`;父窗口发生了变化。
+- `QEvent::PlatformPanel`：`212`;已请求设立平台专属小组。
+- `QEvent::PlatformSurface`：`217`;已创建或即将被摧毁的原生平台表面（`QPlatformSurfaceEvent`）。
+- `QEvent::Polish`：`75`;小部件经过抛光。
+- `QEvent::PolishRequest`：`74`;小部件应被抛光。
+- `QEvent::QueryWhatsThis`：`123`;如果小部件有“这是什么？”帮助（`QHelpEvent`），应接受该事件。
+- `QEvent::Quit`：`20`;应用已退出。
+- `QEvent::ReadOnlyChange (since Qt 5.4)`：`106`;小部件的只读状态发生了变化。
+- `QEvent::RequestSoftwareInputPanel`：`199`;一个小部件想要打开软件输入面板（SIP）。
+- `QEvent::Resize`：`14`;小部件大小发生变化（`QResizeEvent`）。
+- `QEvent::ScrollPrepare`：`204`;物体需要填写其几何信息（`QScrollPrepareEvent`）。
+- `QEvent::Scroll`：`205`;物体需要滚动到指定位置（`QScrollEvent`）。
+- `QEvent::Shortcut`：`117`;子键用于快捷键操作（`QShortcutEvent`）。
+- `QEvent::ShortcutOverride`：`51`;子键操作，用于覆盖快捷键操作（`QKeyEvent`）。当快捷方式即将触发时，`ShortcutOverride`会发送到当前窗口。这允许客户端（例如控件）通过接受事件来表示他们将自行处理该快捷方式。如果快捷键覆盖被接受，事件将作为正常按键传递给焦点控件。否则，如果存在快捷方式动作，则触发该动作。
+- `QEvent::Show`：`17`;小部件显示在屏幕上（`QShowEvent`）。
+- `QEvent::ShowToParent`：`26`;已展示一个子控件。
+- `QEvent::SockAct`：`50`;套接字激活，用于实现`QSocketNotifier`。
+- `QEvent::StateMachineSignal`：`192`;传递给状态机（`QStateMachine::SignalEvent`）的信号。
+- `QEvent::StateMachineWrapped`：`193`;该事件是另一个事件（`QStateMachine::WrappedEvent`）的包装器，即包含另一个事件()。
+- `QEvent::StatusTip`：`112`;请求状态提示（`QStatusTipEvent`）。
+- `QEvent::StyleChange`：`100`;小部件的样式已更改。
+- `QEvent::TabletMove`：`87`;Wacom绘板移动（`QTabletEvent`）。
+- `QEvent::TabletPress`：`92`;Wacom平板印刷机（`QTabletEvent`）。
+- `QEvent::TabletRelease`：`93`;Wacom绘图板发行（`QTabletEvent`年）。
+- `QEvent::TabletEnterProximity`：`171`;Wacom绘图板进入接近事件（`QTabletEvent`），发送到`QApplication`。
+- `QEvent::TabletLeaveProximity`：`172`;Wacom绘图板离场事件（`QTabletEvent`），发送到`QApplication`。
+- `QEvent::TabletTrackingChange (since Qt 5.9)`：`219`;Wacom绘图板的追踪状态发生了变化。
+- `QEvent::ThreadChange`：`22`;该对象被移动到另一个线程。这是上一个线程中发送给该对象的最后一个事件。详见`QObject::moveToThread()`。
+- `QEvent::Timer`：`1`;常规计时器事件（`QTimerEvent`）。
+- `QEvent::ToolBarChange`：`120`;macOS上工具栏按钮被切换。
+- `QEvent::ToolTip`：`110`;请求提供提示（`QHelpEvent`）。
+- `QEvent::ToolTipChange`：`184`;小部件的工具提示发生了变化。
+- `QEvent::TouchBegin`：`194`;触摸屏或触控板事件序列的开始（`QTouchEvent`）。
+- `QEvent::TouchCancel`：`209`;取消触碰事件序列（`QTouchEvent`）。
+- `QEvent::TouchEnd`：`196`;触控事件序列结束（`QTouchEvent`）。
+- `QEvent::TouchUpdate`：`195`;触摸屏事件（`QTouchEvent`）。
+- `QEvent::UngrabKeyboard`：`189`;物品失去键盘抓取（仅`QGraphicsItem`）。
+- `QEvent::UngrabMouse`：`187`;物品失去鼠标抓取（`QGraphicsItem`，`QQuickItem`）。
+- `QEvent::UpdateLater`：`78`;该小部件应排队等待以后重新涂装。
+- `QEvent::UpdateRequest`：`77`;小部件应重新涂装。
+- `QEvent::WhatsThis`：`111`;小部件应显示“这是什么？”帮助（`QHelpEvent`）。
+- `QEvent::WhatsThisClicked`：`118`;点击了一个小部件“这是什么？”帮助中的链接。
+- `QEvent::Wheel`：`31`;滚鼠轮（`QWheelEvent`）。
+- `QEvent::WinEventAct`：`132`;发生了Windows特定的激活事件。
+- `QEvent::WindowActivate`：`24`;窗口已启动。
+- `QEvent::WindowBlocked`：`103`;窗口被模态对话框屏蔽。
+- `QEvent::WindowDeactivate`：`25`;窗口已被关闭。
+- `QEvent::WindowIconChange`：`34`;窗口图标发生变化。
+- `QEvent::WindowStateChange`：`105`;窗口状态（最小化、最大化或全屏）发生变化（`QWindowStateChangeEvent`）。
+- `QEvent::WindowTitleChange`：`33`;窗户标题已更改。
+- `QEvent::WindowUnblocked`：`104`;在模态对话结束后窗口会被解除阻塞。
+- `QEvent::WinIdChange`：`203`;该本地控件的窗口系统标识符已更改。
+- `QEvent::ZOrderChange`：`126`;小部件的 z 顺序发生了变化。该事件从未发送到顶层窗口。
+- `QEvent::SafeAreaMarginsChange (since Qt 6.9)`：`227`;窗口的安全区域边界发生变化。
+用户事件的值应介于`User`到`MaxUser`之间：
+- `QEvent::User`：`1000`;用户定义事件。
+- `QEvent::MaxUser`：`65535`;最后用户事件ID。
+为了方便起见，您可以使用`registerEventType()`功能注册并保留一个自定义事件类型。这样做可以避免误用应用中已在其他地方使用的自定义事件类型。
 
 ### `accepted : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEvent` 的配置属性。初始化或状态切换时通过 `setAccepted(...)` 设置，之后用 `accepted()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含事件对象的accept标志。
+设置accept参数表示事件接收方需要该事件。不需要的事件可能会传播到父控件。默认情况下，isAccepted() 设置为true，但不要依赖它，因为子类可能会在其构造函数中选择清除该参数。
+为了方便，接受标志也可以设置为`accept()`，并以`ignore()`清除。
+注意：接受`QPointerEvent`隐含`accepts`该事件所承载的所有`points`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`accepted`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `accepted()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QEvent::QEvent(QEvent::Type type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QEvent::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造类型为`type`的事件对象。
 
 ### `[virtual noexcept] QEvent::~QEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEvent` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁该事件。如果是`posted`，将从待发布事件列表中移除。
 
 ### `void QEvent::accept()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEvent::accept` 用于执行与“接受”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置事件对象的accept标志，相当于调用`setAccepted`（true）。
+设置接受参数表示事件接收方需要该事件。不需要的事件可能会传播到父组件。
 
 ### `[virtual, since 6.0] QEvent *QEvent::clone() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEvent::clone` 用于计算、查询或取得与“clone”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QEvent *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QEvent *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回该事件的完全相同的副本。
 
 ### `void QEvent::ignore()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEvent::ignore` 用于执行与“ignore”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除事件对象的accept标志参数，相当于调用`setAccepted`（false）。
+清除accept参数表示事件接收方不希望该事件。不需要的事件可能会传播到父控件。
 
 ### `[noexcept, since 6.0] bool QEvent::isInputEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInputEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果事件对象是`QInputEvent`还是其子类，返回`true`。
 
 ### `[noexcept, since 6.0] bool QEvent::isPointerEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isPointerEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果事件对象是`QPointerEvent`还是其子类，返回`true`。
 
 ### `[noexcept, since 6.0] bool QEvent::isSinglePointEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSinglePointEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果事件对象是`QSinglePointEvent`的子类，返回`true`。
 
 ### `[static noexcept] int QEvent::registerEventType(int hint = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerEventType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `hint`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册并返回自定义事件类型。如果提供的`hint`可用，将被使用;否则返回的值介于`QEvent::User`到`QEvent::MaxUser`之间，且尚未注册。如果`hint`值不在`QEvent::User`和`QEvent::MaxUser`之间，则被忽略。
+如果所有可用值都已取用或程序正在关闭，返回 -1。
+注意：该功能是线程安全的。
 
 ### `bool QEvent::spontaneous() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEvent::spontaneous` 用于计算、查询或取得与“spontaneous”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果事件起源于应用程序外部（系统事件），返回`true`;否则返回`false`。
 
 ### `QEvent::Type QEvent::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEvent::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QEvent::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QEvent::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回事件类型。
 
 ### `bool isAccepted() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAccepted`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性包含事件对象的accept标志。
+设置accept参数表示事件接收方需要该事件。不需要的事件可能会传播到父控件。默认情况下，isAccepted() 设置为true，但不要依赖它，因为子类可能会在其构造函数中选择清除该参数。
+为了方便，接受标志也可以设置为`accept()`，并以`ignore()`清除。
+注意：接受`QPointerEvent`隐含`accepts`该事件所承载的所有`points`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isAccepted()` 读取当前值；它不会修改应用状态。
 
 ### `virtual void setAccepted(bool accepted)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAccepted`。调用它会改变 `QEvent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含事件对象的accept标志。
+设置accept参数表示事件接收方需要该事件。不需要的事件可能会传播到父控件。默认情况下，isAccepted() 设置为true，但不要依赖它，因为子类可能会在其构造函数中选择清除该参数。
+为了方便，接受标志也可以设置为`accept()`，并以`ignore()`清除。
+注意：接受`QPointerEvent`隐含`accepts`该事件所承载的所有`points`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `accepted`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAccepted(...)` 修改 `accepted`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

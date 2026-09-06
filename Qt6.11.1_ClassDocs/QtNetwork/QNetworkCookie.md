@@ -104,402 +104,204 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 30 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkCookie::RawForm`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 暴露的类型声明 `Raw、Form`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RawForm`。
-- 属性名：`QNetworkCookie`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举与`toRawForm()`函数一起使用，用于声明将返回哪种形式的Cookie。
+- `QNetworkCookie::NameAndValueOnly`：`0`;使`toRawForm()`只返回cookie中的“NAME=VALUE”部分，以便以客户端请求的“Cookie：”头部“返回服务器。多个Cookie在”Cookie：“头字段中用分号分隔。
+- `QNetworkCookie::Full`：`1`;使`toRawForm()`返回完整的 Cookie 内容，以便以服务器的“Set-Cookie：” 头部发送给客户端。
+请注意，只有 cookie 的完整形式可以解析回其原始内容。
 
 ### `[since 6.1] enum class QNetworkCookie::SameSite`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SameSite`。
-- 属性名：`QNetworkCookie`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QNetworkCookie::SameSite::Default`：`0`;SameSite 未被设置。浏览器可将其解读为 None 或 Lax。
+- `QNetworkCookie::SameSite::None`：`1`;Cookie 可以在所有上下文中发送。这曾经是默认设置，但最近的浏览器将 Lax 变为默认，现在要求 Cookie 既安全又必须设置 SameSite=None。
+- `QNetworkCookie::SameSite::Lax`：`2`;Cookie 会在第三方网站发起的第一方请求和 GET 请求中发送。这是现代浏览器的默认设置（自 2020 年中期起）。
+- `QNetworkCookie::SameSite::Strict`：`3`;Cookie 仅会在第一方情境下发送。
+这个枚举是在Qt 6.1引入的。
 
 ### `[explicit] QNetworkCookie::QNetworkCookie(const QByteArray &name = QByteArray(), const QByteArray &value = QByteArray())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的QNetworkCookie对象，将Cookie名初始化为`name`，其值初始化为`value`。
+只有当 cookie 有名称时才有效。然而，该值对应用程序来说是不透明的，且为空的对远程服务器可能具有重要意义。
 
 ### `QNetworkCookie::QNetworkCookie(const QNetworkCookie &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过复制`other`的内容创建新的 QNetworkCookie 对象。
 
 ### `[noexcept] QNetworkCookie::~QNetworkCookie()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了这个`QNetworkCookie`物体。
 
 ### `QString QNetworkCookie::domain() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::domain` 用于计算、查询或取得与“domain”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该 Cookie 关联的域名。这对应于 cookie 字符串中的“domain”字段。
+请注意，这里的域名可能以点开头，但这并不是有效的主机名。但这意味着该 cookie 匹配所有以该域名结尾的主机名。
 
 ### `QDateTime QNetworkCookie::expirationDate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::expirationDate` 用于计算、查询或取得与“expiration、日期”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该 cookie 的有效期。如果该 cookie 是会话 cookie，返回的`QDateTime`将无效。如果日期已过去，则该 cookie 已过期，不应再次发送回远程服务器。
+到期日期对应于cookie字符串中“过期”条目的参数。
 
 ### `bool QNetworkCookie::hasSameIdentifier(const QNetworkCookie &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasSameIdentifier`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该 cookie 与 `other` 的标识符元组相同，返回`true`。标识符元组由名称、域名和路径组成。
 
 ### `bool QNetworkCookie::isHttpOnly() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isHttpOnly`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该cookie启用了“仅HttpOnly”标志，返回`true`。
+仅“HttpOnly”的Cookie仅由网络请求和回复设置和检索;即HTTP协议。浏览器脚本无法访问该Cookie。
 
 ### `bool QNetworkCookie::isSecure() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSecure`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 cookie 字符串中指定了“安全”选项，返回`true`，否则返回 false。
+安全Cookie可能包含私人信息，不应通过未加密连接重新发送。
 
 ### `bool QNetworkCookie::isSessionCookie() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSessionCookie`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true` 如果该 Cookie 是会话 Cookie。会话 Cookie 是没有有效期的 Cookie，这意味着当应用程序的会话概念结束时（通常是应用程序退出时）应丢弃它。
 
 ### `QByteArray QNetworkCookie::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该 cookie 的名称。Cookie 唯一必须填写的字段是其名称，否则不被视为有效。
 
 ### `void QNetworkCookie::normalize(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::normalize` 用于执行与“normalize”相关的操作。调用时要先确认当前状态和 `url` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数会规范 cookie 的路径和域（如果之前为空的话）。`url` 参数用于确定正确的域和路径。
 
 ### `[static] QList<QNetworkCookie> QNetworkCookie::parseCookies(QByteArrayView cookieString)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `parseCookies`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkCookie>`。
-- 参数 `cookieString`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解析从服务器响应收到的 cookie 字符串`cookieString`，在“Set-Cookie：”头部中。如果出现解析错误，该函数返回一个空列表。
+由于 HTTP 头部可以同时设置多个 Cookie，该函数会返回<`QNetworkCookie`>一个 `QList`，每个解析的 cookie 都对应一个。
+注意：在6.7之前的Qt版本中，该功能仅使用`QByteArray`。
 
 ### `QString QNetworkCookie::path() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::path` 用于计算、查询或取得与“path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该 cookie 关联的路径。这对应于 cookie 字符串的“path”字段。
 
 ### `[since 6.1] QNetworkCookie::SameSite QNetworkCookie::sameSitePolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::sameSitePolicy` 用于计算、查询或取得与“same、Site、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkCookie::SameSite`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkCookie::SameSite`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 cookie 字符串中指定了，返回“`SameSite`”选项;如果不存在，`SameSite::Default`返回。
 
 ### `void QNetworkCookie::setDomain(const QString &domain)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDomain`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `domain`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将与该 cookie 关联的域名设置为`domain`。
 
 ### `void QNetworkCookie::setExpirationDate(const QDateTime &date)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setExpirationDate`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `date`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该 cookie 的有效期设置为 `date`。将该 cookie 设置无效的有效期意味着它是会话 cookie。
 
 ### `void QNetworkCookie::setHttpOnly(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHttpOnly`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该 cookie 的“仅 HttpOnly” 标志设置为`enable`。
 
 ### `void QNetworkCookie::setName(const QByteArray &cookieName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setName`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cookieName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该 Cookie 的名称设置为 `cookieName`。注意，将 Cookie 名称设置为空`QByteArray`会使该 Cookie 无效。
 
 ### `void QNetworkCookie::setPath(const QString &path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPath`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将与该 cookie 关联的路径设置为`path`。
 
 ### `[since 6.1] void QNetworkCookie::setSameSitePolicy(QNetworkCookie::SameSite sameSite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSameSitePolicy`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sameSite`：类型为 `QNetworkCookie::SameSite`。没有默认值，调用时必须提供。传入 `QNetworkCookie::SameSite` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该Cookie的“`SameSite`”选项设置为`sameSite`。
 
 ### `void QNetworkCookie::setSecure(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSecure`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该 cookie 的安全标志设置为 `enable`。
+安全Cookie可能包含私人信息，不应通过未加密连接重新发送。
 
 ### `void QNetworkCookie::setValue(const QByteArray &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValue`。调用它会改变 `QNetworkCookie` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该 cookie 的值设置为`value`。
 
 ### `[noexcept] void QNetworkCookie::swap(QNetworkCookie &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookie::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QNetworkCookie &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这个cookie与`other`交换。这个操作非常快，而且从未失败过。
 
 ### `QByteArray QNetworkCookie::toRawForm(QNetworkCookie::RawForm form = Full) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toRawForm`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `form`：类型为 `QNetworkCookie::RawForm`。默认值为 `Full`。传入 `QNetworkCookie::RawForm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QNetworkCookie`的原始形式。该函数返回的`QByteArray`适用于HTTP头，无论是在服务器响应（Set-Cookie首部）还是客户端请求（Cookie首部）。你可以选择两种格式之一，使用`form`。
 
 ### `QByteArray QNetworkCookie::value() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QNetworkCookie` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该 cookie 的值，如 cookie 字符串中指定的。注意，如果 cookie 的值为空，它仍然有效。
+Cookie 名称-值对对应用程序来说是不透明的：也就是说，它们的值没有任何意义。
 
 ### `bool QNetworkCookie::operator!=(const QNetworkCookie &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该 cookie 不等于 `other`，返回`true`。
 
 ### `QNetworkCookie &QNetworkCookie::operator=(const QNetworkCookie &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QNetworkCookie &`。
-- 参数 `other`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QNetworkCookie`对象的内容`other`复制到该对象上。
 
 ### `bool QNetworkCookie::operator==(const QNetworkCookie &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookie` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该 Cookie 等于 `other`，则返回 `true`。该函数只有在 Cookie 的所有字段相同时才返回 `true`。
+然而，在某些情况下，同名的两个cookie可以被视为相等。
 
 ## 6. 深入实践与常见坑
 

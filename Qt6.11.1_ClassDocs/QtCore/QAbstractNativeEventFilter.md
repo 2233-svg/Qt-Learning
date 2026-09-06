@@ -62,50 +62,57 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QAbstractNativeEventFilter::QAbstractNativeEventFilter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractNativeEventFilter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建了原生事件过滤器。
+默认情况下，这不会有任何作用。记得把它安装在应用对象上。
 
 ### `[virtual noexcept] QAbstractNativeEventFilter::~QAbstractNativeEventFilter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractNativeEventFilter` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏本地事件过滤器。
+这会自动从应用中移除它。
 
 ### `[pure virtual] bool QAbstractNativeEventFilter::nativeEventFilter(const QByteArray &eventType, void *message, qintptr *result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractNativeEventFilter::nativeEventFilter` 用于计算、查询或取得与“native、Event、Filter”相关的操作。调用时要先确认当前状态和 `eventType`、`message`、`result` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该方法适用于每个本地事件。
+注意：这里的过滤函数接收本地消息，例如 MSG 或 XCB 事件结构。
+它由 QPA 平台插件调用。在 Windows 上，则由事件调度器调用。
+事件`eventType`类型针对运行时选择的平台插件，可用于将`message`投射到正确的类型。
+在X11上，`eventType`设置为“xcb_generic_event_t”，`message`可以投射到xcb_generic_event_t指针。
+在 Windows 上，`eventType` 设置为发送到顶层 Windows 的消息为“windows_generic_MSG”，系统范围消息（如注册热键的消息）为“windows_dispatcher_MSG”。在这两种情况下，`message`都可以投射为 MSG 指针。`result` 指针仅在 Windows 上使用，对应于 LRESULT 指针。
+在macOS上，`eventType`设置为“mac_generic_NSEvent”，`message`可以投射到NSEvent指针。
+在你对该函数的重新实现中，如果你想过滤掉`message`，即停止进一步处理，返回true;否则返回false。
+Linux 示例。
+Windows 示例。
+macOS 示例。
+mycocoaeventfilter.h：
+mycocoaeventfilter.mm：
+myapp.pro：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `eventType`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `message`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `result`：类型为 `qintptr *`。没有默认值，调用时必须提供。传入 `qintptr *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ class MyXcbEventFilter : public QAbstractNativeEventFilter
+ {
+ public:
+     bool nativeEventFilter(const QByteArray &eventType, void *message, qintptr *) override
+     {
+         if (eventType == "xcb_generic_event_t") {
+             xcb_generic_event_t* ev = static_cast<xcb_generic_event_t *>(message);
+             // ...
+         }
+         return false;
+     }
+ };
+```
 
 ## 6. 深入实践与常见坑
 

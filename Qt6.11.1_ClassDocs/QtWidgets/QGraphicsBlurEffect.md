@@ -91,205 +91,149 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGraphicsBlurEffect::BlurHintflags QGraphicsBlurEffect::BlurHints`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 暴露的类型声明 `Blur、Hintflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:BlurHintflags QGraphicsBlurEffect::BlurHints`。
-- 属性名：`QGraphicsBlurEffect`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以用来控制模糊效果应用的可能提示。这些提示可能在所有喷漆引擎中都会产生效果。
+- `QGraphicsBlurEffect::PerformanceHint`：`0x00`;表示渲染性能是最重要的因素，但可能以较低的质量为代价。
+- `QGraphicsBlurEffect::QualityHint`：`0x01`;表示渲染质量是最重要的因素，但这可能带来性能下降的代价。
+- `QGraphicsBlurEffect::AnimationHint`：`0x02`;表示模糊半径将被动画化，暗示实现可以缓存模糊的源版本。如果源将动态变化，请勿使用此提示。
+BlurHints 类型是 QFlags 的 typedef<BlurHint>。它存储 BlurHint 值的 OR 组合。
 
 ### `blurHints : BlurHints`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 的配置属性。初始化或状态切换时通过 `setBlurHints(...)` 设置，之后用 `blurHints()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这种特性保留了模糊效果的暗示。
+用`PerformanceHint`提示表示你想要更快的模糊，`QualityHint`提示表示你喜欢更高质量的模糊，或者用`AnimationHint`来表示你想动画化模糊半径。
+默认情况下，模糊提示是`PerformanceHint`。
 
-**签名拆解：**
-
-- 属性类型：`BlurHints`。
-- 属性名：`blurHints`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blurHints()` 读取当前值；它不会修改应用状态。
 
 ### `blurRadius : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 的配置属性。初始化或状态切换时通过 `setBlurRadius(...)` 设置，之后用 `blurRadius()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性保持了该效果的模糊半径。
+使用较小的半径会让画面更清晰，而大半径则会让画面更模糊。
+默认的模糊半径是5像素。
+半径以设备坐标表示，意味着不受比例尺影响。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`blurRadius`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blurRadius()` 读取当前值；它不会修改应用状态。
 
 ### `QGraphicsBlurEffect::QGraphicsBlurEffect(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的 QGraphicsBlurEffect 实例。`parent`参数传递给 `QGraphicsEffect` 的构造器。
 
 ### `[virtual noexcept] QGraphicsBlurEffect::~QGraphicsBlurEffect()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏效果。
 
 ### `[signal] void QGraphicsBlurEffect::blurHintsChanged(QGraphicsBlurEffect::BlurHints hints)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 发出的通知信号 `blurHintsChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+这种特性保留了模糊效果的暗示。
+用`PerformanceHint`提示表示你想要更快的模糊，`QualityHint`提示表示你喜欢更高质量的模糊，或者用`AnimationHint`来表示你想动画化模糊半径。
+默认情况下，模糊提示是`PerformanceHint`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hints`：类型为 `QGraphicsBlurEffect::BlurHints`。没有默认值，调用时必须提供。传入 `QGraphicsBlurEffect::BlurHints` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `blurHints` 的变化，不要把它当作普通函数主动调用。
 
 ### `[signal] void QGraphicsBlurEffect::blurRadiusChanged(qreal radius)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 发出的通知信号 `blurRadiusChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该特性保持了该效果的模糊半径。
+使用较小的半径会让画面更清晰，而大半径则会让画面更模糊。
+默认的模糊半径是5像素。
+半径以设备坐标表示，意味着不受比例尺影响。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `radius`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `blurRadius` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual] QRectF QGraphicsBlurEffect::boundingRectFor(const QRectF &rect) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsBlurEffect::boundingRectFor` 用于计算、查询或取得与“bounding、Rect、For”相关的操作。调用时要先确认当前状态和 `rect` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsEffect::boundingRectFor`（const QRectF &rect） const.
+根据设备坐标中提供的`rect`，返回该效果的有效边界矩形。编写自定义效果时，每当参数变化可能导致该函数返回不同值时，必须调用`updateBoundingRect()`。
 
 ### `[override virtual protected] void QGraphicsBlurEffect::draw(QPainter *painter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 的核心操作 `draw`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsEffect::draw`（QPainter *画师）。
+这个纯虚拟函数绘制该效应，并在需要绘制源时调用。
+在`QGraphicsEffect`子类中重新实现该函数，以提供该效果的绘制实现，使用`painter`。
+用户不应明确调用该函数，因为它仅用于重实现。
 
 ### `enum BlurHint { PerformanceHint, QualityHint, AnimationHint }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 暴露的类型声明 `Blur、Hint`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以用来控制模糊效果应用的可能提示。这些提示可能在所有喷漆引擎中都会产生效果。
+- `QGraphicsBlurEffect::PerformanceHint`：`0x00`;表示渲染性能是最重要的因素，但可能以较低的质量为代价。
+- `QGraphicsBlurEffect::QualityHint`：`0x01`;表示渲染质量是最重要的因素，但这可能带来性能下降的代价。
+- `QGraphicsBlurEffect::AnimationHint`：`0x02`;表示模糊半径将被动画化，暗示实现可以缓存模糊的源版本。如果源将动态变化，请勿使用此提示。
+BlurHints 类型是 QFlags 的 typedef<BlurHint>。它存储 BlurHint 值的 OR 组合。
 
 ### `flags BlurHints`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsBlurEffect` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以用来控制模糊效果应用的可能提示。这些提示可能在所有喷漆引擎中都会产生效果。
+- `QGraphicsBlurEffect::PerformanceHint`：`0x00`;表示渲染性能是最重要的因素，但可能以较低的质量为代价。
+- `QGraphicsBlurEffect::QualityHint`：`0x01`;表示渲染质量是最重要的因素，但这可能带来性能下降的代价。
+- `QGraphicsBlurEffect::AnimationHint`：`0x02`;表示模糊半径将被动画化，暗示实现可以缓存模糊的源版本。如果源将动态变化，请勿使用此提示。
+BlurHints 类型是 QFlags 的 typedef<BlurHint>。它存储 BlurHint 值的 OR 组合。
 
 ### `QGraphicsBlurEffect::BlurHints blurHints() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsBlurEffect::blurHints` 用于计算、查询或取得与“blur、Hints”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QGraphicsBlurEffect::BlurHints`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+这种特性保留了模糊效果的暗示。
+用`PerformanceHint`提示表示你想要更快的模糊，`QualityHint`提示表示你喜欢更高质量的模糊，或者用`AnimationHint`来表示你想动画化模糊半径。
+默认情况下，模糊提示是`PerformanceHint`。
 
-**签名拆解：**
-
-- 返回值：`QGraphicsBlurEffect::BlurHints`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blurHints()` 读取当前值；它不会修改应用状态。
 
 ### `qreal blurRadius() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsBlurEffect::blurRadius` 用于计算、查询或取得与“blur、Radius”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该特性保持了该效果的模糊半径。
+使用较小的半径会让画面更清晰，而大半径则会让画面更模糊。
+默认的模糊半径是5像素。
+半径以设备坐标表示，意味着不受比例尺影响。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `blurRadius()` 读取当前值；它不会修改应用状态。
 
 ### `void setBlurHints(QGraphicsBlurEffect::BlurHints hints)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setBlurHints`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+这种特性保留了模糊效果的暗示。
+用`PerformanceHint`提示表示你想要更快的模糊，`QualityHint`提示表示你喜欢更高质量的模糊，或者用`AnimationHint`来表示你想动画化模糊半径。
+默认情况下，模糊提示是`PerformanceHint`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hints`：类型为 `QGraphicsBlurEffect::BlurHints`。没有默认值，调用时必须提供。传入 `QGraphicsBlurEffect::BlurHints` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setBlurHints(...)` 修改 `blurHints`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setBlurRadius(qreal blurRadius)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setBlurRadius`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该特性保持了该效果的模糊半径。
+使用较小的半径会让画面更清晰，而大半径则会让画面更模糊。
+默认的模糊半径是5像素。
+半径以设备坐标表示，意味着不受比例尺影响。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `blurRadius`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setBlurRadius(...)` 修改 `blurRadius`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

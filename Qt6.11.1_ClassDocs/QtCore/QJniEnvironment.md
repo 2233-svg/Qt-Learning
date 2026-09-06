@@ -91,365 +91,275 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 26 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QJniEnvironment::QJniEnvironment()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniEnvironment` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的JNI环境对象，并将当前线程附加到Java虚拟机上。
 
 ### `[noexcept] QJniEnvironment::~QJniEnvironment()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniEnvironment` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前线程与 Java 虚拟机分离，并销毁`QJniEnvironment`对象。通过调用 `checkAndClearExceptions()` 清除任何待处理的异常。
 
 ### `bool QJniEnvironment::checkAndClearExceptions(QJniEnvironment::OutputMode outputMode = OutputMode::Verbose)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::checkAndClearExceptions` 用于计算、查询或取得与“check、And、清空、Exceptions”相关的操作。调用时要先确认当前状态和 `outputMode` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `outputMode`：类型为 `QJniEnvironment::OutputMode`。默认值为 `OutputMode::Verbose`。传入 `QJniEnvironment::OutputMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`outputMode`，会无声地或报告栈回溯，清理任何待处理的异常。
+与内部处理异常的`QJniObject`不同，如果你通过`JNIEnv`直接调用JNI，你需要在调用后清除所有潜在异常。有关`JNIEnv`可能抛出异常的调用的更多信息，请参见JNI函数。
+退货在处理待处理的例外时才`true`。
 
 ### `[static] bool QJniEnvironment::checkAndClearExceptions(JNIEnv *env, QJniEnvironment::OutputMode outputMode = OutputMode::Verbose)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `checkAndClearExceptions`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `env`：类型为 `JNIEnv *`。没有默认值，调用时必须提供。传入 `JNIEnv *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `outputMode`：类型为 `QJniEnvironment::OutputMode`。默认值为 `OutputMode::Verbose`。传入 `QJniEnvironment::OutputMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`outputMode`，可以静默地或报告栈回溯，清除`env`的待处理异常。这在你已经有`JNIEnv`指针时非常有用，比如原生函数实现。
+与内部处理异常的`QJniObject`不同，如果你通过`JNIEnv`直接调用JNI，你需要在调用后清除所有潜在的异常。有关`JNIEnv`可能抛出异常的调用的更多信息，请参见JNI函数。
+退货在处理待处理的例外时才会`true`。
 
 ### `jclass QJniEnvironment::findClass(const char *className)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::findClass` 用于计算、查询或取得与“查找、Class”相关的操作。调用时要先确认当前状态和 `className` 的有效范围；返回类型是 `jclass`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+使用所有可用的类加载器搜索`className`。Android 上的 Qt 使用自定义类加载器加载所有.jar文件，必须使用它来查找该类加载器创建的任何类，因为使用默认类加载器时这些类不可见。
+如果找不到`className`，返回类指针或空指针。
+该函数的一个用例是寻找一个类来调用一个 JNI 方法，该方法需要一个 `jclass`。这在对同一类对象进行多个 JNI 调用时非常有用，这比每次调用中使用类名稍快一些。此外，该调用会先查找内部缓存的类，然后再调用 JNI 调用，并在找到时返回此类类。以下代码片段创建了该类 `CustomClass` 的实例，然后调用了 `printFromJava()` 方法：
+注意：此调用返回的是内部缓存类对类对象的全局引用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`jclass`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass javaClass = env.findClass("org/qtproject/example/android/CustomClass");
+ QJniObject javaMessage = QJniObject::fromString("findClass example");
+ QJniObject::callStaticMethod<void>(javaClass, "printFromJava",
+                                    "(Ljava/lang/String;)V", javaMessage.object<jstring>());
+```
 
 ### `[since 6.4] template <typename T> jfieldID QJniEnvironment::findField(jclass clazz, const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::findField` 用于计算、查询或取得与“查找、Field”相关的操作。调用时要先确认当前状态和 `clazz`、`fieldName` 的有效范围；返回类型是 `template <typename T> jfieldID`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> jfieldID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索类的成员字段`clazz`。字段由其`fieldName`指定。字段的签名由模板参数推导出来。
+如果找不到字段，返回字段 ID 或`nullptr`。
 
 ### `[since 6.2] jfieldID QJniEnvironment::findField(jclass clazz, const char *fieldName, const char *signature)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::findField` 用于计算、查询或取得与“查找、Field”相关的操作。调用时要先确认当前状态和 `clazz`、`fieldName`、`signature` 的有效范围；返回类型是 `jfieldID`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`jfieldID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索类 `clazz` 的成员域。该域由其`fieldName`和`signature`指定。
+如果找不到字段，返回字段ID或`nullptr`。
+这种方法的一个用例是搜索类字段并缓存其 ID，以便以后用于获取和设置字段。
 
 ### `[since 6.4] template <typename... Args> jmethodID QJniEnvironment::findMethod(jclass clazz, const char *methodName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::findMethod` 用于计算、查询或取得与“查找、Method”相关的操作。调用时要先确认当前状态和 `clazz`、`methodName` 的有效范围；返回类型是 `template <typename... Args> jmethodID`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> jmethodID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索类的实例方法`clazz`。方法由其`methodName`指定，签名则从模板参数中推导出来。
+如果找不到方法，返回方法 ID 或 `nullptr`。
 
 ### `[since 6.2] jmethodID QJniEnvironment::findMethod(jclass clazz, const char *methodName, const char *signature)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::findMethod` 用于计算、查询或取得与“查找、Method”相关的操作。调用时要先确认当前状态和 `clazz`、`methodName`、`signature` 的有效范围；返回类型是 `jmethodID`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`jmethodID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索类的实例方法`clazz`。该方法由其`methodName`和`signature`指定。
+如果找不到方法，返回方法 ID 或 `nullptr`。
+该方法的一个用例是搜索类方法并缓存其 ID，以便以后调用这些方法。
 
 ### `[since 6.4] template <typename T> jfieldID QJniEnvironment::findStaticField(jclass clazz, const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `findStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> jfieldID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索类`clazz`的静态字段。字段由其`fieldName`指定。字段的签名由模板参数推导出来。
+如果找不到字段，返回字段 ID 或`nullptr`。
 
 ### `[since 6.2] jfieldID QJniEnvironment::findStaticField(jclass clazz, const char *fieldName, const char *signature)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `findStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`jfieldID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+搜索类`clazz`的静态域。该域由其`fieldName`和`signature`指定。
+如果找不到字段，返回字段ID或`nullptr`。
+这种方法的一个用例是搜索类字段并缓存其 ID，以便以后用于获取和设置字段。
 
 ### `[since 6.4] template <typename... Args> jmethodID QJniEnvironment::findStaticMethod(jclass clazz, const char *methodName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `findStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+搜索类的实例方法`clazz`。方法由其`methodName`指定，签名则从模板参数中推导出来。
+如果找不到方法，返回方法 ID 或 `nullptr`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename... Args> jmethodID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass javaClass = env.findClass("org/qtproject/example/android/CustomClass");
+ jmethodID methodId = env.findStaticMethod<void, jstring>(javaClass, "staticJavaMethod");
+ QJniObject javaMessage = QJniObject::fromString("findStaticMethod example");
+ QJniObject::callStaticMethod<void>(javaClass,
+                                    methodId,
+                                    javaMessage.object<jstring>());
+```
 
 ### `[since 6.2] jmethodID QJniEnvironment::findStaticMethod(jclass clazz, const char *methodName, const char *signature)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `findStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+搜索类`clazz`的静态方法。该方法由其`methodName`和`signature`指定。
+如果找不到方法，返回方法 ID 或 `nullptr`。
+该方法的一个用例是搜索类方法并缓存其 ID，以便以后调用这些方法。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`jmethodID`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass javaClass = env.findClass("org/qtproject/example/android/CustomClass");
+ jmethodID methodId = env.findStaticMethod(javaClass,
+                                           "staticJavaMethod",
+                                           "(Ljava/lang/String;)V");
+ QJniObject javaMessage = QJniObject::fromString("findStaticMethod example");
+ QJniObject::callStaticMethod<void>(javaClass,
+                                    methodId,
+                                    javaMessage.object<jstring>());
+```
 
 ### `[static] JNIEnv *QJniEnvironment::getJniEnv()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getJniEnv`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`JNIEnv *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前线程的JNIEnv指针。
+当前线程将连接到 Java 虚拟机。
 
 ### `[since 6.2] bool QJniEnvironment::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该实例包含有效的 JNIEnv 对象，返回`true`。
 
 ### `[static] JavaVM *QJniEnvironment::javaVM()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `javaVM`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`JavaVM *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前进程的 Java 虚拟机接口。虽然每个进程可能允许多个 Java 虚拟机，但 Android 只允许一个。
 
 ### `JNIEnv *QJniEnvironment::jniEnv() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::jniEnv` 用于计算、查询或取得与“jni、Env”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `JNIEnv *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`JNIEnv *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回JNI环境的`JNIEnv`指针。
 
 ### `template <typename Class> bool QJniEnvironment::registerNativeMethods(std::initializer_list<JNINativeMethod> methods)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::registerNativeMethods` 用于计算、查询或取得与“注册、Native、Methods”相关的操作。调用时要先确认当前状态和 `methods` 的有效范围；返回类型是 `template <typename Class> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+`methods` Java方法与`Class`表示的Java类注册，并返回注册是否成功。
+`Class`类型必须在`QtJniTypes`命名空间内使用 `Q_DECLARE_JNI_CLASS` 宏声明。以自由 C 或 C 函数实现的函数必须使用`Q_DECLARE_JNI_NATIVE_METHOD`宏之一声明，并通过 `Q_JNI_NATIVE_METHOD` 宏传递到注册中。
+对于作为静态类成员函数实现的函数，应使用作用域函数的宏。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Class> bool`。
-- 参数 `methods`：类型为 `std::initializer_list<JNINativeMethod>`。没有默认值，调用时必须提供。传入 `std::initializer_list<JNINativeMethod>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ // C++ side
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Q_DECLARE_JNI_CLASS(MyJavaType, "my/java/Type")
+
+ static void nativeFunction(JNIEnv *env, jobject thiz, jlong id)
+ {
+     // ...
+ }
+ Q_DECLARE_JNI_NATIVE_METHOD(nativeFunction)
+
+ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+ {
+     QJniEnvironment env;
+     env.registerNativeMethods<QtJniTypes::MyJavaType>({
+         Q_JNI_NATIVE_METHOD(nativeFunction)
+     });
+ }
+
+ // Java side
+ public class MyJavaType
+ {
+     native public nativeFunction(long id);
+ }
+```
 
 ### `bool QJniEnvironment::registerNativeMethods(const char *className, std::initializer_list<JNINativeMethod> methods)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::registerNativeMethods` 用于计算、查询或取得与“注册、Native、Methods”相关的操作。调用时要先确认当前状态和 `className`、`methods` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methods`：类型为 `std::initializer_list<JNINativeMethod>`。没有默认值，调用时必须提供。传入 `std::initializer_list<JNINativeMethod>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为 Java 类 `className` `methods` 注册本地函数方法。注册成功时返回 `true`，否则返回`false`。
 
 ### `bool QJniEnvironment::registerNativeMethods(jclass clazz, std::initializer_list<JNINativeMethod> methods)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::registerNativeMethods` 用于计算、查询或取得与“注册、Native、Methods”相关的操作。调用时要先确认当前状态和 `clazz`、`methods` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methods`：类型为 `std::initializer_list<JNINativeMethod>`。没有默认值，调用时必须提供。传入 `std::initializer_list<JNINativeMethod>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在 Java 类 `clazz` `methods` 中注册本地函数方法。如果注册成功，返回`true`，否则返回`false`。
 
 ### `bool QJniEnvironment::registerNativeMethods(const char *className, const JNINativeMethod[] methods, int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::registerNativeMethods` 用于计算、查询或取得与“注册、Native、Methods”相关的操作。调用时要先确认当前状态和 `className`、`methods`、`size` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在数组中注册大小为`size`的 Java 方法，`methods` 每个方法都可以调用类 `className` 的本地 C 函数。这些方法必须在尝试调用前注册。
+如果注册成功，退货`true`，否则就`false`。
+方法数组中的每个元素由以下组成：
+- Java 方法名称
+- 方法签名
+- 将要执行的C函数
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methods`：类型为 `const JNINativeMethod[]`。没有默认值，调用时必须提供。传入 `const JNINativeMethod[]` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ const JNINativeMethod methods[] =
+                         {{"callNativeOne", "(I)V", reinterpret_cast<void *>(fromJavaOne)},
+                         {"callNativeTwo", "(I)V", reinterpret_cast<void *>(fromJavaTwo)}};
+ QJniEnvironment env;
+ env.registerNativeMethods("org/qtproject/android/TestJavaClass", methods, 2);
+```
 
 ### `bool QJniEnvironment::registerNativeMethods(jclass clazz, const JNINativeMethod[] methods, int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniEnvironment::registerNativeMethods` 用于计算、查询或取得与“注册、Native、Methods”相关的操作。调用时要先确认当前状态和 `clazz`、`methods`、`size` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该重载使用之前缓存的 jclass 实例`clazz`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methods`：类型为 `const JNINativeMethod[]`。没有默认值，调用时必须提供。传入 `const JNINativeMethod[]` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ JNINativeMethod methods[] {{"callNativeOne", "(I)V", reinterpret_cast<void *>(fromJavaOne)},
+                            {"callNativeTwo", "(I)V", reinterpret_cast<void *>(fromJavaTwo)}};
+ QJniEnvironment env;
+ jclass clazz = env.findClass("org/qtproject/android/TestJavaClass");
+ env.registerNativeMethods(clazz, methods, 2);
+```
 
 ### `[static] QStringList QJniEnvironment::stackTrace(int exception)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `stackTrace`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `exception`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回导致`exception`被抛弃的栈跟踪。
 
 ### `JNIEnv &QJniEnvironment::operator*() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniEnvironment` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`JNIEnv &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回JNI环境的`JNIEnv`对象。
 
 ### `JNIEnv *QJniEnvironment::operator->() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniEnvironment` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`JNIEnv *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供访问JNI环境的`JNIEnv`指针。
 
 ### `enum class OutputMode { Silent, Verbose }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJniEnvironment` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QJniEnvironment::OutputMode::Silent`：`0`;例外被无声清理
+- `QJniEnvironment::OutputMode::Verbose`：`1`;将异常及其堆栈回溯作为错误打印到`stderr`流。
 
 ## 6. 深入实践与常见坑
 

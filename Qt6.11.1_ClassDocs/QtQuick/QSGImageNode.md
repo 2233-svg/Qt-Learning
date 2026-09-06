@@ -86,304 +86,158 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 22 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGImageNode::TextureCoordinatesTransformFlagflags QSGImageNode::TextureCoordinatesTransformMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGImageNode` 暴露的类型声明 `Texture、Coordinates、Transform、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TextureCoordinatesTransformFlagflags QSGImageNode::TextureCoordinatesTransformMode`。
-- 属性名：`QSGImageNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+TextureCoordinatesTransformFlag枚举用于指定生成纹理四边形纹理坐标的模式。
+- `QSGImageNode::NoTransform`：`0x00`;纹理坐标以窗口坐标定向，即原点位于左上角。
+- `QSGImageNode::MirrorHorizontally`：`0x01`;纹理坐标相对于窗口坐标在水平轴上反转
+- `QSGImageNode::MirrorVertically`：`0x02`;纹理坐标在垂直轴上相对于窗口坐标进行倒置
+TextureCoordinatesTransformMode 类型是 QFlags 的 typedef<TextureCoordinatesTransformFlag>。它存储 TextureCoordinatesTransformFlag 值的 OR 组合。
 
 ### `[pure virtual] QSGTexture::AnisotropyLevel QSGImageNode::anisotropyLevel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::anisotropyLevel` 用于计算、查询或取得与“anisotropy、Level”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::AnisotropyLevel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::AnisotropyLevel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该图像节点的斜纹层。
 
 ### `[pure virtual] QSGTexture::Filtering QSGImageNode::filtering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::filtering` 用于计算、查询或取得与“filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该图像节点的过滤结果。
 
 ### `[pure virtual] QSGTexture::Filtering QSGImageNode::mipmapFiltering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::mipmapFiltering` 用于计算、查询或取得与“mipmap、Filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该图像节点的 mipmap 过滤结果。
 
 ### `[pure virtual] bool QSGImageNode::ownsTexture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::ownsTexture` 用于计算、查询或取得与“owns、Texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点接管了纹理，则返回 `true`；否则返回 `false`。
 
 ### `[static] void QSGImageNode::rebuildGeometry(QSGGeometry *g, QSGTexture *texture, const QRectF &rect, QRectF sourceRect, QSGImageNode::TextureCoordinatesTransformMode texCoordMode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `rebuildGeometry`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `g`：类型为 `QSGGeometry *`。没有默认值，调用时必须提供。传入 `QSGGeometry *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `texture`：类型为 `QSGTexture *`。没有默认值，调用时必须提供。传入 `QSGTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `sourceRect`：类型为 `QRectF`。没有默认值，调用时必须提供。传入 `QRectF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `texCoordMode`：类型为 `QSGImageNode::TextureCoordinatesTransformMode`。没有默认值，调用时必须提供。传入 `QSGImageNode::TextureCoordinatesTransformMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更新几何体`g`，包含`texture`、`rect`坐标和`sourceRect`的纹理坐标。
+`g`假设为一个由四个顶点组成的三角形条带，类型为`QSGGeometry::TexturedPoint2D`。
+`texCoordMode`用于规范`sourceRect`。
 
 ### `[pure virtual] QRectF QSGImageNode::rect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::rect` 用于计算、查询或取得与“rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该图像节点的目标矩形。
 
 ### `[pure virtual] void QSGImageNode::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAnisotropyLevel`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `level`：类型为 `QSGTexture::AnisotropyLevel`。没有默认值，调用时必须提供。传入 `QSGTexture::AnisotropyLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点的暗角层设置为`level`。
 
 ### `[pure virtual] void QSGImageNode::setFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFiltering`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点的过滤设置为`filtering`。
+想要平滑缩放，可以用`QSGTexture::Linear`。正常缩放时用`QSGTexture::Nearest`。
 
 ### `[pure virtual] void QSGImageNode::setMipmapFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMipmapFiltering`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点用于的mipmap滤波设置为`filtering`。
+为了实现MIP映射之间的平滑缩放，使用`QSGTexture::Linear`。对于正常缩放，使用`QSGTexture::Nearest`。
 
 ### `[pure virtual] void QSGImageNode::setOwnsTexture(bool owns)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOwnsTexture`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `owns`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置节点是否拥有纹理的所有权`owns`。
+默认情况下，节点不拥有纹理的所有权。
 
 ### `[pure virtual] void QSGImageNode::setRect(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRect`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点的目标rect设置为`rect`。
 
 ### `void QSGImageNode::setRect(qreal x, qreal y, qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRect`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点的矩形设置为从（`x`， `y`）开始，宽度为`w`，高度为`h`。
 
 ### `[pure virtual] void QSGImageNode::setSourceRect(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSourceRect`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点的源rect设置为`rect`。
 
 ### `void QSGImageNode::setSourceRect(qreal x, qreal y, qreal w, qreal h)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSourceRect`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `x`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `y`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `w`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `h`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该图像节点的矩形以显示其纹理，从（`x`， `y`）中获得，宽度`w`高度相对于`QSGTexture::textureSize` `h`。
 
 ### `[pure virtual] void QSGImageNode::setTexture(QSGTexture *texture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTexture`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `texture`：类型为 `QSGTexture *`。没有默认值，调用时必须提供。传入 `QSGTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该图像节点的纹理设置为`texture`。
+用`setOwnsTexture()`来设置节点是否应该拥有纹理的所有权。默认情况下，节点不会拥有所有权。
+警告：图像节点必须先有纹理，才能添加到进行渲染的场景图中。
 
 ### `[pure virtual] void QSGImageNode::setTextureCoordinatesTransform(QSGImageNode::TextureCoordinatesTransformMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextureCoordinatesTransform`。调用它会改变 `QSGImageNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSGImageNode::TextureCoordinatesTransformMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将生成纹理坐标的方法设置为`mode`。这可以用来获得纹理的正确方向。当使用第三方 OpenGL 库渲染为纹理时，这很常见，因为 OpenGL 的 y 轴相对于 Qt Quick 是倒置的。
 
 ### `[pure virtual] QRectF QSGImageNode::sourceRect() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::sourceRect` 用于计算、查询或取得与“来源、Rect”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该图像节点的源rect。
 
 ### `[pure virtual] QSGTexture *QSGImageNode::texture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::texture` 用于计算、查询或取得与“texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该图像节点的纹理。
 
 ### `[pure virtual] QSGImageNode::TextureCoordinatesTransformMode QSGImageNode::textureCoordinatesTransform() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGImageNode::textureCoordinatesTransform` 用于计算、查询或取得与“texture、Coordinates、Transform”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGImageNode::TextureCoordinatesTransformMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGImageNode::TextureCoordinatesTransformMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回生成该节点纹理坐标的模式。
 
 ### `enum TextureCoordinatesTransformFlag { NoTransform, MirrorHorizontally, MirrorVertically }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGImageNode` 暴露的类型声明 `Texture、Coordinates、Transform、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+TextureCoordinatesTransformFlag枚举用于指定生成纹理四边形纹理坐标的模式。
+- `QSGImageNode::NoTransform`：`0x00`;纹理坐标以窗口坐标定向，即原点位于左上角。
+- `QSGImageNode::MirrorHorizontally`：`0x01`;纹理坐标相对于窗口坐标在水平轴上反转
+- `QSGImageNode::MirrorVertically`：`0x02`;纹理坐标在垂直轴上相对于窗口坐标进行倒置
+TextureCoordinatesTransformMode 类型是 QFlags 的 typedef<TextureCoordinatesTransformFlag>。它存储 TextureCoordinatesTransformFlag 值的 OR 组合。
 
 ### `flags TextureCoordinatesTransformMode`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGImageNode` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+TextureCoordinatesTransformFlag枚举用于指定生成纹理四边形纹理坐标的模式。
+- `QSGImageNode::NoTransform`：`0x00`;纹理坐标以窗口坐标定向，即原点位于左上角。
+- `QSGImageNode::MirrorHorizontally`：`0x01`;纹理坐标相对于窗口坐标在水平轴上反转
+- `QSGImageNode::MirrorVertically`：`0x02`;纹理坐标在垂直轴上相对于窗口坐标进行倒置
+TextureCoordinatesTransformMode 类型是 QFlags 的 typedef<TextureCoordinatesTransformFlag>。它存储 TextureCoordinatesTransformFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

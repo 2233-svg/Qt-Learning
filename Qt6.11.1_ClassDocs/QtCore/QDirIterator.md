@@ -82,210 +82,130 @@ for (auto it = container.cbegin(); it != container.cend(); ++it) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDirIterator::IteratorFlagflags QDirIterator::IteratorFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 暴露的类型声明 `Iterator、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:IteratorFlagflags QDirIterator::IteratorFlags`。
-- 属性名：`QDirIterator`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以组合起来配置`QDirIterator`行为的标志。
+- `QDirIterator::NoIteratorFlags`：`0x0`;默认值，表示无标志。迭代器将返回分配路径的条目。
+- `QDirIterator::Subdirectories`：`0x2`;所有子目录中的条目也列出。
+- `QDirIterator::FollowSymlinks`：`0x1`;当与子目录结合时，该标志使得遍历指定路径的所有子目录，遵循所有符号链路。符号链路循环（例如，“link” => “.” 或 “link” => “..”）会自动检测并忽略。
+IteratorFlags 类型是 QFlags 的 typedef<IteratorFlag>。它存储 IteratorFlag 值的 OR 组合。
 
 ### `QDirIterator::QDirIterator(const QDir &dir, QDirIterator::IteratorFlags flags = NoIteratorFlags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `dir`：类型为 `const QDir &`。没有默认值，调用时必须提供。传入 `const QDir &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QDirIterator::IteratorFlags`。默认值为 `NoIteratorFlags`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDirIterator，可以遍历`dir`的条目列表，使用`dir`的名称过滤器和常规过滤器。你可以通过`flags`传递选项，决定目录的迭代方式。
+默认情况下，`flags`是`NoIteratorFlags`，这与`QDir::entryList()`中行为相同。
+`dir`的分院被忽略了。
+注意：要列出指向不存在文件的符号链接，必须`QDir::System`传递给旗标。
 
 ### `QDirIterator::QDirIterator(const QString &path, QDirIterator::IteratorFlags flags = NoIteratorFlags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `flags`：类型为 `QDirIterator::IteratorFlags`。默认值为 `NoIteratorFlags`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个可以迭代`path`的QDirIterator。你可以通过`flags`传递选项，决定目录的迭代方式。
+默认情况下，`flags`是`NoIteratorFlags`，这与`QDir::entryList()`中表现相同。
+注意：要列出指向不存在文件的符号链接，必须`QDir::System`传递给旗标。
 
 ### `QDirIterator::QDirIterator(const QString &path, QDir::Filters filters, QDirIterator::IteratorFlags flags = NoIteratorFlags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `filters`：类型为 `QDir::Filters`。没有默认值，调用时必须提供。传入 `QDir::Filters` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QDirIterator::IteratorFlags`。默认值为 `NoIteratorFlags`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建了一个可以对`path`进行迭代的QDirIterator，无需名称过滤，且`filters`条目过滤。您可以通过`flags`传递选项，决定目录的迭代方式。
+默认情况下，`filters`是`QDir::NoFilter`，`flags`是`NoIteratorFlags`，这与`QDir::entryList()`中表现相同。
+注意：要列出指向不存在文件的符号链接，必须`QDir::System`传递给旗标。
 
 ### `QDirIterator::QDirIterator(const QString &path, const QStringList &nameFilters, QDir::Filters filters = QDir::NoFilter, QDirIterator::IteratorFlags flags = NoIteratorFlags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个QDirIterator，可以对`path`进行迭代，使用`nameFilters`和 `filters`。你可以通过 `flags` 传递选项，决定目录的复制方式。
+默认情况下，`flags`是`NoIteratorFlags`，这与`QDir::entryList()`提供相同的行为。
+例如，以下迭代器可用于对音频文件进行迭代：
+注意：要列出指向不存在文件的符号链接，必须将`QDir::System`传递给旗标。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `nameFilters`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `filters`：类型为 `QDir::Filters`。默认值为 `QDir::NoFilter`。传入 `QDir::Filters` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QDirIterator::IteratorFlags`。默认值为 `NoIteratorFlags`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QDirIterator audioFileIt(audioPath, {"*.mp3", "*.wav"}, QDir::Files);
+```
 
 ### `[noexcept] QDirIterator::~QDirIterator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QDirIterator`。
 
 ### `QFileInfo QDirIterator::fileInfo() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirIterator::fileInfo` 用于计算、查询或取得与“file、Info”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFileInfo`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFileInfo`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前目录条目的`QFileInfo`。
 
 ### `QString QDirIterator::fileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirIterator::fileName` 用于计算、查询或取得与“file、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前目录条目的文件名，不加路径。
+这个功能在迭代单个目录时非常方便。使用 `QDirIterator::Subdirectories` 标志时，可以使用 `filePath()` 获取完整路径。
 
 ### `QString QDirIterator::filePath() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirIterator::filePath` 用于计算、查询或取得与“file、Path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前目录条目的完整文件路径。
 
 ### `bool QDirIterator::hasNext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasNext`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果目录中至少还有一个条目，返回`true`;否则返回 false。
 
 ### `QString QDirIterator::next()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirIterator::next` 用于计算、查询或取得与“移动到下一项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将迭代器推进到下一个条目，并返回该新条目的文件路径。如果`hasNext()`返回`false`，该函数不做任何操作，返回空`QString`。理想情况下，你应在调用此方法前先调用`hasNext()`。
+你可以调用`fileName()`或`filePath()`获取当前条目的文件名或路径，或者`fileInfo()`获取当前条目的`QFileInfo`。
+如果你对`QFileInfo`感兴趣，请打电话给`nextFileInfo()`而不是next()。
 
 ### `[since 6.3] QFileInfo QDirIterator::nextFileInfo()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirIterator::nextFileInfo` 用于计算、查询或取得与“移动到下一项、File、Info”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFileInfo`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFileInfo`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将迭代器推进到下一个条目，并返回该新条目的文件信息。如果`hasNext()`返回`false`，这个函数什么都不做，只返回一个空`QFileInfo`。理想情况下，你应该在调用此方法之前先调用`hasNext()`。
+你可以调用`fileName()`或`filePath()`获取当前条目的文件名或路径，或者`fileInfo()`获取当前条目的`QFileInfo`。
+当你只需要`filePath()`时，打电话给`next()`而不是nextFileInfo()。
 
 ### `QString QDirIterator::path() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDirIterator::path` 用于计算、查询或取得与“path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回迭代器的基础目录。
 
 ### `enum IteratorFlag { NoIteratorFlags, Subdirectories, FollowSymlinks }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 暴露的类型声明 `Iterator、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以组合起来配置`QDirIterator`行为的标志。
+- `QDirIterator::NoIteratorFlags`：`0x0`;默认值，表示无标志。迭代器将返回分配路径的条目。
+- `QDirIterator::Subdirectories`：`0x2`;所有子目录中的条目也列出。
+- `QDirIterator::FollowSymlinks`：`0x1`;当与子目录结合时，该标志使得遍历指定路径的所有子目录，遵循所有符号链路。符号链路循环（例如，“link” => “.” 或 “link” => “..”）会自动检测并忽略。
+IteratorFlags 类型是 QFlags 的 typedef<IteratorFlag>。它存储 IteratorFlag 值的 OR 组合。
 
 ### `flags IteratorFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDirIterator` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以组合起来配置`QDirIterator`行为的标志。
+- `QDirIterator::NoIteratorFlags`：`0x0`;默认值，表示无标志。迭代器将返回分配路径的条目。
+- `QDirIterator::Subdirectories`：`0x2`;所有子目录中的条目也列出。
+- `QDirIterator::FollowSymlinks`：`0x1`;当与子目录结合时，该标志使得遍历指定路径的所有子目录，遵循所有符号链路。符号链路循环（例如，“link” => “.” 或 “link” => “..”）会自动检测并忽略。
+IteratorFlags 类型是 QFlags 的 typedef<IteratorFlag>。它存储 IteratorFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

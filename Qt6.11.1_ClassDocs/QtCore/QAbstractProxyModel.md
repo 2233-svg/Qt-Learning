@@ -113,500 +113,324 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 36 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[bindable] sourceModel : QAbstractItemModel*`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractProxyModel` 的配置属性。初始化或状态切换时通过 `setSourceModel(...)` 设置，之后用 `sourceModel()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性表示该代理模型的源模型。
+注意：这是一个私有信号。它可以用于信号连接，但用户不能发射。
 
-**签名拆解：**
-
-- 属性类型：`QAbstractItemModel*`。
-- 属性名：`sourceModel`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sourceModel()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QAbstractProxyModel::QAbstractProxyModel(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractProxyModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有给定`parent`的代理模型。
 
 ### `[virtual noexcept] QAbstractProxyModel::~QAbstractProxyModel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractProxyModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这会摧毁代理模型。
 
 ### `[override virtual] QModelIndex QAbstractProxyModel::buddy(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::buddy` 用于计算、查询或取得与“buddy”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::buddy`（const QModelIndex & index） const.
+返回由`index`表示的项目伙伴的模型索引。当用户想编辑某个项目时，视图会调用该函数检查是否应该编辑模型中的其他项目。然后，视图会利用伙伴项目返回的模型索引构建代理。
+该功能的默认实现中，每个物品都是独立的伙伴。
 
 ### `[override virtual] bool QAbstractProxyModel::canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canDropMimeData`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `action`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemModel::canDropMimeData`（const QMimeData *data， Qt：:D ropAction action， int row， int column， const QModelIndex &parent） const.
+返回`true`模型是否能接受`data`的删除。该默认实现仅检查`data` `mimeTypes()`列表中是否至少有一种格式，以及`action`是否在模型的`supportedDropActions()`中。
+如果你想测试`data`是否能在`row`、`column`、`parent`时丢弃，可以用`action`重新实现这个函数。如果你不需要这个测试，就没必要重写这个函数。
 
 ### `[override virtual] bool QAbstractProxyModel::canFetchMore(const QModelIndex &parent) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canFetchMore`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::canFetchMore`（const QModelIndex &parent）const.
+如果有更多数据可供 `parent`，返回`true`;否则返回 `false`。
+默认实现总是返回`false`。
+如果 canFetchMore() 返回 `true`，则应调用 `fetchMore()` 函数。这就是 `QAbstractItemView` 的行为，例如。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual, since 6.0] bool QAbstractProxyModel::clearItemData(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::clearItemData` 用于计算、查询或取得与“清空、项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::clearItemData`（const QModelIndex & index）。
+移除给定`index`所有角色中存储的数据。成功返回`true`;否则返回`false`。如果数据被成功移除，应发出`dataChanged()`信号。基类实现返回`false`。
 
 ### `[protected, since 6.2] QModelIndex QAbstractProxyModel::createSourceIndex(int row, int col, void *internalPtr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::createSourceIndex` 用于计算、查询或取得与“创建、来源、索引”相关的操作。调用时要先确认当前状态和 `row`、`col`、`internalPtr` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `col`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `internalPtr`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+相当于调用源模型上的 createIndex。
+如果你的代理模型希望维护源模型中项目的父子关系，这种方法非常有用。在重新实现`mapToSource()`时，你可以调用该方法为源模型的行`row`和列`col`创建索引。
+典型的用途是在重新实现`mapFromSource()`时保存来自源模型的内部指针并在重新实现`mapToSource()`时用与`internalPtr`相同的内部指针恢复原始源索引。
 
 ### `[override virtual] QVariant QAbstractProxyModel::data(const QModelIndex &proxyIndex, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QAbstractProxyModel` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `proxyIndex`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 通常与 role、QModelIndex 有关；数据变化后发 `dataChanged`，不要在 data() 中修改模型。
+重构：`QAbstractItemModel::data`（const QModelIndex & index， int role） const.
+返回`index`所指项在指定`role`下存储的数据。
+注意：如果你没有可返回的值，请返回一个无效（默认构造）的 `QVariant`。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] bool QAbstractProxyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::dropMimeData` 用于计算、查询或取得与“drop、Mime、数据访问”相关的操作。调用时要先确认当前状态和 `data`、`action`、`row`、`column`、`parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `action`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplementation s： `QAbstractItemModel::dropMimeData`（const QMimeData *data， Qt：:D ropAction action， int row， int column， const QModelIndex &parent）.
+处理拖放操作提供的`data`，拖拽操作以给定`action`结束。
+如果数据和动作由模型处理，返回`true`;否则返回`false`。
+指定的`row`、`column`和`parent`表示操作结束时该项在模型中的位置。模型有责任在正确的位置完成动作。
+例如，`QTreeView`中物品的投放动作可能导致新物品入，要么作为`row`、`column`和`parent`指定的物品的子项，要么作为该物品的兄弟姐妹。
+当`row`和`column`为-1时，意味着丢弃的数据应被视为直接丢弃`parent`。通常这意味着将数据作为`parent`的子项附加。如果`row`和`column`大于或等于零，则表示丢弃发生在指定`parent`中指定的`row`和`column`之前。
+调用`mimeTypes()`成员以获取可接受的MIME类型列表。该默认实现假设`mimeTypes()`的默认实现，返回单一默认MIME类型。如果你在自定义模型中重新实现`mimeTypes()`以返回多个MIME类型，必须重新实现该函数以利用它们。
 
 ### `[override virtual] void QAbstractProxyModel::fetchMore(const QModelIndex &parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractProxyModel` 的核心操作 `fetchMore`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::fetchMore`（const QModelIndex & parent）。
+获取由`parent`索引指定的父项目的任何可用数据。
+如果你是逐步填充模型，请重新实现。
+默认实现什么都不做。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] Qt::ItemFlags QAbstractProxyModel::flags(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `Qt::ItemFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ItemFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::flags`（const QModelIndex & index） const.
+返回给定`index`的物品标志。
+基类实现返回一组标志组合，使该项（`ItemIsEnabled`）启用并允许选择（`ItemIsSelectable`）。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QAbstractProxyModel::hasChildren(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasChildren`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::hasChildren`（const QModelIndex &parent） const.
+如果`parent`有子女，返回`true`;否则返回`false`。
+用`rowCount()`检测父母的子女数量。
+注意，如果同一索引的标志被设置`Qt::ItemNeverHasChildren`，报告某个特定索引 hasChildren 是未定义行为。
+注意：该函数可以通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] QVariant QAbstractProxyModel::headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::headerData` 用于计算、查询或取得与“header、数据访问”相关的操作。调用时要先确认当前状态和 `section`、`orientation`、`role` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::headerData`（整数节，Qt：：Orientation orientation， int role）const.
+返回给定`role`和`section`的头部数据，并带有指定`orientation`。
+对于水平头部，节号对应于列号。同样，对于竖向头部，节号对应行号。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QMap<int, QVariant> QAbstractProxyModel::itemData(const QModelIndex &proxyIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::itemData` 用于计算、查询或取得与“项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `proxyIndex` 的有效范围；返回类型是 `QMap<int, QVariant>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMap<int, QVariant>`。
-- 参数 `proxyIndex`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::itemData`（const QModelIndex & index） const.
+返回一个映射，包含模型中该项目在给定`index`处所有预定义角色的值。
+如果你想将默认行为扩展到地图中包含自定义角色，可以重新实现这个函数。
 
 ### `[pure virtual invokable] QModelIndex QAbstractProxyModel::mapFromSource(const QModelIndex &sourceIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `sourceIndex`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现该函数，返回代理模型中对应源模型`sourceIndex`的模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[virtual invokable] QItemSelection QAbstractProxyModel::mapSelectionFromSource(const QItemSelection &sourceSelection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapSelectionFromSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QItemSelection`。
-- 参数 `sourceSelection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从指定`sourceSelection`映射的代理选择。
+重新实现此方法，将源选择映射到代理选择。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[virtual invokable] QItemSelection QAbstractProxyModel::mapSelectionToSource(const QItemSelection &proxySelection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapSelectionToSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QItemSelection`。
-- 参数 `proxySelection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从指定`proxySelection`映射的源选择。
+重新实现该方法，将代理选择映射到源选择。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[pure virtual invokable] QModelIndex QAbstractProxyModel::mapToSource(const QModelIndex &proxyIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `proxyIndex`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现该函数，返回源模型中对应代理模型`proxyIndex`的模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QMimeData *QAbstractProxyModel::mimeData(const QModelIndexList &indexes) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::mimeData` 用于计算、查询或取得与“mime、数据访问”相关的操作。调用时要先确认当前状态和 `indexes` 的有效范围；返回类型是 `QMimeData *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeData *`。
-- 参数 `indexes`：类型为 `const QModelIndexList &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::mimeData`（const QModelIndexList & indexes） const.
+返回一个对象，包含对应指定`indexes`列表的序列化数据项。描述编码数据的格式来源于`mimeTypes()`函数。该默认实现使用`mimeTypes()`默认实现返回的默认MIME类型。如果你在自定义模型中重新实现`mimeTypes()`以返回更多MIME类型，请重新实现该函数以利用这些类型。
+如果`indexes`列表为空，或没有支持的MIME类型，则返回`nullptr`而非序列化的空列表。
 
 ### `[override virtual] QStringList QAbstractProxyModel::mimeTypes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::mimeTypes` 用于计算、查询或取得与“mime、Types”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::mimeTypes()` const.
+返回允许的 MIME 类型列表。默认情况下，内置模型和视图使用内部 MIME 类型：`application/x-qabstractitemmodeldatalist`。
+在自定义模型中实现拖放支持时，如果你返回的数据格式不是默认的内部 MIME 类型，请重新实现这个函数，返回你的 MIME 类型列表。
+如果你在自定义模型中重新实现该函数，也必须重新实现调用它的成员函数：`mimeData()` 和 `dropMimeData()`。
 
 ### `[override virtual] void QAbstractProxyModel::revert()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::revert` 用于执行与“revert”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::revert()`。
+让模型知道应丢弃缓存信息。该函数通常用于行编辑。
 
 ### `[override virtual] QHash<int, QByteArray> QAbstractProxyModel::roleNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::roleNames` 用于计算、查询或取得与“角色、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHash<int, QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHash<int, QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::roleNames()` const.
+返回模特的角色名。
+Qt 默认设置的角色名称如下：
+- `Qt Role`：QML角色名称
+- `Qt::DisplayRole`：展示
+- `Qt::DecorationRole`：装饰
+- `Qt::EditRole`：编辑
+- `Qt::ToolTipRole`：工具提示
+- `Qt::StatusTipRole`：statusTip
+- `Qt::WhatsThisRole`：这是什么
 
 ### `[override virtual] bool QAbstractProxyModel::setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QAbstractProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 成功修改后要发出对应 dataChanged；同时确认 flags 包含可编辑能力。
+重实现自：`QAbstractItemModel::setData`（const QModelIndex & index， const QVariant & value， int role）。
+将`index`项的 `role` 数据设置为 `value`。
+成功时返回`true`;成功时返回`false`。
+如果数据成功设置，`dataChanged()`信号应会发出。
+基类实现返回`false`。该函数和`data()`必须重新实现以适应可编辑模型。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] bool QAbstractProxyModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaderData`。调用它会改变 `QAbstractProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::setHeaderData`（整数部分，Qt：：Orientation orientation，const QVariant &value，int role）。
+在头部设置给定`role`和`section`数据，并指定`orientation`到所提供`value`。
+如果头部数据更新，返回`true`;否则返回`false`。
+在重新实现该功能时，必须显式地发出`headerDataChanged()`信号。
 
 ### `[override virtual] bool QAbstractProxyModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemData`。调用它会改变 `QAbstractProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `roles`：类型为 `const QMap<int, QVariant> &`。没有默认值，调用时必须提供。传入 `const QMap<int, QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::setItemData`（const QModelIndex & index， const QMap<int， QVariant> and roles）。
+将`index`项的角色数据设置为每个`Qt::ItemDataRole`的对应值`roles`。
+成功时返回`true`;否则返回`false`。
+不在`roles`中的角色不会被修改。
 
 ### `[virtual] void QAbstractProxyModel::setSourceModel(QAbstractItemModel *sourceModel)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSourceModel`。调用它会改变 `QAbstractProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性表示该代理模型的源模型。
+注意：这是一个私有信号。它可以用于信号连接，但用户不能发射。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sourceModel`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。传入 `QAbstractItemModel *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSourceModel(...)` 修改 `sourceModel`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[override virtual] QModelIndex QAbstractProxyModel::sibling(int row, int column, const QModelIndex &idx) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::sibling` 用于计算、查询或取得与“sibling”相关的操作。调用时要先确认当前状态和 `row`、`column`、`idx` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `idx`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QAbstractItemModel::sibling`（整数行，整数列，const QModelIndex & index）const.
+`row`时退回兄弟姐妹，`index` `column`物品，或者如果该地点没有兄弟姐妹，则`QModelIndex`无效。
+sibling() 只是一个方便函数，它会找到该项的父项，并用它检索指定`row`和`column`中子项的索引。
+该方法可选择性地覆盖以实现特定优化。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] void QAbstractProxyModel::sort(int column, Qt::SortOrder order = Qt::AscendingOrder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::sort` 用于执行与“sort”相关的操作。调用时要先确认当前状态和 `column`、`order` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::AscendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::sort`（整数列，Qt：：SortOrder）。
+按给定`order`中的`column`排序模型。
+基础类实现什么都不做。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `QAbstractItemModel *QAbstractProxyModel::sourceModel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::sourceModel` 用于计算、查询或取得与“来源、Model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含代理模型可用数据的模型。
+注意：属性sourceModel的获取函数。
 
 ### `[override virtual] QSize QAbstractProxyModel::span(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::span` 用于计算、查询或取得与“span”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::span`（const QModelIndex & index） const.
+返回由`index`表示的项的行和列跨。
+注：目前不使用跨度。
 
 ### `[override virtual] bool QAbstractProxyModel::submit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::submit` 用于计算、查询或取得与“提交任务”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::submit()`。
+让模型知道应将缓存信息提交到永久存储。该功能通常用于行编辑。
+如果没有错误，返回`true`;否则返回`false`。
 
 ### `[override virtual] Qt::DropActions QAbstractProxyModel::supportedDragActions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::supportedDragActions` 用于计算、查询或取得与“supported、Drag、Actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropActions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropActions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::supportedDragActions()` const.
+返回该模型中数据支持的动作。
+默认实现返回`supportedDropActions()`。如果你希望支持更多操作，可以重新实现这个函数。
+当发生拖拽时，`QAbstractItemView::startDrag()` 默认使用支持的DragActions()。
 
 ### `[override virtual] Qt::DropActions QAbstractProxyModel::supportedDropActions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractProxyModel::supportedDropActions` 用于计算、查询或取得与“supported、Drop、Actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropActions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropActions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::supportedDropActions()` const.
+返回该模型支持的投放动作。
+默认实现返回`Qt::CopyAction`。如果你希望支持额外操作，请重新实现这个函数。你还必须重新实现`dropMimeData()`函数以处理这些额外的操作。
 
 ### `QBindable<QAbstractItemModel *> bindableSourceModel()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableSourceModel`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性表示该代理模型的源模型。
+注意：这是一个私有信号。它可以用于信号连接，但用户不能发射。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QAbstractItemModel *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableSourceModel()` 取得 `sourceModel` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `void sourceModelChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `sourceModelChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性表示该代理模型的源模型。
+注意：这是一个私有信号。它可以用于信号连接，但用户不能发射。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `sourceModel` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

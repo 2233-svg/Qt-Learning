@@ -140,914 +140,577 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 68 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QAbstractSocket::BindFlagflags QAbstractSocket::BindMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `绑定、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:BindFlagflags QAbstractSocket::BindMode`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以通过不同标志来修改`QAbstractSocket::bind()`行为的不同信号。
+- `QAbstractSocket::ShareAddress`：`0x1`;允许其他服务绑定到同一地址和端口。当多个进程通过监听同一地址和端口来分担单一服务负载时（例如，拥有多个预分叉监听器的Web服务器可以大大提升响应时间），这非常有用。然而，由于任何服务都允许重新绑定，这一选项受到一定的安全考虑。注意，将此选项与ReuseAddressHint结合后，你还将允许服务重新绑定已有的共享地址。在Unix上，这相当于SO_REUSEADDR套接字选项。在Windows上，这是默认行为，因此该选项被忽略。
+- `QAbstractSocket::DontShareAddress`：`0x2`;独占绑定地址和端口，确保不允许其他服务重新绑定。通过将此选项传递给`QAbstractSocket::bind()`，成功时确保只有你的服务监听地址和端口。即使服务通过ReuseAddressHint，也不能重新绑定。该选项比ShareAddress更安全，但在某些操作系统上，需要你以管理员权限运行服务器。在Unix和macOS上，绑定地址和端口的默认行为是不共享，因此忽略此选项。在Windows上，该选项使用SO_EXCLUSIVEADDRUSE套接字选项。
+- `QAbstractSocket::ReuseAddressHint`：`0x4`;提示`QAbstractSocket`即使地址和端口已被其他套接字绑定，也应尝试重新绑定服务。在Windows和Unix上，这相当于SO_REUSEADDR套接字选项。
+- `QAbstractSocket::DefaultForPlatform`：`0x0`;当前平台的默认选项。在Unix和macOS上，这相当于（DontShareAddress ReuseAddressHint），在Windows上，则等同于ShareAddress。
+BindMode 类型是 QFlag 的 typedef<BindFlag>。它存储 BindFlag 值的 OR 组合。
 
 ### `enum QAbstractSocket::NetworkLayerProtocol`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `Network、Layer、Protocol`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:NetworkLayerProtocol`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了Qt中使用的网络层协议值。
+- `QAbstractSocket::IPv4Protocol`：`0`;IPv4
+- `QAbstractSocket::IPv6Protocol`：`1`;IPv6
+- `QAbstractSocket::AnyIPProtocol`：`2`;IPv4或IPv6
+- `QAbstractSocket::UnknownNetworkLayerProtocol`：`-1`;除IPv4和IPv6外
 
 ### `enum QAbstractSocket::PauseModeflags QAbstractSocket::PauseModes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `暂停、Modeflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PauseModeflags QAbstractSocket::PauseModes`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了套接字在持续数据传输时应暂停的行为。目前唯一支持的通知是`QSslSocket::sslErrors()`。
+- `QAbstractSocket::PauseNever`：`0x0`;不要暂停套接字的数据传输。这是默认设置，并且与Qt 4的行为一致。
+- `QAbstractSocket::PauseOnSslErrors`：`0x1`;收到SSL错误通知后暂停套接字的数据传输。即`QSslSocket::sslErrors()`。
+PauseMode 类型是 QFlags 的 typedef<PauseMode>。它存储 PauseMode 值的 OR 组合。
 
 ### `enum QAbstractSocket::SocketError`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `Socket、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SocketError`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了可能发生的套接字错误。
+- `QAbstractSocket::ConnectionRefusedError`：`0`;连接被对等端拒绝（或超时）。
+- `QAbstractSocket::RemoteHostClosedError`：`1`;远程主机关闭了连接。注意，客户端套接字（即该套接字）在发送远程关闭通知后将关闭。
+- `QAbstractSocket::HostNotFoundError`：`2`;未找到主机地址。
+- `QAbstractSocket::SocketAccessError`：`3`;套接字操作失败，因为应用程序缺乏所需的权限。
+- `QAbstractSocket::SocketResourceError`：`4`;本地系统资源耗尽（例如套接字过多）。
+- `QAbstractSocket::SocketTimeoutError`：`5`;套接字操作超时。
+- `QAbstractSocket::DatagramTooLargeError`：`6`;数据报大于操作系统的限制（最低可达8192字节）。
+- `QAbstractSocket::NetworkError`：`7`;网络发生错误（例如，网络电缆被意外拔除）。
+- `QAbstractSocket::AddressInUseError`：`8`;指定给`QAbstractSocket::bind()`的地址已在使用中，且设置为排他。
+- `QAbstractSocket::SocketAddressNotAvailableError`：`9`;指定给`QAbstractSocket::bind()`的地址不属于主机。
+- `QAbstractSocket::UnsupportedSocketOperationError`：`10`;请求的套接字操作不被本地操作系统支持（例如，不支持 IPv6）。
+- `QAbstractSocket::ProxyAuthenticationRequiredError`：`12`;套接字使用代理，代理需要认证。
+- `QAbstractSocket::SslHandshakeFailedError`：`13`;SSL/TLS握手失败，连接被关闭（仅`QSslSocket`使用）
+- `QAbstractSocket::UnfinishedSocketOperationError`：`11`;仅由QAbstractSocketEngine使用，最后尝试的操作尚未完成（仍在后台进行中）。
+- `QAbstractSocket::ProxyConnectionRefusedError`：`14`;无法联系代理服务器，因为该服务器的连接被拒绝
+- `QAbstractSocket::ProxyConnectionClosedError`：`15`;与代理服务器的连接意外关闭（在与最终节点连接建立之前）
+- `QAbstractSocket::ProxyConnectionTimeoutError`：`16`;与代理服务器的连接超时或代理服务器在认证阶段停止响应。
+- `QAbstractSocket::ProxyNotFoundError`：`17`;未找到带有`setProxy()`的代理地址（或应用代理）。
+- `QAbstractSocket::ProxyProtocolError`：`18`;与代理服务器的连接协商失败，因为代理服务器的响应无法被理解。
+- `QAbstractSocket::OperationError`：`19`;在套筒处于不允许操作的状态时尝试操作。
+- `QAbstractSocket::SslInternalError`：`20`;所使用的SSL库报告了内部错误。这很可能是由于安装不良或库配置错误所致。
+- `QAbstractSocket::SslInvalidUserDataError`：`21`;提供了无效数据（证书、密钥、密码等），其使用导致SSL库出现错误。
+- `QAbstractSocket::TemporaryError`：`22`;发生了临时错误（例如，操作会阻塞，而套接字是非阻塞的）。
+- `QAbstractSocket::UnknownSocketError`：`-1`;发生了未识别的错误。
 
 ### `enum QAbstractSocket::SocketOption`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `Socket、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SocketOption`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表套接字上可以设置的选项。如果需要，可以在收到套接字的`connected()`信号后设置，或者在从`QTcpServer`接收到新套接字后设置。
+- `QAbstractSocket::LowDelayOption`：`0`;尝试优化套接字以降低延迟。对于`QTcpSocket`，这会设置TCP_NODELAY选项并禁用Nagle算法。将此设置为1以启用。
+- `QAbstractSocket::KeepAliveOption`：`1`;将此设置为1以启用SO_KEEPALIVE套接字选项
+- `QAbstractSocket::MulticastTtlOption`：`2`;将其设置为整数值以设置IP_MULTICAST_TTL（多播数据报的TTL）套接字选项。
+- `QAbstractSocket::MulticastLoopbackOption`：`3`;将此设为1以启用IP_MULTICAST_LOOP（多播回环）套接字选项。
+- `QAbstractSocket::TypeOfServiceOption`：`4`;Windows不支持此选项。该选项映射到IP_TOS套接字选项。有关可能的值，请参见下表。
+- `QAbstractSocket::SendBufferSizeSocketOption`：`5`;在操作系统层面设置套接字发送缓冲区的字节大小。这映射到SO_SNDBUF套接字选项。该选项不影响`QIODevice`或`QAbstractSocket`缓冲区。该枚举值在Qt 5.3中引入。
+- `QAbstractSocket::ReceiveBufferSizeSocketOption`：`6`;在操作系统层面设置套接字接收缓冲区大小（字节）。这映射到SO_RCVBUF套接字选项。该选项不影响`QIODevice`或`QAbstractSocket`缓冲区（见`setReadBufferSize()`）。该枚举值在Qt 5.3中引入。
+- `QAbstractSocket::PathMtuSocketOption`：`7`;检索IP栈目前已知的路径最大传输单元（PMTU）值（如有）。部分IP协议栈还允许设置传输的MTU。该枚举值于Qt 5.11引入。
+- `QAbstractSocket::KeepAliveIdleOption`：`8`;如果启用KeepAliveOption，连接需要保持空闲的时间（秒数）。该枚举值于Qt 6.11引入。
+- `QAbstractSocket::KeepAliveIntervalOption`：`9`;如果启用KeepAliveOption，则指单个保持活探针之间的秒数。并非所有操作系统都支持此选项。该枚举值是在Qt 6.11中引入的。
+- `QAbstractSocket::KeepAliveCountOption`：`10`;如果启用KeepAliveOption，TCP在断开连接前可发送的最大保持活探测数量。该选项并非所有操作系统都支持。该枚举值于Qt 6.11引入。
+TypeOfServiceOption 可能的值有：
+- `Value`：描述
+- `224`：网络控制
+- `192`：网络间控制
+- `160`：CRITIC/ECP
+- `128`：闪烁覆盖
+- `96`：闪电侠
+- `64`：立即
+- `32`：优先级
+- `0`：例行公事
 
 ### `enum QAbstractSocket::SocketState`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `Socket、State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SocketState`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了套筒可能处于的不同状态。
+- `QAbstractSocket::UnconnectedState`：`0`;套接字未连接。
+- `QAbstractSocket::HostLookupState`：`1`;套接字正在执行主机名称查询。
+- `QAbstractSocket::ConnectingState`：`2`;套接字已开始建立连接。
+- `QAbstractSocket::ConnectedState`：`3`;建立联系。
+- `QAbstractSocket::BoundState`：`4`;套接字绑定在地址和端口。
+- `QAbstractSocket::ClosingState`：`6`;套接字即将关闭（数据可能仍在等待写入）。
+- `QAbstractSocket::ListeningState`：`5`;仅供内部使用。
 
 ### `enum QAbstractSocket::SocketType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `Socket、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SocketType`。
-- 属性名：`QAbstractSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了传输层协议。
+- `QAbstractSocket::TcpSocket`：`0`;TCP
+- `QAbstractSocket::UdpSocket`：`1`;统一民主党（UDP）
+- `QAbstractSocket::SctpSocket`：`2`;SCTP
+- `QAbstractSocket::UnknownSocketType`：`-1`;除TCP、UDP和SCTP外
 
 ### `QAbstractSocket::QAbstractSocket(QAbstractSocket::SocketType socketType, QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `socketType`：类型为 `QAbstractSocket::SocketType`。没有默认值，调用时必须提供。传入 `QAbstractSocket::SocketType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的类型为`socketType`的抽象套接字。`parent`参数传递给`QObject`的构造函数。
 
 ### `[virtual noexcept] QAbstractSocket::~QAbstractSocket()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会毁坏套接字。
 
 ### `void QAbstractSocket::abort()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `abort`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+中止当前连接并重置套接字。与`disconnectFromHost()`不同，该函数立即关闭套接字，丢弃写缓冲区中未处理的数据。
 
 ### `[virtual] bool QAbstractSocket::bind(const QHostAddress &address, quint16 port = 0, QAbstractSocket::BindMode mode = DefaultForPlatform)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bind`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `address`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。默认值为 `0`。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QAbstractSocket::BindMode`。默认值为 `DefaultForPlatform`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`BindMode` `mode`绑定到`port`端口的`address`。
+对于 UDP 套接字，绑定后，每当 UDP 数据报到达指定地址和端口时，信号`QUdpSocket::readyRead()`就会发出。因此，这个功能对于编写 UDP 服务器非常有用。
+对于TCP套接字，该函数可用于指定输出连接的接口，这在多个网络接口的情况下非常有用。
+默认情况下，套接字通过`DefaultForPlatform` `BindMode`绑定。如果未指定端口，则随机选择端口。
+成功时，函数返回`true`，套接字进入`BoundState`;否则返回`false`。
 
 ### `bool QAbstractSocket::bind(quint16 port = 0, QAbstractSocket::BindMode mode = DefaultForPlatform)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bind`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `port`：类型为 `quint16`。默认值为 `0`。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QAbstractSocket::BindMode`。默认值为 `DefaultForPlatform`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`BindMode` `mode`绑定到端口`port`的 `QHostAddress`：any。
+默认情况下，套接字被绑定为`DefaultForPlatform` `BindMode`。如果未指定端口，则选择随机端口。
 
 ### `[since 6.2] bool QAbstractSocket::bind(QHostAddress::SpecialAddress addr, quint16 port = 0, QAbstractSocket::BindMode mode = DefaultForPlatform)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bind`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `addr`：类型为 `QHostAddress::SpecialAddress`。没有默认值，调用时必须提供。传入 `QHostAddress::SpecialAddress` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。默认值为 `0`。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QAbstractSocket::BindMode`。默认值为 `DefaultForPlatform`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`BindMode` `mode`绑定到端口`port`的特殊地址`addr`。
+默认情况下，套接字通过`DefaultForPlatform` `BindMode`绑定。如果未指定端口，则随机选择端口。
 
 ### `[override virtual] qint64 QAbstractSocket::bytesAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesAvailable`，返回 `QAbstractSocket` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QIODevice::bytesAvailable()` const.
+返回等待读取的输入字节数。
 
 ### `[override virtual] qint64 QAbstractSocket::bytesToWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesToWrite`，返回 `QAbstractSocket` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::bytesToWrite()` const.
+返回等待写入的字节数。当控制返回事件循环或调用`flush()`时，字节会被写入。
 
 ### `[override virtual] void QAbstractSocket::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::close()`。
+关闭套接字的I/O设备，并调用`disconnectFromHost()`关闭套接字连接。
+关于关闭I/O设备时发生的动作，请参见`QIODevice::close()`。
 
 ### `[virtual] void QAbstractSocket::connectToHost(const QString &hostName, quint16 port, QIODeviceBase::OpenMode openMode = ReadWrite, QAbstractSocket::NetworkLayerProtocol protocol = AnyIPProtocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToHost`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hostName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `protocol`：类型为 `QAbstractSocket::NetworkLayerProtocol`。默认值为 `AnyIPProtocol`。传入 `QAbstractSocket::NetworkLayerProtocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试在给定`port`上与`hostName`建立连接。`protocol`参数可用于指定使用哪种网络协议（例如：IPv4 或 IPv6）。
+套接字在给定`openMode`中打开，首先进入`HostLookupState`，然后对`hostName`进行主机名查询。如果查询成功，`hostFound()`会被发射，`QAbstractSocket`进入`ConnectingState`。然后尝试连接到查找返回的地址或多个地址。最后，如果建立连接，`QAbstractSocket`进入`ConnectedState`并发出`connected()`。
+套接字随时可以发出`errorOccurred()`信号，提示发生了错误。
+`hostName`可以是字符串形式的IP地址（例如，“43.195.83.32”），也可以是主机名（例如，“example.com”）。`QAbstractSocket`只有在需要时才会进行查找。`port`按本地字节顺序排列。
 
 ### `void QAbstractSocket::connectToHost(const QHostAddress &address, quint16 port, QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToHost`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `address`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试连接端口`port` `address`。
 
 ### `[signal] void QAbstractSocket::connected()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 发出的通知信号 `connected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在`connectToHost()`被调用并成功建立连接后发出的。
+注意：在某些操作系统上，connected() 信号可能直接从连接本地主机的 `connectToHost()`调用发出。
 
 ### `[virtual] void QAbstractSocket::disconnectFromHost()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `disconnectFromHost`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试关闭套接字。如果有待写入的数据，`QAbstractSocket`会进入`ClosingState`并等待所有数据写入完成。最终，它会进入`UnconnectedState`并发出`disconnected()`信号。
 
 ### `[signal] void QAbstractSocket::disconnected()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 发出的通知信号 `disconnected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当套接字断开时，该信号会发出。
+警告：如果你需要删除连接该信号的槽函数中的`sender()`，请使用`deleteLater()`功能。
 
 ### `QAbstractSocket::SocketError QAbstractSocket::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSocket::SocketError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSocket::SocketError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后一次发生的错误类型。
 
 ### `[signal] void QAbstractSocket::errorOccurred(QAbstractSocket::SocketError socketError)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 发出的通知信号 `errorOccurred`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketError`：类型为 `QAbstractSocket::SocketError`。没有默认值，调用时必须提供。传入 `QAbstractSocket::SocketError` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在错误发生后发出的。`socketError`参数描述了发生的错误类型。
+当该信号发出时，套接字可能还没准备好进行重连尝试。在这种情况下，重新连接的尝试应从事件循环中进行。例如，使用QChronoTimer：：singleShot()，超时为0ns。
+`QAbstractSocket::SocketError`不是注册元类型，所以对于排队连接，你需要用`Q_DECLARE_METATYPE()`和`qRegisterMetaType()`注册它。
 
 ### `bool QAbstractSocket::flush()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::flush` 用于计算、查询或取得与“刷新”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数尽可能多地从内部写入缓冲区写入底层网络套接字，且不阻塞。如果写入了任何数据，该函数返回`true`;否则返回false。
+如果你需要`QAbstractSocket`立即开始发送缓冲数据，可以调用这个函数。成功写入的字节数取决于操作系统。在大多数情况下，你不需要调用这个函数，因为一旦控制返回事件循环，系统会自动开始发送数据`QAbstractSocket`。如果没有事件循环，则调用 `waitForBytesWritten()`。
 
 ### `[signal] void QAbstractSocket::hostFound()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 发出的通知信号 `hostFound`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在`connectToHost()`被调用且主机查询成功后发出的。
+注意：自Qt 4.6.3起，`QAbstractSocket`可能直接从`connectToHost()`调用中发送hostFound()，因为DNS结果可能被缓存。
 
 ### `[override virtual] bool QAbstractSocket::isSequential() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSequential`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::isSequential()` const.
 
 ### `bool QAbstractSocket::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果套接字有效且准备好使用，返回`true`;否则返回`false`。
+注意：套接字的状态必须`ConnectedState`才能进行读写。
 
 ### `QHostAddress QAbstractSocket::localAddress() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::localAddress` 用于计算、查询或取得与“local、Address”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有本地套接字的主机地址，返回;否则返回`QHostAddress::Null`。
+这通常是主机的主IP地址，但也可以`QHostAddress::LocalHost`（127.0.0.1）以连接本地主机。
 
 ### `quint16 QAbstractSocket::localPort() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::localPort` 用于计算、查询或取得与“local、Port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有，返回本地套接字的主机端口号（按本地字节顺序）;否则返回0。
 
 ### `QAbstractSocket::PauseModes QAbstractSocket::pauseMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::pauseMode` 用于计算、查询或取得与“暂停、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSocket::PauseModes`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSocket::PauseModes`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该套筒的暂停模式。
 
 ### `QHostAddress QAbstractSocket::peerAddress() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::peerAddress` 用于计算、查询或取得与“peer、Address”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHostAddress`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHostAddress`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果套接字处于`ConnectedState`，返回连接节点的地址;否则返回`QHostAddress::Null`。
 
 ### `QString QAbstractSocket::peerName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::peerName` 用于计算、查询或取得与“peer、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由 `connectToHost()` 指定的对等端名称，若未调用`connectToHost()`则返回空 `QString`。
 
 ### `quint16 QAbstractSocket::peerPort() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::peerPort` 用于计算、查询或取得与“peer、Port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果套接字处于`ConnectedState`，返回连接节点的端口;否则返回0。
 
 ### `QString QAbstractSocket::protocolTag() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::protocolTag` 用于计算、查询或取得与“protocol、Tag”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该套接字的协议标签。如果协议标签被设置，则在内部创建该标签以指示将使用协议标签时，该标签会传递给`QNetworkProxyQuery`。
 
 ### `QNetworkProxy QAbstractSocket::proxy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::proxy` 用于计算、查询或取得与“proxy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkProxy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该套接字的网络代理。默认情况下使用`QNetworkProxy::DefaultProxy`，这意味着该套接字会查询该应用的默认代理设置。
 
 ### `[signal] void QAbstractSocket::proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 发出的通知信号 `proxyAuthenticationRequired`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `proxy`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。传入 `const QNetworkProxy &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `authenticator`：类型为 `QAuthenticator *`。没有默认值，调用时必须提供。传入 `QAuthenticator *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当使用需要认证的`proxy`时，可以发出该信号。 `authenticator`随后可以填写所需信息，从而允许认证并继续连接。
+注意：无法使用队列连接连接该信号，因为如果信号返回时认证器未输入新信息，连接将失败。
 
 ### `qint64 QAbstractSocket::readBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的核心操作 `readBufferSize`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回内部读取缓冲区的大小。这限制了客户端在调用`read()`或`readAll()`之前能接收的数据量。
+读取缓冲区大小为0（默认值）意味着缓冲区没有大小限制，确保不会丢失数据。
 
 ### `[override virtual protected] qint64 QAbstractSocket::readData(char *data, qint64 maxSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的核心操作 `readData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `maxSize`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从套接字接收缓冲区复制最多 `maxSize` 字节到 `data`，返回读取字节数，失败返回 -1。这是供 `QIODevice::read()` 调用的受保护实现；异步代码应先响应 `readyRead()`，不要直接调用它或阻塞轮询。
 
 ### `[override virtual protected] qint64 QAbstractSocket::readLineData(char *data, qint64 maxlen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的核心操作 `readLineData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `maxlen`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现：`QIODevice::readLineData`（char *data， qint64 maxSize）.
 
 ### `[virtual] void QAbstractSocket::resume()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::resume` 用于执行与“恢复运行”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+继续在套接字上传输数据。该方法应仅在套接字被设置为通知暂停且收到通知后使用。目前唯一支持的通知是`QSslSocket::sslErrors()`。如果套接字未暂停，调用此方法会导致行为未定义。
 
 ### `[protected] void QAbstractSocket::setLocalAddress(const QHostAddress &address)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocalAddress`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `address`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接的本地地址设置为`address`。
+你可以在`QAbstractSocket`的子类中调用该函数，在连接建立后更改`localAddress()`函数的返回值。此功能通常被代理连接用于虚拟连接设置。
+注意，该函数不会绑定连接前套接字的本地地址（例如`QAbstractSocket::bind()`）。
 
 ### `[protected] void QAbstractSocket::setLocalPort(quint16 port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocalPort`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将端口设置在连接的本地端`port`。
+你可以在`QAbstractSocket`的子类中调用该函数，在连接建立后更改`localPort()`函数的返回值。该功能通常被代理连接用于虚拟连接设置。
+注意，该函数不会在连接前绑定套接字的本地端口（例如`QAbstractSocket::bind()`）。
 
 ### `void QAbstractSocket::setPauseMode(QAbstractSocket::PauseModes pauseMode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPauseMode`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pauseMode`：类型为 `QAbstractSocket::PauseModes`。没有默认值，调用时必须提供。传入 `QAbstractSocket::PauseModes` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+控制收到通知后是否暂停。`pauseMode`参数指定了套接字应暂停的条件。目前唯一支持的通知是`QSslSocket::sslErrors()`。如果设置为`PauseOnSslErrors`，套接字上的数据传输将暂停，需要通过调用`resume()`显式重新启用。默认情况下，该选项设置为`PauseNever`。该选项必须在连接到服务器前调用，否则会导致行为未定义。
 
 ### `[protected] void QAbstractSocket::setPeerAddress(const QHostAddress &address)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerAddress`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `address`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接远端地址设置为`address`。
+你可以在`QAbstractSocket`的子类中调用该函数，在连接建立后更改`peerAddress()`函数的返回值。该功能通常被代理连接用于虚拟连接设置。
 
 ### `[protected] void QAbstractSocket::setPeerName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerName`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将远程节点的主机名设置为`name`。
+你可以在`QAbstractSocket`的子类中调用该函数，在连接建立后更改`peerName()`函数的返回值。该功能通常被代理连接用于虚拟连接设置。
 
 ### `[protected] void QAbstractSocket::setPeerPort(quint16 port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerPort`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接远端端口设置为`port`。
+你可以在`QAbstractSocket`的子类中调用该函数，在连接建立后更改`peerPort()`函数的返回值。该功能通常被代理连接用于虚拟连接设置。
 
 ### `void QAbstractSocket::setProtocolTag(const QString &tag)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProtocolTag`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tag`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该套接字的协议标签设置为`tag`。
 
 ### `void QAbstractSocket::setProxy(const QNetworkProxy &networkProxy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProxy`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将该套接字的显式网络代理设置为`networkProxy`。
+要禁用该套接字的代理，请使用`QNetworkProxy::NoProxy`代理类型：
+代理的默认值是`QNetworkProxy::DefaultProxy`，这意味着套接字会使用应用设置：如果代理设置为`QNetworkProxy::setApplicationProxy`，则使用该设置;否则，如果工厂设置为`QNetworkProxyFactory::setApplicationProxyFactory`，它会查询该工厂，类型为`QNetworkProxyQuery::TcpSocket`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `networkProxy`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。传入 `const QNetworkProxy &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ socket->setProxy(QNetworkProxy::NoProxy);
+```
 
 ### `[virtual] void QAbstractSocket::setReadBufferSize(qint64 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadBufferSize`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QAbstractSocket`内部读取缓冲区的大小设置为`size`字节。
+如果缓冲区大小被限制在某个特定大小，`QAbstractSocket`不会缓冲超过这个大小的数据。例外情况下，缓冲区大小为0意味着读取缓冲区是无限的，所有输入数据都被缓冲。这是默认设置。
+如果你只在特定时间点读取数据（例如在实时流媒体应用中），或者想保护套接字免受过多数据接收，避免最终导致内存不足，这个选项非常有用。
+只有`QTcpSocket`使用`QAbstractSocket`的内部缓冲区;`QUdpSocket` 完全不使用缓冲，而是依赖操作系统提供的隐式缓冲。因此，调用该函数在`QUdpSocket`上没有效果。
 
 ### `[virtual] bool QAbstractSocket::setSocketDescriptor(qintptr socketDescriptor, QAbstractSocket::SocketState socketState = ConnectedState, QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketDescriptor`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socketDescriptor`：类型为 `qintptr`。没有默认值，调用时必须提供。传入 `qintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `socketState`：类型为 `QAbstractSocket::SocketState`。默认值为 `ConnectedState`。传入 `QAbstractSocket::SocketState` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用本地套接字描述符`socketDescriptor`初始化`QAbstractSocket`。如果`socketDescriptor`被接受为有效的套接字描述符，返回`true`;否则返回`false`。套接字以`openMode`指定的模式打开，进入`socketState`指定的套接字状态。清除读写缓冲区，丢弃任何待处理的数据。
+注意：无法用相同的本地套接字描述符初始化两个抽象套接字。
 
 ### `[protected] void QAbstractSocket::setSocketError(QAbstractSocket::SocketError socketError)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketError`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketError`：类型为 `QAbstractSocket::SocketError`。没有默认值，调用时必须提供。传入 `QAbstractSocket::SocketError` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最后一次发生的错误类型设置为`socketError`。
 
 ### `[virtual] void QAbstractSocket::setSocketOption(QAbstractSocket::SocketOption option, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketOption`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QAbstractSocket::SocketOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`option`设置为`value`描述的值。
+注意：由于选项设置在内部套接字上，选项仅在套接字已被创建时生效。这只有在调用`bind()`后或`connected()`已发出时才会生效。
 
 ### `[protected] void QAbstractSocket::setSocketState(QAbstractSocket::SocketState state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketState`。调用它会改变 `QAbstractSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `QAbstractSocket::SocketState`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套筒状态设置为`state`。
 
 ### `[override virtual protected] qint64 QAbstractSocket::skipData(qint64 maxSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::skipData` 用于计算、查询或取得与“skip、数据访问”相关的操作。调用时要先确认当前状态和 `maxSize` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `maxSize`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::skipData`（qint64 maxSize）。
 
 ### `[virtual] qintptr QAbstractSocket::socketDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::socketDescriptor` 用于计算、查询或取得与“socket、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qintptr`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qintptr`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有本地套`QAbstractSocket`描述符，返回该对象的本地套接字描述符;否则返回 -1。
+如果套接字使用`QNetworkProxy`，返回的描述符可能无法与本地套接字函数一起使用。
+当`QAbstractSocket`处于`UnconnectedState`时，套接字描述符不可用。
 
 ### `[virtual] QVariant QAbstractSocket::socketOption(QAbstractSocket::SocketOption option)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::socketOption` 用于计算、查询或取得与“socket、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `option`：类型为 `QAbstractSocket::SocketOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`option`期权的价值。
 
 ### `QAbstractSocket::SocketType QAbstractSocket::socketType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::socketType` 用于计算、查询或取得与“socket、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSocket::SocketType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSocket::SocketType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字类型（TCP、UDP或其他）。
 
 ### `QAbstractSocket::SocketState QAbstractSocket::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSocket::SocketState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSocket::SocketState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套筒的状态。
 
 ### `[signal] void QAbstractSocket::stateChanged(QAbstractSocket::SocketState socketState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 发出的通知信号 `stateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketState`：类型为 `QAbstractSocket::SocketState`。没有默认值，调用时必须提供。传入 `QAbstractSocket::SocketState` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当`QAbstractSocket`的状态发生变化时，该信号就会发出。`socketState`参数即为新状态。
+`QAbstractSocket::SocketState` 不是注册元类型，所以对于排队连接，你需要用 `Q_DECLARE_METATYPE()` 和 `qRegisterMetaType()` 注册。
 
 ### `[override virtual] bool QAbstractSocket::waitForBytesWritten(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::waitForBytesWritten` 用于计算、查询或取得与“等待、For、字节、Written”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::waitForBytesWritten`（int msecs）。
+该函数会阻塞，直到至少一个字节写入套接字并发出`bytesWritten()`信号。该函数在`msecs`毫秒后超时;默认超时为30000毫秒。
+如果`bytesWritten()`信号被发射，函数返回`true`;否则返回`false`（如果发生错误或操作超时）。
+注意：该功能在Windows上可能会随机失败。如果你的软件能在Windows上运行，可以考虑使用事件循环和`bytesWritten()`信号。
 
 ### `[virtual] bool QAbstractSocket::waitForConnected(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::waitForConnected` 用于计算、查询或取得与“等待、For、Connected”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+等待套接字连接，最多可达`msecs`毫秒。如果连接已建立，该函数返回`true`;否则返回`false`。如果返回`false`，你可以调用`error()`来确定错误原因。
+以下示例等待最多一秒以建立连接：
+如果 msecs 为 -1，该函数不会超时。
+注意：该函数可能比`msecs`稍长，具体取决于完成主机查找所需的时间。
+注意：多次调用这些函数不会累计时间。如果函数超时，连接进程将被中止。
+注意：该功能在Windows上可能会随机失败。如果你的软件能在Windows上运行，可以考虑使用事件循环和`connected()`信号。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ socket->connectToHost("imap", 143);
+ if (socket->waitForConnected(1000))
+     qDebug("Connected!");
+```
 
 ### `[virtual] bool QAbstractSocket::waitForDisconnected(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::waitForDisconnected` 用于计算、查询或取得与“等待、For、Disconnected”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+等待套接字断开连接，最多可达`msecs`毫秒。如果连接成功断开，该函数返回`true`;否则返回`false`（如果操作超时、发生错误或该`QAbstractSocket`已断开）。如果返回`false`，你可以调用`error()`来确定错误原因。
+以下示例等待连接关闭最多一秒钟：
+如果 msecs 为 -1，该函数不会超时。
+注意：该功能在Windows上可能会随机失败。如果你的软件能在Windows上运行，可以考虑使用事件循环和`disconnected()`信号。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ socket->disconnectFromHost();
+ if (socket->state() == QAbstractSocket::UnconnectedState
+     || socket->waitForDisconnected(1000)) {
+         qDebug("Disconnected!");
+ }
+```
 
 ### `[override virtual] bool QAbstractSocket::waitForReadyRead(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSocket::waitForReadyRead` 用于计算、查询或取得与“等待、For、Ready、读取”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::waitForReadyRead`（int msecs）。
+该功能会阻塞，直到有新数据可供读取且`readyRead()`信号已发出。该函数在`msecs`毫秒后超时;默认超时为30000毫秒。
+如果`readyRead()`信号被发射且有新数据可用，函数返回`true`;否则返回`false`（如果发生错误或操作超时）。
+注意：该功能在Windows上可能会随机失效。如果你的软件能在Windows上运行，可以考虑使用事件循环和`readyRead()`信号。
 
 ### `[override virtual protected] qint64 QAbstractSocket::writeData(const char *data, qint64 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的核心操作 `writeData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把最多 `size` 字节加入套接字发送缓冲区，返回已接受字节数，失败返回 -1。返回成功不表示数据已经到达对端；实际写出进度由 `bytesWritten()` 通知，错误用 `error()` 和 `errorString()` 检查。
 
 ### `enum BindFlag { ShareAddress, DontShareAddress, ReuseAddressHint, DefaultForPlatform }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `绑定、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以通过不同标志来修改`QAbstractSocket::bind()`行为的不同信号。
+- `QAbstractSocket::ShareAddress`：`0x1`;允许其他服务绑定到同一地址和端口。当多个进程通过监听同一地址和端口来分担单一服务负载时（例如，拥有多个预分叉监听器的Web服务器可以大大提升响应时间），这非常有用。然而，由于任何服务都允许重新绑定，这一选项受到一定的安全考虑。注意，将此选项与ReuseAddressHint结合后，你还将允许服务重新绑定已有的共享地址。在Unix上，这相当于SO_REUSEADDR套接字选项。在Windows上，这是默认行为，因此该选项被忽略。
+- `QAbstractSocket::DontShareAddress`：`0x2`;独占绑定地址和端口，确保不允许其他服务重新绑定。通过将此选项传递给`QAbstractSocket::bind()`，成功时确保只有你的服务监听地址和端口。即使服务通过ReuseAddressHint，也不能重新绑定。该选项比ShareAddress更安全，但在某些操作系统上，需要你以管理员权限运行服务器。在Unix和macOS上，绑定地址和端口的默认行为是不共享，因此忽略此选项。在Windows上，该选项使用SO_EXCLUSIVEADDRUSE套接字选项。
+- `QAbstractSocket::ReuseAddressHint`：`0x4`;提示`QAbstractSocket`即使地址和端口已被其他套接字绑定，也应尝试重新绑定服务。在Windows和Unix上，这相当于SO_REUSEADDR套接字选项。
+- `QAbstractSocket::DefaultForPlatform`：`0x0`;当前平台的默认选项。在Unix和macOS上，这相当于（DontShareAddress ReuseAddressHint），在Windows上，则等同于ShareAddress。
+BindMode 类型是 QFlag 的 typedef<BindFlag>。它存储 BindFlag 值的 OR 组合。
 
 ### `flags BindMode`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以通过不同标志来修改`QAbstractSocket::bind()`行为的不同信号。
+- `QAbstractSocket::ShareAddress`：`0x1`;允许其他服务绑定到同一地址和端口。当多个进程通过监听同一地址和端口来分担单一服务负载时（例如，拥有多个预分叉监听器的Web服务器可以大大提升响应时间），这非常有用。然而，由于任何服务都允许重新绑定，这一选项受到一定的安全考虑。注意，将此选项与ReuseAddressHint结合后，你还将允许服务重新绑定已有的共享地址。在Unix上，这相当于SO_REUSEADDR套接字选项。在Windows上，这是默认行为，因此该选项被忽略。
+- `QAbstractSocket::DontShareAddress`：`0x2`;独占绑定地址和端口，确保不允许其他服务重新绑定。通过将此选项传递给`QAbstractSocket::bind()`，成功时确保只有你的服务监听地址和端口。即使服务通过ReuseAddressHint，也不能重新绑定。该选项比ShareAddress更安全，但在某些操作系统上，需要你以管理员权限运行服务器。在Unix和macOS上，绑定地址和端口的默认行为是不共享，因此忽略此选项。在Windows上，该选项使用SO_EXCLUSIVEADDRUSE套接字选项。
+- `QAbstractSocket::ReuseAddressHint`：`0x4`;提示`QAbstractSocket`即使地址和端口已被其他套接字绑定，也应尝试重新绑定服务。在Windows和Unix上，这相当于SO_REUSEADDR套接字选项。
+- `QAbstractSocket::DefaultForPlatform`：`0x0`;当前平台的默认选项。在Unix和macOS上，这相当于（DontShareAddress ReuseAddressHint），在Windows上，则等同于ShareAddress。
+BindMode 类型是 QFlag 的 typedef<BindFlag>。它存储 BindFlag 值的 OR 组合。
 
 ### `enum PauseMode { PauseNever, PauseOnSslErrors }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 暴露的类型声明 `暂停、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了套接字在持续数据传输时应暂停的行为。目前唯一支持的通知是`QSslSocket::sslErrors()`。
+- `QAbstractSocket::PauseNever`：`0x0`;不要暂停套接字的数据传输。这是默认设置，并且与Qt 4的行为一致。
+- `QAbstractSocket::PauseOnSslErrors`：`0x1`;收到SSL错误通知后暂停套接字的数据传输。即`QSslSocket::sslErrors()`。
+PauseMode 类型是 QFlags 的 typedef<PauseMode>。它存储 PauseMode 值的 OR 组合。
 
 ### `flags PauseModes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSocket` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了套接字在持续数据传输时应暂停的行为。目前唯一支持的通知是`QSslSocket::sslErrors()`。
+- `QAbstractSocket::PauseNever`：`0x0`;不要暂停套接字的数据传输。这是默认设置，并且与Qt 4的行为一致。
+- `QAbstractSocket::PauseOnSslErrors`：`0x1`;收到SSL错误通知后暂停套接字的数据传输。即`QSslSocket::sslErrors()`。
+PauseMode 类型是 QFlags 的 typedef<PauseMode>。它存储 PauseMode 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

@@ -81,236 +81,157 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QStringDecoder::FinalizeResult`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的配置属性。初始化或状态切换时通过 `setFinalizeResult(...)` 设置，之后用 `FinalizeResult()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:FinalizeResult`。
-- 属性名：`QStringDecoder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是`QStringConverter::FinalizeResultChar`的化名<char16_t>。
 
 ### `[alias] QStringDecoder::FinalizeResultQChar`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的配置属性。初始化或状态切换时通过 `setFinalizeResultQChar(...)` 设置，之后用 `FinalizeResultQChar()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:FinalizeResultQChar`。
-- 属性名：`QStringDecoder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是`QStringConverter::FinalizeResultChar`的化名<`QChar`>。
 
 ### `[constexpr noexcept] QStringDecoder::QStringDecoder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+默认构建解码器。默认解码器无效，不能用于转换文本。
 
 ### `[explicit] QStringDecoder::QStringDecoder(QAnyStringView name, QStringConverter::Flags flags = Flag::Default)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `flags`：类型为 `QStringConverter::Flags`。默认值为 `Flag::Default`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用 `name` 和 `flags` 创建解码器对象。如果 的 不是已知编码的名称`name`，将生成一个无效的转换器。
+注意：在6.8之前的Qt版本中，该功能只需一个`const char *`，预计该功能将采用UTF-8编码。
 
 ### `[explicit constexpr] QStringDecoder::QStringDecoder(QStringConverter::Encoding encoding, QStringConverter::Flags flags = Flag::Default)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `encoding`：类型为 `QStringConverter::Encoding`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `flags`：类型为 `QStringConverter::Flags`。默认值为 `Flag::Default`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用`encoding`和 `flags` 创建解码器对象。
 
 ### `QChar *QStringDecoder::appendToBuffer(QChar *out, QByteArrayView in)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStringDecoder` 添加依赖、数据或子对象的 API `appendToBuffer`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QChar *`。
-- 参数 `out`：类型为 `QChar *`。没有默认值，调用时必须提供。传入 `QChar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `in`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码`in`看到的字节序列，并将解码结果写入从`out`开始的缓冲区。返回写入数据末尾的指针。
+`out`需要足够大，能够容纳所有解码数据。利用`requiredSpace`确定解码`in.size()`字节编码数据缓冲区的最大大小要求。该函数可以写入介于`out`到`out + requiredSpace()`之间的任意字节，包括返回端点以外的字节。
 
 ### `[since 6.6] char16_t *QStringDecoder::appendToBuffer(char16_t *out, QByteArrayView in)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QStringDecoder` 添加依赖、数据或子对象的 API `appendToBuffer`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`char16_t *`。
-- 参数 `out`：类型为 `char16_t *`。没有默认值，调用时必须提供。传入 `char16_t *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `in`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码`in`看到的字节序列，并将解码结果写入从`out`开始的缓冲区。返回写入数据末尾的指针。
+`out`需要足够大，能够容纳所有解码数据。利用`requiredSpace`确定解码`in.size()`字节编码数据缓冲区的最大大小要求。该函数可以写入介于`out`到`out + requiredSpace()`之间的任意字节，包括返回端点以外的字节。
 
 ### `[static] QStringDecoder QStringDecoder::decoderForHtml(QByteArrayView data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `decoderForHtml`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringDecoder`。
-- 参数 `data`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试通过查看 HTML 元标签中的字节序标记或字元集指定符来确定 `data` HTML 的编码，并返回与编码匹配的`QStringDecoder`。如果返回的译码器无效，`QStringConverter`不支持该编码。如果检测不到编码，方法返回 Utf8 的译码器。
 
 ### `[since 6.11] QStringDecoder::FinalizeResult QStringDecoder::finalize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringDecoder::finalize` 用于计算、查询或取得与“finalize”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringDecoder::FinalizeResult`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringDecoder::FinalizeResult`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向解码器发出信号，表示不会再有更多数据到达。
+也可能提供待解码的残余内容数据。当没有剩余数据需要考虑时，返回的`error`字段将设置为`NoError`。
+如果`out`被提供且非空，则必须有空间，最多可写入`maxlen`个字符。在该空间写入最多剩余输出字符，末尾由返回值的`next`字段表示。通常，这些残差数据应由每个未转换输入字符的替换字符组成。
+如果所有残留内容都已通过`out`传递，`out` `nullptr`，或没有残留数据，解码器在返回时`finalize()`重置。否则，剩余数据可以通过进一步调用`finalize()`来检索或丢弃。
 
 ### `qsizetype QStringDecoder::requiredSpace(qsizetype inputLength) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringDecoder::requiredSpace` 用于计算、查询或取得与“required、Space”相关的操作。调用时要先确认当前状态和 `inputLength` 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数 `inputLength`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回处理`inputLength`编码数据所需的最大UTF-16编码单元数量。
 
 ### `QStringDecoder::EncodedData<QByteArrayView> QStringDecoder::decode(QByteArrayView ba)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringDecoder::decode` 用于计算、查询或取得与“decode”相关的操作。调用时要先确认当前状态和 `ba` 的有效范围；返回类型是 `QStringDecoder::EncodedData<QByteArrayView>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+转换`ba`并返回一个可隐式转换为`QString`的结构体。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringDecoder::EncodedData<QByteArrayView>`。
-- 参数 `ba`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+```cpp
+ QByteArray encodedString = "...";
+ auto toUtf16 = QStringDecoder(QStringDecoder::Utf8);
+ auto data = toUtf16(encodedString); // data's type is QStringDecoder::EncodedData<const QByteArray &>
+ QString string = toUtf16(encodedString); // Implicit conversion to QString
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // Here you have to cast "data" to QString
+ auto func = [&]() { return !toUtf16.hasError() ? QString(data) : u"foo"_s; };
+```
 
 ### `FinalizeResult`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的 `Finalize、结果` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是`QStringConverter::FinalizeResultChar`的化名<char16_t>。
 
 ### `FinalizeResultQChar`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的 `Finalize、结果、Q、Char` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是`QStringConverter::FinalizeResultChar`的化名<`QChar`>。
 
 ### `QStringDecoder::EncodedData<const QByteArray &> decode(const QByteArray &ba)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringDecoder::decode` 用于计算、查询或取得与“decode”相关的操作。调用时要先确认当前状态和 `ba` 的有效范围；返回类型是 `QStringDecoder::EncodedData<const QByteArray &>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+转换`ba`并返回一个可隐式转换为`QString`的结构体。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringDecoder::EncodedData<const QByteArray &>`。
-- 参数 `ba`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+```cpp
+ QByteArray encodedString = "...";
+ auto toUtf16 = QStringDecoder(QStringDecoder::Utf8);
+ auto data = toUtf16(encodedString); // data's type is QStringDecoder::EncodedData<const QByteArray &>
+ QString string = toUtf16(encodedString); // Implicit conversion to QString
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // Here you have to cast "data" to QString
+ auto func = [&]() { return !toUtf16.hasError() ? QString(data) : u"foo"_s; };
+```
 
 ### `(since 6.11) QStringDecoder::FinalizeResultQChar finalize(QChar *out, qsizetype maxlen)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringDecoder::finalize` 用于计算、查询或取得与“finalize”相关的操作。调用时要先确认当前状态和 `out`、`maxlen` 的有效范围；返回类型是 `QStringDecoder::FinalizeResultQChar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringDecoder::FinalizeResultQChar`。
-- 参数 `out`：类型为 `QChar *`。没有默认值，调用时必须提供。传入 `QChar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxlen`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向解码器发出信号，表示不会再有更多数据到达。
+也可能提供待解码的残余内容数据。当没有剩余数据需要考虑时，返回的`error`字段将设置为`NoError`。
+如果`out`被提供且非空，则必须有空间，最多可写入`maxlen`个字符。在该空间写入最多剩余输出字符，末尾由返回值的`next`字段表示。通常，这些残差数据应由每个未转换输入字符的替换字符组成。
+如果所有残留内容都已通过`out`传递，`out` `nullptr`，或没有残留数据，解码器在返回时`finalize()`重置。否则，剩余数据可以通过进一步调用`finalize()`来检索或丢弃。
 
 ### `(since 6.11) QStringDecoder::FinalizeResult finalize(char16_t *out, qsizetype maxlen)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QStringDecoder::finalize` 用于计算、查询或取得与“finalize”相关的操作。调用时要先确认当前状态和 `out`、`maxlen` 的有效范围；返回类型是 `QStringDecoder::FinalizeResult`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringDecoder::FinalizeResult`。
-- 参数 `out`：类型为 `char16_t *`。没有默认值，调用时必须提供。传入 `char16_t *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxlen`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向解码器发出信号，表示不会再有更多数据到达。
+也可能提供待解码的残余内容数据。当没有剩余数据需要考虑时，返回的`error`字段将设置为`NoError`。
+如果`out`被提供且非空，则必须有空间，最多可写入`maxlen`个字符。在该空间写入最多剩余输出字符，末尾由返回值的`next`字段表示。通常，这些残差数据应由每个未转换输入字符的替换字符组成。
+如果所有残留内容都已通过`out`传递，`out` `nullptr`，或没有残留数据，解码器在返回时`finalize()`重置。否则，剩余数据可以通过进一步调用`finalize()`来检索或丢弃。
 
 ### `QStringDecoder::EncodedData<QByteArrayView> operator()(QByteArrayView ba)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QStringDecoder` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+转换`ba`并返回一个可隐式转换为`QString`的结构体。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringDecoder::EncodedData<QByteArrayView>`。
-- 参数：无。
+```cpp
+ QByteArray encodedString = "...";
+ auto toUtf16 = QStringDecoder(QStringDecoder::Utf8);
+ auto data = toUtf16(encodedString); // data's type is QStringDecoder::EncodedData<const QByteArray &>
+ QString string = toUtf16(encodedString); // Implicit conversion to QString
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // Here you have to cast "data" to QString
+ auto func = [&]() { return !toUtf16.hasError() ? QString(data) : u"foo"_s; };
+```
 
 ## 6. 深入实践与常见坑
 

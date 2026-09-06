@@ -185,1573 +185,795 @@ for (const int value : values) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 118 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QVarLengthArray::const_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setConst_iterator(...)` 设置，之后用 `const_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_iterator`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 表示 const T *。提供以兼容 STL 的。
 
 ### `[alias] QVarLengthArray::const_pointer`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setConst_pointer(...)` 设置，之后用 `const_pointer()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_pointer`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 表示 const T *。提供以兼容 STL 的。
 
 ### `[alias] QVarLengthArray::const_reference`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setConst_reference(...)` 设置，之后用 `const_reference()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_reference`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于 const T 和。为 STL 兼容性提供。
 
 ### `[alias] QVarLengthArray::const_reverse_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setConst_reverse_iterator(...)` 设置，之后用 `const_reverse_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_reverse_iterator`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`std::reverse_iterator<const T*>`。提供 STL 兼容性。
 
 ### `[alias] QVarLengthArray::difference_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setDifference_type(...)` 设置，之后用 `difference_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:difference_type`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于ptrdiff_t。提供 STL 兼容性。
 
 ### `[alias] QVarLengthArray::iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setIterator(...)` 设置，之后用 `iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:iterator`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T的Typedef。提供STL兼容性。
 
 ### `[alias] QVarLengthArray::pointer`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setPointer(...)` 设置，之后用 `pointer()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:pointer`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T的Typedef。提供STL兼容性。
 
 ### `[alias] QVarLengthArray::reference`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setReference(...)` 设置，之后用 `reference()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reference`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T和的Typedef。提供STL兼容性。
 
 ### `[alias] QVarLengthArray::reverse_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setReverse_iterator(...)` 设置，之后用 `reverse_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reverse_iterator`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`std::reverse_iterator<T*>`。提供支持 STL 兼容性。
 
 ### `[alias] QVarLengthArray::size_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setSize_type(...)` 设置，之后用 `size_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:size_type`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类型定义用于国际语言。提供支持STL兼容性。
 
 ### `[alias] QVarLengthArray::value_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的配置属性。初始化或状态切换时通过 `setValue_type(...)` 设置，之后用 `value_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:value_type`。
-- 属性名：`QVarLengthArray`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T的Typedef。提供STL兼容性。
 
 ### `[noexcept] QVarLengthArray::QVarLengthArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个初始大小为零的数组。
 
 ### `[explicit] QVarLengthArray::QVarLengthArray(qsizetype size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造初始大小为`size`元素的数组。
+如果值类型是原始类型（例如 char、int、float）或指针类型（例如 `QWidget` *），则元素不会被初始化。对于其他类型，元素会以默认构造值初始化。
 
 ### `QVarLengthArray::QVarLengthArray(std::initializer_list<T> args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `args`：类型为 `std::initializer_list<T>`。没有默认值，调用时必须提供。传入 `std::initializer_list<T>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从 std：：initializer_list 由 `args` 给出的数组构造。
 
 ### `template <typename InputIterator, QVarLengthArray<T, Prealloc>::if_input_iterator<InputIterator> = true> QVarLengthArray::QVarLengthArray(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个包含迭代子范围内容的数组 [`first`， `last`）。
+`InputIterator`的价值类型必须可转换为`T`。
+只有当`InputIterator`满足LegacyInputIterator的要求时，才参与超载解析。
 
 ### `[explicit, since 6.4] QVarLengthArray::QVarLengthArray(qsizetype size, const T &v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `v`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个初始大小为`size`元素的数组，填充包含`v`的副本。
+注意：该构造器仅在`T`可复制构造时可用。
 
 ### `QVarLengthArray::QVarLengthArray(const QVarLengthArray<T, Prealloc> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QVarLengthArray<T, Prealloc> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[noexcept(...), since 6.0] QVarLengthArray::QVarLengthArray(QVarLengthArray<T, Prealloc> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QVarLengthArray<T, Prealloc> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动从`other`构造出这个可变长度数组。移动后，`other`为空。
+注意：该功能仅在`std::is_nothrow_move_constructible_v<T>` `true`时才适用。
 
 ### `QVarLengthArray::~QVarLengthArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁阵列。
 
 ### `void QVarLengthArray::append(const T &t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `append`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将项`t`附加到数组中，必要时扩展数组。
 
 ### `void QVarLengthArray::append(const T *buf, qsizetype size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `append`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `const T *`。没有默认值，调用时必须提供。传入 `const T *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`size` `buf` 引用的项目数量附加到该数组中。
 
 ### `void QVarLengthArray::append(T &&t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `append`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+注意：与 append（ 的 lvalue 超载不同），传递已是 `*this` 元素的对象的引用会导致行为未定义：
+注意：该功能会让`QVarLengthArray::append`重载。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `t`：类型为 `T &&`。没有默认值，调用时必须提供。传入 `T &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ vla.append(std::move(vla[0])); // BUG: passing an object that is already in the container
+```
 
 ### `[since 6.6] QVarLengthArray<T, Prealloc> &QVarLengthArray::assign(std::initializer_list<T> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::assign` 用于计算、查询或取得与“assign”相关的操作。调用时要先确认当前状态和 `list` 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `list`：类型为 `std::initializer_list<T>`。没有默认值，调用时必须提供。传入 `std::initializer_list<T>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 `list` 元素的副本替换了这个容器里的内容。
+该容器的大小将等于`list`中元素的数量。
+该函数仅在`list`中的元素数量超过容器容量时分配内存。
 
 ### `[since 6.6] template <typename InputIterator, QVarLengthArray<T, Prealloc>::if_input_iterator<InputIterator> = true> QVarLengthArray<T, Prealloc> &QVarLengthArray::assign(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::assign` 用于计算、查询或取得与“assign”相关的操作。调用时要先确认当前状态和 `first`、`last` 的有效范围；返回类型是 `template <typename InputIterator, QVarLengthArray<T, Prealloc>::if_input_iterator<InputIterator> = true> QVarLengthArray<T, Prealloc> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator, QVarLengthArray<T, Prealloc>::if_input_iterator<InputIterator> = true> QVarLengthArray<T, Prealloc> &`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用迭代范围内元素的副本替换该容器的内容 [`first`， `last`）。
+该容器的大小将等于该区间的元素数 [`first`， `last`）。该函数仅在该区间的元素数量超过容器容量时分配内存。
+如果任一参数是对*这个的迭代子，则该行为是未定义的。
+只有当`InputIterator`满足LegacyInputIterator的要求时，才参与重载决议。
 
 ### `[since 6.6] QVarLengthArray<T, Prealloc> &QVarLengthArray::assign(qsizetype n, const T &t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::assign` 用于计算、查询或取得与“assign”相关的操作。调用时要先确认当前状态和 `n`、`t` 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `n`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `t`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`n`份`t`的副本替换了该容器的内容。
+该容器的大小将等于`n`。该函数仅在内存`n`超过容器容量时分配内存。
 
 ### `const T &QVarLengthArray::at(qsizetype i) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QVarLengthArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const T &`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引位置`i`的项目引用。
+`i` 必须是数组中的有效索引位置（即 0 <= `i` < `size()`）。
 
 ### `T &QVarLengthArray::back()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::back` 用于计算、查询或取得与“末尾”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`last()`一样。提供STL兼容性。
 
 ### `const T &QVarLengthArray::back() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::back` 用于计算、查询或取得与“末尾”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`last()`一样。提供STL兼容性。
 
 ### `QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::begin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向数组中的第一个项。
 
 ### `QVarLengthArray<T, Prealloc>::const_iterator QVarLengthArray::begin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向数组中的第一个项。
 
 ### `qsizetype QVarLengthArray::capacity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `capacity`，返回 `QVarLengthArray` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中可在不强制重分配的情况下存储的最大元素数量。
+该函数的唯一目的是提供一种微调`QVarLengthArray`内存使用的方法。一般来说，你很少需要调用这个函数。如果你想知道数组中有多少项，可以调用`size()`。
 
 ### `QVarLengthArray<T, Prealloc>::const_iterator QVarLengthArray::cbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向数组中的第一个项。
 
 ### `QVarLengthArray<T, Prealloc>::const_iterator QVarLengthArray::cend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向数组最后一个项之后的虚数项。
 
 ### `void QVarLengthArray::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从数组中移除所有元素。
+和resize（0）一样。
 
 ### `QVarLengthArray<T, Prealloc>::const_iterator QVarLengthArray::constBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向数组中的第一个项。
 
 ### `const T *QVarLengthArray::constData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `constData`，用于取得 `QVarLengthArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向数组中存储数据的const指针。该指针可用于访问数组中的项目。只要数组未被重新分配，指针依然有效。
+该函数主要用于将数组传递给接受普通 C 数组的函数。
 
 ### `QVarLengthArray<T, Prealloc>::const_iterator QVarLengthArray::constEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代子，指向数组最后一个项之后的虚数项。
 
 ### `template <typename AT = T> bool QVarLengthArray::contains(const AT &value) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`template <typename AT = T> bool`。
-- 参数 `value`：类型为 `const AT &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数组中包含 `value` 的出现，返回 `true`;否则返回 `false`。
+该函数要求值类型实现 `operator==()`。
 
 ### `qsizetype QVarLengthArray::count() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QVarLengthArray` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`size()`一样。
 
 ### `QVarLengthArray<T, Prealloc>::const_reverse_iterator QVarLengthArray::crbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::crbegin` 用于计算、查询或取得与“crbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的反迭代器，指向可变长度数组中的第一个项，顺序相反。
 
 ### `QVarLengthArray<T, Prealloc>::const_reverse_iterator QVarLengthArray::crend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::crend` 用于计算、查询或取得与“crend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的反迭代器，指向变量长度数组中最后一个项之后的迭代器，顺序相反。
 
 ### `T *QVarLengthArray::data()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QVarLengthArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
+返回数组中存储的数据指针。该指针可用于访问和修改数组中的项。
+只要数组没有被重新分配，指针依然有效。
+该函数主要用于将数组传递给接受普通 C 数组的函数。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QVarLengthArray<int> array(10);
+ int *data = array.data();
+ for (int i = 0; i < 10; ++i)
+     data[i] = 2 * i;
+```
 
 ### `const T *QVarLengthArray::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QVarLengthArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
+返回数组中存储的数据指针。该指针可用于访问和修改数组中的项。
+只要数组没有被重新分配，指针依然有效。
+该函数主要用于将数组传递给接受普通 C 数组的函数。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`const T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QVarLengthArray<int> array(10);
+ int *data = array.data();
+ for (int i = 0; i < 10; ++i)
+     data[i] = 2 * i;
+```
 
 ### `[since 6.3] template <typename... Args> QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::emplace(QVarLengthArray<T, Prealloc>::const_iterator pos, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::emplace` 用于计算、查询或取得与“emplace”相关的操作。调用时要先确认当前状态和 `pos`、`args` 的有效范围；返回类型是 `template <typename... Args> QVarLengthArray<T, Prealloc>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QVarLengthArray<T, Prealloc>::iterator`。
-- 参数 `pos`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在迭代器指向的对象前插入一个项，`pos`，`args`传递给其构造器。
+返回一个迭代器，指向已放置的物品。
 
 ### `[since 6.3] template <typename... Args> T &QVarLengthArray::emplace_back(Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::emplace_back` 用于计算、查询或取得与“emplace、末尾”相关的操作。调用时要先确认当前状态和 `args` 的有效范围；返回类型是 `template <typename... Args> T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> T &`。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该`QVarLengthArray`的后部插入一个项，`args`传递给其构造函数。
+返回对已放置物品的引用。
 
 ### `bool QVarLengthArray::empty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::empty` 用于计算、查询或取得与“空状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数组大小为0，返回`true`;否则返回`false`。
+和`isEmpty()`一样。提供STL兼容性。
 
 ### `QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::end()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向数组最后一个项之后的虚数项。
 
 ### `QVarLengthArray<T, Prealloc>::const_iterator QVarLengthArray::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向数组最后一个项之后的虚数项。
 
 ### `QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::erase(QVarLengthArray<T, Prealloc>::const_iterator pos)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::erase` 用于计算、查询或取得与“erase”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数 `pos`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从向量中移除迭代器`pos`指向的项，返回向量中下一个项（可能是`end()`）的迭代器。
 
 ### `QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::erase(QVarLengthArray<T, Prealloc>::const_iterator begin, QVarLengthArray<T, Prealloc>::const_iterator end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::erase` 用于计算、查询或取得与“erase”相关的操作。调用时要先确认当前状态和 `begin`、`end` 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数 `begin`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc>::const_iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc>::const_iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`begin`中所有至（但不包括）`end`项。返回调用前`end`提及的同一项的迭代器。
 
 ### `T &QVarLengthArray::first()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::first` 用于计算、查询或取得与“首项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中第一个项的引用。数组不得为空。如果数组可以为空，调用该函数前请检查`isEmpty()`。
 
 ### `const T &QVarLengthArray::first() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::first` 用于计算、查询或取得与“首项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中第一个项的引用。数组不得为空。如果数组可以为空，调用该函数前请检查`isEmpty()`。
 
 ### `T &QVarLengthArray::front()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::front` 用于计算、查询或取得与“开头”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`first()`一样。提供STL兼容性。
 
 ### `const T &QVarLengthArray::front() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::front` 用于计算、查询或取得与“开头”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`first()`一样。提供STL兼容性。
 
 ### `template <typename AT = T> qsizetype QVarLengthArray::indexOf(const AT &value, qsizetype from = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::indexOf` 用于计算、查询或取得与“索引、Of”相关的操作。调用时要先确认当前状态和 `value`、`from` 的有效范围；返回类型是 `template <typename AT = T> qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename AT = T> qsizetype`。
-- 参数 `value`：类型为 `const AT &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中首次出现`value`的索引位置，从索引位置`from`向前搜索。如果没有匹配的项，返回-1。
+该函数要求值类型实现 `operator==()`。
 
 ### `void QVarLengthArray::insert(qsizetype i, T &&value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `T &&`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在数组中索引位置`i`插入`value`。如果`i`为0，则在向量前加上该值。如果`i`为`size()`，则将该值附加到向量后。
+对于大型数组，这个操作可能很慢（线性时间），因为它需要将索引`i`及以上的所有项在内存中移动一个位置。如果你想要一个能快速实现`insert()`函数的容器类，可以用 std：：list 代替。
 
 ### `QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::insert(QVarLengthArray<T, Prealloc>::const_iterator before, qsizetype count, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数 `before`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc>::const_iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在数组中索引位置`i`插入`value`。如果`i`为0，则在向量前加上该值。如果`i`为`size()`，则将该值附加到向量后。
+对于大型数组，这个操作可能很慢（线性时间），因为它需要将索引`i`及以上的所有项在内存中移动一个位置。如果你想要一个能快速实现`insert()`函数的容器类，可以用 std：：list 代替。
 
 ### `QVarLengthArray<T, Prealloc>::iterator QVarLengthArray::insert(QVarLengthArray<T, Prealloc>::const_iterator before, T &&value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数 `before`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc>::const_iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `T &&`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在迭代器指向的项目前插入`count` `value`副本`before`。返回指向插入项中第一个的迭代器。
 
 ### `void QVarLengthArray::insert(qsizetype i, qsizetype count, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入迭代器指向的项目前方`value` `before`。返回指向插入项的迭代器。
 
 ### `bool QVarLengthArray::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数组大小为0，返回`true`;否则返回`false`。
 
 ### `T &QVarLengthArray::last()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::last` 用于计算、查询或取得与“末项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中最后一个项的引用。数组不得为空。如果数组可以为空，调用该函数前请检查`isEmpty()`。
 
 ### `const T &QVarLengthArray::last() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::last` 用于计算、查询或取得与“末项”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const T &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中最后一个项的引用。数组不得为空。如果数组可以为空，调用该函数前请检查`isEmpty()`。
 
 ### `template <typename AT = T> qsizetype QVarLengthArray::lastIndexOf(const AT &value, qsizetype from = -1) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::lastIndexOf` 用于计算、查询或取得与“末项、索引、Of”相关的操作。调用时要先确认当前状态和 `value`、`from` 的有效范围；返回类型是 `template <typename AT = T> qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename AT = T> qsizetype`。
-- 参数 `value`：类型为 `const AT &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `from`：类型为 `qsizetype`。默认值为 `-1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中值`value`最后一次出现的索引位置，从索引位置`from`回溯搜索。如果`from`为-1（默认值），搜索从最后一项开始。如果没有匹配的项，返回-1。
+该函数要求值类型实现 `operator==()`。
 
 ### `qsizetype QVarLengthArray::length() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `length`，返回 `QVarLengthArray` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`size()`一样。
 
 ### `[static constexpr noexcept, since 6.8] qsizetype QVarLengthArray::maxSize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `maxSize`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它返回数组理论上能容纳的最大元素数。实际上，这个数量可以更小，受限于系统可用的内存容量。
 
 ### `void QVarLengthArray::pop_back()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::pop_back` 用于执行与“pop、末尾”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`removeLast()`一样。提供STL兼容性。
 
 ### `void QVarLengthArray::push_back(const T &t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `push_back`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将项`t`附加到数组中，必要时扩展数组。提供STL兼容性。
 
 ### `void QVarLengthArray::push_back(T &&t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `push_back`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+注意：与 push_back() 的 lvalue 超载不同，传递对已是 `*this` 元素的对象的引用会导致行为未定义：
+注意：该功能会让`QVarLengthArray::push_back`重载。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `t`：类型为 `T &&`。没有默认值，调用时必须提供。传入 `T &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ vla.push_back(std::move(vla[0])); // BUG: passing an object that is already in the container
+```
 
 ### `QVarLengthArray<T, Prealloc>::reverse_iterator QVarLengthArray::rbegin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::rbegin` 用于计算、查询或取得与“rbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向可变长度数组中的第一个项，顺序相反。
 
 ### `QVarLengthArray<T, Prealloc>::const_reverse_iterator QVarLengthArray::rbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::rbegin` 用于计算、查询或取得与“rbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向可变长度数组中的第一个项，顺序相反。
 
 ### `void QVarLengthArray::remove(qsizetype i, qsizetype count = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `qsizetype`。默认值为 `1`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从索引位置`i`开始移除数组中的`count`元素。
+`i` 必须是数组中的有效索引位置（即 0 <= `i` < `size()`）。`count` 必须是 <= `size()` - `i`。`i` == 如果 `count` == 0，则允许 `size()`。
 
 ### `[since 6.1] template <typename AT = T> qsizetype QVarLengthArray::removeAll(const AT &t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeAll`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename AT = T> qsizetype`。
-- 参数 `t`：类型为 `const AT &`。没有默认值，调用时必须提供。传入 `const AT &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从数组中移除所有与`t`相等的元素。返回移除的元素数量（如有）。
 
 ### `[since 6.1] template <typename Predicate> qsizetype QVarLengthArray::removeIf(Predicate pred)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeIf`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename Predicate> qsizetype`。
-- 参数 `pred`：类型为 `Predicate`。没有默认值，调用时必须提供。传入 `Predicate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从数组中移除所有谓词 `pred` 返回为真元素。返回被移除的元素数量（如有）。
 
 ### `void QVarLengthArray::removeLast()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeLast`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数组大小减少一。分配的大小不变。
 
 ### `[since 6.1] template <typename AT = T> bool QVarLengthArray::removeOne(const AT &t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeOne`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename AT = T> bool`。
-- 参数 `t`：类型为 `const AT &`。没有默认值，调用时必须提供。传入 `const AT &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从数组中移除第一个与 `t` 比较的元素。返回是否确实移除了某个元素。
 
 ### `QVarLengthArray<T, Prealloc>::reverse_iterator QVarLengthArray::rend()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::rend` 用于计算、查询或取得与“rend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向变长数组中最后一个项之后的迭代器，顺序相反。
 
 ### `QVarLengthArray<T, Prealloc>::const_reverse_iterator QVarLengthArray::rend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::rend` 用于计算、查询或取得与“rend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVarLengthArray<T, Prealloc>::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的反向迭代器，指向变长数组中最后一个项之后的迭代器，顺序相反。
 
 ### `void QVarLengthArray::replace(qsizetype i, const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::replace` 用于执行与“替换”相关的操作。调用时要先确认当前状态和 `i`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将指数位置`i`的项目替换为`value`。
+`i` 必须是数组中的有效索引位置（即 0 <= `i` < `size()`）。
 
 ### `void QVarLengthArray::reserve(qsizetype size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::reserve` 用于执行与“reserve”相关的操作。调用时要先确认当前状态和 `size` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试为至少`size`个元素分配内存。如果你提前知道数组能扩展到多大，就可以调用这个函数，频繁调用`resize()`，性能可能会更好。如果`size`低估，最坏的情况也不过是`QVarLengthArray`会稍微慢一点。
+该函数的唯一目的是提供一种微调`QVarLengthArray`内存使用的方法。一般来说，你很少需要调用这个函数。如果你想更改数组大小，可以调用`resize()`。
 
 ### `void QVarLengthArray::resize(qsizetype size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::resize` 用于执行与“调整尺寸”相关的操作。调用时要先确认当前状态和 `size` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数组大小设置为`size`。如果`size`大于当前大小，则在末尾添加元素。如果`size`小于当前大小，则从末尾移除元素。
+如果值类型是原始类型（例如 char， int， float）或指针类型（例如 `QWidget` *），则新元素不会被初始化。对于其他类型，元素会以默认构造的值初始化。
 
 ### `[since 6.4] void QVarLengthArray::resize(qsizetype size, const T &v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::resize` 用于执行与“调整尺寸”相关的操作。调用时要先确认当前状态和 `size`、`v` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qsizetype`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `v`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数组大小设置为`size`。如果`size`大于当前大小，则在末尾添加`v`的副本。如果`size`小于当前大小，则从末端移除元素。
+注意：该函数仅在`T`可复制构造时可用。
 
 ### `void QVarLengthArray::shrink_to_fit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::shrink_to_fit` 用于执行与“shrink、转换输出、fit”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`squeeze()`一样。提供支持STL兼容性。
 
 ### `qsizetype QVarLengthArray::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QVarLengthArray` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数组中的元素数量。
 
 ### `void QVarLengthArray::squeeze()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::squeeze` 用于执行与“squeeze”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放所有不需要存储这些物品的内存。如果容器能将其存储空间放入栈分配，它会释放堆分配并将元素复制回栈。
+该函数的唯一目的是提供一种微调`QVarLengthArray`内存使用的方法。一般来说，你很少需要调用这个函数。
 
 ### `T QVarLengthArray::value(qsizetype i) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QVarLengthArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指数位置`i`的值。
+如果索引`i`超出边界，函数返回默认构造值。如果你确定`i`在边界内，可以用`at()`，速度稍快。
 
 ### `T QVarLengthArray::value(qsizetype i, const T &defaultValue) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QVarLengthArray` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `defaultValue`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果索引`i`超出边界，函数返回`defaultValue`。
 
 ### `QVarLengthArray<T, Prealloc> &QVarLengthArray::operator+=(const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`value`附加到数组中，返回对该向量的引用。
 
 ### `QVarLengthArray<T, Prealloc> &QVarLengthArray::operator+=(T &&value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `value`：类型为 `T &&`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`value`附加到数组中，返回对该向量的引用。
 
 ### `QVarLengthArray<T, Prealloc> &QVarLengthArray::operator<<(const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`value`附加到数组中，返回对该向量的引用。
 
 ### `QVarLengthArray<T, Prealloc> &QVarLengthArray::operator<<(T &&value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `value`：类型为 `T &&`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`value`附加到数组中，返回对该向量的引用。
 
 ### `[noexcept(...), since 6.0] QVarLengthArray<T, Prealloc> &QVarLengthArray::operator=(QVarLengthArray<T, Prealloc> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `other`：类型为 `QVarLengthArray<T, Prealloc> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动将`other`分配到该数组，并返回对该数组的引用。移动后，`other`为空。
+注意：该函数仅在`std::is_nothrow_move_constructible_v<T>` `true`时才适用。
 
 ### `QVarLengthArray<T, Prealloc> &QVarLengthArray::operator=(const QVarLengthArray<T, Prealloc> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `other`：类型为 `const QVarLengthArray<T, Prealloc> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`分配到该数组，并返回对该数组的引用。
 
 ### `QVarLengthArray<T, Prealloc> &QVarLengthArray::operator=(std::initializer_list<T> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc> &`。
-- 参数 `list`：类型为 `std::initializer_list<T>`。没有默认值，调用时必须提供。传入 `std::initializer_list<T>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 `list` 的值分配到该数组，并返回对该数组的引用。
 
 ### `T &QVarLengthArray::operator[](qsizetype i)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引位置`i`的项目引用。
+`i` 必须是数组中的有效索引位置（即 0 <= `i` < `size()`）。
 
 ### `const T &QVarLengthArray::operator[](qsizetype i) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const T &`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引位置`i`的项目引用。
+`i` 必须是数组中的有效索引位置（即 0 <= `i` < `size()`）。
 
 ### `[since 6.1] template < typename T, qsizetype Prealloc, typename AT > qsizetype erase(QVarLengthArray<T, Prealloc> &array, const AT &t)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::erase` 用于计算、查询或取得与“erase”相关的操作。调用时要先确认当前状态和 `array`、`t` 的有效范围；返回类型是 `template < typename T, qsizetype Prealloc, typename AT > qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc, typename AT > qsizetype`。
-- 参数 `array`：类型为 `QVarLengthArray<T, Prealloc> &`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `t`：类型为 `const AT &`。没有默认值，调用时必须提供。传入 `const AT &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从数组中移除所有与`t`相等的元素`array`。返回移除的元素数量（如有）。
+注意：`t` 不允许作为 `array` 内部元素的引用。如果无法确定不是这样，可以复制一份 `t`，并用该副本调用该函数。
 
 ### `[since 6.1] template < typename T, qsizetype Prealloc, typename Predicate > qsizetype erase_if(QVarLengthArray<T, Prealloc> &array, Predicate pred)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::erase_if` 用于计算、查询或取得与“erase、if”相关的操作。调用时要先确认当前状态和 `array`、`pred` 的有效范围；返回类型是 `template < typename T, qsizetype Prealloc, typename Predicate > qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc, typename Predicate > qsizetype`。
-- 参数 `array`：类型为 `QVarLengthArray<T, Prealloc> &`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pred`：类型为 `Predicate`。没有默认值，调用时必须提供。传入 `Predicate` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从列表中移除所有谓词 `pred` 返回为真元素`array`。返回移除的元素数量（如有）。
 
 ### `[noexcept(...)] template <typename T, qsizetype Prealloc> size_t qHash(const QVarLengthArray<T, Prealloc> &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `template <typename T, qsizetype Prealloc> size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, qsizetype Prealloc> size_t`。
-- 参数 `key`：类型为 `const QVarLengthArray<T, Prealloc> &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
+类型`T`必须由qHash()支持。
+注意：该函数仅在`QtPrivate::QNothrowHashable_v<T>` `true`时才使用。
 
 ### `template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool operator!=(const QVarLengthArray<T, Prealloc1> &left, const QVarLengthArray<T, Prealloc2> &right)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool`。
-- 参数 `left`：类型为 `const QVarLengthArray<T, Prealloc1> &`。没有默认值，调用时必须提供。传入 `const QVarLengthArray<T, Prealloc1> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `const QVarLengthArray<T, Prealloc2> &`。没有默认值，调用时必须提供。传入 `const QVarLengthArray<T, Prealloc2> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个数组（由`left`和`right`指定）不相等，返回 `true`。
+如果两个数组包含相同且顺序相同的数值，则它们被视为相等。
+该函数要求值类型实现 `operator==()`。
 
 ### `template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool operator<(const QVarLengthArray<T, Prealloc1> &lhs, const QVarLengthArray<T, Prealloc2> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool`。
-- 参数 `lhs`：类型为 `const QVarLengthArray<T, Prealloc1> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVarLengthArray<T, Prealloc2> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可变长度数组`lhs`字典序小于`rhs`，返回`true`;否则返回`false`。
+该函数要求值类型实现 `operator<()`。
 
 ### `template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool operator<=(const QVarLengthArray<T, Prealloc1> &lhs, const QVarLengthArray<T, Prealloc2> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool`。
-- 参数 `lhs`：类型为 `const QVarLengthArray<T, Prealloc1> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVarLengthArray<T, Prealloc2> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可变长度数组`lhs`字典序上小于或等于`rhs`，返回`true`;否则返回`false`。
+该函数要求值类型实现 `operator<()`。
 
 ### `template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool operator==(const QVarLengthArray<T, Prealloc1> &left, const QVarLengthArray<T, Prealloc2> &right)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool`。
-- 参数 `left`：类型为 `const QVarLengthArray<T, Prealloc1> &`。没有默认值，调用时必须提供。传入 `const QVarLengthArray<T, Prealloc1> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `right`：类型为 `const QVarLengthArray<T, Prealloc2> &`。没有默认值，调用时必须提供。传入 `const QVarLengthArray<T, Prealloc2> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个数组相等，返回`true`，分别由`left`和`right`指定。
+如果两个数组包含相同且顺序相同的数值，则它们被视为相等。
+该函数要求值类型实现 `operator==()`。
 
 ### `template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool operator>(const QVarLengthArray<T, Prealloc1> &lhs, const QVarLengthArray<T, Prealloc2> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool`。
-- 参数 `lhs`：类型为 `const QVarLengthArray<T, Prealloc1> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVarLengthArray<T, Prealloc2> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果变长数组`lhs`字典序大于`rhs`，返回`true`;否则返回`false`。
+该函数要求值类型实现 `operator<()`。
 
 ### `template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool operator>=(const QVarLengthArray<T, Prealloc1> &lhs, const QVarLengthArray<T, Prealloc2> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename T, qsizetype Prealloc1, qsizetype Prealloc2 > bool`。
-- 参数 `lhs`：类型为 `const QVarLengthArray<T, Prealloc1> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVarLengthArray<T, Prealloc2> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可变长度数组 `lhs` 在字典序上大于或等于 `rhs`，返回 `true`;否则返回 `false`。
+该函数要求值类型实现 `operator<()`。
 
 ### `const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `const、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 表示 const T *。提供以兼容 STL 的。
 
 ### `const_pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `const、pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 表示 const T *。提供以兼容 STL 的。
 
 ### `const_reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `const、reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于 const T 和。为 STL 兼容性提供。
 
 ### `const_reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `const、reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`std::reverse_iterator<const T*>`。提供 STL 兼容性。
 
 ### `difference_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `difference、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于ptrdiff_t。提供 STL 兼容性。
 
 ### `iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T的Typedef。提供STL兼容性。
 
 ### `pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T的Typedef。提供STL兼容性。
 
 ### `reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T和的Typedef。提供STL兼容性。
 
 ### `reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`std::reverse_iterator<T*>`。提供支持 STL 兼容性。
 
 ### `size_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `尺寸或数量、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类型定义用于国际语言。提供支持STL兼容性。
 
 ### `value_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVarLengthArray` 的 `值访问、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+T的Typedef。提供STL兼容性。
 
 ### `void insert(qsizetype i, const T &value)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入迭代器指向的项目前方`value` `before`。返回指向插入项的迭代器。
 
 ### `QVarLengthArray<T, Prealloc>::iterator insert(QVarLengthArray<T, Prealloc>::const_iterator before, const T &value)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是向 `QVarLengthArray` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVarLengthArray<T, Prealloc>::iterator`。
-- 参数 `before`：类型为 `QVarLengthArray<T, Prealloc>::const_iterator`。没有默认值，调用时必须提供。传入 `QVarLengthArray<T, Prealloc>::const_iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在向量中索引位置`i`插入`count` `value`副本。
 
 ### `(since 6.8) qsizetype max_size() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVarLengthArray::max_size` 用于计算、查询或取得与“max、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它返回数组理论上能容纳的最大元素数。实际上，这个数量可以更小，受限于系统可用的内存容量。
 
 ## 6. 深入实践与常见坑
 

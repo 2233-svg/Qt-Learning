@@ -77,207 +77,105 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `bool QPointerEvent::addPassiveGrabber(const QEventPoint &point, QObject *grabber)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QPointerEvent` 添加依赖、数据或子对象的 API `addPassiveGrabber`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `grabber`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通知交付逻辑，给定`grabber`将接收所有未来的更新事件以及包含该`point`的发布事件，无论这些事件可能在其他地方传递。
+它只供 Qt 快速输入处理器使用。
+如果`grabber`已经添加，退货`false`，否则`true`。
 
 ### `bool QPointerEvent::allPointsAccepted() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::allPointsAccepted` 用于计算、查询或取得与“all、Points、Accepted”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果isPointAccepted()对`points()`中的每个点都`true`，则返回`true`;否则`false`。
 
 ### `bool QPointerEvent::allPointsGrabbed() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::allPointsGrabbed` 用于计算、查询或取得与“all、Points、Grabbed”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`points()`中的每个点都有一个`exclusiveGrabber()`或一个或多个`passiveGrabbers()`，则返回`true`。
 
 ### `void QPointerEvent::clearPassiveGrabbers(const QEventPoint &point)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::clearPassiveGrabbers` 用于执行与“清空、Passive、Grabbers”相关的操作。调用时要先确认当前状态和 `point` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除给定`point`中所有被动抓取者。
+它只供 Qt 快速输入处理器使用。
 
 ### `QObject *QPointerEvent::exclusiveGrabber(const QEventPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::exclusiveGrabber` 用于计算、查询或取得与“exclusive、Grabber”相关的操作。调用时要先确认当前状态和 `point` 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回已设置为接收所有未来更新事件和包含该`point`的发布事件的对象。
+目前主要用于Qt Quick。
 
 ### `QList<QPointer<QObject>> QPointerEvent::passiveGrabbers(const QEventPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::passiveGrabbers` 用于计算、查询或取得与“passive、Grabbers”相关的操作。调用时要先确认当前状态和 `point` 的有效范围；返回类型是 `QList<QPointer<QObject>>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QPointer<QObject>>`。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回被请求接收所有未来更新事件的对象列表，以及包含该更新`point`的发布事件。
+它只供 Qt 快速输入处理器使用。
 
 ### `QEventPoint &QPointerEvent::point(qsizetype i)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::point` 用于计算、查询或取得与“point”相关的操作。调用时要先确认当前状态和 `i` 的有效范围；返回类型是 `QEventPoint &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QEventPoint &`。
-- 参数 `i`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引`i`点的`QEventPoint`引用。
 
 ### `QEventPoint *QPointerEvent::pointById(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::pointById` 用于计算、查询或取得与“point、By、Id”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `QEventPoint *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QEventPoint *`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`id`与给定`id`匹配的点，若未找到该点则返回`nullptr`。
 
 ### `qsizetype QPointerEvent::pointCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::pointCount` 用于计算、查询或取得与“point、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该指针事件中的得分。
 
 ### `QPointingDevice::PointerType QPointerEvent::pointerType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::pointerType` 用于计算、查询或取得与“pointer、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointingDevice::PointerType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointingDevice::PointerType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回产生事件的点类型。
 
 ### `const QPointingDevice *QPointerEvent::pointingDevice() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::pointingDevice` 用于计算、查询或取得与“pointing、Device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QPointingDevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QPointingDevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该事件起源的源设备。
+这和`QInputEvent::device()`一样，但为了方便被定型了。
 
 ### `const QList<QEventPoint> &QPointerEvent::points() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointerEvent::points` 用于计算、查询或取得与“points”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QList<QEventPoint> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QList<QEventPoint> &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该指针事件中的点列表。
 
 ### `bool QPointerEvent::removePassiveGrabber(const QEventPoint &point, QObject *grabber)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removePassiveGrabber`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `grabber`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果被动`grabber`之前被添加，则从给定`point`中移除。如果之前是被动抓取者，则返回`true`;如果不是，`false`返回。
+它只供 Qt 快速输入处理器使用。
 
 ### `void QPointerEvent::setExclusiveGrabber(const QEventPoint &point, QObject *exclusiveGrabber)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setExclusiveGrabber`。调用它会改变 `QPointerEvent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `exclusiveGrabber`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通知交付逻辑，给定`exclusiveGrabber`将接收所有未来的更新事件和包含该`point`的发布事件，且可以跳过对其他项目的交付。
+目前主要用于Qt Quick。
 
 ### `virtual void setAccepted(bool accepted) override`
 
-**API 类别：** 重实现的公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAccepted`。调用它会改变 `QPointerEvent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `accepted`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置整个指针事件的接受状态。传入 `true` 表示接收者已经处理该事件，并会隐式接受事件携带的所有触点；传入 `false` 允许未处理事件继续传播。若只想接受某个触点，应设置对应 `QEventPoint` 的接受状态。
 
 ## 6. 深入实践与常见坑
 

@@ -71,132 +71,104 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `template <typename ObjectSignalGetter> QtTaskTree::Group ExecutableItem::withAccept(ObjectSignalGetter &&getter) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::ExecutableItem::withAccept` 用于计算、查询或取得与“with、接受”相关的操作。调用时要先确认当前状态和 `getter` 的有效范围；返回类型是 `template <typename ObjectSignalGetter> QtTaskTree::Group`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename ObjectSignalGetter> QtTaskTree::Group`。
-- 参数 `getter`：类型为 `ObjectSignalGetter &&`。没有默认值，调用时必须提供。传入 `ObjectSignalGetter &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`this` `ExecutableItem`的副本，并结合一个信号等待器。传递的`getter`是一个函数，返回描述发射器和其等待信号的 `ObjectSignal`。在`getter`中使用`makeObjectSignal()`来创建一个`ObjectSignal`对象。
+当`this` `ExecutableItem`以错误结束时，返回`Group`立即以错误结束，无需等待等待者的信号。
+当`this` `ExecutableItem`成功完成时，返回的`Group`不会立即完成，而是等待等待信号的发送。等待信号发送后，返回的`Group`成功完成。如果等待信号在`this` `ExecutableItem`结束前发送，等待阶段被跳过，返回`Group`同步完成。
+当`this` `ExecutableItem`即将启动时，连接到等待者信号。如果等待信号在启动前被触发，启动`this` `ExecutableItem`后不会被察觉。
 
 ### `template <typename ObjectSignalGetter> QtTaskTree::Group ExecutableItem::withCancel(ObjectSignalGetter &&getter, std::initializer_list<QtTaskTree::GroupItem> postCancelRecipe = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::ExecutableItem::withCancel` 用于计算、查询或取得与“with、取消”相关的操作。调用时要先确认当前状态和 `getter`、`postCancelRecipe` 的有效范围；返回类型是 `template <typename ObjectSignalGetter> QtTaskTree::Group`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename ObjectSignalGetter> QtTaskTree::Group`。
-- 参数 `getter`：类型为 `ObjectSignalGetter &&`。没有默认值，调用时必须提供。传入 `ObjectSignalGetter &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `postCancelRecipe`：类型为 `std::initializer_list<QtTaskTree::GroupItem>`。默认值为 `{}`。传入 `std::initializer_list<QtTaskTree::GroupItem>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使 的副本`this` `ExecutableItem`可取消。传递的`getter`是一个函数，返回描述发射体及其消去信号的 `ObjectSignal`。在`getter`中使用`makeObjectSignal()`来创建一个`ObjectSignal`对象。当消去信号发出时，`this` `ExecutableItem`被取消，执行一个可选提供的`postCancelRecipe`，返回 Group 以错误结束。
+当`this` `ExecutableItem`在取消信号发出前结束时，返回的组立即结束，结果与`this` `ExecutableItem`结束相同。此时可选择的`postCancelRecipe`会被跳过。
+与取消信号的连接是在即将启动`this` `ExecutableItem`时建立的。如果取消信号在启动前被触发，启动`this` `ExecutableItem`后不会被察觉。
 
 ### `QtTaskTree::Group ExecutableItem::withLog(const QString &logName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::ExecutableItem::withLog` 用于计算、查询或取得与“with、Log”相关的操作。调用时要先确认当前状态和 `logName` 的有效范围；返回类型是 `QtTaskTree::Group`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::Group`。
-- 参数 `logName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将自定义的调试打印输出附加到任务启动时及任务结束后发布的`this` `ExecutableItem`副本上，并返回耦合后的项目。
+调试打印输出包含事件（开始或结束）的时间戳和`logName`，用于识别调试日志中的具体任务。
+最终打印输出包含额外信息，如执行是同步还是异步，其结果（由`DoneWith`枚举描述的值）以及总执行时间（毫秒）。
 
 ### `QtTaskTree::Group ExecutableItem::withTimeout(std::chrono::milliseconds timeout, const std::function<void ()> &handler = {}) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::ExecutableItem::withTimeout` 用于计算、查询或取得与“with、超时”相关的操作。调用时要先确认当前状态和 `timeout`、`handler` 的有效范围；返回类型是 `QtTaskTree::Group`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::Group`。
-- 参数 `timeout`：类型为 `std::chrono::milliseconds`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-- 参数 `handler`：类型为 `const std::function<void ()> &`。默认值为 `{}`。传入 `const std::function<void ()> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QTimeoutTask`附加到`this` `ExecutableItem`副本上，经过`timeout`毫秒，并可选择提供超时`handler`，并返回已连接的项目。
+当`ExecutableItem`在`timeout`通过前结束时，返回的项目立即结束并显示任务结果。否则，`handler`会被调用（如果提供），任务会被取消，返回的项目会以错误结束。
 
 ### `QtTaskTree::Group operator!(const QtTaskTree::ExecutableItem &item)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutableItem` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+回归一群被否定`item` `DoneResult`的群体。
+如果`item`报告`DoneResult::Success`，退回物品报告`DoneResult::Error`。如果`item`报告`DoneResult::Error`，退回物品报告 `DoneResult::Success`。
+退回的物品等同于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QtTaskTree::Group`。
-- 参数 `item`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ Group {
+     item,
+     onGroupDone([](DoneWith doneWith) { return toDoneResult(doneWith == DoneWith::Error); })
+ }
+```
 
 ### `QtTaskTree::Group operator&&(const QtTaskTree::ExecutableItem &first, const QtTaskTree::ExecutableItem &second)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutableItem` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+返回一个包含`first`任务和`second`任务合并的群。
+`first`和`second`任务都按顺序执行。如果两个任务都报告`DoneResult::Success`，返回的项目报告`DoneResult::Success`。否则，返回的项目报告`DoneResult::Error`。
+返回的项目发生短路：如果`first`任务报告`DoneResult::Error`，`second`任务会被跳过，返回的项目立即报告`DoneResult::Error`。
+退回的物品等同于：
+注意：通过以下代码实现并行执行合取，可以实现短路方式：`Group { parallel, stopOnError, first, second }`。在这种情况下：如果第一个完成的任务报告`DoneResult::Error`，另一个任务会被取消，组立即报告`DoneResult::Error`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QtTaskTree::Group`。
-- 参数 `first`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::ExecutableItem &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `second`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::ExecutableItem &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ Group { stopOnError, first, second }
+```
 
 ### `QtTaskTree::Group operator&&(const QtTaskTree::ExecutableItem &item, QtTaskTree::DoneResult result)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutableItem` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::Group`。
-- 参数 `item`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `result`：类型为 `QtTaskTree::DoneResult`。没有默认值，调用时必须提供。传入 `QtTaskTree::DoneResult` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`result` `DoneResult::Success`，返回`item`任务;否则返回`item`任务，完成结果调整为`DoneResult::Error`。
+`task && DoneResult::Error`是无条件调整任务成果为`DoneResult::Error`的等价工具。
+注意：该函数会超载 ExecutableItem：：operator&&()。
 
 ### `QtTaskTree::Group operator||(const QtTaskTree::ExecutableItem &first, const QtTaskTree::ExecutableItem &second)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutableItem` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+返回一个包含`first`和`second`任务的组，并与析取合并。
+`first`和`second`任务都按顺序执行。如果两个任务都报告`DoneResult::Error`，返回的项目报告`DoneResult::Error`。否则，返回的项目报告`DoneResult::Success`。
+返回的项目发生短路：如果`first`任务报告`DoneResult::Success`，`second`任务会被跳过，返回的项目立即报告`DoneResult::Success`。
+退回的物品等同于：
+注意：通过以下代码实现析取的并行短路执行：`Group { parallel, stopOnSuccess, first, second }`。此时，如果第一个完成的任务报告`DoneResult::Success`，另一个任务被取消，组立即报告`DoneResult::Success`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QtTaskTree::Group`。
-- 参数 `first`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::ExecutableItem &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `second`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::ExecutableItem &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ Group { stopOnSuccess, first, second }
+```
 
 ### `QtTaskTree::Group operator||(const QtTaskTree::ExecutableItem &item, QtTaskTree::DoneResult result)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::ExecutableItem` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::Group`。
-- 参数 `item`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `result`：类型为 `QtTaskTree::DoneResult`。没有默认值，调用时必须提供。传入 `QtTaskTree::DoneResult` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`result`被`DoneResult::Error`，返回`item`任务;否则返回`item`任务，其完成结果调整为`DoneResult::Success`。
+`task || DoneResult::Success`是无条件调整任务成果为`DoneResult::Success`的等价工具。
+注意：该函数会超载 ExecutableItem：：operator||().
 
 ## 6. 深入实践与常见坑
 

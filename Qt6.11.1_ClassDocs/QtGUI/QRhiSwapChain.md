@@ -95,413 +95,246 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 31 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiSwapChain::Flagflags QRhiSwapChain::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSwapChain` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QRhiSwapChain::Flags`。
-- 属性名：`QRhiSwapChain`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述交换链属性的标志值。
+- `QRhiSwapChain::SurfaceHasPreMulAlpha`：`1 << 0`;表示目标表面具有预乘 alpha 的透明性。例如，当目标`QWindow`启用 alpha 通道时，Qt Quick 就是用这个方式，因为场景图的 rendrerer 总是输出 alpha 乘以红、绿、蓝三色的片段。为确保各平台行为一致，每当交换链上设置该标志时，目标`QWindow`上始终将 `QSurfaceFormat::alphaBufferSize()` 设置为非零值。
+- `QRhiSwapChain::SurfaceHasNonPreMulAlpha`：`1 << 1`;表示目标表面具有非预乘法alpha的透明性。请注意，如果系统合成器总是预期预乘法alpha的内容，某些系统可能不支持此功能。在这种情况下，使用该标志集的行为应等价于SurfaceHasPreMulAlpha。
+- `QRhiSwapChain::sRGB`：`1 << 2`;请求为交换链的颜色缓冲区和/或渲染目标视图选择 sRGB 格式（如适用）。注意，这意味着所有针对该交换链的内容都会启用 sRGB 帧缓冲区更新和混合功能，且无法选择退出。对于 OpenGL，还应在`QWindow` `QSurfaceFormat`上设置 `sRGBColorSpace`。仅在交换链格式设置为 `QRhiSwapChain::SDR` 时才适用。
+- `QRhiSwapChain::UsedAsTransferSource`：`1 << 3`;表示交换链将作为`QRhiResourceUpdateBatch::readBackTexture()`中回读的源。
+- `QRhiSwapChain::NoVSync`：`1 << 4`;请求禁用等待垂直同步，同时避免限制渲染线程。该行为是后端特定的，仅适用于可控制的部分。有些人可能会完全忽略该请求。对于OpenGL，可以尝试通过`QSurfaceFormat::setSwapInterval()`将`QWindow`的交换间隔设置为0。
+- `QRhiSwapChain::MinimalBufferCount`：`1 << 5`;创建交换链的请求，缓冲区数最小，实际上是2个，除非图形实现的最低缓冲数更高。仅适用于后端，且该控制可通过图形API实现，例如Vulkan。默认情况下，后端决定请求缓冲区数（实际上几乎总是2或3），这与应用程序无关。然而，例如在Vulkan上，后端通常偏好较高的缓冲区数（3），以避免移动设备上某些Vulkan实现出现异常性能问题。在某些平台上，强制减少缓冲区数（2）可能有益，因此该标志允许强制执行。注意，所有这些都不会影响保持在飞行中的帧数，因此CPU（`QRhi`）仍然会在最多比GPU领先`N - 1`帧时准备帧，即使交换链映像缓冲区计数大于`N`。（`N` = `QRhi::FramesInFlight`，通常为2）。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QRhiSwapChain::Format`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSwapChain` 暴露的类型声明 `格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Format`。
-- 属性名：`QRhiSwapChain`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述掉期链格式。默认格式为SDR。
+该枚举用于`isFormatSupported()`，提前检查平台及其窗口界面是否支持以该格式创建交换链，并与`setFormat()`配合，在首次调用`createOrResize()`前设置交换链中的请求格式。
+- `QRhiSwapChain::SDR`：`0`;8位RGBA或BGRA，具体取决于后端和平台。特别是在OpenGL ES中，平台可能提供少于8位（例如由于EGL和`QSurfaceFormat`选择565或444格式——这超出`QRhi`控制范围）。标准动态范围。可与设置`QRhiSwapChain::sRGB`标志结合使用。
+- `QRhiSwapChain::HDRExtendedSrgbLinear`：`1`;16位浮点RGBA，高动态范围，扩展线性sRGB（scRGB）色彩空间。这涉及Rec. 709原色（与SDR/sRGB相同）和线性色彩。窗口系统对显示的原生色彩空间（如HDR10）进行转换。在Windows上，这是系统合成器的标准色彩空间，也是桌面平台上HDR交换链的推荐格式。
+- `QRhiSwapChain::HDR10`：`2`;10位无符号int RGB或BGR，2位alpha，高动态范围，HDR10（2020年修订）色彩空间，采用ST2084 PQ传递函数。
+- `QRhiSwapChain::HDRExtendedDisplayP3Linear`：`3`;16位浮点RGBA，高动态范围，扩展线性显示P3色彩空间。iOS和VisionOS等平台上HDR的主要选择。
 
 ### `enum QRhiSwapChain::StereoTargetBuffer`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSwapChain` 暴露的类型声明 `Stereo、目标、Buffer`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StereoTargetBuffer`。
-- 属性名：`QRhiSwapChain`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择用于立体交换链的回缓冲区。
+- `QRhiSwapChain::LeftBuffer`：`0`
+- `QRhiSwapChain::RightBuffer`：`1`
 
 ### `[pure virtual] bool QRhiSwapChain::createOrResize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::createOrResize` 用于计算、查询或取得与“创建、Or、调整尺寸”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果还没做，创建掉链，并调整掉链缓冲区大小以匹配当前目标曲面大小。每当目标曲面大小与之前不同时调用此值。
+注意：只有在需要完全释放掉期链时才调用`destroy()`，通常是在`QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed`时。要进行调整大小，只需调用createOrResize()。
+成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终是安全的。
 
 ### `[pure virtual] QRhiCommandBuffer *QRhiSwapChain::currentFrameCommandBuffer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::currentFrameCommandBuffer` 用于计算、查询或取得与“当前、Frame、Command、Buffer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiCommandBuffer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiCommandBuffer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个命令缓冲区，可以在`beginFrame`-`endFrame`块内记录渲染命令和资源更新，假设通过该交换链调用了beginFrame()。
+注意：返回的对象在 endFrame() 之后也有效，直到下一个 beginFrame()，但返回的命令缓冲区不应用于记录任何命令。相反，它可以用于查询帧（或之前帧）收集的数据，例如调用 `lastCompletedGpuTime()`。
+注意：该值不得在帧间缓存和重复使用。调用者不应在再次调用`beginFrame()`后保留返回对象。相反，应通过调用该函数再次查询命令缓冲对象。
 
 ### `[pure virtual] QRhiRenderTarget *QRhiSwapChain::currentFrameRenderTarget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::currentFrameRenderTarget` 用于计算、查询或取得与“当前、Frame、渲染、目标”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderTarget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderTarget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个渲染目标，可用于与 beginPass() 一起使用，以渲染交换链当前的回缓冲区。仅在调用 bestartFrame() 的 `QRhi::beginFrame()` - `QRhi::endFrame()` 块内有效。
+注意：该值不得在帧间缓存并重复使用。
 
 ### `[virtual] QRhiRenderTarget *QRhiSwapChain::currentFrameRenderTarget(QRhiSwapChain::StereoTargetBuffer targetBuffer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::currentFrameRenderTarget` 用于计算、查询或取得与“当前、Frame、渲染、目标”相关的操作。调用时要先确认当前状态和 `targetBuffer` 的有效范围；返回类型是 `QRhiRenderTarget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderTarget *`。
-- 参数 `targetBuffer`：类型为 `QRhiSwapChain::StereoTargetBuffer`。没有默认值，调用时必须提供。传入 `QRhiSwapChain::StereoTargetBuffer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个渲染目标，可配合 beginPass() 来渲染到交换链的左侧或右侧后缓冲区。这种重载应仅用于立体渲染，即当关联`QWindow`有两个颜色缓冲区，分别对应一只眼睛，而非仅一个时。
+当不支持立体渲染时，返回值将成为默认目标。除了 Metal，所有硬件后端都支持它，并且与 `QSurfaceFormat::StereoBuffers` 结合，前提是图形和显示驱动栈在运行时支持它。Metal 和 Null 后端会从这种重载中返回默认渲染目标。
+注意：该值不得在帧间缓存并重复使用。
 
 ### `QSize QRhiSwapChain::currentPixelSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::currentPixelSize` 用于计算、查询或取得与“当前、Pixel、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回掉频链最后成功构建的大小。利用此数据判断是否需要再次调用`createOrResize()`：如果`currentPixelSize() != surfacePixelSize()`，则需要调整掉链大小。
+注意：典型的渲染逻辑会调用该函数，在准备新帧时获取输出大小，并基于该函数返回的大小进行基底相关计算（如视口）。
+虽然在许多情况下，该值与`QWindow::size() * QWindow::devicePixelRatio()`相同，但依赖报告`QWindow`的大小并不保证在所有平台和图形API实现上都正确。因此，每当需要识别输出层或表面的尺寸（像素单位）时，强烈建议使用该函数。
+这还带来了一个额外好处，就是在专用渲染线程中使用`QRhi`时避免了潜在的数据竞赛，因为无需调用`QWindow`函数，这些函数随后可能访问主线程更新的数据。
 
 ### `QRhiRenderBuffer *QRhiSwapChain::depthStencil() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::depthStencil` 用于计算、查询或取得与“depth、Stencil”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderBuffer *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderBuffer *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前关联的深度模板渲染缓冲区。
 
 ### `QRhiSwapChain::Flags QRhiSwapChain::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSwapChain::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSwapChain::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的标志。
 
 ### `QRhiSwapChain::Format QRhiSwapChain::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QRhiSwapChain::Format`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设定的格式。
 
 ### `[virtual] QRhiSwapChainHdrInfo QRhiSwapChain::hdrInfo()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::hdrInfo` 用于计算、查询或取得与“hdr、Info”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSwapChainHdrInfo`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSwapChainHdrInfo`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回相关显示器的HDR信息。
+不要以为这是一项廉价操作。根据平台，该函数会对平台进行各种查询，可能会影响性能。
+注意：只要窗口期未`set`，可以在`createOrResize()`前打电话。
+注意：当前移动带有初始化交换链的窗口（HDR到HDR但特性不同，HDR到SDR等）时的处理尚未明确，且高度依赖窗口系统和合成器，且不同平台行为可能有所不同。目前`QRhi`仅保证hdrInfo()在`createOrResize()`时所属显示显示的有效数据（如有）返回有效数据。
 
 ### `[pure virtual] bool QRhiSwapChain::isFormatSupported(QRhiSwapChain::Format f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFormatSupported`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `f`：类型为 `QRhiSwapChain::Format`。没有默认值，调用时必须提供。传入 `QRhiSwapChain::Format` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果支持给定的交换链格式 `f`，则返回为真。SDR 始终被支持。
+注意：可以独立于`createOrResize()`调用，但`window()`必须已经设置好。未设置窗口调用可能会导致意外结果（任何HDR格式很可能为假），因为HDR格式支持通常绑定在交换链相关窗口所在的输出（屏幕）上。如果HDR格式的结果成立，那么只要窗口不被移动到其他屏幕，创建该格式的交换链通常会成功。
+该函数的主要用途是在窗口设置后的第一个`createOrResize()`之前调用该函数。这使得`QRhi`后端能够执行平台或窗口系统特定的查询，以确定窗口（及其所在屏幕）是否能够以指定格式进行真正的HDR输出。
+当格式被报告为支持时，调用`setFormat()`设置所需格式并调用`createOrResize()`。但要注意后果：成功申请HDR格式需要处理不同的色彩空间，可能需要对非HDR内容进行白位校正，调整色调映射方法，调整屏幕外渲染目标设置等。
 
 ### `[pure virtual] QRhiRenderPassDescriptor *QRhiSwapChain::newCompatibleRenderPassDescriptor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::newCompatibleRenderPassDescriptor` 用于计算、查询或取得与“new、Compatible、渲染、Pass、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderPassDescriptor *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QRhiRenderPassDescriptor`，它与此交换链兼容。 返回值有两种用途：可以传递给 `setRenderPassDescriptor()` 和 `QRhiGraphicsPipeline::setRenderPassDescriptor()`。渲染通道描述符描述了附件（颜色、深度/模板）以及可以由 `flags()` 影响的加载/存储行为。`QRhiGraphicsPipeline` 只能与具有 `compatible` `QRhiRenderPassDescriptor` 设置的交换链一起使用。
 
 ### `QRhiSwapChainProxyData QRhiSwapChain::proxyData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::proxyData` 用于计算、查询或取得与“proxy、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiSwapChainProxyData`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiSwapChainProxyData`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的代理数据。
 
 ### `QRhiRenderPassDescriptor *QRhiSwapChain::renderPassDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSwapChain` 的核心操作 `renderPassDescriptor`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前关联的 `QRhiRenderPassDescriptor` 对象。
 
 ### `[override virtual] QRhiResource::Type QRhiSwapChain::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `int QRhiSwapChain::sampleCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::sampleCount` 用于计算、查询或取得与“sample、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的采样计数。1表示没有多重采样抗锯齿。
 
 ### `void QRhiSwapChain::setDepthStencil(QRhiRenderBuffer *ds)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthStencil`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ds`：类型为 `QRhiRenderBuffer *`。没有默认值，调用时必须提供。传入 `QRhiRenderBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将渲染缓冲区设置为深度模板缓冲区`ds`。
 
 ### `void QRhiSwapChain::setFlags(QRhiSwapChain::Flags f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiSwapChain::Flags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这让标志变得很有点像`f`。
 
 ### `void QRhiSwapChain::setFormat(QRhiSwapChain::Format f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiSwapChain::Format`。没有默认值，调用时必须提供。传入 `QRhiSwapChain::Format` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定下了`f`的格式。
+避免设置`isFormatSupported()`中报告为不支持的格式。请注意，对某一格式的支持可能取决于交换链相关窗口打开的屏幕。在某些平台，如Windows和macOS，HDR输出要正常工作，显示设置中必须启用HDR输出。
+有关高动态范围输出的更多信息，请参见`isFormatSupported()`、`QRhiSwapChainHdrInfo`和`Format`。
 
 ### `void QRhiSwapChain::setProxyData(const QRhiSwapChainProxyData &d)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProxyData`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `d`：类型为 `const QRhiSwapChainProxyData &`。没有默认值，调用时必须提供。传入 `const QRhiSwapChainProxyData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置代理数据`d`。
 
 ### `void QRhiSwapChain::setRenderPassDescriptor(QRhiRenderPassDescriptor *desc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderPassDescriptor`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `desc`：类型为 `QRhiRenderPassDescriptor *`。没有默认值，调用时必须提供。传入 `QRhiRenderPassDescriptor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与`QRhiRenderPassDescriptor` `desc`有关联。
 
 ### `void QRhiSwapChain::setSampleCount(int samples)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleCount`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `samples`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定样本计数。`samples`常见的数值有1（无MSAA）、4（4×MSAA）或8×8（8×MSAA）。
 
 ### `[since 6.9] void QRhiSwapChain::setShadingRateMap(QRhiShadingRateMap *map)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShadingRateMap`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `map`：类型为 `QRhiShadingRateMap *`。没有默认值，调用时必须提供。传入 `QRhiShadingRateMap *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与指定的`QRhiShadingRateMap` `map`关联。只有当`QRhi::VariableRateShadingMap`功能被报告为支持时，这才有效。
+当也调用`QRhiCommandBuffer::setShadingRate()`时，每个瓦片使用较高的着色率。目前无法控制组合器行为。
+注意：设置着色率映射意味着需要一个不同的新`QRhiRenderPassDescriptor`，且部分本地交换链对象必须重建。因此，如果交换链已经设置好，在setShadingRateMap()后立即调用`newCompatibleRenderPassDescriptor()`和`setRenderPassDescriptor()`。然后，`createOrResize()`也必须再次调用。这会产生滚动后果，例如图形管线：这些流程也需要与新`QRhiRenderPassDescriptor`关联并重建。请参阅`QRhiRenderPassDescriptor::serializedFormat()`，了解一些处理建议。记得也为它们设置`QRhiGraphicsPipeline::UsesShadingRate`标志。
 
 ### `void QRhiSwapChain::setWindow(QWindow *window)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWindow`。调用它会改变 `QRhiSwapChain` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `window`：类型为 `QWindow *`。没有默认值，调用时必须提供。传入 `QWindow *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定`window`。
 
 ### `[since 6.9] QRhiShadingRateMap *QRhiSwapChain::shadingRateMap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::shadingRateMap` 用于计算、查询或取得与“shading、Rate、映射”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiShadingRateMap *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiShadingRateMap *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的`QRhiShadingRateMap`。默认情况下，这是`nullptr`。
 
 ### `[pure virtual] QSize QRhiSwapChain::surfacePixelSize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::surfacePixelSize` 用于计算、查询或取得与“surface、Pixel、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回窗口对应的表面或层的大小。
+警告：请勿以为这与`QWindow::size() * QWindow::devicePixelRatio()`相同。在某些图形API和窗口系统接口（例如Vulkan）中，理论上曲面的大小可能与相关窗口不同。为了支持这些情况，渲染逻辑必须始终基于`QRhiSwapChain`报告的大小进行尺寸衍生计算（如视口），而绝不能基于`QWindow`查询的大小。
+注意：如果至少`window()`已设置，也可以在`createOrResize()`之前调用。结合`currentPixelSize()`可以检测交换链何时需要调整大小。但请注意，底层本地对象（表面、图层等）的大小是“活的”，因此每当调用该函数时，它返回底层实现报告的最新值，且不保证原子性。因此，强烈建议使用该函数来确定帧中使用的图形资源像素大小。应依赖 `currentPixelSize()`，它返回的大小是原子级的，且在`createOrResize()`调用之间不会变化。
+注意：对于与交换链颜色缓冲区结合使用的深度模板缓冲区，强烈建议依赖 `QRhiRenderBuffer`：UsedWithSwapChainOnly 标志提供的自动大小和重建行为。避免仅仅通过该函数查询表面大小以获取可传递给`QRhiRenderBuffer::setPixelSize()`的大小，因为这会受到上述缺乏原子性的影响。
 
 ### `QWindow *QRhiSwapChain::window() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiSwapChain::window` 用于计算、查询或取得与“window”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWindow *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWindow *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的窗口。
 
 ### `enum Flag { SurfaceHasPreMulAlpha, SurfaceHasNonPreMulAlpha, sRGB, UsedAsTransferSource, NoVSync, MinimalBufferCount }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSwapChain` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述交换链属性的标志值。
+- `QRhiSwapChain::SurfaceHasPreMulAlpha`：`1 << 0`;表示目标表面具有预乘 alpha 的透明性。例如，当目标`QWindow`启用 alpha 通道时，Qt Quick 就是用这个方式，因为场景图的 rendrerer 总是输出 alpha 乘以红、绿、蓝三色的片段。为确保各平台行为一致，每当交换链上设置该标志时，目标`QWindow`上始终将 `QSurfaceFormat::alphaBufferSize()` 设置为非零值。
+- `QRhiSwapChain::SurfaceHasNonPreMulAlpha`：`1 << 1`;表示目标表面具有非预乘法alpha的透明性。请注意，如果系统合成器总是预期预乘法alpha的内容，某些系统可能不支持此功能。在这种情况下，使用该标志集的行为应等价于SurfaceHasPreMulAlpha。
+- `QRhiSwapChain::sRGB`：`1 << 2`;请求为交换链的颜色缓冲区和/或渲染目标视图选择 sRGB 格式（如适用）。注意，这意味着所有针对该交换链的内容都会启用 sRGB 帧缓冲区更新和混合功能，且无法选择退出。对于 OpenGL，还应在`QWindow` `QSurfaceFormat`上设置 `sRGBColorSpace`。仅在交换链格式设置为 `QRhiSwapChain::SDR` 时才适用。
+- `QRhiSwapChain::UsedAsTransferSource`：`1 << 3`;表示交换链将作为`QRhiResourceUpdateBatch::readBackTexture()`中回读的源。
+- `QRhiSwapChain::NoVSync`：`1 << 4`;请求禁用等待垂直同步，同时避免限制渲染线程。该行为是后端特定的，仅适用于可控制的部分。有些人可能会完全忽略该请求。对于OpenGL，可以尝试通过`QSurfaceFormat::setSwapInterval()`将`QWindow`的交换间隔设置为0。
+- `QRhiSwapChain::MinimalBufferCount`：`1 << 5`;创建交换链的请求，缓冲区数最小，实际上是2个，除非图形实现的最低缓冲数更高。仅适用于后端，且该控制可通过图形API实现，例如Vulkan。默认情况下，后端决定请求缓冲区数（实际上几乎总是2或3），这与应用程序无关。然而，例如在Vulkan上，后端通常偏好较高的缓冲区数（3），以避免移动设备上某些Vulkan实现出现异常性能问题。在某些平台上，强制减少缓冲区数（2）可能有益，因此该标志允许强制执行。注意，所有这些都不会影响保持在飞行中的帧数，因此CPU（`QRhi`）仍然会在最多比GPU领先`N - 1`帧时准备帧，即使交换链映像缓冲区计数大于`N`。（`N` = `QRhi::FramesInFlight`，通常为2）。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiSwapChain` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述交换链属性的标志值。
+- `QRhiSwapChain::SurfaceHasPreMulAlpha`：`1 << 0`;表示目标表面具有预乘 alpha 的透明性。例如，当目标`QWindow`启用 alpha 通道时，Qt Quick 就是用这个方式，因为场景图的 rendrerer 总是输出 alpha 乘以红、绿、蓝三色的片段。为确保各平台行为一致，每当交换链上设置该标志时，目标`QWindow`上始终将 `QSurfaceFormat::alphaBufferSize()` 设置为非零值。
+- `QRhiSwapChain::SurfaceHasNonPreMulAlpha`：`1 << 1`;表示目标表面具有非预乘法alpha的透明性。请注意，如果系统合成器总是预期预乘法alpha的内容，某些系统可能不支持此功能。在这种情况下，使用该标志集的行为应等价于SurfaceHasPreMulAlpha。
+- `QRhiSwapChain::sRGB`：`1 << 2`;请求为交换链的颜色缓冲区和/或渲染目标视图选择 sRGB 格式（如适用）。注意，这意味着所有针对该交换链的内容都会启用 sRGB 帧缓冲区更新和混合功能，且无法选择退出。对于 OpenGL，还应在`QWindow` `QSurfaceFormat`上设置 `sRGBColorSpace`。仅在交换链格式设置为 `QRhiSwapChain::SDR` 时才适用。
+- `QRhiSwapChain::UsedAsTransferSource`：`1 << 3`;表示交换链将作为`QRhiResourceUpdateBatch::readBackTexture()`中回读的源。
+- `QRhiSwapChain::NoVSync`：`1 << 4`;请求禁用等待垂直同步，同时避免限制渲染线程。该行为是后端特定的，仅适用于可控制的部分。有些人可能会完全忽略该请求。对于OpenGL，可以尝试通过`QSurfaceFormat::setSwapInterval()`将`QWindow`的交换间隔设置为0。
+- `QRhiSwapChain::MinimalBufferCount`：`1 << 5`;创建交换链的请求，缓冲区数最小，实际上是2个，除非图形实现的最低缓冲数更高。仅适用于后端，且该控制可通过图形API实现，例如Vulkan。默认情况下，后端决定请求缓冲区数（实际上几乎总是2或3），这与应用程序无关。然而，例如在Vulkan上，后端通常偏好较高的缓冲区数（3），以避免移动设备上某些Vulkan实现出现异常性能问题。在某些平台上，强制减少缓冲区数（2）可能有益，因此该标志允许强制执行。注意，所有这些都不会影响保持在飞行中的帧数，因此CPU（`QRhi`）仍然会在最多比GPU领先`N - 1`帧时准备帧，即使交换链映像缓冲区计数大于`N`。（`N` = `QRhi::FramesInFlight`，通常为2）。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

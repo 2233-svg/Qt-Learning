@@ -77,270 +77,115 @@ target_link_libraries(mytarget PRIVATE Qt6::Test)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QTestEventList::QTestEventList()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTestEventList` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的 QTestEventList。
 
 ### `QTestEventList::QTestEventList(const QTestEventList &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTestEventList` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QTestEventList &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的QTestEventList，作为`other`的副本。
 
 ### `[noexcept] QTestEventList::~QTestEventList()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTestEventList` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清空列表并销毁所有存储事件。
 
 ### `void QTestEventList::addDelay(int msecs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addDelay`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msecs`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+增加了`msecs`毫秒的延迟。
 
 ### `void QTestEventList::addKeyClick(Qt::Key qtKey, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyClick`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qtKey`：类型为 `Qt::Key`。没有默认值，调用时必须提供。传入 `Qt::Key` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加一个新的按键点击。事件会用修饰符`modifiers`模拟按键`qtKey`，然后等待`msecs`毫秒。
 
 ### `void QTestEventList::addKeyClick(char ascii, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyClick`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ascii`：类型为 `char`。没有默认值，调用时必须提供。传入 `char` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加一个新的按键点击。事件会用修饰符`modifiers`模拟按键`ascii`，然后等待`msecs`毫秒。
 
 ### `void QTestEventList::addKeyClicks(const QString &keys, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyClicks`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keys`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加新的键盘条目。事件会按下带有`modifiers`的`keys`，并在每个按键之间等待`msecs`毫秒。
 
 ### `void QTestEventList::addKeyPress(Qt::Key qtKey, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyPress`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qtKey`：类型为 `Qt::Key`。没有默认值，调用时必须提供。传入 `Qt::Key` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加一个新的按键按键。事件会按按键`qtKey`并`modifiers`修饰键，然后等待`msecs`毫秒。
 
 ### `void QTestEventList::addKeyPress(char ascii, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyPress`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ascii`：类型为 `char`。没有默认值，调用时必须提供。传入 `char` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加一个新的按键。事件会用修饰符`modifiers`按键`ascii`，然后等待`msecs`毫秒。
 
 ### `void QTestEventList::addKeyRelease(Qt::Key qtKey, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyRelease`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qtKey`：类型为 `Qt::Key`。没有默认值，调用时必须提供。传入 `Qt::Key` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加一个新的密钥释放。事件会释放带有修饰符`modifiers`的密钥`qtKey`，然后等待`msecs`毫秒。
 
 ### `void QTestEventList::addKeyRelease(char ascii, Qt::KeyboardModifiers modifiers = Qt::NoModifier, int msecs = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addKeyRelease`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ascii`：类型为 `char`。没有默认值，调用时必须提供。传入 `char` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::NoModifier`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会在列表中添加一个新的密钥释放。事件会释放带有修饰符`modifiers`的密钥`ascii`，然后等待`msecs`毫秒。
 
 ### `void QTestEventList::addMouseClick(Qt::MouseButton button, Qt::KeyboardModifiers modifiers = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addMouseClick`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::KeyboardModifiers()`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pos`：类型为 `QPoint`。默认值为 `QPoint()`。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `delay`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加鼠标点击。事件会点击带有可选`modifiers`的位置`button` `pos`带有可选`delay`的位置。默认位置是小部件的中心。
 
 ### `void QTestEventList::addMouseDClick(Qt::MouseButton button, Qt::KeyboardModifiers modifiers = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addMouseDClick`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::KeyboardModifiers()`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pos`：类型为 `QPoint`。默认值为 `QPoint()`。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `delay`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加双击鼠标。事件会双击`button`，并选择在位置`pos` `modifiers`，并带有可选`delay`。默认位置是小部件的中心。
 
 ### `void QTestEventList::addMouseMove(QPoint pos = QPoint(), int delay = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addMouseMove`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pos`：类型为 `QPoint`。默认值为 `QPoint()`。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `delay`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加一个鼠标移动。事件会将鼠标移动到位置`pos`。如果设置了`delay`（毫秒级），测试将在移动鼠标后等待。默认位置是控件的中心。
 
 ### `void QTestEventList::addMousePress(Qt::MouseButton button, Qt::KeyboardModifiers modifiers = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addMousePress`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::KeyboardModifiers()`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pos`：类型为 `QPoint`。默认值为 `QPoint()`。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `delay`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在列表中添加鼠标按压。事件会在该位置按下`button`，并选择`modifiers` `pos`带有可选`delay`。默认位置是小部件的中心。
 
 ### `void QTestEventList::addMouseRelease(Qt::MouseButton button, Qt::KeyboardModifiers modifiers = Qt::KeyboardModifiers(), QPoint pos = QPoint(), int delay = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QTestEventList` 添加依赖、数据或子对象的 API `addMouseRelease`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。默认值为 `Qt::KeyboardModifiers()`。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pos`：类型为 `QPoint`。默认值为 `QPoint()`。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-- 参数 `delay`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向列表中添加鼠标释放。事件会在位置`pos`释放`button`，`modifiers`并带有可选`delay`。默认位置是小部件的中心。
 
 ### `void QTestEventList::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从列表中移除所有事件。
 
 ### `void QTestEventList::simulate(QWidget *w)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTestEventList::simulate` 用于执行与“simulate”相关的操作。调用时要先确认当前状态和 `w` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `w`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在控件`w`上逐一模拟列表中的事件。举个例子，请阅读`QTestEventList`类文档。
 
 ## 6. 深入实践与常见坑
 

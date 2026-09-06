@@ -88,196 +88,127 @@ source = 2; // result 会重新计算
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[bindable] propertyName : QByteArray`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPropertyAnimation` 的配置属性。初始化或状态切换时通过 `setPropertyName(...)` 设置，之后用 `propertyName()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标属性名称。
+该属性定义了该动画的目标属性名称。该属性名称是动画运行所必需的。
 
-**签名拆解：**
-
-- 属性类型：`QByteArray`。
-- 属性名：`propertyName`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `propertyName()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] targetObject : QObject*`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPropertyAnimation` 的配置属性。初始化或状态切换时通过 `setTargetObject(...)` 设置，之后用 `targetObject()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标`QObject`。
+该属性定义了该动画的目标`QObject`。
 
-**签名拆解：**
-
-- 属性类型：`QObject*`。
-- 属性名：`targetObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `targetObject()` 读取当前值；它不会修改应用状态。
 
 ### `QPropertyAnimation::QPropertyAnimation(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPropertyAnimation` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QPropertyAnimation对象。`parent`传递给`QObject`的构造器。
 
 ### `QPropertyAnimation::QPropertyAnimation(QObject *target, const QByteArray &propertyName, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPropertyAnimation` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-- 参数 `propertyName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QPropertyAnimation对象。`parent`传递给`QObject`的构造器。动画会改变`target`上的属性`propertyName`。默认持续时间为250毫秒。
 
 ### `[virtual noexcept] QPropertyAnimation::~QPropertyAnimation()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPropertyAnimation` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会摧毁`QPropertyAnimation`实例。
 
 ### `[override virtual protected] bool QPropertyAnimation::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPropertyAnimation::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QVariantAnimation::event`（QEvent *事件）。
 
 ### `[override virtual protected] void QPropertyAnimation::updateCurrentValue(const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPropertyAnimation::updateCurrentValue` 用于执行与“更新、当前、值访问”相关的操作。调用时要先确认当前状态和 `value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QVariantAnimation::updateCurrentValue`（const QVariant & value）。
+每当当前值发生变化时，`QVariantAnimation`都会调用这个虚拟函数。`value` 是新的、更新后的值。它会更新目标对象属性的当前值，除非动画停止。
+每次动画当前值变化时，都会调用这个虚拟函数。`value`参数是新的当前值。
+基础类实现什么都不做。
 
 ### `[override virtual protected] void QPropertyAnimation::updateState(QAbstractAnimation::State newState, QAbstractAnimation::State oldState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPropertyAnimation::updateState` 用于执行与“更新、State”相关的操作。调用时要先确认当前状态和 `newState`、`oldState` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newState`：类型为 `QAbstractAnimation::State`。没有默认值，调用时必须提供。传入 `QAbstractAnimation::State` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldState`：类型为 `QAbstractAnimation::State`。没有默认值，调用时必须提供。传入 `QAbstractAnimation::State` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QVariantAnimation::updateState`（QAbstractAnimation：：State newState， QAbstractAnimation：：State oldState）。
+如果动画状态从停止变为运行时未定义`startValue`，则使用当前属性值作为动画的初始值。
 
 ### `QBindable<QByteArray> bindablePropertyName()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindablePropertyName`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标属性名称。
+该属性定义了该动画的目标属性名称。该属性名称是动画运行所必需的。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindablePropertyName()` 取得 `propertyName` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QObject *> bindableTargetObject()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableTargetObject`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标`QObject`。
+该属性定义了该动画的目标`QObject`。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QObject *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableTargetObject()` 取得 `targetObject` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QByteArray propertyName() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPropertyAnimation::propertyName` 用于计算、查询或取得与“property、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标属性名称。
+该属性定义了该动画的目标属性名称。该属性名称是动画运行所必需的。
 
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `propertyName()` 读取当前值；它不会修改应用状态。
 
 ### `void setPropertyName(const QByteArray &propertyName)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPropertyName`。调用它会改变 `QPropertyAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标属性名称。
+该属性定义了该动画的目标属性名称。该属性名称是动画运行所必需的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `propertyName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setPropertyName(...)` 修改 `propertyName`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTargetObject(QObject *target)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTargetObject`。调用它会改变 `QPropertyAnimation` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标`QObject`。
+该属性定义了该动画的目标`QObject`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTargetObject(...)` 修改 `targetObject`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QObject * targetObject() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QPropertyAnimation::targetObject` 用于计算、查询或取得与“目标、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含了该动画的目标`QObject`。
+该属性定义了该动画的目标`QObject`。
 
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `targetObject()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

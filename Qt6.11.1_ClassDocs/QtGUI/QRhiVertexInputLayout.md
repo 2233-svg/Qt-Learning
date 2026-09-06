@@ -78,222 +78,103 @@ Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QRhiVertexInputLayout::QRhiVertexInputLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputLayout` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空顶点输入布局描述。
 
 ### `const QRhiVertexInputAttribute *QRhiVertexInputLayout::attributeAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::attributeAt` 用于计算、查询或取得与“attribute、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `const QRhiVertexInputAttribute *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiVertexInputAttribute *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`index`的属性。
 
 ### `qsizetype QRhiVertexInputLayout::attributeCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::attributeCount` 用于计算、查询或取得与“attribute、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回属性数量。
 
 ### `const QRhiVertexInputBinding *QRhiVertexInputLayout::bindingAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindingAt`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`const QRhiVertexInputBinding *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定的`index`归还绑定。
 
 ### `qsizetype QRhiVertexInputLayout::bindingCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindingCount`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回绑定数量。
 
 ### `const QRhiVertexInputAttribute *QRhiVertexInputLayout::cbeginAttributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::cbeginAttributes` 用于计算、查询或取得与“cbegin、Attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiVertexInputAttribute *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiVertexInputAttribute *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向属性列表第一个项目的const迭代器。
 
 ### `const QRhiVertexInputBinding *QRhiVertexInputLayout::cbeginBindings() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::cbeginBindings` 用于计算、查询或取得与“cbegin、Bindings”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiVertexInputBinding *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiVertexInputBinding *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 const 迭代器，指向绑定列表中的第一个项。
 
 ### `const QRhiVertexInputAttribute *QRhiVertexInputLayout::cendAttributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::cendAttributes` 用于计算、查询或取得与“cend、Attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiVertexInputAttribute *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiVertexInputAttribute *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 const 迭代器，指向属性列表中最后一个项目之后。
 
 ### `const QRhiVertexInputBinding *QRhiVertexInputLayout::cendBindings() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::cendBindings` 用于计算、查询或取得与“cend、Bindings”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiVertexInputBinding *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiVertexInputBinding *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个连接迭代器，指向绑定列表最后一项之后。
 
 ### `void QRhiVertexInputLayout::setAttributes(std::initializer_list<QRhiVertexInputAttribute> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAttributes`。调用它会改变 `QRhiVertexInputLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiVertexInputAttribute>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiVertexInputAttribute>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置指定`list`的属性。
 
 ### `template <typename InputIterator> void QRhiVertexInputLayout::setAttributes(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAttributes`。调用它会改变 `QRhiVertexInputLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用迭代器`first`和`last`来设置属性。
 
 ### `void QRhiVertexInputLayout::setBindings(std::initializer_list<QRhiVertexInputBinding> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBindings`。调用它会改变 `QRhiVertexInputLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiVertexInputBinding>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiVertexInputBinding>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置指定`list`的绑定。
 
 ### `template <typename InputIterator> void QRhiVertexInputLayout::setBindings(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBindings`。调用它会改变 `QRhiVertexInputLayout` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用迭代器`first`和`last`来设置绑定。
 
 ### `[noexcept] size_t qHash(const QRhiVertexInputLayout &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputLayout::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRhiVertexInputLayout &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRhiVertexInputLayout &a, const QRhiVertexInputLayout &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputLayout` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiVertexInputLayout &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputLayout &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiVertexInputLayout &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputLayout &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QRhiVertexInputLayout` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QRhiVertexInputLayout &a, const QRhiVertexInputLayout &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputLayout` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiVertexInputLayout &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputLayout &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiVertexInputLayout &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputLayout &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QRhiVertexInputLayout`对象`a`和`b`的值相等，返回`true`。
 
 ## 6. 深入实践与常见坑
 

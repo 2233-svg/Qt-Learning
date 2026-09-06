@@ -80,207 +80,99 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QTypeRevision::QTypeRevision()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTypeRevision` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+产生无效的修订。
 
 ### `[static constexpr] template <typename Integer, QTypeRevision::if_valid_value_type<Integer> = true> QTypeRevision QTypeRevision::fromEncodedVersion(Integer value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromEncodedVersion`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Integer, QTypeRevision::if_valid_value_type<Integer> = true> QTypeRevision`。
-- 参数 `value`：类型为 `Integer`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的`value`生成一个`QTypeRevision`。`value` 分别以最低有效字节和第二低有效字节编码小版本和大字节。
+`value`不能有位超出最低有效两个字节设置。`Integer`宽度至少为16位，且最低有效16位内不得有符号位。
 
 ### `[static constexpr] template <typename Major, QTypeRevision::if_valid_segment_type<Major> = true> QTypeRevision QTypeRevision::fromMajorVersion(Major majorVersion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromMajorVersion`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Major, QTypeRevision::if_valid_segment_type<Major> = true> QTypeRevision`。
-- 参数 `majorVersion`：类型为 `Major`。没有默认值，调用时必须提供。传入 `Major` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定`majorVersion`生成一个带有无效小版本的`QTypeRevision`。`majorVersion`需要是有效的段。
 
 ### `[static constexpr] template <typename Minor, QTypeRevision::if_valid_segment_type<Minor> = true> QTypeRevision QTypeRevision::fromMinorVersion(Minor minorVersion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromMinorVersion`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Minor, QTypeRevision::if_valid_segment_type<Minor> = true> QTypeRevision`。
-- 参数 `minorVersion`：类型为 `Minor`。没有默认值，调用时必须提供。传入 `Minor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定`minorVersion`生成一个无效的主要版本的`QTypeRevision`。`minorVersion`段必须是有效的。
 
 ### `[static constexpr] template < typename Major, typename Minor, QTypeRevision::if_valid_segment_type<Major> = true, QTypeRevision::if_valid_segment_type<Minor> = true > QTypeRevision QTypeRevision::fromVersion(Major majorVersion, Minor minorVersion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromVersion`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template < typename Major, typename Minor, QTypeRevision::if_valid_segment_type<Major> = true, QTypeRevision::if_valid_segment_type<Minor> = true > QTypeRevision`。
-- 参数 `majorVersion`：类型为 `Major`。没有默认值，调用时必须提供。传入 `Major` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minorVersion`：类型为 `Minor`。没有默认值，调用时必须提供。传入 `Minor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的 `majorVersion` 和 `minorVersion` 产生`QTypeRevision`，这两者都需要是有效的段。
 
 ### `[constexpr] bool QTypeRevision::hasMajorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasMajorVersion`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知主要版本，则返回真，否则返回为假。
 
 ### `[constexpr] bool QTypeRevision::hasMinorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasMinorVersion`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知次要版本，则返回为真，否则为假。
 
 ### `[constexpr] bool QTypeRevision::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知主要版本或次要版本，则返回真，否则返回为假。
 
 ### `[static constexpr] template <typename Integer, QTypeRevision::if_valid_segment_type<Integer> = true> bool QTypeRevision::isValidSegment(Integer segment)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isValidSegment`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Integer, QTypeRevision::if_valid_segment_type<Integer> = true> bool`。
-- 参数 `segment`：类型为 `Integer`。没有默认值，调用时必须提供。传入 `Integer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果给定数字可以作为`QTypeRevision`中的大调或小调使用，则返回真值。`segment`的有效范围为`>= 0`和`< 255`。
 
 ### `[constexpr] quint8 QTypeRevision::majorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTypeRevision::majorVersion` 用于计算、查询或取得与“major、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint8`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint8`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回版本中编码的主版本。
 
 ### `[constexpr] quint8 QTypeRevision::minorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTypeRevision::minorVersion` 用于计算、查询或取得与“minor、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint8`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint8`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回版本中编码的次要版本。
 
 ### `[constexpr] template <typename Integer, QTypeRevision::if_valid_value_type<Integer> = true> Integer QTypeRevision::toEncodedVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toEncodedVersion`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename Integer, QTypeRevision::if_valid_value_type<Integer> = true> Integer`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将修订值转换为整数值，将次要版本编码为最低有效字节，将主要版本编码为第二低有效字节。
+`Integer`宽度至少为16位，且符号位不得处于最低有效16位。
 
 ### `[static constexpr] QTypeRevision QTypeRevision::zero()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `zero`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QTypeRevision`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+产生带有大调和小调`0`的`QTypeRevision`。
 
 ### `[since 6.0] QDataStream &operator<<(QDataStream &out, const QTypeRevision &revision)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QTypeRevision` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `out`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `revision`：类型为 `const QTypeRevision &`。没有默认值，调用时必须提供。传入 `const QTypeRevision &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写修订版，播放`out` `revision`。
 
 ### `[since 6.0] QDataStream &operator>>(QDataStream &in, QTypeRevision &revision)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QTypeRevision` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `in`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `revision`：类型为 `QTypeRevision &`。没有默认值，调用时必须提供。传入 `QTypeRevision &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取流`in`的修订并存储在`revision`。
 
 ## 6. 深入实践与常见坑
 

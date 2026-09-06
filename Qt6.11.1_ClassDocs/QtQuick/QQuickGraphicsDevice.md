@@ -78,159 +78,90 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QQuickGraphicsDevice::QQuickGraphicsDevice()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickGraphicsDevice` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个默认的 QQuickGraphicsDevice，不引用任何本地对象。
 
 ### `[noexcept] QQuickGraphicsDevice::~QQuickGraphicsDevice()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickGraphicsDevice` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `[static] QQuickGraphicsDevice QQuickGraphicsDevice::fromAdapter(quint32 adapterLuidLow, qint32 adapterLuidHigh, int featureLevel = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromAdapter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `adapterLuidLow`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `adapterLuidHigh`：类型为 `qint32`。没有默认值，调用时必须提供。传入 `qint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `featureLevel`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新`QQuickGraphicsDevice`，描述了DXGI适配器和D3D功能等级。
+该出厂功能适用于 Direct3D 11 和 12，尤其是与 OpenXR 结合使用。`adapterLuidLow` 和 `adapterLuidHigh` 共同指定 LUID，而 featureLevel 指定 `D3D_FEATURE_LEVEL_` 值。如果不指定，`featureLevel` 可设置为 0，此时将使用场景图的默认值。
+注意：使用 Direct 3D 12 `featureLevel` 指定传递给 D3D12CreateDevice()的 `minimum` 功能层级。
 
 ### `[static] QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndCommandQueue(MTLDevice *device, MTLCommandQueue *commandQueue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromDeviceAndCommandQueue`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `device`：类型为 `MTLDevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `commandQueue`：类型为 `MTLCommandQueue *`。没有默认值，调用时必须提供。传入 `MTLCommandQueue *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickGraphicsDevice`，引用已有的`device`和`commandQueue`对象。
+这种工厂功能适用于金属。
+注意：生成的 `QQuickGraphicsDevice` 不拥有任何本地资源，仅包含引用。调用者有责任确保本地资源持续存在直到必要。
 
 ### `[static] QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndContext(void *device, void *context)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromDeviceAndContext`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `device`：类型为 `void *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `context`：类型为 `void *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickGraphicsDevice`，引用本地设备和上下文对象。
+该工厂功能适用于Direct3D 11。`device`预计为`ID3D11Device*`，`context`为`ID3D11DeviceContext*`。
+它也支持 Direct 3D 12，如果运行时使用的 3D API 是 Direct 3D 12。使用 D3D12 时，`context` 未被使用，可以设置为空。`device` 预计会是 `ID3D12Device*`。
+注意：最终的`QQuickGraphicsDevice`不拥有任何本地资源，仅包含引用。调用者有责任确保本地资源持续存在直到必要。
 
 ### `[static] QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice physicalDevice, VkDevice device, int queueFamilyIndex, int queueIndex = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromDeviceObjects`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `physicalDevice`：类型为 `VkPhysicalDevice`。没有默认值，调用时必须提供。传入 `VkPhysicalDevice` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `device`：类型为 `VkDevice`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `queueFamilyIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `queueIndex`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickGraphicsDevice`引用已有的`device`对象。
+该工厂函数适用于Vulkan。必须始终提供`physicalDevice`、`device`和`queueFamilyIndex`。`queueIndex`是可选的，因为默认值0通常合适。
+注意：最终`QQuickGraphicsDevice`不拥有任何本地资源，仅包含引用。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static] QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *context)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromOpenGLContext`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `context`：类型为 `QOpenGLContext *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个引用现有OpenGL的新`QQuickGraphicsDevice` `context`。
+该出厂功能适用于 OpenGL。
+注意：确保`context`与`QQuickWindow`兼容且可用由调用者负责。相关`QSurfaceFormat`中平台特定的不匹配，或因尝试在多个线程中使用`context`而导致的线程问题，则由调用者自行避免。
 
 ### `[static] QQuickGraphicsDevice QQuickGraphicsDevice::fromPhysicalDevice(VkPhysicalDevice physicalDevice)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromPhysicalDevice`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `physicalDevice`：类型为 `VkPhysicalDevice`。没有默认值，调用时必须提供。传入 `VkPhysicalDevice` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个引用现有`physicalDevice`的新`QQuickGraphicsDevice`。
+该出厂功能适用于 Vulkan，尤其适合与 OpenXR 结合使用。
+注意：最终`QQuickGraphicsDevice`不拥有任何本地资源，仅包含引用。调用者有责任确保本地资源持续存在，直到必要时间为止。
 
 ### `[static, since 6.6] QQuickGraphicsDevice QQuickGraphicsDevice::fromRhi(QRhi *rhi)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromRhi`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `rhi`：类型为 `QRhi *`。没有默认值，调用时必须提供。传入 `QRhi *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个引用现有`rhi`对象的新`QQuickGraphicsDevice`。
+注意：与`fromOpenGLContext()`类似，调用者必须谨慎只共享已知兼容的QQuickWindows之间的`QRhi`（以及底层图形上下文或设备），不得违反底层图形API在线程、像素格式等方面的规则。
 
 ### `[static, since 6.10] QQuickGraphicsDevice QQuickGraphicsDevice::fromRhiAdapter(QRhiAdapter *adapter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromRhiAdapter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickGraphicsDevice`。
-- 参数 `adapter`：类型为 `QRhiAdapter *`。没有默认值，调用时必须提供。传入 `QRhiAdapter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个引用现有`adapter` `QRhiAdapter`对象的新`QQuickGraphicsDevice`。
+不适用于`QRhi`后端和图形API，因为`QRhiAdapter`没有真正的实现。
+相当于Direct 3D的 `fromAdapter()`，以及 Vulkan 的`fromPhysicalDevice()`。
+注意：所有权不被`adapter`夺取，且至少必须在场景图启动前保持有效，这很可能发生在相关`QQuickWindow`暴露时。
 
 ### `bool QQuickGraphicsDevice::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这是一个默认构造图形设备且不引用任何本地对象，则返回为真。
 
 ## 6. 深入实践与常见坑
 

@@ -80,215 +80,124 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QSslServer::QSslServer(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有给定`parent`的新QSslServer。
 
 ### `[override virtual noexcept] QSslServer::~QSslServer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁了`QSslServer`。
+所有开路连接均关闭。
 
 ### `[signal] void QSslServer::alertReceived(QSslSocket *socket, QSsl::AlertLevel level, QSsl::AlertType type, const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `alertReceived`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `QSsl::AlertLevel`。没有默认值，调用时必须提供。传入 `QSsl::AlertLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `QSsl::AlertType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`socket`收到来自对等端的警报消息，`QSslServer`会发出此信号。`level` 表示该警报是致命还是警告。`type`是解释为何发送警报的代码。当有警报消息的文本描述时，会以`description`形式提供。
+注意：该信号主要用于信息和调试目的，不需要在应用程序中处理。如果警报是致命的，底层后端会处理并关闭连接。
+注意：并非所有后端都支持此功能。
 
 ### `[signal] void QSslServer::alertSent(QSslSocket *socket, QSsl::AlertLevel level, QSsl::AlertType type, const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `alertSent`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `QSsl::AlertLevel`。没有默认值，调用时必须提供。传入 `QSsl::AlertLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `QSsl::AlertType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`socket`向对端发送了警报消息，`QSslServer`会发出该信号。`level`描述是警告还是致命错误。`type`给出警报消息的代码。当有警报消息的文本描述时，会以`description`形式提供。
+注意：该信号主要用于信息性，可用于调试，通常不需要应用程序执行任何操作。
+注意：并非所有后端都支持此功能。
 
 ### `[signal] void QSslServer::errorOccurred(QSslSocket *socket, QAbstractSocket::SocketError socketError)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `errorOccurred`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `socketError`：类型为 `QAbstractSocket::SocketError`。没有默认值，调用时必须提供。传入 `QAbstractSocket::SocketError` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在握手过程中发生错误后发出的。`socketError`参数描述了发生的错误类型。
+如果套接字握手未达到加密状态，该信号发出后该`socket`会自动删除。但如果该`socket`成功加密，则会入`QSslServer`的待处理连接队列中。当用户调用`QTcpServer::nextPendingConnection()`时，用户有责任销毁`socket`，否则`socket`不会被销毁，直到`QSslServer`对象被销毁。如果`socket`在插入待处理连接队列后发生错误，该信号不会发出，`socket`也不会被移除或销毁。
+注意：连接该信号时不能使用`Qt::QueuedConnection`，否则信号处理时`socket`已经被销毁。
 
 ### `[signal] void QSslServer::handshakeInterruptedOnError(QSslSocket *socket, const QSslError &error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `handshakeInterruptedOnError`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `error`：类型为 `const QSslError &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`socket`发现证书验证错误且`QSslConfiguration`启用早期错误报告，`QSslServer`会发出该信号。应用程序应检查`error`，决定是否继续握手，或中止握手并向对端发送警报消息。信号-槽函数连接必须是直接的。
 
 ### `int QSslServer::handshakeTimeout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslServer::handshakeTimeout` 用于计算、查询或取得与“handshake、超时”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前配置的握手超时。
 
 ### `[override virtual protected] void QSslServer::incomingConnection(qintptr socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslServer::incomingConnection` 用于执行与“incoming、Connection”相关的操作。调用时要先确认当前状态和 `socket` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `qintptr`。没有默认值，调用时必须提供。传入 `qintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QTcpServer::incomingConnection`（qintptr socketDescriptor）。
+当新连接建立时会被调用。
+将`socket`转化为`QSslSocket`。
+当有新连接可用时，`QTcpServer`调用该虚拟函数。`socketDescriptor`参数是接受连接的本地套接字描述符。
+基础实现创建`QTcpSocket`，设置套接字描述符，然后将`QTcpSocket`存储在待处理连接的内部列表中。最后`newConnection()`被发出。
+重新实现该函数以改变连接可用时服务器的行为。
+如果该服务器使用 `QNetworkProxy`，则该`socketDescriptor`可能无法与本地套接字函数一起使用，应仅与 `QTcpSocket::setSocketDescriptor()` 一起使用。
+注意：如果在该方法的重实现中创建了另一个套接字，需要通过调用`addPendingConnection()`将其添加到待处理连接机制中。
+注意：如果你想将一个新连接作为另一个线程中的新`QTcpSocket`对象处理，你必须将`socketDescriptor`传递给另一个线程，在那里创建`QTcpSocket`对象并使用其`setSocketDescriptor()`方法。
 
 ### `[signal] void QSslServer::peerVerifyError(QSslSocket *socket, const QSslError &error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `peerVerifyError`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `error`：类型为 `const QSslError &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSslServer`可以在SSL握手过程中多次发出该信号，在加密尚未建立之前，以表明在确认对等端身份时发生了错误。`error`通常表示`socket`无法安全识别对等端。
+该信号能让您提前发现异常。通过连接该信号，您可以在握手完成前手动选择从连接槽内断开连接。如果未采取任何行动，`QSslServer`将继续发出`sslErrors()`。
 
 ### `[signal] void QSslServer::preSharedKeyAuthenticationRequired(QSslSocket *socket, QSslPreSharedKeyAuthenticator *authenticator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `preSharedKeyAuthenticationRequired`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `authenticator`：类型为 `QSslPreSharedKeyAuthenticator *`。没有默认值，调用时必须提供。传入 `QSslPreSharedKeyAuthenticator *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSslServer`在协商PSK密码套件时`socket`会发出该信号，因此需要PSK认证。
+使用PSK时，服务器必须提供有效的身份和有效的预共享密钥，才能继续SSL握手。应用程序可以通过根据需求填写传递`authenticator`对象，在连接到该信号的槽中提供这些信息。
+注意：忽视该信号或未提供所需凭证，将导致握手失败，连接将被终止。
+注意：`authenticator`对象归`socket`所有，应用程序不得删除。
 
 ### `void QSslServer::setHandshakeTimeout(int timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHandshakeTimeout`。调用它会改变 `QSslServer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timeout`：类型为 `int`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有来电握手的 `timeout` 设置成毫秒级。
+这在客户端（无论是恶意还是意外）连接到服务器但未尝试通信或发起握手的情况下尤为重要。`QSslServer` 会在`timeout`毫秒后自动终止连接。
+默认情况下，超时为5000毫秒（5秒）。
+注意：底层TLS框架现在或未来可能有自己的超时逻辑，但该函数不会影响这些。
+注意：传递给该函数的`timeout`只适用于新连接。如果客户端已经连接，它将使用连接时设定的超时值。
 
 ### `void QSslServer::setSslConfiguration(const QSslConfiguration &sslConfiguration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSslConfiguration`。调用它会改变 `QSslServer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sslConfiguration`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`sslConfiguration`用于后续所有进来连接。
+必须在 `listen()` 前调用此设备，以确保所有握手过程中所需的配置均已使用。
 
 ### `QSslConfiguration QSslServer::sslConfiguration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslServer::sslConfiguration` 用于计算、查询或取得与“ssl、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslConfiguration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslConfiguration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的SSL配置。
 
 ### `[signal] void QSslServer::sslErrors(QSslSocket *socket, const QList<QSslError> &errors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `sslErrors`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `errors`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSslServer`在SSL握手后发出该信号，表示在建立对等端身份时发生了一个或多个错误。这些错误通常表明`socket`无法安全识别对等端。除非采取任何措施，否则该信号发出后连接将被中断。
+如果你想在发生错误的情况下继续连接，必须从连接到该信号的槽函数内调用`QSslSocket::ignoreSslErrors()`。如果你以后需要访问错误列表，可以调用 sslHandshakeErrors()。
+`errors`包含一个或多个错误，阻止`QSslSocket`验证对等端的身份。
+注意：连接该信号时不能使用`Qt::QueuedConnection`，或者调用`QSslSocket::ignoreSslErrors()`也无效。
 
 ### `[signal] void QSslServer::startedEncryptionHandshake(QSslSocket *socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslServer` 发出的通知信号 `startedEncryptionHandshake`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QSslSocket *`。没有默认值，调用时必须提供。传入 `QSslSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当客户端连接到`socket`发起TLS握手时，该信号会发出。
 
 ## 6. 深入实践与常见坑
 

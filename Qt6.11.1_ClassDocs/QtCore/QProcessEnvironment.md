@@ -88,274 +88,139 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 20 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.3] enum QProcessEnvironment::Initialization`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 暴露的类型声明 `Initialization`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Initialization`。
-- 属性名：`QProcessEnvironment`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含一个用于消歧构造函数的令牌。
+- `QProcessEnvironment::InheritFromParent`：`0`;会创建一个`QProcessEnvironment`，当它被设定在`QProcess`上时，会继承父节点的变量。
+这个枚举是在Qt 6.3引入的。
 
 ### `QProcessEnvironment::QProcessEnvironment()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的 QProcessEnvironment 对象。该构造函数创建一个空环境。如果设置在`QProcess`上，将导致当前环境变量被移除（Windows 上的 PATH 和 SystemRoot 除外）。
 
 ### `[noexcept, since 6.3] QProcessEnvironment::QProcessEnvironment(QProcessEnvironment::Initialization)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `Initialization`：类型为 `QProcessEnvironment::`。没有默认值，调用时必须提供。传入 `QProcessEnvironment::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个对象，当设置为 `QProcess` 时，执行时会使用继承自父进程的环境变量。
+注意：创建对象本身不存储任何环境变量，只是指示`QProcess`在新进程启动时安排继承环境。向创建对象添加任何环境变量会禁用环境继承，环境只包含添加的环境变量。
+如果需要修改后的父环境版本，请从返回值`systemEnvironment()`开始并对其进行修改（但请注意，创建后对父进程环境的更改不会反映在修改后的环境中）。
 
 ### `QProcessEnvironment::QProcessEnvironment(const QProcessEnvironment &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QProcessEnvironment对象，它是`other`的副本。
 
 ### `[noexcept] QProcessEnvironment::~QProcessEnvironment()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放与该`QProcessEnvironment`对象相关的资源。
 
 ### `void QProcessEnvironment::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除该`QProcessEnvironment`对象中所有键=值对，使其为空。
+如果环境是基于`QProcessEnvironment::InheritFromParent`构建的，则保持不变。
 
 ### `bool QProcessEnvironment::contains(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QProcessEnvironment`对象中找到名为 `name` 的环境变量，返回`true`。
 
 ### `[since 6.3] bool QProcessEnvironment::inheritsFromParent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProcessEnvironment::inheritsFromParent` 用于计算、查询或取得与“inherits、转换进入、父对象”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QProcessEnvironment`是用`QProcessEnvironment::InheritFromParent`构建的，返回`true`。
 
 ### `void QProcessEnvironment::insert(const QString &name, const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QProcessEnvironment` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将环境变量 name `name` and contents 的 named and contents s `value` 插入到该 `QProcessEnvironment` 对象中。如果该变量已经存在，则用新值替换。
+在大多数系统中，插入无内容的变量对应用程序的影响与变量未被设置相同。但为确保不兼容，移除变量请使用`remove()`函数。
 
 ### `void QProcessEnvironment::insert(const QProcessEnvironment &e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QProcessEnvironment` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。传入 `const QProcessEnvironment &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`e`的内容插入到该`QProcessEnvironment`对象中。该对象中存在于`e`中的变量将被覆盖。
 
 ### `bool QProcessEnvironment::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QProcessEnvironment`对象为空，返回`true`：即没有设置键=值对。
+该方法还返回了使用`QProcessEnvironment::InheritFromParent`构建的对象的 `true`。
 
 ### `QStringList QProcessEnvironment::keys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProcessEnvironment::keys` 用于计算、查询或取得与“keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含该`QProcessEnvironment`对象中所有变量名的列表。
+使用`QProcessEnvironment::InheritFromParent`构建的对象返回的列表为空。
 
 ### `void QProcessEnvironment::remove(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该`QProcessEnvironment`对象中移除由`name`识别的环境变量。如果该变量之前不存在，则不会发生任何事。
 
 ### `[noexcept] void QProcessEnvironment::swap(QProcessEnvironment &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QProcessEnvironment::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QProcessEnvironment &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该进程环境实例与`other`交换。该操作非常快且从未出错。
 
 ### `[static] QProcessEnvironment QProcessEnvironment::systemEnvironment()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `systemEnvironment`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QProcessEnvironment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+systemEnvironment 函数返回调用进程的环境。
+它以`QProcessEnvironment`的形式返回。该函数不会缓存系统环境。因此，如果调用了低级C库函数如`setenv`或`putenv`，可以获得环境的更新版本。
+但需要注意的是，反复调用该函数会重新创建`QProcessEnvironment`对象，这是一个非简单的操作。
 
 ### `QStringList QProcessEnvironment::toStringList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toStringList`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QProcessEnvironment`对象转换为字符串列表，每个设置的环境变量对应一个字符串。环境变量的名称和值之间用相等字符（'='）分隔。
+该函数返回的`QStringList`内容适合展示。由于在 Unix 下可能存在编码问题及性能较差，不建议与 QProcess：：setEnvironment 函数一起使用。
 
 ### `QString QProcessEnvironment::value(const QString &name, const QString &defaultValue = QString()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QProcessEnvironment` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `defaultValue`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该`QProcessEnvironment`对象中搜索由`name`识别的变量并返回其值。如果该变量未在该对象中出现，则返回`defaultValue`。
 
 ### `QProcessEnvironment &QProcessEnvironment::operator=(const QProcessEnvironment &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QProcessEnvironment &`。
-- 参数 `other`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other` `QProcessEnvironment`对象的内容复制到这个对象中。
 
 ### `[noexcept] bool operator!=(const QProcessEnvironment &lhs, const QProcessEnvironment &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果进程环境对象`lhs`和`rhs`不同，返回`true`。
 
 ### `[noexcept] bool operator==(const QProcessEnvironment &lhs, const QProcessEnvironment &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QProcessEnvironment` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QProcessEnvironment &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果进程环境对象`lhs`和`rhs`相等，返回`true`。
+如果两个`QProcessEnvironment`对象具有相同的键=值对集合，则视为相等。在环境区分大小写的平台上，键的比较采用大小写区分。
 
 ## 6. 深入实践与常见坑
 

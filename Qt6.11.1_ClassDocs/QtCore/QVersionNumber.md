@@ -117,679 +117,390 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 51 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias, since 6.8] QVersionNumber::const_reverse_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的配置属性。初始化或状态切换时通过 `setConst_reverse_iterator(...)` 设置，之后用 `const_reverse_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_reverse_iterator`。
-- 属性名：`QVersionNumber`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedefs 用于一个不透明类，实现了对`QVersionNumber`段的（反向）随机访问迭代器。
+注意：`QVersionNumber` 不支持原地修改段，因此没有可变迭代器。
+这些类型防线是在Qt 6.8引入的。
 
 ### `[alias, since 6.8] QVersionNumber::value_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的配置属性。初始化或状态切换时通过 `setValue_type(...)` 设置，之后用 `value_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:value_type`。
-- 属性名：`QVersionNumber`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `[noexcept] QVersionNumber::QVersionNumber()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成一个空版本。
 
 ### `[explicit] QVersionNumber::QVersionNumber(QList<int> &&seg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `seg`：类型为 `QList<int> &&`。没有默认值，调用时必须提供。传入 `QList<int> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move从`seg`中包含的数字列表中构造出一个版本号。
 
 ### `[explicit, since 6.8] QVersionNumber::QVersionNumber(QSpan<const int> args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `args`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。传入 `QSpan<const int>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`args`指定的范围构造版本号。
+注意：在 6.8 之前的 Qt 版本中，QVersionNumber 只能由 `QList`、QVarLenthArray 或 std：：initializer_list 构建。
 
 ### `[explicit] QVersionNumber::QVersionNumber(const QList<int> &seg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `seg`：类型为 `const QList<int> &`。没有默认值，调用时必须提供。传入 `const QList<int> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`seg`中包含的数字列表中构建一个版本号。
 
 ### `[explicit] QVersionNumber::QVersionNumber(int maj)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `maj`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个仅包含主要版本号`maj`的QVersionNumber。
 
 ### `QVersionNumber::QVersionNumber(std::initializer_list<int> args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `args`：类型为 `std::initializer_list<int>`。没有默认值，调用时必须提供。传入 `std::initializer_list<int>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`args`指定的std：：initializer_list构造版本号。
 
 ### `[explicit] QVersionNumber::QVersionNumber(int maj, int min)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `maj`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `min`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QVersionNumber，分别由主版本号`maj`和次要版本号`min`组成。
 
 ### `[explicit] QVersionNumber::QVersionNumber(int maj, int min, int mic)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `maj`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `min`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mic`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QVersionNumber，由主版本、次要和微版本编号`maj`、`min`和微版本`mic`组成。
 
 ### `[noexcept, since 6.8] QVersionNumber::const_iterator QVersionNumber::constEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `[static] QVersionNumber QVersionNumber::commonPrefix(const QVersionNumber &v1, const QVersionNumber &v2)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `commonPrefix`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber`。
-- 参数 `v1`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。传入 `const QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。传入 `const QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QVersionNumber` QVersionNumber：：commonPrefix（const `QVersionNumber` & v1，cont `QVersionNumber` & v2）。
+返回一个版本号，该版本同时是`v1`和`v2`的父版本。
 
 ### `[static noexcept] int QVersionNumber::compare(const QVersionNumber &v1, const QVersionNumber &v2)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `compare`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+比较`v1`与`v2`，返回一个小于、等于或大于零的整数，具体取决于`v1`小于、等于或大于`v2`。
+比较通过比较`v1`和`v2`的各个段，从索引0开始，向较长列表的末端进行比较。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`int`。
-- 参数 `v1`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。传入 `const QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v2`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。传入 `const QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QVersionNumber v1(1, 2);
+ QVersionNumber v2(1, 2, 0);
+ int compare = QVersionNumber::compare(v1, v2); // compare == -1
+```
 
 ### `[static, since 6.4] QVersionNumber QVersionNumber::fromString(QAnyStringView string, qsizetype *suffixIndex = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从一个特殊格式化的非负十进制数`string`构造一个`QVersionNumber`，这些数字以句号（`.`）为界隔。
+当数值段被解析完毕后，字符串的其余部分被视为后缀字符串。如果该字符串的起始索引不是空的，则会存储在`suffixIndex`中。
+注意：在Qt 6.4之前的版本中，该功能被`QString`、`QLatin1StringView`和`QStringView`重载，`suffixIndex`成为`int*`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVersionNumber`。
-- 参数 `string`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `suffixIndex`：类型为 `qsizetype *`。默认值为 `nullptr`。传入 `qsizetype *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QLatin1StringView string("5.4.0-alpha");
+ qsizetype suffixIndex;
+ auto version = QVersionNumber::fromString(string, &suffixIndex);
+ // version is 5.4.0
+ // suffixIndex is 5
+```
 
 ### `[noexcept] bool QVersionNumber::isNormalized() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNormalized`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果版本号没有尾部零，返回`true`;否则返回`false`。
 
 ### `[noexcept] bool QVersionNumber::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果没有数值段，返回`true`，否则返回`false`。
 
 ### `[noexcept] bool QVersionNumber::isPrefixOf(const QVersionNumber &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isPrefixOf`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果当前版本号包含在`other`版本号中，返回`true`;否则返回`false`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QVersionNumber v1(5, 3);
+ QVersionNumber v2(5, 3, 1);
+ bool value = v1.isPrefixOf(v2); // true
+```
 
 ### `[noexcept] int QVersionNumber::majorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::majorVersion` 用于计算、查询或取得与“major、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主要版本号，即第一个段。该函数等价于 `segmentAt`（0）。如果该`QVersionNumber`对象为空，则返回 0。
 
 ### `[noexcept] int QVersionNumber::microVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::microVersion` 用于计算、查询或取得与“micro、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回微观版本号，即第三段。该函数等价于`segmentAt`（2）。如果该`QVersionNumber`对象不含微观数，则返回0。
 
 ### `[noexcept] int QVersionNumber::minorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::minorVersion` 用于计算、查询或取得与“minor、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回次要版本号，即第二个段。该函数等价于`segmentAt`（1）。如果该`QVersionNumber`对象不包含小数，则返回0。
 
 ### `QVersionNumber QVersionNumber::normalized() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::normalized` 用于计算、查询或取得与“normalized”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个等效的版本号，但去掉所有尾随的零。
+要检查两个数字是否等价，在进行比较前对两个版本号使用归一化()。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVersionNumber`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QVersionNumber v1(5, 4);
+ QVersionNumber v2(5, 4, 0);
+ bool equivalent = v1.normalized() == v2.normalized();
+ bool equal = v1 == v2;
+ // equivalent is true
+ // equal is false
+```
 
 ### `[noexcept] int QVersionNumber::segmentAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::segmentAt` 用于计算、查询或取得与“segment、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`index`的段值。如果索引不存在，返回0。
 
 ### `[noexcept] qsizetype QVersionNumber::segmentCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::segmentCount` 用于计算、查询或取得与“segment、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储在`segments()`中的整数。
 
 ### `QList<int> QVersionNumber::segments() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::segments` 用于计算、查询或取得与“segments”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<int>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有数字段。
 
 ### `QString QVersionNumber::toString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个字符串，所有段都用一个周期（`.`）分隔。
 
 ### `[noexcept] bool operator!=(const QVersionNumber &lhs, const QVersionNumber &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 不等于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator<(const QVersionNumber &lhs, const QVersionNumber &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 小于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `QDataStream &operator<<(QDataStream &out, const QVersionNumber &version)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `out`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `version`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。传入 `const QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入版本号`version`以进行流`out`。
+请注意，这与`QDataStream::version()`无关。
 
 ### `[noexcept] bool operator<=(const QVersionNumber &lhs, const QVersionNumber &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 小于或等于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QVersionNumber &lhs, const QVersionNumber &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 等于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>(const QVersionNumber &lhs, const QVersionNumber &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 大于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `[noexcept] bool operator>=(const QVersionNumber &lhs, const QVersionNumber &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QVersionNumber &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 大于或等于 `rhs`，则返回 `true`；否则返回 `false`。
 
 ### `QDataStream &operator>>(QDataStream &in, QVersionNumber &version)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `in`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `version`：类型为 `QVersionNumber &`。没有默认值，调用时必须提供。传入 `QVersionNumber &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取流`in`的版本号并存储在`version`。
+请注意，这与`QDataStream::version()`无关。
 
 ### `(since 6.8) const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `const、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedefs 用于一个不透明类，实现了对`QVersionNumber`段的（反向）随机访问迭代器。
+注意：`QVersionNumber` 不支持原地修改段，因此没有可变迭代器。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) const_pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `const、pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) const_reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `const、reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) const_reverse_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `const、reverse、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedefs 用于一个不透明类，实现了对`QVersionNumber`段的（反向）随机访问迭代器。
+注意：`QVersionNumber` 不支持原地修改段，因此没有可变迭代器。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) difference_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `difference、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) size_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `尺寸或数量、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) value_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QVersionNumber` 的 `值访问、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供STL兼容性。
+注意：`QVersionNumber`不支持原地修改段，因此引用和`const_reference`，以及指针和`const_pointer`都是同一类型。
+这些类型防线是在Qt 6.8引入的。
 
 ### `(since 6.8) QVersionNumber::const_iterator begin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_iterator cbegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_iterator cend() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_iterator constBegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_reverse_iterator crbegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::crbegin` 用于计算、查询或取得与“crbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_reverse_iterator crend() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::crend` 用于计算、查询或取得与“crend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_iterator end() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_reverse_iterator rbegin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::rbegin` 用于计算、查询或取得与“rbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ### `(since 6.8) QVersionNumber::const_reverse_iterator rend() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QVersionNumber::rend` 用于计算、查询或取得与“rend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVersionNumber::const_reverse_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber::const_reverse_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`const_iterator`或`const_reverse_iterator`，分别指向该版本号的第一个或最后一个段之后的段。
+注意：`QVersionNumber`不支持原地修改分段，因此没有可变迭代器。
 
 ## 6. 深入实践与常见坑
 

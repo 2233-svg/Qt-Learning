@@ -66,22 +66,44 @@ for (auto it = container.cbegin(); it != container.cend(); ++it) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 1 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `qsizetype Iterator::iteration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::Iterator::iteration` 用于计算、查询或取得与“iteration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回当前执行处理器在`For`（`Iterator`）>>构造的`Do`体内的迭代索引。该函数仅在放入配方`Do`体的任何`GroupItem`元素的处理程序体内使用，否则可能会崩溃。确保`Iterator`传递给`For`元素。
+用例：
+执行`sequentialRecipe`时的输出为：
+在顺序模式下，完成处理程序中的迭代索引顺序保证保持。
+执行`parallelRecipe`时的输出为：
+在并行模式下，完成处理程序中的迭代索引顺序不保证保持，且取决于完成任务的顺序。并行`Do`体完成处理程序内返回的迭代索引与对应设置处理程序的原始迭代索引一致，因此后续完成处理程序的迭代索引顺序可能不是递增的。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`qsizetype`。
-- 参数：无。
+```cpp
+ const QList<std::chrono::seconds> timeouts = { 5s, 1s, 3s };
+ const ListIterator iterator(timeouts);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ const auto onSetup = [iterator](std::chrono::milliseconds &timeout) {
+     timeout = *iterator;
+     qDebug() << "Starting" << iterator.iteration() << "iteration with timeout"
+              << *iterator << "seconds.";
+ };
+ const auto onDone = [iterator] {
+     qDebug() << "Finished" << iterator.iteration() << "iteration with timeout"
+              << *iterator << "seconds.";
+ };
+
+ const Group sequentialRecipe = For(iterator) >> Do {
+     QTimeoutTask(onSetup, onDone)
+ };
+
+ const Group parallelRecipe = For(iterator) >> Do {
+     parallel,
+     QTimeoutTask(onSetup, onDone)
+ };
+```
 
 ## 6. 深入实践与常见坑
 

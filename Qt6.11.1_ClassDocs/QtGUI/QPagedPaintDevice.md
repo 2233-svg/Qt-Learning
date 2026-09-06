@@ -72,141 +72,84 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPagedPaintDevice::PdfVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPagedPaintDevice` 暴露的类型声明 `Pdf、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PdfVersion`。
-- 属性名：`QPagedPaintDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+PdfVersion 枚举描述了由`QPrinter`或`QPdfWriter`生成的PDF文件版本。
+- `QPagedPaintDevice::PdfVersion_1_4`：`0`;生成一份兼容PDF 1.4的文档。
+- `QPagedPaintDevice::PdfVersion_A1b`：`1`;生成一份PDF/A-1b兼容的文档。
+- `QPagedPaintDevice::PdfVersion_1_6`：`2`;生成一个兼容PDF 1.6的文档。该值是在Qt 5.12中添加的。
+- `QPagedPaintDevice::PdfVersion_X4 (since Qt 6.8)`：`3`;生成一份兼容PDF/X-4的文档。
 
 ### `[virtual noexcept] QPagedPaintDevice::~QPagedPaintDevice()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPagedPaintDevice` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了该物体。
 
 ### `[pure virtual] bool QPagedPaintDevice::newPage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPagedPaintDevice::newPage` 用于计算、查询或取得与“new、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+开始新一页。成功后返回`true`。
 
 ### `QPageLayout QPagedPaintDevice::pageLayout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPagedPaintDevice::pageLayout` 用于计算、查询或取得与“page、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPageLayout`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPageLayout`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前页面布局。使用此方法访问当前的`QPageSize`、`QPageLayout::Orientation`、`QMarginsF`、fullRect()和paintRect()。
+注意你不能对返回的物体使用设定器，必须调用单个`QPagedPaintDevice`设置器或使用`setPageLayout()`。
 
 ### `[since 6.0] QPageRanges QPagedPaintDevice::pageRanges() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPagedPaintDevice::pageRanges` 用于计算、查询或取得与“page、Ranges”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPageRanges`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPageRanges`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该设备相关的页面范围。
 
 ### `[virtual] bool QPagedPaintDevice::setPageLayout(const QPageLayout &newPageLayout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageLayout`。调用它会改变 `QPagedPaintDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newPageLayout`：类型为 `const QPageLayout &`。没有默认值，调用时必须提供。传入 `const QPageLayout &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面布局设置为`newPageLayout`。
+你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页面布局到新页面之前立即调用它。在调用 setPageLayout() 和 `newPage()` 之间，不应调用任何绘画方法，因为可能使用错误的绘画指标。
+如果页面布局成功设置为`newPageLayout`，则返回为真。
 
 ### `[virtual] bool QPagedPaintDevice::setPageMargins(const QMarginsF &margins, QPageLayout::Unit units = QPageLayout::Millimeter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageMargins`。调用它会改变 `QPagedPaintDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `margins`：类型为 `const QMarginsF &`。没有默认值，调用时必须提供。传入 `const QMarginsF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `units`：类型为 `QPageLayout::Unit`。默认值为 `QPageLayout::Millimeter`。传入 `QPageLayout::Unit` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面设置`margins`给定`units`定义。
+你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页边距前立即调用它。你不应在调用 setPageMargins() 和 `newPage()` 之间调用任何绘画方法，因为可能使用错误的绘画指标。
+要查看当前页页边缘，请使用`pageLayout()`。`margins()`。
+如果页边距被成功设置为`margins`，则返回为真。
 
 ### `[virtual] bool QPagedPaintDevice::setPageOrientation(QPageLayout::Orientation orientation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageOrientation`。调用它会改变 `QPagedPaintDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `orientation`：类型为 `QPageLayout::Orientation`。没有默认值，调用时必须提供。传入 `QPageLayout::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+让页面`orientation`。
+页面方向用于定义获取页面正交时页面大小的方向。
+你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页面新方向之前立即调用它。在调用 setPageOrientation() 和 `newPage()` 之间，不应调用任何绘画方法，因为可能使用错误的绘画指标。
+要获得当前`QPageLayout::Orientation`请使用`pageLayout()`.orientation()。
+如果页面方向成功设置为`orientation`，则返回为真。
 
 ### `[virtual, since 6.0] void QPagedPaintDevice::setPageRanges(const QPageRanges &ranges)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageRanges`。调用它会改变 `QPagedPaintDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ranges`：类型为 `const QPageRanges &`。没有默认值，调用时必须提供。传入 `const QPageRanges &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该设备的页面范围设置为`ranges`。
 
 ### `[virtual] bool QPagedPaintDevice::setPageSize(const QPageSize &pageSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPageSize`。调用它会改变 `QPagedPaintDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `pageSize`：类型为 `const QPageSize &`。没有默认值，调用时必须提供。传入 `const QPageSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将页面大小设置为`pageSize`。
+要获取当前`QPageSize`请使用 `pageLayout()`.pageSize()。
+你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页面大小之前立即调用它。在调用 setPageSize() 和 `newPage()` 之间，不应调用任何绘画方法，因为可能使用错误的绘画指标。
+如果页面大小被成功设置为`pageSize`，则返回为真。
 
 ## 6. 深入实践与常见坑
 

@@ -65,49 +65,28 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPlatformSurfaceEvent::SurfaceEventType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlatformSurfaceEvent` 暴露的类型声明 `Surface、Event、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SurfaceEventType`。
-- 属性名：`QPlatformSurfaceEvent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了平台表面事件的类型。可能的类型有：
+- `QPlatformSurfaceEvent::SurfaceCreated`：`0`;底层的原生表面已被创建
+- `QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed`：`1`;该事件后，底层的天然表面将立即被破坏
+`SurfaceAboutToBeDestroyed`事件类型作为停止渲染平台窗口的手段，防止其被破坏。
 
 ### `[explicit] QPlatformSurfaceEvent::QPlatformSurfaceEvent(QPlatformSurfaceEvent::SurfaceEventType surfaceEventType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPlatformSurfaceEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `surfaceEventType`：类型为 `QPlatformSurfaceEvent::SurfaceEventType`。没有默认值，调用时必须提供。传入 `QPlatformSurfaceEvent::SurfaceEventType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定`surfaceEventType`构造平台表面事件。
 
 ### `QPlatformSurfaceEvent::SurfaceEventType QPlatformSurfaceEvent::surfaceEventType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPlatformSurfaceEvent::surfaceEventType` 用于计算、查询或取得与“surface、Event、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPlatformSurfaceEvent::SurfaceEventType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPlatformSurfaceEvent::SurfaceEventType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回特定类型的平台表面事件。
 
 ## 6. 深入实践与常见坑
 

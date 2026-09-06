@@ -62,50 +62,27 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QAccessibleStateChangeEvent::QAccessibleStateChangeEvent(QAccessibleInterface *iface, QAccessible::State state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleStateChangeEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `iface`：类型为 `QAccessibleInterface *`。没有默认值，调用时必须提供。传入 `QAccessibleInterface *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `state`：类型为 `QAccessible::State`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的 QAccessibleStateChangeEvent。`iface` 是与事件关联的接口`state`是可访问对象的状态。
 
 ### `QAccessibleStateChangeEvent::QAccessibleStateChangeEvent(QObject *object, QAccessible::State state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleStateChangeEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `state`：类型为 `QAccessible::State`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`object`构造一个新的QAccessibleStateChangeEvent。与对象之前状态的差异为`state`。
 
 ### `QAccessible::State QAccessibleStateChangeEvent::changedStates() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleStateChangeEvent::changedStates` 用于计算、查询或取得与“changed、States”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAccessible::State`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessible::State`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回已更改的状态。
+请记住，返回的状态是那些已经发生变化的状态。要了解对象的状态，可以使用`QAccessibleInterface::state()`。
+例如，如果一个物体曾经拥有焦点但失去了焦点，该物体的焦点状态将设置为`false`。而该事件则说明了焦点的变化，焦点设置为`true`，因为焦点状态从`true`变为`false`。
 
 ## 6. 深入实践与常见坑
 

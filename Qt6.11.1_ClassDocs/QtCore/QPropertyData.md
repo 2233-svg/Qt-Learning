@@ -71,48 +71,28 @@ source = 2; // result 会重新计算
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QPropertyData::setValueBypassingBindings(QPropertyData<T>::parameter_type v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValueBypassingBindings`。调用它会改变 `QPropertyData` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `v`：类型为 `QPropertyData<T>::parameter_type`。没有默认值，调用时必须提供。传入 `QPropertyData<T>::parameter_type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将存储在该属性中的数据值设置为`v`。
+注意：使用此方法将绕过该属性注册的任何潜在绑定。
 
 ### `void QPropertyData::setValueBypassingBindings(QPropertyData<T>::rvalue_ref v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValueBypassingBindings`。调用它会改变 `QPropertyData` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `v`：类型为 `QPropertyData<T>::rvalue_ref`。没有默认值，调用时必须提供。传入 `QPropertyData<T>::rvalue_ref` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将存储在该属性中的数据值设置为`v`。
+注意：使用此方法将绕过该属性注册的任何潜在绑定。
 
 ### `QPropertyData<T>::parameter_type QPropertyData::valueBypassingBindings() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPropertyData::valueBypassingBindings` 用于计算、查询或取得与“值访问、Bypassing、Bindings”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPropertyData<T>::parameter_type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPropertyData<T>::parameter_type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储在此属性中的数据。
+注意：由于此方法会绕过任何绑定值，如果该属性被绑定，可能会返回过时值。使用此方法也不会将属性访问注册到当前执行的绑定中。
 
 ## 6. 深入实践与常见坑
 

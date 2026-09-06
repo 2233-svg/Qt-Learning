@@ -92,386 +92,255 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 25 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiShaderResourceBinding::StageFlagflags QRhiShaderResourceBinding::StageFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderResourceBinding` 暴露的类型声明 `Stage、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StageFlagflags QRhiShaderResourceBinding::StageFlags`。
-- 属性名：`QRhiShaderResourceBinding`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于指示着色器资源在哪些阶段中可见。
+- `QRhiShaderResourceBinding::VertexStage`：`1 << 0`;顶点阶段
+- `QRhiShaderResourceBinding::TessellationControlStage`：`1 << 1`;镶嵌控制（船体着色器）阶段
+- `QRhiShaderResourceBinding::TessellationEvaluationStage`：`1 << 2`;镶嵌评估（领域着色器）阶段
+- `QRhiShaderResourceBinding::FragmentStage`：`1 << 4`;片段（像素着色器）阶段
+- `QRhiShaderResourceBinding::ComputeStage`：`1 << 5`;计算阶段
+- `QRhiShaderResourceBinding::GeometryStage`：`1 << 3`;几何阶段
+StageFlags 类型是 QFlags 的 typedef<StageFlag>。它存储 StageFlag 值的 OR 组合。
 
 ### `enum QRhiShaderResourceBinding::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderResourceBinding` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QRhiShaderResourceBinding`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定绑定到绑定点的着色器资源类型。
+- `QRhiShaderResourceBinding::UniformBuffer`：`0`;均匀缓冲
+- `QRhiShaderResourceBinding::SampledTexture`：`1`;合成图像采样器（纹理和采样器对）。即使底层3D API关联的着色语言不支持该概念（如D3D和HLSL），仍支持该功能，因为着色器翻译层负责绑定点或着色器寄存器的适当转换和重新映射。
+- `QRhiShaderResourceBinding::Texture`：`2`;纹理（独立）
+- `QRhiShaderResourceBinding::Sampler`：`3`;采样器（独立）
+- `QRhiShaderResourceBinding::ImageLoad`：`4`;图像加载（使用 GLSL 时，这映射为对暴露在着色器中的一个或所有图层的单一层级`imageLoad()`，以及作为图像对象暴露给着色器的纹理）
+- `QRhiShaderResourceBinding::ImageStore`：`5`;图像存储（使用 GLSL 时，这映射为对暴露在着色器中作为图像对象的纹理进行单一层级的 `imageStore()` 或 imageAtomic*() 操作）
+- `QRhiShaderResourceBinding::ImageLoadStore`：`6`;图像加载与存储
+- `QRhiShaderResourceBinding::BufferLoad`：`7`;存储缓冲区负载（GLSL 映射为从着色器存储缓冲区读取）
+- `QRhiShaderResourceBinding::BufferStore`：`8`;存储缓冲区存储（GLSL 映射写入着色器存储缓冲区）
+- `QRhiShaderResourceBinding::BufferLoadStore`：`9`;存储缓冲区加载和存储
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::bufferLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bufferLoad`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回只读存储缓冲区的着色器资源绑定，具有给定的`binding`号和流水线`stage`。
+注意：当`buf`不是空时，必须是用`QRhiBuffer::StorageBuffer`创建的。
+注意：`buf`可以是空的。创建未指定资源的 `QRhiShaderResourceBindings` 是有效的，但此类对象不能与 `QRhiCommandBuffer::setShaderResources()` 一起使用。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：缓冲区加载/存储仅保证在计算流水线内可用。虽然部分后端支持在图形流水线中使用这些资源，但并非普遍支持，即使支持，也可能在障碍和同步方面出现意想不到的问题。因此，避免将此类资源与计算以外的着色器一起使用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::bufferLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, quint32 offset, quint32 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bufferLoad`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回只读存储缓冲区的着色器资源绑定，`binding`号和流水线`stage`。该重载仅绑定区域，按照`offset`和`size`的规定。
+注意：当`buf`不是空时，必须是用`QRhiBuffer::StorageBuffer`创建的。
+注意：`buf`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能与`QRhiCommandBuffer::setShaderResources()`一起使用。不过，它适合创建管道。因此，这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源已传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：缓冲区加载/存储仅保证在计算流水线内可用。虽然部分后端支持在图形流水线中使用这些资源，但并非普遍支持，即使支持，也可能在障碍和同步方面出现意想不到的问题。因此，避免将此类资源与计算以外的着色器一起使用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::bufferLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bufferLoadStore`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`binding`号和流水线`stage`的着色器资源绑定，用于读写存储缓冲区。
+注意：当`buf`不是空时，必须是用`QRhiBuffer::StorageBuffer`创建的。
+注意：`buf`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源已传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：缓冲区加载/存储仅保证在计算流水线内可用。虽然部分后端支持在图形流水线中使用这些资源，但并非普遍支持，即使支持，也可能在障碍和同步方面出现意想不到的问题。因此，避免将此类资源与计算以外的着色器一起使用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::bufferLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, quint32 offset, quint32 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bufferLoadStore`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`binding`号和流水线`stage`的着色器资源绑定，用于读写存储缓冲区。该超载仅绑定区域，按照`offset`和`size`的规定。
+注意：当`buf`不是空的，必须是用`QRhiBuffer::StorageBuffer`创建的。
+注意：`buf`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能与`QRhiCommandBuffer::setShaderResources()`一起使用。但它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：缓冲区加载/存储仅保证在计算流水线内可用。虽然部分后端支持在图形流水线中使用这些资源，但并非普遍支持，即使支持，也可能在障碍和同步方面出现意想不到的问题。因此，避免将此类资源与计算以外的着色器一起使用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::bufferStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bufferStore`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回只写存储缓冲区的着色器资源绑定，包含给定的`binding`号和流水线`stage`。
+注意：当`buf`不是空时，必须是用`QRhiBuffer::StorageBuffer`创建的。
+注意：`buf`可以为空。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：缓冲区加载/存储仅保证在计算流水线内可用。虽然部分后端支持在图形流水线中使用这些资源，但并非普遍支持，即使支持，也可能在障碍和同步方面出现意想不到的问题。因此，避免将此类资源与计算以外的着色器一起使用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::bufferStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, quint32 offset, quint32 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `bufferStore`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回只写存储缓冲区的着色器资源绑定，具有给定的`binding`号和流水线`stage`。该重载仅绑定一个区域，按照`offset`和`size`的规定。
+注意：当`buf`不是空时，必须是用 `QRhiBuffer::StorageBuffer` 创建的。
+注意：`buf`可以为空。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能与`QRhiCommandBuffer::setShaderResources()`一起使用。不过，它适合创建管道。因此，这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些已传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：缓冲区加载/存储仅保证在计算流水线内可用。虽然部分后端支持在图形流水线中使用这些资源，但并非普遍支持，即使支持，也可能在障碍和同步方面出现意想不到的问题。因此，避免将此类资源与计算以外的着色器一起使用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::imageLoad(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `imageLoad`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回只读存储图像的着色器资源绑定，具有给定的`binding`号和流水线`stage`。图像加载操作将访问指定`level`的所有层。（因此，如果纹理是立方体贴图，着色器必须使用imageCube而非image2D）。
+注意：当`tex`不是空时，必须是用`QRhiTexture::UsedWithLoadStore`创建的。
+注意：`tex`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能与`QRhiCommandBuffer::setShaderResources()`一起使用。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：图像加载/存储仅在计算和片段阶段可用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::imageLoadStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `imageLoadStore`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`binding`号和流水线`stage`的读写存储图像的着色器资源绑定。图像加载/存储操作将访问指定`level`的所有层。（因此，如果纹理是立方体贴图，着色器必须使用imageCube而非image2D）。
+注意：当`tex`不是空的，必须是用`QRhiTexture::UsedWithLoadStore`创建的。
+注意：`tex`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：图像加载/存储仅在计算和片段阶段可用。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::imageStore(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, int level)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `imageStore`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `level`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回只写存储图像的着色器资源绑定，具有给定的`binding`号和流水线`stage`。图像存储操作将访问指定`level`的所有层。（因此，如果纹理是立方体映射，着色器必须使用imageCube而非image2D）。
+注意：当`tex`不是无效时，必须是用`QRhiTexture::UsedWithLoadStore`创建的。
+注意：`tex`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`同时使用，这些资源已传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：图像加载/存储仅在计算和片段阶段可用。
 
 ### `bool QRhiShaderResourceBinding::isLayoutCompatible(const QRhiShaderResourceBinding &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLayoutCompatible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果布局与`other`兼容，返回`true`。布局不包含实际资源（如缓冲区或纹理）及相关参数（如偏移量或大小）。
+例如，下面的`a`和`b`不相等，但在布局上是兼容的：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QRhiShaderResourceBinding &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ auto a = QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage, buffer);
+ auto b = QRhiShaderResourceBinding::uniformBuffer(0, QRhiShaderResourceBinding::VertexStage, someOtherBuffer, 256);
+```
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::sampledTexture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex, QRhiSampler *sampler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sampledTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampler`：类型为 `QRhiSampler *`。没有默认值，调用时必须提供。传入 `QRhiSampler *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的绑定编号、流水线阶段、纹理和采样器（由`binding`、`stage`、`tex`、`sampler` 指定）的着色器资源绑定。
+注意：该函数等价于调用`sampledTextures()`，`count`为1。
+注意：`tex` 和 `sampler` 可以为空。创建未指定资源的 `QRhiShaderResourceBindings` 是有效的，但此类对象不能用于 `QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：着色器可能不能消耗超过16个纹理/采样器，具体取决于底层图形API。在渲染器设计中必须牢记这一硬性限制。这不适用于只占用单一绑定点（着色器寄存器）且可能包含256-2048个纹理的纹理数组，具体取决于底层图形API。纹理数组（见`sampledTextures()`）在这方面与使用相同数量的单个纹理没有区别。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::sampledTextures(int binding, QRhiShaderResourceBinding::StageFlags stage, int count, const QRhiShaderResourceBinding::TextureAndSampler *texSamplers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sampledTextures`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `texSamplers`：类型为 `const QRhiShaderResourceBinding::TextureAndSampler *`。没有默认值，调用时必须提供。传入 `const QRhiShaderResourceBinding::TextureAndSampler *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定绑定编号、流水线阶段以及由`binding`、`stage`、`count`和`texSamplers`指定的纹理采样器对数组的着色器资源绑定。
+注意：`count`必须至少为1，且不得大于16。
+注意：当`count`为1时，该函数等价于`sampledTexture()`。
+当涉及组合图像采样器数组时，该函数尤为重要。例如，在GLSL中`layout(binding = 5) uniform sampler2D shadowMaps[8];`声明一个组合图像采样器的数组。应用程序随后需要为绑定点5提供一个`QRhiShaderResourceBinding`，通过调用该函数，`count`设为8，并为数组中的每个元素提供有效的纹理和采样器来设置。
+警告：数组的所有元素都必须指定。上述示例中，唯一有效且可移植的方法是调用该函数，`count`为8。此外，所有`QRhiTexture`和`QRhiSampler`实例都必须有效，这意味着nullptr不被接受。这是因为一些底层API，如Vulkan，要求描述符数组中的每个元素都有一个有效的图像和采样器对象。如果某些数组元素不相关（因为着色器无法访问），建议应用程序提供“虚拟”采样器和纹理。
+注意：`texSamplers`可以为空。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::sampler(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiSampler *sampler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sampler`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `sampler`：类型为 `QRhiSampler *`。没有默认值，调用时必须提供。传入 `QRhiSampler *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定绑定号、流水线阶段和采样器（由`binding`、`stage`、`sampler`指定的着色器资源绑定。
+注意：`sampler`可以为空。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能与`QRhiCommandBuffer::setShaderResources()`一起使用。不过，它适合创建管道。因此，这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`与传`QRhiCommandBuffer::setShaderResources()`一起使用。
+不支持多个独立采样器的数组。
+这为独立的采样器对象创建了绑定，而`sampledTexture()`则适合组合图像采样器。在兼容Vulkan的GLSL代码中，单独的采样器被声明为`sampler`，而不是`sampler2D`：`layout(binding = 2) uniform sampler samp;`。
+既有`texture2D`和`sampler`，就可以一起使用来采样质感：`fragColor = texture(sampler2D(tex, samp), texcoord);`。
+注意：着色器可能无法消耗超过16个采样器，具体取决于底层图形API。在渲染器设计中必须牢记这一硬性限制。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::texture(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiTexture *tex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `texture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的绑定编号、流水线阶段和纹理的着色器资源绑定，这些绑定由`binding`、`stage`、`tex` 规定。
+注意：该函数等价于调用`count`为1的`textures()`。
+注意：`tex`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+这为独立的纹理（图像）对象创建绑定，而`sampledTexture()`适合组合图像采样器。在兼容Vulkan的GLSL代码中，单独纹理声明为`texture2D`，而不是`sampler2D`：`layout(binding = 1) uniform texture2D tex;`。
+注意：着色器可能无法消耗超过16个纹理，具体取决于底层图形API。在渲染器设计中必须牢记这一硬性限制。这不适用于那些只消耗单一绑定点（着色器寄存器）且可能包含256-2048个纹理的纹理数组，具体取决于底层图形API。纹理数组（见`sampledTextures()`）在这方面与使用相同数量的单个纹理没有区别。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::textures(int binding, QRhiShaderResourceBinding::StageFlags stage, int count, QRhiTexture **tex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `textures`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `tex`：类型为 `QRhiTexture **`。没有默认值，调用时必须提供。传入 `QRhiTexture **` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定绑定号、流水线阶段以及由`binding`、`stage`、`count`和`tex`指定（独立）纹理数组的着色器资源绑定。
+注意：`count`必须至少为1，且不得大于16。
+注意：当`count`为1时，该函数等价于`texture()`。
+警告：阵列中的所有元素必须指定。
+注意：`tex`可以为空。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。因此，这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::uniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uniformBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定绑定号、流水线阶段和缓冲区的着色器资源绑定，这些绑定点由`binding`、`stage`和`buf`指定的。
+注意：当`buf`不是空的，必须是用`QRhiBuffer::UniformBuffer`创建的。
+注意：`buf`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：如果`buf`大小超过`QRhi::MaxUniformBufferRange`报告的限制，可能会出现意外错误。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::uniformBuffer(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, quint32 offset, quint32 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uniformBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定绑定号、流水线阶段和缓冲区的着色器资源绑定，由`binding`、`stage`和`buf`指定的。该超载仅绑定`offset`和`size`指定区域。
+注意：用户需确保偏移量对齐于`QRhi::ubufAlignment()`。
+注意：`size`必须大于0。
+注意：当`buf`不是空时，必须用`QRhiBuffer::UniformBuffer`创建。
+注意：`buf`可以为空。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能用于`QRhiCommandBuffer::setShaderResources()`。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`同时使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：如果`size`超过`QRhi::MaxUniformBufferRange`报告的限制，可能会发生意外错误。
 
 ### `[static] QRhiShaderResourceBinding QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(int binding, QRhiShaderResourceBinding::StageFlags stage, QRhiBuffer *buf, quint32 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uniformBufferWithDynamicOffset`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBinding`。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stage`：类型为 `QRhiShaderResourceBinding::StageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的绑定编号、流水线阶段和由`binding`、`stage`和`buf`指定缓冲区的着色器资源绑定。假设均匀缓冲区具有动态偏移。动态偏移可以在`QRhiCommandBuffer::setShaderResources()`中指定，从而允许使用不同的偏移值而无需为缓冲区创建新的绑定。绑定区域的大小由`size`指定。与非动态偏移一样，`offset + size`不能超过`buf`的大小。
+注意：当`buf`不是无效时，必须是用`QRhiBuffer::UniformBuffer`创建的。
+注意：`buf`可以是空的。创建未指定资源的`QRhiShaderResourceBindings`是有效的，但此类对象不能与`QRhiCommandBuffer::setShaderResources()`一起使用。不过，它适合创建管道。这样的管道必须始终与另一个布局兼容的资源`QRhiShaderResourceBindings`一起使用，这些资源传递给`QRhiCommandBuffer::setShaderResources()`。
+注意：如果`size`超过`QRhi::MaxUniformBufferRange`报告的限制，可能会发生意外错误。
 
 ### `[noexcept] size_t qHash(const QRhiShaderResourceBinding &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRhiShaderResourceBinding::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRhiShaderResourceBinding &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRhiShaderResourceBinding &a, const QRhiShaderResourceBinding &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderResourceBinding` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiShaderResourceBinding &`。没有默认值，调用时必须提供。传入 `const QRhiShaderResourceBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiShaderResourceBinding &`。没有默认值，调用时必须提供。传入 `const QRhiShaderResourceBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QRhiShaderResourceBinding` 对象 `a` 和 `b` 中的所有绑定都相等，则返回 `false`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QRhiShaderResourceBinding &a, const QRhiShaderResourceBinding &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderResourceBinding` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiShaderResourceBinding &`。没有默认值，调用时必须提供。传入 `const QRhiShaderResourceBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiShaderResourceBinding &`。没有默认值，调用时必须提供。传入 `const QRhiShaderResourceBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QRhiShaderResourceBinding`对象的内容相等，`a`和`b`的内容相等，返回`true`。这包括资源（缓冲区、纹理）和相关参数（偏移量、大小）。仅比较布局（绑定点、流水线阶段、资源类型）时，请使用`isLayoutCompatible()`。
 
 ### `enum StageFlag { VertexStage, TessellationControlStage, TessellationEvaluationStage, FragmentStage, ComputeStage, GeometryStage }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderResourceBinding` 暴露的类型声明 `Stage、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于指示着色器资源在哪些阶段中可见。
+- `QRhiShaderResourceBinding::VertexStage`：`1 << 0`;顶点阶段
+- `QRhiShaderResourceBinding::TessellationControlStage`：`1 << 1`;镶嵌控制（船体着色器）阶段
+- `QRhiShaderResourceBinding::TessellationEvaluationStage`：`1 << 2`;镶嵌评估（领域着色器）阶段
+- `QRhiShaderResourceBinding::FragmentStage`：`1 << 4`;片段（像素着色器）阶段
+- `QRhiShaderResourceBinding::ComputeStage`：`1 << 5`;计算阶段
+- `QRhiShaderResourceBinding::GeometryStage`：`1 << 3`;几何阶段
+StageFlags 类型是 QFlags 的 typedef<StageFlag>。它存储 StageFlag 值的 OR 组合。
 
 ### `flags StageFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderResourceBinding` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于指示着色器资源在哪些阶段中可见。
+- `QRhiShaderResourceBinding::VertexStage`：`1 << 0`;顶点阶段
+- `QRhiShaderResourceBinding::TessellationControlStage`：`1 << 1`;镶嵌控制（船体着色器）阶段
+- `QRhiShaderResourceBinding::TessellationEvaluationStage`：`1 << 2`;镶嵌评估（领域着色器）阶段
+- `QRhiShaderResourceBinding::FragmentStage`：`1 << 4`;片段（像素着色器）阶段
+- `QRhiShaderResourceBinding::ComputeStage`：`1 << 5`;计算阶段
+- `QRhiShaderResourceBinding::GeometryStage`：`1 << 3`;几何阶段
+StageFlags 类型是 QFlags 的 typedef<StageFlag>。它存储 StageFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

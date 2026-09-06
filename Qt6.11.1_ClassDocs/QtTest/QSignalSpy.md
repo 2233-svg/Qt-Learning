@@ -67,116 +67,100 @@ target_link_libraries(mytarget PRIVATE Qt6::Test)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `template <typename PointerToMemberFunction> QSignalSpy::QSignalSpy(const QObject *object, PointerToMemberFunction signal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSignalSpy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个新的QSignalSpy，监听`QObject` `object` `signal`的发射。如果QSignalSpy无法监听有效信号（例如，`object` `nullptr`或`signal`不表示有效信号`object`），将使用`qWarning()`输出解释性警告消息，后续调用`isValid()`将返回false。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `signal`：类型为 `PointerToMemberFunction`。没有默认值，调用时必须提供。传入 `PointerToMemberFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSignalSpy spy(myPushButton, &QPushButton::clicked);
+```
 
 ### `QSignalSpy::QSignalSpy(const QObject *obj, QMetaMethod signal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSignalSpy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个新的QSignalSpy，监听`QObject` `obj` `signal`的发射。如果QSignalSpy无法监听有效信号（例如，`obj` `nullptr`或`signal`不表示有效信号为`obj`），将输出一个解释性警告消息，使用`qWarning()`，后续调用`isValid()`将返回false。
+当 Qt 的元对象系统在测试中被大量使用时，该构造器非常方便。
+基本使用示例：
+假设我们需要检查代表最小维和最大维度的`QWindow`类所有属性是否都正确可写。以下示例展示了其中一种方法：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `obj`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `signal`：类型为 `QMetaMethod`。没有默认值，调用时必须提供。传入 `QMetaMethod` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QObject object;
+ auto mo = object.metaObject();
+ auto signalIndex = mo->indexOfSignal("objectNameChanged(QString)");
+ auto signal = mo->method(signalIndex);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QSignalSpy spy(&object, signal);
+ object.setObjectName("A new object name");
+ QCOMPARE(spy.count(), 1);
+```
 
 ### `[explicit] QSignalSpy::QSignalSpy(const QObject *object, const char *signal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSignalSpy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个新的QSignalSpy，监听`QObject` `object` `signal`的发射。如果QSignalSpy无法监听有效信号（例如，`object` `nullptr`或`signal`不表示有效信号`object`），将使用`qWarning()`输出解释性警告消息，后续调用`isValid()`将返回false。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `signal`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSignalSpy spy(myPushButton, SIGNAL(clicked(bool)));
+```
 
 ### `[noexcept] QSignalSpy::~QSignalSpy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSignalSpy` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `[noexcept] bool QSignalSpy::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果信号间谍听到有效信号，则返回`true`，否则返回假。
 
 ### `QByteArray QSignalSpy::signal() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSignalSpy::signal` 用于计算、查询或取得与“signal”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回间谍当前正在收听的归一化信号。
 
 ### `bool QSignalSpy::wait(int timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSignalSpy::wait` 用于计算、查询或取得与“等待”相关的操作。调用时要先确认当前状态和 `timeout` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+这是一个重载函数，等效地传递`timeout`时间超载：
+如果信号在`timeout`中至少发射过一次，返回`true`，否则返回`false`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `timeout`：类型为 `int`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ wait(std::chrono::milliseconds{timeout});
+```
 
 ### `[since 6.6] bool QSignalSpy::wait(std::chrono::milliseconds timeout = std::chrono::seconds{5})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSignalSpy::wait` 用于计算、查询或取得与“等待”相关的操作。调用时要先确认当前状态和 `timeout` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+启动一个事件循环，直到收到给定信号或`timeout`过去，以先发生者为准。
+`timeout`有有效的标准：：:d uration（标准：：时间：：秒，标准：：时间：毫秒......等等）。
+如果信号在 `timeout` 中至少发出一次，则返回`true`，否则返回 `false`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `timeout`：类型为 `std::chrono::milliseconds`。默认值为 `std::chrono::seconds{5}`。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using namespace std::chrono_literals;
+ QSignalSpy spy(object, signal);
+ spy.wait(2s);
+```
 
 ## 6. 深入实践与常见坑
 

@@ -86,251 +86,140 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDBusConnectionInterface::RegisterServiceReply`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 暴露的类型声明 `注册、Service、Reply`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RegisterServiceReply`。
-- 属性名：`QDBusConnectionInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`registerService()`可能的返回值：
+- `QDBusConnectionInterface::ServiceNotRegistered`：`0`;调用失败，服务名称未被注册。
+- `QDBusConnectionInterface::ServiceRegistered`：`1`;调用者现在是服务名称的所有者。
+- `QDBusConnectionInterface::ServiceQueued`：`2`;调用者指定了`QueueService`标志，服务已注册，因此我们处于队列中。
+当该应用获得服务时，`serviceRegistered()`信号将被发射。
 
 ### `enum QDBusConnectionInterface::ServiceQueueOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 暴露的类型声明 `Service、Queue、Options`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ServiceQueueOptions`。
-- 属性名：`QDBusConnectionInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于确定服务注册应如何行为的标志，如果服务名称已经注册。
+- `QDBusConnectionInterface::DontQueueService`：`0`;如果应用程序请求已拥有的名称，则不会进行队列。registeredService() 调用将直接失败。这是默认设置。
+- `QDBusConnectionInterface::QueueService`：`1`;尝试注册请求的服务，但如果已有其他应用注册，则不尝试替换。只需将该应用放入队列，直到放弃为止。此时`serviceRegistered()`信号将被发射。
+- `QDBusConnectionInterface::ReplaceExistingService`：`2`;如果其他应用程序已经注册了该服务名称，尝试替换它。
 
 ### `enum QDBusConnectionInterface::ServiceReplacementOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 暴露的类型声明 `Service、Replacement、Options`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ServiceReplacementOptions`。
-- 属性名：`QDBusConnectionInterface`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于判断 D-Bus 服务器是否应允许其他应用程序用 `ReplaceExistingService` 选项替换该应用已注册的名称的标志。
+可能的数值如下：
+- `QDBusConnectionInterface::DontAllowReplacement`：`0`;不要允许其他应用取代我们。该服务必须明确未注册于`unregisterService()`，其他应用才能获得。这是默认情况。
+- `QDBusConnectionInterface::AllowReplacement`：`1`;允许其他应用以`ReplaceExistingService`选择无需干预即可`registerService()`我们。如果发生这种情况，`serviceUnregistered()`信号将被发射。
 
 ### `[read-only] activatableServiceNames : QDBusReply<QStringList>`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 的状态/能力属性。通常通过 `activatableServiceNames()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+保持可激活的服务名称。
+列出所有可以在公交车上激活的名称。
 
-**签名拆解：**
-
-- 属性类型：`QDBusReply<QStringList>`。
-- 属性名：`activatableServiceNames`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `activatableServiceNames()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] registeredServiceNames : QDBusReply<QStringList>`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 的状态/能力属性。通常通过 `registeredServiceNames()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+持有注册的服务名称。
+列出目前在公交车上登记的所有姓名。
 
-**签名拆解：**
-
-- 属性类型：`QDBusReply<QStringList>`。
-- 属性名：`registeredServiceNames`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `registeredServiceNames()` 读取当前值；它不会修改应用状态。
 
 ### `[signal] void QDBusConnectionInterface::callWithCallbackFailed(const QDBusError &error, const QDBusMessage &call)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 发出的通知信号 `callWithCallbackFailed`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `const QDBusError &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-- 参数 `call`：类型为 `const QDBusMessage &`。没有默认值，调用时必须提供。传入 `const QDBusMessage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`QDBusConnection::callWithCallback()`中出现错误时，该信号会发出。`error` 指定错误。`call` 是无法传递的消息。
 
 ### `[slot] QDBusReply<bool> QDBusConnectionInterface::isServiceRegistered(const QString &serviceName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `isServiceRegistered`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<bool>`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`serviceName`拥有的服务名称目前已注册，返回`true`。
 
 ### `[slot] QDBusReply<QDBusConnectionInterface::RegisterServiceReply> QDBusConnectionInterface::registerService(const QString &serviceName, QDBusConnectionInterface::ServiceQueueOptions qoption = DontQueueService, QDBusConnectionInterface::ServiceReplacementOptions roption = DontAllowReplacement)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `registerService`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<QDBusConnectionInterface::RegisterServiceReply>`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `qoption`：类型为 `QDBusConnectionInterface::ServiceQueueOptions`。默认值为 `DontQueueService`。传入 `QDBusConnectionInterface::ServiceQueueOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `roption`：类型为 `QDBusConnectionInterface::ServiceReplacementOptions`。默认值为 `DontAllowReplacement`。传入 `QDBusConnectionInterface::ServiceReplacementOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+总线上`serviceName`注册服务名称的请求。`qoption`标志规定了如果D-Bus服务器已经注册`serviceName`应如何表现。`roption`标志表示服务器是否应允许其他应用程序替换我们的注册名称。
+如果服务注册成功，`serviceRegistered()`信号将被发出。如果我们被列入队列，获得名称时信号会被发出。如果`roption` `AllowReplacement`，如果有其他应用程序替换，`serviceUnregistered()`信号将被发出。
 
 ### `[slot, since 6.10] QDBusReply<QVariantMap> QDBusConnectionInterface::serviceCredentials(const QString &serviceName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusConnectionInterface::serviceCredentials` 用于计算、查询或取得与“service、Credentials”相关的操作。调用时要先确认当前状态和 `serviceName` 的有效范围；返回类型是 `QDBusReply<QVariantMap>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<QVariantMap>`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前持有总线服务`serviceName`进程的连接凭据。
+更多信息请参见<https://dbus.freedesktop.org/doc/dbus-specification.html>部分：“方法：org.freedesktop.DBus.GetConnectionCredentials”。
 
 ### `[slot] QDBusReply<QString> QDBusConnectionInterface::serviceOwner(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `serviceOwner`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<QString>`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该名称的主要所有者的唯一连接名称`name`。如果请求的名称没有所有者，则返回`org.freedesktop.DBus.Error.NameHasNoOwner`错误。
 
 ### `[slot] QDBusReply<uint> QDBusConnectionInterface::servicePid(const QString &serviceName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `servicePid`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<uint>`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前承载总线服务`serviceName`进程的Unix进程ID（PID）。
 
 ### `[signal] void QDBusConnectionInterface::serviceRegistered(const QString &service)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 发出的通知信号 `serviceRegistered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `service`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当该应用获取`service`提供的总线服务名称（唯一连接名称或知名服务名称）时，D-总线服务器会发出该信号。
+获取是在该应用请求使用名称`registerService()`之后进行的。
 
 ### `[slot] QDBusReply<uint> QDBusConnectionInterface::serviceUid(const QString &serviceName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `serviceUid`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<uint>`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前持有总线服务`serviceName`进程的Unix用户ID（UID）。
 
 ### `[signal] void QDBusConnectionInterface::serviceUnregistered(const QString &service)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusConnectionInterface` 发出的通知信号 `serviceUnregistered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `service`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当该应用失去`service`分配的总线服务名称所有权时，D-Bus服务器会发出该信号。
 
 ### `[slot] QDBusReply<void> QDBusConnectionInterface::startService(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `startService`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<void>`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+请求公交车开始以“`name`”命名的服务。
 
 ### `[slot] QDBusReply<bool> QDBusConnectionInterface::unregisterService(const QString &serviceName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `unregisterService`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`QDBusReply<bool>`。
-- 参数 `serviceName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放之前已注册于`registerService()`的公交服务名称`serviceName`的权利要求。如果该应用拥有该名称的所有权，将被释放给其他申请申请。如果仅排队该名称，则放弃其在队列中的位置。
 
 ### `QDBusReply<QStringList> activatableServiceNames() const`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `activatableServiceNames`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+保持可激活的服务名称。
+列出所有可以在公交车上激活的名称。
 
-**签名拆解：**
-
-- 返回值：`QDBusReply<QStringList>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `activatableServiceNames()` 读取当前值；它不会修改应用状态。
 
 ### `QDBusReply<QStringList> registeredServiceNames() const`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `registeredServiceNames`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+持有注册的服务名称。
+列出目前在公交车上登记的所有姓名。
 
-**签名拆解：**
-
-- 返回值：`QDBusReply<QStringList>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `registeredServiceNames()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

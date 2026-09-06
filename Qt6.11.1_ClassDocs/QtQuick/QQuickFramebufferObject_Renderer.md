@@ -65,113 +65,66 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[protected] Renderer::Renderer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject::Renderer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的渲染器。
+该函数在场景图同步阶段调用，当图形线程被阻塞时。
 
 ### `[virtual noexcept protected] Renderer::~Renderer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject::Renderer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`QQuickFramebufferObject`项目的场景图资源被清理时，渲染器会自动被删除。
+该函数在渲染线程中被调用。
 
 ### `[virtual protected] QOpenGLFramebufferObject *Renderer::createFramebufferObject(const QSize &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::Renderer::createFramebufferObject` 用于计算、查询或取得与“创建、Framebuffer、Object”相关的操作。调用时要先确认当前状态和 `size` 的有效范围；返回类型是 `QOpenGLFramebufferObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLFramebufferObject *`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当需要新的 FBO 时调用该函数。此过程发生在初始帧。如果 `QQuickFramebufferObject::textureFollowsItemSize` 设置为 true，每次项目尺寸变化时都会再次调用。
+返回的 FBO 可以有任何附件。如果`QOpenGLFramebufferObjectFormat`指示 FBO 需要多重采样，渲染器内部实现会分配第二个 FBO，并将多采样后的 FBO 漂白到用于显示纹理的 FBO 中。
+注意：有些硬件对小FBO尺寸存在问题。`size`考虑了这一点，所以在用固定尺寸覆盖尺寸时要小心。最小尺寸64x64应该总是可行。
+注意：`size`考虑了设备像素比，意味着它已经乘以正确的比例因子。当将包含`QQuickFramebufferObject`物品的窗口移动到设置不同的屏幕时，FBO会自动重建，并以正确的大小调用此功能。
 
 ### `[protected] QOpenGLFramebufferObject *Renderer::framebufferObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::Renderer::framebufferObject` 用于计算、查询或取得与“framebuffer、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOpenGLFramebufferObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLFramebufferObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前正在渲染的帧缓冲对象。
 
 ### `[protected] void Renderer::invalidateFramebufferObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::Renderer::invalidateFramebufferObject` 用于执行与“invalidate、Framebuffer、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在 `synchronize()` 期间调用该函数以使当前 FBO 失效。这会导致创建一个新的 FBO 并带有 `createFramebufferObject()`。
 
 ### `[pure virtual protected] void Renderer::render()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickFramebufferObject::Renderer` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当 FBO 渲染到该 时调用这个函数。此时帧缓冲区被绑定，`glViewport` 也设置为匹配 FBO 大小。
+函数返回后，FBO会自动解除绑定。
+注意：不要假设调用该函数时 OpenGL 状态已全部设置为默认值，或调用间保持状态。Qt Quick 渲染器和自定义渲染代码都使用相同的 OpenGL 上下文。这意味着状态可能在调用该函数之前被 Quick 修改过。
+注意：建议在返回前调用`QQuickOpenGLUtils::resetOpenGLState()`。这会重置 Qt Quick 渲染器使用的 OpenGL 状态，从而避免渲染代码在该函数中所做的状态变化干扰。
 
 ### `[virtual protected] void Renderer::synchronize(QQuickFramebufferObject *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::Renderer::synchronize` 用于执行与“synchronize”相关的操作。调用时要先确认当前状态和 `item` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QQuickFramebufferObject *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数是`QQuickFramebufferObject::update()`的结果。
+使用该函数更新渲染器中发生的变更。`item` 是实例化该渲染器的项目。在创建 FBO 之前，该函数只调用一次。
+例如，如果该项目有由QML控制的颜色属性，应调用`QQuickFramebufferObject::update()`并使用同步化（synchronize）将新颜色复制到渲染器中，以便用于渲染下一帧。
+这个函数是渲染器和物品之间唯一安全读取和写入彼此成员的地方。
 
 ### `[protected] void Renderer::update()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickFramebufferObject::Renderer::update` 用于执行与“更新”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当 FBO 需要重新渲染时调用此函数。可以在 `render()` 中调用，以在下一帧之前强制 FBO 重新渲染。注意：此函数应在渲染器内部使用。要在 GUI 线程上更新项，请使用 `QQuickFramebufferObject::update()`。
 
 ## 6. 深入实践与常见坑
 

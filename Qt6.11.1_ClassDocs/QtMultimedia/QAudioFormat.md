@@ -97,391 +97,238 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 29 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QAudioFormat::AudioChannelPosition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 暴露的类型声明 `Audio、Channel、Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AudioChannelPosition`。
-- 属性名：`QAudioFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述可能的音频通道位置。这些通道遵循22.2环绕声配置中使用的标清。
+- `QAudioFormat::UnknownPosition`：`0`;位置不明
+- `QAudioFormat::FrontLeft`：`1`
+- `QAudioFormat::FrontRight`：`2`
+- `QAudioFormat::FrontCenter`：`3`
+- `QAudioFormat::LFE`：`4`;低频效果通道（低音炮）
+- `QAudioFormat::BackLeft`：`5`
+- `QAudioFormat::BackRight`：`6`
+- `QAudioFormat::FrontLeftOfCenter`：`7`
+- `QAudioFormat::FrontRightOfCenter`：`8`
+- `QAudioFormat::BackCenter`：`9`
+- `QAudioFormat::LFE2`：`19`
+- `QAudioFormat::SideLeft`：`10`
+- `QAudioFormat::SideRight`：`11`
+- `QAudioFormat::TopFrontLeft`：`13`
+- `QAudioFormat::TopFrontRight`：`15`
+- `QAudioFormat::TopFrontCenter`：`14`
+- `QAudioFormat::TopCenter`：`12`
+- `QAudioFormat::TopBackLeft`：`16`
+- `QAudioFormat::TopBackRight`：`18`
+- `QAudioFormat::TopSideLeft`：`20`
+- `QAudioFormat::TopSideRight`：`21`
+- `QAudioFormat::TopBackCenter`：`17`
+- `QAudioFormat::BottomFrontCenter`：`22`
+- `QAudioFormat::BottomFrontLeft`：`23`
+- `QAudioFormat::BottomFrontRight`：`24`
 
 ### `enum QAudioFormat::ChannelConfig`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 暴露的类型声明 `Channel、Config`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ChannelConfig`。
-- 属性名：`QAudioFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了标准化的音频通道布局。最常见的配置包括单声道、立体声、2.1声道（立体声加低频）、5.1环绕和7.1环绕配置。
+- `QAudioFormat::ChannelConfigUnknown`：`0`;信道配置尚不清楚。
+- `QAudioFormat::ChannelConfigMono`：`QtPrivate::channelConfig(FrontCenter)`;音频有一个中置声道。
+- `QAudioFormat::ChannelConfigStereo`：`QtPrivate::channelConfig(FrontLeft, FrontRight)`;音频有两个声道，分别是左声道和右声道。
+- `QAudioFormat::ChannelConfig2Dot1`：`QtPrivate::channelConfig(FrontLeft, FrontRight, LFE)`;音频有三个声道，分别是左声道、右声道和低频效果（LFE）。
+- `QAudioFormat::ChannelConfig3Dot0`：`QtPrivate::channelConfig(FrontLeft, FrontRight, FrontCenter)`;音频有三个声道，分别是左声道、右声道和中声道。
+- `QAudioFormat::ChannelConfig3Dot1`：`QtPrivate::channelConfig(FrontLeft, FrontRight, FrontCenter, LFE)`;音频有四个声道，分别是左声道、右声道、中声道和低频效果（LFE）。
+- `QAudioFormat::ChannelConfigSurround5Dot0`：`QtPrivate::channelConfig(FrontLeft, FrontRight, FrontCenter, BackLeft, BackRight)`;音频有五个声道，分别是左声道、右声道、中声道、正声道`BackLeft`声道和声道`BackRight`。
+- `QAudioFormat::ChannelConfigSurround5Dot1`：`QtPrivate::channelConfig(FrontLeft, FrontRight, FrontCenter, LFE, BackLeft, BackRight)`;音频有6个声道，分别是左声道、右声道、中声道、低频效果器（LFE）、`BackLeft`声道和`BackRight`声道。
+- `QAudioFormat::ChannelConfigSurround7Dot0`：`QtPrivate::channelConfig(FrontLeft, FrontRight, FrontCenter, BackLeft, BackRight, SideLeft, SideRight)`;音频有7个声道，分别是左、右、中、`BackLeft`、`BackRight`、`SideLeft`和`SideRight`。
+- `QAudioFormat::ChannelConfigSurround7Dot1`：`QtPrivate::channelConfig(FrontLeft, FrontRight, FrontCenter, LFE, BackLeft, BackRight, SideLeft, SideRight)`;音频有8个声道，分别是左声道、右声道、中声道、低频效果器、`BackLeft`声道、`BackRight`声道、正`SideLeft`声道和`SideRight`声道。
 
 ### `enum QAudioFormat::SampleFormat`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 暴露的类型声明 `Sample、格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SampleFormat`。
-- 属性名：`QAudioFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt始终期望并使用主平台的字节音。在自己处理外部音频数据时，确保在写入`QAudioSink`或音`QAudioBuffer`前将其转换为正确的字节。
+- `QAudioFormat::Unknown`：`0`;未设定
+- `QAudioFormat::UInt8`：`1`;采样是8位无符号整数
+- `QAudioFormat::Int16`：`2`;采样是16位符号整数
+- `QAudioFormat::Int32`：`3`;采样是32位符号整数
+- `QAudioFormat::Float`：`4`;样本是浮点
 
 ### `[default] QAudioFormat::QAudioFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建了一种新的音频格式。
+数值初始化如下：
+- `sampleRate()` = 0
+- `channelCount()` = 0
+- `sampleFormat()` = `QAudioFormat::Unknown`
 
 ### `[default] QAudioFormat::QAudioFormat(const QAudioFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QAudioFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`other`构建一种新的音频格式。
 
 ### `[noexcept default] QAudioFormat::~QAudioFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁这个音频格式。
 
 ### `qint32 QAudioFormat::bytesForDuration(qint64 microseconds) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::bytesForDuration` 用于计算、查询或取得与“字节、For、持续时间”相关的操作。调用时要先确认当前状态和 `microseconds` 的有效范围；返回类型是 `qint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint32`。
-- 参数 `microseconds`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该音频格式所需的字节数，`microseconds`。
+如果该格式不成立，则返回 0。
+注意，如果 `microseconds` 不是`sampleRate()`的精确分数，可能会出现一些四舍五入。
 
 ### `qint32 QAudioFormat::bytesForFrames(qint32 frameCount) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::bytesForFrames` 用于计算、查询或取得与“字节、For、Frames”相关的操作。调用时要先确认当前状态和 `frameCount` 的有效范围；返回类型是 `qint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint32`。
-- 参数 `frameCount`：类型为 `qint32`。没有默认值，调用时必须提供。传入 `qint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式`frameCount`帧所需的字节数。
+如果该格式不成立，则返回 0。
 
 ### `[constexpr] int QAudioFormat::bytesPerFrame() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::bytesPerFrame` 用于计算、查询或取得与“字节、Per、Frame”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表示该格式中一帧（每个通道中的一个采样）所需的字节数。
+如果该格式无效，则返回0。
 
 ### `[constexpr noexcept] int QAudioFormat::bytesPerSample() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::bytesPerSample` 用于计算、查询或取得与“字节、Per、Sample”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表示该格式中一个样本所需的字节数。
+如果该格式无效，则返回0。
 
 ### `[constexpr noexcept] QAudioFormat::ChannelConfig QAudioFormat::channelConfig() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::channelConfig` 用于计算、查询或取得与“channel、Config”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAudioFormat::ChannelConfig`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAudioFormat::ChannelConfig`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前频道配置。
 
 ### `[static constexpr] template <typename... Args> QAudioFormat::ChannelConfig QAudioFormat::channelConfig(Args... channels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `channelConfig`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QAudioFormat::ChannelConfig`。
-- 参数 `channels`：类型为 `Args...`。没有默认值，调用时必须提供。传入 `Args...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`channels`当前的信道配置。
 
 ### `[constexpr noexcept] int QAudioFormat::channelCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::channelCount` 用于计算、查询或取得与“channel、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前频道计数值。
 
 ### `[noexcept] int QAudioFormat::channelOffset(QAudioFormat::AudioChannelPosition channel) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::channelOffset` 用于计算、查询或取得与“channel、Offset”相关的操作。调用时要先确认当前状态和 `channel` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `channel`：类型为 `QAudioFormat::AudioChannelPosition`。没有默认值，调用时必须提供。传入 `QAudioFormat::AudioChannelPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回某一音频`channel`在给定格式中音频帧内的位置。如果该格式的通道不存在或通道配置未知，返回-1。
 
 ### `[static] QAudioFormat::ChannelConfig QAudioFormat::defaultChannelConfigForChannelCount(int channelCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultChannelConfigForChannelCount`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QAudioFormat::ChannelConfig`。
-- 参数 `channelCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`channelCount`返回默认频道配置。
+默认配置最多支持8个声道，对应标准的单声道、立体声和环绕声配置。对于更高声道数量，只需使用`QAudioFormat::AudioChannelPosition`中定义的前`channelCount`音频声道。
 
 ### `qint64 QAudioFormat::durationForBytes(qint32 bytes) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::durationForBytes` 用于计算、查询或取得与“持续时间、For、字节”相关的操作。调用时要先确认当前状态和 `bytes` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `bytes`：类型为 `qint32`。没有默认值，调用时必须提供。传入 `qint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式中由`bytes`表示的微秒数。
+如果该格式不成立，则返回 0。
+注意，如果`bytes`不是每帧字节数的正好倍数，可能会进行一些舍入处理。
 
 ### `qint64 QAudioFormat::durationForFrames(qint32 frameCount) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::durationForFrames` 用于计算、查询或取得与“持续时间、For、Frames”相关的操作。调用时要先确认当前状态和 `frameCount` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `frameCount`：类型为 `qint32`。没有默认值，调用时必须提供。传入 `qint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回以`frameCount`帧表示的微秒数。
 
 ### `qint32 QAudioFormat::framesForBytes(qint32 byteCount) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::framesForBytes` 用于计算、查询或取得与“frames、For、字节”相关的操作。调用时要先确认当前状态和 `byteCount` 的有效范围；返回类型是 `qint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint32`。
-- 参数 `byteCount`：类型为 `qint32`。没有默认值，调用时必须提供。传入 `qint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式中由`byteCount`表示的帧数。
+注意，如果`byteCount`不是每帧字节数的正好倍数，可能会出现一些四舍五入。
+每帧每个通道有一个采样。
 
 ### `qint32 QAudioFormat::framesForDuration(qint64 microseconds) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::framesForDuration` 用于计算、查询或取得与“frames、For、持续时间”相关的操作。调用时要先确认当前状态和 `microseconds` 的有效范围；返回类型是 `qint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint32`。
-- 参数 `microseconds`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表示该格式`microseconds`所需的帧数。
+注意，如果`microseconds`不是`sampleRate()`的精确分数，可能会出现一定的舍入。
 
 ### `[constexpr noexcept] bool QAudioFormat::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果所有参数都有效，返回`true`。
 
 ### `float QAudioFormat::normalizedSampleValue(const void *sample) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::normalizedSampleValue` 用于计算、查询或取得与“normalized、Sample、值访问”相关的操作。调用时要先确认当前状态和 `sample` 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数 `sample`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`sample`值归一化为-1到1之间的数值。该方法依赖于QaudioFormat。
 
 ### `[constexpr noexcept] QAudioFormat::SampleFormat QAudioFormat::sampleFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::sampleFormat` 用于计算、查询或取得与“sample、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAudioFormat::SampleFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAudioFormat::SampleFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的采样格式。
 
 ### `[constexpr noexcept] int QAudioFormat::sampleRate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAudioFormat::sampleRate` 用于计算、查询或取得与“sample、Rate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的采样率（赫兹）。
 
 ### `[noexcept] void QAudioFormat::setChannelConfig(QAudioFormat::ChannelConfig config)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setChannelConfig`。调用它会改变 `QAudioFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `config`：类型为 `QAudioFormat::ChannelConfig`。没有默认值，调用时必须提供。传入 `QAudioFormat::ChannelConfig` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将通道配置设置为`config`。
+将音频格式的通道配置设置为标准音频通道配置之一。
+注意：这也会改变频道数量。
 
 ### `[constexpr noexcept] void QAudioFormat::setChannelCount(int channels)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setChannelCount`。调用它会改变 `QAudioFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `channels`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将频道计数设置为`channels`。设置后频道配置也设为`ChannelConfigUnknown`。
 
 ### `[constexpr noexcept] void QAudioFormat::setSampleFormat(QAudioFormat::SampleFormat format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleFormat`。调用它会改变 `QAudioFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `QAudioFormat::SampleFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将采样格式设置为`format`。
 
 ### `[constexpr noexcept] void QAudioFormat::setSampleRate(int samplerate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleRate`。调用它会改变 `QAudioFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `samplerate`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+采样率设置为`samplerate`赫兹。
 
 ### `bool operator!=(const QAudioFormat &a, const QAudioFormat &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QAudioFormat &`。没有默认值，调用时必须提供。传入 `const QAudioFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QAudioFormat &`。没有默认值，调用时必须提供。传入 `const QAudioFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果音频格式`a`不等于`b`，返回`true`，否则返回`false`。
 
 ### `bool operator==(const QAudioFormat &a, const QAudioFormat &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QAudioFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QAudioFormat &`。没有默认值，调用时必须提供。传入 `const QAudioFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QAudioFormat &`。没有默认值，调用时必须提供。传入 `const QAudioFormat &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果音频格式`a`等于`b`，返回`true`，否则返回`false`。
 
 ## 6. 深入实践与常见坑
 

@@ -119,691 +119,374 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 52 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSurfaceFormat::FormatOptionflags QSurfaceFormat::FormatOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 暴露的类型声明 `格式化、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FormatOptionflags QSurfaceFormat::FormatOptions`。
-- 属性名：`QSurfaceFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含用于与`QSurfaceFormat`的格式选项。
+- `QSurfaceFormat::StereoBuffers`：`0x0001`;用于请求表面格式的立体声缓冲。
+- `QSurfaceFormat::DebugContext`：`0x0002`;用于请求带有额外调试信息的调试上下文。
+- `QSurfaceFormat::DeprecatedFunctions`：`0x0004`;用于请求将弃用函数包含在 OpenGL 上下文配置文件中。如果未指定，你应获得一个前向兼容的上下文，且没有支持功能，标记为弃用。这需要 OpenGL 3.0 或更高版本。
+- `QSurfaceFormat::ResetNotification`：`0x0008`;启用关于 OpenGL 上下文重置的通知。状态随后可通过上下文的 `isValid()` 函数查询。注意，未设置该标志并不保证上下文状态丢失永远不会发生。此外，某些实现可能选择报告上下文丢失，尽管该标志存在。支持动态支持上下文丢失监控的平台，如 Windows 的 WGL，或 Linux/X11（xcb）的 GLX，会监控每次调用 `makeCurrent()` 的状态。详见`isValid()`相关信息。
+- `QSurfaceFormat::ProtectedContent`：`0x0010`;允许访问受保护内容。这使得GPU能够操作受保护的资源（表面、缓冲区、纹理），例如受DRM保护的视频内容。目前仅为EGL实现。
+FormatOptions 类型是 QFlags 的 typedef<FormatOption>。它存储 FormatOption 值的 OR 组合。
 
 ### `enum QSurfaceFormat::OpenGLContextProfile`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 暴露的类型声明 `打开、GL、Context、Profile`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OpenGLContextProfile`。
-- 属性名：`QSurfaceFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定OpenGL上下文配置文件，配合`QSurfaceFormat::setMajorVersion()`和`QSurfaceFormat::setMinorVersion()`。
+配置文件在 OpenGL 3.2 及以上版本中公开，用于在受限核心配置文件和可能包含已废弃支持功能的兼容性配置文件之间进行选择。
+注意，核心配置文件可能仍包含已弃用并在更高版本中计划移除的功能。要访问该核心配置文件的弃用功能，可以在设置的OpenGL版本中使用`QSurfaceFormat`格式选项`QSurfaceFormat::DeprecatedFunctions`。
+- `QSurfaceFormat::NoProfile`：`0`;OpenGL 版本低于 3.2。对于 3.2 及以后版本，这与 CoreProfile 相同。
+- `QSurfaceFormat::CoreProfile`：`1`;OpenGL 3.0 版本中弃用的功能不可用。
+- `QSurfaceFormat::CompatibilityProfile`：`2`;可用早期 OpenGL 版本的功能。
 
 ### `enum QSurfaceFormat::RenderableType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 暴露的类型声明 `Renderable、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RenderableType`。
-- 属性名：`QSurfaceFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举指定了该表面的渲染后端。
+- `QSurfaceFormat::DefaultRenderableType`：`0x0`;默认的未指定渲染方法
+- `QSurfaceFormat::OpenGL`：`0x1`;桌面OpenGL渲染
+- `QSurfaceFormat::OpenGLES`：`0x2`;OpenGL ES 2.0 渲染
+- `QSurfaceFormat::OpenVG`：`0x4`;开放矢量图形渲染
 
 ### `enum QSurfaceFormat::SwapBehavior`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 暴露的类型声明 `Swap、Behavior`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SwapBehavior`。
-- 属性名：`QSurfaceFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSurfaceFormat`用该枚举来指定曲面的交换行为。交换行为对应用程序来说大多透明，但它会影响渲染延迟和吞吐量等因素。
+- `QSurfaceFormat::DefaultSwapBehavior`：`0`;平台默认的、未指定掉期行为。
+- `QSurfaceFormat::SingleBuffer`：`1`;用于请求单缓冲，当OpenGL直接渲染到屏幕且没有中间屏外缓冲时，可能导致闪烁。
+- `QSurfaceFormat::DoubleBuffer`：`2`;这通常是桌面平台上默认的交换行为，由一个后缓冲区和一个前缓冲区组成。渲染先对后缓冲区进行，然后交换后缓冲区和前缓冲区，或者根据实现方式将后缓冲区内容复制到前缓冲区。
+- `QSurfaceFormat::TripleBuffer`：`3`;这种交换行为有时用于降低在渲染率勉强跟上屏幕刷新率时跳帧的风险。根据平台，由于流水线行为的改进，这也可能带来GPU的稍微更高效利用。三重缓冲会以额外的一帧内存使用和延迟为代价，且根据底层平台可能不支持。
 
 ### `QSurfaceFormat::QSurfaceFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建默认初始化的QSurfaceFormat。
+注意：默认情况下请求使用 OpenGL 2.0，因为它提供了平台与 OpenGL 实现之间最高级别的可移植性。
 
 ### `QSurfaceFormat::QSurfaceFormat(QSurfaceFormat::FormatOptions options)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `options`：类型为 `QSurfaceFormat::FormatOptions`。没有默认值，调用时必须提供。传入 `QSurfaceFormat::FormatOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QSurfaceFormat，格式为`options`。
 
 ### `QSurfaceFormat::QSurfaceFormat(const QSurfaceFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[noexcept] QSurfaceFormat::~QSurfaceFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉`QSurfaceFormat`。
 
 ### `int QSurfaceFormat::alphaBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::alphaBufferSize` 用于计算、查询或取得与“alpha、Buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取颜色缓冲区α通道的比特大小。
 
 ### `int QSurfaceFormat::blueBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::blueBufferSize` 用于计算、查询或取得与“blue、Buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取颜色缓冲区蓝色通道的比特大小。
 
 ### `const QColorSpace &QSurfaceFormat::colorSpace() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::colorSpace` 用于计算、查询或取得与“color、Space”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QColorSpace &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QColorSpace &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回色彩空间。
 
 ### `[static] QSurfaceFormat QSurfaceFormat::defaultFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回全局默认表面格式。
+当未调用`setDefaultFormat()`时，这就是默认构造的`QSurfaceFormat`。
 
 ### `int QSurfaceFormat::depthBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::depthBufferSize` 用于计算、查询或取得与“depth、Buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回深度缓冲区大小。
 
 ### `int QSurfaceFormat::greenBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::greenBufferSize` 用于计算、查询或取得与“green、Buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取颜色缓冲区绿色通道的比特大小。
 
 ### `bool QSurfaceFormat::hasAlpha() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAlpha`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 alpha 缓冲区大小大于零，返回 `true`。
+这意味着表面可能会被用来实现每像素的半透明效果。
 
 ### `int QSurfaceFormat::majorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::majorVersion` 用于计算、查询或取得与“major、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回归主要的OpenGL版本。
+默认版本是2.0。
 
 ### `int QSurfaceFormat::minorVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::minorVersion` 用于计算、查询或取得与“minor、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回了次要的OpenGL版本。
 
 ### `QSurfaceFormat::FormatOptions QSurfaceFormat::options() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::options` 用于计算、查询或取得与“options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSurfaceFormat::FormatOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat::FormatOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的格式选项。
 
 ### `QSurfaceFormat::OpenGLContextProfile QSurfaceFormat::profile() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::profile` 用于计算、查询或取得与“profile”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSurfaceFormat::OpenGLContextProfile`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat::OpenGLContextProfile`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取配置好的OpenGL上下文配置文件。
+如果请求的OpenGL版本小于3.2，则忽略该设置。
 
 ### `int QSurfaceFormat::redBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::redBufferSize` 用于计算、查询或取得与“red、Buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取颜色缓冲区红色通道的位数。
 
 ### `QSurfaceFormat::RenderableType QSurfaceFormat::renderableType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的核心操作 `renderableType`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat::RenderableType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它得到了可渲染类型。
+在桌面OpenGL、OpenGL ES和 `OpenVG` 之间选择。
 
 ### `int QSurfaceFormat::samples() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::samples` 用于计算、查询或取得与“samples”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+启用多重采样时返回每像素采样的采样数，禁用多采样时返回`-1`。默认返回值为`-1`。
 
 ### `void QSurfaceFormat::setAlphaBufferSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAlphaBufferSize`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置颜色缓冲区α通道的比特为单位的期望`size`。
 
 ### `void QSurfaceFormat::setBlueBufferSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBlueBufferSize`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置颜色缓冲区蓝色通道的比特为单位的期望`size`。
 
 ### `[since 6.0] void QSurfaceFormat::setColorSpace(const QColorSpace &colorSpace)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColorSpace`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `colorSpace`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置首选`colorSpace`。
+例如，这允许在支持sRGB的平台上请求默认帧缓冲区的窗口。
+注意：当平台不支持请求的色彩空间时，请求将被忽略。创建窗口后查询`QSurfaceFormat`，以确认颜色空间请求是否能被接受。
+注意：该设置控制窗口默认帧缓冲区是否能够在特定色彩空间中更新和混合。它本身不会改变应用程序的输出。应用程序的渲染代码仍需通过相应的OpenGL调用选择加入，以启用在给定色彩空间内进行更新和混合，而非使用标准线性操作。
 
 ### `[static] void QSurfaceFormat::setDefaultFormat(const QSurfaceFormat &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setDefaultFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置全局默认表面`format`。
+该格式默认用于`QOpenGLContext`、`QWindow`、`QOpenGLWidget`等类。
+它总可以通过使用该类自身的 setFormat() 函数在每个实例上覆盖。不过，通常在应用程序开始时一次性设置所有窗口的格式会更方便。它还保证了在需要共享上下文的情况下的正确行为，因为通过该函数设置格式保证所有上下文和表面，即使是由 Qt 内部创建的，也将使用相同的格式。
 
 ### `void QSurfaceFormat::setDepthBufferSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthBufferSize`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将最小深度缓冲区大小设置为`size`。
 
 ### `void QSurfaceFormat::setGreenBufferSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGreenBufferSize`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置颜色缓冲区绿色通道的比特为单位的期望`size`。
 
 ### `void QSurfaceFormat::setMajorVersion(int major)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMajorVersion`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `major`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置目标`major` OpenGL版本。
 
 ### `void QSurfaceFormat::setMinorVersion(int minor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinorVersion`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `minor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置目标`minor` OpenGL版本。
+默认版本是2.0。
 
 ### `void QSurfaceFormat::setOption(QSurfaceFormat::FormatOption option, bool on = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOption`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QSurfaceFormat::FormatOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `on`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `on`为真，设置格式选项为 `option`;否则，清除该选项。
+为了验证选项是否被尊重，可以在生成表面/上下文后将实际格式与请求的格式进行比较。
 
 ### `void QSurfaceFormat::setOptions(QSurfaceFormat::FormatOptions options)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptions`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QSurfaceFormat::FormatOptions`。没有默认值，调用时必须提供。传入 `QSurfaceFormat::FormatOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将格式选项设置为`options`。
+为了验证选项是否被尊重，可以在生成表面/上下文后将实际格式与请求的格式进行比较。
 
 ### `void QSurfaceFormat::setProfile(QSurfaceFormat::OpenGLContextProfile profile)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProfile`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `profile`：类型为 `QSurfaceFormat::OpenGLContextProfile`。没有默认值，调用时必须提供。传入 `QSurfaceFormat::OpenGLContextProfile` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置所需的OpenGL上下文`profile`。
+如果请求的OpenGL版本小于3.2，则忽略该设置。
 
 ### `void QSurfaceFormat::setRedBufferSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRedBufferSize`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置颜色缓冲区红色通道的比特为单位的期望`size`。
 
 ### `void QSurfaceFormat::setRenderableType(QSurfaceFormat::RenderableType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderableType`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QSurfaceFormat::RenderableType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置所需的可渲染`type`。
+可以在桌面版OpenGL、OpenGL ES和`OpenVG`之间选择。
 
 ### `void QSurfaceFormat::setSamples(int numSamples)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSamples`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `numSamples`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当启用多重采样时，将每像素的首选采样数设置为`numSamples`。默认情况下，多重采样是被禁用的。
 
 ### `void QSurfaceFormat::setStencilBufferSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilBufferSize`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将首选模板缓冲区大小设置为`size`位。
 
 ### `void QSurfaceFormat::setStereo(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStereo`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enable`为真，则启用立体声缓冲;否则禁用立体声缓冲。
+立体声缓冲默认是禁用的。
+立体缓冲提供额外的颜色缓冲区，用于生成左眼和右眼图像。
 
 ### `void QSurfaceFormat::setSwapBehavior(QSurfaceFormat::SwapBehavior behavior)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSwapBehavior`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `behavior`：类型为 `QSurfaceFormat::SwapBehavior`。没有默认值，调用时必须提供。传入 `QSurfaceFormat::SwapBehavior` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把交换`behavior`设在表面。
+交换行为指定了需要单缓冲、双缓冲还是三缓冲。默认设置`DefaultSwapBehavior`显示平台默认交换行为。
 
 ### `void QSurfaceFormat::setSwapInterval(int interval)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSwapInterval`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `interval`：类型为 `int`。没有默认值，调用时必须提供。时间间隔，Qt 定时器通常使用毫秒；要检查 0、负数和超出范围时的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置首选的交换间隔。交换间隔指定了缓冲区交换发生前显示的最小视频帧数。这可以用来将窗口中的GL绘制与屏幕的垂直刷新同步。
+将`interval`值设为0会关闭垂直刷新同步，任何高于0的值都会开启垂直同步。将`interval`设为更高的值，例如10，则每次缓冲区交换之间会有10次垂直回扫。
+默认间隔为1。
+底层平台可能不支持更改交换间隔。在这种情况下，请求将被无声忽略。
 
 ### `void QSurfaceFormat::setVersion(int major, int minor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVersion`。调用它会改变 `QSurfaceFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `major`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `minor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置所需的`major`和`minor` OpenGL版本。
+默认版本是2.0。
 
 ### `int QSurfaceFormat::stencilBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::stencilBufferSize` 用于计算、查询或取得与“stencil、Buffer、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模板缓冲区大小（比特）。
 
 ### `bool QSurfaceFormat::stereo() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::stereo` 用于计算、查询或取得与“stereo”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用立体声缓冲，返回`true`;否则返回false。立体声缓冲默认被禁用。
 
 ### `QSurfaceFormat::SwapBehavior QSurfaceFormat::swapBehavior() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::swapBehavior` 用于计算、查询或取得与“swap、Behavior”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSurfaceFormat::SwapBehavior`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat::SwapBehavior`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回配置中的交换行为。
 
 ### `int QSurfaceFormat::swapInterval() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::swapInterval` 用于计算、查询或取得与“swap、间隔”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回交换间隔。
 
 ### `bool QSurfaceFormat::testOption(QSurfaceFormat::FormatOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::testOption` 用于计算、查询或取得与“test、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `option`：类型为 `QSurfaceFormat::FormatOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果设置了格式选项`option`，则返回true;否则返回false。
 
 ### `std::pair<int, int> QSurfaceFormat::version() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSurfaceFormat::version` 用于计算、查询或取得与“version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::pair<int, int>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::pair<int, int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 std：:p air<int， int>，代表 OpenGL 版本。
+用于版本检查，例如 format.version() >= std：:p air（3， 2）。
 
 ### `QSurfaceFormat &QSurfaceFormat::operator=(const QSurfaceFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat &`。
-- 参数 `other`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该对象分配`other`。
 
 ### `[noexcept] bool operator!=(const QSurfaceFormat &lhs, const QSurfaceFormat &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QSurfaceFormat` 对象 `lhs` 和 `rhs` 的所有选项都相等，则返回 `lhs`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QSurfaceFormat &lhs, const QSurfaceFormat &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QSurfaceFormat`对象`lhs`和`rhs`的所有选项相等，返回`true`。
 
 ### `enum FormatOption { StereoBuffers, DebugContext, DeprecatedFunctions, ResetNotification, ProtectedContent }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 暴露的类型声明 `格式化、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含用于与`QSurfaceFormat`的格式选项。
+- `QSurfaceFormat::StereoBuffers`：`0x0001`;用于请求表面格式的立体声缓冲。
+- `QSurfaceFormat::DebugContext`：`0x0002`;用于请求带有额外调试信息的调试上下文。
+- `QSurfaceFormat::DeprecatedFunctions`：`0x0004`;用于请求将弃用函数包含在 OpenGL 上下文配置文件中。如果未指定，你应获得一个前向兼容的上下文，且没有支持功能，标记为弃用。这需要 OpenGL 3.0 或更高版本。
+- `QSurfaceFormat::ResetNotification`：`0x0008`;启用关于 OpenGL 上下文重置的通知。状态随后可通过上下文的 `isValid()` 函数查询。注意，未设置该标志并不保证上下文状态丢失永远不会发生。此外，某些实现可能选择报告上下文丢失，尽管该标志存在。支持动态支持上下文丢失监控的平台，如 Windows 的 WGL，或 Linux/X11（xcb）的 GLX，会监控每次调用 `makeCurrent()` 的状态。详见`isValid()`相关信息。
+- `QSurfaceFormat::ProtectedContent`：`0x0010`;允许访问受保护内容。这使得GPU能够操作受保护的资源（表面、缓冲区、纹理），例如受DRM保护的视频内容。目前仅为EGL实现。
+FormatOptions 类型是 QFlags 的 typedef<FormatOption>。它存储 FormatOption 值的 OR 组合。
 
 ### `flags FormatOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSurfaceFormat` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含用于与`QSurfaceFormat`的格式选项。
+- `QSurfaceFormat::StereoBuffers`：`0x0001`;用于请求表面格式的立体声缓冲。
+- `QSurfaceFormat::DebugContext`：`0x0002`;用于请求带有额外调试信息的调试上下文。
+- `QSurfaceFormat::DeprecatedFunctions`：`0x0004`;用于请求将弃用函数包含在 OpenGL 上下文配置文件中。如果未指定，你应获得一个前向兼容的上下文，且没有支持功能，标记为弃用。这需要 OpenGL 3.0 或更高版本。
+- `QSurfaceFormat::ResetNotification`：`0x0008`;启用关于 OpenGL 上下文重置的通知。状态随后可通过上下文的 `isValid()` 函数查询。注意，未设置该标志并不保证上下文状态丢失永远不会发生。此外，某些实现可能选择报告上下文丢失，尽管该标志存在。支持动态支持上下文丢失监控的平台，如 Windows 的 WGL，或 Linux/X11（xcb）的 GLX，会监控每次调用 `makeCurrent()` 的状态。详见`isValid()`相关信息。
+- `QSurfaceFormat::ProtectedContent`：`0x0010`;允许访问受保护内容。这使得GPU能够操作受保护的资源（表面、缓冲区、纹理），例如受DRM保护的视频内容。目前仅为EGL实现。
+FormatOptions 类型是 QFlags 的 typedef<FormatOption>。它存储 FormatOption 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

@@ -155,1010 +155,742 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 76 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QAbstractSpinBox::ButtonSymbols`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 暴露的类型声明 `Button、Symbols`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ButtonSymbols`。
-- 属性名：`QAbstractSpinBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这种枚举类型描述了旋转框中按钮上可以显示的符号。
+- `QAbstractSpinBox::UpDownArrows`：`0`;经典风格的小箭头。
+- `QAbstractSpinBox::PlusMinus`：`1`;以及——符号。
+- `QAbstractSpinBox::NoButtons`：`2`;不要显示按钮。
 
 ### `enum QAbstractSpinBox::CorrectionMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 暴露的类型声明 `Correction、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CorrectionMode`。
-- 属性名：`QAbstractSpinBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型描述了旋转盒在编辑结束后纠正`Intermediate`值的模式。
+- `QAbstractSpinBox::CorrectToPreviousValue`：`0`;自旋盒将恢复到最后有效值。
+- `QAbstractSpinBox::CorrectToNearestValue`：`1`;自旋盒将恢复到最接近的有效值。
 
 ### `enum QAbstractSpinBox::StepEnabledFlagflags QAbstractSpinBox::StepEnabled`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 暴露的类型声明 `Step、启用状态、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StepEnabledFlagflags QAbstractSpinBox::StepEnabled`。
-- 属性名：`QAbstractSpinBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractSpinBox::StepNone`：`0x00`
+- `QAbstractSpinBox::StepUpEnabled`：`0x01`
+- `QAbstractSpinBox::StepDownEnabled`：`0x02`
+StepEnabled 类型是 QFlags 的 typedef<StepEnabledFlag>。它存储 StepEnabledFlag 值的 OR 组合。
 
 ### `accelerated : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setAccelerated(...)` 设置，之后用 `accelerated()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了当按下阶级上/下按钮时，旋转盒是否会加速步进频率。
+如果启用了，旋转框会随着你按住按钮的时间越长，数值的增减会越快。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`accelerated`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `accelerated()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] acceptableInput : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的状态/能力属性。通常通过 `acceptableInput()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性是否满足当前验证。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`acceptableInput`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `acceptableInput()` 读取当前值；它不会修改应用状态。
 
 ### `alignment : Qt::Alignment`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setAlignment(...)` 设置，之后用 `Alignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示自旋盒的对齐。
+可能的数值有`Qt::AlignLeft`、`Qt::AlignRight`和`Qt::AlignHCenter`。
+默认情况下，对齐是`Qt::AlignLeft`。
+尝试将对齐设置为非法标志组合毫无效果。
 
-**签名拆解：**
-
-- 属性类型：`Qt::Alignment`。
-- 属性名：`alignment`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
 
 ### `buttonSymbols : ButtonSymbols`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setButtonSymbols(...)` 设置，之后用 `buttonSymbols()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留当前按钮符号模式。
+可能的值可以是`UpDownArrows`或`PlusMinus`。默认值是`UpDownArrows`。
+注意，有些样式可能渲染`PlusMinus`和`UpDownArrows`完全相同。
 
-**签名拆解：**
-
-- 属性类型：`ButtonSymbols`。
-- 属性名：`buttonSymbols`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `buttonSymbols()` 读取当前值；它不会修改应用状态。
 
 ### `correctionMode : CorrectionMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setCorrectionMode(...)` 设置，之后用 `correctionMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性具有编辑结束时纠正`Intermediate`值的模式。
+默认模式是`QAbstractSpinBox::CorrectToPreviousValue`。
 
-**签名拆解：**
-
-- 属性类型：`CorrectionMode`。
-- 属性名：`correctionMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `correctionMode()` 读取当前值；它不会修改应用状态。
 
 ### `frame : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setFrame(...)` 设置，之后用 `frame()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否成立，取决于自旋盒是否以一个框架绘制自身。
+如果启用（默认），旋转盒会在一个框架内绘制自己，否则旋转盒会在没有任何框架的情况下绘制自己。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`frame`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `frame()` 读取当前值；它不会修改应用状态。
 
 ### `keyboardTracking : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setKeyboardTracking(...)` 设置，之后用 `keyboardTracking()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定自旋盒启用键盘跟踪。
+如果启用了键盘跟踪（默认），旋转盒在输入新值时会发出valueChanged()和textChanged()信号。
+例如，当用户输入600输入600时，自旋盒会发出3个信号，分别为60、60和600。
+如果禁用键盘跟踪，旋转盒在输入时不会发出valueChanged()和textChanged()信号。它会在之后、按回车键、键盘失去焦点或使用其他旋转盒功能（如按方向键）时发出信号。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`keyboardTracking`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardTracking()` 读取当前值；它不会修改应用状态。
 
 ### `readOnly : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setReadOnly(...)` 设置，之后用 `readOnly()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定自旋盒是否为只读。
+在只读模式下，用户仍可将文本复制到剪贴板，或拖拽文本;但无法编辑。
+`QAbstractSpinBox`中的`QLineEdit`在只读模式下没有显示光标。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`readOnly`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `readOnly()` 读取当前值；它不会修改应用状态。
 
 ### `showGroupSeparator : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setShowGroupSeparator(...)` 设置，之后用 `showGroupSeparator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性判定是否启用千分隔符。默认情况下，该属性为假。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`showGroupSeparator`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+**如何使用：** 调用 `showGroupSeparator()` 读取当前值；它不会修改应用状态。
 
 ### `specialValueText : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setSpecialValueText(...)` 设置，之后用 `specialValueText()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含特殊值文本。
+如果设置为，旋转框会在当前值等于最小值()时显示该文本而非数值。通常用来表示该选择具有特殊（默认）含义。
+例如，如果你的旋转框允许用户选择显示图像的缩放因子（或缩放等级），而你的应用程序能够自动选择一个缩放因子，使图像完全嵌入显示窗口，你可以这样设置旋转框：
+用户可以选择从1%到1000%的缩放，或者选择“自动”，由应用程序自行选择。你的代码必须将自转盒值为0，视为用户请求将图像缩放以适应窗口内。
+所有值都以前缀和后缀（如已设置）显示，唯独特殊值仅显示特殊值文本。该特殊文本通过传递`QString`的 `QSpinBox::textChanged()` 信号传递。
+要关闭特殊值文本显示，请用空字符串调用该函数。默认情况下没有特殊值文本，即数值按常显示。
+如果没有设置特殊值文本，specialValueText() 返回一个空字符串。
 
-**签名拆解：**
+**如何使用：** 调用 `specialValueText()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QString`。
-- 属性名：`specialValueText`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QSpinBox *zoomSpinBox = new QSpinBox;
+     zoomSpinBox->setRange(0, 1000);
+     zoomSpinBox->setSingleStep(10);
+     zoomSpinBox->setSuffix("%");
+     zoomSpinBox->setSpecialValueText(tr("Automatic"));
+     zoomSpinBox->setValue(100);
+```
 
 ### `[read-only] text : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的状态/能力属性。通常通过 `text()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含自旋盒的文本，包括任何前缀和后缀。
+没有默认文本。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`text`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `text()` 读取当前值；它不会修改应用状态。
 
 ### `wrapping : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的配置属性。初始化或状态切换时通过 `setWrapping(...)` 设置，之后用 `wrapping()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性适用于自旋盒是否为圆形。
+如果包裹为真，从最大值()向上移动会到达最小值，反之亦然。包裹只有在设置了最小值()和最大值时才有意义。
 
-**签名拆解：**
+**如何使用：** 调用 `wrapping()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`bool`。
-- 属性名：`wrapping`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSpinBox *spinBox = new QSpinBox(this);
+ spinBox->setRange(0, 100);
+ spinBox->setWrapping(true);
+ spinBox->setValue(100);
+ spinBox->stepBy(1);
+ // value is 0
+```
 
 ### `[explicit] QAbstractSpinBox::QAbstractSpinBox(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有默认`wrapping`和对齐属性的抽象自旋盒，`parent`。
 
 ### `[virtual noexcept] QAbstractSpinBox::~QAbstractSpinBox()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当 `QAbstractSpinBox` 被销毁时调用。
 
 ### `[override virtual protected] void QAbstractSpinBox::changeEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QWidget::changeEvent`（QEvent *事件）。
+该事件处理程序可以重新实现以处理状态变化。
+该事件中被更改的状态可以通过提供的`event`检索。
+变更事件包括：`QEvent::ToolBarChange`、`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::WindowTitleChange`、`QEvent::IconTextChange`、`QEvent::ModifiedChange`、`QEvent::MouseTrackingChange`、`QEvent::ParentChange`、`QEvent::WindowStateChange`、`QEvent::LanguageChange`、`QEvent::LocaleChange`、`QEvent::LayoutDirectionChange`、`QEvent::ReadOnlyChange`。
 
 ### `[virtual slot] void QAbstractSpinBox::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除行编辑中除前缀和后缀外的所有文本。
 
 ### `[override virtual protected] void QAbstractSpinBox::closeEvent(QCloseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `closeEvent`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QCloseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::closeEvent`（QCloseEvent *event）。
+当 Qt 收到来自窗口系统顶层控件的窗口关闭请求时，该事件处理程序会以该`event`调用。
+默认情况下，事件被接受，小部件关闭。你可以重新实现这个函数，改变小部件对窗口关闭请求的响应方式。例如，你可以通过调用所有事件的 `ignore()` 来阻止窗口关闭。
+主窗口应用程序通常会重新实现该函数，以检查用户的工作是否已被保存，并在关闭前请求许可。
 
 ### `[override virtual protected] void QAbstractSpinBox::contextMenuEvent(QContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
+当控件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用处理器。
+默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
 
 ### `[signal] void QAbstractSpinBox::editingFinished()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 发出的通知信号 `editingFinished`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号发出后编辑完成。当旋转盒失去焦点且按下回车键时，就会发生这种情况。
 
 ### `[override virtual] bool QAbstractSpinBox::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `[virtual] void QAbstractSpinBox::fixup(QString &input) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::fixup` 用于执行与“fixup”相关的操作。调用时要先确认当前状态和 `input` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `input`：类型为 `QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`input`在按回车键或调用`interpretText()`时未被验证为`QValidator::Acceptable`，`QAbstractSpinBox`会调用该虚拟函数。它会尝试修改文本使其有效。在各个子类中重新实现。
 
 ### `[override virtual protected] void QAbstractSpinBox::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::focusInEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点接收）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] void QAbstractSpinBox::focusOutEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QWidget::focusOutEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] void QAbstractSpinBox::hideEvent(QHideEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::hideEvent` 用于执行与“隐藏、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QHideEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::hideEvent`（QHideEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件隐藏事件。事件通过`event`参数传递。
+隐藏事件会在小部件被隐藏后立即发送。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，恢复窗口时自发显示事件。收到自发隐藏事件后，小部件仍被视为可见，意义`isVisible()`。
 
 ### `[virtual protected] void QAbstractSpinBox::initStyleOption(QStyleOptionSpinBox *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::initStyleOption` 用于执行与“init、Style、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionSpinBox *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用这个`QSpinBox`的值初始化`option`。这种方法对需要 `QStyleOptionSpinBox`但不想自己填满所有信息的子类很有用。
 
 ### `[override virtual] QVariant QAbstractSpinBox::inputMethodQuery(Qt::InputMethodQuery query) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `query` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `query`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodQuery`（Qt：：InputMethodQuery query） const.
+该方法仅适用于输入控件。输入方法用于查询控件的一组属性，以支持复杂的输入法操作，以支持周围文本和重新转换。
+`query` 指定查询的属性。
 
 ### `void QAbstractSpinBox::interpretText()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::interpretText` 用于执行与“interpret、文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数解释自旋盒的文本。如果值自上次解释以来发生变化，则会发出信号。
 
 ### `[override virtual protected] void QAbstractSpinBox::keyPressEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyPressEvent`（QKeyEvent *event）。
+该功能负责键盘输入。
+具体处理的密钥如下：
+- `Enter/Return`：即使值自上次发出以来未变，也会重新解释文本并发出信号。
+- `Up`：这将调用`stepBy`（1）
+- `Down`：这将触发`stepBy`（-1）
+- `Page up`：这将引发`stepBy`（10）
+- `Page down`：这将触发`stepBy`（-10）
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的按键事件。
+小部件必须先调用`setFocusPolicy()`接受焦点，并且必须拥有焦点才能接收按键事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现会关闭弹出小部件，如果用户按下`QKeySequence::Cancel`的按键序列（通常是Escape键）。否则事件会被忽略，以便小部件的父节点能够解释。
+注意`QKeyEvent`以 isAccepted() == true 开头，所以你不需要调用 `QKeyEvent::accept()`——只要你对密钥执行时不要调用基类实现即可。
 
 ### `[override virtual protected] void QAbstractSpinBox::keyReleaseEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyReleaseEvent`（QKeyEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该小部件的密钥释放事件。
+小部件必须先接受焦点并拥有焦点，才能接收密钥释放事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现忽略事件，以便小部件的父节点能够解释事件。
+注意`QKeyEvent`以 isAccepted() == true开头，所以你不需要调用`QKeyEvent::accept()`——只要你对密钥操作时不要调用基类实现即可。
 
 ### `[protected] QLineEdit *QAbstractSpinBox::lineEdit() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::lineEdit` 用于计算、查询或取得与“行、Edit”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLineEdit *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLineEdit *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回指向自旋盒的行编辑位置的指针。
 
 ### `[override virtual] QSize QAbstractSpinBox::minimumSizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::minimumSizeHint` 用于计算、查询或取得与“最小值、尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现属性的访问函数：`QWidget::minimumSizeHint`。
 
 ### `[override virtual protected] void QAbstractSpinBox::mouseMoveEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseMoveEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标移动事件。
+如果关闭鼠标追踪，只有在鼠标移动过程中按下鼠标按钮时才会发生鼠标移动事件。如果开启鼠标追踪，即使未按键，鼠标移动事件也会发生。
+`QMouseEvent::position()`报告鼠标光标相对于该小部件的位置。对于按下和释放事件，位置通常与最后一次鼠标移动事件的位置相同，但如果用户的手握手，可能会有所不同。这是底层窗口系统的功能，而非Qt。
+如果你想在鼠标移动时立即显示提示（例如，获取鼠标坐标与`QMouseEvent::position()`并显示为提示），你必须先启用上述的鼠标追踪功能。然后，为了确保提示立即更新，你必须在鼠标移动事件（mouseMoveEvent）实现中调用`QToolTip::showText()`而不是`setToolTip()`。
 
 ### `[override virtual protected] void QAbstractSpinBox::mousePressEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mousePressEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标按键事件。
+如果你在 mousePressEvent() 创建新控件，`mouseReleaseEvent()`可能不会出现在你预期的位置，这取决于底层窗口系统（或 X11 窗口管理器）、控件的位置，甚至可能还有其他因素。
+默认实现实现了当你点击窗口外时关闭弹出小部件的功能。对于其他小部件类型，它没有任何作用。
 
 ### `[override virtual protected] void QAbstractSpinBox::mouseReleaseEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::mouseReleaseEvent`（QMouseEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标释放事件。
 
 ### `[override virtual protected] void QAbstractSpinBox::paintEvent(QPaintEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
+绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
+- `repaint()`或`update()`被援引，
+- 小部件被遮挡，现已被发现，或
+- 还有很多其他原因。
+许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
+Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
+当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
+背景可以用`setBackgroundRole()`和`setPalette()`设置。
+自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
+注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
+警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
 
 ### `[override virtual protected] void QAbstractSpinBox::resizeEvent(QResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::resizeEvent`（QResizeEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收通过 `event` 参数传递的控件调整大小事件。当调用 resizeEvent() 时，控件已经拥有新的几何体。旧的大小可以通过 `QResizeEvent::oldSize()` 访问。
+控件会被擦除，并在处理调整尺寸事件后立即接收绘图事件。不需要（也不应该）在这个处理程序中进行绘图。
 
 ### `[signal, since 6.10] void QAbstractSpinBox::returnPressed()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::returnPressed` 用于执行与“return、Pressed”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当使用返回键或回车键时，会发出该信号。
 
 ### `[slot] void QAbstractSpinBox::selectAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `selectAll`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择旋转框中除前缀和后缀外的所有文本。
 
 ### `[protected] void QAbstractSpinBox::setLineEdit(QLineEdit *lineEdit)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLineEdit`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `lineEdit`：类型为 `QLineEdit *`。没有默认值，调用时必须提供。传入 `QLineEdit *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将旋转盒的行编辑设置为`lineEdit`，而不是当前的行编辑小部件。`lineEdit`不能被`nullptr`。
+`QAbstractSpinBox`接管了新`lineEdit`。
+如果`QLineEdit::validator()` 返回`lineEdit`返回`nullptr`，旋转盒的内部验证器将在行编辑时被设置。
 
 ### `[override virtual protected] void QAbstractSpinBox::showEvent(QShowEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::showEvent` 用于执行与“显示、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QShowEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+重实现自：`QWidget::showEvent`（QShowEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收传递给 `event` 参数的控件显示事件。
+非自发的展示事件会在展示前立即发送到小部件。窗口的自发展示事件则在展示之后交付。
+注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，窗口恢复时自发显示事件。收到自发隐藏事件后，小部件仍被视为`isVisible()`可见。
 
 ### `[override virtual] QSize QAbstractSpinBox::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现了属性的访问函数：`QWidget::sizeHint`。
 
 ### `[virtual] void QAbstractSpinBox::stepBy(int steps)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::stepBy` 用于执行与“step、By”相关的操作。调用时要先确认当前状态和 `steps` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `steps`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当用户触发一步时调用的虚拟函数。`steps`参数表示已采取的步数。例如，按`Qt::Key_Down`会触发对`stepBy(-1)`的调用，而按`Qt::Key_PageUp`则会触发对`stepBy(10)`的调用。
+如果你对`QAbstractSpinBox`子类，必须重新实现这个函数。注意，即使最终值超出极小值和最大值范围，这个函数也会被调用。处理这些情况是这个函数的工作。
 
 ### `[slot] void QAbstractSpinBox::stepDown()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `stepDown`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+下行一步 调用该槽函数类似于调用`stepBy`（-1）;
 
 ### `[virtual protected] QAbstractSpinBox::StepEnabled QAbstractSpinBox::stepEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::stepEnabled` 用于计算、查询或取得与“step、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSpinBox::StepEnabled`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSpinBox::StepEnabled`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟函数，决定在任一时刻上下步进是否合法。除非 （stepEnabled() & `StepUpEnabled`） ！= 0，否则上箭头将被涂为禁用。如果开启了包裹，默认实现会返回 （`StepUpEnabled`| `StepDownEnabled`）。否则如果值>为 minimum()，则返回 （`StepDownEnabled`），如果值为 maximum()，则返回 `StepUpEnabled`，< 最大化。
+如果你`QAbstractSpinBox`子类，就需要重新实现这个函数。
 
 ### `[slot] void QAbstractSpinBox::stepUp()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `stepUp`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+上调一行步 调用该槽函数类似于调用 `stepBy`（1）;
 
 ### `[override virtual protected] void QAbstractSpinBox::timerEvent(QTimerEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::timerEvent` 用于执行与“timer、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QTimerEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::timerEvent`（QTimerEvent *event）。
 
 ### `[virtual] QValidator::State QAbstractSpinBox::validate(QString &input, int &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validate`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QValidator::State`。
-- 参数 `input`：类型为 `QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pos`：类型为 `int &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QAbstractSpinBox`调用该虚拟函数以判断`input`是否有效。`pos`参数表示字符串中的位置。在各个子类中重新实现。
 
 ### `[override virtual protected] void QAbstractSpinBox::wheelEvent(QWheelEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QWheelEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::wheelEvent`（QWheelEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的轮事件。
+如果你重新实现了这个处理程序，非常重要的是，如果你不处理事件，必须`ignore()`事件，这样小部件的父节点才能解释它。
+默认实现会忽略该事件。
 
 ### `flags StepEnabled`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractSpinBox::StepNone`：`0x00`
+- `QAbstractSpinBox::StepUpEnabled`：`0x01`
+- `QAbstractSpinBox::StepDownEnabled`：`0x02`
+StepEnabled 类型是 QFlags 的 typedef<StepEnabledFlag>。它存储 StepEnabledFlag 值的 OR 组合。
 
 ### `enum StepEnabledFlag { StepNone, StepUpEnabled, StepDownEnabled }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 暴露的类型声明 `Step、启用状态、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractSpinBox::StepNone`：`0x00`
+- `QAbstractSpinBox::StepUpEnabled`：`0x01`
+- `QAbstractSpinBox::StepDownEnabled`：`0x02`
+StepEnabled 类型是 QFlags 的 typedef<StepEnabledFlag>。它存储 StepEnabledFlag 值的 OR 组合。
 
 ### `enum StepType { DefaultStepType, AdaptiveDecimalStepType }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractSpinBox` 暴露的类型声明 `Step、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定步进算法。`DefaultStepType` 始终使用 `singleStep`；`AdaptiveDecimalStepType` 根据当前数值的数量级自动调整步长，例如较大数值每次改变得更多。自适应模式下 `singleStep` 不参与实际步长计算。
 
 ### `Qt::Alignment alignment() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::alignment` 用于计算、查询或取得与“对齐方式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Alignment`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示自旋盒的对齐。
+可能的数值有`Qt::AlignLeft`、`Qt::AlignRight`和`Qt::AlignHCenter`。
+默认情况下，对齐是`Qt::AlignLeft`。
+尝试将对齐设置为非法标志组合毫无效果。
 
-**签名拆解：**
-
-- 返回值：`Qt::Alignment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractSpinBox::ButtonSymbols buttonSymbols() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::buttonSymbols` 用于计算、查询或取得与“button、Symbols”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSpinBox::ButtonSymbols`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留当前按钮符号模式。
+可能的值可以是`UpDownArrows`或`PlusMinus`。默认值是`UpDownArrows`。
+注意，有些样式可能渲染`PlusMinus`和`UpDownArrows`完全相同。
 
-**签名拆解：**
-
-- 返回值：`QAbstractSpinBox::ButtonSymbols`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `buttonSymbols()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractSpinBox::CorrectionMode correctionMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::correctionMode` 用于计算、查询或取得与“correction、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSpinBox::CorrectionMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性具有编辑结束时纠正`Intermediate`值的模式。
+默认模式是`QAbstractSpinBox::CorrectToPreviousValue`。
 
-**签名拆解：**
-
-- 返回值：`QAbstractSpinBox::CorrectionMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `correctionMode()` 读取当前值；它不会修改应用状态。
 
 ### `bool hasAcceptableInput() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAcceptableInput`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性是否满足当前验证。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `hasAcceptableInput()` 读取当前值；它不会修改应用状态。
 
 ### `bool hasFrame() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasFrame`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性是否成立，取决于自旋盒是否以一个框架绘制自身。
+如果启用（默认），旋转盒会在一个框架内绘制自己，否则旋转盒会在没有任何框架的情况下绘制自己。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `hasFrame()` 读取当前值；它不会修改应用状态。
 
 ### `bool isAccelerated() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAccelerated`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定了当按下阶级上/下按钮时，旋转盒是否会加速步进频率。
+如果启用了，旋转框会随着你按住按钮的时间越长，数值的增减会越快。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isAccelerated()` 读取当前值；它不会修改应用状态。
 
 ### `bool isGroupSeparatorShown() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isGroupSeparatorShown`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性判定是否启用千分隔符。默认情况下，该属性为假。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isGroupSeparatorShown()` 读取当前值；它不会修改应用状态。
 
 ### `bool isReadOnly() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isReadOnly`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定自旋盒是否为只读。
+在只读模式下，用户仍可将文本复制到剪贴板，或拖拽文本;但无法编辑。
+`QAbstractSpinBox`中的`QLineEdit`在只读模式下没有显示光标。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isReadOnly()` 读取当前值；它不会修改应用状态。
 
 ### `bool keyboardTracking() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::keyboardTracking` 用于计算、查询或取得与“keyboard、Tracking”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定自旋盒启用键盘跟踪。
+如果启用了键盘跟踪（默认），旋转盒在输入新值时会发出valueChanged()和textChanged()信号。
+例如，当用户输入600输入600时，自旋盒会发出3个信号，分别为60、60和600。
+如果禁用键盘跟踪，旋转盒在输入时不会发出valueChanged()和textChanged()信号。它会在之后、按回车键、键盘失去焦点或使用其他旋转盒功能（如按方向键）时发出信号。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardTracking()` 读取当前值；它不会修改应用状态。
 
 ### `void setAccelerated(bool on)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAccelerated`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了当按下阶级上/下按钮时，旋转盒是否会加速步进频率。
+如果启用了，旋转框会随着你按住按钮的时间越长，数值的增减会越快。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `on`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAccelerated(...)` 修改 `accelerated`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setAlignment(Qt::Alignment flag)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAlignment`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示自旋盒的对齐。
+可能的数值有`Qt::AlignLeft`、`Qt::AlignRight`和`Qt::AlignHCenter`。
+默认情况下，对齐是`Qt::AlignLeft`。
+尝试将对齐设置为非法标志组合毫无效果。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flag`：类型为 `Qt::Alignment`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAlignment(...)` 修改 `alignment`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setButtonSymbols(QAbstractSpinBox::ButtonSymbols bs)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setButtonSymbols`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留当前按钮符号模式。
+可能的值可以是`UpDownArrows`或`PlusMinus`。默认值是`UpDownArrows`。
+注意，有些样式可能渲染`PlusMinus`和`UpDownArrows`完全相同。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bs`：类型为 `QAbstractSpinBox::ButtonSymbols`。没有默认值，调用时必须提供。传入 `QAbstractSpinBox::ButtonSymbols` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setButtonSymbols(...)` 修改 `buttonSymbols`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setCorrectionMode(QAbstractSpinBox::CorrectionMode cm)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCorrectionMode`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性具有编辑结束时纠正`Intermediate`值的模式。
+默认模式是`QAbstractSpinBox::CorrectToPreviousValue`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cm`：类型为 `QAbstractSpinBox::CorrectionMode`。没有默认值，调用时必须提供。传入 `QAbstractSpinBox::CorrectionMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCorrectionMode(...)` 修改 `correctionMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFrame(bool)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFrame`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否成立，取决于自旋盒是否以一个框架绘制自身。
+如果启用（默认），旋转盒会在一个框架内绘制自己，否则旋转盒会在没有任何框架的情况下绘制自己。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bool`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFrame(...)` 修改 `frame`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setGroupSeparatorShown(bool shown)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGroupSeparatorShown`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性判定是否启用千分隔符。默认情况下，该属性为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `shown`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setGroupSeparatorShown(...)` 修改 `showGroupSeparator`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setKeyboardTracking(bool kt)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeyboardTracking`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定自旋盒启用键盘跟踪。
+如果启用了键盘跟踪（默认），旋转盒在输入新值时会发出valueChanged()和textChanged()信号。
+例如，当用户输入600输入600时，自旋盒会发出3个信号，分别为60、60和600。
+如果禁用键盘跟踪，旋转盒在输入时不会发出valueChanged()和textChanged()信号。它会在之后、按回车键、键盘失去焦点或使用其他旋转盒功能（如按方向键）时发出信号。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `kt`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setKeyboardTracking(...)` 修改 `keyboardTracking`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setReadOnly(bool r)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadOnly`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定自旋盒是否为只读。
+在只读模式下，用户仍可将文本复制到剪贴板，或拖拽文本;但无法编辑。
+`QAbstractSpinBox`中的`QLineEdit`在只读模式下没有显示光标。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `r`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setReadOnly(...)` 修改 `readOnly`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSpecialValueText(const QString &txt)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSpecialValueText`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含特殊值文本。
+如果设置为，旋转框会在当前值等于最小值()时显示该文本而非数值。通常用来表示该选择具有特殊（默认）含义。
+例如，如果你的旋转框允许用户选择显示图像的缩放因子（或缩放等级），而你的应用程序能够自动选择一个缩放因子，使图像完全嵌入显示窗口，你可以这样设置旋转框：
+用户可以选择从1%到1000%的缩放，或者选择“自动”，由应用程序自行选择。你的代码必须将自转盒值为0，视为用户请求将图像缩放以适应窗口内。
+所有值都以前缀和后缀（如已设置）显示，唯独特殊值仅显示特殊值文本。该特殊文本通过传递`QString`的 `QSpinBox::textChanged()` 信号传递。
+要关闭特殊值文本显示，请用空字符串调用该函数。默认情况下没有特殊值文本，即数值按常显示。
+如果没有设置特殊值文本，specialValueText() 返回一个空字符串。
 
-**签名拆解：**
+**如何使用：** 调用 `setSpecialValueText(...)` 修改 `specialValueText`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `txt`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QSpinBox *zoomSpinBox = new QSpinBox;
+     zoomSpinBox->setRange(0, 1000);
+     zoomSpinBox->setSingleStep(10);
+     zoomSpinBox->setSuffix("%");
+     zoomSpinBox->setSpecialValueText(tr("Automatic"));
+     zoomSpinBox->setValue(100);
+```
 
 ### `void setWrapping(bool w)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWrapping`。调用它会改变 `QAbstractSpinBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性适用于自旋盒是否为圆形。
+如果包裹为真，从最大值()向上移动会到达最小值，反之亦然。包裹只有在设置了最小值()和最大值时才有意义。
 
-**签名拆解：**
+**如何使用：** 调用 `setWrapping(...)` 修改 `wrapping`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `w`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSpinBox *spinBox = new QSpinBox(this);
+ spinBox->setRange(0, 100);
+ spinBox->setWrapping(true);
+ spinBox->setValue(100);
+ spinBox->stepBy(1);
+ // value is 0
+```
 
 ### `QString specialValueText() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::specialValueText` 用于计算、查询或取得与“special、值访问、文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含特殊值文本。
+如果设置为，旋转框会在当前值等于最小值()时显示该文本而非数值。通常用来表示该选择具有特殊（默认）含义。
+例如，如果你的旋转框允许用户选择显示图像的缩放因子（或缩放等级），而你的应用程序能够自动选择一个缩放因子，使图像完全嵌入显示窗口，你可以这样设置旋转框：
+用户可以选择从1%到1000%的缩放，或者选择“自动”，由应用程序自行选择。你的代码必须将自转盒值为0，视为用户请求将图像缩放以适应窗口内。
+所有值都以前缀和后缀（如已设置）显示，唯独特殊值仅显示特殊值文本。该特殊文本通过传递`QString`的 `QSpinBox::textChanged()` 信号传递。
+要关闭特殊值文本显示，请用空字符串调用该函数。默认情况下没有特殊值文本，即数值按常显示。
+如果没有设置特殊值文本，specialValueText() 返回一个空字符串。
 
-**签名拆解：**
+**如何使用：** 调用 `specialValueText()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QString`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QSpinBox *zoomSpinBox = new QSpinBox;
+     zoomSpinBox->setRange(0, 1000);
+     zoomSpinBox->setSingleStep(10);
+     zoomSpinBox->setSuffix("%");
+     zoomSpinBox->setSpecialValueText(tr("Automatic"));
+     zoomSpinBox->setValue(100);
+```
 
 ### `QString text() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::text` 用于计算、查询或取得与“文本”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含自旋盒的文本，包括任何前缀和后缀。
+没有默认文本。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `text()` 读取当前值；它不会修改应用状态。
 
 ### `bool wrapping() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractSpinBox::wrapping` 用于计算、查询或取得与“wrapping”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性适用于自旋盒是否为圆形。
+如果包裹为真，从最大值()向上移动会到达最小值，反之亦然。包裹只有在设置了最小值()和最大值时才有意义。
 
-**签名拆解：**
+**如何使用：** 调用 `wrapping()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`bool`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSpinBox *spinBox = new QSpinBox(this);
+ spinBox->setRange(0, 100);
+ spinBox->setWrapping(true);
+ spinBox->setValue(100);
+ spinBox->stepBy(1);
+ // value is 0
+```
 
 ## 6. 深入实践与常见坑
 

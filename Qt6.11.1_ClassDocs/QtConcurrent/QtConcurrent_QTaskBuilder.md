@@ -68,86 +68,53 @@ target_link_libraries(mytarget PRIVATE Qt6::Concurrent)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QtConcurrent::QTaskBuilder<Task, Args...> &QTaskBuilder::onThreadPool(QThreadPool &newThreadPool)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtConcurrent::QTaskBuilder::onThreadPool` 用于计算、查询或取得与“on、Thread、Pool”相关的操作。调用时要先确认当前状态和 `newThreadPool` 的有效范围；返回类型是 `QtConcurrent::QTaskBuilder<Task, Args...> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtConcurrent::QTaskBuilder<Task, Args...> &`。
-- 参数 `newThreadPool`：类型为 `QThreadPool &`。没有默认值，调用时必须提供。传入 `QThreadPool &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置任务调用的线程池 `newThreadPool`。
 
 ### `QFuture<QtConcurrent::InvokeResultType> QTaskBuilder::spawn()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtConcurrent::QTaskBuilder::spawn` 用于计算、查询或取得与“spawn”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFuture<QtConcurrent::InvokeResultType>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFuture<QtConcurrent::InvokeResultType>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在独立线程中运行任务，并立即返回未来对象。这是一个非阻塞调用。任务可能不会立即启动。
 
 ### `void QTaskBuilder::spawn(QtConcurrent::FutureResult)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtConcurrent::QTaskBuilder::spawn` 用于执行与“spawn”相关的操作。调用时要先确认当前状态和 `FutureResult` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `FutureResult`：类型为 `QtConcurrent::`。没有默认值，调用时必须提供。传入 `QtConcurrent::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在独立线程中运行任务。这是一个非阻塞调用。任务可能不会立即启动。
 
 ### `template <typename... ExtraArgs> QtConcurrent::QTaskBuilder<Task, ExtraArgs...> QTaskBuilder::withArguments(ExtraArgs &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtConcurrent::QTaskBuilder::withArguments` 用于计算、查询或取得与“with、Arguments”相关的操作。调用时要先确认当前状态和 `args` 的有效范围；返回类型是 `template <typename... ExtraArgs> QtConcurrent::QTaskBuilder<Task, ExtraArgs...>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... ExtraArgs> QtConcurrent::QTaskBuilder<Task, ExtraArgs...>`。
-- 参数 `args`：类型为 `ExtraArgs &&...`。没有默认值，调用时必须提供。传入 `ExtraArgs &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置调用任务`args`参数。代码为格式错误（导致编译错误），如果：
+- 该函数被调用不止一次。
+- 参数计数为零。
 
 ### `QtConcurrent::QTaskBuilder<Task, Args...> &QTaskBuilder::withPriority(int newPriority)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtConcurrent::QTaskBuilder::withPriority` 用于计算、查询或取得与“with、Priority”相关的操作。调用时要先确认当前状态和 `newPriority` 的有效范围；返回类型是 `QtConcurrent::QTaskBuilder<Task, Args...> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtConcurrent::QTaskBuilder<Task, Args...> &`。
-- 参数 `newPriority`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定任务调用的优先级`newPriority`。
 
 ### `[alias] InvokeResultType`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QtConcurrent::QTaskBuilder` 的 `Invoke、结果、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+这种类型的简化定义如下：
+实际实现还包含一个编译时检查，以确定任务是否可以使用指定的参数调用。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ template <class Task, class ...Args>
+ using InvokeResultType = std::invoke_result_t<std::decay_t<Task>, std::decay_t<Args>...>;
+```
 
 ## 6. 深入实践与常见坑
 

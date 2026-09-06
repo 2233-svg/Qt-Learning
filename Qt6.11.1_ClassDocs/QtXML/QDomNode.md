@@ -136,945 +136,554 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 71 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDomNode::EncodingPolicy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 暴露的类型声明 `Encoding、Policy`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:EncodingPolicy`。
-- 属性名：`QDomNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了`QDomNode::save()`在序列化时如何决定使用哪种编码方式。
+- `QDomNode::EncodingFromDocument`：`1`;编码从文档中获取。
+- `QDomNode::EncodingFromTextStream`：`2`;编码从`QTextStream`取出。
 
 ### `enum QDomNode::NodeType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 暴露的类型声明 `Node、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:NodeType`。
-- 属性名：`QDomNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举定义了节点的类型：
+- `QDomNode::ElementNode`：`1`
+- `QDomNode::AttributeNode`：`2`
+- `QDomNode::TextNode`：`3`
+- `QDomNode::CDATASectionNode`：`4`
+- `QDomNode::EntityReferenceNode`：`5`
+- `QDomNode::EntityNode`：`6`
+- `QDomNode::ProcessingInstructionNode`：`7`
+- `QDomNode::CommentNode`：`8`
+- `QDomNode::DocumentNode`：`9`
+- `QDomNode::DocumentTypeNode`：`10`
+- `QDomNode::DocumentFragmentNode`：`11`
+- `QDomNode::NotationNode`：`12`
+- `QDomNode::BaseNode`：`21`;一个`QDomNode`对象，即非`QDomNode`子类。
+- `QDomNode::CharacterDataNode`：`22`
 
 ### `QDomNode::QDomNode()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个`null`节点。
 
 ### `QDomNode::QDomNode(const QDomNode &node)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `node`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建了`node`的复制品。
+复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
 
 ### `[noexcept] QDomNode::~QDomNode()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放其资源。
 
 ### `QDomNode QDomNode::appendChild(const QDomNode &newChild)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDomNode` 添加依赖、数据或子对象的 API `appendChild`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `newChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+作为节点的最后一个子节点，`newChild` 附着。
+如果`newChild`是另一个节点的子节点，则它会被重新父级到该节点。如果`newChild`是该节点的子节点，那么它在子节点列表中的位置会发生变化。
+如果`newChild`是`QDomDocumentFragment`，则该片段的子节点会从片段中移除并附加。
+如果`newChild`是`QDomElement`，且该节点是一个`QDomDocument`，且该节点已经有一个元素节点作为子节点，则`newChild`不会被添加为子节点，而是返回一个空节点。
+成功时返回新的`newChild`引用，失败时返回空节点。
+在空节点（例如用默认构造函数创建）上调用该函数无效，返回空节点。
+DOM规范禁止插入属性节点，但出于历史原因，QDom仍然接受它们。
 
 ### `QDomNamedNodeMap QDomNode::attributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::attributes` 用于计算、查询或取得与“attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNamedNodeMap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNamedNodeMap`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有属性的命名节点映射。属性仅为`QDomElement`提供。
+更改地图中的属性也会改变该`QDomNode`的属性。
 
 ### `QDomNodeList QDomNode::childNodes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::childNodes` 用于计算、查询或取得与“child、Nodes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNodeList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回所有直接子节点的列表。
+通常你会调用`QDomElement`对象上的这个函数。
+例如，如果XML文档看起来如下：
+那么“body”元素的子节点列表将包含由标签创建的节点<h1>和由标签创建的节点<p>。
+列表中的节点不会被复制;因此，更改列表中的节点也会改变该节点的子节点。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDomNodeList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ <body>
+ <h1>Heading</h1>
+ <p>Hello <b>you</b></p>
+ </body>
+```
 
 ### `void QDomNode::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该节点转换为空节点;如果之前不是空节点，其类型和内容将被删除。
 
 ### `QDomNode QDomNode::cloneNode(bool deep = true) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::cloneNode` 用于计算、查询或取得与“clone、Node”相关的操作。调用时要先确认当前状态和 `deep` 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `deep`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这样可以建立一个深层（而非浅层）的`QDomNode`复制品。
+如果`deep`为真，则克隆是递归完成的，这意味着节点的所有子节点也都被深度复制。如果`deep`为假，则只有节点本身被复制，且复制中没有子节点。
 
 ### `int QDomNode::columnNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::columnNumber` 用于计算、查询或取得与“列、Number”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`QDomDocument::setContent()`创建的节点，该函数返回解析节点所在的XML文档列号。否则返回-1。
 
 ### `QDomNode QDomNode::firstChild() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::firstChild` 用于计算、查询或取得与“首项、Child”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的第一个子节点。如果没有子节点，则返回一个空节点。更改返回的节点也会改变文档树中的该节点。
 
 ### `QDomElement QDomNode::firstChildElement(const QString &tagName = QString(), const QString &namespaceURI = QString()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::firstChildElement` 用于计算、查询或取得与“首项、Child、Element”相关的操作。调用时要先确认当前状态和 `tagName`、`namespaceURI` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `tagName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `namespaceURI`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回第一个子元素，标签名为`tagName`，命名空间为URI `namespaceURI`。如果`tagName`为空，返回第一个子元素，`namespaceURI`;如果为空，返回第一个子元素，`namespaceURI`返回第一个子元素，`tagName`。如果两个参数均为空，返回第一个子元素。如果不存在空子元素，返回空元素。
 
 ### `bool QDomNode::hasAttributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAttributes`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点有属性，返回`true`;否则返回`false`。
 
 ### `bool QDomNode::hasChildNodes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasChildNodes`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点有一个或多个子节点，返回`true`;否则返回`false`。
 
 ### `QDomNode QDomNode::insertAfter(const QDomNode &newChild, const QDomNode &refChild)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDomNode` 添加依赖、数据或子对象的 API `insertAfter`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `newChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `refChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在子节点 `refChild` 之后插入节点 `newChild`。`refChild` 必须是该节点的直接子节点。如果 `refChild` 被`null`，则`newChild` 作为该节点的最后一个子节点被附加。
+如果`newChild`是另一个节点的子节点，则它会被重新父级到该节点。如果`newChild`是该节点的子节点，那么它在子节点列表中的位置会发生变化。
+如果`newChild`是`QDomDocumentFragment`，则片段的子节点会从片段中移除，并在`refChild`后插入。
+成功时返回新的 `newChild` 引用，失败时返回空节点。
+DOM规范不允许插入属性节点，但由于历史原因，QDom仍然接受它们。
 
 ### `QDomNode QDomNode::insertBefore(const QDomNode &newChild, const QDomNode &refChild)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDomNode` 添加依赖、数据或子对象的 API `insertBefore`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `newChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `refChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在子节点`refChild`之前插入节点 `newChild`。`refChild` 必须是该节点的直接子节点。如果`refChild` 被`null`，则插入`newChild`作为该节点的第一个子节点。
+如果`newChild`是另一个节点的子节点，则它会被重新父级到该节点。如果`newChild`是该节点的子节点，那么它在子节点列表中的位置会被改变。
+如果`newChild`是`QDomDocumentFragment`，则片段的子节点会从片段中移除，并在`refChild`之前插入。
+成功时返回新的 `newChild` 引用，失败时返回空节点。
+DOM规范不允许插入属性节点，但由于历史原因，QDom仍然接受它们。
 
 ### `bool QDomNode::isAttr() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAttr`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是属性，则返回 `true`；否则返回 `false`。
+如果此函数返回 `true`，则不意味着此对象是 QDomAttribute；你可以使用 toAttribute() 获取 QDomAttribute。
 
 ### `bool QDomNode::isCDATASection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCDATASection`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是 CDATA 部分，返回 `true`;否则返回 false。
+如果该函数返回`true`，并不意味着该对象是`QDomCDATASection`;你可以用`toCDATASection()`得到`QDomCDATASection`。
 
 ### `bool QDomNode::isCharacterData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCharacterData`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是字符数据节点，返回`true`;否则返回`false`。
+如果该函数返回`true`，并不意味着该对象是`QDomCharacterData`;你可以用`toCharacterData()`得到`QDomCharacterData`。
 
 ### `bool QDomNode::isComment() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isComment`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是注释，则返回 `true`；否则返回 `false`。如果此函数返回 `true`，并不意味着该对象是 `QDomComment`；您可以使用 `toComment()` 获取 `QDomComment`。
 
 ### `bool QDomNode::isDocument() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDocument`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是文档，则返回 `true`；否则返回 `false`。如果此函数返回 `true`，并不意味着该对象是 `QDomDocument`；您可以使用 `toDocument()` 获取 `QDomDocument`。
 
 ### `bool QDomNode::isDocumentFragment() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDocumentFragment`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是文档片段，则返回 `true`；否则返回 false。
+如果此函数返回 `true`，并不意味着此对象是 `QDomDocumentFragment`；你可以通过 `toDocumentFragment()` 获取 `QDomDocumentFragment`。
 
 ### `bool QDomNode::isDocumentType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDocumentType`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是文档类型，则返回 `true`；否则返回 false。如果此函数返回 `true`，则不意味着该对象是 `QDomDocumentType`；你可以使用 `toDocumentType()` 获取 `QDomDocumentType`。
 
 ### `bool QDomNode::isElement() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isElement`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是元素，则返回 `true`；否则返回 `false`。 如果此函数返回 `true`，并不意味着该对象是 `QDomElement`；您可以使用 `toElement()` 获取 `QDomElement`。
 
 ### `bool QDomNode::isEntity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEntity`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是实体，则返回 `true`；否则返回 `false`。 如果此函数返回 `true`，并不意味着该对象是 `QDomEntity`；您可以使用 `toEntity()` 获取 `QDomEntity`。
 
 ### `bool QDomNode::isEntityReference() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEntityReference`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是实体引用，则返回 `true`；否则返回 false。 如果此函数返回 `true`，则不意味着该对象是 `QDomEntityReference`；你可以使用 `toEntityReference()` 获取 `QDomEntityReference`。
 
 ### `bool QDomNode::isNotation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNotation`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是记号，则返回 `true`；否则返回 `false`。如果此函数返回 `true`，并不意味着该对象是 `QDomNotation`；您可以使用 `toNotation()` 获取 `QDomNotation`。
 
 ### `bool QDomNode::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该节点为空（即没有类型或内容），返回`true`;否则返回`false`。
 
 ### `bool QDomNode::isProcessingInstruction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isProcessingInstruction`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是处理指令，则返回 `true`；否则返回 `false`。
+如果此函数返回 `true`，并不意味着该对象是 `QDomProcessingInstruction`；你可以通过 `toProcessingInstruction()` 获取 QProcessingInstruction。
 
 ### `bool QDomNode::isSupported(const QString &feature, const QString &version) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSupported`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `feature`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `version`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果DOM实现了该功能`feature`且该节点在版本`version`中支持该功能，则返回`true`;否则返回`false`。
 
 ### `bool QDomNode::isText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isText`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点是文本节点，则返回 `true`；否则返回 `false`。
+如果此函数返回 `true`，并不意味着此对象是 `QDomText`；你可以通过 `toText()` 获取 `QDomText`。
 
 ### `QDomNode QDomNode::lastChild() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::lastChild` 用于计算、查询或取得与“末项、Child”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的最后一个子节点。如果没有子节点，则返回一个空节点。更改返回的节点也会改变文档树中的该节点。
 
 ### `QDomElement QDomNode::lastChildElement(const QString &tagName = QString(), const QString &namespaceURI = QString()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::lastChildElement` 用于计算、查询或取得与“末项、Child、Element”相关的操作。调用时要先确认当前状态和 `tagName`、`namespaceURI` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `tagName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `namespaceURI`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回标签名为`tagName`的最后一个子元素，命名空间为URI `namespaceURI`。如果`tagName`为空，返回最后一个子元素，`namespaceURI`;如果是空的，返回`namespaceURI`，返回最后一个子元素，`tagName`。如果两个参数均为空，返回最后一个子元素。如果没有空子元素，返回一个空元素。
 
 ### `int QDomNode::lineNumber() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::lineNumber` 用于计算、查询或取得与“行、Number”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对于`QDomDocument::setContent()`创建的节点，该函数返回解析节点所在的XML文档行号。否则返回-1。
 
 ### `QString QDomNode::localName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::localName` 用于计算、查询或取得与“local、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点使用命名空间，该函数返回节点的本地名称;否则返回空字符串。
+只有类型为`ElementNode`或`AttributeNode`的节点才能拥有命名空间。命名空间必须在创建时被指定;之后无法添加命名空间。
 
 ### `QDomNode QDomNode::namedItem(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::namedItem` 用于计算、查询或取得与“named、项目访问”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回第一个 `nodeName()` 等于 `name` 的直接子节点。
+如果不存在这样的直接子节点，则返回一个空节点。
 
 ### `QString QDomNode::namespaceURI() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::namespaceURI` 用于计算、查询或取得与“namespace、URI”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的命名空间URI，或如果没有命名空间URI，则返回空字符串。
+只有类型为`ElementNode`或`AttributeNode`的节点才能拥有命名空间。命名空间URI必须在创建时指定，且之后不能更改。
 
 ### `QDomNode QDomNode::nextSibling() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::nextSibling` 用于计算、查询或取得与“移动到下一项、Sibling”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回文档树中的下一个兄弟节点。更改返回节点也会改变文档树中的节点。
+如果你有类似这样的 XML：
+而这个`QDomNode`代表<p>该标签，nextSibling() 将返回代表<h2>该标签的节点。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDomNode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ <h1>Heading</h1>
+ <p>The text...</p>
+ <h2>Next heading</h2>
+```
 
 ### `QDomElement QDomNode::nextSiblingElement(const QString &tagName = QString(), const QString &namespaceURI = QString()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::nextSiblingElement` 用于计算、查询或取得与“移动到下一项、Sibling、Element”相关的操作。调用时要先确认当前状态和 `tagName`、`namespaceURI` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `tagName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `namespaceURI`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下一个兄弟元素，标签名为`tagName`，命名空间为URI `namespaceURI`。如果`tagName`为空，返回下一个兄弟元素，`namespaceURI`;如果`namespaceURI`为空，返回下一个兄弟子元素，`tagName`。如果两个参数均为空，返回下一个兄弟元素。如果不存在兄弟元素，返回空元素。
 
 ### `QString QDomNode::nodeName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::nodeName` 用于计算、查询或取得与“node、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回节点名称。
+名称的含义取决于子类：
+- `Name`：含义
+- `QDomAttr`：属性名称
+- `QDomCDATASection`：弦“#cdata 段”
+- `QDomComment`：弦“#comment”
+- `QDomDocument`：弦“#document”
+- `QDomDocumentFragment`：字符串“#document 片段”
+- `QDomDocumentType`：文档类型的名称
+- `QDomElement`：标签名称
+- `QDomEntity`：实体名称
+- `QDomEntityReference`：被引用实体的名称
+- `QDomNotation`：符号名称
+- `QDomProcessingInstruction`：处理指令的目标
+- `QDomText`：弦“#text”
+注意：该函数在处理元素和属性节点名称时不考虑命名空间的存在。因此，返回的名称可能包含任何可能存在的命名空间前缀。要获取元素或属性的节点名称，请使用`localName()`;获取命名空间前缀，请使用`namespaceURI()`。
 
 ### `QDomNode::NodeType QDomNode::nodeType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::nodeType` 用于计算、查询或取得与“node、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode::NodeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode::NodeType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回节点类型。
 
 ### `QString QDomNode::nodeValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::nodeValue` 用于计算、查询或取得与“node、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回节点的值。
+该值的含义取决于子类：
+- `Name`：含义
+- `QDomAttr`：属性值
+- `QDomCDATASection`：CDATA部分的内容
+- `QDomComment`：评论
+- `QDomProcessingInstruction`：处理指令的数据
+- `QDomText`：文本
+其他所有子类都没有节点值，会返回空字符串。
 
 ### `void QDomNode::normalize()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::normalize` 用于执行与“normalize”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用元素的 normalize() 会将其所有子节点转换为标准形式。这意味着相邻的 `QDomText` 对象会合并成一个文本对象（`QDomCDATASection`节点不合并）。
 
 ### `QDomDocument QDomNode::ownerDocument() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::ownerDocument` 用于计算、查询或取得与“owner、Document”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomDocument`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点所属的文档。
 
 ### `QDomNode QDomNode::parentNode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::parentNode` 用于计算、查询或取得与“父对象、Node”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回父节点。如果该节点没有父节点，则返回一个空节点（即`isNull()`返回`true`的节点）。
 
 ### `QString QDomNode::prefix() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::prefix` 用于计算、查询或取得与“prefix”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回节点的命名空间前缀，若节点没有命名空间前缀则返回空字符串。
+只有类型为`ElementNode`或`AttributeNode`的节点才能拥有命名空间。创建时必须指定命名空间前缀。如果节点创建时带有命名空间前缀，之后可以用`setPrefix()`更改。
+如果你创建带有 `QDomDocument::createElement()` 或 `QDomDocument::createAttribute()` 的元素或属性，前缀将是空字符串。如果你使用 `QDomDocument::createElementNS()` 或 `QDomDocument::createAttributeNS()`，前缀不会是空字符串;但如果名称没有前缀，则可能是空字符串。
 
 ### `QDomNode QDomNode::previousSibling() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::previousSibling` 用于计算、查询或取得与“previous、Sibling”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回文档树中的前一个兄弟节点。更改返回节点也会改变文档树中的节点。
+例如，如果你有像这样的 XML 文件：
+而这个`QDomNode`代表<p>该标签，前置Sibling()将返回代表<h1>该标签的节点。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDomNode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ <h1>Heading</h1>
+ <p>The text...</p>
+ <h2>Next heading</h2>
+```
 
 ### `QDomElement QDomNode::previousSiblingElement(const QString &tagName = QString(), const QString &namespaceURI = QString()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::previousSiblingElement` 用于计算、查询或取得与“previous、Sibling、Element”相关的操作。调用时要先确认当前状态和 `tagName`、`namespaceURI` 的有效范围；返回类型是 `QDomElement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数 `tagName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `namespaceURI`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有标签名`tagName`和命名空间URI `namespaceURI`的前一个兄弟元素。如果`tagName`为空，返回前一个兄弟元素（`namespaceURI`），如果`namespaceURI`为空，返回前一个兄弟元素，`tagName`。如果两个参数均为空，返回前一个兄弟元素。如果不存在此类兄弟元素，返回空元素。
 
 ### `QDomNode QDomNode::removeChild(const QDomNode &oldChild)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeChild`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `oldChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从子节点列表中移除`oldChild`。`oldChild`必须是该节点的直接子节点。
+成功时返回新的 `oldChild` 引用，失败时返回空节点。
 
 ### `QDomNode QDomNode::replaceChild(const QDomNode &newChild, const QDomNode &oldChild)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::replaceChild` 用于计算、查询或取得与“替换、Child”相关的操作。调用时要先确认当前状态和 `newChild`、`oldChild` 的有效范围；返回类型是 `QDomNode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomNode`。
-- 参数 `newChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldChild`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`newChild`替换`oldChild`。`oldChild`必须是该节点的直接子节点。
+如果`newChild`是另一个节点的子节点，则它会被重新父级到该节点。如果`newChild`是该节点的子节点，那么它在子节点列表中的位置会发生变化。
+如果`newChild`是`QDomDocumentFragment`，则`oldChild`被该片段的所有子节点替换。
+成功时返回新的`oldChild`引用，失败时返回空节点。
 
 ### `void QDomNode::save(QTextStream &stream, int indent, QDomNode::EncodingPolicy encodingPolicy = QDomNode::EncodingFromDocument) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomNode::save` 用于执行与“保存”相关的操作。调用时要先确认当前状态和 `stream`、`indent`、`encodingPolicy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stream`：类型为 `QTextStream &`。没有默认值，调用时必须提供。传入 `QTextStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `indent`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `encodingPolicy`：类型为 `QDomNode::EncodingPolicy`。默认值为 `QDomNode::EncodingFromDocument`。传入 `QDomNode::EncodingPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将节点及其所有子节点的XML表示写入流 `stream`。该函数使用`indent`作为缩进节点的空间量。
+如果文档包含无效的XML字符或无法用指定编码方式编码的字符，那么结果和行为将未定义。
+如果`encodingPolicy` `QDomNode::EncodingFromDocument`且该节点是文档节点，文本流`stream`的编码通过将名为“xml”的处理指令视为 XML 声明（如果存在）来设定，否则默认为 UTF-8。XML 声明不是处理指令，但这种行为存在于历史原因。如果该节点不是文档节点，则使用文本流的编码。
+如果`encodingPolicy`是`EncodingFromTextStream`且该节点是文档节点，该函数表现为 save（`QTextStream` &str， int 缩进），例外是使用文本流 `stream` 中指定的编码。
+如果文档包含无效的XML字符或无法用指定编码方式编码的字符，那么结果和行为将未定义。
 
 ### `void QDomNode::setNodeValue(const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNodeValue`。调用它会改变 `QDomNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将节点值设置为`value`。
 
 ### `void QDomNode::setPrefix(const QString &pre)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrefix`。调用它会改变 `QDomNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pre`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果节点有命名空间前缀，该函数将该节点的命名空间前缀改为`pre`。否则该函数不做任何事。
+只有类型为`ElementNode`或`AttributeNode`的节点才能拥有命名空间。创建时必须指定命名空间前缀;之后无法添加命名空间前缀。
 
 ### `QDomAttr QDomNode::toAttr() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toAttr`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomAttr`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomAttr`。如果节点不是属性，返回的对象将被`null`。
 
 ### `QDomCDATASection QDomNode::toCDATASection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toCDATASection`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomCDATASection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomCDATASection`。如果节点不是CDATA部分，返回的对象将被`null`。
 
 ### `QDomCharacterData QDomNode::toCharacterData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toCharacterData`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomCharacterData`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomCharacterData`。如果节点不是字符数据节点，返回的对象将被 `null`。
 
 ### `QDomComment QDomNode::toComment() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toComment`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomComment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomComment`。如果节点不是注释，返回的对象将被 `null`。
 
 ### `QDomDocument QDomNode::toDocument() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDocument`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomDocument`。如果节点不是文档，返回的对象将被`null`。
 
 ### `QDomDocumentFragment QDomNode::toDocumentFragment() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDocumentFragment`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomDocumentFragment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomDocumentFragment`。如果节点不是文档片段，返回的对象将被`null`。
 
 ### `QDomDocumentType QDomNode::toDocumentType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDocumentType`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomDocumentType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomDocumentType`。如果节点不是文档类型，返回的对象将被`null`。
 
 ### `QDomElement QDomNode::toElement() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toElement`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomElement`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomElement`。如果节点不是元素，返回的对象将被`null`。
 
 ### `QDomEntity QDomNode::toEntity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toEntity`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomEntity`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomEntity`。如果节点不是实体，返回的对象将被`null`。
 
 ### `QDomEntityReference QDomNode::toEntityReference() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toEntityReference`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomEntityReference`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomEntityReference`。如果节点不是实体引用，返回的对象将被`null`。
 
 ### `QDomNotation QDomNode::toNotation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toNotation`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomNotation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomNotation`。如果节点不是符号，返回的对象将被`null`。
 
 ### `QDomProcessingInstruction QDomNode::toProcessingInstruction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toProcessingInstruction`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomProcessingInstruction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomProcessingInstruction`。如果节点不是处理指令，返回的对象将被`null`。
 
 ### `QDomText QDomNode::toText() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toText`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QDomText`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QDomNode`转换为`QDomText`。如果节点不是文本，返回的对象将被`null`。
 
 ### `bool QDomNode::operator!=(const QDomNode &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`和该DOM节点不相等，返回`true`;否则返回`false`。
 
 ### `QDomNode &QDomNode::operator=(const QDomNode &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDomNode &`。
-- 参数 `other`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`的副本分配给该DOM节点。
+复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
 
 ### `bool QDomNode::operator==(const QDomNode &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果`other`和该DOM节点相等，返回`true`;否则返回`false`。
+任何`QDomNode`实例都作为`QDomDocument`底层数据结构的引用。当两个引用指向同一底层节点时，对等性检查进行检验。例如：
+这两个节点（`QDomElement` 是`QDomNode`子类）都指向文档的根元素，`element1 == element2` 返回 true。另一方面：
+尽管这两个节点都是携带相同名称的空元素，`element3 == element4` 仍会返回 false，因为它们指向底层数据结构中的两个不同节点。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QDomDocument document;
+ QDomElement element1 = document.documentElement();
+ QDomElement element2 = element1;
+```
 
 ### `QTextStream &operator<<(QTextStream &str, const QDomNode &node)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDomNode` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTextStream &`。
-- 参数 `str`：类型为 `QTextStream &`。没有默认值，调用时必须提供。传入 `QTextStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `node`：类型为 `const QDomNode &`。没有默认值，调用时必须提供。传入 `const QDomNode &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将节点`node`及其所有子节点的XML表示写入流`str`。
 
 ## 6. 深入实践与常见坑
 

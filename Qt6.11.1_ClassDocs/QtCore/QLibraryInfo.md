@@ -68,88 +68,59 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QLibraryInfo::LibraryPath`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLibraryInfo` 暴露的类型声明 `Library、Path`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:LibraryPath`。
-- 属性名：`QLibraryInfo`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型用于查询特定路径：
+- `QLibraryInfo::PrefixPath`：`0`;所有路径的默认前缀。
+- `QLibraryInfo::DocumentationPath`：`1`;安装时通往文档的路径。
+- `QLibraryInfo::HeadersPath`：`2`;通往所有头部的路径。
+- `QLibraryInfo::LibrariesPath`：`3`;通往已安装库的路径。
+- `QLibraryInfo::LibraryExecutablesPath`：`4`;运行时库所需的已安装可执行文件路径。
+- `QLibraryInfo::BinariesPath`：`5`;通往已安装Qt二进制文件（工具和应用程序）的路径。
+- `QLibraryInfo::PluginsPath`：`6`;通往已安装 Qt 插件的路径。
+- `QLibraryInfo::QmlImportsPath`：`7`;导入已安装QML扩展的路径。
+- `QLibraryInfo::Qml2ImportsPath`：`QmlImportsPath`;该值已被弃用。请使用 QmlImportsPath。
+- `QLibraryInfo::ArchDataPath`：`8`;通往通用架构依赖Qt数据的路径。
+- `QLibraryInfo::DataPath`：`9`;通往通用架构无关的Qt数据路径。
+- `QLibraryInfo::TranslationsPath`：`10`;Qt弦翻译信息的路径。
+- `QLibraryInfo::ExamplesPath`：`11`;安装后指向示例的路径。
+- `QLibraryInfo::TestsPath`：`12`;通往已安装Qt测试用例的路径。
+- `QLibraryInfo::SettingsPath`：`100`;通往 Qt 设置的路径。不适用于 Windows。
 
 ### `[static noexcept] bool QLibraryInfo::isDebugBuild()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isDebugBuild`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果本次 Qt 构建时启用调试，返回 `true`;如果是在发布模式构建，则返回 false。
 
 ### `[static noexcept, since 6.5] bool QLibraryInfo::isSharedBuild()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isSharedBuild`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这是Qt的共享（动态）构建，返回`true`。
 
 ### `[static, since 6.0] QString QLibraryInfo::path(QLibraryInfo::LibraryPath p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `path`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `p`：类型为 `QLibraryInfo::LibraryPath`。没有默认值，调用时必须提供。传入 `QLibraryInfo::LibraryPath` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`p`指定的路径。
+如果qt.conf中列出了多个路径，它只返回第一个路径。
 
 ### `[static, since 6.8] QStringList QLibraryInfo::paths(QLibraryInfo::LibraryPath p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `paths`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `p`：类型为 `QLibraryInfo::LibraryPath`。没有默认值，调用时必须提供。传入 `QLibraryInfo::LibraryPath` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`p`指定的所有路径。
 
 ### `[static noexcept] QVersionNumber QLibraryInfo::version()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `version`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QVersionNumber`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回Qt库的版本。
 
 ## 6. 深入实践与常见坑
 

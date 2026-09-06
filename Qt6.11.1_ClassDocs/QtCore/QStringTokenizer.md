@@ -84,394 +84,228 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 29 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QStringTokenizer::const_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setConst_iterator(...)` 设置，之后用 `const_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_iterator`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该typedef为`QStringTokenizer`提供了一个STL风格的const迭代器。
 
 ### `[alias] QStringTokenizer::const_pointer`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setConst_pointer(...)` 设置，之后用 `const_pointer()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_pointer`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。
 
 ### `[alias] QStringTokenizer::const_reference`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setConst_reference(...)` 设置，之后用 `const_reference()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_reference`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type &`的别名。
 
 ### `[alias] QStringTokenizer::difference_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setDifference_type(...)` 设置，之后用 `difference_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:difference_type`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qsizetype 的别名。
 
 ### `[alias] QStringTokenizer::iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setIterator(...)` 设置，之后用 `iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:iterator`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该typedef为`QStringTokenizer`提供了STL风格的const迭代器。
+`QStringTokenizer`不支持可变迭代器，所以这和`const_iterator`一样。
 
 ### `[alias] QStringTokenizer::pointer`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setPointer(...)` 设置，之后用 `pointer()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:pointer`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。
+`QStringTokenizer`不支持可变迭代器，所以这和`const_pointer`一样。
 
 ### `[alias] QStringTokenizer::reference`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setReference(...)` 设置，之后用 `reference()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:reference`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type &`的别名。
+`QStringTokenizer`不支持可变引用，所以这和`const_reference`一样。
 
 ### `[alias] QStringTokenizer::sentinel`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setSentinel(...)` 设置，之后用 `sentinel()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:sentinel`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该typedef为`QStringTokenizer::iterator`和`QStringTokenizer::const_iterator`提供了类似STL风格的哨兵。
 
 ### `[alias] QStringTokenizer::size_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setSize_type(...)` 设置，之后用 `size_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:size_type`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qsizetype 的别名。
 
 ### `[alias] QStringTokenizer::value_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的配置属性。初始化或状态切换时通过 `setValue_type(...)` 设置，之后用 `value_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:value_type`。
-- 属性名：`QStringTokenizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`const QStringView`或`const QLatin1StringView`的别名，取决于分词器的`Haystack`模板参数。
 
 ### `[explicit constexpr noexcept(...)] QStringTokenizer::QStringTokenizer(Haystack haystack, Needle needle, Qt::SplitBehavior sb = Qt::KeepEmptyParts, Qt::CaseSensitivity cs = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `haystack`：类型为 `Haystack`。没有默认值，调用时必须提供。传入 `Haystack` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `needle`：类型为 `Needle`。没有默认值，调用时必须提供。传入 `Needle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sb`：类型为 `Qt::SplitBehavior`。默认值为 `Qt::KeepEmptyParts`。传入 `Qt::SplitBehavior` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个字符串分词器，它会在每当 `needle` 出现的时候，将字符串 `haystack` 分割成子字符串，并允许在找到这些子字符串时进行迭代。如果 `needle` 在 `haystack` 中未匹配到任何内容，则会产生一个包含 `haystack` 的单个元素。
+`cs` 指定 `needle` 是否应区分大小写匹配。
+如果 `sb` 是 `Qt::SkipEmptyParts`，则空条目不会出现在结果中。默认情况下，空条目是包含的。
+注意：(1) 当 `std::is_nothrow_copy_constructible<QStringTokenizer>::value` 是 `true` 时，不会抛出异常。
+注意：(2) 当 `std::is_nothrow_copy_constructible<QStringTokenizer>::value` 是 `true` 时，不会抛出异常。
 
 ### `[noexcept] QStringTokenizer<Haystack, Needle>::iterator QStringTokenizer::cbegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringTokenizer::cbegin` 用于计算、查询或取得与“cbegin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringTokenizer<Haystack, Needle>::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringTokenizer<Haystack, Needle>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向列表中的第一个令牌。
 
 ### `[constexpr noexcept] QStringTokenizer<Haystack, Needle>::sentinel QStringTokenizer::cend() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringTokenizer::cend` 用于计算、查询或取得与“cend”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringTokenizer<Haystack, Needle>::sentinel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringTokenizer<Haystack, Needle>::sentinel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`end()`一样。
 
 ### `[constexpr noexcept] QStringTokenizer<Haystack, Needle>::sentinel QStringTokenizer::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QStringTokenizer<Haystack, Needle>::sentinel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的哨兵，指向列表中最后一个令牌之后的虚数令牌。
 
 ### `template <typename LContainer> LContainer QStringTokenizer::toContainer(LContainer &&c = {}) const &`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toContainer`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+将懒惰序列转换为（通常）类型为`LContainer`的随机访问容器。
+该函数仅在`Container`的`value_type`与该分词器`value_type`匹配时可用。
+如果你输入一个命名容器（lvalue）作为`c`，那么该容器已被填充，并返回对它的引用。如果你输入一个临时容器（r值，包含默认参数），那么该容器被填充，并返回值。
+这让你在存储序列时有最大的灵活性。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename LContainer> LContainer`。
-- 参数 `c`：类型为 `LContainer &&`。默认值为 `{}`。传入 `LContainer &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // assuming tok's value_type is QStringView, then...
+ auto tok = QStringTokenizer{~~~};
+ // ... rac1 is a QList:
+ auto rac1 = tok.toContainer();
+ // ... rac2 is std::pmr::vector<QStringView>:
+ auto rac2 = tok.toContainer<std::pmr::vector<QStringView>>();
+ auto rac3 = QVarLengthArray<QStringView, 12>{};
+ // appends the token sequence produced by tok to rac3
+ //  and returns a reference to rac3 (which we ignore here):
+ tok.toContainer(rac3);
+```
 
 ### `template <typename RContainer> RContainer QStringTokenizer::toContainer(RContainer &&c = {}) const &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toContainer`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+将懒惰序列转换为（通常）随机访问的`RContainer`型容器。
+除了对lvalue-这个超载的约束外，这个r值-这个超载只有在该 `QStringTokenizer` 内部不存储干草堆时才可用，因为这可能会形成一个充满悬挂引用的容器：
+修复方法是暂时存放这些`QStringTokenizer`：
+你可以通过传递一个视图来强制启用这个函数：
+如果你为`c`传递一个命名容器（lvalue），那么该容器被填满，并返回对它的引用。如果你传递一个临时容器（rvalue，包含默认参数），那么该容器被填满，并返回值。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename RContainer> RContainer`。
-- 参数 `c`：类型为 `RContainer &&`。默认值为 `{}`。传入 `RContainer &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ auto tokens = QStringTokenizer{widget.text(), u','}.toContainer();
+ // ERROR: cannot call toContainer() on rvalue
+ // 'tokens' references the data of the copy of widget.text()
+ // stored inside the QStringTokenizer, which has since been deleted
+```
 
 ### `[constexpr noexcept(...), since 6.0] template < typename Haystack, typename Needle, typename... Flags > auto qTokenize(Haystack &&haystack, Needle &&needle, Flags... flags)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QStringTokenizer::qTokenize` 用于计算、查询或取得与“q、Tokenize”相关的操作。调用时要先确认当前状态和 `haystack`、`needle`、`flags` 的有效范围；返回类型是 `template < typename Haystack, typename Needle, typename... Flags > auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename Haystack, typename Needle, typename... Flags > auto`。
-- 参数 `haystack`：类型为 `Haystack &&`。没有默认值，调用时必须提供。传入 `Haystack &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `needle`：类型为 `Needle &&`。没有默认值，调用时必须提供。传入 `Needle &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `Flags...`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+工厂函数，`QStringTokenizer`将字符串`haystack`分割成子串，`needle`出现时允许对这些字符串进行迭代。如果`needle`在`haystack`中任何地方不匹配，则生成包含`haystack`的单一元素。
+将`Qt::CaseSensitivity`和`Qt::SplitBehavior`枚举器的值传递为`flags`以修改分词器的行为。
+注意：该功能仅在`QtPrivate::Tok::is_nothrow_constructible_from<Haystack, Needle>::value` 被`true`时才使用。
 
 ### `const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `const、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该typedef为`QStringTokenizer`提供了一个STL风格的const迭代器。
 
 ### `const_pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `const、pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。
 
 ### `const_reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `const、reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type &`的别名。
 
 ### `difference_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `difference、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qsizetype 的别名。
 
 ### `iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该typedef为`QStringTokenizer`提供了STL风格的const迭代器。
+`QStringTokenizer`不支持可变迭代器，所以这和`const_iterator`一样。
 
 ### `pointer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `pointer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type *`的别名。
+`QStringTokenizer`不支持可变迭代器，所以这和`const_pointer`一样。
 
 ### `reference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `reference` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`value_type &`的别名。
+`QStringTokenizer`不支持可变引用，所以这和`const_reference`一样。
 
 ### `sentinel`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `sentinel` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该typedef为`QStringTokenizer::iterator`和`QStringTokenizer::const_iterator`提供了类似STL风格的哨兵。
 
 ### `size_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `尺寸或数量、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qsizetype 的别名。
 
 ### `value_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的 `值访问、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`const QStringView`或`const QLatin1StringView`的别名，取决于分词器的`Haystack`模板参数。
 
 ### `QStringTokenizer(Haystack haystack, Needle needle, Qt::CaseSensitivity cs, Qt::SplitBehavior sb = Qt::KeepEmptyParts)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QStringTokenizer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `haystack`：类型为 `Haystack`。没有默认值，调用时必须提供。传入 `Haystack` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `needle`：类型为 `Needle`。没有默认值，调用时必须提供。传入 `Needle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sb`：类型为 `Qt::SplitBehavior`。默认值为 `Qt::KeepEmptyParts`。传入 `Qt::SplitBehavior` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个字符串分词器，它会在每当 `needle` 出现的时候，将字符串 `haystack` 分割成子字符串，并允许在找到这些子字符串时进行迭代。如果 `needle` 在 `haystack` 中未匹配到任何内容，则会产生一个包含 `haystack` 的单个元素。
+`cs` 指定 `needle` 是否应区分大小写匹配。
+如果 `sb` 是 `Qt::SkipEmptyParts`，则空条目不会出现在结果中。默认情况下，空条目是包含的。
+注意：(1) 当 `std::is_nothrow_copy_constructible<QStringTokenizer>::value` 是 `true` 时，不会抛出异常。
+注意：(2) 当 `std::is_nothrow_copy_constructible<QStringTokenizer>::value` 是 `true` 时，不会抛出异常。
 
 ### `QStringTokenizer<Haystack, Needle>::iterator begin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QStringTokenizer<Haystack, Needle>::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向列表中的第一个令牌。
 
 ## 6. 深入实践与常见坑
 

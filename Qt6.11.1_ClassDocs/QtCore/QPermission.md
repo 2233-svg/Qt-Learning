@@ -83,61 +83,47 @@ int main(int argc, char *argv[])
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `template <typename T, QPermission::if_permission<T> = true> QPermission::QPermission(const T &type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPermission` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `const T &`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的类型许可`type`构建许可。
+你不需要显式构造这种类型，因为在检查或请求权限时会自动使用该类型。
+只有当 `T` 是类型化权限类之一时，才参与超载解析：
+- `QBluetoothPermission`：访问蓝牙外设
+- `QCalendarPermission`：访问用户日历
+- `QCameraPermission`：使用相机拍照或视频
+- `QContactsPermission`：访问用户联系人
+- `QLocationPermission`：访问用户位置
+- `QMicrophonePermission`：使用麦克风进行监听或录音
 
 ### `Qt::PermissionStatus QPermission::status() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPermission::status` 用于计算、查询或取得与“状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::PermissionStatus`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::PermissionStatus`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回权限状态。
 
 ### `QMetaType QPermission::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPermission::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回权限类型。
 
 ### `template <typename T, QPermission::if_permission<T> = true> std::optional<T> QPermission::value() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QPermission` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, QPermission::if_permission<T> = true> std::optional<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回类型为`T`的类型权限，如果该`QPermission`对象不包含类型许可，则返回`std::nullopt`。
+使用`type()`动态选择请求的类型权限。
+仅当 `T` 是类型权限类之一时，才参与超载解析：
+- `QBluetoothPermission`：访问蓝牙外设
+- `QCalendarPermission`：访问用户日历
+- `QCameraPermission`：使用相机拍照或视频
+- `QContactsPermission`：访问用户联系人
+- `QLocationPermission`：访问用户位置
+- `QMicrophonePermission`：访问麦克风进行监听或录音
 
 ## 6. 深入实践与常见坑
 

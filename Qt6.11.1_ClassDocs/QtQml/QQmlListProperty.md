@@ -84,308 +84,218 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 22 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] QQmlListProperty::AppendFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setAppendFunction(...)` 设置，之后用 `AppendFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AppendFunction`。
-- 属性名：`QQmlListProperty`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property, T *value)`的同义词。
+请将`value`附在`property`列表后。
 
 ### `[alias] QQmlListProperty::AtFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setAtFunction(...)` 设置，之后用 `AtFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:AtFunction`。
-- 属性名：`QQmlListProperty`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`T *(*)(QQmlListProperty<T> *property, qsizetype index)`的同义词。
+返回列表`property`中位置`index`的元素。
 
 ### `[alias] QQmlListProperty::ClearFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setClearFunction(...)` 设置，之后用 `ClearFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ClearFunction`。
-- 属性名：`QQmlListProperty`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property)`的同义词。
+清空名单，`property`。
 
 ### `[alias] QQmlListProperty::CountFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setCountFunction(...)` 设置，之后用 `CountFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:CountFunction`。
-- 属性名：`QQmlListProperty`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`qsizetype (*)(QQmlListProperty<T> *property)`的同义词。
+返回列表中的元素数量`property`。
 
 ### `[alias] QQmlListProperty::RemoveLastFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setRemoveLastFunction(...)` 设置，之后用 `RemoveLastFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:RemoveLastFunction`。
-- 属性名：`QQmlListProperty`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property)`的同义词。
+从列表中移除最后一个元素`property`。
 
 ### `[alias] QQmlListProperty::ReplaceFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setReplaceFunction(...)` 设置，之后用 `ReplaceFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ReplaceFunction`。
-- 属性名：`QQmlListProperty`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property, qsizetype index, T *value)`的同义词。
+将列表`property`中位置`index`的元素替换为`value`。
 
 ### `QQmlListProperty::QQmlListProperty(QObject *object, QList<T *> *list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+方便构造工具，用于从现有`QList` `list`中生成QQmlListProperty值。只要你持有指向该列表的QQmlListProperty，就必须提供并保持该列表及其`object` `list`的存续。
+这是提供由`QList`支持的QQmlListProperty最简单且最安全的方式，在大多数情况下应使用。典型的调用如下：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `list`：类型为 `QList<T *> *`。没有默认值，调用时必须提供。传入 `QList<T *> *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QQmlListProperty<PieSlice> PieChart::slices()
+ {
+     return QQmlListProperty<PieSlice>(this, &m_slices);
+ }
+```
 
 ### `QQmlListProperty::QQmlListProperty(QObject *object, void *data, QQmlListProperty<T>::CountFunction count, QQmlListProperty<T>::AtFunction at)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `count`：类型为 `QQmlListProperty<T>::CountFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::CountFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `at`：类型为 `QQmlListProperty<T>::AtFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::AtFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从一组操作函数 `count` 和 `at` 构造一个只读的 QQmlListProperty。可以传递一个不透明的 `data` 句柄，可以从操作函数内部访问。只要拥有该列表属性的`object`存在，列表属性依然有效。
 
 ### `QQmlListProperty::QQmlListProperty(QObject *object, void *data, QQmlListProperty<T>::AppendFunction append, QQmlListProperty<T>::CountFunction count, QQmlListProperty<T>::AtFunction at, QQmlListProperty<T>::ClearFunction clear)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `append`：类型为 `QQmlListProperty<T>::AppendFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::AppendFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `QQmlListProperty<T>::CountFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::CountFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `at`：类型为 `QQmlListProperty<T>::AtFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::AtFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `clear`：类型为 `QQmlListProperty<T>::ClearFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::ClearFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从一组操作函数`append`、`count`、`at`和`clear`构造一个QQmlListProperty。可以传递一个不透明的`data`柄，可以从操作函数内部访问。只要拥有列表属性的`object`存在，列表属性就保持有效。
+任何函数都可以传递空指针。如果传递了任何空指针，该列表将无法被调试器设计或修改。建议为所有函数提供有效的指针。
+注意：最终的QQmlListProperty会综合removeLast()和replace（如果这些方法都给出了，`count`、`at`、`clear`和replace（`append`）。这很慢。如果你打算操作列表，除了清除它之外，应明确提供这些方法。
 
 ### `QQmlListProperty::QQmlListProperty(QObject *object, void *data, QQmlListProperty<T>::AppendFunction append, QQmlListProperty<T>::CountFunction count, QQmlListProperty<T>::AtFunction at, QQmlListProperty<T>::ClearFunction clear, QQmlListProperty<T>::ReplaceFunction replace, QQmlListProperty<T>::RemoveLastFunction removeLast)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `append`：类型为 `QQmlListProperty<T>::AppendFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::AppendFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `QQmlListProperty<T>::CountFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::CountFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `at`：类型为 `QQmlListProperty<T>::AtFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::AtFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `clear`：类型为 `QQmlListProperty<T>::ClearFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::ClearFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `replace`：类型为 `QQmlListProperty<T>::ReplaceFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::ReplaceFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `removeLast`：类型为 `QQmlListProperty<T>::RemoveLastFunction`。没有默认值，调用时必须提供。传入 `QQmlListProperty<T>::RemoveLastFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从一组操作函数 `append`、`count`、`at`、`clear`、`replace` 和 removeLast 构造 QQmlListProperty。可以传递一个不透明度的 `data` 句柄，可以从操作函数内部访问。只要拥有该列表属性的 `object` 存在，列表属性依然有效。
+可以传递任何函数的空指针，如果可能的话，使相应函数被合成为其他函数。QQmlListProperty 可以合成。
+- `clear`使用`count`和`removeLast`
+- `replace`使用`count`、`at`、`clear`和`append`
+- `replace`使用`count`、`at`、`removeLast`和`append`
+- `removeLast`使用`count`、`at`、`clear`和`append`
+如果这些都给出了。这很慢，但如果你的列表本身没有为这些原语提供更快的选项，你可能想用合成的。
+此外，如果`count`、`at`、`append`和`clear`中的任何一个都没有明确给出或合成，那么该列表将无法被调试器设计或修改。建议提供足够的有效指针以避免这种情况。
 
 ### `bool QQmlListProperty::operator==(const QQmlListProperty<T> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QQmlListProperty<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QQmlListProperty`等于 `other`，则返回真，否则为假。
 
 ### `void *QQmlListProperty::data`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setData(...)` 设置，之后用 `data()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 成员类型：`void *`。
-- 成员名：`data`；读取前确认所属对象或命名空间仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该字段可以存储任意数据指针。
+如果你手动实现了访问器方法并需要存储自定义数据，可以将任意指针传递给`QQmlListProperty`构造函数，之后访问同一`QQmlListProperty`时从数据字段中取回。
+由QList指针构建的QQmlListProperty使用该字段存储指向列表本身的指针，因为它无法直接访问所有者的列表内容。
 
 ### `QObject *QQmlListProperty::object`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的配置属性。初始化或状态切换时通过 `setObject(...)` 设置，之后用 `object()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 成员类型：`QObject *`。
-- 成员名：`object`；读取前确认所属对象或命名空间仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这块田地的主人是`QQmlListProperty`。
+在手动实现访问器方法时，可能需要使用该字段来检索作列表的内容。
 
 ### `QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `追加` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+该宏定义了该类列表属性的行为以进行附加。在赋值于衍生类型时，值会附加到基类的值上。这是默认行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ class FruitBasket : QObject {
+     Q_OBJECT
+     QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
+     Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     public:
+     // ...
+     QQmlListProperty<Fruit> fruit();
+     // ...
+ };
+```
 
 ### `QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `替换` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+该宏定义了该类列表属性的行为以替换。在赋值于派生类型时，值会替换基类的值。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ class FruitBasket : QObject {
+     Q_OBJECT
+     QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+     Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     public:
+     // ...
+     QQmlListProperty<Fruit> fruit();
+     // ...
+ };
+```
 
 ### `QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `DEFAULT` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+该宏定义了该类列表属性的行为，即 ReplaceIfNotDefault。在赋值时，除非是默认属性，否则这些值会替换基类的值。对于默认属性，值会附加到基类的值上。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+```cpp
+ class FruitBasket : QObject {
+     Q_OBJECT
+     QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+     Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     public:
+     // ...
+     QQmlListProperty<Fruit> fruit();
+     // ...
+ };
+```
 
 ### `AppendFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `追加、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property, T *value)`的同义词。
+请将`value`附在`property`列表后。
 
 ### `AtFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `按位置访问、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`T *(*)(QQmlListProperty<T> *property, qsizetype index)`的同义词。
+返回列表`property`中位置`index`的元素。
 
 ### `ClearFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `清空、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property)`的同义词。
+清空名单，`property`。
 
 ### `CountFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `数量统计、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`qsizetype (*)(QQmlListProperty<T> *property)`的同义词。
+返回列表中的元素数量`property`。
 
 ### `RemoveLastFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `移除、末项、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property)`的同义词。
+从列表中移除最后一个元素`property`。
 
 ### `ReplaceFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlListProperty` 的 `替换、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`void (*)(QQmlListProperty<T> *property, qsizetype index, T *value)`的同义词。
+将列表`property`中位置`index`的元素替换为`value`。
 
 ## 6. 深入实践与常见坑
 

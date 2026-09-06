@@ -97,473 +97,303 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `autoRepeat : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的配置属性。初始化或状态切换时通过 `setAutoRepeat(...)` 设置，之后用 `autoRepeat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了捷径是否能自动重复。
+如果为真，只要系统上启用了键盘自动重复，只要按住快捷键组合，快捷方式会自动重复。默认值为真。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`autoRepeat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoRepeat()` 读取当前值；它不会修改应用状态。
 
 ### `context : Qt::ShortcutContext`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的配置属性。初始化或状态切换时通过 `setShortcutContext(...)` 设置，之后用 `ShortcutContext()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示快捷方式有效的上下文。
+快捷方式的上下文决定了在何种情况下允许触发快捷方式。正常上下文是`Qt::WindowShortcut`，如果父节点（包含快捷方式的控件）是活跃顶层窗口的子控件，则该快捷方式可以触发。
+默认情况下，该属性设置为`Qt::WindowShortcut`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::ShortcutContext`。
-- 属性名：`context`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `context()` 读取当前值；它不会修改应用状态。
 
 ### `enabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的配置属性。初始化或状态切换时通过 `setEnabled(...)` 设置，之后用 `enabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否启用了捷径。
+启用的快捷方式在出现与快捷方式`key()`序列相符的`QShortcutEvent`时，会发出`activated()`或`activatedAmbiguously()`信号。
+如果应用处于`WhatsThis`模式，捷径不会发出信号，而是显示“这是什么？”的文字。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`enabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `enabled()` 读取当前值；它不会修改应用状态。
 
 ### `key : QKeySequence`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的配置属性。初始化或状态切换时通过 `setKey(...)` 设置，之后用 `key()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含快捷键的主键序列。
+这是一个按键序列，可选组合为Shift、Ctrl和Alt。按键序列可以通过多种方式提供：
+默认情况下，该属性包含空密钥序列。
 
-**签名拆解：**
+**如何使用：** 调用 `key()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QKeySequence`。
-- 属性名：`key`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setKey(0);                  // no signal emitted
+ setKey(QKeySequence());     // no signal emitted
+ setKey(0x3b1);              // Greek letter alpha
+ setKey(Qt::Key_D);              // 'd', e.g. to delete
+ setKey('q');                // 'q', e.g. to quit
+ setKey(Qt::CTRL | Qt::Key_P);       // Ctrl+P, e.g. to print document
+ setKey(tr("Ctrl+P"));           // Ctrl+P, e.g. to print document
+```
 
 ### `[explicit] QShortcut::QShortcut(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`parent`构造一个QShortcut对象，应该是`QWindow`或`QWidget`。
+由于没有指定快捷键序列，快捷键不会发出任何信号。
 
 ### `[explicit, since 6.0] QShortcut::QShortcut(QKeySequence::StandardKey standardKey, QObject *parent, const char *member = nullptr, const char *ambiguousMember = nullptr, Qt::ShortcutContext context = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `standardKey`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。传入 `QKeySequence::StandardKey` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `member`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ambiguousMember`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `context`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`parent`构造一个QShortcut对象，应该是`QWindow`或`QWidget`。
+快捷方式会在其父功能上运行，监听与`standardKey`匹配的`QShortcutEvent`。根据事件的歧义，快捷方式会调用`member`函数，或者如果按键在快捷方式的`context`中，则调用`ambiguousMember`函数。
 
 ### `[explicit] QShortcut::QShortcut(const QKeySequence &key, QObject *parent, const char *member = nullptr, const char *ambiguousMember = nullptr, Qt::ShortcutContext context = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `member`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ambiguousMember`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `context`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`parent`构造一个QShortcut对象，应该是`QWindow`或`QWidget`。
+捷径在其父程序上运行，监听与`key`序列匹配的`QShortcutEvent`。根据事件的歧义，捷径会调用`member`函数，或者如果按键在快捷方式的`context`中，则调用`ambiguousMember`函数。
 
 ### `[since 6.0] template <typename Functor> QShortcut::QShortcut(QKeySequence::StandardKey key, QObject *parent, Functor functor, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将捷径的`activated()`信号连接到`functor`。
 
 ### `template <typename Functor> QShortcut::QShortcut(const QKeySequence &key, QObject *parent, Functor functor, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将捷径的`activated()`信号连接到`functor`。
 
 ### `[since 6.0] template <typename Functor> QShortcut::QShortcut(QKeySequence::StandardKey key, QObject *parent, const QObject *context, Functor functor, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `context`：类型为 `const QObject *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将快捷方式的`activated()`信号连接到`functor`。
+`functor`可以是指向`context`对象成员函数的指针。
+如果`context`对象被销毁，`functor`不会被调用。
 
 ### `template <typename Functor> QShortcut::QShortcut(const QKeySequence &key, QObject *parent, const QObject *context, Functor functor, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `context`：类型为 `const QObject *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将快捷方式的`activated()`信号连接到`functor`。
+`functor`可以是指向`context`对象成员函数的指针。
+如果`context`对象被销毁，`functor`不会被调用。
 
 ### `[since 6.0] template <typename Functor, typename FunctorAmbiguous> QShortcut::QShortcut(QKeySequence::StandardKey key, QObject *parent, const QObject *context, Functor functor, FunctorAmbiguous functorAmbiguous, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `context`：类型为 `const QObject *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `functorAmbiguous`：类型为 `FunctorAmbiguous`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将快捷方式的`activated()`信号连接到`functor`，`activatedAmbiguously()`信号连接到`functorAmbiguous`。
+`functor` 和 `functorAmbiguous` 可以作为指向`context`对象成员函数的指针。
+如果`context`对象被销毁，`functor`和`functorAmbiguous`不会被调用。
 
 ### `template <typename Functor, typename FunctorAmbiguous> QShortcut::QShortcut(const QKeySequence &key, QObject *parent, const QObject *context, Functor functor, FunctorAmbiguous functorAmbiguous, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `context`：类型为 `const QObject *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `functorAmbiguous`：类型为 `FunctorAmbiguous`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将快捷方式的`activated()`信号连接到`functor`，`activatedAmbiguously()`信号连接到`functorAmbiguous`。
+`functor` 和 `functorAmbiguous` 可以作为指向`context`对象成员函数的指针。
+如果`context`对象被销毁，`functor`和`functorAmbiguous`不会被调用。
 
 ### `[since 6.0] template <typename Functor, typename FunctorAmbiguous> QShortcut::QShortcut(QKeySequence::StandardKey key, QObject *parent, const QObject *context1, Functor functor, const QObject *context2, FunctorAmbiguous functorAmbiguous, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `context1`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `context2`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `functorAmbiguous`：类型为 `FunctorAmbiguous`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将快捷路的`activated()`信号连接到`functor`，`activatedAmbiguously()`信号连接到`functorAmbiguous`。
+`functor`可以是指向`context1`对象成员函数的指针。`functorAmbiguous`可以指向`context2`对象的成员函数。
+如果`context1`对象被摧毁，`functor`不会被调用。如果`context2`对象被摧毁，`functorAmbiguous`不会被调用。
 
 ### `template <typename Functor, typename FunctorAmbiguous> QShortcut::QShortcut(const QKeySequence &key, QObject *parent, const QObject *context1, Functor functor, const QObject *context2, FunctorAmbiguous functorAmbiguous, Qt::ShortcutContext shortcutContext = Qt::WindowShortcut)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `context1`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `functor`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `context2`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `functorAmbiguous`：类型为 `FunctorAmbiguous`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-- 参数 `shortcutContext`：类型为 `Qt::ShortcutContext`。默认值为 `Qt::WindowShortcut`。传入 `Qt::ShortcutContext` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个QShortcut便利构造器，将快捷路的`activated()`信号连接到`functor`，`activatedAmbiguously()`信号连接到`functorAmbiguous`。
+`functor`可以是指向`context1`对象成员函数的指针。`functorAmbiguous`可以指向`context2`对象的成员函数。
+如果`context1`对象被摧毁，`functor`不会被调用。如果`context2`对象被摧毁，`functorAmbiguous`不会被调用。
 
 ### `[virtual noexcept] QShortcut::~QShortcut()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏捷径。
 
 ### `[signal] void QShortcut::activated()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 发出的通知信号 `activated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户输入快捷键的按键序列时，该信号会发出。
 
 ### `[signal] void QShortcut::activatedAmbiguously()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QShortcut` 发出的通知信号 `activatedAmbiguously`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当键盘输入一个按键序列时，只要它与多个快捷键的开头相符，就称为歧义。
+当快捷键序列完成时，如果快捷键序列仍然模糊（即一个或多个快捷键的起点），则会发出激活Ambiguously()。此时不会发出`activated()`信号。
 
 ### `[since 6.0] QList<QKeySequence> QShortcut::keys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShortcut::keys` 用于计算、查询或取得与“keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QKeySequence>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QKeySequence>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回触发该快捷方式的密钥序列列表。
 
 ### `QWidget *QShortcut::parentWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShortcut::parentWidget` 用于计算、查询或取得与“父对象、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回快捷方式的父控件。
 
 ### `[since 6.0] void QShortcut::setKeys(QKeySequence::StandardKey key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeys`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `QKeySequence::StandardKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置触发条件与标准密钥`key`匹配。
 
 ### `[since 6.0] void QShortcut::setKeys(const QList<QKeySequence> &keys)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeys`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keys`：类型为 `const QList<QKeySequence> &`。没有默认值，调用时必须提供。传入 `const QList<QKeySequence> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`keys`设置为触发快捷方式的按键序列列表。
 
 ### `void QShortcut::setWhatsThis(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWhatsThis`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置快捷方式“这是什么？”帮助`text`。
+当小部件应用处于“这是什么？”模式，用户输入快捷方式`key()`序列时，文本将会显示。
+要在菜单项上设置“这是什么？”帮助（有快捷键或无快捷键），请将帮助设置在该项的动作上。
+默认情况下，帮助文本是空字符串。
+该函数在不使用控件的应用程序中没有影响。
 
 ### `QString QShortcut::whatsThis() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QShortcut::whatsThis` 用于计算、查询或取得与“whats、This”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回快捷方式的“这是什么？”帮助文本。
 
 ### `bool autoRepeat() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QShortcut::autoRepeat` 用于计算、查询或取得与“auto、Repeat”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了捷径是否能自动重复。
+如果为真，只要系统上启用了键盘自动重复，只要按住快捷键组合，快捷方式会自动重复。默认值为真。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoRepeat()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::ShortcutContext context() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QShortcut::context` 用于计算、查询或取得与“context”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::ShortcutContext`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示快捷方式有效的上下文。
+快捷方式的上下文决定了在何种情况下允许触发快捷方式。正常上下文是`Qt::WindowShortcut`，如果父节点（包含快捷方式的控件）是活跃顶层窗口的子控件，则该快捷方式可以触发。
+默认情况下，该属性设置为`Qt::WindowShortcut`。
 
-**签名拆解：**
-
-- 返回值：`Qt::ShortcutContext`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `context()` 读取当前值；它不会修改应用状态。
 
 ### `bool isEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性是否启用了捷径。
+启用的快捷方式在出现与快捷方式`key()`序列相符的`QShortcutEvent`时，会发出`activated()`或`activatedAmbiguously()`信号。
+如果应用处于`WhatsThis`模式，捷径不会发出信号，而是显示“这是什么？”的文字。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `QKeySequence key() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QShortcut::key` 用于计算、查询或取得与“key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QKeySequence`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含快捷键的主键序列。
+这是一个按键序列，可选组合为Shift、Ctrl和Alt。按键序列可以通过多种方式提供：
+默认情况下，该属性包含空密钥序列。
 
-**签名拆解：**
+**如何使用：** 调用 `key()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QKeySequence`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setKey(0);                  // no signal emitted
+ setKey(QKeySequence());     // no signal emitted
+ setKey(0x3b1);              // Greek letter alpha
+ setKey(Qt::Key_D);              // 'd', e.g. to delete
+ setKey('q');                // 'q', e.g. to quit
+ setKey(Qt::CTRL | Qt::Key_P);       // Ctrl+P, e.g. to print document
+ setKey(tr("Ctrl+P"));           // Ctrl+P, e.g. to print document
+```
 
 ### `void setAutoRepeat(bool on)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoRepeat`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了捷径是否能自动重复。
+如果为真，只要系统上启用了键盘自动重复，只要按住快捷键组合，快捷方式会自动重复。默认值为真。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `on`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoRepeat(...)` 修改 `autoRepeat`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setContext(Qt::ShortcutContext context)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setContext`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示快捷方式有效的上下文。
+快捷方式的上下文决定了在何种情况下允许触发快捷方式。正常上下文是`Qt::WindowShortcut`，如果父节点（包含快捷方式的控件）是活跃顶层窗口的子控件，则该快捷方式可以触发。
+默认情况下，该属性设置为`Qt::WindowShortcut`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `context`：类型为 `Qt::ShortcutContext`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setContext(...)` 修改 `context`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setEnabled(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEnabled`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否启用了捷径。
+启用的快捷方式在出现与快捷方式`key()`序列相符的`QShortcutEvent`时，会发出`activated()`或`activatedAmbiguously()`信号。
+如果应用处于`WhatsThis`模式，捷径不会发出信号，而是显示“这是什么？”的文字。
+默认情况下，该属性为`true`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setEnabled(...)` 修改 `enabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setKey(const QKeySequence &key)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKey`。调用它会改变 `QShortcut` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含快捷键的主键序列。
+这是一个按键序列，可选组合为Shift、Ctrl和Alt。按键序列可以通过多种方式提供：
+默认情况下，该属性包含空密钥序列。
 
-**签名拆解：**
+**如何使用：** 调用 `setKey(...)` 修改 `key`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setKey(0);                  // no signal emitted
+ setKey(QKeySequence());     // no signal emitted
+ setKey(0x3b1);              // Greek letter alpha
+ setKey(Qt::Key_D);              // 'd', e.g. to delete
+ setKey('q');                // 'q', e.g. to quit
+ setKey(Qt::CTRL | Qt::Key_P);       // Ctrl+P, e.g. to print document
+ setKey(tr("Ctrl+P"));           // Ctrl+P, e.g. to print document
+```
 
 ## 6. 深入实践与常见坑
 

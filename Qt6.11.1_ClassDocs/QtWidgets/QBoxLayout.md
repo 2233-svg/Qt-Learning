@@ -269,516 +269,262 @@ int main(int argc, char *argv[])
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 36 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QBoxLayout::Direction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** `QBoxLayout::Direction` 决定项目排列方向：`LeftToRight`、`RightToLeft`、`TopToBottom`、`BottomToTop`。水平和垂直方向不仅改变视觉顺序，也决定 stretch 沿宽度还是高度分配。
-
-**签名拆解：**
-
-- 属性类型：`:Direction`。
-- 属性名：`QBoxLayout`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这种类型用于确定方块布局的方向。
+- `QBoxLayout::LeftToRight`：`0`;从左到右水平排列。
+- `QBoxLayout::RightToLeft`：`1`;从右向左水平排列。
+- `QBoxLayout::TopToBottom`：`2`;从上到下垂直排列。
+- `QBoxLayout::BottomToTop`：`3`;从下到上垂直排列。
 
 ### `[explicit] QBoxLayout::QBoxLayout(QBoxLayout::Direction dir, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QBoxLayout(QBoxLayout::Direction dir, QWidget *parent = nullptr)` 中，`dir` 决定排列方向：`LeftToRight` 从左到右，`RightToLeft` 从右到左，`TopToBottom` 从上到下，`BottomToTop` 从下到上。`parent` 只有在这个布局直接作为某个 QWidget 的顶层布局时才传入；嵌套布局通常先无父对象创建，再用父布局的 `addLayout()` 接管它。实际开发优先写 `QHBoxLayout` 或 `QVBoxLayout`，因为它们已经固定了方向。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `dir`：类型为 `QBoxLayout::Direction`。没有默认值，调用时必须提供。传入 `QBoxLayout::Direction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的QBoxLayout，带有方向`dir`和父控件`parent`。
+布局直接设置为`parent`的顶层布局。一个小部件只能有一个顶层布局。它由`QWidget::layout()`返回。
 
 ### `[virtual noexcept] QBoxLayout::~QBoxLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 析构布局时，布局项目和子布局会按 Qt 的所有权规则释放；布局管理的普通 `QWidget` 不会因为布局析构而自动销毁。若只是移除布局，不要误以为控件也被删除；控件的新父对象和生命周期仍需明确。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了这个盒子布局。
+布局中的控件没有被破坏。
 
 ### `[override virtual] void QBoxLayout::addItem(QLayoutItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addItem(QLayoutItem *item)` 把一个底层布局项目追加到末尾，项目可以包着 widget、子布局或 spacer。普通业务代码通常使用 `addWidget()`、`addLayout()`、`addSpacing()` 或 `addStretch()`，因为这些函数会明确表达项目类型和参数。传入的 item 所有权交给布局。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `item`：类型为 `QLayoutItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QLayout::addItem`（QLayoutItem *item）。
+在子职业中实现以添加`item`。添加方式因子职业而异。
+该函数通常不会在应用代码中调用。要向布局添加小部件，使用`addWidget()`函数;要添加子布局，使用相关`QLayout`子类提供的addLayout()函数。
+注意：`item`的所有权转移到了布局上，删除它由布局负责。
 
 ### `void QBoxLayout::addLayout(QLayout *layout, int stretch = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addLayout(QLayout *layout, int stretch = 0)` 把另一个布局作为一个项目追加。子布局的所有控件仍由子布局管理，而父布局只分配这个子布局整体的矩形。`stretch` 作用在子布局整体上。例如外层垂直布局中，上方工具栏布局设为 0、下方编辑区布局设为 1，就能让编辑区吸收多余高度。添加后所有权交给父布局，不要重复把同一个布局加入多个父布局。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `layout`：类型为 `QLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `stretch`：类型为 `int`。默认值为 `0`。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 通常与嵌套布局和父布局 stretch 一起使用；父布局分配子布局整体空间，子布局再管理自己的项目。
+在盒子末端增加`layout`，并实现串行拉伸因子`stretch`。
+`layout`成为盒子布局的子体。
 
 ### `void QBoxLayout::addSpacerItem(QSpacerItem *spacerItem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addSpacerItem(QSpacerItem *spacerItem)` 添加自定义 spacer。与 `addStretch()` 和 `addSpacing()` 相比，`QSpacerItem` 可以分别指定宽度、最小高度、最大尺寸和 `QSizePolicy`。添加后所有权交给布局；除非确实需要复杂 size policy，否则优先使用语义更清楚的 `addStretch()` 或 `addSpacing()`。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `spacerItem`：类型为 `QSpacerItem *`。没有默认值，调用时必须提供。传入 `QSpacerItem *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这为这个盒子布局的结尾增加了一些`spacerItem`。
+`spacerItem`的所有权转移到了这种布局。
 
 ### `void QBoxLayout::addSpacing(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addSpacing(int size)` 添加固定大小的空白，`size` 是沿布局主方向的像素数。它不会随着窗口变大而吸收剩余空间，也不会代替 `setSpacing()` 设置所有相邻项目的间隔。它适合表达某一个位置需要额外留白的关系。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在这个框布局的末端添加一个不可拉伸的空间（`QSpacerItem`），大小为`size`。`QBoxLayout`提供默认的边距和间距。这个功能增加了额外的空间。
 
 ### `void QBoxLayout::addStretch(int stretch = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addStretch(int stretch = 0)` 添加一个可伸缩空白。参数是这个空白项目的 stretch factor，默认 0；当布局中没有其他正 stretch 时，Qt 还会结合 spacer 的 size policy 分配空间。为了明确表达“这个空白按比例吸收剩余空间”，通常写 `addStretch(1)`。`addStretch(1); addWidget(button);` 把按钮推到末端；两侧各加一个相同 stretch 则可以居中。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stretch`：类型为 `int`。默认值为 `0`。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 通常用来吸收剩余空间、推开项目或配合两侧相同 stretch 实现居中。
+在这个盒子布局的末端增加了一个可拉伸空间（`QSpacerItem`），最小尺寸和拉伸因子`stretch`为零。
 
 ### `void QBoxLayout::addStrut(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addStrut(int size)` 设置一条不可见的最小尺寸约束，作用在布局的交叉方向：水平盒式布局影响最小高度，垂直盒式布局影响最小宽度。它不是主方向上的空白，也不是设置控件固定尺寸；只有需要让一行/一列至少达到某个交叉方向尺寸时才使用。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+限制盒子的垂直尺寸（例如箱体`LeftToRight`时高度）最小`size`。其他约束可能会增加限制。
 
 ### `void QBoxLayout::addWidget(QWidget *widget, int stretch = 0, Qt::Alignment alignment = Qt::Alignment())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `addWidget(QWidget *widget, int stretch = 0, Qt::Alignment alignment = {})` 把控件追加到末尾。`widget` 是要管理的控件；`stretch` 是主方向的相对伸展比例，默认 0；`alignment` 是控件在分配单元格内的对齐方式，默认空 alignment，通常表示允许控件填满单元格。常用写法是 `addWidget(edit, 1)` 让输入框吸收剩余宽度，按钮使用默认 0 保持接近推荐尺寸。控件会成为布局父控件中的子控件，不要再手动管理同一几何区域。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `stretch`：类型为 `int`。默认值为 `0`。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-- 参数 `alignment`：类型为 `Qt::Alignment`。默认值为 `Qt::Alignment()`。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-
-**正确调用组合：** 通常与 `setContentsMargins()`、`setSpacing()` 和 stretch 一起使用；stretch 分配主方向剩余空间，alignment 控制控件在自身区域中的位置。
+为该盒式布局末端增加了`widget`，并增加了`stretch`的拉伸因子和对齐`alignment`。
+拉伸因子仅适用于`QBoxLayout` `direction`，且相对于本`QBoxLayout`中其他箱子和小部件。伸缩因子较高的小部件和盒子增长更多。
+如果拉伸因子为0，且`QBoxLayout`中没有其他元素的拉伸因子大于0，则空间根据涉及的每个控件的`QWidget::sizePolicy()`分布。
+对齐方式由 `alignment` 指定。默认对齐为 0，这意味着小部件会填满整个单元格。
+`widget`成为了`QLayout::parentWidget()`的孩子。
 
 ### `[override virtual] int QBoxLayout::count() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `count()` 返回当前布局项目数量。这里的项目不仅是可见控件，还包括子布局、固定空白和 stretch；因此它是遍历 `itemAt(index)`、`takeAt(index)` 或判断 `setStretch(index, ...)` 索引范围的依据。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayout::count()` const.
+必须在子类中实现，以返回布局中的物品数量。
 
 ### `QBoxLayout::Direction QBoxLayout::direction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setDirection(Direction direction)` 运行时改变排列方向，`direction()` 读取当前方向。方向改变后，项目仍是同一批项目，但视觉顺序和 stretch 的作用轴会改变；例如从 `LeftToRight` 切到 `TopToBottom` 后，同样的 stretch 会从分配宽度变成分配高度。
-
-**签名拆解：**
-
-- 返回值：`QBoxLayout::Direction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回盒子的方向。`addWidget()`和`addSpacing()`朝这个方向工作;拉伸方向向此延伸。
 
 ### `[override virtual] Qt::Orientations QBoxLayout::expandingDirections() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `expandingDirections()` 告诉 Qt 这个布局愿意在哪些方向扩展。盒式布局的主方向通常可以扩展，具体结果还会综合子项目的 size policy；它主要供布局系统计算尺寸，不是设置控件大小的业务 API。
-
-**签名拆解：**
-
-- 返回值：`Qt::Orientations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayout::expandingDirections()` const.
 
 ### `[override virtual] bool QBoxLayout::hasHeightForWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `hasHeightForWidth()` 用于判断布局中的项目是否需要根据宽度计算高度，例如自动换行文本。它由布局系统在尺寸计算时使用，应用代码通常不需要手动调用；不要把它当成普通控件是否可见的判断。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::hasHeightForWidth()` const.
+如果该布局的首选高度取决于宽度，则返回`true`;否则返回`false`。默认实现返回false。
+在支持宽度高度的布局管理器中重新实现这个功能。
 
 ### `[override virtual] int QBoxLayout::heightForWidth(int w) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `heightForWidth(int w)` 根据给定宽度计算布局需要的高度，`w` 是布局宽度。它通常由 Qt 在布局计算过程中调用，用来支持 word wrap 等高度依赖宽度的控件；不要在普通业务代码中用它替代设置布局。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `w`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::heightForWidth`（int） const.
+返回该布局项的首选高度，基于宽度，但默认实现中未使用宽度。
+默认实现返回 -1，表示首选高度与项目宽度无关。使用函数 `hasHeightForWidth()` 通常比调用该函数并测试 -1 快得多。
+在支持宽度高度的布局管理器中重新实现该函数。典型的实现如下：
+强烈建议缓存;没有缓存，布局将耗费指数级时间。
 
 ### `void QBoxLayout::insertItem(int index, QLayoutItem *item)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `insertItem(int index, QLayoutItem *item)` 在指定位置插入一个布局项目。`index` 是包括控件、子布局和 spacer 在内的项目索引；所有权转交给布局。普通代码优先使用 `insertWidget()`、`insertLayout()`、`insertSpacing()` 或 `insertStretch()`，因为这些函数的参数更明确。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `item`：类型为 `QLayoutItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该框布局中插入`item`，位置`index`。索引必须为负或范围在0到`count()`之间，包括。如果`index`为负或`count()`，则该项会加在末尾。
+`item`的所有权转移到了这种布局。
 
 ### `void QBoxLayout::insertLayout(int index, QLayout *layout, int stretch = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 插入版本的第一个参数 `index` 是项目位置，项目包括控件、子布局、固定空白和 stretch，不能只按可见控件计数。负数或等于 `count()` 会追加到末尾。插入控件时后两个参数仍分别是 stretch 和 alignment；插入布局时最后一个参数是子布局整体的 stretch。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `layout`：类型为 `QLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `stretch`：类型为 `int`。默认值为 `0`。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入物在位置`index` `layout`，拉伸因子为`stretch`。如果`index`为负，则在末尾添加布局。
+`layout`成为盒子布局的子体。
 
 ### `void QBoxLayout::insertSpacerItem(int index, QSpacerItem *spacerItem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `insertSpacerItem(int index, QSpacerItem *spacerItem)` 在指定位置插入自定义 spacer。`index` 负数或等于 `count()` 时追加到末尾；添加后 spacer 的所有权交给布局。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `spacerItem`：类型为 `QSpacerItem *`。没有默认值，调用时必须提供。传入 `QSpacerItem *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入物`spacerItem`位置为`index`，最小尺寸和拉伸因子均为零。如果`index`为负，则在末端加空间。
+`spacerItem`的所有权转移到了该布局。
 
 ### `void QBoxLayout::insertSpacing(int index, int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `insertSpacing(int index, int size)` 在指定位置插入固定空白。`size` 是沿布局主方向的像素大小；它不会吸收窗口变大后产生的剩余空间。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在位置`index`插入一个不可伸缩的空间（`QSpacerItem`），大小为`size`。如果`index`为负，则在末尾加空间。
+框布局默认有边距和间距。这个功能增加了额外的空间。
 
 ### `void QBoxLayout::insertStretch(int index, int stretch = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `insertStretch(int index, int stretch = 0)` 在指定位置插入可伸缩空白。`stretch` 是相对权重；想让它吸收剩余空间通常传入正数，例如 `insertStretch(1, 1)`。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `stretch`：类型为 `int`。默认值为 `0`。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在位置`index`插入一个可拉伸空间（`QSpacerItem`），最小大小为零，拉伸因子为`stretch`。如果`index`为负，则在末端加空间。
 
 ### `void QBoxLayout::insertWidget(int index, QWidget *widget, int stretch = 0, Qt::Alignment alignment = Qt::Alignment())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 插入版本的第一个参数 `index` 是项目位置，项目包括控件、子布局、固定空白和 stretch，不能只按可见控件计数。负数或等于 `count()` 会追加到末尾。插入控件时后两个参数仍分别是 stretch 和 alignment；插入布局时最后一个参数是子布局整体的 stretch。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `stretch`：类型为 `int`。默认值为 `0`。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-- 参数 `alignment`：类型为 `Qt::Alignment`。默认值为 `Qt::Alignment()`。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入点在位置`index` `widget`，拉伸因子为`stretch`，对齐`alignment`。如果`index`为负，则在末尾添加小部件。
+拉伸因子仅适用于`QBoxLayout` `direction`，且相对于该`QBoxLayout`中的其他盒子和控件。拉伸因子较高的控件和盒子增长更多。
+如果拉伸因子为0，且`QBoxLayout`中没有其他物品的拉伸因子大于零，则空间根据涉及的每个控件的`QWidget::sizePolicy()`分配。
+对齐由 `alignment` 指定。默认对齐为 0，这意味着小部件会填满整个单元格。
+`widget`成为`QLayout::parentWidget()`的孩子。
 
 ### `[override virtual] void QBoxLayout::invalidate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `invalidate()` 清除布局缓存，让 Qt 在下一次布局更新时重新计算尺寸和几何位置。改变项目、margin、spacing、stretch 或子控件尺寸提示后 Qt 通常会自动触发更新，只有自定义布局或特殊缓存场景才需要关注它。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayout::invalidate()`。
+重置缓存信息。
 
 ### `[override virtual] QLayoutItem *QBoxLayout::itemAt(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `itemAt(int index)` 按索引读取布局项目，但不移除它。返回的 `QLayoutItem` 可能代表 widget、子 layout 或 spacer，读取前先判断 `item->widget()`、`item->layout()` 和 `item->spacerItem()` 哪一个有效；索引越界返回空指针。
-
-**签名拆解：**
-
-- 返回值：`QLayoutItem *`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QLayout::itemAt`（int index）const.
+必须在子类中实现以返回`index`的布局项。如果没有这样的项，函数必须返回`nullptr`。项编号从0依次排列。如果一个项被删除，其他项将被重新编号。
+该函数可用于遍历布局。以下代码将为小部件布局结构中的每个布局项绘制一个矩形。
 
 ### `[override virtual] QSize QBoxLayout::maximumSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `maximumSize()` 返回布局综合子项目最大尺寸后允许的最大尺寸。某个控件达到 maximumSize 后，即使它的 stretch 很大也不会继续变大，多余空间会由其他可扩展项目处理。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayout::maximumSize()` const.
 
 ### `[override virtual] int QBoxLayout::minimumHeightForWidth(int w) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `minimumHeightForWidth(int w)` 根据宽度 `w` 计算布局所需的最小高度，主要用于布局中存在自动换行或其他宽度影响高度的控件时。它是 Qt 尺寸计算过程的一部分，普通代码不应拿它代替 `setMinimumHeight()`。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `w`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QLayoutItem::minimumHeightForWidth`（内性 w） const.
+返回该控件在给定宽度下所需的最小高度，`w`。默认实现则返回 `heightForWidth`（`w`）。
 
 ### `[override virtual] QSize QBoxLayout::minimumSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `minimumSize()` 返回布局根据 margins、spacing、子项目最小尺寸和 size policy 计算出的最小尺寸。窗口被缩小时，这个结果会影响窗口还能缩到多小；它不是单独设置某个控件最小尺寸的接口。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayout::minimumSize()` const.
 
 ### `void QBoxLayout::setDirection(QBoxLayout::Direction direction)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setDirection(Direction direction)` 运行时改变排列方向，`direction()` 读取当前方向。方向改变后，项目仍是同一批项目，但视觉顺序和 stretch 的作用轴会改变；例如从 `LeftToRight` 切到 `TopToBottom` 后，同样的 stretch 会从分配宽度变成分配高度。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `direction`：类型为 `QBoxLayout::Direction`。没有默认值，调用时必须提供。方向枚举，决定排列、遍历或坐标增长方向；要结合该类定义的枚举值判断实际方向。
-
-**正确调用组合：** 改变方向后 stretch 的作用轴也会改变；水平变垂直时，同一比例从分配宽度变为分配高度。
+将布局方向设置为`direction`。
 
 ### `[override virtual] void QBoxLayout::setGeometry(const QRect &r)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setGeometry(const QRect &r)` 是布局系统用来分配自身矩形的虚函数。`r` 是 Qt 计算出的布局区域；普通代码不要手动调用它，也不要在窗口 resize 中自己调用它来摆放子控件，应该修改布局参数或控件的尺寸策略。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `r`：类型为 `const QRect &`。没有默认值，调用时必须提供。传入 `const QRect &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayout::setGeometry`（const QRect & r）。
 
 ### `[override virtual] void QBoxLayout::setSpacing(int spacing)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setSpacing(int spacing)` 设置相邻项目之间的统一间隔，`spacing()` 读取实际值。它只影响相邻项目之间的距离，不影响布局外边距；嵌套布局未显式设置时，间距可能继承父布局或由 style 决定。`addSpacing()` 是某一个位置的额外固定空白，两者不要混为一谈。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `spacing`：类型为 `int`。没有默认值，调用时必须提供。相邻项目之间的间隔，通常以像素表示；它通常不等于外边距。
-
-**正确调用组合：** 与 `setContentsMargins()` 配合控制内部间隔和外部边距，不能用一个替代另一个。
+重新实现了属性的访问函数：`QLayout::spacing`。
+重新实现`QLayout::setSpacing()`。将间距属性设置为`spacing`。
 
 ### `void QBoxLayout::setStretch(int index, int stretch)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setStretch(int index, int stretch)` 修改指定项目的 stretch。`index` 必须对应当前布局中的项目索引，`stretch` 是非负的相对权重。布局中有三个控件时，只有控件项目恰好位于 0、1、2 才能这样写；如果中间插入了 `addSpacing()` 或 `addStretch()`，索引会随项目改变。对于不容易维护的索引，使用 `setStretchFactor(widget, stretch)` 更安全。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `stretch`：类型为 `int`。没有默认值，调用时必须提供。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 要结合 `count()` 和 `stretch(index)` 使用，注意 index 包括 spacer 和子布局。
+将拉伸因子设定在位置`index`。为`stretch`。
 
 ### `bool QBoxLayout::setStretchFactor(QWidget *widget, int stretch)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setStretchFactor(QWidget *widget, int stretch)` 和 `setStretchFactor(QLayout *layout, int stretch)` 通过对象设置直接子项的 stretch，并返回是否找到该对象。返回 `false` 通常表示对象不在当前布局这一层，或者已经被移除；它不会递归搜索子布局。`stretch` 仍是比例，不是宽度。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `stretch`：类型为 `int`。没有默认值，调用时必须提供。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 要结合 `count()` 和 `stretch(index)` 使用，注意 index 包括 spacer 和子布局。
+将 `widget` 的拉伸因子设置为 `stretch`，若在此布局中找到 `widget`则返回 true（不包括子布局）;否则返回 `false`。
 
 ### `bool QBoxLayout::setStretchFactor(QLayout *layout, int stretch)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setStretchFactor(QWidget *widget, int stretch)` 和 `setStretchFactor(QLayout *layout, int stretch)` 通过对象设置直接子项的 stretch，并返回是否找到该对象。返回 `false` 通常表示对象不在当前布局这一层，或者已经被移除；它不会递归搜索子布局。`stretch` 仍是比例，不是宽度。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `layout`：类型为 `QLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `stretch`：类型为 `int`。没有默认值，调用时必须提供。伸展比例或权重，不是像素值。它通常只影响剩余空间如何分配，并受最小/最大尺寸和 size policy 限制。
-
-**正确调用组合：** 要结合 `count()` 和 `stretch(index)` 使用，注意 index 包括 spacer 和子布局。
+将布局`layout`的拉伸因子设置为`stretch`，如果在该布局中发现`layout`（不包括子布局），返回`true`;否则返回`false`。
 
 ### `[override virtual] QSize QBoxLayout::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `sizeHint()` 返回布局希望占用的推荐尺寸，它来自子项目的 sizeHint、spacing 和 margins。它是窗口初始大小和 `SetFixedSize` 等约束的重要输入，但不是强制尺寸；窗口仍可在约束允许时调整。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QLayoutItem::sizeHint()` const.
+在子类中实现，以返回该物品的首选大小。
 
 ### `[override virtual] int QBoxLayout::spacing() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `setSpacing(int spacing)` 设置相邻项目之间的统一间隔，`spacing()` 读取实际值。它只影响相邻项目之间的距离，不影响布局外边距；嵌套布局未显式设置时，间距可能继承父布局或由 style 决定。`addSpacing()` 是某一个位置的额外固定空白，两者不要混为一谈。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现了属性访问函数：`QLayout::spacing`。
+重新实现`QLayout::spacing()`。如果间距属性有效，则返回该值。否则，计算并返回间距属性的值。由于控件中的布局间距依赖于样式，如果父组件是控件，它会查询样式的（水平或垂直）间距。否则，父节点是布局，它会查询父布局的间距()。
 
 ### `int QBoxLayout::stretch(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `stretch(int index) const` 返回项目当前的 stretch factor，可用来检查动态调整是否生效。`index` 与 `setStretch()` 使用同一套项目索引，访问前先确认 `0 <= index < count()`。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位置`index`的拉伸因子。
 
 ### `[override virtual] QLayoutItem *QBoxLayout::takeAt(int index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `removeWidget(widget)` 只把控件从布局关系中移除，通常不会销毁控件；移除后要自己决定它的新父对象和生命周期。`takeAt(index)` 取出项目并把所有权交还给调用者，取出的 `QLayoutItem` 可能包着 widget、子布局或 spacer，需要分别通过 `widget()`、`layout()`、`spacerItem()` 处理。
-
-**签名拆解：**
-
-- 返回值：`QLayoutItem *`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### 常用继承 API
-
-#### `QLayout::setContentsMargins`
-
-`setContentsMargins(int left, int top, int right, int bottom)` 的四个参数分别是左、上、右、下边距，单位是像素。它作用在布局外框，不会改变控件之间的 spacing。传入 0 可以让内容贴近父控件边缘，但通常要考虑平台风格和可读性；不手动设置时，Qt 可能使用 style 提供的默认值。
-
-#### `QLayout::setSpacing / spacing`
-
-`setSpacing(int spacing)` 设置相邻项目之间的统一间隔，`spacing()` 读取实际值。它只影响相邻项目之间的距离，不影响布局外边距；嵌套布局未显式设置时，间距可能继承父布局或由 style 决定。`addSpacing()` 是某一个位置的额外固定空白，两者不要混为一谈。
-
-#### `QLayout::setAlignment`
-
-`setAlignment(QWidget *widget, Qt::Alignment alignment)` 或 `setAlignment(QLayout *layout, Qt::Alignment alignment)` 设置直接子项目在其分配单元格中的对齐方式。常用组合是 `Qt::AlignLeft | Qt::AlignVCenter`、`Qt::AlignHCenter`、`Qt::AlignRight`。alignment 解决“项目在自己的格子里怎么放”，stretch 解决“项目的格子分多大”，需要两者配合时先分配空间再控制内容对齐。
-
-#### `QLayout::setSizeConstraint`
-
-`setSizeConstraint(QLayout::SizeConstraint constraint)` 控制布局所属窗口的尺寸约束。`SetDefaultConstraint` 使用默认行为；`SetFixedSize` 让窗口按布局推荐尺寸固定；`SetMinimumSize` 只设置最小尺寸；`SetMaximumSize` 只设置最大尺寸；`SetMinAndMaxSize` 同时设置最小和最大尺寸；`SetNoConstraint` 不由布局施加约束。它不替代 `QWidget::setMinimumSize()`，也不改变 stretch 比例。
-
-#### `removeWidget / takeAt`
-
-`removeWidget(widget)` 只把控件从布局关系中移除，通常不会销毁控件；移除后要自己决定它的新父对象和生命周期。`takeAt(index)` 取出项目并把所有权交还给调用者，取出的 `QLayoutItem` 可能包着 widget、子布局或 spacer，需要分别通过 `widget()`、`layout()`、`spacerItem()` 处理。
+重实现自：`QLayout::takeAt`（整数索引）。
+必须在子类中实现，以从布局中移除`index`的布局项并返回该项。如果没有这样的项，函数必须什么都不做，返回0。项编号从0开始依次编号。如果一个项被移除，其他项将被重新编号。
+以下代码片段展示了一种安全移除所有布局物品的方法：
 
 ## 6. 深入实践与常见坑
 

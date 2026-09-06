@@ -79,113 +79,70 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QNetworkProxyFactory::QNetworkProxyFactory()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyFactory` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QNetworkProxyFactory 对象。
+由于QNetworkProxyFactory是一个抽象类，你不能直接创建类型为QNetworkProxyFactory的对象。
 
 ### `[virtual noexcept] QNetworkProxyFactory::~QNetworkProxyFactory()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyFactory` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QNetworkProxyFactory`物体。
 
 ### `[static] QList<QNetworkProxy> QNetworkProxyFactory::proxyForQuery(const QNetworkProxyQuery &query)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `proxyForQuery`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkProxy>`。
-- 参数 `query`：类型为 `const QNetworkProxyQuery &`。没有默认值，调用时必须提供。传入 `const QNetworkProxyQuery &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数接收查询请求`query`，检查套接字或请求类型的详细信息，并返回一份`QNetworkProxy`对象列表，指示将使用的代理服务器，按偏好顺序排列。
 
 ### `[pure virtual] QList<QNetworkProxy> QNetworkProxyFactory::queryProxy(const QNetworkProxyQuery &query = QNetworkProxyQuery())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxyFactory` 的核心操作 `queryProxy`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkProxy>`。
-- 参数 `query`：类型为 `const QNetworkProxyQuery &`。默认值为 `QNetworkProxyQuery()`。传入 `const QNetworkProxyQuery &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数接收查询请求 `query`，检查套接字或请求类型的详细信息，并返回一个`QNetworkProxy`对象列表，指示所使用的代理服务器，按偏好顺序排列。
+在重新实现该类时，请确保至少返回一个元素。
+如果你无法确定更好的代理替代方案，可以使用 `QNetworkProxy::DefaultProxy`，它会告诉查询代理的代码使用更高级别的替代方案。例如，如果该工厂设置为`QNetworkAccessManager`对象，DefaultProxy 会告诉它查询应用级代理设置。
+如果该出厂设置为应用代理工厂，DefaultProxy 和 NoProxy 的含义相同。
 
 ### `[static] void QNetworkProxyFactory::setApplicationProxyFactory(QNetworkProxyFactory *factory)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setApplicationProxyFactory`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `factory`：类型为 `QNetworkProxyFactory *`。没有默认值，调用时必须提供。传入 `QNetworkProxyFactory *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将应用范围的代理工厂设置为`factory`。该函数会获得该对象的所有权，并在必要时删除它。
+当所有其他代理选择请求返回`QNetworkProxy::DefaultProxy`时，应用范围代理作为最后手段使用。例如，`QTcpSocket`对象可以设置带有QTcpSocket：：setProxy的代理，但如果没有设置，则查询带有该函数的代理工厂类集合。
+如果你用这个函数设置代理工厂，任何带有`QNetworkProxy::setApplicationProxy`的应用级代理都会被覆盖，`usesSystemConfiguration()`会返回`false`。
 
 ### `[static] void QNetworkProxyFactory::setUseSystemConfiguration(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setUseSystemConfiguration`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+仅允许使用平台特定的代理设置。更多信息请参见 `systemProxyForQuery()`。
+调用该函数时`enable`设置为`true`会重置已设置的任何代理或`QNetworkProxyFactory`。
+注意：有关系统代理使用限制的列表，请参见 `systemProxyForQuery()` 文档。
 
 ### `[static] QList<QNetworkProxy> QNetworkProxyFactory::systemProxyForQuery(const QNetworkProxyQuery &query = QNetworkProxyQuery())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `systemProxyForQuery`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkProxy>`。
-- 参数 `query`：类型为 `const QNetworkProxyQuery &`。默认值为 `QNetworkProxyQuery()`。传入 `const QNetworkProxyQuery &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数接收查询请求`query`，检查套接字或请求类型的详细信息，并返回一份`QNetworkProxy`对象列表，指示将使用代理服务器，按偏好顺序排列。
+该函数可用于确定平台特定的代理设置。该函数将利用操作系统提供的库来确定某连接的代理（如果存在此类库）。如果没有，该函数仅返回类型为`QNetworkProxy::NoProxy`的 `QNetworkProxy`。
+在 Windows 上，该函数将使用 WinHTTP DLL 函数。尽管名称如此，Microsoft 建议对所有需要网络连接的应用程序使用，而不仅仅是 HTTP。这将尊重注册表中 proxycfg.exe 工具设置的代理设置。如果找不到这些设置，该功能将尝试获取 Internet Explorer 的设置并使用它们。
+在macOS上，该功能会通过苹果的CFNetwork框架获取代理设置。它会分别应用包含“ftp”、“http”和“https”协议标签的查询的FTP、HTTP和HTTPS代理配置。如果该配置启用了SOCKS代理，该函数将使用SOCKS服务器处理所有查询。如果未启用SOCKS，则所有TcpSocket和UrlRequest查询都会使用HTTPS代理。
+在配置了支持libproxy的系统上，这个功能依赖libproxy获取代理设置。根据libproxy配置，这又可以委托给桌面设置、环境变量等。
+在其他系统中，该函数会从“http_proxy”环境变量中获取代理设置。该变量必须是使用以下方案之一的URL：“http”、“socks5”或“socks5h”之一。
+以下是当前版本该功能的限制。未来的Qt版本可能会解除这里列出的一些限制。
+- 在 Windows 平台上，根据用户系统配置，该功能执行可能需要几秒钟。
 
 ### `[static] bool QNetworkProxyFactory::usesSystemConfiguration()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `usesSystemConfiguration`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回是否启用了平台特定的代理设置。
 
 ## 6. 深入实践与常见坑
 

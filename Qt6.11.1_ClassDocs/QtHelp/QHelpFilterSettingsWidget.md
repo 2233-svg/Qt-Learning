@@ -65,87 +65,43 @@ target_link_libraries(mytarget PRIVATE Qt6::Help)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QHelpFilterSettingsWidget::QHelpFilterSettingsWidget(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpFilterSettingsWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个以 `parent` 为父控件的过滤器设置小部件。
 
 ### `[virtual noexcept] QHelpFilterSettingsWidget::~QHelpFilterSettingsWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpFilterSettingsWidget` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏过滤器设置小部件。
 
 ### `bool QHelpFilterSettingsWidget::applySettings(QHelpFilterEngine *filterEngine) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterSettingsWidget::applySettings` 用于计算、查询或取得与“应用、Settings”相关的操作。调用时要先确认当前状态和 `filterEngine` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `filterEngine`：类型为 `QHelpFilterEngine *`。没有默认值，调用时必须提供。传入 `QHelpFilterEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前在这个过滤器设置控件中显示的过滤器设置写入`filterEngine`。过滤引擎中存储的旧设置将被覆盖。成功后返回`true`。
 
 ### `void QHelpFilterSettingsWidget::readSettings(const QHelpFilterEngine *filterEngine)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpFilterSettingsWidget` 的核心操作 `readSettings`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filterEngine`：类型为 `const QHelpFilterEngine *`。没有默认值，调用时必须提供。传入 `const QHelpFilterEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取`filterEngine`中存储的过滤器设置，并相应地设置这个过滤器设置控件。
 
 ### `void QHelpFilterSettingsWidget::setAvailableComponents(const QStringList &components)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAvailableComponents`。调用它会改变 `QHelpFilterSettingsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `components`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有可用组件列表设置为`components`。
 
 ### `void QHelpFilterSettingsWidget::setAvailableVersions(const QList<QVersionNumber> &versions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAvailableVersions`。调用它会改变 `QHelpFilterSettingsWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `versions`：类型为 `const QList<QVersionNumber> &`。没有默认值，调用时必须提供。传入 `const QList<QVersionNumber> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有可用版本号列表设置为`versions`。
 
 ## 6. 深入实践与常见坑
 

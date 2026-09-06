@@ -225,2104 +225,1314 @@ Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 158 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QAbstractItemView::CursorAction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Cursor、Action`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CursorAction`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了在物品之间导航的不同方式，。
+- `QAbstractItemView::MoveUp`：`0`;移动到当前物品上方的物品。
+- `QAbstractItemView::MoveDown`：`1`;移动到当前物品下方的物品。
+- `QAbstractItemView::MoveLeft`：`2`;移动到当前物品左侧。
+- `QAbstractItemView::MoveRight`：`3`;移动到当前物品的右侧。
+- `QAbstractItemView::MoveHome`：`4`;移动到左上角的项目。
+- `QAbstractItemView::MoveEnd`：`5`;移动到右下角的项目。
+- `QAbstractItemView::MovePageUp`：`6`;将当前项目向上移动一页。
+- `QAbstractItemView::MovePageDown`：`7`;向下移动一页，位于当前项目下方。
+- `QAbstractItemView::MoveNext`：`8`;在当前物品之后移动到该项目。
+- `QAbstractItemView::MovePrevious`：`9`;移动到当前物品之前的物品。
 
 ### `enum QAbstractItemView::DragDropMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Drag、Drop、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DragDropMode`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述视图可以操作的各种拖拽事件。默认情况下，视图不支持拖拽或拖拽（`NoDragDrop`）。
+- `QAbstractItemView::NoDragDrop`：`0`;不支持拖拽或拖拽。
+- `QAbstractItemView::DragOnly`：`1`;视图支持拖拽自身项目
+- `QAbstractItemView::DropOnly`：`2`;视图接受落差
+- `QAbstractItemView::DragDrop`：`3`;视图支持拖拽和拖放
+- `QAbstractItemView::InternalMove`：`4`;视图只接受自身的移动（不复制）操作。
+请注意，所用模型需要支持拖拽操作。
 
 ### `enum QAbstractItemView::DropIndicatorPosition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Drop、Indicator、Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DropIndicatorPosition`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举表示掉落指示器在当前鼠标位置相对于索引的位置：
+- `QAbstractItemView::OnItem`：`0`;该项将被丢弃在索引中。
+- `QAbstractItemView::AboveItem`：`1`;该项目将被丢弃在索引之上。
+- `QAbstractItemView::BelowItem`：`2`;该项目将被降至索引以下。
+- `QAbstractItemView::OnViewport`：`3`;该项目会被丢弃到没有物品的视口区域。每个视图处理丢弃到视口的物品的方式取决于所用底层模型的行为。
 
 ### `enum QAbstractItemView::EditTriggerflags QAbstractItemView::EditTriggers`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Edit、Triggerflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:EditTriggerflags QAbstractItemView::EditTriggers`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了将启动项目编辑的动作。
+- `QAbstractItemView::NoEditTriggers`：`0`;无法编辑。
+- `QAbstractItemView::CurrentChanged`：`1`;当前项目发生变化时，编辑开始。
+- `QAbstractItemView::DoubleClicked`：`2`;编辑当双击项目时开始。
+- `QAbstractItemView::SelectedClicked`：`4`;点击已选中的项目后开始编辑。
+- `QAbstractItemView::EditKeyPressed`：`8`;当平台编辑键被按在某个项目上时，编辑开始。
+- `QAbstractItemView::AnyKeyPressed`：`16`;当按下任意键时，编辑开始。
+- `QAbstractItemView::AllEditTriggers`：`31`;所有上述操作开始编辑。
+EditTriggers 类型是 QFlags 的 typedef<EditTrigger>。它存储 EditTrigger 值的 OR 组合。
 
 ### `enum QAbstractItemView::ScrollMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Scroll、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ScrollMode`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述滚动条应如何表现。将滚动模式设置为ScrollPerPixel时，除非用`setSingleStep()`明确设置，否则单步长会自动调整。通过将单步长设置为-1可以恢复自动调整。
+- `QAbstractItemView::ScrollPerItem`：`0`;视图将逐项滚动内容。
+- `QAbstractItemView::ScrollPerPixel`：`1`;视图将逐像素滚动内容。
 
 ### `enum QAbstractItemView::SelectionMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Selection、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SelectionMode`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举显示视图对用户选择的响应：
+- `QAbstractItemView::SingleSelection`：`1`;当用户选择一个项目时，任何已选中的项目都会被取消选择。用户可以通过点击选中的项目时按Ctrl键取消选择该项目。
+- `QAbstractItemView::ContiguousSelection`：`4`;当用户以常规方式选择物品时，选择会被清除，新物品被选中。然而，如果用户在点击物品时按下Shift键，当前物品与被点击物品之间的所有物品都会被选择或取消，具体取决于点击物品的状态。
+- `QAbstractItemView::ExtendedSelection`：`3`;当用户以常规方式选择物品时，选择会被清除，新物品被选中。但如果用户点击物品时按Ctrl键，点击的物品会被切换，其他物品保持不动。如果用户点击物品时按下Shift键，当前物品与被点击物品之间的所有物品都会被选择或取消，具体取决于点击物品的状态。通过拖动鼠标可以选择多个物品。
+- `QAbstractItemView::MultiSelection`：`2`;当用户以常规方式选择某个物品时，该物品的选择状态会被切换，其他物品保持不动。通过拖动鼠标可以切换多个物品。
+- `QAbstractItemView::NoSelection`：`0`;物品不可选择。
+最常用的模式是单选（SingleElection）和扩展选择（ExtendedSelection）。
 
 ### `enum QAbstractItemView::State`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:State`。
-- 属性名：`QAbstractItemView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述视图可能处于的不同状态。这通常只有在重新实现你自己的视图时才有趣。
+- `QAbstractItemView::NoState`：`0`;是默认状态。
+- `QAbstractItemView::DraggingState`：`1`;用户正在拖拽物品。
+- `QAbstractItemView::DragSelectingState`：`2`;用户正在选择项目。
+- `QAbstractItemView::EditingState`：`3`;用户正在小部件编辑器中编辑一个项目。
+- `QAbstractItemView::ExpandingState`：`4`;用户正在打开一个物品分支。
+- `QAbstractItemView::CollapsingState`：`5`;用户正在关闭一个分支的物品。
+- `QAbstractItemView::AnimatingState`：`6`;物品视图正在进行动画。
 
 ### `alternatingRowColors : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setAlternatingRowColors(...)` 设置，之后用 `alternatingRowColors()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定是否使用交替颜色绘制背景。
+如果该属性`true`，物品背景将使用 `QPalette::Base` 和 `QPalette::AlternateBase` 绘制;否则背景将使用 `QPalette::Base` 颜色绘制。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`alternatingRowColors`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `alternatingRowColors()` 读取当前值；它不会修改应用状态。
 
 ### `autoScroll : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setAutoScroll(...)` 设置，之后用 `autoScroll()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性适用于拖动移动事件中是否启用自动滚动。
+如果将该属性设置为 true（默认值），则当用户拖动到视口边缘 16 像素范围内时，`QAbstractItemView` 会自动滚动视图内容。如果当前项目发生变化，则视图会自动滚动以确保当前项目完全可见。
+此属性仅在视口接受放置操作时有效。将此属性设置为 false 可关闭自动滚动。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`autoScroll`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoScroll()` 读取当前值；它不会修改应用状态。
 
 ### `autoScrollMargin : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setAutoScrollMargin(...)` 设置，之后用 `autoScrollMargin()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示触发自动滚动时区域的大小。
+该属性控制视口边缘触发自动滚动区域的大小。默认值为16像素。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`autoScrollMargin`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoScrollMargin()` 读取当前值；它不会修改应用状态。
 
 ### `defaultDropAction : Qt::DropAction`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setDropAction(...)` 设置，之后用 `DropAction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了 QAbstractItemView：:d rag() 默认使用的 drop 动作。
+如果该属性未被设置，当支持的动作支持 CopyAction 时，drop 动作是 CopyAction。
 
-**签名拆解：**
-
-- 属性类型：`Qt::DropAction`。
-- 属性名：`defaultDropAction`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `defaultDropAction()` 读取当前值；它不会修改应用状态。
 
 ### `dragDropMode : DragDropMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setDragDropMode(...)` 设置，之后用 `dragDropMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含视图将对拖拽事件的反应。
 
-**签名拆解：**
-
-- 属性类型：`DragDropMode`。
-- 属性名：`dragDropMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragDropMode()` 读取当前值；它不会修改应用状态。
 
 ### `dragDropOverwriteMode : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setDragDropOverwriteMode(...)` 设置，之后用 `dragDropOverwriteMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了视图的拖拽行为。
+如果其值`true`，所选数据在丢弃时会覆盖现有的项目数据;移动数据则清除该项目。如果其值为`false`，则在丢弃数据时，所选数据将作为新项目插入。当数据被移动时，该项目也会被移除。
+默认值为`false`，与`QListView`和`QTreeView`子类相同。而`QTableView`子类则设定为`true`。
+注意：这并非为了防止项目被覆盖。模型中标志()的实现应通过不返回`Qt::ItemIsDropEnabled`来实现这一点。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`dragDropOverwriteMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragDropOverwriteMode()` 读取当前值；它不会修改应用状态。
 
 ### `dragEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setDragEnabled(...)` 设置，之后用 `dragEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否支持视图拖拽自身项目，则判定。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`dragEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `editTriggers : EditTriggers`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setEditTriggers(...)` 设置，之后用 `editTriggers()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定哪些动作将启动物品编辑。
+该属性是`EditTrigger`定义的一系列标志，并结合 OR 操作符。只有当执行的动作被设置在该属性中时，视图才会启动对项目的编辑。
+默认值为：
+- `QTableView`：`DoubleClicked`|`AnyKeyPressed`
+- 其他视角：`DoubleClicked`|`EditKeyPressed`
 
-**签名拆解：**
-
-- 属性类型：`EditTriggers`。
-- 属性名：`editTriggers`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `editTriggers()` 读取当前值；它不会修改应用状态。
 
 ### `horizontalScrollMode : ScrollMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setHorizontalScrollMode(...)` 设置，之后用 `horizontalScrollMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+视图如何横向滚动内容。
+该属性控制视图如何横向滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 属性类型：`ScrollMode`。
-- 属性名：`horizontalScrollMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `horizontalScrollMode()` 读取当前值；它不会修改应用状态。
 
 ### `iconSize : QSize`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setIconSize(...)` 设置，之后用 `iconSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性会显示物品图标的大小。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 属性类型：`QSize`。
-- 属性名：`iconSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `iconSize()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.11] keyboardSearchFlags : Qt::MatchFlags`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setMatchFlags(...)` 设置，之后用 `MatchFlags()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了`keyboardSearch()`默认实现如何将给定字符串与模型数据匹配。
+默认值是`Qt::MatchStartsWith|Qt::MatchWrap`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::MatchFlags`。
-- 属性名：`keyboardSearchFlags`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardSearchFlags()` 读取当前值；它不会修改应用状态。
 
 ### `selectionBehavior : SelectionBehavior`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setSelectionBehavior(...)` 设置，之后用 `selectionBehavior()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了视图所采用的选择行为。
+无论选择是单项、行还是列，都适用该属性。
 
-**签名拆解：**
-
-- 属性类型：`SelectionBehavior`。
-- 属性名：`selectionBehavior`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `selectionBehavior()` 读取当前值；它不会修改应用状态。
 
 ### `selectionMode : SelectionMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setSelectionMode(...)` 设置，之后用 `selectionMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了视图在哪种选择模式下运行。
+该属性控制用户是否可以选择一个或多个项目，以及在多项目选择中，选择是否必须是连续的项目范围。
 
-**签名拆解：**
-
-- 属性类型：`SelectionMode`。
-- 属性名：`selectionMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `selectionMode()` 读取当前值；它不会修改应用状态。
 
 ### `showDropIndicator : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setShowDropIndicator(...)` 设置，之后用 `showDropIndicator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否在拖曳物品和投放时显示掉落指示器时成立。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`showDropIndicator`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+**如何使用：** 调用 `showDropIndicator()` 读取当前值；它不会修改应用状态。
 
 ### `tabKeyNavigation : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setTabKeyNavigation(...)` 设置，之后用 `tabKeyNavigation()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定是否启用了带有标签页和后页的项目导航。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`tabKeyNavigation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabKeyNavigation()` 读取当前值；它不会修改应用状态。
 
 ### `textElideMode : Qt::TextElideMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setTextElideMode(...)` 设置，之后用 `TextElideMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+此属性保存省略文本中“...”的位置。
+所有项视图的默认值是 `Qt::ElideRight`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::TextElideMode`。
-- 属性名：`textElideMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textElideMode()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.9] updateThreshold : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setUpdateThreshold(...)` 设置，之后用 `updateThreshold()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了索引的变化数量，以直接触发`dataChanged()`内视图的全面更新。
+`dataChanged()` 内部的算法试图通过计算变更后的索引是否可见，来最小化视图的全面更新。对于非常大的模型，且有大量大变更，这可能比实际更新时间更长，因此适得其反。这一特性使算法能够控制，当变更的索引数量超过给定值时，跳过检查并直接触发完整更新。
+默认数值是200。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`updateThreshold`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+**如何使用：** 调用 `updateThreshold()` 读取当前值；它不会修改应用状态。
 
 ### `verticalScrollMode : ScrollMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的配置属性。初始化或状态切换时通过 `setVerticalScrollMode(...)` 设置，之后用 `verticalScrollMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+视图如何沿垂直方向滚动内容。
+该属性控制视图如何垂直滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 属性类型：`ScrollMode`。
-- 属性名：`verticalScrollMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `verticalScrollMode()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QAbstractItemView::QAbstractItemView(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于给定`parent`构造抽象项目视图。
 
 ### `[virtual noexcept] QAbstractItemView::~QAbstractItemView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了视野。
 
 ### `[signal] void QAbstractItemView::activated(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 发出的通知信号 `activated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户激活`index`指定的物品时，会发出该信号。激活方式取决于平台;例如，单击或双击该物品，或当前物品时按回车或回车键。
 
 ### `[slot] void QAbstractItemView::clearSelection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `clearSelection`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消所有选中的项目。当前索引不会被更改。
 
 ### `[signal] void QAbstractItemView::clicked(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 发出的通知信号 `clicked`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当鼠标按钮左键点击时，该信号会发出。鼠标被点击的物品由`index`指定。只有当索引有效时才会发出该信号。
 
 ### `[virtual protected slot] void QAbstractItemView::closeEditor(QWidget *editor, QAbstractItemDelegate::EndEditHint hint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `closeEditor`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `editor`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `hint`：类型为 `QAbstractItemDelegate::EndEditHint`。没有默认值，调用时必须提供。传入 `QAbstractItemDelegate::EndEditHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭给定的`editor`，并释放它。`hint`用于指定视图在编辑操作结束时应如何响应。例如，提示可能表明视图中的下一个项目应被打开进行编辑。
 
 ### `void QAbstractItemView::closePersistentEditor(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `closePersistentEditor`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定的 `index` 关闭该项目的持久编辑器。
 
 ### `[virtual protected slot] void QAbstractItemView::commitData(QWidget *editor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::commitData` 用于执行与“提交、数据访问”相关的操作。调用时要先确认当前状态和 `editor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `editor`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 `editor` 中的数据提交到模型中。
 
 ### `[virtual protected slot] void QAbstractItemView::currentChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `currentChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当新项目变成当前项目时调用该槽。之前的当前项目由`previous`索引指定，新项目由`current`索引指定。
+如果你想知道物品的变化，请查看`dataChanged()`信号。
 
 ### `QModelIndex QAbstractItemView::currentIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::currentIndex` 用于计算、查询或取得与“当前、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前项目的模型索引。
 
 ### `[virtual protected slot] void QAbstractItemView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles = QList<int>())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `dataChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `topLeft`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `bottomRight`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `roles`：类型为 `const QList<int> &`。默认值为 `QList<int>()`。传入 `const QList<int> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当模型中具有相同`roles`的物品发生变化时，该槽位被调用。更改的物品包括从`topLeft`到`bottomRight`的物品。如果只更改一个物品`topLeft` == `bottomRight`。
+被更改的`roles`可以是空容器（意味着一切都变了），也可以是包含角色子集的非空容器。
+注意：`Qt::ToolTipRole` 未被 dataChanged() 认可，在 Qt 提供的观点中。
 
 ### `[protected] QPoint QAbstractItemView::dirtyRegionOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dirtyRegionOffset` 用于计算、查询或取得与“dirty、Region、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视图中脏区域的偏移量。
+如果你用`scrollDirtyRegion()`并在`QAbstractItemView`子类中实现`paintEvent()`，你应该将绘画事件给出的面积与该函数返回的偏移量进行转换。
 
 ### `[signal] void QAbstractItemView::doubleClicked(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 发出的通知信号 `doubleClicked`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当双击鼠标按钮时，该信号会发出。鼠标被双击的项目由`index`指定。只有当索引有效时才会发出该信号。
 
 ### `[override virtual protected] void QAbstractItemView::dragEnterEvent(QDragEnterEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dragEnterEvent` 用于执行与“drag、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDragEnterEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragEnterEvent`（QDragEnterEvent *event）。
+当拖拽操作进入控件时，调用该函数`event`。如果拖拽地点是有效的投放地点（例如允许投放的物品），则该事件被接受;否则将被忽略。
 
 ### `[override virtual protected] void QAbstractItemView::dragLeaveEvent(QDragLeaveEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDragLeaveEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragLeaveEvent`（QDragLeaveEvent *event）。
+当被拖拽的物品离开视图时调用该函数。`event`描述拖拽操作的状态。
 
 ### `[override virtual protected] void QAbstractItemView::dragMoveEvent(QDragMoveEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDragMoveEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::dragMoveEvent`（QDragMoveEvent *event）。
+该函数在拖拽控件时连续调用给定`event`。例如，当用户将选区拖到视图的右侧或底部时，视图可能会滚动。此时事件会被接受;否则会被忽略。
 
 ### `[override virtual protected] void QAbstractItemView::dropEvent(QDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QAbstractScrollArea::dropEvent`（QDropEvent *事件）。
+当组件上发生掉落事件时，该函数会被调用给定`event`。如果模型接受偶数位置，则接受掉落事件;否则会被忽略。
 
 ### `[protected] QAbstractItemView::DropIndicatorPosition QAbstractItemView::dropIndicatorPosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dropIndicatorPosition` 用于计算、查询或取得与“drop、Indicator、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::DropIndicatorPosition`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::DropIndicatorPosition`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回掉落指示器相对于最近物品的位置。
 
 ### `[slot] void QAbstractItemView::edit(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `edit`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+如果该项目可编辑，`index`会开始编辑。
+请注意，该函数不会改变当前索引。由于当前索引定义了接下来和之前需要编辑的项目，用户可能会发现键盘导航无法如预期般工作。为了提供一致的导航行为，请在使用相同模型索引的函数前调用 `setCurrentIndex()`。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+abstractItemView， qOverload（&QAbstractItemView：：edit））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+abstractItemView， [receiver = abstractItemView]（const QModelIndex &index） { receiver->edit（index）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[virtual protected] bool QAbstractItemView::edit(const QModelIndex &index, QAbstractItemView::EditTrigger trigger, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::edit` 用于计算、查询或取得与“edit”相关的操作。调用时要先确认当前状态和 `index`、`trigger`、`event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `trigger`：类型为 `QAbstractItemView::EditTrigger`。没有默认值，调用时必须提供。传入 `QAbstractItemView::EditTrigger` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`index`开始编辑该项，必要时创建编辑器，若视图`State` `EditingState`，返回`true`;否则返回`false`。
+导致编辑过程的动作由`trigger`描述，相关事件由`event`指定。
+编辑可以通过指定`QAbstractItemView::AllEditTriggers`的`trigger`来强制进行。
 
 ### `[virtual protected slot] void QAbstractItemView::editorDestroyed(QObject *editor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::editorDestroyed` 用于执行与“editor、Destroyed”相关的操作。调用时要先确认当前状态和 `editor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `editor`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当给定`editor`被销毁时，调用该函数。
 
 ### `[signal] void QAbstractItemView::entered(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 发出的通知信号 `entered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当鼠标光标进入`index`指定的项目时，会发出该信号。此功能需要启用鼠标追踪功能。
 
 ### `[override virtual protected] bool QAbstractItemView::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractScrollArea::event`（QEvent *事件）。
 
 ### `[override virtual protected] bool QAbstractItemView::eventFilter(QObject *object, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::eventFilter` 用于计算、查询或取得与“event、Filter”相关的操作。调用时要先确认当前状态和 `object`、`event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
 
 ### `[protected] void QAbstractItemView::executeDelayedItemsLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::executeDelayedItemsLayout` 用于执行与“execute、Delayed、Items、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在不等待事件处理开始的情况下执行预约布局。
 
 ### `[override virtual protected] void QAbstractItemView::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::focusInEvent`（QFocusEvent *event）。
+当控件获得焦点时，该函数会以给定的`event`调用。默认情况下，该事件被忽略。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点接收）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] bool QAbstractItemView::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QWidget::focusNextPrevChild`（下一个布尔）。
+根据 Tab 和 Shift Tab 找到一个新的控件来给键盘焦点，如果能找到新控件，则返回 `true`，找不到则返回 false。
+如果`next`为真，该函数向前搜索;如果`next`为假，则向后搜索。
+有时，你会想重新实现这个函数。例如，浏览器可能会重新实现它，将“当前活跃链接”向前或向后移动，只有当它到达“页面”的最后或第一个链接时才调用 focusNextPrevChild()。
+子控件调用其父控件的 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过重新实现该函数，你就能控制所有子控件的焦点遍历。
 
 ### `[override virtual protected] void QAbstractItemView::focusOutEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::focusOutEvent`（QFocusEvent *event）。
+当控件失去焦点时，该函数会被调用给定的`event`。默认情况下，该事件被忽略。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件上的`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非有没有指定`focusPolicy()`的窗口）。
 
 ### `[pure virtual protected] int QAbstractItemView::horizontalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::horizontalOffset` 用于计算、查询或取得与“水平、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视角的水平偏移。
+在基类中，这是一个纯虚拟函数。
 
 ### `[pure virtual] QModelIndex QAbstractItemView::indexAt(const QPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::indexAt` 用于计算、查询或取得与“索引、按位置访问”相关的操作。调用时要先确认当前状态和 `point` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `point`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视口坐标处的模型索引`point`。
+在基类中，这是一个纯虚拟函数。
 
 ### `QWidget *QAbstractItemView::indexWidget(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::indexWidget` 用于计算、查询或取得与“索引、Widget”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`index`返回该物品的小部件。
 
 ### `[virtual protected, since 6.0] void QAbstractItemView::initViewItemOption(QStyleOptionViewItem *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::initViewItemOption` 用于执行与“init、View、项目访问、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionViewItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用视图的调色板、字体、状态、对齐等初始化`option`结构。
+注意：该方法的实现应检查接收结构的 `version`，填充实现熟悉的所有成员，并将版本成员设置为实现支持的版本，然后返回。
 
 ### `[override virtual protected] void QAbstractItemView::inputMethodEvent(QInputMethodEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::inputMethodEvent` 用于执行与“input、Method、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QInputMethodEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodEvent`（QInputMethodEvent *event）。
+对于事件`event`，该事件处理程序可以被重新实现到子类中以接收输入法组合事件。当输入方法的状态发生变化时，调用该处理程序。
+注意，在创建自定义文本编辑小部件时，必须明确设置`Qt::WA_InputMethodEnabled`窗口属性（使用`setAttribute()`函数），才能接收输入法事件。
+默认实现调用 event->ignore()，拒绝输入法事件。详情请参见 `QInputMethodEvent` 文档。
 
 ### `[override virtual] QVariant QAbstractItemView::inputMethodQuery(Qt::InputMethodQuery query) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `query` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `query`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::inputMethodQuery`（Qt：：InputMethodQuery query） const.
+该方法仅适用于输入控件。输入方法用于查询控件的一组属性，以支持复杂的输入法操作，以支持周围文本和重新转换。
+`query` 指定查询的属性。
 
 ### `[pure virtual protected] bool QAbstractItemView::isIndexHidden(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isIndexHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果给定`index`所引用的项目隐藏在视图中，返回`true`，否则返回`false`。
+隐藏是视图特定的功能。例如在`TableView`中，可以标记一列为隐藏，或者标记为`TreeView`中的一行。
+在基类中，这是一个纯虚拟函数。
 
 ### `bool QAbstractItemView::isPersistentEditorOpen(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isPersistentEditorOpen`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引`index`时是否打开了持久编辑器。
 
 ### `QAbstractItemDelegate *QAbstractItemView::itemDelegate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::itemDelegate` 用于计算、查询或取得与“项目访问、Delegate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemDelegate *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemDelegate *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视图和模型所使用的项目代理。这要么是带有`setItemDelegate()`的一组，要么是默认的。
 
 ### `QAbstractItemDelegate *QAbstractItemView::itemDelegateForColumn(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::itemDelegateForColumn` 用于计算、查询或取得与“项目访问、Delegate、For、列”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `QAbstractItemDelegate *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemDelegate *`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视图和模型对给定`column`所使用的项目代理。你可以调用`itemDelegate()`获取指向当前代理的指针。
 
 ### `[virtual, since 6.0] QAbstractItemDelegate *QAbstractItemView::itemDelegateForIndex(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::itemDelegateForIndex` 用于计算、查询或取得与“项目访问、Delegate、For、索引”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QAbstractItemDelegate *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemDelegate *`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视图和模型在给定`index`中使用的项目代理。
 
 ### `QAbstractItemDelegate *QAbstractItemView::itemDelegateForRow(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::itemDelegateForRow` 用于计算、查询或取得与“项目访问、Delegate、For、行”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QAbstractItemDelegate *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemDelegate *`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视图和模型用于给定`row`的项目代理，若未分配代理则返回`nullptr`。你可以调用`itemDelegate()`获取当前索引代理的指针。
 
 ### `[override virtual protected] void QAbstractItemView::keyPressEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::keyPressEvent`（QKeyEvent *e）。
+当向控件发送键事件时，该函数会以给定的`event`调用。默认实现处理基本的光标移动，例如上下、左、右、主页、PageUp和PageDown;如果当前索引有效且激活键被按下（例如按回车或回车，取决于平台），就会发出`activated()`信号。该功能是通过按键启动编辑，例如按F2时。
 
 ### `[virtual] void QAbstractItemView::keyboardSearch(const QString &search)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::keyboardSearch` 用于执行与“keyboard、Search”相关的操作。调用时要先确认当前状态和 `search` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `search`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动到并选择与字符串最匹配的`search`项。如果未找到任何项，则不会发生任何事。
+在默认实现中，如果`search`为空，或自上次搜索到时间区间超过`QApplication::keyboardInputInterval()`，搜索将被重置。
 
 ### `QAbstractItemModel *QAbstractItemView::model() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::model` 用于计算、查询或取得与“model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该视图所呈现的模型。
 
 ### `[override virtual protected] void QAbstractItemView::mouseDoubleClickEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseDoubleClickEvent`（QMouseEvent *e）。
+当鼠标按钮在控件内双击时，调用该函数的 `event`。如果双击点击在有效物品上，会发出 `doubleClicked()` 信号并调用该物品的 `edit()`。
 
 ### `[override virtual protected] void QAbstractItemView::mouseMoveEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseMoveEvent`（QMouseEvent *e）。
+当向控件发送鼠标移动事件时，该函数会被调用给定的`event`。如果选择正在进行中且有新项目被移动，则选择会被扩展;如果正在进行拖动，则继续。
 
 ### `[override virtual protected] void QAbstractItemView::mousePressEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mousePressEvent`（QMouseEvent *e）。
+当鼠标按键且光标位于控件内时，调用该函数的 `event`。如果点击有效物品，则该项被转换为当前物品。该函数发出`pressed()`信号。
 
 ### `[override virtual protected] void QAbstractItemView::mouseReleaseEvent(QMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::mouseReleaseEvent`（QMouseEvent *e）。
+该函数在小部件上按下鼠标事件后，按`event`时调用。如果用户在小部件内按下鼠标，然后在松开前将鼠标拖到另一个位置，小部件会接收释放事件。如果有物品被按下，该函数会发出`clicked()`信号。
 
 ### `[pure virtual protected] QModelIndex QAbstractItemView::moveCursor(QAbstractItemView::CursorAction cursorAction, Qt::KeyboardModifiers modifiers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::moveCursor` 用于计算、查询或取得与“移动、Cursor”相关的操作。调用时要先确认当前状态和 `cursorAction`、`modifiers` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `cursorAction`：类型为 `QAbstractItemView::CursorAction`。没有默认值，调用时必须提供。传入 `QAbstractItemView::CursorAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向视图中下一个对象的`QModelIndex`对象，基于`modifiers`指定的`cursorAction`和键盘修饰符。
+在基类中，这是一个纯虚拟函数。
 
 ### `void QAbstractItemView::openPersistentEditor(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `openPersistentEditor`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`index`处对该项目打开持久编辑器。如果没有编辑器存在，代理将创建一个新的编辑器。
 
 ### `[signal] void QAbstractItemView::pressed(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 发出的通知信号 `pressed`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当鼠标按下按钮时，该信号会发出。鼠标被按下的物品由`index`指定。只有当索引有效时，才会发出该信号。
+用`QGuiApplication::mouseButtons()`功能获取鼠标按键的状态。
 
 ### `[virtual slot] void QAbstractItemView::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重置视图的内部状态。
+警告：该函数将重置打开的编辑器、滚动条位置、选择等。现有的更改不会被提交。如果你想在重置视图时保存你的更改，可以重新实现这个函数，提交你的更改，然后调用该超类的实现。
 
 ### `[override virtual protected] void QAbstractItemView::resizeEvent(QResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::resizeEvent`（QResizeEvent *event）。
+当向控件发送缩放事件时，调用该函数的具体`event`。
 
 ### `QModelIndex QAbstractItemView::rootIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::rootIndex` 用于计算、查询或取得与“root、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型根项的模型索引。根项是视图顶层项的父项。根项可能无效。
 
 ### `[virtual protected slot] void QAbstractItemView::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::rowsAboutToBeRemoved` 用于执行与“行、About、转换输出、Be、Removed”相关的操作。调用时要先确认当前状态和 `parent`、`start`、`end` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当行即将被移除时，会调用该栏位。被删除的行是从`start`到`end`包含给定`parent`下的行。
 
 ### `[virtual protected slot] void QAbstractItemView::rowsInserted(const QModelIndex &parent, int start, int end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::rowsInserted` 用于执行与“行、Inserted”相关的操作。调用时要先确认当前状态和 `parent`、`start`、`end` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入行时调用该槽位。新行为`start`至`end`包含给定`parent`下的行。基类实现调用模型中的fetchMore()以检查更多数据。
 
 ### `[protected] void QAbstractItemView::scheduleDelayedItemsLayout()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::scheduleDelayedItemsLayout` 用于执行与“schedule、Delayed、Items、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在事件处理开始时，安排视图中项目的布局。
+即使在事件处理前多次调用 scheduleDelayedItemsLayout()，视图也只会执行一次布局。
 
 ### `[protected] void QAbstractItemView::scrollDirtyRegion(int dx, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::scrollDirtyRegion` 用于执行与“scroll、Dirty、Region”相关的操作。调用时要先确认当前状态和 `dx`、`dy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过将脏区域向相反方向移动，为按 （`dx`，`dy`） 像素滚动做准备。只有在你的视图子类中实现滚动视口时，才需要调用这个函数。
+如果你在`QAbstractItemView`的子类中实现`scrollContentsBy()`，请先调用这个函数，再调用视口上的`QWidget::scroll()`。或者，直接调用`update()`。
 
 ### `[pure virtual] void QAbstractItemView::scrollTo(const QModelIndex &index, QAbstractItemView::ScrollHint hint = EnsureVisible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::scrollTo` 用于执行与“scroll、转换输出”相关的操作。调用时要先确认当前状态和 `index`、`hint` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `hint`：类型为 `QAbstractItemView::ScrollHint`。默认值为 `EnsureVisible`。传入 `QAbstractItemView::ScrollHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如有需要，滚动视图以确保`index`的物品可见。视图会尝试根据给定的`hint`定位该物品。
+在基类中，这是一个纯虚拟函数。
 
 ### `[slot] void QAbstractItemView::scrollToBottom()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `scrollToBottom`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视图滚动到底部。
 
 ### `[slot] void QAbstractItemView::scrollToTop()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `scrollToTop`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视图滚动到顶部。
 
 ### `[virtual slot] void QAbstractItemView::selectAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::selectAll` 用于执行与“select、All”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择视图中的所有项目。该函数在选择时会使用视图中的选择行为。
 
 ### `[virtual protected] QModelIndexList QAbstractItemView::selectedIndexes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::selectedIndexes` 用于计算、查询或取得与“selected、Indexes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此便捷函数返回视图中所有已选择且未隐藏的项目索引的列表。该列表不包含重复项，也未排序。
 
 ### `[virtual protected slot] void QAbstractItemView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `selectionChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deselected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当选择发生变化时，该槽被调用。之前的选择（可能是空的）由`deselected`指定，新选择由`selected`指定。
 
 ### `[virtual protected] QItemSelectionModel::SelectionFlags QAbstractItemView::selectionCommand(const QModelIndex &index, const QEvent *event = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::selectionCommand` 用于计算、查询或取得与“selection、Command”相关的操作。调用时要先确认当前状态和 `index`、`event` 的有效范围；返回类型是 `QItemSelectionModel::SelectionFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QItemSelectionModel::SelectionFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `event`：类型为 `const QEvent *`。默认值为 `nullptr`。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于更新指定`index`选择模型时使用的SelectionFlags。结果取决于当前`selectionMode()`以及用户输入事件`event`，该事件可以`nullptr`。
+重新实现这个函数，定义你自己的选择行为。
 
 ### `QItemSelectionModel *QAbstractItemView::selectionModel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::selectionModel` 用于计算、查询或取得与“selection、Model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QItemSelectionModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QItemSelectionModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的选择模型。
 
 ### `[slot] void QAbstractItemView::setCurrentIndex(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setCurrentIndex`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前项目设置为`index`的项目。
+除非当前选择模式`NoSelection`，否则该项目也会被选中。注意，该功能还会更新用户新选择的起始位置。
+要将某个项目设置为当前项目但未选择该项目，请调用。
+`selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);`。
 
 ### `[protected] void QAbstractItemView::setDirtyRegion(const QRegion &region)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDirtyRegion`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `region`：类型为 `const QRegion &`。没有默认值，调用时必须提供。传入 `const QRegion &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`region`标记为脏的，并安排更新。只有在实现自己的视图子类时才需要调用这个函数。
 
 ### `void QAbstractItemView::setIndexWidget(const QModelIndex &index, QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIndexWidget`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+在给定`index`对物品设置给定的`widget`，将小部件的所有权传递给视口。
+如果`index`无效（例如，传递根索引），该函数将无效。
+给定`widget`的`autoFillBackground`属性必须设置为true，否则小部件的背景将透明，同时显示模型数据和该`index`的物品。
+注意：视图拥有`widget`的所有权。这意味着如果索引控件A被替换为索引控件B，索引控件A将被删除。例如，在下面的代码片段中，`QLineEdit`对象将被删除。
+该函数应仅用于显示对应数据项可见区域内的静态内容。如果你想显示自定义动态内容或实现自定义编辑器小部件，则改用子类`QStyledItemDelegate`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setIndexWidget(index, new QLineEdit);
+ ...
+ setIndexWidget(index, new QTextEdit);
+```
 
 ### `void QAbstractItemView::setItemDelegate(QAbstractItemDelegate *delegate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemDelegate`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `delegate`：类型为 `QAbstractItemDelegate *`。没有默认值，调用时必须提供。传入 `QAbstractItemDelegate *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该视图及其模型的项目代理设置为`delegate`。如果你想完全控制项目的编辑和显示，这非常有用。
+任何现有代表都会被移除，但不会被删除。`QAbstractItemView`不对`delegate`拥有所有权。
+警告：你不应在不同视图之间共享同一个代理实例。这样做可能导致错误或不直观的编辑行为，因为连接到某代理的每个视图都可能收到`closeEditor()`信号，并试图访问、修改或关闭已被关闭的编辑器。
 
 ### `void QAbstractItemView::setItemDelegateForColumn(int column, QAbstractItemDelegate *delegate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemDelegateForColumn`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `delegate`：类型为 `QAbstractItemDelegate *`。没有默认值，调用时必须提供。传入 `QAbstractItemDelegate *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置该视图和模型在给定的`column`中`delegate`所用的项目。`column`上的所有项目都将由`delegate`绘制和管理，而不是使用默认代理（即`itemDelegate()`）。
+任何已有的`column`列代表都会被移除，但不会被删除。`QAbstractItemView`不对`delegate`拥有所有权。
+注意：如果代理被分配到行和列，行代理将优先管理交叉单元索引。
+警告：你不应在不同视图之间共享同一个代理实例。这样做可能导致错误或不直观的编辑行为，因为连接到某代理的每个视图都可能收到`closeEditor()`信号，并试图访问、修改或关闭已被关闭的编辑器。
 
 ### `void QAbstractItemView::setItemDelegateForRow(int row, QAbstractItemDelegate *delegate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemDelegateForRow`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `delegate`：类型为 `QAbstractItemDelegate *`。没有默认值，调用时必须提供。传入 `QAbstractItemDelegate *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该视图和模型对给定`row`设置`delegate`所使用物品。`row`上的所有物品都将由`delegate`绘制和管理，而不是使用默认代理（即`itemDelegate()`）。
+任何现有的行`row`代表都会被移除，但不会被删除。`QAbstractItemView`不对`delegate`拥有所有权。
+注意：如果代理被分配到行和列，行代理（即该代理）将优先管理交叉单元索引。
+警告：您不应在不同视图之间共享同一个代理实例。这样做可能导致错误或不直观的编辑行为，因为连接到某个代理的每个视图都可能收到`closeEditor()`信号，并试图访问、修改或关闭已关闭的编辑器。
 
 ### `[virtual] void QAbstractItemView::setModel(QAbstractItemModel *model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModel`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设定视角呈现的`model`。
+该函数将创建并设置新的选择模型，替换之前用`setSelectionModel()`设置的模型。不过，旧的选择模型不会被删除，因为它可能在多个视图之间共享。如果不再需要，建议您删除旧的选择模型。这可以通过以下代码完成：
+如果旧模型和旧选择模型都没有父对象，或者它们的父对象是长寿命对象，可能更倾向于调用它们的`deleteLater()`函数来显式删除它们。
+视图不会拥有该模型的所有权，除非它是模型的父对象，因为模型可能在多个不同视图之间共享。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QItemSelectionModel *m = view->selectionModel();
+ view->setModel(new model);
+ delete m;
+```
 
 ### `[virtual slot] void QAbstractItemView::setRootIndex(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRootIndex`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将根项设置为给定`index`的项。
 
 ### `[pure virtual protected] void QAbstractItemView::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelection`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `flags`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将选择`flags`应用到矩形内或被触及的物品，`rect`。
+在实现自己的 itemview 时，setSelection 应调用 `selectionModel()`->select（selection， flags），其中 select 要么是空的 `QModelIndex`，要么是包含所有 `rect` 中元素的 `QItemSelection`。
 
 ### `[virtual] void QAbstractItemView::setSelectionModel(QItemSelectionModel *selectionModel)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionModel`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selectionModel`：类型为 `QItemSelectionModel *`。没有默认值，调用时必须提供。传入 `QItemSelectionModel *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前选择模型设置为给定的`selectionModel`。
+注意，如果你在该函数之后调用`setModel()`，给定的`selectionModel`将被视图创建的替代。
+注意：如果旧的选择模型不再需要，应用程序自行删除;即当它不再被其他视图使用时。当其父对象被删除时，这会自动发生。然而，如果它没有父对象，或者父对象是长寿命对象，可能更倾向于调用其`deleteLater()`函数显式删除它。
 
 ### `[protected] void QAbstractItemView::setState(QAbstractItemView::State state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setState`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `QAbstractItemView::State`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将项目视图的状态设置为给定的`state`。
 
 ### `[virtual] int QAbstractItemView::sizeHintForColumn(int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::sizeHintForColumn` 用于计算、查询或取得与“尺寸或数量、Hint、For、列”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定`column`的宽度尺寸提示，若无模型则返回-1。
+该函数用于带有水平头部的视图，根据给定`column`的内容查找头部部分的大小提示。
 
 ### `QSize QAbstractItemView::sizeHintForIndex(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::sizeHintForIndex` 用于计算、查询或取得与“尺寸或数量、Hint、For、索引”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定`index`项的大小提示，或对无效索引返回无效大小。
 
 ### `[virtual] int QAbstractItemView::sizeHintForRow(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::sizeHintForRow` 用于计算、查询或取得与“尺寸或数量、Hint、For、行”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定`row`的高度尺寸提示，若无模型则返回-1。
+返回的高度是根据给定`row`项的大小提示计算的，也就是说，返回的值是所有项中的最大高度。注意，要控制行的高度，必须重新实现`QAbstractItemDelegate::sizeHint()`函数。
+该函数用于带有垂直头部的视图，根据给定`row`的内容查找头部部分的大小提示。
 
 ### `[virtual protected] void QAbstractItemView::startDrag(Qt::DropActions supportedActions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startDrag`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `supportedActions`：类型为 `Qt::DropActions`。没有默认值，调用时必须提供。传入 `Qt::DropActions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过调用 drag->exec() 并使用给定的 `supportedActions` 启动拖动。
 
 ### `[protected] QAbstractItemView::State QAbstractItemView::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::State`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::State`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回物品视图的状态。
 
 ### `[override virtual protected] void QAbstractItemView::timerEvent(QTimerEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::timerEvent` 用于执行与“timer、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QTimerEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::timerEvent`（QTimerEvent *event）。
+当向控件发送计时器事件时，该函数会以该`event`调用。
 
 ### `[slot] void QAbstractItemView::update(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `update`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+更新该`index`所占据的区域。
 
 ### `[virtual protected slot] void QAbstractItemView::updateGeometries()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::updateGeometries` 用于执行与“更新、Geometries”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+更新视图子控件的几何体。
 
 ### `[pure virtual protected] int QAbstractItemView::verticalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::verticalOffset` 用于计算、查询或取得与“垂直、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回视图的垂直偏移量。
+在基类中，这是一个纯虚拟函数。
 
 ### `[signal] void QAbstractItemView::viewportEntered()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 发出的通知信号 `viewportEntered`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当鼠标光标进入视口时，会发出该信号。该功能需要启用鼠标追踪。
 
 ### `[override virtual protected] bool QAbstractItemView::viewportEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::viewportEvent` 用于计算、查询或取得与“viewport、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::viewportEvent`（QEvent *事件）。
+该函数用于处理工具提示和“这是什么？”模式。如果给定的`event`是`QEvent::ToolTip`或`QEvent::WhatsThis`。它会将所有其他事件传递给其基类 ViewportEvent() 处理程序。
+如果`event`已被识别和处理，返回`true`;否则，返回`false`。
+滚动区域（`viewport()` 小部件）的主事件处理程序。它处理指定的`event`，子类可以调用以提供合理的默认行为。
+返回`true`表示事件系统事件已处理，无需进一步处理;否则返回 `false`表示事件应继续传播。
+你可以在子类中重新实现这个函数，但我们建议使用专门的事件处理程序。
+视口事件的专用处理程序包括：`paintEvent()`、`mousePressEvent()`、`mouseReleaseEvent()`、`mouseDoubleClickEvent()`、`mouseMoveEvent()`、`wheelEvent()`、`dragEnterEvent()`、`dragMoveEvent()`、`dragLeaveEvent()`、`dropEvent()`、`contextMenuEvent()`和`resizeEvent()`。
 
 ### `[override virtual protected] QSize QAbstractItemView::viewportSizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::viewportSizeHint` 用于计算、查询或取得与“viewport、尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractScrollArea::viewportSizeHint()` const.
+返回视口推荐大小。默认实现返回`viewport()`->`sizeHint()`。注意，大小仅为视口大小，没有可见的滚动条。
 
 ### `[pure virtual] QRect QAbstractItemView::visualRect(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::visualRect` 用于计算、查询或取得与“visual、Rect”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该物品在视口中`index`的矩形。
+如果你的项目显示在多个区域，visualRect 应该返回包含索引的主要区域，而不是索引可能涵盖、触摸或导致绘图的全部区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `[pure virtual protected] QRegion QAbstractItemView::visualRegionForSelection(const QItemSelection &selection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::visualRegionForSelection` 用于计算、查询或取得与“visual、Region、For、Selection”相关的操作。调用时要先确认当前状态和 `selection` 的有效范围；返回类型是 `QRegion`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegion`。
-- 参数 `selection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从视口返回给定`selection`中物品的区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `enum EditTrigger { NoEditTriggers, CurrentChanged, DoubleClicked, SelectedClicked, EditKeyPressed, …, AllEditTriggers }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Edit、触发`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了将启动项目编辑的动作。
+- `QAbstractItemView::NoEditTriggers`：`0`;无法编辑。
+- `QAbstractItemView::CurrentChanged`：`1`;当前项目发生变化时，编辑开始。
+- `QAbstractItemView::DoubleClicked`：`2`;编辑当双击项目时开始。
+- `QAbstractItemView::SelectedClicked`：`4`;点击已选中的项目后开始编辑。
+- `QAbstractItemView::EditKeyPressed`：`8`;当平台编辑键被按在某个项目上时，编辑开始。
+- `QAbstractItemView::AnyKeyPressed`：`16`;当按下任意键时，编辑开始。
+- `QAbstractItemView::AllEditTriggers`：`31`;所有上述操作开始编辑。
+EditTriggers 类型是 QFlags 的 typedef<EditTrigger>。它存储 EditTrigger 值的 OR 组合。
 
 ### `flags EditTriggers`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了将启动项目编辑的动作。
+- `QAbstractItemView::NoEditTriggers`：`0`;无法编辑。
+- `QAbstractItemView::CurrentChanged`：`1`;当前项目发生变化时，编辑开始。
+- `QAbstractItemView::DoubleClicked`：`2`;编辑当双击项目时开始。
+- `QAbstractItemView::SelectedClicked`：`4`;点击已选中的项目后开始编辑。
+- `QAbstractItemView::EditKeyPressed`：`8`;当平台编辑键被按在某个项目上时，编辑开始。
+- `QAbstractItemView::AnyKeyPressed`：`16`;当按下任意键时，编辑开始。
+- `QAbstractItemView::AllEditTriggers`：`31`;所有上述操作开始编辑。
+EditTriggers 类型是 QFlags 的 typedef<EditTrigger>。它存储 EditTrigger 值的 OR 组合。
 
 ### `enum ScrollHint { EnsureVisible, PositionAtTop, PositionAtBottom, PositionAtCenter }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Scroll、Hint`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractItemView::EnsureVisible`：`0`;滚动确保物品可见。
+- `QAbstractItemView::PositionAtTop`：`1`;滚动将物品定位在视口顶部。
+- `QAbstractItemView::PositionAtBottom`：`2`;滚动将物品置于视窗底部。
+- `QAbstractItemView::PositionAtCenter`：`3`;滚动将物品置于视窗中央。
 
 ### `enum SelectionBehavior { SelectItems, SelectRows, SelectColumns }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractItemView` 暴露的类型声明 `Selection、Behavior`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QAbstractItemView::SelectItems`：`0`;选择单一物品。
+- `QAbstractItemView::SelectRows`：`1`;仅选择行。
+- `QAbstractItemView::SelectColumns`：`2`;仅选择列。
 
 ### `bool alternatingRowColors() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::alternatingRowColors` 用于计算、查询或取得与“alternating、行、Colors”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定是否使用交替颜色绘制背景。
+如果该属性`true`，物品背景将使用 `QPalette::Base` 和 `QPalette::AlternateBase` 绘制;否则背景将使用 `QPalette::Base` 颜色绘制。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `alternatingRowColors()` 读取当前值；它不会修改应用状态。
 
 ### `int autoScrollMargin() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::autoScrollMargin` 用于计算、查询或取得与“auto、Scroll、Margin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示触发自动滚动时区域的大小。
+该属性控制视口边缘触发自动滚动区域的大小。默认值为16像素。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoScrollMargin()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::DropAction defaultDropAction() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::defaultDropAction` 用于计算、查询或取得与“default、Drop、Action”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropAction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了 QAbstractItemView：:d rag() 默认使用的 drop 动作。
+如果该属性未被设置，当支持的动作支持 CopyAction 时，drop 动作是 CopyAction。
 
-**签名拆解：**
-
-- 返回值：`Qt::DropAction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `defaultDropAction()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractItemView::DragDropMode dragDropMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dragDropMode` 用于计算、查询或取得与“drag、Drop、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::DragDropMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含视图将对拖拽事件的反应。
 
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::DragDropMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragDropMode()` 读取当前值；它不会修改应用状态。
 
 ### `bool dragDropOverwriteMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dragDropOverwriteMode` 用于计算、查询或取得与“drag、Drop、Overwrite、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了视图的拖拽行为。
+如果其值`true`，所选数据在丢弃时会覆盖现有的项目数据;移动数据则清除该项目。如果其值为`false`，则在丢弃数据时，所选数据将作为新项目插入。当数据被移动时，该项目也会被移除。
+默认值为`false`，与`QListView`和`QTreeView`子类相同。而`QTableView`子类则设定为`true`。
+注意：这并非为了防止项目被覆盖。模型中标志()的实现应通过不返回`Qt::ItemIsDropEnabled`来实现这一点。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragDropOverwriteMode()` 读取当前值；它不会修改应用状态。
 
 ### `bool dragEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::dragEnabled` 用于计算、查询或取得与“drag、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性是否支持视图拖拽自身项目，则判定。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dragEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractItemView::EditTriggers editTriggers() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::editTriggers` 用于计算、查询或取得与“edit、Triggers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::EditTriggers`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定哪些动作将启动物品编辑。
+该属性是`EditTrigger`定义的一系列标志，并结合 OR 操作符。只有当执行的动作被设置在该属性中时，视图才会启动对项目的编辑。
+默认值为：
+- `QTableView`：`DoubleClicked`|`AnyKeyPressed`
+- 其他视角：`DoubleClicked`|`EditKeyPressed`
 
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::EditTriggers`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `editTriggers()` 读取当前值；它不会修改应用状态。
 
 ### `bool hasAutoScroll() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAutoScroll`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性适用于拖动移动事件中是否启用自动滚动。
+如果将该属性设置为 true（默认值），则当用户拖动到视口边缘 16 像素范围内时，`QAbstractItemView` 会自动滚动视图内容。如果当前项目发生变化，则视图会自动滚动以确保当前项目完全可见。
+此属性仅在视口接受放置操作时有效。将此属性设置为 false 可关闭自动滚动。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `hasAutoScroll()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractItemView::ScrollMode horizontalScrollMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::horizontalScrollMode` 用于计算、查询或取得与“水平、Scroll、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::ScrollMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视图如何横向滚动内容。
+该属性控制视图如何横向滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::ScrollMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `horizontalScrollMode()` 读取当前值；它不会修改应用状态。
 
 ### `QSize iconSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::iconSize` 用于计算、查询或取得与“icon、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性会显示物品图标的大小。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `iconSize()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::MatchFlags keyboardSearchFlags() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::keyboardSearchFlags` 用于计算、查询或取得与“keyboard、Search、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MatchFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了`keyboardSearch()`默认实现如何将给定字符串与模型数据匹配。
+默认值是`Qt::MatchStartsWith|Qt::MatchWrap`。
 
-**签名拆解：**
-
-- 返回值：`Qt::MatchFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keyboardSearchFlags()` 读取当前值；它不会修改应用状态。
 
 ### `void resetHorizontalScrollMode()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::resetHorizontalScrollMode` 用于执行与“重置、水平、Scroll、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视图如何横向滚动内容。
+该属性控制视图如何横向滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resetHorizontalScrollMode()` 撤销对 `horizontalScrollMode` 的显式覆盖，让它重新采用继承值或默认值。
 
 ### `void resetVerticalScrollMode()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::resetVerticalScrollMode` 用于执行与“重置、垂直、Scroll、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视图如何沿垂直方向滚动内容。
+该属性控制视图如何垂直滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resetVerticalScrollMode()` 撤销对 `verticalScrollMode` 的显式覆盖，让它重新采用继承值或默认值。
 
 ### `QAbstractItemView::SelectionBehavior selectionBehavior() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::selectionBehavior` 用于计算、查询或取得与“selection、Behavior”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::SelectionBehavior`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了视图所采用的选择行为。
+无论选择是单项、行还是列，都适用该属性。
 
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::SelectionBehavior`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `selectionBehavior()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractItemView::SelectionMode selectionMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::selectionMode` 用于计算、查询或取得与“selection、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::SelectionMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了视图在哪种选择模式下运行。
+该属性控制用户是否可以选择一个或多个项目，以及在多项目选择中，选择是否必须是连续的项目范围。
 
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::SelectionMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `selectionMode()` 读取当前值；它不会修改应用状态。
 
 ### `void setAlternatingRowColors(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAlternatingRowColors`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定是否使用交替颜色绘制背景。
+如果该属性`true`，物品背景将使用 `QPalette::Base` 和 `QPalette::AlternateBase` 绘制;否则背景将使用 `QPalette::Base` 颜色绘制。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAlternatingRowColors(...)` 修改 `alternatingRowColors`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setAutoScroll(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoScroll`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性适用于拖动移动事件中是否启用自动滚动。
+如果将该属性设置为 true（默认值），则当用户拖动到视口边缘 16 像素范围内时，`QAbstractItemView` 会自动滚动视图内容。如果当前项目发生变化，则视图会自动滚动以确保当前项目完全可见。
+此属性仅在视口接受放置操作时有效。将此属性设置为 false 可关闭自动滚动。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoScroll(...)` 修改 `autoScroll`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setAutoScrollMargin(int margin)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoScrollMargin`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示触发自动滚动时区域的大小。
+该属性控制视口边缘触发自动滚动区域的大小。默认值为16像素。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `margin`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoScrollMargin(...)` 修改 `autoScrollMargin`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDefaultDropAction(Qt::DropAction dropAction)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultDropAction`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了 QAbstractItemView：:d rag() 默认使用的 drop 动作。
+如果该属性未被设置，当支持的动作支持 CopyAction 时，drop 动作是 CopyAction。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dropAction`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDefaultDropAction(...)` 修改 `defaultDropAction`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDragDropMode(QAbstractItemView::DragDropMode behavior)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDragDropMode`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含视图将对拖拽事件的反应。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `behavior`：类型为 `QAbstractItemView::DragDropMode`。没有默认值，调用时必须提供。传入 `QAbstractItemView::DragDropMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDragDropMode(...)` 修改 `dragDropMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDragDropOverwriteMode(bool overwrite)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDragDropOverwriteMode`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了视图的拖拽行为。
+如果其值`true`，所选数据在丢弃时会覆盖现有的项目数据;移动数据则清除该项目。如果其值为`false`，则在丢弃数据时，所选数据将作为新项目插入。当数据被移动时，该项目也会被移除。
+默认值为`false`，与`QListView`和`QTreeView`子类相同。而`QTableView`子类则设定为`true`。
+注意：这并非为了防止项目被覆盖。模型中标志()的实现应通过不返回`Qt::ItemIsDropEnabled`来实现这一点。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `overwrite`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDragDropOverwriteMode(...)` 修改 `dragDropOverwriteMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDragEnabled(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDragEnabled`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否支持视图拖拽自身项目，则判定。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDragEnabled(...)` 修改 `dragEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDropIndicatorShown(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDropIndicatorShown`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否在拖曳物品和投放时显示掉落指示器时成立。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDropIndicatorShown(...)` 修改 `showDropIndicator`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setEditTriggers(QAbstractItemView::EditTriggers triggers)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEditTriggers`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定哪些动作将启动物品编辑。
+该属性是`EditTrigger`定义的一系列标志，并结合 OR 操作符。只有当执行的动作被设置在该属性中时，视图才会启动对项目的编辑。
+默认值为：
+- `QTableView`：`DoubleClicked`|`AnyKeyPressed`
+- 其他视角：`DoubleClicked`|`EditKeyPressed`
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `triggers`：类型为 `QAbstractItemView::EditTriggers`。没有默认值，调用时必须提供。传入 `QAbstractItemView::EditTriggers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setEditTriggers(...)` 修改 `editTriggers`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setHorizontalScrollMode(QAbstractItemView::ScrollMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHorizontalScrollMode`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+视图如何横向滚动内容。
+该属性控制视图如何横向滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QAbstractItemView::ScrollMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setHorizontalScrollMode(...)` 修改 `horizontalScrollMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setIconSize(const QSize &size)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIconSize`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性会显示物品图标的大小。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setIconSize(...)` 修改 `iconSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setKeyboardSearchFlags(Qt::MatchFlags searchFlags)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKeyboardSearchFlags`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了`keyboardSearch()`默认实现如何将给定字符串与模型数据匹配。
+默认值是`Qt::MatchStartsWith|Qt::MatchWrap`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `searchFlags`：类型为 `Qt::MatchFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setKeyboardSearchFlags(...)` 修改 `keyboardSearchFlags`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSelectionBehavior(QAbstractItemView::SelectionBehavior behavior)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionBehavior`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了视图所采用的选择行为。
+无论选择是单项、行还是列，都适用该属性。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `behavior`：类型为 `QAbstractItemView::SelectionBehavior`。没有默认值，调用时必须提供。传入 `QAbstractItemView::SelectionBehavior` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSelectionBehavior(...)` 修改 `selectionBehavior`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSelectionMode(QAbstractItemView::SelectionMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionMode`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了视图在哪种选择模式下运行。
+该属性控制用户是否可以选择一个或多个项目，以及在多项目选择中，选择是否必须是连续的项目范围。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QAbstractItemView::SelectionMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSelectionMode(...)` 修改 `selectionMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTabKeyNavigation(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabKeyNavigation`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定是否启用了带有标签页和后页的项目导航。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTabKeyNavigation(...)` 修改 `tabKeyNavigation`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTextElideMode(Qt::TextElideMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextElideMode`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+此属性保存省略文本中“...”的位置。
+所有项视图的默认值是 `Qt::ElideRight`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `Qt::TextElideMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTextElideMode(...)` 修改 `textElideMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setUpdateThreshold(int threshold)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUpdateThreshold`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了索引的变化数量，以直接触发`dataChanged()`内视图的全面更新。
+`dataChanged()` 内部的算法试图通过计算变更后的索引是否可见，来最小化视图的全面更新。对于非常大的模型，且有大量大变更，这可能比实际更新时间更长，因此适得其反。这一特性使算法能够控制，当变更的索引数量超过给定值时，跳过检查并直接触发完整更新。
+默认数值是200。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `threshold`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUpdateThreshold(...)` 修改 `updateThreshold`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setVerticalScrollMode(QAbstractItemView::ScrollMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVerticalScrollMode`。调用它会改变 `QAbstractItemView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+视图如何沿垂直方向滚动内容。
+该属性控制视图如何垂直滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QAbstractItemView::ScrollMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setVerticalScrollMode(...)` 修改 `verticalScrollMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `bool showDropIndicator() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::showDropIndicator` 用于计算、查询或取得与“显示、Drop、Indicator”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性是否在拖曳物品和投放时显示掉落指示器时成立。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 通常在控件完成 parent、layout、属性和信号连接后调用；顶层窗口显示后由事件循环处理绘制和输入。
+**如何使用：** 调用 `showDropIndicator()` 读取当前值；它不会修改应用状态。
 
 ### `bool tabKeyNavigation() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::tabKeyNavigation` 用于计算、查询或取得与“tab、Key、Navigation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定是否启用了带有标签页和后页的项目导航。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabKeyNavigation()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::TextElideMode textElideMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::textElideMode` 用于计算、查询或取得与“文本、Elide、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::TextElideMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+此属性保存省略文本中“...”的位置。
+所有项视图的默认值是 `Qt::ElideRight`。
 
-**签名拆解：**
-
-- 返回值：`Qt::TextElideMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textElideMode()` 读取当前值；它不会修改应用状态。
 
 ### `int updateThreshold() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::updateThreshold` 用于计算、查询或取得与“更新、Threshold”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了索引的变化数量，以直接触发`dataChanged()`内视图的全面更新。
+`dataChanged()` 内部的算法试图通过计算变更后的索引是否可见，来最小化视图的全面更新。对于非常大的模型，且有大量大变更，这可能比实际更新时间更长，因此适得其反。这一特性使算法能够控制，当变更的索引数量超过给定值时，跳过检查并直接触发完整更新。
+默认数值是200。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 通常在数据变化后调用，让 Qt 合并重绘请求；不要直接调用 `paintEvent()`。
+**如何使用：** 调用 `updateThreshold()` 读取当前值；它不会修改应用状态。
 
 ### `QAbstractItemView::ScrollMode verticalScrollMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QAbstractItemView::verticalScrollMode` 用于计算、查询或取得与“垂直、Scroll、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemView::ScrollMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+视图如何沿垂直方向滚动内容。
+该属性控制视图如何垂直滚动内容。滚动可以按像素或按项目滚动。默认值来自样式，通过`QStyle::SH_ItemView_ScrollMode`样式提示。
 
-**签名拆解：**
-
-- 返回值：`QAbstractItemView::ScrollMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `verticalScrollMode()` 读取当前值；它不会修改应用状态。
 
 ### `void iconSizeChanged(const QSize &size)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `iconSizeChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性会显示物品图标的大小。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `iconSize` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

@@ -65,90 +65,43 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QSingleTaskTreeRunner::QSingleTaskTreeRunner()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QSingleTaskTreeRunner` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建单一任务树运行器。
 
 ### `[noexcept] QSingleTaskTreeRunner::~QSingleTaskTreeRunner()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QSingleTaskTreeRunner` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁单个任务树运行器。可能正在运行的任务树被删除。调用无任务树完成处理程序。
 
 ### `void QSingleTaskTreeRunner::cancel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `cancel`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消正在运行的任务树。调用任务树已完成的处理程序`DoneWith::Cancel`。
 
 ### `bool QSingleTaskTreeRunner::isRunning() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRunning`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回单个任务树运行器当前是否正在执行任务树。
 
 ### `void QSingleTaskTreeRunner::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重置正在运行的任务树。没有任务树完成处理程序。
 
 ### `template <typename SetupHandler = QtTaskTree::TreeSetupHandler, typename DoneHandler = QtTaskTree::TreeDoneHandler> void QSingleTaskTreeRunner::start(const QtTaskTree::Group &recipe, SetupHandler &&setupHandler = {}, DoneHandler &&doneHandler = {}, QtTaskTree::CallDone callDone = QtTaskTree::CallDoneFlag::Always)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `start`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`template <typename SetupHandler = QtTaskTree::TreeSetupHandler, typename DoneHandler = QtTaskTree::TreeDoneHandler> void`。
-- 参数 `recipe`：类型为 `const QtTaskTree::Group &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Group &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `setupHandler`：类型为 `SetupHandler &&`。默认值为 `{}`。传入 `SetupHandler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `doneHandler`：类型为 `DoneHandler &&`。默认值为 `{}`。传入 `DoneHandler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `callDone`：类型为 `QtTaskTree::CallDone`。默认值为 `QtTaskTree::CallDoneFlag::Always`。传入 `QtTaskTree::CallDone` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 通常与完成、取消、错误和安全退出信号配合；启动成功不等于任务完成。
+无条件启动`recipe`，重置任何可能运行中的任务树。当新任务树即将启动时调用`setupHandler`。调用任务树完成时`doneHandler`。`doneHandler`根据传递的`callDone`调用。
 
 ## 6. 深入实践与常见坑
 

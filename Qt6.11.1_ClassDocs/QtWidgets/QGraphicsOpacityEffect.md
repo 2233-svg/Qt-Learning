@@ -82,154 +82,160 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `opacity : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 的配置属性。初始化或状态切换时通过 `setOpacity(...)` 设置，之后用 `opacity()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了效应的不透明度。
+值应在0.0到1.0之间，0.0表示完全透明，1.0表示完全不透明。
+默认情况下，不透明度为0.7。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`opacity`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `opacity()` 读取当前值；它不会修改应用状态。
 
 ### `opacityMask : QBrush`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 的配置属性。初始化或状态切换时通过 `setOpacityMask(...)` 设置，之后用 `opacityMask()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示了该效应的不透明度掩膜。
+不透明度遮罩允许你对元素的某些部分施加不透明度。
+默认情况下没有不透明度遮罩。
 
-**签名拆解：**
+**如何使用：** 调用 `opacityMask()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QBrush`。
-- 属性名：`opacityMask`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ ...
+ QLinearGradient alphaGradient(rect.topLeft(), rect.bottomLeft());
+ alphaGradient.setColorAt(0.0, Qt::transparent);
+ alphaGradient.setColorAt(0.5, Qt::black);
+ alphaGradient.setColorAt(1.0, Qt::transparent);
+ QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect;
+ effect->setOpacityMask(alphaGradient);
+ ...
+```
 
 ### `QGraphicsOpacityEffect::QGraphicsOpacityEffect(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个新的 QGraphicsOpacityEffect 实例。`parent`参数传递给 `QGraphicsEffect` 的构造器。
 
 ### `[virtual noexcept] QGraphicsOpacityEffect::~QGraphicsOpacityEffect()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏效果。
 
 ### `[override virtual protected] void QGraphicsOpacityEffect::draw(QPainter *painter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 的核心操作 `draw`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsEffect::draw`（QPainter *画师）。
+这个纯虚拟函数绘制该效应，并在需要绘制源时调用。
+在`QGraphicsEffect`子类中重新实现该函数，以提供该效果的绘制实现，使用`painter`。
+用户不应明确调用该函数，因为它仅用于重实现。
 
 ### `[signal] void QGraphicsOpacityEffect::opacityChanged(qreal opacity)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 发出的通知信号 `opacityChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示了效应的不透明度。
+值应在0.0到1.0之间，0.0表示完全透明，1.0表示完全不透明。
+默认情况下，不透明度为0.7。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `opacity`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `opacity` 的变化，不要把它当作普通函数主动调用。
 
 ### `[signal] void QGraphicsOpacityEffect::opacityMaskChanged(const QBrush &mask)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsOpacityEffect` 发出的通知信号 `opacityMaskChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性表示了该效应的不透明度掩膜。
+不透明度遮罩允许你对元素的某些部分施加不透明度。
+默认情况下没有不透明度遮罩。
 
-**签名拆解：**
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `opacityMask` 的变化，不要把它当作普通函数主动调用。
 
-- 返回值：`void`。
-- 参数 `mask`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ ...
+ QLinearGradient alphaGradient(rect.topLeft(), rect.bottomLeft());
+ alphaGradient.setColorAt(0.0, Qt::transparent);
+ alphaGradient.setColorAt(0.5, Qt::black);
+ alphaGradient.setColorAt(1.0, Qt::transparent);
+ QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect;
+ effect->setOpacityMask(alphaGradient);
+ ...
+```
 
 ### `qreal opacity() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsOpacityEffect::opacity` 用于计算、查询或取得与“opacity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示了效应的不透明度。
+值应在0.0到1.0之间，0.0表示完全透明，1.0表示完全不透明。
+默认情况下，不透明度为0.7。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `opacity()` 读取当前值；它不会修改应用状态。
 
 ### `QBrush opacityMask() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QGraphicsOpacityEffect::opacityMask` 用于计算、查询或取得与“opacity、Mask”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示了该效应的不透明度掩膜。
+不透明度遮罩允许你对元素的某些部分施加不透明度。
+默认情况下没有不透明度遮罩。
 
-**签名拆解：**
+**如何使用：** 调用 `opacityMask()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QBrush`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ ...
+ QLinearGradient alphaGradient(rect.topLeft(), rect.bottomLeft());
+ alphaGradient.setColorAt(0.0, Qt::transparent);
+ alphaGradient.setColorAt(0.5, Qt::black);
+ alphaGradient.setColorAt(1.0, Qt::transparent);
+ QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect;
+ effect->setOpacityMask(alphaGradient);
+ ...
+```
 
 ### `void setOpacity(qreal opacity)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setOpacity`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性表示了效应的不透明度。
+值应在0.0到1.0之间，0.0表示完全透明，1.0表示完全不透明。
+默认情况下，不透明度为0.7。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `opacity`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOpacity(...)` 修改 `opacity`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setOpacityMask(const QBrush &mask)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setOpacityMask`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性表示了该效应的不透明度掩膜。
+不透明度遮罩允许你对元素的某些部分施加不透明度。
+默认情况下没有不透明度遮罩。
 
-**签名拆解：**
+**如何使用：** 调用 `setOpacityMask(...)` 修改 `opacityMask`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `mask`：类型为 `const QBrush &`。没有默认值，调用时必须提供。传入 `const QBrush &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ ...
+ QLinearGradient alphaGradient(rect.topLeft(), rect.bottomLeft());
+ alphaGradient.setColorAt(0.0, Qt::transparent);
+ alphaGradient.setColorAt(0.5, Qt::black);
+ alphaGradient.setColorAt(1.0, Qt::transparent);
+ QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect;
+ effect->setOpacityMask(alphaGradient);
+ ...
+```
 
 ## 6. 深入实践与常见坑
 

@@ -173,1152 +173,740 @@ for (const int value : values) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 86 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QListView::LayoutMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 暴露的类型声明 `Layout、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:LayoutMode`。
-- 属性名：`QListView`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QListView::SinglePass`：`0`;物品一次性摆放。
+- `QListView::Batched`：`1`;物品以`batchSize`件为一组排列。
 
 ### `batchSize : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setBatchSize(...)` 设置，之后用 `batchSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+如果将`layoutMode`设为`Batched`，该属性表示每批中排列的物品数量。
+默认值是100。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`batchSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `batchSize()` 读取当前值；它不会修改应用状态。
 
 ### `flow : Flow`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setFlow(...)` 设置，之后用 `flow()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了物品布局应朝向流动。
+如果该属性`LeftToRight`，物品将从左到右排列。如果`isWrapping`属性`true`，布局在到达可见区域右侧时会包裹。如果该属性`TopToBottom`，物品将从可见区域顶部展开，达到底部时包裹。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性设置为`TopToBottom`。
 
-**签名拆解：**
-
-- 属性类型：`Flow`。
-- 属性名：`flow`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `flow()` 读取当前值；它不会修改应用状态。
 
 ### `gridSize : QSize`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setGridSize(...)` 设置，之后用 `gridSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示布局网格的大小。
+该属性是物品摆放所在网格的大小。默认尺寸为空，意味着没有网格，布局也不是在网格中完成的。将该属性设置为非空大小，网格布局会被切换。（当网格布局生效时，`spacing`属性被忽略。）。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 属性类型：`QSize`。
-- 属性名：`gridSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `gridSize()` 读取当前值；它不会修改应用状态。
 
 ### `isWrapping : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的状态/能力属性。通常通过 `isWrapping()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性决定了物品布局是否应进行包裹。
+该属性决定了当可见区域没有更多空间时，布局是否应进行包裹。布局折叠的地点取决于`flow`属性。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性是`false`的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`isWrapping`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isWrapping()` 读取当前值；它不会修改应用状态。
 
 ### `itemAlignment : Qt::Alignment`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setAlignment(...)` 设置，之后用 `Alignment()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了每个单元格中的对齐。
+这只在`ListMode`中支持，且`TopToBottom`流且启用包裹。默认对齐为0，意味着项目会完全填满其单元格。
 
-**签名拆解：**
-
-- 属性类型：`Qt::Alignment`。
-- 属性名：`itemAlignment`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `itemAlignment()` 读取当前值；它不会修改应用状态。
 
 ### `layoutMode : LayoutMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setLayoutMode(...)` 设置，之后用 `layoutMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+决定物品的布局是应立即进行还是延迟。
+该属性包含了物品的布局模式。当该模式`SinglePass`（默认）时，物品会一次性摆放好。当该模式`Batched`时，物品会分批`batchSize`件物品摆放，同时处理事件。这使得在其他物品摆放时，可以即时查看和交互可见物品。
 
-**签名拆解：**
-
-- 属性类型：`LayoutMode`。
-- 属性名：`layoutMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `layoutMode()` 读取当前值；它不会修改应用状态。
 
 ### `modelColumn : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setModelColumn(...)` 设置，之后用 `modelColumn()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示模型中可见的列。
+默认情况下，该属性包含0，表示模型的第一列将被显示。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`modelColumn`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `modelColumn()` 读取当前值；它不会修改应用状态。
 
 ### `movement : Movement`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setMovement(...)` 设置，之后用 `movement()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性适用于物品是否可以自由移动、被吸附到网格上，还是完全无法移动。
+该属性决定了用户如何在视图中移动这些物品。`Static` 表示用户不能移动这些物品。`Free` 意味着用户可以拖拽物品到视图中的任何位置。`Snap` 意味着用户可以拖放物品，但只能拖拽到 `gridSize` 属性所指示的假想网格中的位置。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性设为`Static`。
 
-**签名拆解：**
-
-- 属性类型：`Movement`。
-- 属性名：`movement`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `movement()` 读取当前值；它不会修改应用状态。
 
 ### `resizeMode : ResizeMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setResizeMode(...)` 设置，之后用 `resizeMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否在视图调整时重新布局。
+如果该属性被`Adjust`，视图调整大小时项目将重新排列。如果值`Fixed`，视图调整时物品不会被布局。
+默认情况下，该属性设置为`Fixed`。
 
-**签名拆解：**
-
-- 属性类型：`ResizeMode`。
-- 属性名：`resizeMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resizeMode()` 读取当前值；它不会修改应用状态。
 
 ### `selectionRectVisible : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setSelectionRectVisible(...)` 设置，之后用 `selectionRectVisible()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+如果选择矩形应该是可见的。
+如果`true`该属性，则选择矩形是可见的;否则它将被隐藏。
+注意：只有当选择模式允许多项选择时，选区矩形才会显示;即如果选区模式为`QAbstractItemView::SingleSelection`，则不会绘制选区矩形。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`selectionRectVisible`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `selectionRectVisible()` 读取当前值；它不会修改应用状态。
 
 ### `spacing : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setSpacing(...)` 设置，之后用 `spacing()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了布局中物品周围的空间。
+该属性是指布局中围绕物品填充的空白空间的大小。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性的值为0。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`spacing`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `spacing()` 读取当前值；它不会修改应用状态。
 
 ### `uniformItemSizes : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setUniformItemSizes(...)` 设置，之后用 `uniformItemSizes()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性确定列表视图中所有项目大小是否相同。
+只有当保证视图中所有项目大小相同时，该属性才应设置为 true。这使得视图能够为性能进行一些优化。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`uniformItemSizes`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `uniformItemSizes()` 读取当前值；它不会修改应用状态。
 
 ### `viewMode : ViewMode`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setViewMode(...)` 设置，之后用 `viewMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示`QListView`的视模式。
+该属性会将其他未设置属性调整为符合集合视图模式。已设置的 `QListView` 特定属性不会被更改，除非调用了 `clearPropertyFlags()`。
+设置视图模式会根据所选移动开启或禁用拖放。`ListMode`时，默认移动为`Static`（拖放禁用）;`IconMode`中默认移动为`Free`（启用拖放）。
 
-**签名拆解：**
-
-- 属性类型：`ViewMode`。
-- 属性名：`viewMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `viewMode()` 读取当前值；它不会修改应用状态。
 
 ### `wordWrap : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的配置属性。初始化或状态切换时通过 `setWordWrap(...)` 设置，之后用 `wordWrap()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含项目文本单词打包策略。
+如果该属性`true`，则在词分隔处必要时对条目文本进行装帧;否则则完全不进行装包。该属性默认`false`。
+请注意，即使启用了换行，单元格也不会被展开以腾出文本空间。根据视图的 `textElideMode`，对于无法显示的文本，它会打印省略号。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`wordWrap`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wordWrap()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QListView::QListView(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的QListView，并使用给定的`parent`来查看模型。使用`setModel()`设置模型。
 
 ### `[virtual noexcept] QListView::~QListView()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了视野。
 
 ### `void QListView::clearPropertyFlags()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::clearPropertyFlags` 用于执行与“清空、Property、标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除`QListView`特定属性的标志。详见`viewMode`。
+从`QAbstractItemView`继承的属性不被属性标志覆盖。具体来说，`dragEnabled`和`acceptsDrops`在调用`setMovement()`或`setViewMode()`时通过`QListView`计算。
 
 ### `[override virtual protected] void QListView::currentChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `currentChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimpations： `QAbstractItemView::currentChanged`（const QModelIndex ¤t， const QModelIndex &previous）.
+当新项目变成当前项目时，调用该槽位。之前的当前项目由`previous`索引指定，新项目由`current`索引指定。
+如果你想知道物品的变化，请查看`dataChanged()`信号。
 
 ### `[override virtual protected] void QListView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles = QList<int>())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `dataChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `topLeft`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `bottomRight`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `roles`：类型为 `const QList<int> &`。默认值为 `QList<int>()`。传入 `const QList<int> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::dataChanged`（const QModelIndex & topLeft，const QModelIndex & bottomRight，const QList<int> and roles）。
+当模型中具有相同`roles`的物品发生变化时，该槽位被调用。更改的物品包括从`topLeft`到`bottomRight`的物品。如果只更改一个物品`topLeft` == `bottomRight`。
+被更改的`roles`可以是空容器（意味着一切都变了），或者是一个包含变更角色子集的非空容器。
+注意：`Qt::ToolTipRole`未被 dataChanged() 在 Qt 提供的观点中认可。
 
 ### `[override virtual protected] void QListView::dragLeaveEvent(QDragLeaveEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QDragLeaveEvent *`。没有默认值，调用时必须提供。传入 `QDragLeaveEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::dragLeaveEvent`（QDragLeaveEvent *event）。
 
 ### `[override virtual protected] void QListView::dragMoveEvent(QDragMoveEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QDragMoveEvent *`。没有默认值，调用时必须提供。传入 `QDragMoveEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::dragMoveEvent`（QDragMoveEvent *event）。
 
 ### `[override virtual protected] void QListView::dropEvent(QDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::dropEvent`（QDropEvent *event）。
 
 ### `[override virtual protected] bool QListView::event(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::event`（QEvent *事件）。
 
 ### `[override virtual protected] int QListView::horizontalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::horizontalOffset` 用于计算、查询或取得与“水平、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::horizontalOffset()` const.
+返回视角的水平偏移。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual] QModelIndex QListView::indexAt(const QPoint &p) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::indexAt` 用于计算、查询或取得与“索引、按位置访问”相关的操作。调用时要先确认当前状态和 `p` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `p`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::indexAt`（const QPoint & point） const.
+返回视口坐标处的模型索引`point`。
+在基类中，这是一个纯虚拟函数。
 
 ### `[signal] void QListView::indexesMoved(const QModelIndexList &indexes)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 发出的通知信号 `indexesMoved`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `indexes`：类型为 `const QModelIndexList &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当指定`indexes`在视野中移动时，该信号会发出。
 
 ### `[override virtual protected] void QListView::initViewItemOption(QStyleOptionViewItem *option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::initViewItemOption` 用于执行与“init、View、项目访问、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QStyleOptionViewItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QAbstractItemView::initViewItemOption`（QStyleOptionViewItem *option） const.
+用视图的调色板、字体、状态、对齐等初始化`option`结构。
+注意：该方法的实现应检查接收结构的 `version`，填充实现熟悉的所有成员，并将版本成员设置为实现支持的版本，然后返回。
 
 ### `[override virtual protected] bool QListView::isIndexHidden(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isIndexHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::isIndexHidden`（const QModelIndex & index） const.
+如果给定`index`所引用的项目隐藏在视图中，返回`true`;否则返回`false`。
+隐藏是视图特定的功能。例如`TableView`中可以标记为隐藏列或`TreeView`中的一行。
+在基类中，这是一个纯虚拟函数。
 
 ### `bool QListView::isRowHidden(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRowHidden`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`row`被隐藏，返回`true`;否则返回`false`。
 
 ### `[override virtual protected] void QListView::mouseMoveEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::mouseMoveEvent`（QMouseEvent *event）。
 
 ### `[override virtual protected] void QListView::mouseReleaseEvent(QMouseEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QMouseEvent *`。没有默认值，调用时必须提供。传入 `QMouseEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::mouseReleaseEvent`（QMouseEvent *event）。
 
 ### `[override virtual protected] QModelIndex QListView::moveCursor(QAbstractItemView::CursorAction cursorAction, Qt::KeyboardModifiers modifiers)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::moveCursor` 用于计算、查询或取得与“移动、Cursor”相关的操作。调用时要先确认当前状态和 `cursorAction`、`modifiers` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `cursorAction`：类型为 `QAbstractItemView::CursorAction`。没有默认值，调用时必须提供。传入 `QAbstractItemView::CursorAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::moveCursor`（QAbstractItemView：：CursorAction cursorAction， Qt：：KeyboardModifiers modifiers）。
+返回一个`QModelIndex`对象，指向视图中的下一个对象，基于`modifiers`指定的`cursorAction`和键盘修饰符。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] void QListView::paintEvent(QPaintEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。传入 `QPaintEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::paintEvent`（QPaintEvent *event）。
 
 ### `[protected] QRect QListView::rectForIndex(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::rectForIndex` 用于计算、查询或取得与“rect、For、索引”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型中位置`index`的矩形。矩形位于目录坐标中。
 
 ### `[override virtual protected] void QListView::resizeEvent(QResizeEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。传入 `QResizeEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::resizeEvent`（QResizeEvent *event）。
 
 ### `[override virtual protected] void QListView::rowsAboutToBeRemoved(const QModelIndex &parent, int start, int end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::rowsAboutToBeRemoved` 用于执行与“行、About、转换输出、Be、Removed”相关的操作。调用时要先确认当前状态和 `parent`、`start`、`end` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QAbstractItemView::rowsAboutToBeRemoved`（const QModelIndex & parent， int start， int end）。
+当即将移除的行时，会调用该槽位。被删除的行是`parent`从`start`到`end`包含的列。
 
 ### `[override virtual protected] void QListView::rowsInserted(const QModelIndex &parent, int start, int end)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::rowsInserted` 用于执行与“行、Inserted”相关的操作。调用时要先确认当前状态和 `parent`、`start`、`end` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::rowsInserted`（const QModelIndex & parent， int start， int end）。
+插入行时调用该槽位。新行为`parent`下，从`start`到`end`包含。基类实现调用模型中的fetchMore()以检查更多数据。
 
 ### `[override virtual protected] void QListView::scrollContentsBy(int dx, int dy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::scrollContentsBy` 用于执行与“scroll、Contents、By”相关的操作。调用时要先确认当前状态和 `dx`、`dy` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dx`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dy`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::scrollContentsBy`（智力 dx，智力 dy）。
+按`dx`和`dy`滚动查看内容。
+当滚动条被`dx`、`dy`移动时调用该虚拟处理程序，因此应相应地滚动视口内容。
+默认实现只需调用整个`viewport()`的`update()`，子类可以重新实现该处理程序以优化，或者像`QScrollArea`一样移动内容控件。参数`dx`和`dy`是为了方便，让类知道应该滚动多少（比如像素位移时很有用）。你也可以忽略这些值，直接滚动到滚动条指示的位置。
+调用该函数以进行程序滚动是错误的，建议使用滚动条（例如直接调用`QScrollBar::setValue()`）。
 
 ### `[override virtual] void QListView::scrollTo(const QModelIndex &index, QAbstractItemView::ScrollHint hint = EnsureVisible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::scrollTo` 用于执行与“scroll、转换输出”相关的操作。调用时要先确认当前状态和 `index`、`hint` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `hint`：类型为 `QAbstractItemView::ScrollHint`。默认值为 `EnsureVisible`。传入 `QAbstractItemView::ScrollHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::scrollTo`（const QModelIndex & index， QAbstractItemView：：ScrollHint 提示）。
+如有必要，滚动视图以确保该物品在`index`可见。视图会尝试根据给定的`hint`定位该物品。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QModelIndexList QListView::selectedIndexes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::selectedIndexes` 用于计算、查询或取得与“selected、Indexes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::selectedIndexes()` const.
+这个便利函数返回视图中所有已选中和非隐藏的项目索引列表。该列表没有重复，也没有排序。
 
 ### `[override virtual protected] void QListView::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `selectionChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deselected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::selectionChanged`（const QItemSelection &selected， const QItemSelection &deselected）.
+当选择发生变化时，该槽函数被调用。之前的选择（可能是空的）由`deselected`指定，新选择由`selected`表示。
 
 ### `[protected] void QListView::setPositionForIndex(const QPoint &position, const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPositionForIndex`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `const QPoint &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模型中`index`项的内容位置设置为给定的`position`。如果列表视图的移动模式是静态或视图模式为`ListView`，该函数将无效。
 
 ### `[override virtual] void QListView::setRootIndex(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRootIndex`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::setRootIndex`（const QModelIndex & index）。
+将根项设置为给定`index`的项。
 
 ### `void QListView::setRowHidden(int row, bool hide)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRowHidden`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `hide`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`hide`为真，给定`row`将被隐藏;否则`row`会被显示出来。
 
 ### `[override virtual protected] void QListView::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelection`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `command`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::setSelection`（const QRect &rect， QItemSelectionModel：：SelectionFlags flags）。
+将选择`flags`应用于矩形内或被触及的物品，`rect`。
+在实现自己的 itemview 时，setSelection 应调用 `selectionModel()`->select（selection， flags），其中 selection 要么是空的 `QModelIndex`，要么是包含所有 `rect` 中的项的 `QItemSelection`。
 
 ### `[override virtual protected] void QListView::startDrag(Qt::DropActions supportedActions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startDrag`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `supportedActions`：类型为 `Qt::DropActions`。没有默认值，调用时必须提供。传入 `Qt::DropActions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::startDrag`（Qt：:D ropActions supportedActions）。
+通过调用 drag->exec() 使用给定的 `supportedActions` 来启动拖拽。
 
 ### `[override virtual protected] void QListView::timerEvent(QTimerEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::timerEvent` 用于执行与“timer、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QTimerEvent *`。没有默认值，调用时必须提供。传入 `QTimerEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::timerEvent`（QTimerEvent *event）。
 
 ### `[override virtual protected] void QListView::updateGeometries()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::updateGeometries` 用于执行与“更新、Geometries”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::updateGeometries()`。
+更新视图子控件的几何体。
 
 ### `[override virtual protected] int QListView::verticalOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::verticalOffset` 用于计算、查询或取得与“垂直、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::verticalOffset()` const.
+返回视图的垂直偏移量。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QSize QListView::viewportSizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::viewportSizeHint` 用于计算、查询或取得与“viewport、尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemView::viewportSizeHint()` const.
 
 ### `[override virtual] QRect QListView::visualRect(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::visualRect` 用于计算、查询或取得与“visual、Rect”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::visualRect`（const QModelIndex & index） const.
+返回该物品在视口上的矩形，该物体在`index`。
+如果你的项目显示在多个区域，visualRect 应该返回包含索引的主要区域，而不是索引可能涵盖、触摸或导致绘图的全部区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] QRegion QListView::visualRegionForSelection(const QItemSelection &selection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::visualRegionForSelection` 用于计算、查询或取得与“visual、Region、For、Selection”相关的操作。调用时要先确认当前状态和 `selection` 的有效范围；返回类型是 `QRegion`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegion`。
-- 参数 `selection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemView::visualRegionForSelection`（const QItemSelection &selection） const.
+自4.7版本起，返回区域仅包含与视口相交（或包含）的矩形。
+从视口返回给定`selection`中物品的区域。
+在基类中，这是一个纯虚拟函数。
 
 ### `[override virtual protected] void QListView::wheelEvent(QWheelEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QListView::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QWheelEvent *`。没有默认值，调用时必须提供。传入 `QWheelEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractScrollArea::wheelEvent`（QWheelEvent *e）。
 
 ### `enum Flow { LeftToRight, TopToBottom }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 暴露的类型声明 `Flow`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QListView::LeftToRight`：`0`;物品按视角从左到右排列。
+- `QListView::TopToBottom`：`1`;物品从上到下排列成视角。
 
 ### `enum Movement { Static, Free, Snap }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 暴露的类型声明 `Movement`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QListView::Static`：`0`;用户无法移动这些物品。
+- `QListView::Free`：`1`;用户可以自由移动这些物品。
+- `QListView::Snap`：`2`;物品移动时会吸附到指定的网格上;详见`setGridSize()`。
 
 ### `enum ResizeMode { Fixed, Adjust }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 暴露的类型声明 `调整尺寸、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QListView::Fixed`：`0`;这些物品只会在第一次展示视图时摆放。
+- `QListView::Adjust`：`1`;每次视角调整时，这些物品都会被排版。
 
 ### `enum ViewMode { ListMode, IconMode }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QListView` 暴露的类型声明 `View、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QListView::ListMode`：`0`;物品采用`TopToBottom`流程布局，采用小尺寸和静态移动
+- `QListView::IconMode`：`1`;物品采用`LeftToRight`流布局，采用大尺寸和自由移动
 
 ### `int batchSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::batchSize` 用于计算、查询或取得与“batch、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+如果将`layoutMode`设为`Batched`，该属性表示每批中排列的物品数量。
+默认值是100。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `batchSize()` 读取当前值；它不会修改应用状态。
 
 ### `QListView::Flow flow() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::flow` 用于计算、查询或取得与“flow”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QListView::Flow`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了物品布局应朝向流动。
+如果该属性`LeftToRight`，物品将从左到右排列。如果`isWrapping`属性`true`，布局在到达可见区域右侧时会包裹。如果该属性`TopToBottom`，物品将从可见区域顶部展开，达到底部时包裹。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性设置为`TopToBottom`。
 
-**签名拆解：**
-
-- 返回值：`QListView::Flow`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `flow()` 读取当前值；它不会修改应用状态。
 
 ### `QSize gridSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::gridSize` 用于计算、查询或取得与“grid、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示布局网格的大小。
+该属性是物品摆放所在网格的大小。默认尺寸为空，意味着没有网格，布局也不是在网格中完成的。将该属性设置为非空大小，网格布局会被切换。（当网格布局生效时，`spacing`属性被忽略。）。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `gridSize()` 读取当前值；它不会修改应用状态。
 
 ### `bool isSelectionRectVisible() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSelectionRectVisible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果选择矩形应该是可见的。
+如果`true`该属性，则选择矩形是可见的;否则它将被隐藏。
+注意：只有当选择模式允许多项选择时，选区矩形才会显示;即如果选区模式为`QAbstractItemView::SingleSelection`，则不会绘制选区矩形。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isSelectionRectVisible()` 读取当前值；它不会修改应用状态。
 
 ### `bool isWrapping() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isWrapping`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定了物品布局是否应进行包裹。
+该属性决定了当可见区域没有更多空间时，布局是否应进行包裹。布局折叠的地点取决于`flow`属性。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性是`false`的。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isWrapping()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::Alignment itemAlignment() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::itemAlignment` 用于计算、查询或取得与“项目访问、对齐方式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Alignment`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了每个单元格中的对齐。
+这只在`ListMode`中支持，且`TopToBottom`流且启用包裹。默认对齐为0，意味着项目会完全填满其单元格。
 
-**签名拆解：**
-
-- 返回值：`Qt::Alignment`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `itemAlignment()` 读取当前值；它不会修改应用状态。
 
 ### `QListView::LayoutMode layoutMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::layoutMode` 用于计算、查询或取得与“layout、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QListView::LayoutMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+决定物品的布局是应立即进行还是延迟。
+该属性包含了物品的布局模式。当该模式`SinglePass`（默认）时，物品会一次性摆放好。当该模式`Batched`时，物品会分批`batchSize`件物品摆放，同时处理事件。这使得在其他物品摆放时，可以即时查看和交互可见物品。
 
-**签名拆解：**
-
-- 返回值：`QListView::LayoutMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `layoutMode()` 读取当前值；它不会修改应用状态。
 
 ### `int modelColumn() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::modelColumn` 用于计算、查询或取得与“model、列”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示模型中可见的列。
+默认情况下，该属性包含0，表示模型的第一列将被显示。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `modelColumn()` 读取当前值；它不会修改应用状态。
 
 ### `QListView::Movement movement() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::movement` 用于计算、查询或取得与“movement”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QListView::Movement`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性适用于物品是否可以自由移动、被吸附到网格上，还是完全无法移动。
+该属性决定了用户如何在视图中移动这些物品。`Static` 表示用户不能移动这些物品。`Free` 意味着用户可以拖拽物品到视图中的任何位置。`Snap` 意味着用户可以拖放物品，但只能拖拽到 `gridSize` 属性所指示的假想网格中的位置。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性设为`Static`。
 
-**签名拆解：**
-
-- 返回值：`QListView::Movement`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `movement()` 读取当前值；它不会修改应用状态。
 
 ### `QListView::ResizeMode resizeMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::resizeMode` 用于计算、查询或取得与“调整尺寸、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QListView::ResizeMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性是否在视图调整时重新布局。
+如果该属性被`Adjust`，视图调整大小时项目将重新排列。如果值`Fixed`，视图调整时物品不会被布局。
+默认情况下，该属性设置为`Fixed`。
 
-**签名拆解：**
-
-- 返回值：`QListView::ResizeMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `resizeMode()` 读取当前值；它不会修改应用状态。
 
 ### `void setBatchSize(int batchSize)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBatchSize`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+如果将`layoutMode`设为`Batched`，该属性表示每批中排列的物品数量。
+默认值是100。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `batchSize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setBatchSize(...)` 修改 `batchSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFlow(QListView::Flow flow)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlow`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了物品布局应朝向流动。
+如果该属性`LeftToRight`，物品将从左到右排列。如果`isWrapping`属性`true`，布局在到达可见区域右侧时会包裹。如果该属性`TopToBottom`，物品将从可见区域顶部展开，达到底部时包裹。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性设置为`TopToBottom`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flow`：类型为 `QListView::Flow`。没有默认值，调用时必须提供。传入 `QListView::Flow` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFlow(...)` 修改 `flow`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setGridSize(const QSize &size)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGridSize`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示布局网格的大小。
+该属性是物品摆放所在网格的大小。默认尺寸为空，意味着没有网格，布局也不是在网格中完成的。将该属性设置为非空大小，网格布局会被切换。（当网格布局生效时，`spacing`属性被忽略。）。
+当视图可见时设置该属性，物品会重新排列。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setGridSize(...)` 修改 `gridSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setItemAlignment(Qt::Alignment alignment)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setItemAlignment`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了每个单元格中的对齐。
+这只在`ListMode`中支持，且`TopToBottom`流且启用包裹。默认对齐为0，意味着项目会完全填满其单元格。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `alignment`：类型为 `Qt::Alignment`。没有默认值，调用时必须提供。对齐标志的组合，例如 `Qt::AlignLeft | Qt::AlignVCenter`；它描述内容在已分配区域中的位置，不负责分配剩余空间。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setItemAlignment(...)` 修改 `itemAlignment`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setLayoutMode(QListView::LayoutMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLayoutMode`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+决定物品的布局是应立即进行还是延迟。
+该属性包含了物品的布局模式。当该模式`SinglePass`（默认）时，物品会一次性摆放好。当该模式`Batched`时，物品会分批`batchSize`件物品摆放，同时处理事件。这使得在其他物品摆放时，可以即时查看和交互可见物品。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QListView::LayoutMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setLayoutMode(...)` 修改 `layoutMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setModelColumn(int column)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModelColumn`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示模型中可见的列。
+默认情况下，该属性包含0，表示模型的第一列将被显示。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setModelColumn(...)` 修改 `modelColumn`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMovement(QListView::Movement movement)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMovement`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性适用于物品是否可以自由移动、被吸附到网格上，还是完全无法移动。
+该属性决定了用户如何在视图中移动这些物品。`Static` 表示用户不能移动这些物品。`Free` 意味着用户可以拖拽物品到视图中的任何位置。`Snap` 意味着用户可以拖放物品，但只能拖拽到 `gridSize` 属性所指示的假想网格中的位置。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性设为`Static`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `movement`：类型为 `QListView::Movement`。没有默认值，调用时必须提供。传入 `QListView::Movement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMovement(...)` 修改 `movement`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setResizeMode(QListView::ResizeMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setResizeMode`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否在视图调整时重新布局。
+如果该属性被`Adjust`，视图调整大小时项目将重新排列。如果值`Fixed`，视图调整时物品不会被布局。
+默认情况下，该属性设置为`Fixed`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QListView::ResizeMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setResizeMode(...)` 修改 `resizeMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSelectionRectVisible(bool show)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionRectVisible`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+如果选择矩形应该是可见的。
+如果`true`该属性，则选择矩形是可见的;否则它将被隐藏。
+注意：只有当选择模式允许多项选择时，选区矩形才会显示;即如果选区模式为`QAbstractItemView::SingleSelection`，则不会绘制选区矩形。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `show`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSelectionRectVisible(...)` 修改 `selectionRectVisible`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSpacing(int space)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSpacing`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了布局中物品周围的空间。
+该属性是指布局中围绕物品填充的空白空间的大小。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性的值为0。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `space`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSpacing(...)` 修改 `spacing`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setUniformItemSizes(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUniformItemSizes`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性确定列表视图中所有项目大小是否相同。
+只有当保证视图中所有项目大小相同时，该属性才应设置为 true。这使得视图能够为性能进行一些优化。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUniformItemSizes(...)` 修改 `uniformItemSizes`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setViewMode(QListView::ViewMode mode)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setViewMode`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性表示`QListView`的视模式。
+该属性会将其他未设置属性调整为符合集合视图模式。已设置的 `QListView` 特定属性不会被更改，除非调用了 `clearPropertyFlags()`。
+设置视图模式会根据所选移动开启或禁用拖放。`ListMode`时，默认移动为`Static`（拖放禁用）;`IconMode`中默认移动为`Free`（启用拖放）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QListView::ViewMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setViewMode(...)` 修改 `viewMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWordWrap(bool on)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWordWrap`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含项目文本单词打包策略。
+如果该属性`true`，则在词分隔处必要时对条目文本进行装帧;否则则完全不进行装包。该属性默认`false`。
+请注意，即使启用了换行，单元格也不会被展开以腾出文本空间。根据视图的 `textElideMode`，对于无法显示的文本，它会打印省略号。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `on`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWordWrap(...)` 修改 `wordWrap`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWrapping(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWrapping`。调用它会改变 `QListView` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了物品布局是否应进行包裹。
+该属性决定了当可见区域没有更多空间时，布局是否应进行包裹。布局折叠的地点取决于`flow`属性。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性是`false`的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWrapping(...)` 修改 `isWrapping`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `int spacing() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::spacing` 用于计算、查询或取得与“spacing”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了布局中物品周围的空间。
+该属性是指布局中围绕物品填充的空白空间的大小。
+当视图可见时设置该属性，物品会重新排列。
+默认情况下，该属性的值为0。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `spacing()` 读取当前值；它不会修改应用状态。
 
 ### `bool uniformItemSizes() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::uniformItemSizes` 用于计算、查询或取得与“uniform、项目访问、Sizes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性确定列表视图中所有项目大小是否相同。
+只有当保证视图中所有项目大小相同时，该属性才应设置为 true。这使得视图能够为性能进行一些优化。
+默认情况下，该属性为`false`。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `uniformItemSizes()` 读取当前值；它不会修改应用状态。
 
 ### `QListView::ViewMode viewMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::viewMode` 用于计算、查询或取得与“view、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QListView::ViewMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示`QListView`的视模式。
+该属性会将其他未设置属性调整为符合集合视图模式。已设置的 `QListView` 特定属性不会被更改，除非调用了 `clearPropertyFlags()`。
+设置视图模式会根据所选移动开启或禁用拖放。`ListMode`时，默认移动为`Static`（拖放禁用）;`IconMode`中默认移动为`Free`（启用拖放）。
 
-**签名拆解：**
-
-- 返回值：`QListView::ViewMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `viewMode()` 读取当前值；它不会修改应用状态。
 
 ### `bool wordWrap() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QListView::wordWrap` 用于计算、查询或取得与“word、Wrap”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含项目文本单词打包策略。
+如果该属性`true`，则在词分隔处必要时对条目文本进行装帧;否则则完全不进行装包。该属性默认`false`。
+请注意，即使启用了换行，单元格也不会被展开以腾出文本空间。根据视图的 `textElideMode`，对于无法显示的文本，它会打印省略号。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wordWrap()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

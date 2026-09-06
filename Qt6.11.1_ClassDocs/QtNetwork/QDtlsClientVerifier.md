@@ -71,128 +71,88 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QDtlsClientVerifier::QDtlsClientVerifier(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtlsClientVerifier` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QDtlsClientVerifier对象，`parent`传递给`QObject`的构造函数。
 
 ### `[virtual noexcept] QDtlsClientVerifier::~QDtlsClientVerifier()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDtlsClientVerifier` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QDtlsClientVerifier`物体。
 
 ### `QDtlsClientVerifier::GeneratorParameters QDtlsClientVerifier::cookieGeneratorParameters() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtlsClientVerifier::cookieGeneratorParameters` 用于计算、查询或取得与“cookie、Generator、Parameters”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDtlsClientVerifier::GeneratorParameters`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDtlsClientVerifier::GeneratorParameters`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前用于生成 Cookie 的秘密和哈希算法。如果 Qt 配置支持默认哈希算法，则`QCryptographicHash::Sha256`，否则`QCryptographicHash::Sha1`。默认秘密来自后端专用的强密码学伪随机数生成器。
 
 ### `QDtlsError QDtlsClientVerifier::dtlsError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtlsClientVerifier::dtlsError` 用于计算、查询或取得与“dtls、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDtlsError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDtlsError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上次发生的错误或`QDtlsError::NoError`。
 
 ### `QString QDtlsClientVerifier::dtlsErrorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtlsClientVerifier::dtlsErrorString` 用于计算、查询或取得与“dtls、错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后一个错误的文本描述，或空字符串。
 
 ### `bool QDtlsClientVerifier::setCookieGeneratorParameters(const QDtlsClientVerifier::GeneratorParameters &params)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCookieGeneratorParameters`。调用它会改变 `QDtlsClientVerifier` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `params`：类型为 `const QDtlsClientVerifier::GeneratorParameters &`。没有默认值，调用时必须提供。传入 `const QDtlsClientVerifier::GeneratorParameters &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`params`设置秘密和密码学哈希算法。该`QDtlsClientVerifier`将利用这些方法生成Cookie。如果新秘密大小为零，该函数返回`false`，且不更改Cookie生成器参数。
+注意：秘密应为一组加密学上安全的字节序列。
 
 ### `QByteArray QDtlsClientVerifier::verifiedHello() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtlsClientVerifier::verifiedHello` 用于计算、查询或取得与“verified、Hello”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+便利功能。返回最后一次成功验证的 ClientHello 消息，若未完成验证则返回空 `QByteArray`。
 
 ### `bool QDtlsClientVerifier::verifyClient(QUdpSocket *socket, const QByteArray &dgram, const QHostAddress &address, quint16 port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDtlsClientVerifier::verifyClient` 用于计算、查询或取得与“verify、Client”相关的操作。调用时要先确认当前状态和 `socket`、`dgram`、`address`、`port` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+`socket`必须是有效的指针，`dgram`必须是非空数据报，`address`不能是空指针、广播或多播。`port` 是远程对等端的端口。如果`dgram`包含带有有效 cookie 的 ClientHello 消息，该函数返回 `true`。如果找不到匹配的 cookie，verifyClient() 将使用 `socket` 发送 HelloVerifyRequest 消息并返回 `false`。
+以下摘要展示了服务器应用程序如何检查错误：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `socket`：类型为 `QUdpSocket *`。没有默认值，调用时必须提供。传入 `QUdpSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dgram`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `address`：类型为 `const QHostAddress &`。没有默认值，调用时必须提供。传入 `const QHostAddress &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (!verifier.verifyClient(&socket, message, address, port)) {
+     switch (verifyClient.dtlsError()) {
+     case QDtlsError::NoError:
+         // Not verified yet, but no errors found and we have to wait for the next
+         // message from this client.
+         return;
+     case QDtlsError::TlsInitializationError:
+         // This error is fatal, nothing we can do about it.
+         // Probably, quit the server after reporting the error.
+         return;
+     case QDtlsError::UnderlyingSocketError:
+         // There is some problem in QUdpSocket, handle it (see QUdpSocket::error())
+         return;
+     case QDtlsError::InvalidInputParameters:
+     default:
+         Q_UNREACHABLE();
+     }
+ }
+```
 
 ### `struct GeneratorParameters`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDtlsClientVerifier` 的 `Generator、Parameters` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该类定义了DTLS饼干生成器的参数。
+此类对象提供了`QDtlsClientVerifier`生成DTLS Cookie的参数。它们包括密码学哈希算法和一个秘密。
+注意：空秘密被`QDtlsClientVerifier::setCookieGeneratorParameters()`视为无效。
 
 ## 6. 深入实践与常见坑
 

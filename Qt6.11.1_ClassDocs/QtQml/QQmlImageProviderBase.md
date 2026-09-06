@@ -72,87 +72,53 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QQmlImageProviderBase::Flagflags QQmlImageProviderBase::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlImageProviderBase` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QQmlImageProviderBase::Flags`。
-- 属性名：`QQmlImageProviderBase`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义了该图像提供商的具体需求或功能。
+- `QQmlImageProviderBase::ForceAsynchronousImageLoading`：`0x01`;确保向提供者发送图像请求在独立线程中运行，使提供者能够在不阻塞主线程的情况下，花费足够的时间生成图像。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QQmlImageProviderBase::ImageType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlImageProviderBase` 暴露的类型声明 `Image、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ImageType`。
-- 属性名：`QQmlImageProviderBase`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义了该图像提供者支持的图像类型。
+- `QQmlImageProviderBase::Image`：`1`;图像提供者提供`QImage`图像。所有图像请求都会调用`QQuickImageProvider::requestImage()`方法。
+- `QQmlImageProviderBase::Pixmap`：`2`;图像提供者提供`QPixmap`图像。所有图像请求都会调用`QQuickImageProvider::requestPixmap()`方法。
+- `QQmlImageProviderBase::Texture`：`3`;图像提供者提供基于`QSGTextureProvider`的图像。所有图像请求都会调用`QQuickImageProvider::requestTexture()`方法。
+- `QQmlImageProviderBase::ImageResponse`：`4`;Image 提供者提供基于`QQuickTextureFactory`的图像。应仅用于`QQuickAsyncImageProvider`或其子类。所有图像请求都会调用`QQuickAsyncImageProvider::requestImageResponse()`方法。自Qt 5.6起
 
 ### `[pure virtual] QQmlImageProviderBase::Flags QQmlImageProviderBase::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlImageProviderBase::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlImageProviderBase::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlImageProviderBase::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现此功能以返回该图像提供者的属性。
 
 ### `[pure virtual] QQmlImageProviderBase::ImageType QQmlImageProviderBase::imageType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlImageProviderBase::imageType` 用于计算、查询或取得与“image、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlImageProviderBase::ImageType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlImageProviderBase::ImageType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现此方法以返回该图像提供者支持的图像类型。
 
 ### `enum Flag { ForceAsynchronousImageLoading }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlImageProviderBase` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义了该图像提供商的具体需求或功能。
+- `QQmlImageProviderBase::ForceAsynchronousImageLoading`：`0x01`;确保向提供者发送图像请求在独立线程中运行，使提供者能够在不阻塞主线程的情况下，花费足够的时间生成图像。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlImageProviderBase` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义了该图像提供商的具体需求或功能。
+- `QQmlImageProviderBase::ForceAsynchronousImageLoading`：`0x01`;确保向提供者发送图像请求在独立线程中运行，使提供者能够在不阻塞主线程的情况下，花费足够的时间生成图像。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

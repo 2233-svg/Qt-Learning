@@ -65,48 +65,30 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QStandardItemEditorCreator::QStandardItemEditorCreator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStandardItemEditorCreator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建编辑器创建对象。
 
 ### `[override virtual] QWidget *QStandardItemEditorCreator::createWidget(QWidget *parent) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemEditorCreator::createWidget` 用于计算、查询或取得与“创建、Widget”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数 `parent`：类型为 `QWidget *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QItemEditorCreatorBase::createWidget`（QWidget *parent） const.
+返回带有给定`parent`的编辑器小部件。
+在该类子类中实现该函数时，必须构造并返回指定父控件的新编辑器控件。
 
 ### `[override virtual] QByteArray QStandardItemEditorCreator::valuePropertyName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStandardItemEditorCreator::valuePropertyName` 用于计算、查询或取得与“值访问、Property、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QItemEditorCreatorBase::valuePropertyName()` const.
+返回用于获取和设置创建者编辑器控件中值的属性名称。
+在子类中实现该函数时，必须确保编辑器控件的属性能接受创建者注册的类型。例如，`QCheckBox`构建用于编辑布尔值的控件的创建器会返回该函数的`checkable`属性名称，并且必须在物品编辑器工厂注册该`QMetaType::Bool`类型。
+注意：自Qt 4.2起，该项委托查询控件的用户属性，只有当控件没有用户属性时才调用该函数。您可以通过重新实现`QAbstractItemDelegate::setModelData()`和`QAbstractItemDelegate::setEditorData()`来覆盖此行为。
 
 ## 6. 深入实践与常见坑
 

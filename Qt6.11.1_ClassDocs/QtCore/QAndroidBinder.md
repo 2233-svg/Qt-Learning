@@ -68,94 +68,59 @@ target_link_libraries(mytarget PRIVATE Qt6::CorePrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QAndroidBinder::CallType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidBinder` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CallType`。
-- 属性名：`QAndroidBinder`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举与`QAndroidBinder::transact()`一起使用，描述IPC调用的执行模式。
+- `QAndroidBinder::CallType::Normal`：`0`;正常IPC，意味着调用者等待被叫方的结果
+- `QAndroidBinder::CallType::OneWay`：`1`;单向IPC，意味着来电者立即返回，无需等待被叫方的结果
 
 ### `[explicit] QAndroidBinder::QAndroidBinder()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidBinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的对象，可用于执行IPC。
 
 ### `QAndroidBinder::QAndroidBinder(const QJniObject &binder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidBinder` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `binder`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`binder` Java 对象创建一个新对象。
 
 ### `QJniObject QAndroidBinder::handle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidBinder::handle` 用于计算、查询或取得与“handle”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJniObject`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJniObject`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回值对于调用未被该封装器覆盖的其他 Java API 非常有用。
 
 ### `[virtual] bool QAndroidBinder::onTransact(int code, const QAndroidParcel &data, const QAndroidParcel &reply, QAndroidBinder::CallType flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidBinder::onTransact` 用于计算、查询或取得与“on、Transact”相关的操作。调用时要先确认当前状态和 `code`、`data`、`reply`、`flags` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+默认实现是一个返回false的存根。用户应覆盖此方法以获取调用方的交易数据。
+`code`是要执行的动作。`data`是调用者发送的集结数据。
 
-**签名拆解：**
+`reply`是发送给来电者的集管数据。
 
-- 返回值：`bool`。
-- 参数 `code`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const QAndroidParcel &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `reply`：类型为 `const QAndroidParcel &`。没有默认值，调用时必须提供。异步响应对象。它通常有自己的生命周期、状态和错误信号，读取前要确认仍然有效。
-- 参数 `flags`：类型为 `QAndroidBinder::CallType`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`flags`是额外的操作标志。
+警告：此方法调用自Binder的线程，该线程与该对象创建的线程不同。
 
 ### `bool QAndroidBinder::transact(int code, const QAndroidParcel &data, QAndroidParcel *reply = nullptr, QAndroidBinder::CallType flags = CallType::Normal) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidBinder::transact` 用于计算、查询或取得与“transact”相关的操作。调用时要先确认当前状态和 `code`、`data`、`reply`、`flags` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+执行IPC调用。
+`code`是要执行的动作。应该介于FIRST_CALL_TRANSACTION和LAST_CALL_TRANSACTION之间。
 
-**签名拆解：**
+`data`是发送给目标的汇编数据。
 
-- 返回值：`bool`。
-- 参数 `code`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const QAndroidParcel &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `reply`：类型为 `QAndroidParcel *`。默认值为 `nullptr`。异步响应对象。它通常有自己的生命周期、状态和错误信号，读取前要确认仍然有效。
-- 参数 `flags`：类型为 `QAndroidBinder::CallType`。默认值为 `CallType::Normal`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
+`reply`（如果指定）是目标接收的编组数据。如果你不关心返回值，可能是nullptr。
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`flags`是额外的操作标志。
+成功时的回报为真。
 
 ## 6. 深入实践与常见坑
 

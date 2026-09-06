@@ -66,105 +66,52 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QXmlStreamAttributes::QXmlStreamAttributes()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QXmlStreamAttributes` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QXmlStreamAttributes 的构造器。
 
 ### `void QXmlStreamAttributes::append(const QString &namespaceUri, const QString &name, const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QXmlStreamAttributes` 添加依赖、数据或子对象的 API `append`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `namespaceUri`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在命名空间中附加一个带有`name`的新属性，`namespaceUri`和值`value`。`namespaceUri`可以是空的。
 
 ### `void QXmlStreamAttributes::append(const QString &qualifiedName, const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QXmlStreamAttributes` 添加依赖、数据或子对象的 API `append`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `qualifiedName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+附加一个带有限定名称`qualifiedName`和值`value`的新属性。
 
 ### `bool QXmlStreamAttributes::hasAttribute(QAnyStringView qualifiedName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAttribute`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `qualifiedName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QXmlStreamAttributes`的属性限定名称为`qualifiedName`，则返回`true`;否则返回`false`。
+请注意，这并非命名空间感知。例如，如果该 `QXmlStreamAttributes` 包含一个词汇名为“xlink：href”的属性，这并不能说明 XLink 命名空间中名为 `href` 的属性存在，因为 `xlink` 前缀可以绑定到任何命名空间。使用以命名空间 URI 和本地名称为参数的超载，以实现命名空间感知代码。
 
 ### `bool QXmlStreamAttributes::hasAttribute(QAnyStringView namespaceUri, QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasAttribute`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QXmlStreamAttributes`的命名空间URI和名称对应于`namespaceUri`和`name`，则返回`true`;否则返回`false`。
 
 ### `[noexcept] QStringView QXmlStreamAttributes::value(QAnyStringView namespaceUri, QAnyStringView name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QXmlStreamAttributes` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数 `namespaceUri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用`namespaceUri`描述的命名空间中属性`name`值，若未定义属性则返回空字符串引用。`namespaceUri`可以是空的。
+注意：在 6.6 之前的 Qt 版本中，该函数被实现为仅接受 `QString` 和 `QLatin1StringView` 组合的超载集。
 
 ### `[noexcept] QStringView QXmlStreamAttributes::value(QAnyStringView qualifiedName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QXmlStreamAttributes` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStringView`。
-- 参数 `qualifiedName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有限定名称`qualifiedName`的属性值，如果该属性未定义，则返回空字符串引用。限定名称是XML数据中属性的原始名称。它由命名空间前缀、冒号和属性的本地名称组成。由于命名空间前缀不是唯一的（同一个前缀可以指向不同的命名空间，不同的前缀也可能指向同一命名空间），你不应使用限定名称，而应使用已解析的namespaceUri和该属性的本地名称。
+注意：在 6.6 之前的 Qt 版本中，该函数被实现为仅接受 `QString` 和 `QLatin1StringView` 的重载集。
 
 ## 6. 深入实践与常见坑
 

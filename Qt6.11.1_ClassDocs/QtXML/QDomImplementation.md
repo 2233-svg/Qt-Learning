@@ -78,184 +78,122 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDomImplementation::InvalidDataPolicy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 暴露的类型声明 `Invalid、数据访问、Policy`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:InvalidDataPolicy`。
-- 属性名：`QDomImplementation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了当调用`QDomDocument`中的工厂函数时，数据无效时应采取的操作。
+- `QDomImplementation::AcceptInvalidChars`：`0`;数据无论如何都应该存储在DOM对象中。在这种情况下，最终生成的XML文档可能不是良好格式的。这是Qt < 4.1中的默认值和QDom的行为。
+- `QDomImplementation::DropInvalidChars`：`1`;应从数据中删除无效字符。
+- `QDomImplementation::ReturnNullNode`：`2`;工厂函数应返回一个空节点。
 
 ### `QDomImplementation::QDomImplementation()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDomImpliation对象。
 
 ### `QDomImplementation::QDomImplementation(const QDomImplementation &implementation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `implementation`：类型为 `const QDomImplementation &`。没有默认值，调用时必须提供。传入 `const QDomImplementation &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`implementation`。
 
 ### `[noexcept] QDomImplementation::~QDomImplementation()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放其资源。
 
 ### `QDomDocument QDomImplementation::createDocument(const QString &nsURI, const QString &qName, const QDomDocumentType &doctype)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomImplementation::createDocument` 用于计算、查询或取得与“创建、Document”相关的操作。调用时要先确认当前状态和 `nsURI`、`qName`、`doctype` 的有效范围；返回类型是 `QDomDocument`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomDocument`。
-- 参数 `nsURI`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `qName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `doctype`：类型为 `const QDomDocumentType &`。没有默认值，调用时必须提供。传入 `const QDomDocumentType &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建文档类型为 `doctype` 的 DOM 文档。该函数还添加一个根元素节点，包含合格名称 `qName` 和命名空间 URI `nsURI`。
 
 ### `QDomDocumentType QDomImplementation::createDocumentType(const QString &qName, const QString &publicId, const QString &systemId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDomImplementation::createDocumentType` 用于计算、查询或取得与“创建、Document、类型”相关的操作。调用时要先确认当前状态和 `qName`、`publicId`、`systemId` 的有效范围；返回类型是 `QDomDocumentType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDomDocumentType`。
-- 参数 `qName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `publicId`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `systemId`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为名称`qName`创建文档类型节点。
+`publicId`指定外部子集的公共标识符。如果将`publicId`指定为空字符串（QString()），则表示文档类型没有公共标识符。
+`systemId`指定外部子集的系统标识符。如果将`systemId`指定为空字符串，则表示文档类型没有系统标识符。
+由于没有系统标识符不能有公共标识符，如果没有系统标识符，则公共标识符将设置为空字符串。
+DOM级别2不支持任何其他文档类型声明功能。
+创建的这种文档类型的唯一使用方式，是与`createDocument()`函数结合，使用此文档类型创建`QDomDocument`。
+在DOM规范中，这是创建非空文档的唯一方式。出于历史原因，Qt也允许使用默认的空构造函数创建文档。生成的文档是空的，但当调用工厂函数，例如`QDomDocument::createElement()`时，它将变为非空文档。当调用setContent()时，文档也会变为非空。
 
 ### `bool QDomImplementation::hasFeature(const QString &feature, const QString &version) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasFeature`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `feature`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `version`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果QDom实现了请求的`version`，函数返回`true` `feature`;否则返回`false`。
+目前支持的功能及其版本：
+- `Feature`：版本
+- `XML`：1.0
 
 ### `[static] QDomImplementation::InvalidDataPolicy QDomImplementation::invalidDataPolicy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `invalidDataPolicy`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QDomImplementation::InvalidDataPolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回无效数据策略，该策略规定了当`QDomDocument`中的工厂函数传递无效数据时应采取的措施。
+警告：此函数不重复使用。
 
 ### `bool QDomImplementation::isNull()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对象是由 `QDomDocument::implementation()` 创建的，则返回 `false`；否则返回 `true`。
 
 ### `[static] void QDomImplementation::setInvalidDataPolicy(QDomImplementation::InvalidDataPolicy policy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setInvalidDataPolicy`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+设置无效数据策略，规定当`QDomDocument`中的工厂函数传递无效数据时应采取的措施。
+`policy`为所有已存在且未来将被创造的`QDomDocument`实例设定。
+警告：此函数不重复使用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `policy`：类型为 `QDomImplementation::InvalidDataPolicy`。没有默认值，调用时必须提供。传入 `QDomImplementation::InvalidDataPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ void XML_snippet_main()
+ {
+ QDomDocument doc;
+ QDomImplementation impl;
+ // This will create the element, but the resulting XML document will
+ // be invalid, because '~' is not a valid character in a tag name.
+ impl.setInvalidDataPolicy(QDomImplementation::AcceptInvalidChars);
+ QDomElement elt1 = doc.createElement("foo~bar");
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // This will create an element with the tag name "foobar".
+ impl.setInvalidDataPolicy(QDomImplementation::DropInvalidChars);
+ QDomElement elt2 = doc.createElement("foo~bar");
+
+ // This will create a null element.
+ impl.setInvalidDataPolicy(QDomImplementation::ReturnNullNode);
+ QDomElement elt3 = doc.createElement("foo~bar");
+ }
+```
 
 ### `bool QDomImplementation::operator!=(const QDomImplementation &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QDomImplementation &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`和该DOM实现对象是由不同的QDomDocuments创建的，返回`true`;否则返回`false`。
 
 ### `QDomImplementation &QDomImplementation::operator=(const QDomImplementation &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDomImplementation &`。
-- 参数 `other`：类型为 `const QDomImplementation &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该DOM实现分配`other`。
 
 ### `bool QDomImplementation::operator==(const QDomImplementation &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDomImplementation` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QDomImplementation &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`和该DOM实现对象是从同一`QDomDocument`创建的，则返回`true`;否则返回`false`。
 
 ## 6. 深入实践与常见坑
 

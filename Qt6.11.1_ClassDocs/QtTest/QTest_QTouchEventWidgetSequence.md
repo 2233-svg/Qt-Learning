@@ -62,54 +62,31 @@ target_link_libraries(mytarget PRIVATE Qt6::Test)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QTest::QTouchEventWidgetSequence &QTouchEventWidgetSequence::move(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventWidgetSequence::move` 用于计算、查询或取得与“移动”相关的操作。调用时要先确认当前状态和 `touchId`、`pt`、`widget` 的有效范围；返回类型是 `QTest::QTouchEventWidgetSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventWidgetSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该序列中位置`pt`的触点`touchId`添加移动事件，并返回该`QTouchEventWidgetSequence`的引用。
+`pt`位置相对于`widget`被解释为相对于。如果`widget`是空指针，那么`pt`相对于实例化该`QTouchEventWidgetSequence`时所提供的控件。
+模拟用户移动`touchId`识别的手指。
 
 ### `QTest::QTouchEventWidgetSequence &QTouchEventWidgetSequence::press(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventWidgetSequence::press` 用于计算、查询或取得与“press”相关的操作。调用时要先确认当前状态和 `touchId`、`pt`、`widget` 的有效范围；返回类型是 `QTest::QTouchEventWidgetSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventWidgetSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该序列中添加`pt`位置的触点`touchId`的按压事件，并返回该`QTouchEventWidgetSequence`的引用。
+位置`pt`相对于`widget`解释为相对于。如果`widget`是空指针，那么`pt`相对于实例化该`QTouchEventWidgetSequence`时所提供的控件。
+模拟用户用`touchId`识别的手指按下触摸屏或触摸板。
 
 ### `QTest::QTouchEventWidgetSequence &QTouchEventWidgetSequence::release(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTest::QTouchEventWidgetSequence::release` 用于计算、查询或取得与“释放”相关的操作。调用时要先确认当前状态和 `touchId`、`pt`、`widget` 的有效范围；返回类型是 `QTest::QTouchEventWidgetSequence &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTest::QTouchEventWidgetSequence &`。
-- 参数 `touchId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在该序列中添加`pt`位置触点`touchId`的释放事件，并返回该`QTouchEventWidgetSequence`的引用。
+位置`pt`相对于`widget`被解释为相对于。如果`widget`是空指针，那么`pt`被解释为相对于实例化该`QTouchEventWidgetSequence`时所提供的控件。
+模拟用户抬起`touchId`识别的手指。
 
 ## 6. 深入实践与常见坑
 

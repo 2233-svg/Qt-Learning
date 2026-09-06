@@ -140,733 +140,438 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 55 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkReply::NetworkError`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 暴露的类型声明 `Network、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:NetworkError`。
-- 属性名：`QNetworkReply`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示请求处理过程中发现的所有可能错误条件。
+- `QNetworkReply::NoError`：`0`;无错误条件。
+注意：当HTTP协议返回重定向时，不会报告错误。你可以检查是否存在带有`QNetworkRequest::RedirectionTargetAttribute`属性的重定向。
+- `QNetworkReply::ConnectionRefusedError`：`1`;远程服务器拒绝连接（服务器不接受请求）
+- `QNetworkReply::RemoteHostClosedError`：`2`;远程服务器提前关闭连接，未收到和处理完整回复
+- `QNetworkReply::HostNotFoundError`：`3`;未找到远程主机名称（主机名无效）
+- `QNetworkReply::TimeoutError`：`4`;与远程服务器的连接超时
+- `QNetworkReply::OperationCanceledError`：`5`;该操作在完成前通过调用`abort()`或`close()`被取消。
+- `QNetworkReply::SslHandshakeFailedError`：`6`;SSL/TLS握手失败，加密信道无法建立。`sslErrors()`信号本应发出。
+- `QNetworkReply::TemporaryNetworkFailureError`：`7`;连接因网络断开而中断，但系统已开始漫游至另一个接入点。请求应重新提交，连接恢复后将立即处理。
+- `QNetworkReply::NetworkSessionFailedError`：`8`;连接因断开网络连接或未能启动网络而中断。
+- `QNetworkReply::BackgroundRequestNotAllowedError`：`9`;由于平台政策，目前不允许背景调查请求。
+- `QNetworkReply::TooManyRedirectsError`：`10`;在执行重定向时，达到了最大限制。该限制默认设置为50，或由QNetworkRequest：：setMaxRedirectsAllowed()设定。（该值于5.6版本引入。）
+- `QNetworkReply::InsecureRedirectError`：`11`;在执行重定向时，网络访问API检测到从加密协议（https）重定向到未加密协议（http）。（该值于5.6版本引入。）
+- `QNetworkReply::ProxyConnectionRefusedError`：`101`;代理服务器的连接被拒绝（代理服务器不接受请求）
+- `QNetworkReply::ProxyConnectionClosedError`：`102`;代理服务器提前关闭连接，未收到并处理完整回复
+- `QNetworkReply::ProxyNotFoundError`：`103`;未找到代理主机名（代理主机名无效）
+- `QNetworkReply::ProxyTimeoutError`：`104`;与代理的连接超时或代理未及时回复请求
+- `QNetworkReply::ProxyAuthenticationRequiredError`：`105`;代理方要求认证以响应请求，但未接受任何提供的凭证（如有）
+- `QNetworkReply::ContentAccessDenied`：`201`;对远程内容的访问被拒绝（类似于HTTP错误403）
+- `QNetworkReply::ContentOperationNotPermittedError`：`202`;不允许对远程内容进行操作
+- `QNetworkReply::ContentNotFoundError`：`203`;服务器端找不到远程内容（类似于HTTP错误404）
+- `QNetworkReply::AuthenticationRequiredError`：`204`;远程服务器需要认证才能提供内容，但提供的凭证未被接受（如果有的话）
+- `QNetworkReply::ContentReSendError`：`205`;请求需要再次发送，但失败，例如因为上传数据无法第二次读取。
+- `QNetworkReply::ContentConflictError`：`206`;由于与当前资源状态冲突，请求无法完成。
+- `QNetworkReply::ContentGoneError`：`207`;请求的资源不再在服务器上可用。
+- `QNetworkReply::InternalServerError`：`401`;服务器遇到了意外状况，导致无法满足请求。
+- `QNetworkReply::OperationNotImplementedError`：`402`;服务器不支持满足请求所需的功能。
+- `QNetworkReply::ServiceUnavailableError`：`403`;此时服务器无法处理该请求。
+- `QNetworkReply::ProtocolUnknownError`：`301`;网络访问API无法接受请求，因为协议尚未公开
+- `QNetworkReply::ProtocolInvalidOperationError`：`302`;请求的操作对该协议无效
+- `QNetworkReply::UnknownNetworkError`：`99`;检测到未知的网络相关错误
+- `QNetworkReply::UnknownProxyError`：`199`;检测到一个未知的代理相关错误
+- `QNetworkReply::UnknownContentError`：`299`;检测到与远程内容相关的未知错误
+- `QNetworkReply::ProtocolFailure`：`399`;检测到协议出现故障（解析错误、无效或意外响应等）
+- `QNetworkReply::UnknownServerError`：`499`;检测到与服务器响应相关的未知错误
 
 ### `QNetworkReply::RawHeaderPair`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的配置属性。初始化或状态切换时通过 `setRawHeaderPair(...)` 设置，之后用 `RawHeaderPair()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:RawHeaderPair`。
-- 属性名：`QNetworkReply`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+RawHeaderPair 是一个标准化:p air<`QByteArray`，`QByteArray`>第一个`QByteArray`是标题名，第二个是头部。
 
 ### `[explicit protected] QNetworkReply::QNetworkReply(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建带有父`parent`的QNetworkReply对象。
+你不能直接实例化 QNetworkReply 对象。用 `QNetworkAccessManager` 函数来实现这一点。
 
 ### `[virtual noexcept] QNetworkReply::~QNetworkReply()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除该回复并释放与之相关的资源。如果仍有任何网络连接，它们将被关闭。
 
 ### `[pure virtual slot] void QNetworkReply::abort()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `abort`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+立即中止操作并关闭所有仍然开放的网络连接。仍在上传的也被中止。
+`finished()`信号也会被发射。
 
 ### `QVariant QNetworkReply::attribute(QNetworkRequest::Attribute code) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::attribute` 用于计算、查询或取得与“attribute”相关的操作。调用时要先确认当前状态和 `code` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `code`：类型为 `QNetworkRequest::Attribute`。没有默认值，调用时必须提供。传入 `QNetworkRequest::Attribute` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与代码`code`关联的属性。如果该属性未被设置，则返回无效`QVariant`（类型`QMetaType::UnknownType`）。
+你可以预期`QNetworkRequest::Attribute`中列出的默认值会应用到该函数返回的值上。
 
 ### `[override virtual] void QNetworkReply::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QIODevice::close()`。
+关闭该设备进行读取。未读取数据会被丢弃，但网络资源直到完成才会丢弃。特别是，如果上传正在进行中，上传会一直进行直到完成。
+当所有操作结束且网络资源被释放时，`finished()`信号才会发出。
 
 ### `[signal] void QNetworkReply::downloadProgress(qint64 bytesReceived, qint64 bytesTotal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `downloadProgress`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bytesReceived`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bytesTotal`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号用于表示网络请求中下载部分的进展（如果有的话）。如果该请求没有下载，则该信号会发出一次，且`bytesReceived`和`bytesTotal`的值均为0。
+`bytesReceived`参数表示接收的字节数，`bytesTotal`表示预计下载的字节总数。如果未知下载字节数，`bytesTotal`为-1。
+当`bytesReceived`等于`bytesTotal`时，下载结束。此时，`bytesTotal`不会是-1。
+注意，`bytesReceived`和`bytesTotal`的值可能与`size()`、通过`read()`或`readAll()`获得的字节总数或头部（ContentLengthHeader）的值不同。原因可能是协议开销，或者下载过程中数据被压缩。
 
 ### `[signal] void QNetworkReply::encrypted()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `encrypted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当SSL/TLS会话成功完成初始握手时，该信号会发出。此时，尚未传输任何用户数据。该信号可用于对证书链进行额外检查，例如通知用户网站证书发生变化。如果回复不符合预期标准，应通过连接该信号的槽函数调用`QNetworkReply::abort()`来终止。可用的SSL配置可以通过`QNetworkReply::sslConfiguration()`方法进行检查。
+内部，`QNetworkAccessManager` 可能开启多个连接，以便服务器并行处理请求。这些连接可以被重复使用，这意味着加密()信号不会被发出。这意味着你只有在`QNetworkAccessManager`生命周期内第一次连接到某个站点时才有保证接收到该信号。
 
 ### `QNetworkReply::NetworkError QNetworkReply::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkReply::NetworkError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkReply::NetworkError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回处理请求时发现的错误。如果未发现错误，返回`NoError`。
 
 ### `[signal] void QNetworkReply::errorOccurred(QNetworkReply::NetworkError code)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `errorOccurred`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `code`：类型为 `QNetworkReply::NetworkError`。没有默认值，调用时必须提供。传入 `QNetworkReply::NetworkError` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当回复检测到处理错误时，会发出该信号。随后可能会发出`finished()`信号，表示连接已结束。
+`code`参数包含检测到的错误代码。调用`errorString()`以获取错误条件的文本表示。
+注意：不要删除连接到该信号的槽函数中的物体。请使用`deleteLater()`。
 
 ### `[signal] void QNetworkReply::finished()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `finished`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在回复处理完成后发出。该信号发出后，回复的数据或元数据将不再更新。
+除非`close()`或`abort()`被调用，否则回复仍可读取，因此可以通过调用`read()`或`readAll()`来检索数据。特别是，如果由于`readyRead()`没有调用`read()`，调用`readAll()`会在一个`QByteArray`中检索全部内容。
+该信号与`QNetworkAccessManager::finished()`同步发射，该信号的响应参数为该对象。
+注意：不要删除连接到该信号槽中的物体。使用`deleteLater()`。
+你也可以用`isFinished()`在收到 finished() 信号之前就检查`QNetworkReply`是否已经完成。
 
 ### `bool QNetworkReply::hasRawHeader(QAnyStringView headerName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasRawHeader`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `headerName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果原始的名称头 `headerName` 是由远程服务器发送的，返回`true`。
+注意：在 6.7 之前的 Qt 版本中，该功能仅取`QByteArray`。
 
 ### `QVariant QNetworkReply::header(QNetworkRequest::KnownHeaders header) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::header` 用于计算、查询或取得与“header”相关的操作。调用时要先确认当前状态和 `header` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `header`：类型为 `QNetworkRequest::KnownHeaders`。没有默认值，调用时必须提供。传入 `QNetworkRequest::KnownHeaders` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该头部是由远程服务器发送的，返回已知头部的值`header`。如果未发送头部，返回无效`QVariant`。
 
 ### `[since 6.8] QHttpHeaders QNetworkReply::headers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::headers` 用于计算、查询或取得与“headers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHttpHeaders`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHttpHeaders`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由远程服务器发送的头部。
 
 ### `[virtual slot] void QNetworkReply::ignoreSslErrors()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::ignoreSslErrors` 用于执行与“ignore、Ssl、Errors”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+如果调用该函数，与网络连接相关的SSL错误将被忽略，包括证书验证错误。
+警告：请务必让用户检查`sslErrors()`信号报告的错误，只有在用户确认继续后才调用此方法。如果出现意外错误，应中止回复。未检查实际错误就调用此方法，很可能会对你的应用构成安全风险。请格外小心使用！
+该功能可从连接`sslErrors()`信号的槽函数调用，以指示发现的错误。
+注意：如果`QNetworkAccessManager`启用了HTTP严格传输安全，该功能不会产生影响。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数：无。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+networkReply， qOverload<>（&QNetworkReply：：ignoreSslErrors））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+networkReply， [receiver = networkReply]() { receiver->ignoreSslErrors(); }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `void QNetworkReply::ignoreSslErrors(const QList<QSslError> &errors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::ignoreSslErrors` 用于执行与“ignore、Ssl、Errors”相关的操作。调用时要先确认当前状态和 `errors` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+如果调用该函数，`errors`中给出的SSL错误将被忽略。
+注意：由于大多数SSL错误与证书相关，因此大多数SSL错误必须设置与该SSL错误相关的预期证书。例如，如果你想向使用自签名证书的服务器发出请求，请考虑以下摘要：
+多次调用该函数会替换之前调用中传递的错误列表。你可以通过调用该函数时用空列表清除你想忽略的错误列表。
+注意：如果`QNetworkAccessManager`启用了HTTP严格传输安全，该功能不会产生影响。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `errors`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QList<QSslCertificate> cert = QSslCertificate::fromPath("server-certificate.pem"_L1);
+ QSslError error(QSslError::SelfSignedCertificate, cert.at(0));
+ QList<QSslError> expectedSslErrors;
+ expectedSslErrors.append(error);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QNetworkReply *reply = manager.get(QNetworkRequest(QUrl("https://server.tld/index.html")));
+ reply->ignoreSslErrors(expectedSslErrors);
+ // here connect signals etc.
+```
 
 ### `[virtual protected] void QNetworkReply::ignoreSslErrorsImplementation(const QList<QSslError> &errors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::ignoreSslErrorsImplementation` 用于执行与“ignore、Ssl、Errors、Implementation”相关的操作。调用时要先确认当前状态和 `errors` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `errors`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该虚拟方法旨在实现覆盖`ignoreSslErrors()`行为。`ignoreSslErrors()` 是该方法的公开包装。`errors`包含用户希望忽略的错误。
 
 ### `bool QNetworkReply::isFinished() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFinished`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回复结束或中止后返回`true`。
 
 ### `bool QNetworkReply::isRunning() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRunning`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退货`true`是在请求还在处理中，回复既未完成也未中止时进行。
 
 ### `[override virtual] bool QNetworkReply::isSequential() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSequential`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::isSequential()` const.
 
 ### `QNetworkAccessManager *QNetworkReply::manager() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::manager` 用于计算、查询或取得与“manager”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkAccessManager *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkAccessManager *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于创建该`QNetworkReply`对象的`QNetworkAccessManager`。最初，它也是父对象。
 
 ### `[signal] void QNetworkReply::metaDataChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `metaDataChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当该回复中的元数据发生变化时，都会发出该信号。元数据是指任何非内容（数据）本身的信息，包括网络头部。在大多数情况下，元数据在收到第一个字节时已完全已知。然而，在数据处理过程中，也可以接收头部或其他元数据的更新。
 
 ### `QNetworkAccessManager::Operation QNetworkReply::operation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::operation` 用于计算、查询或取得与“operation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkAccessManager::Operation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkAccessManager::Operation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回了本回复中发布的操作。
 
 ### `[signal] void QNetworkReply::preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator *authenticator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `preSharedKeyAuthenticationRequired`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `authenticator`：类型为 `QSslPreSharedKeyAuthenticator *`。没有默认值，调用时必须提供。传入 `QSslPreSharedKeyAuthenticator *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果SSL/TLS握手协商PSK密码套件，就会发出该信号，因此需要PSK认证。
+使用PSK时，客户端必须向服务器发送有效的身份和有效的预共享密钥，以便SSL握手继续。应用程序可以通过根据需求填写传递的`authenticator`对象，在连接到该信号的槽函数中提供这些信息。
+注意：忽视该信号或未提供所需凭证，将导致握手失败，连接将被终止。
+注意：`authenticator`对象归回复所有，应用程序不得删除。
 
 ### `QByteArray QNetworkReply::rawHeader(QAnyStringView headerName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::rawHeader` 用于计算、查询或取得与“raw、Header”相关的操作。调用时要先确认当前状态和 `headerName` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `headerName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由远程服务器发送的头部`headerName`原始内容。如果没有此类头部，返回一个空字节数组，可能与空头部无法区分。使用`hasRawHeader()`验证服务器是否发送了该头部字段。
+注意：在 6.7 之前的 Qt 版本中，该功能仅取`QByteArray`。
 
 ### `QList<QByteArray> QNetworkReply::rawHeaderList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::rawHeaderList` 用于计算、查询或取得与“raw、Header、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由远程服务器发送的头部字段列表，按发送顺序排列。重复的头部会被跳过。
 
 ### `const QList<QNetworkReply::RawHeaderPair> &QNetworkReply::rawHeaderPairs() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::rawHeaderPairs` 用于计算、查询或取得与“raw、Header、Pairs”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QList<QNetworkReply::RawHeaderPair> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QList<QNetworkReply::RawHeaderPair> &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回原始头部对列表。
 
 ### `qint64 QNetworkReply::readBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的核心操作 `readBufferSize`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回读取缓冲区的大小，单位为字节。
 
 ### `[signal] void QNetworkReply::redirectAllowed()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `redirectAllowed`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当处理`redirected()`信号的客户端代码验证了新 URL 后，会发出该信号以允许重定向继续。该协议适用于重定向策略设置为 `QNetworkRequest::UserVerifiedRedirectPolicy` 的网络请求。
 
 ### `[signal] void QNetworkReply::redirected(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `redirected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果请求中未设置`QNetworkRequest::ManualRedirectPolicy`，且服务器以3xx状态（具体为301、302、303、305、307或308状态码）响应，且位置头部有有效URL，表示HTTP重定向，则会发出该信号。`url`参数包含服务器在位置头部返回的新重定向URL。
 
 ### `QNetworkRequest QNetworkReply::request() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的核心操作 `request`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QNetworkRequest`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回为本回复发布的请求。特别注意，请求的URL可能与回复不同。
 
 ### `[signal, since 6.3] void QNetworkReply::requestSent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的核心操作 `requestSent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在请求发送时会发出1次或多次。对于自定义进度或超时处理非常有用。
 
 ### `[protected] void QNetworkReply::setAttribute(QNetworkRequest::Attribute code, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAttribute`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `code`：类型为 `QNetworkRequest::Attribute`。没有默认值，调用时必须提供。传入 `QNetworkRequest::Attribute` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将属性 `code` 设置为值为 `value`。如果之前设置过`code`，则该属性将被覆盖。如果 `value` 是无效的`QVariant`，则该属性将被取消设置。
 
 ### `[protected] void QNetworkReply::setError(QNetworkReply::NetworkError errorCode, const QString &errorString)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setError`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `errorCode`：类型为 `QNetworkReply::NetworkError`。没有默认值，调用时必须提供。传入 `QNetworkReply::NetworkError` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `errorString`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将错误条件设置为`errorCode`。可读消息被设置为`errorString`。
+调用 setError() 不会发出 `errorOccurred`（`QNetworkReply::NetworkError`） 信号。
 
 ### `[protected] void QNetworkReply::setFinished(bool finished)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFinished`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `finished`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把回复设置为`finished`。
+设置完后，回复的数据不得发生变化。
 
 ### `[protected] void QNetworkReply::setHeader(QNetworkRequest::KnownHeaders header, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeader`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `header`：类型为 `QNetworkRequest::KnownHeaders`。没有默认值，调用时必须提供。传入 `QNetworkRequest::KnownHeaders` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将已知的头部`header`设置为值`value`。对应的头部原始形式也会被设置。
 
 ### `[protected, since 6.8] void QNetworkReply::setHeaders(const QHttpHeaders &newHeaders)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newHeaders`：类型为 `const QHttpHeaders &`。没有默认值，调用时必须提供。传入 `const QHttpHeaders &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newHeaders`设为该网络回复中的头部，覆盖之前设置的任何头部。
+如果某些头对应已知头，它们会被解析，并设置相应的解析形式。
 
 ### `[protected, since 6.8] void QNetworkReply::setHeaders(QHttpHeaders &&newHeaders)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newHeaders`：类型为 `QHttpHeaders &&`。没有默认值，调用时必须提供。传入 `QHttpHeaders &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newHeaders`设为该网络回复中的头部，覆盖之前设置的任何头部。
+如果某些头对应已知头，它们会被解析，并设置相应的解析形式。
 
 ### `[protected] void QNetworkReply::setOperation(QNetworkAccessManager::Operation operation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOperation`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `operation`：类型为 `QNetworkAccessManager::Operation`。没有默认值，调用时必须提供。传入 `QNetworkAccessManager::Operation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象的相关操作设置为`operation`。该值将由`operation()`返回。
+注意：该操作应在创建该对象时设置，且不得再次更改。
 
 ### `[protected] void QNetworkReply::setRawHeader(const QByteArray &headerName, const QByteArray &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRawHeader`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `headerName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `value`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将原始首部`headerName`设置为值为`value`。如果`headerName`之前被设置，则会被覆盖。多个同名的HTTP头在功能上等价于一个将值串接并用逗号分隔的单一头部。
+如果`headerName`匹配已知头部，`value`值将被解析，并设置相应的解析形式。
 
 ### `[virtual] void QNetworkReply::setReadBufferSize(qint64 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadBufferSize`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将读取缓冲区的大小设置为`size`字节。读取缓冲区是存放正在从网络下载的数据的缓冲区，在读取`QIODevice::read()`之前。将缓冲区大小设置为0，缓冲区大小将无限大。
+当缓冲区满（即`bytesAvailable()`返回`size`或更多）时，`QNetworkReply`会尝试停止从网络读取，从而导致下载速度相应降低。如果缓冲区大小不受限制，`QNetworkReply`会尽快从网络下载。
+与`QAbstractSocket::setReadBufferSize()`不同，`QNetworkReply`无法保证读取缓冲区大小的精度。也就是说，`bytesAvailable()`可以返回超过`size`。
 
 ### `[protected] void QNetworkReply::setRequest(const QNetworkRequest &request)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRequest`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `request`：类型为 `const QNetworkRequest &`。没有默认值，调用时必须提供。请求描述对象，通常包含 URL、请求头和传输选项；它不等于响应或实际连接。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象的相关请求设置为`request`。该值将由`request()`返回。
+注意：请求应在创建该对象时设置，且不得再次更改。
 
 ### `void QNetworkReply::setSslConfiguration(const QSslConfiguration &config)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSslConfiguration`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `config`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将与该请求关联的网络连接设置为`config`的SSL配置（如可能）。
 
 ### `[virtual protected] void QNetworkReply::setSslConfigurationImplementation(const QSslConfiguration &configuration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSslConfigurationImplementation`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `configuration`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供这种虚拟方法是为了实现覆盖`setSslConfiguration()`行为。`setSslConfiguration()` 是该方法的公包。如果你覆盖了该方法，请使用 `configuration` 来设置 SSL 配置。
 
 ### `[protected] void QNetworkReply::setUrl(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUrl`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将正在处理的URL设置为`url`。通常，URL与发布请求的URL匹配，但由于各种原因，它可能不同（例如，文件路径被设置为绝对或规范）。
 
 ### `[protected, since 6.8] void QNetworkReply::setWellKnownHeader(QHttpHeaders::WellKnownHeader name, QByteArrayView value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWellKnownHeader`。调用它会改变 `QNetworkReply` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `QHttpHeaders::WellKnownHeader`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将头部`name`设置为值为`value`。如果`name`之前被设置过，则会被覆盖。
 
 ### `[signal, since 6.3] void QNetworkReply::socketStartedConnecting()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::socketStartedConnecting` 用于执行与“socket、Started、Connecting”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在套接字连接时发出0次或更多次，然后才发送请求。对于自定义进度或超时处理非常有用。
 
 ### `QSslConfiguration QNetworkReply::sslConfiguration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::sslConfiguration` 用于计算、查询或取得与“ssl、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslConfiguration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslConfiguration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果使用SSL，返回与该回复相关的SSL配置和状态。该文件将包含远程服务器的证书、通往证书授权中心的证书链以及正在使用的加密密码。
+对等方的证书及其证书链在`sslErrors()`发出时（如果已经发出）就会被知道。
 
 ### `[virtual protected] void QNetworkReply::sslConfigurationImplementation(QSslConfiguration &configuration) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::sslConfigurationImplementation` 用于执行与“ssl、Configuration、Implementation”相关的操作。调用时要先确认当前状态和 `configuration` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `configuration`：类型为 `QSslConfiguration &`。没有默认值，调用时必须提供。传入 `QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该虚拟方法旨在实现覆盖`sslConfiguration()`行为。`sslConfiguration()` 是该方法的公共包装器。配置将在 `configuration` 返回。
 
 ### `[signal] void QNetworkReply::sslErrors(const QList<QSslError> &errors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `sslErrors`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `errors`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果SSL/TLS会话在设置过程中遇到错误，包括证书验证错误，该信号会发出。`errors`参数包含错误列表。
+为了表明错误不致命且连接应继续，应从连接该信号的槽函数调用`ignoreSslErrors()`函数。如果未调用，SSL会话将在交换任何数据（包括URL）之前被撕毁。
+该信号可用于向用户显示错误信息，提示安全可能受到威胁，并显示SSL设置（参见获取`sslConfiguration()`）。如果用户在分析远程证书后决定继续，槽函数应调用`ignoreSslErrors()`。
 
 ### `[signal] void QNetworkReply::uploadProgress(qint64 bytesSent, qint64 bytesTotal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 发出的通知信号 `uploadProgress`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bytesSent`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bytesTotal`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号用于表示网络请求中上传部分的进展（如果有的话）。如果该请求没有上传，则该信号不会发出。
+`bytesSent`参数表示上传的字节数，`bytesTotal`表示要上传的字节总数。如果无法确定上传字节数，`bytesTotal`为-1。
+上传结束时`bytesSent`等于`bytesTotal`。此时，`bytesTotal`不会是-1。
 
 ### `QUrl QNetworkReply::url() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkReply::url` 用于计算、查询或取得与“url”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回已下载或上传内容的 URL。注意，该 URL 可能与原始请求不同。如果请求中启用了重定向功能，该函数返回网络 API 正在访问的当前 URL，即请求重定向到的资源的 URL。
 
 ### `[override virtual protected] qint64 QNetworkReply::writeData(const char *data, qint64 len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的核心操作 `writeData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现 `QIODevice` 的写入入口，但普通 `QNetworkReply` 是由网络后端提供数据的只读顺序设备，应用不应向回复对象写数据。要发送请求正文，应把数据传给 `QNetworkAccessManager` 的 `post()`、`put()` 或 `sendCustomRequest()`。
 
 ### `RawHeaderPair`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkReply` 的 `Raw、Header、Pair` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+RawHeaderPair 是一个标准化:p air<`QByteArray`，`QByteArray`>第一个`QByteArray`是标题名，第二个是头部。
 
 ## 6. 深入实践与常见坑
 

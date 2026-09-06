@@ -74,224 +74,176 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QRhiResourceUpdateBatch::copyTexture(QRhiTexture *dst, QRhiTexture *src, const QRhiTextureCopyDescription &desc = QRhiTextureCopyDescription())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::copyTexture` 用于执行与“copy、Texture”相关的操作。调用时要先确认当前状态和 `dst`、`src`、`desc` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dst`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `src`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `desc`：类型为 `const QRhiTextureCopyDescription &`。默认值为 `QRhiTextureCopyDescription()`。传入 `const QRhiTextureCopyDescription &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+按照`desc`描述，将纹理间的纹理复制操作从`src`放入`dst`。
+注意：源纹理`src`必须用`QRhiTexture::UsedAsTransferSource`创建。
+注意：纹理的格式必须一致。大多数图形API数据是按原样复制的，没有任何格式转换。如果`dst`和`src`使用不同格式创建，可能会出现未说明的问题。
 
 ### `void QRhiResourceUpdateBatch::generateMips(QRhiTexture *tex)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::generateMips` 用于执行与“generate、Mips”相关的操作。调用时要先确认当前状态和 `tex` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为指定的纹理`tex`排入一个 mipmap 生成操作。
+支持2D和立方体纹理。
+注意：纹理必须用`QRhiTexture::MipMapped`和`QRhiTexture::UsedWithGenerateMips`来制作。
+警告：`QRhi`无法保证所有支持的纹理格式都能生成mipmap。例如，`QRhiTexture::RGBA32F`在OpenGL ES 3.0和iOS上的Metal中不是`filterable`格式，因此mipmap生成请求可能会失败。RGBA8和RGBA16F通常可过滤，因此建议在需要生成mipmap时使用这些格式。
 
 ### `bool QRhiResourceUpdateBatch::hasOptimalCapacity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasOptimalCapacity`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回为真，直到该批次中排队的缓冲区和纹理操作数量低于合理限制。
+当该批次添加的缓冲区和/或纹理操作数量达到或即将达到某个上限时，返回值为假。批处理完后也完全正常，但可能需要分配额外内存。因此，如果渲染器在准备帧时会在单一批中收集大量缓冲区和纹理更新，可能需要考虑提交批次并在该函数返回 false 时重新开始新批次。
 
 ### `void QRhiResourceUpdateBatch::merge(QRhiResourceUpdateBatch *other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::merge` 用于执行与“merge”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+将`other`批次中所有排队操作复制到该批次中。
+注意：合并操作后`other`可能不再包含有效数据，且不得提交，但仍需通过调用`release()`释放数据。
+这提供了方便的模式，即在初始化步骤中已知的资源更新被收集成一个批次，然后在开始首次渲染时合并到另一个批次中：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `other`：类型为 `QRhiResourceUpdateBatch *`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
+```cpp
+ void init()
+ {
+     initialUpdates = rhi->nextResourceUpdateBatch();
+     initialUpdates->uploadStaticBuffer(vbuf, vertexData);
+     initialUpdates->uploadStaticBuffer(ibuf, indexData);
+     // ...
+ }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void render()
+ {
+     QRhiResourceUpdateBatch *resUpdates = rhi->nextResourceUpdateBatch();
+     if (initialUpdates) {
+         resUpdates->merge(initialUpdates);
+         initialUpdates->release();
+         initialUpdates = nullptr;
+     }
+     // resUpdates->updateDynamicBuffer(...);
+     cb->beginPass(rt, clearCol, clearDs, resUpdates);
+ }
+```
 
 ### `void QRhiResourceUpdateBatch::readBackBuffer(QRhiBuffer *buf, quint32 offset, quint32 size, QRhiReadbackResult *result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiResourceUpdateBatch` 的核心操作 `readBackBuffer`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `result`：类型为 `QRhiReadbackResult *`。没有默认值，调用时必须提供。传入 `QRhiReadbackResult *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+排队读取`QRhiBuffer` `buf`的某个区域。该区域的大小由`size`字节表示，`offset`是开始读取的偏移量（字节数）。
+回读是异步的。`result`包含一个回调，操作完成后调用。数据以`QRhiReadbackResult::data`形式提供。成功完成时，该`QByteArray`大小将为`size`。失败时，`QByteArray`将为空。
+注意：只有当`QRhi::ReadBackNonUniformBuffer`功能被报告为支持时，才支持读取使用量与`QRhiBuffer::UniformBuffer`不同的缓冲区。
+注意：当满足以下条件之一时，异步回读保证完成：`finish()`已调用;或者至少`N`帧已被`submitted`，包括发出回读操作的帧，并且已开始新帧录制，其中`N`是`QRhi::MaxAsyncReadbackFrames`返回的资源限制值。
 
 ### `void QRhiResourceUpdateBatch::readBackTexture(const QRhiReadbackDescription &rb, QRhiReadbackResult *result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiResourceUpdateBatch` 的核心操作 `readBackTexture`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+按照`rb`描述，将纹理复制到主机的复制操作排队。
+通常`rb`会指定一个`QRhiTexture`作为源。然而，当当前帧中的交换链是用`QRhiSwapChain::UsedAsTransferSource`创建的，它也可以是读取的来源。为此，`rb`中纹理设置为空。
+与其他操作不同，这里的结果需要由应用程序处理。因此，`result`不仅提供数据，还提供回调功能，因为批处理的操作本质上是异步的：
+注意：纹理必须用`QRhiTexture::UsedAsTransferSource`制作。
+注意：多采样纹理无法读取。
+注意：读回返回原始字节数据，以便应用程序以任何他们认为合适的方式解释。注意渲染代码的混合设置：如果混合设置为依赖预乘法 alpha，则读回结果也必须被解释为预乘法。
+注意：在解读所得原始数据时，请注意回读采用字节排序格式。因此，`RGBA8`纹理映射到字节排序的`QImage`格式，如`QImage::Format_RGBA8888`。
+注意：当满足以下条件之一时，异步回读保证完成：`finish()` 已被调用;或者至少已`N`帧被 `submitted`，包括发出回读操作的帧，并且已开始新帧记录，其中 `N` 是返回的资源限制值`QRhi::MaxAsyncReadbackFrames`。
+单次读回操作一次复制一个图层（立方体映射、面或三维切片或纹理数组元素）的一级 mip。层级和层由 `rb` 中的相应字段指定。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `rb`：类型为 `const QRhiReadbackDescription &`。没有默认值，调用时必须提供。传入 `const QRhiReadbackDescription &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `result`：类型为 `QRhiReadbackResult *`。没有默认值，调用时必须提供。传入 `QRhiReadbackResult *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ rhi->beginFrame(swapchain);
+ cb->beginPass(swapchain->currentFrameRenderTarget(), colorClear, dsClear);
+ // ...
+ QRhiReadbackResult *rbResult = new QRhiReadbackResult;
+ rbResult->completed = [rbResult] {
+     {
+         const QImage::Format fmt = QImage::Format_RGBA8888_Premultiplied; // fits QRhiTexture::RGBA8
+         const uchar *p = reinterpret_cast<const uchar *>(rbResult->data.constData());
+         QImage image(p, rbResult->pixelSize.width(), rbResult->pixelSize.height(), fmt);
+         image.save("result.png");
+     }
+     delete rbResult;
+ };
+ QRhiResourceUpdateBatch *u = nextResourceUpdateBatch();
+ QRhiReadbackDescription rb; // no texture -> uses the current backbuffer of sc
+ u->readBackTexture(rb, rbResult);
+ cb->endPass(u);
+ rhi->endFrame(swapchain);
+```
 
 ### `void QRhiResourceUpdateBatch::release()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::release` 用于执行与“释放”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将批次返回池。只有当批次未传递给`QRhiCommandBuffer::beginPass()`、`QRhiCommandBuffer::endPass()`或`QRhiCommandBuffer::resourceUpdate()`时，才应使用，因为这些实例隐式调用了destroy()。
+注意：`QRhiResourceUpdateBatch`实例绝不能被应用程序 `deleted`。
 
 ### `void QRhiResourceUpdateBatch::updateDynamicBuffer(QRhiBuffer *buf, quint32 offset, quint32 size, const void *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::updateDynamicBuffer` 用于执行与“更新、Dynamic、Buffer”相关的操作。调用时要先确认当前状态和 `buf`、`offset`、`size`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Enqueue 更新了类型为 `QRhiBuffer::Dynamic` 的创建的`QRhiBuffer` `buf`区域。
+区域指定为`offset`和`size`。实际写入的字节由`data`指定，且）至少有`size`字节可用。
+`data`会被复制，一旦该函数恢复，就可以安全地销毁或更改。
+注意：如果涉及主机写入，通常如updateDynamicBuffer()，因为此类缓冲区在大多数后端中由主机可见内存支持，写入可能会在帧内累积。因此，第一遍读取被批处理到第二遍的区域时，可能会看到第二遍更新批处理中指定的更改。
+注意：`QRhi`透明地管理双重缓冲，以防止图形流水线停滞。使用`QRhi`和 `QRhiResourceUpdateBatch` 时，`QRhiBuffer`底下可能有多个原生缓冲对象的事实可以被安全忽略。
 
 ### `[since 6.10] void QRhiResourceUpdateBatch::updateDynamicBuffer(QRhiBuffer *buf, quint32 offset, QByteArray data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::updateDynamicBuffer` 用于执行与“更新、Dynamic、Buffer”相关的操作。调用时要先确认当前状态和 `buf`、`offset`、`data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `QByteArray`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+排队更新以类型为 `QRhiBuffer::Dynamic` 创建的`QRhiBuffer` `buf`区域。
+`data`被移入批处理中，而不是用这种重载复制。
 
 ### `void QRhiResourceUpdateBatch::uploadStaticBuffer(QRhiBuffer *buf, quint32 offset, quint32 size, const void *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uploadStaticBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Enqueue 更新以类型为 `QRhiBuffer::Immutable` 或 `QRhiBuffer::Static` 创建的`QRhiBuffer` `buf`区域。
+区域指定为`offset`和 `size`。实际写入的字节由`data`指定，且必须至少有`size`字节可用。
+`data`会被复制，一旦该函数恢复，就可以安全地销毁或更改。
 
 ### `[since 6.10] void QRhiResourceUpdateBatch::uploadStaticBuffer(QRhiBuffer *buf, QByteArray data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uploadStaticBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `QByteArray`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用类型`QRhiBuffer::Immutable`或`QRhiBuffer::Static`创建的整个`QRhiBuffer` `buf`的队列。
+`data`被移入批次，而不是用这种重载复制。
+`data`大小必须等于`buf`的大小。
 
 ### `void QRhiResourceUpdateBatch::uploadStaticBuffer(QRhiBuffer *buf, const void *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uploadStaticBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更新整个 `QRhiBuffer` `buf` 的队列类型为 `QRhiBuffer::Immutable` 或 `QRhiBuffer::Static`。
 
 ### `[since 6.10] void QRhiResourceUpdateBatch::uploadStaticBuffer(QRhiBuffer *buf, quint32 offset, QByteArray data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `uploadStaticBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buf`：类型为 `QRhiBuffer *`。没有默认值，调用时必须提供。传入 `QRhiBuffer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `QByteArray`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Enqueue 更新以类型为 `QRhiBuffer::Immutable` 或 `QRhiBuffer::Static` 创建的`QRhiBuffer` `buf`区域。
+`data`被移入批处理中，而不是用这种重载复制。
 
 ### `void QRhiResourceUpdateBatch::uploadTexture(QRhiTexture *tex, const QImage &image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::uploadTexture` 用于执行与“upload、Texture”相关的操作。调用时要先确认当前状态和 `tex`、`image` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `image`：类型为 `const QImage &`。没有默认值，调用时必须提供。传入 `const QImage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在纹理`tex`第0层的MIP级上传图像数据时，会排队。
+`tex`必须是未压缩格式。其格式还必须与`image`的 `QImage::format()`兼容。源数据以`image`形式提供。
 
 ### `void QRhiResourceUpdateBatch::uploadTexture(QRhiTexture *tex, const QRhiTextureUploadDescription &desc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResourceUpdateBatch::uploadTexture` 用于执行与“upload、Texture”相关的操作。调用时要先确认当前状态和 `tex`、`desc` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tex`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `desc`：类型为 `const QRhiTextureUploadDescription &`。没有默认值，调用时必须提供。传入 `const QRhiTextureUploadDescription &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+排队上传一个或多个 mip 级别的图像数据，分布在纹理`tex`的一层或多层。
+复制的细节（源码`QImage`或压缩纹理数据、区域、目标图层和关卡）在`desc`中描述。
 
 ## 6. 深入实践与常见坑
 

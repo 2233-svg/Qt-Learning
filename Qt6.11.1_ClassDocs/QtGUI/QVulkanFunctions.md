@@ -72,50 +72,28 @@ if (result != VK_SUCCESS) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QVulkanFunctions *QVulkanInstance::functions() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `functions` 属于 Vulkan 动态函数取得或调用过程。先保证 QVulkanInstance 有效、核心版本/扩展已启用，再区分实例级与设备级函数并检查 VkResult 或返回指针。
-
-**签名拆解：**
-
-- 返回值：`QVulkanFunctions *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应的`QVulkanFunctions`对象，该对象暴露核心 Vulkan 命令集，排除设备级功能，且保证跨平台功能。
+注意：归还的物品由`QVulkanInstance`拥有和管理。请勿销毁或更改。
+核心 Vulkan 1.0 API 中的函数将始终可用。对于更高版本的 Vulkan，如 1.1 和 1.2，`QVulkanFunctions` 对象也会尝试解析这些核心 API 函数，但如果运行时 Vulkan 实例实现不支持这些功能，调用任何不支持的函数会导致不确定的行为。此外，为了正确启用对 1.0 以上版本的支持，可能需要在 `create()` 前调用 `setApiVersion()` 来设置合适的实例 API 版本。要查询 Vulkan 实现的实例级版本，请调用 `supportedApiVersion()`。
 
 ### `VkResult QVulkanFunctions::vkEnumeratePhysicalDevices(VkInstance instance, uint32_t *count, VkPhysicalDevice *devices)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `vkEnumeratePhysicalDevices` 属于 Vulkan 动态函数取得或调用过程。先保证 QVulkanInstance 有效、核心版本/扩展已启用，再区分实例级与设备级函数并检查 VkResult 或返回指针。
-
-**签名拆解：**
-
-- 返回值：`VkResult`。
-- 参数 `instance`：类型为 `VkInstance`。没有默认值，调用时必须提供。传入 `VkInstance` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `uint32_t *`。没有默认值，调用时必须提供。传入 `uint32_t *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `devices`：类型为 `VkPhysicalDevice *`。没有默认值，调用时必须提供。传入 `VkPhysicalDevice *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举 Vulkan 实例可见的物理设备。先把 `devices` 设为 `nullptr` 取得数量，再按 `count` 分配数组并再次调用；返回值是 `VkResult`，第二次调用仍应处理设备数变化导致的 `VK_INCOMPLETE`。
 
 ### `PFN_vkVoidFunction QVulkanInstance::getInstanceProcAddr(const char *name)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** `getInstanceProcAddr` 属于 Vulkan 动态函数取得或调用过程。先保证 QVulkanInstance 有效、核心版本/扩展已启用，再区分实例级与设备级函数并检查 VkResult 或返回指针。
-
-**签名拆解：**
-
-- 返回值：`PFN_vkVoidFunction`。
-- 参数 `name`：类型为 `const char *`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的 `name` 解析 Vulkan 函数。
+对于核心，Vulkan命令更倾向于使用可从`functions()`和`deviceFunctions()`检索的函数包装器。
 
 ## 6. 深入实践与常见坑
 

@@ -84,198 +84,163 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QQmlApplicationEngine::QQmlApplicationEngine(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlApplicationEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的 `parent`创建一个新的 QQmlApplicationEngine。你之后需要调用 `load()` 才能加载 QML 文件。
 
 ### `QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlApplicationEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `filePath`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的 QQmlApplicationEngine，并在给定的 `filePath` 加载 QML 文件，该文件必须是本地文件或 qrc 路径。如果给出了相对路径，则该路径将被解释为相对于应用的工作目录。
+这是出于方便而提供的，类似于使用空构造函数后再调用加载。
 
 ### `QQmlApplicationEngine::QQmlApplicationEngine(const QUrl &url, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlApplicationEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的 QQmlApplicationEngine，并在给定的 `url` 加载 QML 文件。这是出于方便，类似于使用空构造函数后调用加载。
 
 ### `[explicit, since 6.5] QQmlApplicationEngine::QQmlApplicationEngine(QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlApplicationEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `uri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的 QQmlApplicationEngine，加载由 `uri` 和 `typeName` 指定的 QML 类型。这是方便提供，与使用空构造函数后调用 `loadFromModule` 相同。
 
 ### `[override virtual noexcept] QQmlApplicationEngine::~QQmlApplicationEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlApplicationEngine` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁`QQmlApplicationEngine`及其加载的所有QML对象。
 
 ### `[slot] void QQmlApplicationEngine::load(const QString &filePath)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `load`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+加载位于 `filePath` 的根 QML 文件。`filePath` 必须是指向本地文件的路径，或资源文件系统中文件的路径。如果 `filePath` 是相对路径，则视为相对于应用程序的工作目录。文件定义的对象树会立即实例化。
+如果发生错误，错误消息会与`qWarning`一起打印。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `filePath`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+qmlApplicationEngine， qOverload（&QQmlApplicationEngine：：load））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+qmlApplicationEngine， [receiver = qmlApplicationEngine]（const QString &filePath） { receiver->load（filePath）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[slot] void QQmlApplicationEngine::load(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `load`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+加载位于`url`的根QML文件。文件定义的对象树立即为本地文件URL创建。远程URL异步加载，监听`objectCreated`信号以确定对象树何时准备好。
+如果发生错误，`objectCreated`信号会以空指针作为参数发射，错误消息随`qWarning`打印。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+qmlApplicationEngine， qOverload（&QQmlApplicationEngine：：load））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+qmlApplicationEngine， [receiver = qmlApplicationEngine]（const QUrl &url） { receiver->load（url）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[slot] void QQmlApplicationEngine::loadData(const QByteArray &data, const QUrl &url = QUrl())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `loadData`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `url`：类型为 `const QUrl &`。默认值为 `QUrl()`。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+加载`data`中给出的QML。由`data`定义的对象树会立即实例化。
+如果指定了`url`，则该地址作为组件的基础URL。这会影响数据和错误消息中的相对路径。
+如果发生错误，错误消息会与`qWarning`一起打印。
 
 ### `[slot, since 6.5] void QQmlApplicationEngine::loadFromModule(QAnyStringView uri, QAnyStringView typeName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `loadFromModule`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+从`uri`指定的模块加载QML类型`typeName`。如果类型来源于位于远程URL的QML文件，则该类型将异步加载。监听`objectCreated`信号以确定对象树何时准备好。
+如果发生错误，`objectCreated`信号会以空指针作为参数发射，错误消息随`qWarning`打印。
+注意：`uri`识别的模块会在导入路径中被搜索，方式与在QML文件中进行`import uri`搜索相同。如果模块无法在该路径中定位，该函数将失败。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `uri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QQmlApplicationEngine engine;
+ engine.loadFromModule("QtQuick", "Rectangle");
+```
 
 ### `[signal] void QQmlApplicationEngine::objectCreated(QObject *object, const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlApplicationEngine` 发出的通知信号 `objectCreated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当对象完成加载时，该信号会发出。如果加载成功，`object`包含指向已加载对象的指针，否则指针为NULL。
+同时也提供了`object`所来自组件的`url`。
+注意：如果组件路径作为包含相对路径的 `QString` 提供，则`url`将包含文件的完全解析路径。
 
 ### `[signal, since 6.4] void QQmlApplicationEngine::objectCreationFailed(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlApplicationEngine::objectCreationFailed` 用于执行与“object、Creation、Failed”相关的操作。调用时要先确认当前状态和 `url` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该信号在加载结束时发出，因为发生了错误。
+未能加载的组件`url`作为参数提供。
+注意：如果组件路径作为包含相对路径的 `QString` 提供，`url` 将包含文件的完全解析路径。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
+```cpp
+ QGuiApplication app(argc, argv);
+ QQmlApplicationEngine engine;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ // exit on error
+ QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+     &app, []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
+ engine.load(QUrl());
+ return app.exec();
+```
 
 ### `QList<QObject *> QQmlApplicationEngine::rootObjects() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlApplicationEngine::rootObjects` 用于计算、查询或取得与“root、Objects”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QObject *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QObject *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`QQmlApplicationEngine`实例化的所有根对象列表。该列表只包含通过`load()`或便利构造器加载的对象。
+注意：在5.9之前的Qt版本中，该功能被标记为非 `const`。
 
 ### `[slot, since 6.0] void QQmlApplicationEngine::setExtraFileSelectors(const QStringList &extraFileSelectors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setExtraFileSelectors`。调用它会改变 `QQmlApplicationEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `extraFileSelectors`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置将 `extraFileSelectors`传递给用于将 URL 解析为本地文件的内部 `QQmlFileSelector`。`extraFileSelectors`在加载第一个 QML 文件时应用。之后设置 QML 文件则无效。
 
 ### `[slot] void QQmlApplicationEngine::setInitialProperties(const QVariantMap &initialProperties)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setInitialProperties`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+设置 QML 组件加载后初始化的`initialProperties`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `initialProperties`：类型为 `const QVariantMap &`。没有默认值，调用时必须提供。传入 `const QVariantMap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QQmlApplicationEngine engine;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ EventDatabase eventDatabase;
+ EventMonitor eventMonitor;
+
+ engine.setInitialProperties({
+     { "eventDatabase", QVariant::fromValue(&eventDatabase) },
+     { "eventMonitor", QVariant::fromValue(&eventMonitor) }
+ });
+```
 
 ## 6. 深入实践与常见坑
 

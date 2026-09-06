@@ -68,213 +68,130 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOptionToolButton::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionToolButton::Type`：`SO_ToolButton`;提供样式选项（本类别`SO_ToolButton`）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必太担心。
 
 ### `enum QStyleOptionToolButton::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionToolButton::Version`：`1`;1
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你使用`qstyleoption_cast()`，通常不需要检查。
 
 ### `enum QStyleOptionToolButton::ToolButtonFeatureflags QStyleOptionToolButton::ToolButtonFeatures`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 暴露的类型声明 `Tool、Button、Featureflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ToolButtonFeatureflags QStyleOptionToolButton::ToolButtonFeatures`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述工具按钮可能具备的各种功能。
+- `QStyleOptionToolButton::None`：`0x00`;一个普通工具按钮。
+- `QStyleOptionToolButton::Arrow`：`0x01`;工具按钮是一个箭头。
+- `QStyleOptionToolButton::Menu`：`0x04`;工具按钮带有菜单。
+- `QStyleOptionToolButton::PopupDelay`：`0x08`;菜单显示会有延迟。
+- `QStyleOptionToolButton::HasMenu`：`0x10`;按钮带有弹出菜单。
+- `QStyleOptionToolButton::MenuButtonPopup`：`Menu`;按钮应显示一个箭头，表示菜单存在。
+ToolButtonFeatures 类型是 QFlags 的 typedef<ToolButtonFeature>。它存储 ToolButtonFeature 值的 OR 组合。
 
 ### `QStyleOptionToolButton::QStyleOptionToolButton()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QStyleOptionToolButton，将成员变量初始化为默认值。
 
 ### `QStyleOptionToolButton::QStyleOptionToolButton(const QStyleOptionToolButton &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOptionToolButton &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`样式选项的副本。
 
 ### `Qt::ArrowType QStyleOptionToolButton::arrowType`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setArrowType(...)` 设置，之后用 `arrowType()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ArrowType QStyleOptionToolButton::arrowType`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持工具按钮箭头的方向。
+该值仅在`features`包含`Arrow`时使用。默认值为`Qt::DownArrow`。
 
 ### `QStyleOptionToolButton::ToolButtonFeatures QStyleOptionToolButton::features`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setFeatures(...)` 设置，之后用 `features()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ToolButtonFeatures QStyleOptionToolButton::features`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个变量包含工具按钮功能的或组合。
+默认值是`None`。
 
 ### `QFont QStyleOptionToolButton::font`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setFont(...)` 设置，之后用 `font()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:font`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量存储文本所使用的字体。
+该值仅在`toolButtonStyle`为`Qt::ToolButtonTextUnderIcon`、`Qt::ToolButtonTextBesideIcon`或`Qt::ToolButtonTextOnly`时使用。默认情况下，应用程序的默认字体被使用。
 
 ### `QIcon QStyleOptionToolButton::icon`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setIcon(...)` 设置，之后用 `icon()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:icon`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个变量保留了工具按钮的图标。
+默认值为空图标，即既无像素图也无文件名的图标。
 
 ### `QSize QStyleOptionToolButton::iconSize`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setIconSize(...)` 设置，之后用 `iconSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:iconSize`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持工具按钮图标的大小。
+默认值为`QSize`（-1， -1），即无效大小。
 
 ### `QPoint QStyleOptionToolButton::pos`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setPos(...)` 设置，之后用 `pos()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:pos`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持工具按钮的位置。
+默认值为空点，即 （0， 0）。
 
 ### `QString QStyleOptionToolButton::text`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setText(...)` 设置，之后用 `text()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:text`。
-- 属性名：`QStyleOptionToolButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存工具按钮的文本。
+该值仅在`toolButtonStyle`为`Qt::ToolButtonTextUnderIcon`、`Qt::ToolButtonTextBesideIcon`或`Qt::ToolButtonTextOnly`时使用。默认值为空字符串。
 
 ### `Qt::ToolButtonStyle QStyleOptionToolButton::toolButtonStyle`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的配置属性。初始化或状态切换时通过 `setToolButtonStyle(...)` 设置，之后用 `toolButtonStyle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ToolButtonStyle QStyleOptionToolButton::toolButtonStyle`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持一个`Qt::ToolButtonStyle`值，描述工具按钮的外观。
+默认数值为`Qt::ToolButtonIconOnly`。
 
 ### `enum ToolButtonFeature { None, Arrow, Menu, PopupDelay, HasMenu, MenuButtonPopup }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 暴露的类型声明 `Tool、Button、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述工具按钮可能具备的各种功能。
+- `QStyleOptionToolButton::None`：`0x00`;一个普通工具按钮。
+- `QStyleOptionToolButton::Arrow`：`0x01`;工具按钮是一个箭头。
+- `QStyleOptionToolButton::Menu`：`0x04`;工具按钮带有菜单。
+- `QStyleOptionToolButton::PopupDelay`：`0x08`;菜单显示会有延迟。
+- `QStyleOptionToolButton::HasMenu`：`0x10`;按钮带有弹出菜单。
+- `QStyleOptionToolButton::MenuButtonPopup`：`Menu`;按钮应显示一个箭头，表示菜单存在。
+ToolButtonFeatures 类型是 QFlags 的 typedef<ToolButtonFeature>。它存储 ToolButtonFeature 值的 OR 组合。
 
 ### `flags ToolButtonFeatures`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionToolButton` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述工具按钮可能具备的各种功能。
+- `QStyleOptionToolButton::None`：`0x00`;一个普通工具按钮。
+- `QStyleOptionToolButton::Arrow`：`0x01`;工具按钮是一个箭头。
+- `QStyleOptionToolButton::Menu`：`0x04`;工具按钮带有菜单。
+- `QStyleOptionToolButton::PopupDelay`：`0x08`;菜单显示会有延迟。
+- `QStyleOptionToolButton::HasMenu`：`0x10`;按钮带有弹出菜单。
+- `QStyleOptionToolButton::MenuButtonPopup`：`Menu`;按钮应显示一个箭头，表示菜单存在。
+ToolButtonFeatures 类型是 QFlags 的 typedef<ToolButtonFeature>。它存储 ToolButtonFeature 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

@@ -62,51 +62,29 @@ target_link_libraries(mytarget PRIVATE Qt6::CorePrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QAndroidService::QAndroidService(int &argc, char **argv)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidService` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `argc`：类型为 `int &`。没有默认值，调用时必须提供。传入 `int &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `argv`：类型为 `char **`。没有默认值，调用时必须提供。传入 `char **` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的安卓服务，将`argc`和`argv`作为参数传递。
 
 ### `QAndroidService::QAndroidService(int &argc, char **argv, const std::function<QAndroidBinder *(const QAndroidIntent &)> &binder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAndroidService` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `argc`：类型为 `int &`。没有默认值，调用时必须提供。传入 `int &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `argv`：类型为 `char **`。没有默认值，调用时必须提供。传入 `char **` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `binder`：类型为 `const std::function<QAndroidBinder *(const QAndroidIntent &)> &`。没有默认值，调用时必须提供。传入 `const std::function<QAndroidBinder *(const QAndroidIntent &)> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的安卓服务，将`argc`和`argv`作为参数传递。
+`binder`用于在需要时制作`binder`。
 
 ### `[virtual] QAndroidBinder *QAndroidService::onBind(const QAndroidIntent &intent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAndroidService::onBind` 用于计算、查询或取得与“on、绑定”相关的操作。调用时要先确认当前状态和 `intent` 的有效范围；返回类型是 `QAndroidBinder *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAndroidBinder *`。
-- 参数 `intent`：类型为 `const QAndroidIntent &`。没有默认值，调用时必须提供。传入 `const QAndroidIntent &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用户必须覆盖此方法并返回活页夹。
+`intent`参数包含所有调用者信息。
+返回的绑定器被调用者用于执行IPC调用。
+警告：此方法调用自Binder的线程，该线程与该对象创建的线程不同。
 
 ## 6. 深入实践与常见坑
 

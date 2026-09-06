@@ -72,178 +72,87 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QUntypedBindable::QUntypedBindable()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QUntypedBindable` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+默认构造一个QUntypedBindable。它处于无效状态。
 
 ### `template <typename Property> QUntypedBindable::QUntypedBindable(Property *property)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QUntypedBindable` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `property`：类型为 `Property *`。没有默认值，调用时必须提供。传入 `Property *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从属性 `property` 构造 QUntypedBindable。如果 Property 是 const，则 QUntypedBindable 将为只读。`property`如果 为空，则 QUntypedBindable 无效。
 
 ### `template <typename Functor> QPropertyNotifier QUntypedBindable::addNotifier(Functor f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QUntypedBindable` 添加依赖、数据或子对象的 API `addNotifier`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyNotifier`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安装`f`作为变更处理程序。每当基础属性发生变化，只要返回的`QPropertyNotifier`和属性保持存活，就会调用`f`。
+在某些情况下，这种方法比`onValueChanged()`更容易使用，因为返回的对象不是模板。因此它可以更容易地存储，例如作为类中的成员。
 
 ### `QUntypedPropertyBinding QUntypedBindable::binding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `binding`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QUntypedPropertyBinding`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有基础属性的绑定，返回;否则返回默认构造`QUntypedPropertyBinding`。
 
 ### `bool QUntypedBindable::hasBinding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasBinding`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果标的属性具有约束力，回报`true`。
 
 ### `[since 6.1] bool QUntypedBindable::isReadOnly() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isReadOnly`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QUntypedBindable`是只读，则返回真。
 
 ### `bool QUntypedBindable::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QUntypedBindable`有效，则返回为真。调用无效`QUntypedBindable`的方法通常无效，除非另有说明。
 
 ### `QUntypedPropertyBinding QUntypedBindable::makeBinding(const QPropertyBindingSourceLocation &location = QT_PROPERTY_DEFAULT_BINDING_LOCATION) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QUntypedBindable::makeBinding` 用于计算、查询或取得与“make、Binding”相关的操作。调用时要先确认当前状态和 `location` 的有效范围；返回类型是 `QUntypedPropertyBinding`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUntypedPropertyBinding`。
-- 参数 `location`：类型为 `const QPropertyBindingSourceLocation &`。默认值为 `QT_PROPERTY_DEFAULT_BINDING_LOCATION`。传入 `const QPropertyBindingSourceLocation &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建绑定，返回底层属性的值，使用指定的源`location`。
 
 ### `[since 6.2] QMetaType QUntypedBindable::metaType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QUntypedBindable::metaType` 用于计算、查询或取得与“meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回创建`QUntypedBindable`的属性元类型。如果绑定对象无效，则返回一个无效元类型。
 
 ### `template <typename Functor> QPropertyChangeHandler<Functor> QUntypedBindable::onValueChanged(Functor f) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `onValueChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyChangeHandler<Functor>`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安装`f`作为变更处理程序。每当底层属性发生变化，只要返回的`QPropertyChangeHandler`和属性保持活跃，就会调用`f`。每次值变更时，处理程序要么立即调用，要么延迟调用，具体取决于上下文。
 
 ### `bool QUntypedBindable::setBinding(const QUntypedPropertyBinding &binding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QUntypedBindable` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `binding`：类型为 `const QUntypedPropertyBinding &`。没有默认值，调用时必须提供。传入 `const QUntypedPropertyBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将底层属性的绑定设置为`binding`。如果`QUntypedBindable`是只读、空，或者`binding`的类型与底层属性类型匹配，这不会有任何影响。
+绑定成功设置后返回 `true`。
 
 ### `template <typename Functor> QPropertyChangeHandler<Functor> QUntypedBindable::subscribe(Functor f) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QUntypedBindable::subscribe` 用于计算、查询或取得与“subscribe”相关的操作。调用时要先确认当前状态和 `f` 的有效范围；返回类型是 `template <typename Functor> QPropertyChangeHandler<Functor>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyChangeHandler<Functor>`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表现得像是召唤`f`然后接着`onValueChanged(f)`，。
 
 ### `[since 6.1] QUntypedPropertyBinding QUntypedBindable::takeBinding()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QUntypedBindable::takeBinding` 用于计算、查询或取得与“取出、Binding”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUntypedPropertyBinding`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUntypedPropertyBinding`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除当前设置的绑定并返回该属性。如果没有设置绑定，返回一个默认构造的`QUntypedPropertyBinding`。
 
 ## 6. 深入实践与常见坑
 

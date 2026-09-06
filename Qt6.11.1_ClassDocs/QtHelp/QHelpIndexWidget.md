@@ -66,64 +66,31 @@ target_link_libraries(mytarget PRIVATE Qt6::Help)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[slot] void QHelpIndexWidget::activateCurrentItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `activateCurrentItem`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+激活当前项目，最终会发出 linkActivated() 或 linksActivated() 信号。
 
 ### `[signal] void QHelpIndexWidget::documentActivated(const QHelpLink &document, const QString &keyword)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpIndexWidget` 发出的通知信号 `documentActivated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `document`：类型为 `const QHelpLink &`。没有默认值，调用时必须提供。传入 `const QHelpLink &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `keyword`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当项目被激活时发出该信号，并显示其对应的 `document`。为了知道链接所属位置，`keyword`作为第二个参数给出。
 
 ### `[signal] void QHelpIndexWidget::documentsActivated(const QList<QHelpLink> &documents, const QString &keyword)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpIndexWidget` 发出的通知信号 `documentsActivated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `documents`：类型为 `const QList<QHelpLink> &`。没有默认值，调用时必须提供。传入 `const QList<QHelpLink> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `keyword`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当代表`keyword`的项目被激活且该物品关联多个文档时，会发出该信号。`documents`包括文档标题及其网址。
 
 ### `[slot] void QHelpIndexWidget::filterIndices(const QString &filter, const QString &wildcard = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `filterIndices`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `const QString &`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-- 参数 `wildcard`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`filter`或`wildcard`筛选索引。匹配度最佳的项目被设置为当前项目。
 
 ## 6. 深入实践与常见坑
 

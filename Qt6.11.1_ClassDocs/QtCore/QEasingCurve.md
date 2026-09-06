@@ -92,383 +92,276 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 28 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QEasingCurve::EasingFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的配置属性。初始化或状态切换时通过 `setEasingFunction(...)` 设置，之后用 `EasingFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这是指向函数签名如下的指针的类型def：
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:EasingFunction`。
-- 属性名：`QEasingCurve`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ qreal myEasingFunction(qreal progress);
+```
 
 ### `enum QEasingCurve::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QEasingCurve`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+缓解曲线的类型。
+- `QEasingCurve::Linear`：`0`
+线性（t）函数的缓解曲线：速度恒定。
+- `QEasingCurve::InQuad`：`1`
+二次（t^2）函数的松弛曲线：从零速度加速。
+- `QEasingCurve::OutQuad`：`2`
+二次函数（t^2）的缓曲线：减速至零速度。
+- `QEasingCurve::InOutQuad`：`3`
+二次函数（t^2）的缓曲线：先加速到一半，然后减速。
+- `QEasingCurve::OutInQuad`：`4`
+二次函数（t^2）的缓和曲线：减速至一半，然后加速。
+- `QEasingCurve::InCubic`：`5`
+三次曲线（t^3）函数的松弛曲线：从零速度加速。
+- `QEasingCurve::OutCubic`：`6`
+立方（t^3）函数的松动曲线：减速至零速度。
+- `QEasingCurve::InOutCubic`：`7`
+三次曲线（t^3）函数的缓曲线：加速至一半，然后减速。
+- `QEasingCurve::OutInCubic`：`8`
+三次（t^3）函数的缓曲线：减速至一半，然后加速。
+- `QEasingCurve::InQuart`：`9`
+四次函数（t^4）的缓和曲线：从零速度加速。
+- `QEasingCurve::OutQuart`：`10`
+四次函数（t^4）的缓和曲线：减速至零速度。
+- `QEasingCurve::InOutQuart`：`11`
+四次函数（t^4）的松弛曲线：加速至一半，然后减速。
+- `QEasingCurve::OutInQuart`：`12`
+四次函数（t^4）的松弛曲线：减速至一半，然后加速。
+- `QEasingCurve::InQuint`：`13`
+五次进度（t^5）缓进的松动曲线：从零速度加速。
+- `QEasingCurve::OutQuint`：`14`
+五次函数（t^5）的缓解曲线：减速至零速度。
+- `QEasingCurve::InOutQuint`：`15`
+五次函数（t^5）的缓和曲线：加速至一半，然后减速。
+- `QEasingCurve::OutInQuint`：`16`
+五次函数（t^5）的松曲线：减速至一半，然后加速。
+- `QEasingCurve::InSine`：`17`
+正弦函数（sin（t））的缓和曲线：从零速度加速。
+- `QEasingCurve::OutSine`：`18`
+正弦（sin（t））函数的缓曲线：减速至零速度。
+- `QEasingCurve::InOutSine`：`19`
+正弦（sin（t））函数的缓曲线：加速至一半，然后减速。
+- `QEasingCurve::OutInSine`：`20`
+正弦函数（sin（t））的缓和曲线：减速至一半，然后加速。
+- `QEasingCurve::InExpo`：`21`
+指数（2^t）函数的缓和曲线：从零速度加速。
+- `QEasingCurve::OutExpo`：`22`
+指数函数（2^t）的缓曲线：减速至零速度。
+- `QEasingCurve::InOutExpo`：`23`
+指数（2^t）函数的缓曲线：加速至一半，然后减速。
+- `QEasingCurve::OutInExpo`：`24`
+指数（2^t）函数的宽曲线：减速至一半，然后加速度。
+- `QEasingCurve::InCirc`：`25`
+圆形（sqrt（1-t^2））函数的缓和曲线：从零速度加速。
+- `QEasingCurve::OutCirc`：`26`
+圆（sqrt（1-t^2））函数的缓曲线：减速至零速度。
+- `QEasingCurve::InOutCirc`：`27`
+圆（sqrt（1-t^2））函数的缓曲线：先加速至一半，然后减速。
+- `QEasingCurve::OutInCirc`：`28`
+圆形（sqrt（1-t^2））函数的缓曲线：减速至一半，然后加速。
+- `QEasingCurve::InElastic`：`29`
+弹性（指数衰减正弦波）函数的缓解曲线：从零速度加速。峰值振幅可以用振幅参数设定，衰减周期用周期参数来设定。
+- `QEasingCurve::OutElastic`：`30`
+弹性（指数衰减正弦波）函数的缓解曲线：减速至零速度。峰值振幅可以用振幅参数设定，衰减周期用周期参数来设定。
+- `QEasingCurve::InOutElastic`：`31`
+弹性（指数衰减正弦波）函数的缓曲线：加速至一半，然后减速。
+- `QEasingCurve::OutInElastic`：`32`
+弹性（指数衰减正弦波）函数的缓解曲线：减速至一半，然后加速。
+- `QEasingCurve::InBack`：`33`
+后退的缓进曲线（超速三次函数：（s 1）*t^3 - s*t^2）缓进：从零速度加速。
+- `QEasingCurve::OutBack`：`34`
+后退的缓曲线（超速三次函数：（s 1）*t^3 - s*t^2）缓缓出：减速至零速度。
+- `QEasingCurve::InOutBack`：`35`
+InOutBack 函数}。
+后退的缓进曲线（超速三次函数：（s 1）*t^3 - s*t^2）缓进/出：加速至半程，然后减速。
+- `QEasingCurve::OutInBack`：`36`
+后退的缓曲线（超速立方缓进：（s 1）*t^3 - s*t^2）缓缓出/入：减速至半程，然后加速。
+- `QEasingCurve::InBounce`：`37`
+对于一个反弹函数（指数衰减抛物线反弹）的缓曲线：从零速度加速。
+- `QEasingCurve::OutBounce`：`38`
+反弹（指数衰减抛物线弹跳）函数的缓和曲线：从零速度减速。
+- `QEasingCurve::InOutBounce`：`39`
+对于反弹（指数衰减抛物线弹跳）函数的缓进/缓出：加速到一半，然后减速。
+- `QEasingCurve::OutInBounce`：`40`
+对于反弹（指数衰减抛物线反弹）函数的缓进曲线：减速至一半，然后加速。
+- `QEasingCurve::BezierSpline`：`45`;允许使用三次贝塞尔样条定义自定义的松弛曲线
+- `QEasingCurve::TCBSpline`：`46`;允许使用TCB样条定义自定义的松弛曲线
+- `QEasingCurve::Custom`：`47`;如果用户指定了带有`setCustomType()`的自定义曲线类型，则返回此值。注意你不能用此值调用`setType()`，但`type()`可以返回。
 
 ### `QEasingCurve::QEasingCurve(QEasingCurve::Type type = Linear)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QEasingCurve::Type`。默认值为 `Linear`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造给定`type`的宽松曲线。
 
 ### `QEasingCurve::QEasingCurve(const QEasingCurve &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一份`other`的副本。
 
 ### `[noexcept] QEasingCurve::QEasingCurve(QEasingCurve &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QEasingCurve &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-构造一个QEasingCurve实例，使其指向`other`指向的同一个对象。
 
 ### `[noexcept] QEasingCurve::~QEasingCurve()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `void QEasingCurve::addCubicBezierSegment(const QPointF &c1, const QPointF &c2, const QPointF &endPoint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QEasingCurve` 添加依赖、数据或子对象的 API `addCubicBezierSegment`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `c1`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `c2`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `endPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加一个三次贝塞尔样条的一段以定义自定义的缓解曲线。仅当`type()`为`QEasingCurve::BezierSpline`时才适用。注意，样条线隐式从（0.0， 0.0）开始，必须在（1.0， 1.0）结束，才能成为有效的缓解曲线。`c1`和`c2`是用于绘制曲线的控制点。`endPoint`是曲线的端点。
 
 ### `void QEasingCurve::addTCBSegment(const QPointF &nextPoint, qreal t, qreal c, qreal b)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QEasingCurve` 添加依赖、数据或子对象的 API `addTCBSegment`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `nextPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `t`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `c`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加 TCB 贝塞尔样条的一段以定义自定义的缓解曲线。仅在 `type()` `QEasingCurve::TCBSpline`时适用。样条必须明确从（0.0， 0.0）开始，且终止于（1.0， 1.0），才能成为有效的缓解曲线。张力`t`改变切向量的长度。连续性`c`改变切线之间变化的锐利度。偏置`b`改变切向量的方向。`nextPoint` 是样本位置。这三个参数均有效于-1和1之间，并定义了控制点的切线。如果三个参数都是0，则得到的样条是Catmull-Rom样条。起点和终点总是偏向-1和1，因为外切线未定义。
 
 ### `qreal QEasingCurve::amplitude() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::amplitude` 用于计算、查询或取得与“amplitude”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回振幅。这并不适用于所有曲线类型。它仅适用于反弹和弹性曲线（`type()` `QEasingCurve::InBounce`、`QEasingCurve::OutBounce`、`QEasingCurve::InOutBounce`、`QEasingCurve::OutInBounce`、`QEasingCurve::InElastic`、`QEasingCurve::OutElastic`、`QEasingCurve::InOutElastic`或`QEasingCurve::OutInElastic`曲线）。
 
 ### `QEasingCurve::EasingFunction QEasingCurve::customType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::customType` 用于计算、查询或取得与“custom、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QEasingCurve::EasingFunction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QEasingCurve::EasingFunction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回自定义缓解曲线的函数指针。如果`type()`不返回`QEasingCurve::Custom`，该函数返回0。
 
 ### `qreal QEasingCurve::overshoot() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::overshoot` 用于计算、查询或取得与“overshoot”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回超冲。这并不适用于所有曲线类型。仅当`type()`为`QEasingCurve::InBack`、`QEasingCurve::OutBack`、`QEasingCurve::InOutBack`或`QEasingCurve::OutInBack`时才适用。
 
 ### `qreal QEasingCurve::period() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::period` 用于计算、查询或取得与“period”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回周期。这不适用于所有曲线类型。仅在`type()`为`QEasingCurve::InElastic`、`QEasingCurve::OutElastic`、`QEasingCurve::InOutElastic`或`QEasingCurve::OutInElastic`时适用。
 
 ### `void QEasingCurve::setAmplitude(qreal amplitude)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAmplitude`。调用它会改变 `QEasingCurve` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `amplitude`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把振幅设为`amplitude`。
+这将设定弹跳幅度或弹性“弹簧”效应的幅度。数字越大，幅度越大。
 
 ### `void QEasingCurve::setCustomType(QEasingCurve::EasingFunction func)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCustomType`。调用它会改变 `QEasingCurve` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `func`：类型为 `QEasingCurve::EasingFunction`。没有默认值，调用时必须提供。传入 `QEasingCurve::EasingFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置一个自定义的易度曲线，由用户在函数 `func` 中定义。函数的签名是 qreal myEasingFunction（qreal progress），其中进度和返回值被视为在 0 到 1 之间归一化。（在某些情况下，返回值可能超出该范围）调用该函数后，`type()` 返回 `QEasingCurve::Custom`。`func` 无法`nullptr`。
 
 ### `void QEasingCurve::setOvershoot(qreal overshoot)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOvershoot`。调用它会改变 `QEasingCurve` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `overshoot`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将超跃设为`overshoot`。
+0不会产生超调，默认值1.70158会产生10%的超调。
 
 ### `void QEasingCurve::setPeriod(qreal period)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeriod`。调用它会改变 `QEasingCurve` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `period`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将周期设置为`period`。设置小周期值会获得曲线的高频率。较大的周期会得到较小的频率。
 
 ### `void QEasingCurve::setType(QEasingCurve::Type type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setType`。调用它会改变 `QEasingCurve` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QEasingCurve::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将宽松曲线类型设置为`type`。
 
 ### `[noexcept] void QEasingCurve::swap(QEasingCurve &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QEasingCurve &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该曲线与`other`交换。该操作非常快速且从未失效。
 
 ### `QList<QPointF> QEasingCurve::toCubicSpline() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toCubicSpline`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QList<QPointF>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回定义自定义宽松曲线的立方贝塞尔Spline。如果宽松曲线没有自定义贝塞尔宽松曲线，列表为空。
 
 ### `QEasingCurve::Type QEasingCurve::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QEasingCurve::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QEasingCurve::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回宽松曲线的类型。
 
 ### `qreal QEasingCurve::valueForProgress(qreal progress) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QEasingCurve::valueForProgress` 用于计算、查询或取得与“值访问、For、Progress”相关的操作。调用时要先确认当前状态和 `progress` 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数 `progress`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`progress`处缓和曲线的有效进度。虽然 的 变`progress`必须介于 0 和 1 之间，但返回的有效进度可能超出该范围。例如，`QEasingCurve::InBack` 在函数开头会返回负值。
 
 ### `[noexcept] QEasingCurve &QEasingCurve::operator=(QEasingCurve &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QEasingCurve &`。
-- 参数 `other`：类型为 `QEasingCurve &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other` 到该`QEasingCurve`实例。
 
 ### `QEasingCurve &QEasingCurve::operator=(const QEasingCurve &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QEasingCurve &`。
-- 参数 `other`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+收到`other`。
 
 ### `[noexcept] bool operator!=(const QEasingCurve &lhs, const QEasingCurve &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较宽松曲线`lhs`与`rhs`，如果不相等则返回`true`;否则返回`false`。它还会比较曲线的属性。
 
 ### `QDataStream &operator<<(QDataStream &stream, const QEasingCurve &easing)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `easing`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。传入 `const QEasingCurve &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定的`easing`曲线写入给定的`stream`，并返回对流的引用。
+警告：不支持`QEasingCurve::Custom`类型的宽松曲线（即带有自定义宽松函数的曲线）。
 
 ### `[noexcept] bool operator==(const QEasingCurve &lhs, const QEasingCurve &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QEasingCurve &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较宽松曲线`lhs`与`rhs`，如果相等`true`回报;否则返回`false`。它还会比较曲线的属性。
 
 ### `QDataStream &operator>>(QDataStream &stream, QEasingCurve &easing)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `easing`：类型为 `QEasingCurve &`。没有默认值，调用时必须提供。传入 `QEasingCurve &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`stream`的缓曲线读取到给定的`easing`曲线，并返回对该流的引用。
 
 ### `EasingFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QEasingCurve` 的 `Easing、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+这是指向函数签名如下的指针的类型def：
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ qreal myEasingFunction(qreal progress);
+```
 
 ## 6. 深入实践与常见坑
 

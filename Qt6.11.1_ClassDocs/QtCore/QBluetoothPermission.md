@@ -86,73 +86,56 @@ int main(int argc, char *argv[])
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.6] enum QBluetoothPermission::CommunicationModeflags QBluetoothPermission::CommunicationModes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QBluetoothPermission` 暴露的类型声明 `Communication、Modeflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CommunicationModeflags QBluetoothPermission::CommunicationModes`。
-- 属性名：`QBluetoothPermission`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举用于控制允许的蓝牙通信模式。
+- `QBluetoothPermission::Access`: `0x01`; 允许此设备访问其他蓝牙设备。这包括扫描附近设备并连接它们。
+- `QBluetoothPermission::Advertise`: `0x02`; 允许其他蓝牙设备发现此设备。
+- `QBluetoothPermission::Default`: `Access | Advertise`; 此配置为默认使用。
+注意：细粒度权限目前仅在 Android 12 及更高版本上支持。在较旧的 Android 版本以及苹果操作系统上，任何模式都将导致完全的蓝牙访问权限。
+此枚举在 Qt 6.6 中引入。
+CommunicationModes 类型是 QFlags<CommunicationMode> 的类型定义。它存储 CommunicationMode 值的 OR 组合。
 
 ### `[since 6.6] QBluetoothPermission::CommunicationModes QBluetoothPermission::communicationModes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QBluetoothPermission::communicationModes` 用于计算、查询或取得与“communication、Modes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBluetoothPermission::CommunicationModes`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QBluetoothPermission::CommunicationModes`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回允许的蓝牙通信模式。
 
 ### `[since 6.6] void QBluetoothPermission::setCommunicationModes(QBluetoothPermission::CommunicationModes modes)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCommunicationModes`。调用它会改变 `QBluetoothPermission` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `modes`：类型为 `QBluetoothPermission::CommunicationModes`。没有默认值，调用时必须提供。传入 `QBluetoothPermission::CommunicationModes` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将允许的蓝牙通信模式设置为`modes`。
+注意：默认构造的`CommunicationModes`实例没有意义，因此尝试设置此类模式会引发`qWarning()`并退回使用`Default`模式。
 
 ### `(since 6.6) enum CommunicationMode { Access, Advertise, Default }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QBluetoothPermission` 暴露的类型声明 `Communication、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举用于控制允许的蓝牙通信模式。
+- `QBluetoothPermission::Access`: `0x01`; 允许此设备访问其他蓝牙设备。这包括扫描附近设备并连接它们。
+- `QBluetoothPermission::Advertise`: `0x02`; 允许其他蓝牙设备发现此设备。
+- `QBluetoothPermission::Default`: `Access | Advertise`; 此配置为默认使用。
+注意：细粒度权限目前仅在 Android 12 及更高版本上支持。在较旧的 Android 版本以及苹果操作系统上，任何模式都将导致完全的蓝牙访问权限。
+此枚举在 Qt 6.6 中引入。
+CommunicationModes 类型是 QFlags<CommunicationMode> 的类型定义。它存储 CommunicationMode 值的 OR 组合。
 
 ### `flags CommunicationModes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QBluetoothPermission` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举用于控制允许的蓝牙通信模式。
+- `QBluetoothPermission::Access`: `0x01`; 允许此设备访问其他蓝牙设备。这包括扫描附近设备并连接它们。
+- `QBluetoothPermission::Advertise`: `0x02`; 允许其他蓝牙设备发现此设备。
+- `QBluetoothPermission::Default`: `Access | Advertise`; 此配置为默认使用。
+注意：细粒度权限目前仅在 Android 12 及更高版本上支持。在较旧的 Android 版本以及苹果操作系统上，任何模式都将导致完全的蓝牙访问权限。
+此枚举在 Qt 6.6 中引入。
+CommunicationModes 类型是 QFlags<CommunicationMode> 的类型定义。它存储 CommunicationMode 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

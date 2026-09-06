@@ -79,233 +79,175 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSessionManager::RestartHint`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSessionManager` 暴露的类型声明 `Restart、Hint`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RestartHint`。
-- 属性名：`QSessionManager`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型定义了该应用程序希望被会话管理器重启的情形。当前的值为：
+- `QSessionManager::RestartIfRunning`：`0`;如果会话关闭时应用程序仍在运行，它希望在下一个会话开始时重新启动。
+- `QSessionManager::RestartAnyway`：`1`;无论如何，应用程序都希望在下一次会话开始时启动。（这对启动后立即运行然后退出的工具非常有用。）
+- `QSessionManager::RestartImmediately`：`2`;应用程序希望在未运行时立即启动。
+- `QSessionManager::RestartNever`：`3`;应用程序不希望被自动重启。
+默认提示是`RestartIfRunning`。
 
 ### `bool QSessionManager::allowsErrorInteraction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::allowsErrorInteraction` 用于计算、查询或取得与“allows、错误、Interaction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果允许错误交互，返回`true`;否则返回`false`。
+这与`allowsInteraction()`类似，但也使应用程序能够告知用户任何发生的错误。会话管理器可能会将错误交互请求赋予更高优先级，这意味着错误交互被允许的可能性更大。然而，你仍然无法保证会话管理器会允许交互。
 
 ### `bool QSessionManager::allowsInteraction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::allowsInteraction` 用于计算、查询或取得与“allows、Interaction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+请求会话管理器允许与用户交互。如果允许交互，返回 true;否则返回 `false`。
+该机制的原理是使用户在关机期间能够同步交互。高级会话管理器可以同时要求所有应用程序提交数据，从而实现更快的关机速度。
+交互完成后，我们强烈建议通过调用`release()`释放用户交互信号量。这样，其他应用程序可能有机会与用户交互，而你的应用仍在忙于保存数据。（当应用退出时，信号量是隐式释放的。）。
+如果用户在交互阶段决定取消关闭进程，你必须通过调用`cancel()`告诉会话管理器此事发生。
+以下是应用`QGuiApplication::commitDataRequest()`可能实现的一个示例：
+如果应用在保存数据时出现错误，你可以尝试`allowsErrorInteraction()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
+```cpp
+ MyMainWidget::MyMainWidget(QWidget *parent)
+     : QWidget(parent)
+ {
+     connect(qApp, &QGuiApplication::commitDataRequest,
+             this, &MyMainWidget::commitData);
+ }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void MyMainWidget::commitData(QSessionManager& manager)
+ {
+     if (manager.allowsInteraction()) {
+         int ret = QMessageBox::warning(
+                     mainWindow,
+                     tr("My Application"),
+                     tr("Save changes to document?"),
+                     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+         switch (ret) {
+         case QMessageBox::Save:
+             manager.release();
+             if (!saveDocument())
+                 manager.cancel();
+             break;
+         case QMessageBox::Discard:
+             break;
+         case QMessageBox::Cancel:
+         default:
+             manager.cancel();
+         }
+     } else {
+         // we did not get permission to interact, then
+         // do something reasonable instead
+     }
+ }
+```
 
 ### `void QSessionManager::cancel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `cancel`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+告诉会话管理器取消关闭进程。应用程序不应在未先征求用户意见的情况下调用此函数。
 
 ### `QStringList QSessionManager::discardCommand() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::discardCommand` 用于计算、查询或取得与“discard、Command”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的弃牌命令。
 
 ### `bool QSessionManager::isPhase2() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isPhase2`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果会话管理器当前正在执行第二个会话管理阶段，返回`true`;否则返回`false`。
 
 ### `void QSessionManager::release()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::release` 用于执行与“释放”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在交互阶段结束后释放会话管理器的交互信号量。
 
 ### `void QSessionManager::requestPhase2()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSessionManager` 的核心操作 `requestPhase2`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+请求对应用程序进行第二次会话管理阶段。应用程序随后可以立即从`QGuiApplication::commitDataRequest()`或`QApplication::saveStateRequest()`函数返回，并在大多数或所有其他应用程序完成会话管理后再次调用。
+这两个阶段对于需要存储其他应用窗口信息的应用（如X11窗口管理器）非常有用，因此必须等待这些应用程序完成各自的会话管理任务。
+注意：如果其他申请请求了第二阶段，可能会在你的申请第二阶段之前、同时或之后调用。
 
 ### `QStringList QSessionManager::restartCommand() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::restartCommand` 用于计算、查询或取得与“restart、Command”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的重启命令。
 
 ### `QSessionManager::RestartHint QSessionManager::restartHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::restartHint` 用于计算、查询或取得与“restart、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSessionManager::RestartHint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSessionManager::RestartHint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用程序当前的重启提示。默认是`RestartIfRunning`。
 
 ### `QString QSessionManager::sessionId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::sessionId` 用于计算、查询或取得与“session、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前会话的标识符。
+如果应用程序已从早期会话恢复，该标识符与之前会话相同。
 
 ### `QString QSessionManager::sessionKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSessionManager::sessionKey` 用于计算、查询或取得与“session、Key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前会话中的会话密钥。
+如果应用程序是从早期会话恢复的，该密钥与上一个会话结束时相同。
+会话密钥会随着每次调用 commitData() 或 saveState() 而变化。
 
 ### `void QSessionManager::setDiscardCommand(const QStringList &command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDiscardCommand`。调用它会改变 `QSessionManager` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `command`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将弃牌命令设置为给定的 `command`。
 
 ### `void QSessionManager::setManagerProperty(const QString &name, const QStringList &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setManagerProperty`。调用它会改变 `QSessionManager` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QStringList &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对应用识别和状态记录的低层写入权限保存在会话管理器中。
+称为 `name` 的属性的值设置为字符串列表 的 List，其值设在 Str List `value`。
 
 ### `void QSessionManager::setManagerProperty(const QString &name, const QString &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setManagerProperty`。调用它会改变 `QSessionManager` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QString &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对应用程序识别和状态记录的低级写入权限保存在会话管理器中。
+称为`name`的属性的值被设置为字符串`value`。
 
 ### `void QSessionManager::setRestartCommand(const QStringList &command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRestartCommand`。调用它会改变 `QSessionManager` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+如果会话管理器能够恢复会话，它会执行`command`以恢复应用程序。该命令默认为。
+`-session`选项是强制的;否则`QGuiApplication`无法判断是否恢复了，也无法判断当前会话标识符是什么。详情请参见`QGuiApplication::isSessionRestored()`和 `QGuiApplication::sessionId()`。
+如果你的应用非常简单，可能可以在额外的命令行选项中存储整个应用状态。这通常是个坏主意，因为命令行通常限制在几百字节。相反，可以使用`QSettings`、临时文件或数据库来实现这一点。通过在数据上标记唯一的`sessionId()`，你就能在未来的会话中恢复应用程序。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `command`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ appname -session id
+```
 
 ### `void QSessionManager::setRestartHint(QSessionManager::RestartHint hint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRestartHint`。调用它会改变 `QSessionManager` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hint`：类型为 `QSessionManager::RestartHint`。没有默认值，调用时必须提供。传入 `QSessionManager::RestartHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将应用程序的重启提示设置为`hint`。启动应用程序时，提示设置为`RestartIfRunning`。
+注意：这些标志只是提示，会话管理器可能会尊重也可能不会。
+我们建议在`QGuiApplication::saveStateRequest()`中设置重启提示，因为大多数会话管理器会在应用程序启动后不久执行检查点。
 
 ## 6. 深入实践与常见坑
 

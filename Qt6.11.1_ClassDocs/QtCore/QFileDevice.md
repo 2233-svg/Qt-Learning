@@ -110,467 +110,399 @@ if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 35 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QFileDevice::FileError`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `File、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FileError`。
-- 属性名：`QFileDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了`error()`函数可能返回的错误。
+- `QFileDevice::NoError`：`0`;未发生错误。
+- `QFileDevice::ReadError`：`1`;读取文件时发生错误。
+- `QFileDevice::WriteError`：`2`;写入文件时发生错误。
+- `QFileDevice::FatalError`：`3`;发生了致命错误。
+- `QFileDevice::ResourceError`：`4`;资源不足（例如，打开文件过多、内存不足等）
+- `QFileDevice::OpenError`：`5`;文件无法打开。
+- `QFileDevice::AbortError`：`6`;行动被中止。
+- `QFileDevice::TimeOutError`：`7`;暂停发生。
+- `QFileDevice::UnspecifiedError`：`8`;发生了未说明的错误。
+- `QFileDevice::RemoveError`：`9`;文件无法被删除。
+- `QFileDevice::RenameError`：`10`;该文件无法重命名。
+- `QFileDevice::PositionError`：`11`;文件中的位置无法更改。
+- `QFileDevice::ResizeError`：`12`;文件无法调整大小。
+- `QFileDevice::PermissionsError`：`13`;文件无法访问。
+- `QFileDevice::CopyError`：`14`;文件无法复制。
 
 ### `enum QFileDevice::FileHandleFlagflags QFileDevice::FileHandleFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `File、Handle、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FileHandleFlagflags QFileDevice::FileHandleFlags`。
-- 属性名：`QFileDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于打开文件时指定仅适用于文件而非泛`QIODevice`的额外选项。
+- `QFileDevice::AutoCloseHandle`：`0x0001`;传递给`open()`的文件句柄应由`close()`关闭，默认行为是关闭文件，应用程序负责关闭文件句柄。当按名称打开文件时，该标志被忽略，因为 Qt 始终拥有文件柄并必须关闭它。
+- `QFileDevice::DontCloseHandle`：`0`;如果没有显式关闭，`QFile`对象被销毁时，底层文件句柄会保持开放。
+FileHandleFlags 类型是 QFlags 的 typedef<FileHandleFlag>。它存储 FileHandleFlag 值的 OR 组合。
 
 ### `enum QFileDevice::FileTime`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `File、时间`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FileTime`。
-- 属性名：`QFileDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举被`fileTime()`和`setFileTime()`函数使用。
+- `QFileDevice::FileAccessTime`：`0`;文件最近一次被访问（例如读取或写入）。
+- `QFileDevice::FileBirthTime`：`1`;文件创建时间（可能不支持 UNIX）。
+- `QFileDevice::FileMetadataChangeTime`：`2`;文件元数据最后更改的时间。
+- `QFileDevice::FileModificationTime`：`3`;文件最近一次修改的时间。
 
 ### `enum QFileDevice::MemoryMapFlagflags QFileDevice::MemoryMapFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `Memory、映射、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MemoryMapFlagflags QFileDevice::MemoryMapFlags`。
-- 属性名：`QFileDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了`map()`函数可能使用的特殊选项。
+- `QFileDevice::NoOptions`：`0`;无选项。
+- `QFileDevice::MapPrivateOption`：`0x0001`;映射后的内存将是私有的，因此任何修改对其他进程都不可见，也不会写入磁盘。当内存被取消映射时，任何此类修改都会丢失。目前尚不确定映射创建后对文件所做的修改是否会通过映射存储器可见。该枚举值是在Qt 5.4中引入的。
+MemoryMapFlags 类型是 QFlags 的 typedef<MemoryMapFlag>。它存储 MemoryMapFlag 值的 OR 组合。
 
 ### `enum QFileDevice::Permissionflags QFileDevice::Permissions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `Permissionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+此枚举由 permission() 函数使用，用于报告文件的权限和所有权。可将值进行 OR 运算以测试多个权限和所有权值。
+- `QFileDevice::ReadOwner`: `0x4000`；文件可以被文件所有者读取。
+- `QFileDevice::WriteOwner`: `0x2000`；文件可以被文件所有者写入。
+- `QFileDevice::ExeOwner`: `0x1000`；文件可以被文件所有者执行。
+- `QFileDevice::ReadUser`: `0x0400`；文件可以被用户读取。
+- `QFileDevice::WriteUser`: `0x0200`；文件可以被用户写入。
+- `QFileDevice::ExeUser`: `0x0100`；文件可以被用户执行。
+- `QFileDevice::ReadGroup`: `0x0040`；文件可以被组读取。
+- `QFileDevice::WriteGroup`: `0x0020`；文件可以被组写入。
+- `QFileDevice::ExeGroup`: `0x0010`；文件可以被组执行。
+- `QFileDevice::ReadOther`: `0x0004`；文件可以被其他人读取。
+- `QFileDevice::WriteOther`: `0x0002`；文件可以被其他人写入。
+- `QFileDevice::ExeOther`: `0x0001`；文件可以被其他人执行。
+警告：由于 Qt 支持的平台存在差异，ReadUser、WriteUser 和 ExeUser 的语义依赖于平台：在 Unix 上返回文件所有者的权限，在 Windows 上返回当前用户的权限。此行为可能在未来的 Qt 版本中发生变化。
 
-**签名拆解：**
+注意：在 NTFS 文件系统上，默认出于性能考虑禁用所有权和权限检查。要启用它，包含以下行：
 
-- 属性类型：`:Permissionflags QFileDevice::Permissions`。
-- 属性名：`QFileDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
+之后，通过增加或减少 `qt_ntfs_permission_lookup` 的值 1 来打开或关闭权限检查。
+注意：由于这是一个非原子全局变量，仅在主线程启动前或其他线程全部结束后，安全地增加或减少 `qt_ntfs_permission_lookup`。
+注意：从 Qt 6.6 起，变量 `qt_ntfs_permission_lookup` 已弃用。请使用以下替代方案。
+管理权限检查的安全简便方法是使用 RAII 类 `QNtfsPermissionCheckGuard`。
+如果需要更细粒度的控制，可以使用以下函数管理权限：
+Permissions 类型是 Permission 的 QFlags<Permission> 类型定义。它存储 Permission 值的 OR 组合。
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**官方示例：**
+
+```cpp
+ qt_ntfs_permission_lookup++; // turn checking on
+ qt_ntfs_permission_lookup--; // turn it off again
+```
 
 ### `[virtual noexcept] QFileDevice::~QFileDevice()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁文件设备，必要时关闭。
 
 ### `[override virtual] bool QFileDevice::atEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::atEnd` 用于计算、查询或取得与“按位置访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::atEnd()` const.
+如果到达文件末尾，返回`true`;否则返回false。
+对于Unix上的普通空文件（例如`/proc`中的文件），该函数返回`true`，因为文件系统报告该文件大小为0。因此，读取此类文件数据时不应依赖atEnd()，而是调用`read()`直到无法读取更多数据。
+如果当前读写位置位于设备末端（即设备上没有更多可读取的数据），返回`true`;否则返回`false`。
+对于某些设备，即使有更多数据可读取，atEnd() 仍可返回 true。此特殊情况仅适用于直接响应你调用 `read()` 生成数据的设备（例如，Unix 和 macOS 上的 `/dev` 或 `/proc` 文件，或所有平台的控制台输入/`stdin`）。
 
 ### `[override virtual] void QFileDevice::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::close()`。
+调用`QFileDevice::flush()`并关闭文件。冲洗错误被忽略。
+先发出`aboutToClose()`，然后关闭设备并将其OpenMode设置为NotOpen。错误字符串也会被重置。
 
 ### `QFileDevice::FileError QFileDevice::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFileDevice::FileError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFileDevice::FileError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件错误状态。
+I/O 设备状态返回错误代码。例如，如果 `open()`返回 `false`，或读写操作返回 -1，可以调用该函数来查找操作失败的原因。
 
 ### `[virtual] QString QFileDevice::fileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::fileName` 用于计算、查询或取得与“file、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件名称。`QFileDevice` 的默认实现返回空字符串。
 
 ### `QDateTime QFileDevice::fileTime(QFileDevice::FileTime time) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::fileTime` 用于计算、查询或取得与“file、时间”相关的操作。调用时要先确认当前状态和 `time` 的有效范围；返回类型是 `QDateTime`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDateTime`。
-- 参数 `time`：类型为 `QFileDevice::FileTime`。没有默认值，调用时必须提供。传入 `QFileDevice::FileTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`time`指定的文件时间。如果无法确定时间，返回QDateTime()（一个无效的日期时间）。
 
 ### `bool QFileDevice::flush()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::flush` 用于计算、查询或取得与“刷新”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将缓冲数据冲入文件。成功时返回`true`;否则返回`false`。
 
 ### `int QFileDevice::handle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::handle` 用于计算、查询或取得与“handle”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件的地址。
+这是一个小的正整数，适合用于 C 库函数，如 `fdopen()` 和 `fcntl()`。在使用文件描述符表示套接字的系统（如 Unix 系统，但不包括 Windows），该句柄也可以与 `QSocketNotifier` 一起使用。
+如果文件未打开或存在错误，handle() 返回 -1。
 
 ### `[override virtual] bool QFileDevice::isSequential() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSequential`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::isSequential()` const.
+如果文件只能顺序操作，返回`true`;否则返回`false`。
+大多数文件支持随机访问，但有些特殊文件可能不支持。
+如果该装置是顺序的，返回`true`;否则返回假。
+顺序设备与随机访问设备不同，没有起始、结束、大小或当前位置的概念，也不支持寻道。只有当设备报告数据可用时，你才能读取数据。最常见的顺序设备例子是网络套接字。在Unix上，特殊文件如/dev/zero和fifo管道是顺序文件。
+而普通文件则支持随机访问。它们既有大小也有当前位置，还支持在数据流中向后和向前寻求。普通文件则是非顺序的。
 
 ### `uchar *QFileDevice::map(qint64 offset, qint64 size, QFileDevice::MemoryMapFlags flags = NoOptions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `map`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`uchar *`。
-- 参数 `offset`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-- 参数 `flags`：类型为 `QFileDevice::MemoryMapFlags`。默认值为 `NoOptions`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`offset`开始将文件的字节映射到内存中`size`。文件应当是打开的，映射成功，但文件在映射内存完成后不必保持开放。当`QFile`被销毁或用该对象打开新文件时，任何未解映射的映射都会自动被取消映射。
+映射的开启模式与文件相同（读和/或写），除非使用`MapPrivateOption`，此时总可以写入映射存储器。
+任何映射选项都可以通过`flags`传递。
+如果出现错误，返回指向内存或`nullptr`的指针。
 
 ### `[virtual] QFileDevice::Permissions QFileDevice::permissions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::permissions` 用于计算、查询或取得与“permissions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFileDevice::Permissions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFileDevice::Permissions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件中 QFile：:P ermission 的完整 OR ed 组合。
 
 ### `[override virtual] qint64 QFileDevice::pos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::pos` 用于计算、查询或取得与“pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::pos()` const.
+对于随机访问设备，该函数返回数据写入或读取的位置。对于顺序设备或封闭设备，若不存在“当前位置”概念，则返回0。
+设备的当前读写位置由`QIODevice`内部维护，因此无需重新实现此功能。在子类化`QIODevice`时，使用`QIODevice::seek()`通知`QIODevice`设备位置的变化。
 
 ### `[override virtual protected] qint64 QFileDevice::readData(char *data, qint64 len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的核心操作 `readData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 要区分 EOF、暂时无数据和错误；大文件优先分块读取。
+Reimplements： `QIODevice::readData`（char *data， qint64 maxSize）.
+从设备读取最多`maxSize`字节到`data`，返回读取字节数，或如果发生错误则返回-1字节。
+如果没有字节可读且永远无法再有更多字节（例如套接字闭合、管道闭合、子进程已完成），该函数返回 -1。
+该函数由`QIODevice`调用。创建`QIODevice`子类时重新实现该函数。
+在重新实现该函数时，重要的是该函数在返回前读取所有所需数据。这是 `QDataStream` 能够操作该类的必要条件。`QDataStream` 假设所有请求的信息都已读取，因此如果存在问题，不会重新尝试读取。
+该函数可调用 maxSize 为 0，可用于执行读取后操作。
 
 ### `[override virtual protected] qint64 QFileDevice::readLineData(char *data, qint64 maxlen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的核心操作 `readLineData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `maxlen`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 要区分 EOF、暂时无数据和错误；大文件优先分块读取。
+Reimplements： `QIODevice::readLineData`（char *data， qint64 maxSize）.
+读取最多`maxSize`字符`data`并返回已读字符数。
+该函数由`readLine()`调用，并通过`getChar()`提供其基础实现。缓冲设备通过重新实现该函数可以提升`readLine()`的性能。
+`readLine()` 会在 `data` 上附加一个 '\0' 字节;readLineData() 不需要这样做。
+如果重新实现该函数，请注意返回正确的值：应返回该行读取的字节数，包括终止的换行，或者如果此时没有可读的行，则返回0。如果发生错误，应返回-1，当且仅当没有读取字节。超过EOF的读取被视为错误。
 
 ### `[virtual] bool QFileDevice::resize(qint64 sz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::resize` 用于计算、查询或取得与“调整尺寸”相关的操作。调用时要先确认当前状态和 `sz` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `sz`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置文件大小（字节为单位）`sz`。如果调整大小成功，返回 `true`;否则为假。如果 `sz` 比当前文件大，则新字节设为 0;如果 `sz` 较小，文件被简单截断。
+警告：如果文件不存在，该功能可能会失败。
 
 ### `[override virtual] bool QFileDevice::seek(qint64 pos)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::seek` 用于计算、查询或取得与“定位”相关的操作。调用时要先确认当前状态和 `pos` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `pos`：类型为 `qint64`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重制版本：`QIODevice::seek`（qint64 pos）。
+对于随机访问设备，该函数将当前位置设置为`pos`，成功时返回true，发生错误时返回false。对于顺序设备，默认行为是不做并返回false。
+在文件末尾之外寻找：如果位置在文件末尾之外，则 seek() 不会立即扩展文件。如果在该位置写入，文件将被扩展。文件从前一端到新写入数据之间的内容为 UNDEFINED 的，且因平台和文件系统而异。
+对于随机访问设备，该函数将当前位置设置为`pos`，成功时返回true，发生错误时返回false。对于顺序设备，默认行为是发送警告并返回false。
+在子类`QIODevice`时，你必须在函数开头调用 QIODevice：：seek()，以确保与 `QIODevice` 内置缓冲区的完整性。
 
 ### `bool QFileDevice::setFileTime(const QDateTime &newDate, QFileDevice::FileTime fileTime)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileTime`。调用它会改变 `QFileDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newDate`：类型为 `const QDateTime &`。没有默认值，调用时必须提供。传入 `const QDateTime &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fileTime`：类型为 `QFileDevice::FileTime`。没有默认值，调用时必须提供。传入 `QFileDevice::FileTime` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`fileTime`指定的文件时间设置为`newDate`，成功时返回true;否则返回false。
+注意：文件必须是打开的，才能使用此功能。
 
 ### `[virtual] bool QFileDevice::setPermissions(QFileDevice::Permissions permissions)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPermissions`。调用它会改变 `QFileDevice` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `permissions`：类型为 `QFileDevice::Permissions`。没有默认值，调用时必须提供。传入 `QFileDevice::Permissions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文件权限设置为指定的`permissions`。如果成功，返回`true`;如果权限无法修改，则返回`false`。
+警告：该功能不操控前交叉韧带，这可能会限制其效果。
 
 ### `[override virtual] qint64 QFileDevice::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QFileDevice` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::size()` const.
+返回文件大小。
+对于Unix上的普通空文件（例如`/proc`中的文件），该函数返回0;此类文件的内容会根据调用`read()`按需生成。
+对于开放随机访问设备，该函数返回设备的大小。对于开放顺序设备，返回`bytesAvailable()`。
+如果设备关闭，返回的尺寸不会反映设备的实际大小。
 
 ### `bool QFileDevice::unmap(uchar *address)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::unmap` 用于计算、查询或取得与“unmap”相关的操作。调用时要先确认当前状态和 `address` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `address`：类型为 `uchar *`。没有默认值，调用时必须提供。传入 `uchar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解除内存`address`映射。
+如果解映射成功，返回`true`;否则为假。
 
 ### `void QFileDevice::unsetError()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFileDevice::unsetError` 用于执行与“unset、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文件错误设置为`QFileDevice::NoError`。
 
 ### `[override virtual protected] qint64 QFileDevice::writeData(const char *data, qint64 len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的核心操作 `writeData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 要检查返回字节数和错误，关键数据考虑 flush、临时文件和原子替换。
+Reimplements： `QIODevice::writeData`（const char *data， qint64 maxSize）.
+从`data`写入最多`maxSize`字节到设备。返回写入字节数，或如果发生错误则返回-1字节。
+该函数由`QIODevice`调用。创建`QIODevice`子类时重新实现该函数。
+在重新实现该函数时，重要的是该函数在返回前写入所有可用数据。这是`QDataStream`能够操作该类所必需的。`QDataStream`假设所有信息都已写入，因此如果出现问题，不会重试写入。
 
 ### `[since 6.8] QT_NO_USE_NODISCARD_FILE_OPEN`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的 `打开` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与文件相关的I/O类（如`QFile`、`QSaveFile`、`QTemporaryFile`）有一种`open()`方法来打开它们所操作的文件。在继续读写数据到文件之前，务必检查调用`open()`的返回值。
+因此，从 Qt 6.8 开始，部分 `open()` 的超载被标记为 `[[nodiscard]]` 属性。由于此变更可能在现有代码库中引发警告，用户代码可以通过定义某些宏来选择加入或退出该属性：
+- 如果定义了`QT_USE_NODISCARD_FILE_OPEN`宏，`open()`的重载标记为`[[nodiscard]]`。
+- 如果`QT_NO_USE_NODISCARD_FILE_OPEN`定义，`open()`的重载不会标记为`[[nodiscard]]`。
+- 如果两个宏都未定义，则默认在包括Qt 6.9之前不包含该属性。从Qt 6.10开始，该属性会自动应用。
+- 如果两个宏都被定义，程序是错误形式的。
+这些宏在Qt 6.8引入。
 
 ### `enum FileHandleFlag { AutoCloseHandle, DontCloseHandle }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `File、Handle、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于打开文件时指定仅适用于文件而非泛`QIODevice`的额外选项。
+- `QFileDevice::AutoCloseHandle`：`0x0001`;传递给`open()`的文件句柄应由`close()`关闭，默认行为是关闭文件，应用程序负责关闭文件句柄。当按名称打开文件时，该标志被忽略，因为 Qt 始终拥有文件柄并必须关闭它。
+- `QFileDevice::DontCloseHandle`：`0`;如果没有显式关闭，`QFile`对象被销毁时，底层文件句柄会保持开放。
+FileHandleFlags 类型是 QFlags 的 typedef<FileHandleFlag>。它存储 FileHandleFlag 值的 OR 组合。
 
 ### `flags FileHandleFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于打开文件时指定仅适用于文件而非泛`QIODevice`的额外选项。
+- `QFileDevice::AutoCloseHandle`：`0x0001`;传递给`open()`的文件句柄应由`close()`关闭，默认行为是关闭文件，应用程序负责关闭文件句柄。当按名称打开文件时，该标志被忽略，因为 Qt 始终拥有文件柄并必须关闭它。
+- `QFileDevice::DontCloseHandle`：`0`;如果没有显式关闭，`QFile`对象被销毁时，底层文件句柄会保持开放。
+FileHandleFlags 类型是 QFlags 的 typedef<FileHandleFlag>。它存储 FileHandleFlag 值的 OR 组合。
 
 ### `enum MemoryMapFlag { NoOptions, MapPrivateOption }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `Memory、映射、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了`map()`函数可能使用的特殊选项。
+- `QFileDevice::NoOptions`：`0`;无选项。
+- `QFileDevice::MapPrivateOption`：`0x0001`;映射后的内存将是私有的，因此任何修改对其他进程都不可见，也不会写入磁盘。当内存被取消映射时，任何此类修改都会丢失。目前尚不确定映射创建后对文件所做的修改是否会通过映射存储器可见。该枚举值是在Qt 5.4中引入的。
+MemoryMapFlags 类型是 QFlags 的 typedef<MemoryMapFlag>。它存储 MemoryMapFlag 值的 OR 组合。
 
 ### `flags MemoryMapFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了`map()`函数可能使用的特殊选项。
+- `QFileDevice::NoOptions`：`0`;无选项。
+- `QFileDevice::MapPrivateOption`：`0x0001`;映射后的内存将是私有的，因此任何修改对其他进程都不可见，也不会写入磁盘。当内存被取消映射时，任何此类修改都会丢失。目前尚不确定映射创建后对文件所做的修改是否会通过映射存储器可见。该枚举值是在Qt 5.4中引入的。
+MemoryMapFlags 类型是 QFlags 的 typedef<MemoryMapFlag>。它存储 MemoryMapFlag 值的 OR 组合。
 
 ### `enum Permission { ReadOwner, WriteOwner, ExeOwner, ReadUser, WriteUser, …, ExeOther }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 暴露的类型声明 `Permission`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+此枚举由 permission() 函数使用，用于报告文件的权限和所有权。可将值进行 OR 运算以测试多个权限和所有权值。
+- `QFileDevice::ReadOwner`: `0x4000`；文件可以被文件所有者读取。
+- `QFileDevice::WriteOwner`: `0x2000`；文件可以被文件所有者写入。
+- `QFileDevice::ExeOwner`: `0x1000`；文件可以被文件所有者执行。
+- `QFileDevice::ReadUser`: `0x0400`；文件可以被用户读取。
+- `QFileDevice::WriteUser`: `0x0200`；文件可以被用户写入。
+- `QFileDevice::ExeUser`: `0x0100`；文件可以被用户执行。
+- `QFileDevice::ReadGroup`: `0x0040`；文件可以被组读取。
+- `QFileDevice::WriteGroup`: `0x0020`；文件可以被组写入。
+- `QFileDevice::ExeGroup`: `0x0010`；文件可以被组执行。
+- `QFileDevice::ReadOther`: `0x0004`；文件可以被其他人读取。
+- `QFileDevice::WriteOther`: `0x0002`；文件可以被其他人写入。
+- `QFileDevice::ExeOther`: `0x0001`；文件可以被其他人执行。
+警告：由于 Qt 支持的平台存在差异，ReadUser、WriteUser 和 ExeUser 的语义依赖于平台：在 Unix 上返回文件所有者的权限，在 Windows 上返回当前用户的权限。此行为可能在未来的 Qt 版本中发生变化。
 
-**签名拆解：**
+注意：在 NTFS 文件系统上，默认出于性能考虑禁用所有权和权限检查。要启用它，包含以下行：
 
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
+extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
+之后，通过增加或减少 `qt_ntfs_permission_lookup` 的值 1 来打开或关闭权限检查。
+注意：由于这是一个非原子全局变量，仅在主线程启动前或其他线程全部结束后，安全地增加或减少 `qt_ntfs_permission_lookup`。
+注意：从 Qt 6.6 起，变量 `qt_ntfs_permission_lookup` 已弃用。请使用以下替代方案。
+管理权限检查的安全简便方法是使用 RAII 类 `QNtfsPermissionCheckGuard`。
+如果需要更细粒度的控制，可以使用以下函数管理权限：
+Permissions 类型是 Permission 的 QFlags<Permission> 类型定义。它存储 Permission 值的 OR 组合。
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**官方示例：**
+
+```cpp
+ qt_ntfs_permission_lookup++; // turn checking on
+ qt_ntfs_permission_lookup--; // turn it off again
+```
 
 ### `flags Permissions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+此枚举由 permission() 函数使用，用于报告文件的权限和所有权。可将值进行 OR 运算以测试多个权限和所有权值。
+- `QFileDevice::ReadOwner`: `0x4000`；文件可以被文件所有者读取。
+- `QFileDevice::WriteOwner`: `0x2000`；文件可以被文件所有者写入。
+- `QFileDevice::ExeOwner`: `0x1000`；文件可以被文件所有者执行。
+- `QFileDevice::ReadUser`: `0x0400`；文件可以被用户读取。
+- `QFileDevice::WriteUser`: `0x0200`；文件可以被用户写入。
+- `QFileDevice::ExeUser`: `0x0100`；文件可以被用户执行。
+- `QFileDevice::ReadGroup`: `0x0040`；文件可以被组读取。
+- `QFileDevice::WriteGroup`: `0x0020`；文件可以被组写入。
+- `QFileDevice::ExeGroup`: `0x0010`；文件可以被组执行。
+- `QFileDevice::ReadOther`: `0x0004`；文件可以被其他人读取。
+- `QFileDevice::WriteOther`: `0x0002`；文件可以被其他人写入。
+- `QFileDevice::ExeOther`: `0x0001`；文件可以被其他人执行。
+警告：由于 Qt 支持的平台存在差异，ReadUser、WriteUser 和 ExeUser 的语义依赖于平台：在 Unix 上返回文件所有者的权限，在 Windows 上返回当前用户的权限。此行为可能在未来的 Qt 版本中发生变化。
 
-**签名拆解：**
+注意：在 NTFS 文件系统上，默认出于性能考虑禁用所有权和权限检查。要启用它，包含以下行：
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
+extern Q_CORE_EXPORT int qt_ntfs_permission_lookup;
+之后，通过增加或减少 `qt_ntfs_permission_lookup` 的值 1 来打开或关闭权限检查。
+注意：由于这是一个非原子全局变量，仅在主线程启动前或其他线程全部结束后，安全地增加或减少 `qt_ntfs_permission_lookup`。
+注意：从 Qt 6.6 起，变量 `qt_ntfs_permission_lookup` 已弃用。请使用以下替代方案。
+管理权限检查的安全简便方法是使用 RAII 类 `QNtfsPermissionCheckGuard`。
+如果需要更细粒度的控制，可以使用以下函数管理权限：
+Permissions 类型是 Permission 的 QFlags<Permission> 类型定义。它存储 Permission 值的 OR 组合。
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**官方示例：**
+
+```cpp
+ qt_ntfs_permission_lookup++; // turn checking on
+ qt_ntfs_permission_lookup--; // turn it off again
+```
 
 ### `(since 6.8) QT_USE_NODISCARD_FILE_OPEN`
 
-**API 类别：** 公开宏
+**作用与语义：**
 
-**中文解读：** 这是 `QFileDevice` 的 `打开` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与文件相关的I/O类（如`QFile`、`QSaveFile`、`QTemporaryFile`）有一种`open()`方法来打开它们所操作的文件。在继续读写数据到文件之前，务必检查调用`open()`的返回值。
+因此，从 Qt 6.8 开始，部分 `open()` 的超载被标记为 `[[nodiscard]]` 属性。由于此变更可能在现有代码库中引发警告，用户代码可以通过定义某些宏来选择加入或退出该属性：
+- 如果定义了`QT_USE_NODISCARD_FILE_OPEN`宏，`open()`的重载标记为`[[nodiscard]]`。
+- 如果`QT_NO_USE_NODISCARD_FILE_OPEN`定义，`open()`的重载不会标记为`[[nodiscard]]`。
+- 如果两个宏都未定义，则默认在包括Qt 6.9之前不包含该属性。从Qt 6.10开始，该属性会自动应用。
+- 如果两个宏都被定义，程序是错误形式的。
+这些宏在Qt 6.8引入。
 
 ## 6. 深入实践与常见坑
 

@@ -115,661 +115,326 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 47 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.8] enum class QColorSpace::ColorModel`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ColorModel`。
-- 属性名：`QColorSpace`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义色彩空间数据所使用的颜色模型。
+- `QColorSpace::ColorModel::Undefined`：`0`;无彩色模型
+- `QColorSpace::ColorModel::Rgb`：`1`;一个包含红色、绿色和蓝色的RGB色彩模型。可应用于RGB和灰度数据。
+- `QColorSpace::ColorModel::Gray`：`2`;灰度色彩模型。只能应用于灰度数据。
+- `QColorSpace::ColorModel::Cmyk`：`3`;只能表示由青色、品红、黄色和黑色定义的颜色数据。实际上仅有QImage：：Format_CMYK32。注意，Cmyk色彩空间将被`TransformModel::ElementListProcessing`。
+这个枚举是在Qt 6.8引入的。
 
 ### `enum QColorSpace::NamedColorSpace`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 暴露的类型声明 `Named、Color、Space`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:NamedColorSpace`。
-- 属性名：`QColorSpace`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+预定义的色彩空间。
+- `QColorSpace::SRgb`：`1`;sRGB 色彩空间，Qt 默认在该色域中工作。它近似大多数经典显示器的工作方式，也是大多数软硬件支持的模式。sRGB 的 ICC 注册。
+- `QColorSpace::SRgbLinear`：`2`;带有线性伽马的sRGB色彩空间。适用于伽马校正混合。
+- `QColorSpace::AdobeRgb`：`3`;Adobe RGB 色彩空间是一种经典的宽色域色彩空间，采用 2.2 的伽马值。Adobe RGB 的 ICC 注册（1998）
+- `QColorSpace::DisplayP3`：`4`;采用DCI-P3的原色，但白点和传递函数为sRGB。常见于现代广色域屏幕。DCI-P3的ICC注册
+- `QColorSpace::ProPhotoRgb`：`5`;Pro Photo RGB 色彩空间，也称为 ROMM RGB，是一种非常宽色域的色彩空间。ICC 对 ROMM RGB 的配准
+- `QColorSpace::Bt2020 (since Qt 6.8)`：`6`;BT.2020，也称为Rec.2020，是HDR电视的基本色域。BT.2020的ICC注册
+- `QColorSpace::Bt2100Pq (since Qt 6.8)`：`7`;BT.2100（PQ），也称为Rec.2100或HDR10，是一种HDR编码，原色与Bt2020相同，但使用感知量化器传递函数。BT.2100的ICC注册
+- `QColorSpace::Bt2100Hlg (since Qt 6.8)`：`8`;BT.2100（HLG）是一种HDR编码，主编码与Bt2020相同，但采用混合对数-伽马传递函数。
 
 ### `enum class QColorSpace::Primaries`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Primaries`。
-- 属性名：`QColorSpace`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+预设的原色集合。
+- `QColorSpace::Primaries::Custom`：`0`;这些初级是未定义的，或者与任何预定义的集合不匹配。
+- `QColorSpace::Primaries::SRgb`：`1`;sRGB 初级
+- `QColorSpace::Primaries::AdobeRgb`：`2`;Adobe RGB 主色
+- `QColorSpace::Primaries::DciP3D65`：`3`;DCI-P3初选，采用D65白点灯
+- `QColorSpace::Primaries::ProPhotoRgb`：`4`;ProPhoto RGB主色配D50白点
+- `QColorSpace::Primaries::Bt2020 (since Qt 6.8)`：`5`;BT.2020主射器配备D65白点瞄准镜
 
 ### `enum class QColorSpace::TransferFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TransferFunction`。
-- 属性名：`QColorSpace`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+预定义的传递函数或伽马曲线。
+- `QColorSpace::TransferFunction::Custom`：`0`;自定义或空传递函数
+- `QColorSpace::TransferFunction::Linear`：`1`;线性传递函数
+- `QColorSpace::TransferFunction::Gamma`：`2`;基于 的值的实伽马曲线传递函数`gamma()`
+- `QColorSpace::TransferFunction::SRgb`：`3`;sRGB传递函数，由线性和伽马部分组成
+- `QColorSpace::TransferFunction::ProPhotoRgb`：`4`;ProPhoto RGB传递函数，由线性和伽马部分组成
+- `QColorSpace::TransferFunction::Bt2020 (since Qt 6.8)`：`5`;BT.2020传递函数，由线性和伽马部分组成
+- `QColorSpace::TransferFunction::St2084 (since Qt 6.8)`：`6`;SMPTE ST 2084传递函数，也称为感知量子器（PQ）。
+- `QColorSpace::TransferFunction::Hlg (since Qt 6.8)`：`7`;混合对数-伽马传递函数。
 
 ### `[since 6.8] enum class QColorSpace::TransformModel`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TransformModel`。
-- 属性名：`QColorSpace`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义用于色彩空间变换的处理模型。
+- `QColorSpace::TransformModel::ThreeComponentMatrix`：`0`;变换由每个色道的主色和传递函数集合计算的矩阵组成。该矩阵速度非常快，适用于所有预定义色域。该形式上的任何色域均可逆，且始终有效且目标源均有效。
+- `QColorSpace::TransformModel::ElementListProcessing`：`1`;变换是一两个处理元素列表，每个列表只能处理连接色彩空间或从连接色彩空间处理。这非常灵活，但速度较慢，只能通过读取ICC配置文件来设置（参见`fromIccProfile()`）。由于两个列表是分开的，该形式的颜色空间可以是有效的源，但不一定也是有效的目标。当该类型颜色空间的主色或传递函数时，颜色空间会重置为空的三分量矩阵形式。
+这个枚举是在Qt 6.8引入的。
 
 ### `[constexpr noexcept] QColorSpace::QColorSpace()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的色彩空间对象，表示一个未定义且无效的色彩空间。
 
 ### `QColorSpace::QColorSpace(QColorSpace::NamedColorSpace namedColorSpace)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `namedColorSpace`：类型为 `QColorSpace::NamedColorSpace`。没有默认值，调用时必须提供。传入 `QColorSpace::NamedColorSpace` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的色彩空间对象，代表一个`namedColorSpace`。
 
 ### `[since 6.1] QColorSpace::QColorSpace(QColorSpace::Primaries gamut, const QList<uint16_t> &transferFunctionTable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `gamut`：类型为 `QColorSpace::Primaries`。没有默认值，调用时必须提供。传入 `QColorSpace::Primaries` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`transferFunctionTable`描述的自定义传递函数，创建带有主色`gamut`的自定义色彩空间。
+该表应至少包含两个值，并包含一个从0到65535单调递增的值列表。
 
 ### `QColorSpace::QColorSpace(QColorSpace::Primaries primaries, float gamma)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `primaries`：类型为 `QColorSpace::Primaries`。没有默认值，调用时必须提供。传入 `QColorSpace::Primaries` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。没有默认值，调用时必须提供。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用`gamma`的伽马传递函数创建带有主色的自定义色彩空间`primaries`。
 
 ### `[explicit, since 6.8] QColorSpace::QColorSpace(QPointF whitePoint, const QList<uint16_t> &transferFunctionTable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `whitePoint`：类型为 `QPointF`。没有默认值，调用时必须提供。传入 `QPointF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建带有白点`whitePoint`的自定义灰度色彩空间，并使用`transferFunctionTable`描述的自定义传递函数。
 
 ### `QColorSpace::QColorSpace(QColorSpace::Primaries primaries, QColorSpace::TransferFunction transferFunction, float gamma = 0.0f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `primaries`：类型为 `QColorSpace::Primaries`。没有默认值，调用时必须提供。传入 `QColorSpace::Primaries` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunction`：类型为 `QColorSpace::TransferFunction`。没有默认值，调用时必须提供。传入 `QColorSpace::TransferFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。默认值为 `0.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用传递函数`transferFunction`创建带有主色`primaries`的自定义色彩空间，并可选择`gamma`。
 
 ### `[explicit, since 6.8] QColorSpace::QColorSpace(QPointF whitePoint, QColorSpace::TransferFunction transferFunction, float gamma = 0.0f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `whitePoint`：类型为 `QPointF`。没有默认值，调用时必须提供。传入 `QPointF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunction`：类型为 `QColorSpace::TransferFunction`。没有默认值，调用时必须提供。传入 `QColorSpace::TransferFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。默认值为 `0.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用传递函数`transferFunction`创建带有白点`whitePoint`的自定义灰阶色彩空间，可选择`gamma`。
 
 ### `[since 6.9] QColorSpace::QColorSpace(const QColorSpace::PrimaryPoints &primaryPoints, QColorSpace::TransferFunction transferFunction, float gamma = 0.0f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `primaryPoints`：类型为 `const QColorSpace::PrimaryPoints &`。没有默认值，调用时必须提供。传入 `const QColorSpace::PrimaryPoints &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunction`：类型为 `QColorSpace::TransferFunction`。没有默认值，调用时必须提供。传入 `QColorSpace::TransferFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。默认值为 `0.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于`primaryPoints`原色的色度创建自定义色彩空间，使用传递函数`transferFunction`，可选择`gamma`。
 
 ### `[since 6.1] QColorSpace::QColorSpace(const QPointF &whitePoint, const QPointF &redPoint, const QPointF &greenPoint, const QPointF &bluePoint, const QList<uint16_t> &transferFunctionTable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `whitePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `redPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bluePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于原色`whitePoint`、`redPoint`、`greenPoint`和`bluePoint`的色度，并使用`transferFunctionTable`描述的自定义传递函数，创建带有原色的自定义色彩空间。
 
 ### `QColorSpace::QColorSpace(const QPointF &whitePoint, const QPointF &redPoint, const QPointF &greenPoint, const QPointF &bluePoint, QColorSpace::TransferFunction transferFunction, float gamma = 0.0f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `whitePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `redPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bluePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transferFunction`：类型为 `QColorSpace::TransferFunction`。没有默认值，调用时必须提供。传入 `QColorSpace::TransferFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。默认值为 `0.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于原色`whitePoint`、`redPoint`、`greenPoint`和`bluePoint`的色度，并使用传递函数`transferFunction`，可选择`gamma`，创建自定义色彩空间。
 
 ### `[since 6.1] QColorSpace::QColorSpace(const QPointF &whitePoint, const QPointF &redPoint, const QPointF &greenPoint, const QPointF &bluePoint, const QList<uint16_t> &redTransferFunctionTable, const QList<uint16_t> &greenTransferFunctionTable, const QList<uint16_t> &blueTransferFunctionTable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `whitePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `redPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bluePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `redTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `blueTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于原色`whitePoint`、`redPoint`、`greenPoint`和`bluePoint`的色度，并使用`redTransferFunctionTable`、`greenTransferFunctionTable`和`blueTransferFunctionTable`描述的自定义传递函数，创建带有原色的自定义色彩空间。
 
 ### `[noexcept, since 6.8] QColorSpace::ColorModel QColorSpace::colorModel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::colorModel` 用于计算、查询或取得与“color、Model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColorSpace::ColorModel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace::ColorModel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该颜色空间能够表示的颜色模型。
 
 ### `[noexcept, since 6.2] QString QColorSpace::description() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::description` 用于计算、查询或取得与“description”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回名称或简短描述。如果 `setDescription()` 中没有给出描述，若配置文件未修改，则返回原始配置文件名称;如果配置文件被识别为已知色彩空间，返回猜测名称;否则返回空字符串。
 
 ### `[static] QColorSpace QColorSpace::fromIccProfile(const QByteArray &iccProfile)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromIccProfile`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace`。
-- 参数 `iccProfile`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从ICC配置文件`iccProfile`创建`QColorSpace`。
+注意：并非所有ICC配置文件都支持。`QColorSpace`只支持RGB或灰色ICC配置文件。
+如果不支持ICC配置文件，会返回一个无效`QColorSpace`，你仍可以用`iccProfile()`读取原始ICC配置文件。
 
 ### `[noexcept] float QColorSpace::gamma() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::gamma` 用于计算、查询或取得与“gamma”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回色彩空间的伽马值，`TransferFunction::Gamma`，是其他预定义色彩空间的近似伽马值，若无近似伽马则返回0.0。
 
 ### `QByteArray QColorSpace::iccProfile() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::iccProfile` 用于计算、查询或取得与“icc、Profile”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个代表色彩空间的ICC配置文件。
+如果色彩空间是从ICC配置文件生成的，则返回该配置文件，否则生成一个配置文件。
+注意：即使是无效色彩空间，如果它们是从某个颜色空间生成的，也可能返回ICC配置文件，以便应用程序自行实现更广泛的支持。
 
 ### `[noexcept] bool QColorSpace::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果颜色空间有效，返回`true`。对于颜色空间 ，`TransformModel::ThreeComponentMatrix` 表示主色和传递函数都设置为 ，并蕴含 `isValidTarget()`。对于色彩空间 `TransformModel::ElementListProcessing`，表示它有有效的源变换，检查它是否也是有效的目标色彩空间，可以使用`isValidTarget()`。
 
 ### `[noexcept, since 6.8] bool QColorSpace::isValidTarget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValidTarget`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果颜色空间是有效的目标颜色空间，返回`true`。
 
 ### `[noexcept] QColorSpace::Primaries QColorSpace::primaries() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::primaries` 用于计算、查询或取得与“primaries”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColorSpace::Primaries`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace::Primaries`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果颜色空间或`primaries::Custom`与任何一个不匹配，则返回预定义的原色。
 
 ### `[since 6.9] QColorSpace::PrimaryPoints QColorSpace::primaryPoints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::primaryPoints` 用于计算、查询或取得与“primary、Points”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColorSpace::PrimaryPoints`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace::PrimaryPoints`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主色度，如果未定义，则返回零点。
 
 ### `[since 6.2] void QColorSpace::setDescription(const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDescription`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将颜色空间的名称或简短描述设置为`description`。
+如果设置为空`description()`则返回原始或猜测的描述。
 
 ### `void QColorSpace::setPrimaries(QColorSpace::Primaries primariesId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrimaries`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `primariesId`：类型为 `QColorSpace::Primaries`。没有默认值，调用时必须提供。传入 `QColorSpace::Primaries` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将初选设置为`primariesId`集的主选。
 
 ### `void QColorSpace::setPrimaries(const QPointF &whitePoint, const QPointF &redPoint, const QPointF &greenPoint, const QPointF &bluePoint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrimaries`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `whitePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `redPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenPoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `bluePoint`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将原色设定为`whitePoint`、`redPoint`、`greenPoint`和`bluePoint`的色度。
 
 ### `[since 6.9] void QColorSpace::setPrimaryPoints(const QColorSpace::PrimaryPoints &primaryPoints)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrimaryPoints`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `primaryPoints`：类型为 `const QColorSpace::PrimaryPoints &`。没有默认值，调用时必须提供。传入 `const QColorSpace::PrimaryPoints &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所有原色设定为`primaryPoints`的色数。
 
 ### `[since 6.1] void QColorSpace::setTransferFunction(const QList<uint16_t> &transferFunctionTable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransferFunction`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `transferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将传递函数设为`transferFunctionTable`。
 
 ### `void QColorSpace::setTransferFunction(QColorSpace::TransferFunction transferFunction, float gamma = 0.0f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransferFunction`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `transferFunction`：类型为 `QColorSpace::TransferFunction`。没有默认值，调用时必须提供。传入 `QColorSpace::TransferFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。默认值为 `0.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将传递函数设置为`transferFunction`和 `gamma`。
 
 ### `[since 6.1] void QColorSpace::setTransferFunctions(const QList<uint16_t> &redTransferFunctionTable, const QList<uint16_t> &greenTransferFunctionTable, const QList<uint16_t> &blueTransferFunctionTable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransferFunctions`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `redTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `blueTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将传递函数设置为`redTransferFunctionTable`、`greenTransferFunctionTable`和 `blueTransferFunctionTable`。
 
 ### `[since 6.8] void QColorSpace::setWhitePoint(QPointF whitePoint)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWhitePoint`。调用它会改变 `QColorSpace` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `whitePoint`：类型为 `QPointF`。没有默认值，调用时必须提供。传入 `QPointF` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该色彩空间的白色点设置为`whitePoint`。
 
 ### `[noexcept] void QColorSpace::swap(QColorSpace &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QColorSpace &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将色彩空间与`other`交换。这个操作非常快，且从未失败。
 
 ### `[noexcept] QColorSpace::TransferFunction QColorSpace::transferFunction() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::transferFunction` 用于计算、查询或取得与“transfer、Function”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColorSpace::TransferFunction`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace::TransferFunction`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果颜色空间或`TransferFunction::Custom`不匹配，返回预定义的传递函数。
 
 ### `[noexcept, since 6.8] QColorSpace::TransformModel QColorSpace::transformModel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::transformModel` 用于计算、查询或取得与“transform、Model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColorSpace::TransformModel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace::TransformModel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于该色彩空间的transfrom处理模型。
 
 ### `QColorTransform QColorSpace::transformationToColorSpace(const QColorSpace &colorspace) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::transformationToColorSpace` 用于计算、查询或取得与“transformation、转换输出、Color、Space”相关的操作。调用时要先确认当前状态和 `colorspace` 的有效范围；返回类型是 `QColorTransform`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorTransform`。
-- 参数 `colorspace`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+生成并返回从该色彩空间到`colorspace`的色彩空间变换。
 
 ### `[since 6.8] QPointF QColorSpace::whitePoint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::whitePoint` 用于计算、查询或取得与“white、Point”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于该色彩空间的白点。如果未定义，返回空`QPointF`。
 
 ### `[since 6.1] QColorSpace QColorSpace::withTransferFunction(const QList<uint16_t> &transferFunctionTable) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::withTransferFunction` 用于计算、查询或取得与“with、Transfer、Function”相关的操作。调用时要先确认当前状态和 `transferFunctionTable` 的有效范围；返回类型是 `QColorSpace`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace`。
-- 参数 `transferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该色彩空间的副本，但使用`transferFunctionTable`描述的传递函数。
 
 ### `QColorSpace QColorSpace::withTransferFunction(QColorSpace::TransferFunction transferFunction, float gamma = 0.0f) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::withTransferFunction` 用于计算、查询或取得与“with、Transfer、Function”相关的操作。调用时要先确认当前状态和 `transferFunction`、`gamma` 的有效范围；返回类型是 `QColorSpace`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace`。
-- 参数 `transferFunction`：类型为 `QColorSpace::TransferFunction`。没有默认值，调用时必须提供。传入 `QColorSpace::TransferFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `gamma`：类型为 `float`。默认值为 `0.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该色彩空间的副本，但使用传递函数`transferFunction`和`gamma`。
 
 ### `[since 6.1] QColorSpace QColorSpace::withTransferFunctions(const QList<uint16_t> &redTransferFunctionTable, const QList<uint16_t> &greenTransferFunctionTable, const QList<uint16_t> &blueTransferFunctionTable) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QColorSpace::withTransferFunctions` 用于计算、查询或取得与“with、Transfer、Functions”相关的操作。调用时要先确认当前状态和 `redTransferFunctionTable`、`greenTransferFunctionTable`、`blueTransferFunctionTable` 的有效范围；返回类型是 `QColorSpace`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColorSpace`。
-- 参数 `redTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `blueTransferFunctionTable`：类型为 `const QList<uint16_t> &`。没有默认值，调用时必须提供。传入 `const QList<uint16_t> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该色彩空间的副本，但使用`redTransferFunctionTable`、`greenTransferFunctionTable`和`blueTransferFunctionTable`描述的传递函数。
 
 ### `QColorSpace::operator QVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回色彩空间为`QVariant`。
 
 ### `bool operator!=(const QColorSpace &colorSpace1, const QColorSpace &colorSpace2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `colorSpace1`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `colorSpace2`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果色彩空间 `colorSpace1` 不等于色彩空间 `colorSpace2`，则返回 `true`；否则返回 `false`。
 
 ### `QDataStream &operator<<(QDataStream &stream, const QColorSpace &colorSpace)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `colorSpace`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`colorSpace`写入给定`stream`，作为ICC配置文件。
 
 ### `bool operator==(const QColorSpace &colorSpace1, const QColorSpace &colorSpace2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `colorSpace1`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `colorSpace2`：类型为 `const QColorSpace &`。没有默认值，调用时必须提供。传入 `const QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果颜色空间 `colorSpace1` 等于颜色空间 `colorSpace2`，则返回 `true`；否则返回 `false`。
 
 ### `QDataStream &operator>>(QDataStream &stream, QColorSpace &colorSpace)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `colorSpace`：类型为 `QColorSpace &`。没有默认值，调用时必须提供。传入 `QColorSpace &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定`stream`读取色彩空间并将其存储在给定`colorSpace`中。
 
 ### `(since 6.9) struct PrimaryPoints`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QColorSpace` 的 `Primary、Points` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+PrimaryPoints 结构包含四个原色空间点。
+描述RGB色域的四个CIE XY色域点;红、绿、蓝、白。
 
 ## 6. 深入实践与常见坑
 

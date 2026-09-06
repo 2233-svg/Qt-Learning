@@ -77,128 +77,70 @@ source = 2; // result 会重新计算
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit, since 6.5] QBindable::QBindable(QObject *obj, const QMetaProperty &property)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QBindable` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `obj`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `property`：类型为 `const QMetaProperty &`。没有默认值，调用时必须提供。传入 `const QMetaProperty &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+参见 `QBindable::QBindable`（QObject *obj， const char *属性）。
 
 ### `[explicit, since 6.5] QBindable::QBindable(QObject *obj, const char *property)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QBindable` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+为`obj`上的`Q_PROPERTY` `property`构造一个QBindable。该属性必须有通知信号，但其`Q_PROPERTY`定义中不必有`BINDABLE`，因此即使是绑定不知情的`Q_PROPERTY`s也可以被绑定或用于绑定表达式。如果该属性未被`BINDABLE`，你必须在绑定表达式中使用`QBindable::value()`代替函数`READ`的正常属性（或`MEMBER`）来实现依赖追踪。使用λ绑定时，你可能更倾向于通过值捕获QBindable，以避免在绑定表达式中调用该构造函数的成本。该构造函数不应用于实现`Q_PROPERTY`的 `BINDABLE`，因为生成的`Q_PROPERTY`不支持依赖追踪。要制作一个无需读取QBindable即可直接使用的属性，使用`QProperty`或`QObjectBindableProperty`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `obj`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `property`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QProperty<QString> displayText;
+ QDateTimeEdit *dateTimeEdit = findDateTimeEdit();
+ QBindable<QDateTime> dateTimeBindable(dateTimeEdit, "dateTime");
+ displayText.setBinding([dateTimeBindable](){ return dateTimeBindable.value().toString(); });
+```
 
 ### `QPropertyBinding<T> QBindable::binding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `binding`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的基础属性的绑定。如果该属性没有绑定，返回的`QPropertyBinding<T>`将无效。
 
 ### `QPropertyBinding<T> QBindable::makeBinding(const QPropertyBindingSourceLocation &location = QT_PROPERTY_DEFAULT_BINDING_LOCATION) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QBindable::makeBinding` 用于计算、查询或取得与“make、Binding”相关的操作。调用时要先确认当前状态和 `location` 的有效范围；返回类型是 `QPropertyBinding<T>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数 `location`：类型为 `const QPropertyBindingSourceLocation &`。默认值为 `QT_PROPERTY_DEFAULT_BINDING_LOCATION`。传入 `const QPropertyBindingSourceLocation &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建绑定，利用指定的源`location`评估基础物业价值。
 
 ### `QPropertyBinding<T> QBindable::setBinding(const QPropertyBinding<T> &binding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QBindable` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数 `binding`：类型为 `const QPropertyBinding<T> &`。没有默认值，调用时必须提供。传入 `const QPropertyBinding<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将基础属性的约束设置为`binding`。如果`QBindable`是只读或无效，则无效。
 
 ### `template <typename Functor> QPropertyBinding<T> QBindable::setBinding(Functor f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QBindable` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyBinding<T>`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`f`创建一个`QPropertyBinding<T>`，并将其设置为基础属性的绑定。
 
 ### `void QBindable::setValue(const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValue`。调用它会改变 `QBindable` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将基础属性的值设为`value`。这会移除当前设置的绑定。如果`QBindable`是只读或无效，该函数无效。
 
 ### `QPropertyBinding<T> QBindable::takeBinding()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QBindable::takeBinding` 用于计算、查询或取得与“取出、Binding”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPropertyBinding<T>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除当前设置的基础属性的绑定并返回该属性。如果属性没有绑定，返回的`QPropertyBinding<T>`将无效。
 
 ### `T QBindable::value() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QBindable` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基础属性的当前价值。如果`QBindable`无效，则返回默认构造`T`。
 
 ## 6. 深入实践与常见坑
 

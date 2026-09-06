@@ -131,912 +131,610 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 69 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QCborStreamReader::StringResultCode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 暴露的类型声明 `字符串、结果、Code`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StringResultCode`。
-- 属性名：`QCborStreamReader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举通过`readString()`和`readByteArray()`返回，用以表示解析状态。
+- `QCborStreamReader::EndOfString`：`0`;字符串的解析完成且无错误。
+- `QCborStreamReader::Ok`：`1`;函数返回数据;没有错误。
+- `QCborStreamReader::Error`：`-1`;解析失败，出现错误。
 
 ### `enum QCborStreamReader::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QCborStreamReader`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含了所有可能的CBOR类型，并由`QCborStreamReader`解码。CBOR有7个主要类型，以及一些无值的简单类型和浮点值。
+- `QCborStreamReader::UnsignedInteger`：`0x00`;（主要类型0）范围为0至264 - 1（18,446,744,073,709,551,616）
+- `QCborStreamReader::NegativeInteger`：`0x20`;（主要类型1）范围为-1至-264（-18,446,744,073,709,551,616）
+- `QCborStreamReader::ByteArray`：`ByteString`;（主要类型2）任意二进制数据。
+- `QCborStreamReader::ByteString`：`0x40`;字节阵列的别名。
+- `QCborStreamReader::String`：`TextString`;（主要类型3）Unicode文本，可能包含NUL。
+- `QCborStreamReader::TextString`：`0x60`;弦的别名
+- `QCborStreamReader::Array`：`0x80`;（主要类型4）异构项目阵列。
+- `QCborStreamReader::Map`：`0xa0`;（主要类型5）异质项地图/词典。
+- `QCborStreamReader::Tag`：`0xc0`;（主类型6）数字为通用CBOR项提供更多语义价值。更多信息请参见 `QCborTag`。
+- `QCborStreamReader::SimpleType`：`0xe0`;（主要类型7）不具其他取值的类型。包括布尔（真和假）、空、未定义。
+- `QCborStreamReader::Float16`：`HalfFloat`;IEEE 754半精度浮点（`qfloat16`）。
+- `QCborStreamReader::HalfFloat`：`0xf9`;Float16的别名。
+- `QCborStreamReader::Float`：`0xfa`;IEEE 754单精度浮点（`float`）。
+- `QCborStreamReader::Double`：`0xfb`;IEEE 754 双精度浮点（`double`）。
+- `QCborStreamReader::Invalid`：`0xff`;不是一个有效的类型，可能是由于解析错误，也可能是到达数组或映射的末尾。
 
 ### `QCborStreamReader::QCborStreamReader()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个没有源数据的 QCborStreamReader 对象。构建完成后，QCborStreamReader 会报告一次错误解析。
+你可以通过调用`addData()`或用`setDevice()`设置不同的源设备来添加更多数据。
 
 ### `[explicit] QCborStreamReader::QCborStreamReader(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QCborStreamReader对象，解析通过读取`device`找到的CBOR流。QCborStreamReader不拥有`device`，因此该对象必须保持有效，直到该对象被销毁。
 
 ### `[explicit] QCborStreamReader::QCborStreamReader(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QCborStreamReader对象，解析`data`中发现的CBOR流。
 
 ### `QCborStreamReader::QCborStreamReader(const char *data, qsizetype len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QCborStreamReader对象，数据从`data`开始`len`字节。指针必须保持有效，直到QCborStreamReader被销毁。
 
 ### `QCborStreamReader::QCborStreamReader(const quint8 *data, qsizetype len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const quint8 *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QCborStreamReader对象，数据从`data`开始`len`字节。指针必须保持有效，直到QCborStreamReader被销毁。
 
 ### `[noexcept] QCborStreamReader::~QCborStreamReader()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该`QCborStreamReader`对象并释放所有相关资源。
 
 ### `void QCborStreamReader::addData(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCborStreamReader` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向CBOR流添加`data`并重新解析当前元素。当数据在处理流时已到达数据终点，但现在有更多数据可用，此功能非常有用。
 
 ### `void QCborStreamReader::addData(const char *data, qsizetype len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCborStreamReader` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向CBOR流添加`len`字节，从`data`开始，并对当前元素进行解析。如果之前在处理数据流时到达了数据的终点，但现在有更多数据可用，这个功能非常有用。
 
 ### `void QCborStreamReader::addData(const quint8 *data, qsizetype len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QCborStreamReader` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const quint8 *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向CBOR流添加`len`字节，从`data`开始，并对当前元素进行解析。如果之前在处理数据流时到达了数据的终点，但现在有更多数据可用，这个功能非常有用。
 
 ### `void QCborStreamReader::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除解码器状态并将输入源数据重置为空字节数组。调用此函数后，`QCborStreamReader` 将指示解析错误。
+调用 `addData()` 可添加更多待解析数据。
 
 ### `int QCborStreamReader::containerDepth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::containerDepth` 用于计算、查询或取得与“container、Depth”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该流已进入但尚未离开的容器数量`enterContainer()`。
 
 ### `qint64 QCborStreamReader::currentOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::currentOffset` 用于计算、查询或取得与“当前、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前解码项目输入流中的偏移量。当前偏移量仅在源数据为`QByteArray`或解码开始时位于起始位置的`QIODevice`时，才表示已解码的字节数。
 
 ### `qsizetype QCborStreamReader::currentStringChunkSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::currentStringChunkSize` 用于计算、查询或取得与“当前、字符串、Chunk、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前文本或字节字符串块的大小。如果CBOR流包含非分块字符串（即返回`isLengthKnown()`返回`true`），该函数返回整个字符串的大小，与`length()`相同。
+该函数有助于预分配可以传递给`readStringChunk()`的缓冲区。
 
 ### `QIODevice *QCborStreamReader::device() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::device` 用于计算、查询或取得与“device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用 `setDevice()` 或 `QCborStreamReader` 构造函数设置的 `QIODevice`。如果该对象读取 `QByteArray`，则返回 nullptr。
 
 ### `bool QCborStreamReader::enterContainer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::enterContainer` 用于计算、查询或取得与“enter、Container”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+进入当前项的数组或映射，并准备迭代容器中包含的元素。如果成功进入容器返回 true，否则返回 false（通常是解析错误）。每次调用 enterContainer() 都必须与调用 `leaveContainer()` 配对。
+仅当当前项为数组或映射时（即 `isArray()`、`isMap()` 或 `isContainer()` 为真）才可以调用此函数。在其他条件下调用是错误的。
 
 ### `[noexcept] bool QCborStreamReader::hasNext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasNext`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前容器中还有更多需要解码的项，则返回 true;如果已经到达，则返回 false。如果我们解析根元素，return为false表示解析完成;否则，如果容器深度非零，则外部代码需要调用`leaveContainer()`。
 
 ### `bool QCborStreamReader::isArray() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isArray`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果当前元素的类型是数组（即返回`type()`返回`QCborStreamReader::Array`），则返回为真。如果该函数返回为真，你可以调用`enterContainer()`开始解析该容器。
+当当前元素是数组时，你也可以调用 `isLengthKnown()` 来确定数组大小是否在 CBOR 流中显式。如果显式，可以通过调用 `length()` 获得该大小。
+以下示例根据数组大小预分配一个`QVariantList`，以实现更高效的解码：
+注意：上述代码并未验证长度是否合理。如果输入流报告长度为10亿元素，上述函数会尝试分配约16GB或更多的内存，可能导致崩溃。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
+```cpp
+ QVariantList populateFromCbor(QCborStreamReader &reader)
+ {
+     QVariantList list;
+     if (reader.isLengthKnown())
+         list.reserve(reader.length());
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     reader.enterContainer();
+     while (reader.lastError() == QCborError::NoError && reader.hasNext())
+         list.append(readOneElement(reader));
+     if (reader.lastError() == QCborError::NoError)
+         reader.leaveContainer();
+
+     return list;
+ }
+```
 
 ### `bool QCborStreamReader::isBool() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBool`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素是布尔值（`true`或 `false`），返回真;如果是其他值，则返回假。如果该函数返回真，你可以调用 `toBool()` 来获取布尔值。你也可以调用 `toSimpleType()`，并与 QCborSimpleValue：：True 或 QCborSimpleValue：：False 进行比较。
 
 ### `bool QCborStreamReader::isByteArray() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isByteArray`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素类型是字节数组（即返回`type()`返回`QCborStreamReader::ByteArray`），则返回为真。如果该函数返回为真，你可以调用`readByteArray()`读取该数据。
 
 ### `bool QCborStreamReader::isContainer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isContainer`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素是容器（即数组或映射），则返回真;如果是其他元素，则返回 false。如果当前元素是容器，可以使用`isLengthKnown()`函数来确定容器大小是否在流中显式，如果是，可以用 `length()` 来获得该大小。
+更重要的是，对于容器，`enterContainer()`函数可以开始遍历其中的元素。
 
 ### `bool QCborStreamReader::isDouble() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDouble`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元件类型是IEEE 754双精度浮点（即返回`type()`返回`QCborStreamReader::Double`，则返回真。如果该函数返回真，你可以调用`toDouble()`读取该数据。
 
 ### `bool QCborStreamReader::isFalse() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFalse`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素是`false`值，则返回真;如果是其他值，则返回假。
 
 ### `bool QCborStreamReader::isFloat16() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFloat16`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元件类型是IEEE 754半精度浮点（即返回`QCborStreamReader::Float16`，则返回真`type()`）。如果该函数返回真，你可以调用`toFloat16()`读取该数据。
 
 ### `bool QCborStreamReader::isFloat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFloat`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素类型是IEEE 754单精度浮点（即返回`QCborStreamReader::Float`，则返回真`type()`）。如果该函数返回真，你可以调用`toFloat()`读取该数据。
 
 ### `bool QCborStreamReader::isInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInteger`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素的类型是无符号整数或负数（即返回`type()` `QCborStreamReader::UnsignedInteger`或 `QCborStreamReader::NegativeInteger`），则返回真。如果该函数返回真，你可以调用`toInteger()`读取该值。
 
 ### `bool QCborStreamReader::isInvalid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInvalid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素无效，则返回真，否则返回假。如果存在解码错误，或者我们刚刚解析了数组或映射中的最后一个元素，当前元素可能无效。
+注意：该函数不应与`isNull()`混淆。空是一种正常的CBOR类型，应用程序必须处理。
 
 ### `[noexcept] bool QCborStreamReader::isLengthKnown() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLengthKnown`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知当前数组、映射、字节数组或字符串的长度（在CBOR流中明确表示），返回true，否则返回false。只有当元素属于这些元素时才应调用该函数。
+如果已知长度，可以通过调用 `length()` 得到。
+如果未知映射或数组的长度，则由流中元素的数量推断。`QCborStreamReader` 没有 API 来计算该条件下的长度。
+字符串和字节数组也可能具有不确定长度（即它们可以分多个块传输）。目前这些数据块无法用`QCborStreamWriter`创建，但可以用其他编码器创建，因此`QCborStreamReader`支持它们。
 
 ### `bool QCborStreamReader::isMap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isMap`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果当前元素的类型是映射（即返回 `type()` 返回 `QCborStreamReader::Map`），则返回 true。如果该函数返回为真，你可以调用 `enterContainer()` 开始解析该容器。
+当当前元素是映射时，你还可以调用 `isLengthKnown()`，以确定该映射的大小是否在 CBOR 流中显式。如果是，可以通过调用 `length()` 获得该大小。
+以下示例预先分配一个`QVariantMap`，给定映射大小以实现更高效的解码：
+上述示例使用了一个称为`readElementAsString`的函数来读取映射的密钥并获得字符串。这是因为CBOR映射可以包含任意类型的键，而不仅仅是字符串。用户代码需要执行这种转换，拒绝非字符串键，或者使用除`QVariantMap`和`QVariantHash`以外的其他容器。例如，如果映射预期包含整数键，这推荐以减少流规模和解析，那么正确的容器应是`\l{QMap}<int, QVariant>`或`\l{QHash}<int, QVariant>`。
+注意：上述代码并未验证长度是否合理。如果输入流报告长度为10亿个元素，上述函数会尝试分配约24GB或更多的内存，这可能导致崩溃。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
+```cpp
+ QVariantMap populateFromCbor(QCborStreamReader &reader)
+ {
+     QVariantMap map;
+     if (reader.isLengthKnown())
+         map = setMapLength(map, reader.length());
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     reader.enterContainer();
+     while (reader.lastError() == QCborError::NoError && reader.hasNext()) {
+         QString key = readElementAsString(reader);
+         map.insert(key, readOneElement(reader));
+     }
+     if (reader.lastError() == QCborError::NoError)
+         reader.leaveContainer();
+
+     return map;
+ }
+```
 
 ### `bool QCborStreamReader::isNegativeInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNegativeInteger`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素的类型为负整数（即 `type()`返回 `QCborStreamReader::NegativeInteger`），则返回 true。如果该函数返回 true，你可以调用 `toNegativeInteger()` 或 `toInteger()` 读取该值。
 
 ### `bool QCborStreamReader::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素是`null`值，则返回真;如果是其他值，则返回假。空值可用于表示某些可选数据的缺失。
+注意：该函数并非`isValid()`的反义词。Null值是有效的CBOR值。
 
 ### `bool QCborStreamReader::isSimpleType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSimpleType`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素的类型是任意 CBOR 简单类型，包括布尔值（真和假）以及空和未定义，则返回真。要确定该简单类型，请调用 `toSimpleType()`。或者，为了测试某个特定的简单类型，调用取 `QCborSimpleType` 参数的超载。
+CBOR 简单类型是指不携带额外值的类型。有 255 种可能性，但目前只有四个有明确意义的值。代码不被期望处理未知的简单类型，如果发现未知的简单类型，可能会直接丢弃该流为无效。
 
 ### `bool QCborStreamReader::isSimpleType(QCborSimpleType st) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSimpleType`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `st`：类型为 `QCborSimpleType`。没有默认值，调用时必须提供。传入 `QCborSimpleType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素的类型是简单类型 `st`，则返回真;否则返回 false。如果该函数返回真，则返回`toSimpleType()`返回 `st`。
+CBOR 简单类型是指不携带额外值的类型。有 255 种可能性，但目前只有四个有明确意义的值。代码不被期望处理未知的简单类型，如果发现未知的简单类型，可能会直接丢弃该流为无效。
 
 ### `bool QCborStreamReader::isString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isString`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素的类型是文本字符串（即返回`type()`返回`QCborStreamReader::String`），则返回为真。如果该函数返回为真，你可以调用`readString()`读取该数据。
 
 ### `bool QCborStreamReader::isTag() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTag`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素类型是 CBOR 标签（即 返回 `type()` 返回 `QCborStreamReader::Tag`），则返回 true。如果该函数返回为真，你可以调用 `toTag()` 读取该数据。
 
 ### `bool QCborStreamReader::isTrue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTrue`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素是`true`值，则返回真;如果是其他值，则返回假。
 
 ### `bool QCborStreamReader::isUndefined() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUndefined`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素是`undefined`值，则返回真;如果是其他值，则返回假。未定义的值可以被编码为表示在创建流时某些转换失败或无法实现。`QCborStreamReader`从不进行任何替换，且该函数仅在流包含显式未定义值时返回真。
 
 ### `bool QCborStreamReader::isUnsignedInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUnsignedInteger`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素的类型是无符号整数（即 返回 `QCborStreamReader::UnsignedInteger`，则返回真`type()`）。如果该函数返回真，你可以调用 `toUnsignedInteger()` 或 `toInteger()` 读取该值。
 
 ### `bool QCborStreamReader::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前元素有效，则返回 true，否则返回 false。如果当前元素存在解码错误，或者我们刚刚解析了数组或映射中的最后一个元素，当前元素可能无效。
+注意：该函数与`isNull()`的相反。Null 是应用程序必须处理的正常 CBOR 类型。
 
 ### `QCborError QCborStreamReader::lastError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::lastError` 用于计算、查询或取得与“末项、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCborError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCborError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回解码流中最后一次错误（如有）。如果未遇到错误，返回`QCborError::NoError`。
 
 ### `bool QCborStreamReader::leaveContainer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::leaveContainer` 用于计算、查询或取得与“leave、Container”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+离开正在处理的数组或映射，并将解码器定位在容器结束后的下一个项目。如果成功离开容器，则返回true，否则返回false（通常是解析错误）。每次调用`enterContainer()`都必须与对leaveContainer()的调用配对。
+只有当`hasNext()`返回false且`containerDepth()`不是零时，才能调用该函数。在其他条件下调用该函数则为错误。
 
 ### `quint64 QCborStreamReader::length() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `length`，返回 `QCborStreamReader` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字符串或字节数组的长度，或数组中的项数，或如果已知的话，映射中条目对的数量。如果长度未知（即返回 false，`isLengthKnown()`，则不应调用该函数）。这样做是错误，会导致`QCborStreamReader`停止解析输入流。
 
 ### `bool QCborStreamReader::next(int maxRecursion = 10000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::next` 用于计算、查询或取得与“移动到下一项”相关的操作。调用时要先确认当前状态和 `maxRecursion` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `maxRecursion`：类型为 `int`。默认值为 `10000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+先推进 CBOR 流解码一个元素。通常在解析固定宽度基本元素（即整数、简单值、标签和浮点值）时应调用这个函数。但当当前项是字符串、数组或映射时，也可以调用这个函数，并且会跳过整个元素，包括所有包含的元素。
+如果推进成功，该函数返回true，否则返回false。如果流损坏、不完整，或数组和映射的嵌套层级超过`maxRecursion`，则该函数可能会失败。当`hasNext()`返回false时调用该函数也是错误。如果该函数返回false，`lastError()`会返回详细说明失败原因的错误代码。
 
 ### `QCborStreamReader::Type QCborStreamReader::parentContainerType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::parentContainerType` 用于计算、查询或取得与“父对象、Container、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCborStreamReader::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCborStreamReader::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QCborStreamReader::Array`或`QCborStreamReader::Map`，分别表示当前项目的容器是数组还是映射。如果我们当前解析根元素，该函数返回`QCborStreamReader::Invalid`。
 
 ### `[since 6.7] QByteArray QCborStreamReader::readAllByteArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readAllByteArray`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码当前字节串并返回。如果字符串被分块，该函数会遍历所有块并串接它们。如果发生错误，该函数返回默认构造的QByteArray()，但这可能与某些空字节串无法区分。相反，检查`lastError()`以确定是否发生了错误。
+该函数不进行任何类型转换，包括整数或字符串的转换。因此，只有当 `isByteArray()` 为真时才能调用;在其他条件下调用是错误。
+注意：此功能不可恢复。也就是说，该功能不应用于可能仍接收CBOR数据的情境，例如从套接字或管道接收。只有在完整数据已接收且输入`QByteArray`或输入`QIODevice`中可用时，才应使用此功能。
 
 ### `[since 6.7] QString QCborStreamReader::readAllString()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readAllString`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码当前文本字符串并返回。如果字符串被分块，该函数会遍历所有分块并连接它们。如果发生错误，该函数返回默认构造的QString()，但这可能与某些空文本字符串无法区分。相反，检查`lastError()`以确定是否发生了错误。
+该函数不执行任何类型转换，包括从整数或字节数组进行。因此，只有当`isString()`返回为真时才可调用;在其他条件下调用则为错误。
+注意：该功能不可恢复。也就是说，该功能不应用于可能仍接收 CBOR 数据的上下文，例如来自套接字或管道。只有在完整数据已被接收且输入`QByteArray`或 `QIODevice` 中可用时，才应使用。
 
 ### `[since 6.7] QByteArray QCborStreamReader::readAllUtf8String()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readAllUtf8String`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码当前文本字符串并返回。如果字符串被分块，该函数会遍历所有分块并连接它们。如果发生错误，该函数返回默认构造的QString()，但这可能与某些空文本字符串无法区分。相反，检查`lastError()`以确定是否发生了错误。
+该函数不执行任何类型转换，包括从整数或字节数组进行。因此，只有当`isString()`返回为真时才可调用;在其他条件下调用则为错误。
+注意：该功能不可恢复。也就是说，该功能不应用于可能仍接收 CBOR 数据的上下文，例如来自套接字或管道。只有在完整数据已被接收且输入`QByteArray`或 `QIODevice` 中可用时，才应使用。
 
 ### `[since 6.7] bool QCborStreamReader::readAndAppendToByteArray(QByteArray &dst)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readAndAppendToByteArray`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `dst`：类型为 `QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码当前字节串并附加到`dst`。如果字符串被分块，该函数会遍历所有分块并串接它们。如果解码过程中出现错误，其他本可成功解码的分块可能仍然写入`dst`。如果解码没有错误，返回`true`，否则`false`。
+该函数不进行任何类型转换，包括从整数或字符串转换。因此，只有当 `isByteArray()` 为真时才能调用;在任何其他条件下调用它都是错误。
+注意：此功能不可恢复。也就是说，该功能不应用于仍可接收CBOR数据的情境，例如从套接字或管道接收。只有在完整数据已被接收且输入`QByteArray`或`QIODevice`中可用时，才应使用。
 
 ### `[since 6.7] bool QCborStreamReader::readAndAppendToString(QString &dst)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readAndAppendToString`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `dst`：类型为 `QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码当前文本字符串并附加到`dst`。如果字符串被分块，该函数会遍历所有分块并连接它们。如果解码过程中出现错误，其他可能已成功解码的区块仍被写入`dst`。如果解码无错误，返回`true`，否则`false`。
+该函数不进行任何类型转换，包括从整数或字节数组进行。因此，只有当`isString()`返回为真时才能调用;在其他条件下调用则为错误。
+注意：此功能不可恢复。也就是说，该功能不应用于仍可能接收CBOR数据的情境，例如来自套接字或管道。只有在完整数据已接收且输入`QByteArray`或输入`QIODevice`可用时才应使用。
 
 ### `[since 6.7] bool QCborStreamReader::readAndAppendToUtf8String(QByteArray &dst)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readAndAppendToUtf8String`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `dst`：类型为 `QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解码当前文本字符串并附加到`dst`。如果字符串被分块，该函数会遍历所有分块并连接它们。如果解码过程中出现错误，其他可能已成功解码的区块仍被写入`dst`。如果解码无错误，返回`true`，否则`false`。
+该函数不进行任何类型转换，包括从整数或字节数组进行。因此，只有当`isString()`返回为真时才能调用;在其他条件下调用则为错误。
+注意：此功能不可恢复。也就是说，该功能不应用于仍可能接收CBOR数据的情境，例如来自套接字或管道。只有在完整数据已接收且输入`QByteArray`或输入`QIODevice`可用时才应使用。
 
 ### `QCborStreamReader::StringResult<QByteArray> QCborStreamReader::readByteArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readByteArray`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+从CBOR字符串中解码一个字节数组块并返回。该函数用于常规和分块内容，因此调用者必须始终绕着调用该函数，即使`isLengthKnown()`为真。该函数的典型用途如下：
+`readAllByteArray()`函数实现了上述循环和一些额外的检查。
+该函数不执行任何类型转换，包括整数或字符串的转换。因此，只有当 `isByteArray()` 为真时才能调用;在其他条件下调用则为错误。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QCborStreamReader::StringResult<QByteArray>`。
-- 参数：无。
+```cpp
+ QByteArray decodeBytearray(QCborStreamReader &reader)
+ {
+     QByteArray result;
+     auto r = reader.readByteArray();
+     while (r.status == QCborStreamReader::Ok) {
+         result += r.data;
+         r = reader.readByteArray();
+     }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     if (r.status == QCborStreamReader::Error) {
+         // handle error condition
+         result.clear();
+     }
+     return result;
+ }
+```
 
 ### `QCborStreamReader::StringResult<QString> QCborStreamReader::readString()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readString`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+从CBOR字符串中解码一个字符串块并返回。该函数可用于常规字符串和分块字符串内容，因此调用者必须始终绕着调用该函数，即使`isLengthKnown()`为真。该函数的典型用途如下：
+`readAllString()`函数实现了上述循环和一些额外的检查。
+该函数不进行任何类型转换，包括从整数或字节数组。因此，只有当`isString()`返回为真时才能调用;在其他条件下调用则为错误。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QCborStreamReader::StringResult<QString>`。
-- 参数：无。
+```cpp
+ QString decodeString(QCborStreamReader &reader)
+ {
+     QString result;
+     auto r = reader.readString();
+     while (r.status == QCborStreamReader::Ok) {
+         result += r.data;
+         r = reader.readString();
+     }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     if (r.status == QCborStreamReader::Error) {
+         // handle error condition
+         result.clear();
+     }
+     return result;
+ }
+```
 
 ### `QCborStreamReader::StringResult<qsizetype> QCborStreamReader::readStringChunk(char *ptr, qsizetype maxlen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readStringChunk`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+将当前字符串块读取到`ptr`指向的缓冲区，缓冲区大小为`maxlen`。该函数返回一个`StringResult`对象，复制到`ptr`的字节数保存在`\l` `StringResult::data`成员中。`\l` `StringResult::status`成员表示读取字符串时是否出现错误，数据是否被复制，或是否为最后一个块。
+该函数可以同时调用`String`类型和`ByteArray`类型。对于后者，该函数读取的将与`readByteArray()`返回的数据相同。对于字符串，它返回的 UTF-8 等价于本应返回的`QString`。
+该函数通常与`currentStringChunkSize()`一起在循环中使用。例如：
+与`readByteArray()`和`readString()`不同，该功能不受`QByteArray`和 `QString`实现限制。
+注意：该函数不验证 UTF-8 内容格式正确。这意味着即使 `readString()` 出现了，该函数也不会`QCborError::InvalidUtf8String`错误。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QCborStreamReader::StringResult<qsizetype>`。
-- 参数 `ptr`：类型为 `char *`。没有默认值，调用时必须提供。传入 `char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxlen`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QCborStreamReader::StringResult<qsizetype> result;
+ do {
+     qsizetype size = reader.currentStringChunkSize();
+     qsizetype oldsize = buffer.size();
+     buffer.resize(oldsize + size);
+     result = reader.readStringChunk(buffer.data() + oldsize, size);
+ } while (result.status == QCborStreamReader::Ok);
+```
 
 ### `[since 6.7] QCborStreamReader::StringResult<QByteArray> QCborStreamReader::readUtf8String()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的核心操作 `readUtf8String`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+从CBOR字符串中解码一个字符串块并返回。该函数可用于常规字符串和分块字符串内容，因此调用者必须始终绕着调用该函数，即使`isLengthKnown()`为真。该函数的典型用途类似于以下`readString()`：
+`readAllUtf8String()`函数实现了上述循环和一些额外的检查。
+该函数不进行任何类型转换，包括从整数或字节数组。因此，只有当`isString()`返回为真时才能调用;以其他条件调用则为错误。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QCborStreamReader::StringResult<QByteArray>`。
-- 参数：无。
+```cpp
+ QString decodeString(QCborStreamReader &reader)
+ {
+     QString result;
+     auto r = reader.readString();
+     while (r.status == QCborStreamReader::Ok) {
+         result += r.data;
+         r = reader.readString();
+     }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     if (r.status == QCborStreamReader::Error) {
+         // handle error condition
+         result.clear();
+     }
+     return result;
+ }
+```
 
 ### `void QCborStreamReader::reparse()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::reparse` 用于执行与“reparse”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+对当前元素进行解析。当解析失败后，源 `QIODevice` 中出现更多数据，因为输入数据在 CBOR 流结束前到达，必须调用该函数。
+当读取QByteArray()时，`addData()`函数会自动调用该函数。在读取未失败时调用该函数是no-op。
 
 ### `void QCborStreamReader::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将源数据重置回起始并清除解码器状态。如果源数据是`QByteArray`，`QCborStreamReader`将从数组的起始处重新开始。
+如果源数据是`QIODevice`，该函数会调用`QIODevice::reset()`，会寻找字节位置0。如果在设备开头（例如文件开头）找不到CBOR流，那么该函数很可能会做错。相反，将`QIODevice`定位到正确的偏移量并调用`setDevice()`。
 
 ### `void QCborStreamReader::setDevice(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDevice`。调用它会改变 `QCborStreamReader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数据源设置为`device`，将解码器重置为初始状态。
 
 ### `bool QCborStreamReader::toBool() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toBool`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的布尔值。
+该函数不执行任何类型转换，包括从整数的转换。因此，只有当 `isTrue()`、`isFalse()` 或 `isBool()` 返回为真时才能调用;以任何其他条件调用它都是错误。
 
 ### `double QCborStreamReader::toDouble() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toDouble`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`double`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的64位双精度浮点值。
+该函数不进行任何类型转换，包括从其他浮点类型或整数值转换。因此，只有当 `isDouble()` 为真时才能调用;在其他条件下调用则为错误。
 
 ### `qfloat16 QCborStreamReader::toFloat16() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toFloat16`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`qfloat16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的16位半精度浮点值。
+该函数不进行任何类型转换，包括从其他浮点类型或整数值转换。因此，只有当 `isFloat16()` 为真时才能调用;在其他条件下调用则为错误。
 
 ### `float QCborStreamReader::toFloat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toFloat`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的32位单精度浮点值。
+该函数不进行任何类型转换，包括从其他浮点类型或整数值转换。因此，只有当 `isFloat()` 为真时才能调用;在其他条件下调用则为错误。
 
 ### `qint64 QCborStreamReader::toInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toInteger`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的整数值，无论是负数、正数还是零值。如果值大于263 - 1或小于-263，返回的值会溢出并符号错误。如果需要处理这些值，请使用`toUnsignedInteger()`或`toNegativeInteger()`。
+该函数不执行任何类型转换，包括从布尔或CBOR标签转换。因此，只有当`isInteger()`为真时才可调用;在其他条件下调用则为错误。
 
 ### `QCborNegativeInteger QCborStreamReader::toNegativeInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toNegativeInteger`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QCborNegativeInteger`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的负整数值。QCborNegativeValue 是一个 64 位无符号整数，包含存储在 CBOR 流中的负数的绝对值。此外，QCborNegativeValue（0） 表示数字 -264。
+该函数不执行任何类型转换，包括从布尔或CBOR标签转换。因此，只有当`isNegativeInteger()`为真时才能调用;在任何其他条件下调用是错误。
+该函数可用于获取`toInteger()`返回类型范围之外的数字。然而，极不建议使用小于-263的负数。
 
 ### `QCborSimpleType QCborStreamReader::toSimpleType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toSimpleType`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QCborSimpleType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前简单类型的值。
+该函数不进行任何类型转换，包括从整数的转换。因此，只有当 `isSimpleType()` 为真时才可调用;在其他条件下调用则为错误。
 
 ### `QCborTag QCborStreamReader::toTag() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toTag`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QCborTag`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的标签值。
+该函数不进行任何类型转换，包括从整数的转换。因此，只有当 `isTag()` 为真时才能调用;在其他条件下调用则为错误。
+标签是附加在通用CBOR类型的64位数字，赋予它们更多意义。有关已知标签列表，请参见`QCborKnownTags`枚举。
 
 ### `quint64 QCborStreamReader::toUnsignedInteger() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toUnsignedInteger`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的无符号整数值。
+该函数不执行任何类型转换，包括从布尔或CBOR标签转换。因此，只有当`isUnsignedInteger()`为真时才能调用;在其他条件下调用则为错误。
+该函数可用于获取超出返回类型范围的数值`toInteger()`。
 
 ### `QCborStreamReader::Type QCborStreamReader::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCborStreamReader::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QCborStreamReader::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QCborStreamReader::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素的类型。它是有效类型之一，或为无效。
 
 ### `struct StringResult`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QCborStreamReader` 的 `字符串、结果` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该类由`readString()`和`readByteArray()`返回，包含读取字符串的内容或解析已完成或发现错误的指示。
+`data` 的内容只有在 `status` `Ok`时才有效。否则，它应为空。
 
 ## 6. 深入实践与常见坑
 

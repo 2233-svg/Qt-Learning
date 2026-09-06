@@ -110,496 +110,298 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 37 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QNetworkProxy::Capabilityflags QNetworkProxy::Capabilities`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 暴露的类型声明 `Capabilityflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Capabilityflags QNetworkProxy::Capabilities`。
-- 属性名：`QNetworkProxy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志表示某个代理服务器支持的功能。
+`QNetworkProxy` 在创建对象时默认设置不同的能力（参见 `QNetworkProxy::ProxyType` 中的默认列表）。不过，在创建对象后，可以用 `setCapabilities()` 更改能力。
+`QNetworkProxy`支持的功能包括：
+- `QNetworkProxy::TunnelingCapability`：`0x0001`;能够开启透明的隧道TCP连接到远程主机。代理服务器逐字中继传输内容，不进行缓存。
+- `QNetworkProxy::ListeningCapability`：`0x0002`;能够创建监听套接字并等待来自远程主机的 TCP 连接。
+- `QNetworkProxy::UdpTunnelingCapability`：`0x0004`;能够通过代理服务器向远程主机传递UDP数据报。
+- `QNetworkProxy::CachingCapability`：`0x0008`;缓存传输内容的能力。该功能针对每个协议和代理类型而定。例如，HTTP 代理可以通过“GET”命令缓存传输的网络数据内容。
+- `QNetworkProxy::HostNameLookupCapability`：`0x0010`;能够连接以对远程主机名称进行查找并连接，而非仅要求应用程序进行名称查找并请求连接到IP地址。
+- `QNetworkProxy::SctpTunnelingCapability`：`0x00020`;能够向远程主机开放透明的隧道SCTP连接。
+- `QNetworkProxy::SctpListeningCapability`：`0x00040`;能够创建监听套接字并等待来自远程主机的SCTP连接。
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `enum QNetworkProxy::ProxyType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 暴露的类型声明 `Proxy、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ProxyType`。
-- 属性名：`QNetworkProxy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了Qt中提供的网络代理类型。
+Qt 理解两种类型的代理：透明代理和缓存代理。第一类是能够处理任意数据传输的代理，而第二类只能处理特定请求。缓存代理仅适用于可用的特定类。
+- `QNetworkProxy::NoProxy`：`2`;不使用代理
+- `QNetworkProxy::DefaultProxy`：`0`;代理基于应用代理集确定，使用`setApplicationProxy()`
+- `QNetworkProxy::Socks5Proxy`：`1`;`Socks5` 代理使用。
+- `QNetworkProxy::HttpProxy`：`3`;使用 HTTP 透明代理
+- `QNetworkProxy::HttpCachingProxy`：`4`;仅代理HTTP请求
+- `QNetworkProxy::FtpCachingProxy`：`5`;仅代理FTP请求
+下表列出了不同的代理类型及其功能。由于每种代理类型都有不同的功能，在选择代理类型之前了解它们非常重要。
+- `Proxy type`：描述;默认能力
+- `SOCKS 5`：适用于任何连接的通用代理。支持 TCP、UDP、绑定端口（输入连接）及认证;`TunnelingCapability`、`ListeningCapability`、`UdpTunnelingCapability`、`HostNameLookupCapability`
+- `HTTP`：通过“CONNECT”命令实现，仅支持外出TCP连接;支持认证;`TunnelingCapability`、`CachingCapability`、`HostNameLookupCapability`
+- `Caching-only HTTP`：使用普通 HTTP 命令实现，仅在 HTTP 请求上下文中有用（参见 `QNetworkAccessManager`）;`CachingCapability`，`HostNameLookupCapability`
+- `Caching FTP`：通过FTP代理实现，仅在FTP请求中有用（参见 `QNetworkAccessManager`）;`CachingCapability`，`HostNameLookupCapability`
+另外请注意，你不应该把应用默认代理（`setApplicationProxy()`）设置为没有`TunnelingCapability`功能的代理。如果设置了，`QTcpSocket`就不会知道如何开启连接。
 
 ### `QNetworkProxy::QNetworkProxy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有`DefaultProxy`类型的QNetworkProxy。
+代理类型由`applicationProxy()`决定，默认为`NoProxy`或如果配置了系统范围的代理。
 
 ### `QNetworkProxy::QNetworkProxy(QNetworkProxy::ProxyType type, const QString &hostName = QString(), quint16 port = 0, const QString &user = QString(), const QString &password = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QNetworkProxy::ProxyType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `hostName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `quint16`。默认值为 `0`。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `user`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `password`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建包含`type`、`hostName`、`port`、`user`和`password`的QNetworkProxy。
+代理类型`type`的默认能力是自动设置的。
 
 ### `QNetworkProxy::QNetworkProxy(const QNetworkProxy &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[noexcept] QNetworkProxy::~QNetworkProxy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QNetworkProxy`物体。
 
 ### `[static] QNetworkProxy QNetworkProxy::applicationProxy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `applicationProxy`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应用级网络代理。
+如果`QAbstractSocket`或`QTcpSocket`具有`QNetworkProxy::DefaultProxy`类型，则使用该函数返回的`QNetworkProxy`。
 
 ### `QNetworkProxy::Capabilities QNetworkProxy::capabilities() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::capabilities` 用于计算、查询或取得与“capabilities”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkProxy::Capabilities`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxy::Capabilities`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该代理服务器的功能。
 
 ### `bool QNetworkProxy::hasRawHeader(const QByteArray &headerName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasRawHeader`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `headerName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该代理正在使用原始头部`headerName`，返回`true`。如果代理类型不是 `HttpProxy` 或 `HttpCachingProxy`，返回 `false`。
 
 ### `QVariant QNetworkProxy::header(QNetworkRequest::KnownHeaders header) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::header` 用于计算、查询或取得与“header”相关的操作。调用时要先确认当前状态和 `header` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `header`：类型为 `QNetworkRequest::KnownHeaders`。没有默认值，调用时必须提供。传入 `QNetworkRequest::KnownHeaders` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该代理正在使用已知网络头部`header`，返回该值。如果不存在，返回QVariant()（即无效变体）。
 
 ### `[since 6.8] QHttpHeaders QNetworkProxy::headers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::headers` 用于计算、查询或取得与“headers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHttpHeaders`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHttpHeaders`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络请求中设置的头部。
+如果代理不是类型`HttpProxy`或类型`HttpCachingProxy`，则返回默认构造`QHttpHeaders`。
 
 ### `QString QNetworkProxy::hostName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::hostName` 用于计算、查询或取得与“host、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回代理主机的主机名称。
 
 ### `bool QNetworkProxy::isCachingProxy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCachingProxy`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该代理支持`QNetworkProxy::CachingCapability`功能，返回`true`。
+在Qt 4.4中，该能力与代理类型绑定，但自Qt 4.5起，可以通过调用`setCapabilities()`来移除代理缓存功能。
 
 ### `bool QNetworkProxy::isTransparentProxy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTransparentProxy`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该代理支持TCP连接的透明隧道，返回`true`。这与`QNetworkProxy::TunnelingCapability`能力相符。
+在Qt 4.4中，该能力与代理类型绑定，但自Qt 4.5起，可以通过调用`setCapabilities()`来移除代理缓存功能。
 
 ### `QString QNetworkProxy::password() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::password` 用于计算、查询或取得与“password”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于认证的密码。
 
 ### `quint16 QNetworkProxy::port() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::port` 用于计算、查询或取得与“port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint16`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint16`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回代理主机的端口。
 
 ### `QByteArray QNetworkProxy::rawHeader(const QByteArray &headerName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::rawHeader` 用于计算、查询或取得与“raw、Header”相关的操作。调用时要先确认当前状态和 `headerName` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `headerName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回原始的首部`headerName`。如果不存在此类头部或代理类型不属于`HttpProxy`或`HttpCachingProxy`，则返回一个空的`QByteArray`，这可能与存在但无内容的头部无法区分（使用`hasRawHeader()`来判断该头是否存在）。
+原始头部可以用`setRawHeader()`或`setHeader()`设置。
 
 ### `QList<QByteArray> QNetworkProxy::rawHeaderList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::rawHeaderList` 用于计算、查询或取得与“raw、Header、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该网络代理中设置的所有原始头部列表。列表按头部设置顺序排列。
+如果代理不是类型`HttpProxy`或`HttpCachingProxy`，则返回空`QList`。
 
 ### `[static] void QNetworkProxy::setApplicationProxy(const QNetworkProxy &networkProxy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setApplicationProxy`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `networkProxy`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。传入 `const QNetworkProxy &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将应用级网络代理设置为`networkProxy`。
+如果`QAbstractSocket`或`QTcpSocket`具有`QNetworkProxy::DefaultProxy`类型，则使用带有该函数的`QNetworkProxy`集。如果你想更灵活地决定使用哪个代理，可以使用`QNetworkProxyFactory`类。
+设置带有该功能的默认代理值会覆盖用 `QNetworkProxyFactory::setApplicationProxyFactory` 设置的应用代理，并禁用系统代理的使用。
 
 ### `void QNetworkProxy::setCapabilities(QNetworkProxy::Capabilities capabilities)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCapabilities`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `capabilities`：类型为 `QNetworkProxy::Capabilities`。没有默认值，调用时必须提供。传入 `QNetworkProxy::Capabilities` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该代理的能力设置为`capabilities`。
 
 ### `void QNetworkProxy::setHeader(QNetworkRequest::KnownHeaders header, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeader`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `header`：类型为 `QNetworkRequest::KnownHeaders`。没有默认值，调用时必须提供。传入 `QNetworkRequest::KnownHeaders` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将已知`header`头的值设置为`value`，覆盖之前设置的任何头部。该操作还会设置等效的原始HTTP头。
+如果代理不是类型`HttpProxy`或`HttpCachingProxy`，则无效。
 
 ### `[since 6.8] void QNetworkProxy::setHeaders(QHttpHeaders &&newHeaders)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newHeaders`：类型为 `QHttpHeaders &&`。没有默认值，调用时必须提供。传入 `QHttpHeaders &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newHeaders`设置为该网络请求中的头部，覆盖之前设置的任何头部。
+如果某些头对应已知头，则会解析这些值，并设置相应的解析形式。
+如果代理不是类型`HttpProxy`或`HttpCachingProxy`，则无效。
 
 ### `[since 6.8] void QNetworkProxy::setHeaders(const QHttpHeaders &newHeaders)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaders`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newHeaders`：类型为 `const QHttpHeaders &`。没有默认值，调用时必须提供。传入 `const QHttpHeaders &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newHeaders`设置为该网络请求中的头部，覆盖之前设置的任何头部。
+如果某些头对应已知头，则会解析这些值，并设置相应的解析形式。
+如果代理不是类型`HttpProxy`或`HttpCachingProxy`，则无效。
 
 ### `void QNetworkProxy::setHostName(const QString &hostName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHostName`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hostName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将代理主机的主机名称设置为`hostName`。
 
 ### `void QNetworkProxy::setPassword(const QString &password)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPassword`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `password`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将代理认证密码设置为`password`。
 
 ### `void QNetworkProxy::setPort(quint16 port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPort`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将代理主机的端口设置为`port`。
 
 ### `void QNetworkProxy::setRawHeader(const QByteArray &headerName, const QByteArray &headerValue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRawHeader`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将`headerName`的头设置为值为`headerValue`。如果`headerName`对应于已知头部（见`QNetworkRequest::KnownHeaders`），则会解析原始格式，并设置相应的“煮熟”头部。
+还将已知的LastModifiedHeader设置为解析日期的`QDateTime`对象。
+注意：设置同一个头部重复会覆盖之前的设置。为了实现多个同名 HTTP 头的行为，你应将两个值连接起来，用逗号（“，”）分隔，并设置一个单一原始头部。
+如果代理不是类型`HttpProxy`或`HttpCachingProxy`，则无效。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `headerName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `headerValue`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ request.setRawHeader(QByteArray("Last-Modified"), QByteArray("Sun, 06 Nov 1994 08:49:37 GMT"));
+```
 
 ### `void QNetworkProxy::setType(QNetworkProxy::ProxyType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setType`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QNetworkProxy::ProxyType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该实例的代理类型设置为`type`。
+注意，如果已有`setCapabilities()`设置了任何能力，改变代理类型并不会改变该`QNetworkProxy`对象所包含的能力集合。
 
 ### `void QNetworkProxy::setUser(const QString &user)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUser`。调用它会改变 `QNetworkProxy` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `user`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将代理认证的用户名设置为`user`。
 
 ### `[noexcept] void QNetworkProxy::swap(QNetworkProxy &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QNetworkProxy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络代理实例与`other`交换。此操作非常快速且从未失败。
 
 ### `QNetworkProxy::ProxyType QNetworkProxy::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkProxy::ProxyType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxy::ProxyType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该实例的代理类型。
 
 ### `QString QNetworkProxy::user() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkProxy::user` 用于计算、查询或取得与“user”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于认证的用户名。
 
 ### `bool QNetworkProxy::operator!=(const QNetworkProxy &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较该网络代理的价值与`other`，如果两者不同，`true`返回。
 
 ### `QNetworkProxy &QNetworkProxy::operator=(const QNetworkProxy &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QNetworkProxy &`。
-- 参数 `other`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将网络代理`other`的值分配给该网络代理。
 
 ### `bool QNetworkProxy::operator==(const QNetworkProxy &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QNetworkProxy &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该网络代理的价值与`other`进行比较，并在两者相同（代理类型、服务器以及用户名和密码）时返回`true`。
 
 ### `flags Capabilities`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志表示某个代理服务器支持的功能。
+`QNetworkProxy` 在创建对象时默认设置不同的能力（参见 `QNetworkProxy::ProxyType` 中的默认列表）。不过，在创建对象后，可以用 `setCapabilities()` 更改能力。
+`QNetworkProxy`支持的功能包括：
+- `QNetworkProxy::TunnelingCapability`：`0x0001`;能够开启透明的隧道TCP连接到远程主机。代理服务器逐字中继传输内容，不进行缓存。
+- `QNetworkProxy::ListeningCapability`：`0x0002`;能够创建监听套接字并等待来自远程主机的 TCP 连接。
+- `QNetworkProxy::UdpTunnelingCapability`：`0x0004`;能够通过代理服务器向远程主机传递UDP数据报。
+- `QNetworkProxy::CachingCapability`：`0x0008`;缓存传输内容的能力。该功能针对每个协议和代理类型而定。例如，HTTP 代理可以通过“GET”命令缓存传输的网络数据内容。
+- `QNetworkProxy::HostNameLookupCapability`：`0x0010`;能够连接以对远程主机名称进行查找并连接，而非仅要求应用程序进行名称查找并请求连接到IP地址。
+- `QNetworkProxy::SctpTunnelingCapability`：`0x00020`;能够向远程主机开放透明的隧道SCTP连接。
+- `QNetworkProxy::SctpListeningCapability`：`0x00040`;能够创建监听套接字并等待来自远程主机的SCTP连接。
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `enum Capability { TunnelingCapability, ListeningCapability, UdpTunnelingCapability, CachingCapability, HostNameLookupCapability, …, SctpListeningCapability }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkProxy` 暴露的类型声明 `Capability`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志表示某个代理服务器支持的功能。
+`QNetworkProxy` 在创建对象时默认设置不同的能力（参见 `QNetworkProxy::ProxyType` 中的默认列表）。不过，在创建对象后，可以用 `setCapabilities()` 更改能力。
+`QNetworkProxy`支持的功能包括：
+- `QNetworkProxy::TunnelingCapability`：`0x0001`;能够开启透明的隧道TCP连接到远程主机。代理服务器逐字中继传输内容，不进行缓存。
+- `QNetworkProxy::ListeningCapability`：`0x0002`;能够创建监听套接字并等待来自远程主机的 TCP 连接。
+- `QNetworkProxy::UdpTunnelingCapability`：`0x0004`;能够通过代理服务器向远程主机传递UDP数据报。
+- `QNetworkProxy::CachingCapability`：`0x0008`;缓存传输内容的能力。该功能针对每个协议和代理类型而定。例如，HTTP 代理可以通过“GET”命令缓存传输的网络数据内容。
+- `QNetworkProxy::HostNameLookupCapability`：`0x0010`;能够连接以对远程主机名称进行查找并连接，而非仅要求应用程序进行名称查找并请求连接到IP地址。
+- `QNetworkProxy::SctpTunnelingCapability`：`0x00020`;能够向远程主机开放透明的隧道SCTP连接。
+- `QNetworkProxy::SctpListeningCapability`：`0x00040`;能够创建监听套接字并等待来自远程主机的SCTP连接。
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ## 6. 深入实践与常见坑
 

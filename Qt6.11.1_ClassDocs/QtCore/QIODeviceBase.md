@@ -68,47 +68,61 @@ if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QIODeviceBase::OpenModeFlagflags QIODeviceBase::OpenMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QIODeviceBase` 暴露的类型声明 `打开、模式、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OpenModeFlagflags QIODeviceBase::OpenMode`。
-- 属性名：`QIODeviceBase`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举与`QIODevice::open()`一起使用，描述设备打开的模式。它也会被`QIODevice::openMode()`返回。
+- `QIODeviceBase::NotOpen`：`0x0000`;设备未打开。
+- `QIODeviceBase::ReadOnly`：`0x0001`;设备已开放读取。
+- `QIODeviceBase::WriteOnly`：`0x0002`;设备可写入。注意，对于文件系统子类（如`QFile`），此模式意味着截断，除非与只读、附加或仅新操作结合。
+- `QIODeviceBase::ReadWrite`：`ReadOnly | WriteOnly`;该设备可开放用于阅读和写入。
+- `QIODeviceBase::Append`：`0x0004`;设备以附加模式打开，使所有数据写入文件末尾。
+- `QIODeviceBase::Truncate`：`0x0008`;如果可能，设备在打开前被截断。设备中所有早期内容均丢失。
+- `QIODeviceBase::Text`：`0x0010`;读取时，行尾终止符被翻译为“\n”。写入时，行尾终止符被翻译为本地编码，例如Win32的“\r\n”。
+- `QIODeviceBase::Unbuffered`：`0x0020`;设备中的任何缓冲区都会被绕过。
+- `QIODeviceBase::NewOnly`：`0x0040`;如果要打开的文件已经存在，则失败。只有在文件不存在时才创建并打开该文件。操作系统保证只有你自己创建和打开该文件。注意，此模式意味着仅写，允许将其与读写结合。该标志目前只影响`QFile`。未来其他类可能会使用该标志，但在那之前，除`QFile`类外使用该标志可能导致行为未定义。（自Qt 5.11起）
+- `QIODeviceBase::ExistingOnly`：`0x0080`;如果要打开的文件不存在，则失败。该标志必须与 ReadOnly、WriteOnly 或 ReadWrite 一起指定。注意，单独使用该标志是多余的，因为当文件不存在时，ReadOnly 已经失败了。该标志目前只影响 `QFile`。未来其他类可能会使用该标志，但在那之前，除了 `QFile` 之外的类使用该标志可能会导致行为未定义。（自 Qt 5.11 起）
+某些标志，如`Unbuffered`和`Truncate`，在某些子类中使用时是无意义的。其中一些限制是由子类所代表的设备类型所隐含的。在其他情况下，限制可能源于实现方式，也可能由底层平台施加;例如，`QTcpSocket`不支持`Unbuffered`模式，且原生API的限制阻止`QFile`在Windows上支持`Unbuffered`。
+OpenMode 类型是 QFlags 的 typedef<OpenModeFlag>。它存储 OpenModeFlag 值的 OR 组合。
 
 ### `flags OpenMode`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QIODeviceBase` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举与`QIODevice::open()`一起使用，描述设备打开的模式。它也会被`QIODevice::openMode()`返回。
+- `QIODeviceBase::NotOpen`：`0x0000`;设备未打开。
+- `QIODeviceBase::ReadOnly`：`0x0001`;设备已开放读取。
+- `QIODeviceBase::WriteOnly`：`0x0002`;设备可写入。注意，对于文件系统子类（如`QFile`），此模式意味着截断，除非与只读、附加或仅新操作结合。
+- `QIODeviceBase::ReadWrite`：`ReadOnly | WriteOnly`;该设备可开放用于阅读和写入。
+- `QIODeviceBase::Append`：`0x0004`;设备以附加模式打开，使所有数据写入文件末尾。
+- `QIODeviceBase::Truncate`：`0x0008`;如果可能，设备在打开前被截断。设备中所有早期内容均丢失。
+- `QIODeviceBase::Text`：`0x0010`;读取时，行尾终止符被翻译为“\n”。写入时，行尾终止符被翻译为本地编码，例如Win32的“\r\n”。
+- `QIODeviceBase::Unbuffered`：`0x0020`;设备中的任何缓冲区都会被绕过。
+- `QIODeviceBase::NewOnly`：`0x0040`;如果要打开的文件已经存在，则失败。只有在文件不存在时才创建并打开该文件。操作系统保证只有你自己创建和打开该文件。注意，此模式意味着仅写，允许将其与读写结合。该标志目前只影响`QFile`。未来其他类可能会使用该标志，但在那之前，除`QFile`类外使用该标志可能导致行为未定义。（自Qt 5.11起）
+- `QIODeviceBase::ExistingOnly`：`0x0080`;如果要打开的文件不存在，则失败。该标志必须与 ReadOnly、WriteOnly 或 ReadWrite 一起指定。注意，单独使用该标志是多余的，因为当文件不存在时，ReadOnly 已经失败了。该标志目前只影响 `QFile`。未来其他类可能会使用该标志，但在那之前，除了 `QFile` 之外的类使用该标志可能会导致行为未定义。（自 Qt 5.11 起）
+某些标志，如`Unbuffered`和`Truncate`，在某些子类中使用时是无意义的。其中一些限制是由子类所代表的设备类型所隐含的。在其他情况下，限制可能源于实现方式，也可能由底层平台施加;例如，`QTcpSocket`不支持`Unbuffered`模式，且原生API的限制阻止`QFile`在Windows上支持`Unbuffered`。
+OpenMode 类型是 QFlags 的 typedef<OpenModeFlag>。它存储 OpenModeFlag 值的 OR 组合。
 
 ### `enum OpenModeFlag { NotOpen, ReadOnly, WriteOnly, ReadWrite, Append, …, ExistingOnly }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QIODeviceBase` 暴露的类型声明 `打开、模式、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举与`QIODevice::open()`一起使用，描述设备打开的模式。它也会被`QIODevice::openMode()`返回。
+- `QIODeviceBase::NotOpen`：`0x0000`;设备未打开。
+- `QIODeviceBase::ReadOnly`：`0x0001`;设备已开放读取。
+- `QIODeviceBase::WriteOnly`：`0x0002`;设备可写入。注意，对于文件系统子类（如`QFile`），此模式意味着截断，除非与只读、附加或仅新操作结合。
+- `QIODeviceBase::ReadWrite`：`ReadOnly | WriteOnly`;该设备可开放用于阅读和写入。
+- `QIODeviceBase::Append`：`0x0004`;设备以附加模式打开，使所有数据写入文件末尾。
+- `QIODeviceBase::Truncate`：`0x0008`;如果可能，设备在打开前被截断。设备中所有早期内容均丢失。
+- `QIODeviceBase::Text`：`0x0010`;读取时，行尾终止符被翻译为“\n”。写入时，行尾终止符被翻译为本地编码，例如Win32的“\r\n”。
+- `QIODeviceBase::Unbuffered`：`0x0020`;设备中的任何缓冲区都会被绕过。
+- `QIODeviceBase::NewOnly`：`0x0040`;如果要打开的文件已经存在，则失败。只有在文件不存在时才创建并打开该文件。操作系统保证只有你自己创建和打开该文件。注意，此模式意味着仅写，允许将其与读写结合。该标志目前只影响`QFile`。未来其他类可能会使用该标志，但在那之前，除`QFile`类外使用该标志可能导致行为未定义。（自Qt 5.11起）
+- `QIODeviceBase::ExistingOnly`：`0x0080`;如果要打开的文件不存在，则失败。该标志必须与 ReadOnly、WriteOnly 或 ReadWrite 一起指定。注意，单独使用该标志是多余的，因为当文件不存在时，ReadOnly 已经失败了。该标志目前只影响 `QFile`。未来其他类可能会使用该标志，但在那之前，除了 `QFile` 之外的类使用该标志可能会导致行为未定义。（自 Qt 5.11 起）
+某些标志，如`Unbuffered`和`Truncate`，在某些子类中使用时是无意义的。其中一些限制是由子类所代表的设备类型所隐含的。在其他情况下，限制可能源于实现方式，也可能由底层平台施加;例如，`QTcpSocket`不支持`Unbuffered`模式，且原生API的限制阻止`QFile`在Windows上支持`Unbuffered`。
+OpenMode 类型是 QFlags 的 typedef<OpenModeFlag>。它存储 OpenModeFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

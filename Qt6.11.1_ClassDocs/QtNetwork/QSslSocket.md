@@ -174,1944 +174,728 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 - `(since 6.1) enum class ImplementedClass { Key, Certificate, Socket, DiffieHellman, EllipticCurve, …, DtlsCookie }`
 - `(since 6.1) enum class SupportedFeature { CertificateVerification, ClientSideAlpn, ServerSideAlpn, Ocsp, Psk, …, Alerts }`
 
-### 相关非成员函数
-
-- `Constant Value Description`
-- `QSslSocket::AlertLevel::Warning 0 Non-fatal alert message`
-- `QSslSocket::AlertLevel::Fatal 1 Fatal alert message, the underlying backend will handle such an alert properly and close the connection.`
-- `QSslSocket::AlertLevel::Unknown 2 An alert of unknown level of severity.`
-- `QSslSocket::AlertType::CloseNotify 0 ,`
-- `QSslSocket::AlertType::UnexpectedMessage 10`
-- `QSslSocket::AlertType::BadRecordMac 20`
-- `QSslSocket::AlertType::RecordOverflow 22`
-- `QSslSocket::AlertType::DecompressionFailure 30`
-- `QSslSocket::AlertType::HandshakeFailure 40`
-- `QSslSocket::AlertType::NoCertificate 41`
-- `QSslSocket::AlertType::BadCertificate 42`
-- `QSslSocket::AlertType::UnsupportedCertificate 43`
-- `QSslSocket::AlertType::CertificateRevoked 44`
-- `QSslSocket::AlertType::CertificateExpired 45`
-- `QSslSocket::AlertType::CertificateUnknown 46`
-- `QSslSocket::AlertType::IllegalParameter 47`
-- `QSslSocket::AlertType::UnknownCa 48`
-- `QSslSocket::AlertType::AccessDenied 49`
-- `QSslSocket::AlertType::DecodeError 50`
-- `QSslSocket::AlertType::DecryptError 51`
-- `QSslSocket::AlertType::ExportRestriction 60`
-- `QSslSocket::AlertType::ProtocolVersion 70`
-- `QSslSocket::AlertType::InsufficientSecurity 71`
-- `QSslSocket::AlertType::InternalError 80`
-- `QSslSocket::AlertType::InappropriateFallback 86`
-- `QSslSocket::AlertType::UserCancelled 90`
-- `QSslSocket::AlertType::NoRenegotiation 100`
-- `QSslSocket::AlertType::MissingExtension 109`
-- `QSslSocket::AlertType::UnsupportedExtension 110`
-- `QSslSocket::AlertType::CertificateUnobtainable 111`
-- `QSslSocket::AlertType::UnrecognizedName 112`
-- `QSslSocket::AlertType::BadCertificateStatusResponse 113`
-- `QSslSocket::AlertType::BadCertificateHashValue 114`
-- `QSslSocket::AlertType::UnknownPskIdentity 115`
-- `QSslSocket::AlertType::CertificateRequired 116`
-- `QSslSocket::AlertType::NoApplicationProtocol 120`
-- `QSslSocket::AlertType::UnknownAlertMessage 255`
-- `QSslSocket::ImplementedClass::Key 0 Class QSslKey.`
-- `QSslSocket::ImplementedClass::Certificate 1 Class QSslCertificate.`
-- `QSslSocket::ImplementedClass::Socket 2 Class QSslSocket.`
-- `QSslSocket::ImplementedClass::DiffieHellman 3 Class QSslDiffieHellmanParameters.`
-- `QSslSocket::ImplementedClass::EllipticCurve 4 Class QSslEllipticCurve.`
-- `QSslSocket::ImplementedClass::Dtls 5 Class QDtls.`
-- `QSslSocket::ImplementedClass::DtlsCookie 6 Class QDtlsClientVerifier.`
-- `QSslSocket::SupportedFeature::CertificateVerification 0 Indicates that QSslCertificate::verify() is implemented by the backend.`
-- `QSslSocket::SupportedFeature::ClientSideAlpn 1 Client-side ALPN (Application Layer Protocol Negotiation).`
-- `QSslSocket::SupportedFeature::ServerSideAlpn 2 Server-side ALPN.`
-- `QSslSocket::SupportedFeature::Ocsp 3 OCSP stapling (Online Certificate Status Protocol).`
-- `QSslSocket::SupportedFeature::Psk 4 Pre-shared keys.`
-- `QSslSocket::SupportedFeature::SessionTicket 5 Session tickets.`
-- `QSslSocket::SupportedFeature::Alerts 6 Information about alert messages sent and received.`
-
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 139 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSslSocket::PeerVerifyMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 暴露的类型声明 `Peer、Verify、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PeerVerifyMode`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述`QSslSocket`的对等验证模式。默认模式为AutoVerifyPeer，根据套接字的QSocket：：SslMode选择合适的模式。
+- `QSslSocket::VerifyNone`：`0`;`QSslSocket`不会向对端请求证书。如果你不想知道连接另一端的身份，可以设置此模式。连接仍是加密的，且如果请求，套接字仍会向对端发送本地证书。
+- `QSslSocket::QueryPeer`：`1`;`QSslSocket`会向对等方请求证书，但不要求该证书必须有效。当你希望向用户显示对等证书详情而不影响实际的SSL握手时，这非常有用。此模式是服务器的默认模式。注意：在Schannel中，该值的作用与VerifyNone相同。
+- `QSslSocket::VerifyPeer`：`2`;`QSslSocket` 会在 SSL 握手阶段向对方请求证书，并要求该证书有效。失败时，会`QSslSocket`发出`QSslSocket::sslErrors()`信号。此模式是客户端的默认模式。
+- `QSslSocket::AutoVerifyPeer`：`3`;`QSslSocket`会自动使用QueryPeer表示服务器套接字，VerifyPeer表示客户端套接字。
 
 ### `enum QSslSocket::SslMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 暴露的类型声明 `Ssl、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SslMode`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述`QSslSocket`可用的连接模式。
+- `QSslSocket::UnencryptedMode`：`0`;套接字未加密。其行为与`QTcpSocket`相同。
+- `QSslSocket::SslClientMode`：`1`;套接字是客户端SSL套接字。它要么已经加密，要么处于SSL握手阶段（见`QSslSocket::isEncrypted()`）。
+- `QSslSocket::SslServerMode`：`2`;套接字是服务器端的SSL套接字。它要么已经加密，要么处于SSL握手阶段（参见 `QSslSocket::isEncrypted()`）。
 
 ### `[explicit] QSslSocket::QSslSocket(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个 QSslSocket 对象。`parent` 传递给 `QObject` 的构造函数。新套接字的 `cipher` 套件设置为静态方法 defaultCiphers() 返回的那个。
 
 ### `[virtual noexcept] QSslSocket::~QSslSocket()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QSslSocket`。
 
 ### `[static, since 6.1] QString QSslSocket::activeBackend()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `activeBackend`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QSslSocket`及相关类使用的后端名称。如果活动后端未被显式设置，该函数返回`QSslSocket`从可用后端列表中隐式选择的默认后端名称。
+注意：在隐式选择默认后端时，`QSslSocket` 会优先选择 OpenSSL 后端（如果有的话）。如果没有 Schannel 后端，Windows 隐式选择 Schannel 后端，在 Darwin 平台上选择 Secure Transport。如果找不到自定义 TLS 后端，则使用该后端。如果找不到其他后端，则选择“仅证书”后端。有关 TLS 插件的更多信息，请参见“从源构建 Qt 时启用和禁用 SSL 支持”。
 
 ### `[signal] void QSslSocket::alertReceived(QSsl::AlertLevel level, QSsl::AlertType type, const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `alertReceived`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `level`：类型为 `QSsl::AlertLevel`。没有默认值，调用时必须提供。传入 `QSsl::AlertLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `QSsl::AlertType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果收到来自对等端的警报消息，`QSslSocket`会发出该信号。`level`表示警报是致命还是警告。`type`是解释为何发送警报的代码。当有警报消息的文本描述时，会以`description`形式提供。
+注意：该信号主要用于信息和调试目的，不需要在应用程序中处理。如果警报是致命的，底层后端会处理并关闭连接。
+注意：并非所有后端都支持此功能。
 
 ### `[signal] void QSslSocket::alertSent(QSsl::AlertLevel level, QSsl::AlertType type, const QString &description)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `alertSent`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `level`：类型为 `QSsl::AlertLevel`。没有默认值，调用时必须提供。传入 `QSsl::AlertLevel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `QSsl::AlertType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `description`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果向对等端发送了警报消息，`QSslSocket`会发出该信号。`level`描述该信号是警告还是致命错误。`type`给出警报消息的代码。当有警报消息的文本描述时，会以`description`形式提供。
+注意：该信号主要用于信息性，可用于调试，通常不需要应用程序执行任何操作。
+注意：并非所有后端都支持此功能。
 
 ### `[override virtual] bool QSslSocket::atEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::atEnd` 用于计算、查询或取得与“按位置访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::atEnd()` const.
 
 ### `[static, since 6.1] QList<QString> QSslSocket::availableBackends()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `availableBackends`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QString>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前可用后端的名称。这些名称为小写，例如“openssl”、“securetransport”、“schannel”（类似于 Qt 中已有的 TLS 后端功能名称）。
 
 ### `[override virtual] qint64 QSslSocket::bytesAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesAvailable`，返回 `QSslSocket` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::bytesAvailable()` const.
+返回可立即读取的已解密字节数量。
 
 ### `[override virtual] qint64 QSslSocket::bytesToWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesToWrite`，返回 `QSslSocket` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::bytesToWrite()` const.
+返回等待加密并写入网络的未加密字节数量。
 
 ### `[override virtual] bool QSslSocket::canReadLine() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canReadLine`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::canReadLine()` const.
+如果你能读取一行解密字符（以一个ASCII '\n'结尾）的当代行，返回`true`;否则返回为false。
 
 ### `[override virtual] void QSslSocket::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::close()`。
 
 ### `[override virtual] void QSslSocket::connectToHost(const QString &hostName, quint16 port, QIODeviceBase::OpenMode openMode = ReadWrite, QAbstractSocket::NetworkLayerProtocol protocol = AnyIPProtocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToHost`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hostName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `protocol`：类型为 `QAbstractSocket::NetworkLayerProtocol`。默认值为 `AnyIPProtocol`。传入 `QAbstractSocket::NetworkLayerProtocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSocket::connectToHost`（const QString &hostName， quint16 port， QIODeviceBase：：OpenMode openMode， QAbstractSocket：：NetworkLayerProtocol 协议）。
+尝试在给定`port`上与`hostName`建立连接。`protocol`参数可用于指定使用哪种网络协议（例如，IPv4 或 IPv6）。
+套接字在给定`openMode`中打开，首先进入`HostLookupState`，然后对`hostName`进行主机名查询。如果查找成功，`hostFound()`会被发射，`QAbstractSocket`进入`ConnectingState`。然后它尝试连接到查找返回的地址或多个地址。最后，如果建立连接，`QAbstractSocket`进入`ConnectedState`并发出`connected()`。
+在任何时刻，套筒都可以发出`errorOccurred()`来表示发生了错误。
+`hostName`可以是字符串形式的IP地址（例如，“43.195.83.32”），也可以是主机名（例如，“example.com”）。`QAbstractSocket`只有在需要时才会进行查找。`port`按本地字节顺序排列。
 
 ### `void QSslSocket::connectToHostEncrypted(const QString &hostName, quint16 port, QIODeviceBase::OpenMode mode = ReadWrite, QAbstractSocket::NetworkLayerProtocol protocol = AnyIPProtocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToHostEncrypted`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+在`port`上与设备`hostName`启动加密连接，使用`mode`作为`OpenMode`。这相当于先调用`connectToHost()`建立连接，然后再调用`startClientEncryption()`。`protocol`参数可用于指定使用哪种网络协议（例如：IPv4或IPv6）。
+`QSslSocket`首先进入HostLookupState。然后，在进入事件循环或waitFor...函数后，进入ConnectingState，发出`connected()`，然后发起SSL客户端握手。每当状态发生变化时，`QSslSocket`会发出信号`stateChanged()`。
+发起SSL客户端握手后，如果无法确认对端身份，会发出`sslErrors()`信号。如果你想忽略错误继续连接，必须在连接到`sslErrors()`信号的槽函数内调用`ignoreSslErrors()`，或在进入加密模式之前。如果未调用`ignoreSslErrors()`，连接会中断，信号`disconnected()`发出，`QSslSocket`返回UnconnectedState。
+如果SSL握手成功，`QSslSocket`会发出`encrypted()`。
+注意：上述示例表明，文本可以在请求加密连接后立即写入套接字，且在`encrypted()`信号尚未发出之前。在这种情况下，文本会被排队到对象中，并在连接建立且`encrypted()`信号发出后写入套接字。
+`mode`默认是`ReadWrite`。
+如果你想在连接的服务器端创建`QSslSocket`，应该在通过`QTcpServer`接收到来的连接后直接联系`startServerEncryption()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `hostName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `protocol`：类型为 `QAbstractSocket::NetworkLayerProtocol`。默认值为 `AnyIPProtocol`。传入 `QAbstractSocket::NetworkLayerProtocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QSslSocket socket;
+ connect(&socket, &QSslSocket::encrypted, receiver, &Receiver::socketEncrypted);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ socket.connectToHostEncrypted("imap", 993);
+ socket->write("1 CAPABILITY\r\n");
+```
 
 ### `void QSslSocket::connectToHostEncrypted(const QString &hostName, quint16 port, const QString &sslPeerName, QIODeviceBase::OpenMode mode = ReadWrite, QAbstractSocket::NetworkLayerProtocol protocol = AnyIPProtocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToHostEncrypted`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hostName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `quint16`。没有默认值，调用时必须提供。传入 `quint16` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sslPeerName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `protocol`：类型为 `QAbstractSocket::NetworkLayerProtocol`。默认值为 `AnyIPProtocol`。传入 `QAbstractSocket::NetworkLayerProtocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+除了 connectToHostEncrypted 的原始行为外，这种重载方法还允许在证书验证中使用不同的主机名（`sslPeerName`），而不是用于 TCP 连接的主机名（`hostName`）。
 
 ### `[since 6.0] void QSslSocket::continueInterruptedHandshake()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::continueInterruptedHandshake` 用于执行与“continue、Interrupted、Handshake”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果应用程序在收到`handshakeInterruptedOnError()`信号后仍想结束握手，必须调用该函数。该调用必须通过附加在信号上的槽函数进行。信号-槽连接必须是直接的。
 
 ### `[override virtual] void QSslSocket::disconnectFromHost()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `disconnectFromHost`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::disconnectFromHost()`。
+尝试关闭套接字。如果有待写入的数据，`QAbstractSocket`会进入`ClosingState`并等待所有数据写入。最终，它会进入`UnconnectedState`并发出`disconnected()`信号。
 
 ### `[signal] void QSslSocket::encrypted()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `encrypted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`QSslSocket`进入加密模式时，该信号会被发射。该信号发出后，`QSslSocket::isEncrypted()`将返回真值，所有后续的传输都将被加密。
 
 ### `qint64 QSslSocket::encryptedBytesAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::encryptedBytesAvailable` 用于计算、查询或取得与“encrypted、字节、可用量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回等待解密的加密字节数。通常，这个函数返回0，因为`QSslSocket`会尽快解密输入数据。
 
 ### `qint64 QSslSocket::encryptedBytesToWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::encryptedBytesToWrite` 用于计算、查询或取得与“encrypted、字节、转换输出、写入”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回等待写入网络的加密字节数量。
 
 ### `[signal] void QSslSocket::encryptedBytesWritten(qint64 written)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `encryptedBytesWritten`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `written`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`QSslSocket`将其加密数据写入网络时，该信号会发出。`written`参数包含成功写入的字节数。
 
 ### `[signal] void QSslSocket::handshakeInterruptedOnError(const QSslError &error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `handshakeInterruptedOnError`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `const QSslError &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果发现证书验证错误且`QSslConfiguration`启用了早期错误报告，`QSslSocket`会发出该信号。应用程序应检查`error`，决定是否继续握手，或中止握手并向对端发送警报消息。信号-槽函数连接必须是直接的。
 
 ### `[slot] void QSslSocket::ignoreSslErrors()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `ignoreSslErrors`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该槽函数告诉`QSslSocket`在`QSslSocket`握手阶段忽略错误，继续连接。如果你想在握手阶段发生错误继续连接，必须从连接`sslErrors()`的槽函数中调用该槽函数，或在握手阶段前调用。如果你不在错误时或握手前调用该槽函数，`sslErrors()`信号发出后连接将被中断。
+如果SSL握手阶段没有错误（即对等端身份无碍确认），`QSslSocket`不会发出`sslErrors()`信号，无需调用此功能。
+警告：请务必让用户检查`sslErrors()`信号报告的错误，只有在用户确认继续时才调用此方法。如果出现意外错误，应中止连接。未检查实际错误就调用此方法，很可能会对你的应用构成安全风险。请务必小心使用！
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数：无。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+sslSocket， qOverload<>（&QSslSocket：：ignoreSslErrors））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+sslSocket， [receiver = sslSocket]() { receiver->ignoreSslErrors(); }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `void QSslSocket::ignoreSslErrors(const QList<QSslError> &errors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::ignoreSslErrors` 用于执行与“ignore、Ssl、Errors”相关的操作。调用时要先确认当前状态和 `errors` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该方法只`QSslSocket`忽略`errors`中给出的错误。
+注意：由于大多数SSL错误与证书相关，因此大多数SSL错误必须设置与该SSL错误相关的预期证书。例如，如果你想连接到使用自签名证书的服务器，请考虑以下摘要：
+多次调用该函数会替换之前调用中传递的错误列表。你可以通过调用该函数时用空列表清除你想忽略的错误列表。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `errors`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QList<QSslCertificate> cert = QSslCertificate::fromPath("server-certificate.pem"_L1);
+ QSslError error(QSslError::SelfSignedCertificate, cert.at(0));
+ QList<QSslError> expectedSslErrors;
+ expectedSslErrors.append(error);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QSslSocket socket;
+ socket.ignoreSslErrors(expectedSslErrors);
+ socket.connectToHostEncrypted("server.tld", 443);
+```
 
 ### `[static, since 6.1] QList<QSsl::ImplementedClass> QSslSocket::implementedClasses(const QString &backendName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `implementedClasses`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSsl::ImplementedClass>`。
-- 参数 `backendName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回由后端实现的后端特定类，名称为 `backendName`。空`backendName`被理解为对当前激活后端的查询。
 
 ### `[static, since 6.1] bool QSslSocket::isClassImplemented(QSsl::ImplementedClass cl, const QString &backendName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isClassImplemented`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `cl`：类型为 `QSsl::ImplementedClass`。没有默认值，调用时必须提供。传入 `QSsl::ImplementedClass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `backendName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果后端实现了名为 `backendName` 的类`cl`，则返回为真。空 `backendName` 被理解为对当前激活后端的查询。
 
 ### `bool QSslSocket::isEncrypted() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEncrypted`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果套接字加密，返回`true`;否则返回 false。
+加密套接字在数据写入网络前，通过调用`write()`或`putChar()`写入的所有数据进行加密，并在从网络接收数据时解密所有入站数据，在你调用`read()`、`readLine()`或`getChar()`之前。
+`QSslSocket`进入加密模式时会发出`encrypted()`。
+你可以调用`sessionCipher()`，查找用于加密和解密数据的密码。
 
 ### `[static, since 6.1] bool QSslSocket::isFeatureSupported(QSsl::SupportedFeature ft, const QString &backendName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isFeatureSupported`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ft`：类型为 `QSsl::SupportedFeature`。没有默认值，调用时必须提供。传入 `QSsl::SupportedFeature` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `backendName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果某个功能`ft`由名为`backendName`的后端支持，则返回为真。空`backendName`被理解为对当前活跃后端的查询。
 
 ### `[static, since 6.1] bool QSslSocket::isProtocolSupported(QSsl::SslProtocol protocol, const QString &backendName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isProtocolSupported`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `protocol`：类型为 `QSsl::SslProtocol`。没有默认值，调用时必须提供。传入 `QSsl::SslProtocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `backendName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`protocol`由名为`backendName`的后端支持，则返回为真。空`backendName`被理解为对当前激活后端的查询。
 
 ### `QSslCertificate QSslSocket::localCertificate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::localCertificate` 用于计算、查询或取得与“local、Certificate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslCertificate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslCertificate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的本地`certificate`，若未分配本地证书则返回空证书。
 
 ### `QList<QSslCertificate> QSslSocket::localCertificateChain() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::localCertificateChain` 用于计算、查询或取得与“local、Certificate、Chain”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QSslCertificate>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslCertificate>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的本地`certificate`链，若未分配本地证书则返回空列表。
 
 ### `QSslSocket::SslMode QSslSocket::mode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::mode` 用于计算、查询或取得与“模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslSocket::SslMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslSocket::SslMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字当前模式;要么是`UnencryptedMode`，`QSslSocket`行为与`QTcpSocket`相同，要么是`SslClientMode`或`SslServerMode`，客户端要么协商，要么处于加密模式。
+当模式切换时，`QSslSocket`会发出`modeChanged()`。
 
 ### `[signal] void QSslSocket::modeChanged(QSslSocket::SslMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `modeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSslSocket::SslMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`QSslSocket`从`QSslSocket::UnencryptedMode`切换到`QSslSocket::SslClientMode`或`QSslSocket::SslServerMode`时，会发出该信号。`mode`是新的模式。
 
 ### `[signal] void QSslSocket::newSessionTicketReceived()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `newSessionTicketReceived`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果TLS 1.3协议在握手时协商完成，`QSslSocket`在收到NewSessionTicket消息后发出该信号。会话和会话工单的生命周期提示会在套接字配置中更新。该会话可用于未来TLS连接中的会话恢复（及缩短握手）。
+注意：此功能仅在OpenSSL后端启用，且需要OpenSSL v.1.1及以上版本。
 
 ### `QList<QOcspResponse> QSslSocket::ocspResponses() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::ocspResponses` 用于计算、查询或取得与“ocsp、Responses”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QOcspResponse>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QOcspResponse>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能返回服务器在TLS握手期间通过OCSP订书钉发送的在线证书状态协议响应。如果没有收到明确的响应或完全没有响应，列表为空。
 
 ### `QSslCertificate QSslSocket::peerCertificate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::peerCertificate` 用于计算、查询或取得与“peer、Certificate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslCertificate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslCertificate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对等方的数字证书（即你连接主机的直接证书），如果对方未分配证书，则返回空证书。
+对等证书在握手阶段会自动检查，因此此功能通常用于获取显示或连接诊断目的的证书。它包含关于对等方的信息，包括主机名、证书发行方和对等方的公钥。
+由于对等证书是在握手阶段设置的，因此从连接到`sslErrors()`信号或`encrypted()`信号的槽函数访问对等证书是安全的。
+如果返回空证书，可能意味着SSL握手失败，或者你连接的主机没有证书，或者表示没有连接。
+如果你想查看对方完整的证书链，可以用`peerCertificateChain()`一次性获取所有证书。
 
 ### `QList<QSslCertificate> QSslSocket::peerCertificateChain() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::peerCertificateChain` 用于计算、查询或取得与“peer、Certificate、Chain”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QSslCertificate>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslCertificate>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对等方的数字证书链，或一个空白的证书列表。
+对等证书在握手阶段自动检查。此功能通常用于获取显示或连接诊断的证书。证书包含关于对等方和证书发行方的信息，包括主机名称、发行者名称和发行者公钥。
+在握手阶段，对等证书会在`QSslSocket`中设置，因此从连接到`sslErrors()`信号或`encrypted()`信号的槽函数调用此功能是安全的。
+如果返回空列表，可能意味着SSL握手失败，或者你连接的主机没有证书，或者表示没有连接。
+如果你只想获得对等节点的直接证书，可以用`peerCertificate()`。
 
 ### `int QSslSocket::peerVerifyDepth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::peerVerifyDepth` 用于计算、查询或取得与“peer、Verify、Depth”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对等方证书链中SSL握手阶段需检查的最大证书数，若未设置最大深度则返回0（默认），表示应检查整个证书链。
+证书按发出顺序检查，先是对等方自身的证书，然后是其发行方的证书，依此类推。
 
 ### `[signal] void QSslSocket::peerVerifyError(const QSslError &error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `peerVerifyError`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `const QSslError &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSslSocket`在SSL握手期间，在加密尚未建立之前多次发出该信号，以表明在确认对等端身份时发生了错误。`error`通常表示`QSslSocket`无法安全识别对等端。
+该信号能提前提示异常。通过连接该信号，您可以在握手完成前手动选择从连接槽内断开连接。如果未采取任何操作，`QSslSocket`将继续发出`QSslSocket::sslErrors()`。
 
 ### `QSslSocket::PeerVerifyMode QSslSocket::peerVerifyMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::peerVerifyMode` 用于计算、查询或取得与“peer、Verify、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslSocket::PeerVerifyMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslSocket::PeerVerifyMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的验证模式。该模式决定`QSslSocket`应向对端请求证书（即客户端向服务器请求证书，或服务器向客户端请求证书），以及是否要求该证书有效。
+默认模式是`AutoVerifyPeer`，告诉`QSslSocket`客户端使用`VerifyPeer`，服务器使用`QueryPeer`。
 
 ### `QString QSslSocket::peerVerifyName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::peerVerifyName` 用于计算、查询或取得与“peer、Verify、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回证书验证的不同主机名，由`setPeerVerifyName`或`connectToHostEncrypted`设置。
 
 ### `[signal] void QSslSocket::preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator *authenticator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `preSharedKeyAuthenticationRequired`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `authenticator`：类型为 `QSslPreSharedKeyAuthenticator *`。没有默认值，调用时必须提供。传入 `QSslPreSharedKeyAuthenticator *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSslSocket`在协商PSK密码套件时会发出该信号，因此需要PSK认证。
+使用PSK时，客户端必须向服务器发送有效的身份和有效的预共享密钥，才能继续SSL握手。应用程序可以通过根据需求填写传递的`authenticator`对象，在连接到该信号的槽函数中提供这些信息。
+注意：忽视该信号或未提供所需凭证，将导致握手失败，连接将被终止。
+注意：`authenticator`对象归套接字所有，应用程序不得删除。
 
 ### `QSslKey QSslSocket::privateKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::privateKey` 用于计算、查询或取得与“private、Key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslKey`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslKey`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该套接字的私钥。
 
 ### `QSsl::SslProtocol QSslSocket::protocol() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::protocol` 用于计算、查询或取得与“protocol”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSsl::SslProtocol`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSsl::SslProtocol`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的SSL协议。默认情况下，使用`QSsl::SecureProtocols`。
 
 ### `[override virtual protected] qint64 QSslSocket::readData(char *data, qint64 maxlen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 的核心操作 `readData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `maxlen`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从已经解密的 SSL 接收缓冲区复制最多 `maxlen` 字节到 `data`，返回读取字节数，失败返回 -1。它由 `QIODevice::read()` 间接调用；客户端通常应等到 `encrypted()` 且收到 `readyRead()` 后再读取。
 
 ### `[override virtual] void QSslSocket::resume()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::resume` 用于执行与“恢复运行”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::resume()`。
+在套接字暂停后继续传输数据。如果该套接字被调用了“setPauseMode（`QAbstractSocket::PauseOnSslErrors`）;”并收到`sslErrors()`信号，则必须调用该方法才能让套接字继续。
+继续在套接字上传输数据。该方法应仅在套接字被设置为通知暂停且收到通知后使用。目前唯一支持的通知是`QSslSocket::sslErrors()`。如果套接字未暂停，调用此方法会导致行为未定义。
 
 ### `QSslCipher QSslSocket::sessionCipher() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::sessionCipher` 用于计算、查询或取得与“session、Cipher”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslCipher`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslCipher`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的密码`cipher`，如果连接未加密，则返回空密码。会话的套接字密码在握手阶段设置。密码用于加密和解密通过套接字传输的数据。
+`QSslSocket`还提供了设置有序密码列表的函数，这些列表最终会在握手阶段中选择会话密码。该有序列表必须在握手阶段开始前就已存在。
 
 ### `QSsl::SslProtocol QSslSocket::sessionProtocol() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::sessionProtocol` 用于计算、查询或取得与“session、Protocol”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSsl::SslProtocol`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSsl::SslProtocol`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的SSL/TLS协议，如果连接未加密，则返回未知协议。会话的套接字协议在握手阶段设置。
 
 ### `[static, since 6.1] bool QSslSocket::setActiveBackend(const QString &backendName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setActiveBackend`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `backendName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果后端名称为`backendName`，则返回为真。`backendName`必须是`availableBackends()`返回的名称之一。
+注意：应用程序不能同时混合不同的后端。这意味着在使用`QSslSocket`类或相关类（如 `QSslCertificate` 或 `QSslKey`）之前，必须选择非默认后端。
 
 ### `void QSslSocket::setLocalCertificate(const QSslCertificate &certificate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocalCertificate`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `certificate`：类型为 `const QSslCertificate &`。没有默认值，调用时必须提供。传入 `const QSslCertificate &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套接字的本地证书设置为`certificate`。如果你需要向对方确认身份，本地证书是必需的。它与私钥一起使用;如果你设置了本地证书，也必须设置私钥。
+本地证书和私钥对服务器套接字总是必要，但如果服务器需要客户端认证，客户端套接字很少使用本地证书和私钥。
+注意：macOS 上的 Secure Transport SSL 后端可能会通过导入本地证书和密钥来更新默认密钥链（默认可能是你的登录密钥链）。这也可能导致系统对话框出现，并在应用使用这些私钥时请求权限。如果不希望出现此类行为，请将QT_SSL_USE_TEMPORARY_KEYCHAIN环境变量设置为非零值;这会提示`QSslSocket`使用自己的临时密钥链。
 
 ### `void QSslSocket::setLocalCertificate(const QString &path, QSsl::EncodingFormat format = QSsl::Pem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocalCertificate`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套接字的本地`certificate`设置为文件`path`中的第一个，并根据指定的 `format` 进行解析。
 
 ### `void QSslSocket::setLocalCertificateChain(const QList<QSslCertificate> &localChain)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocalCertificateChain`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `localChain`：类型为 `const QList<QSslCertificate> &`。没有默认值，调用时必须提供。传入 `const QList<QSslCertificate> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置在SSL握手期间向对等端展示的证书链`localChain`。
 
 ### `void QSslSocket::setPeerVerifyDepth(int depth)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerVerifyDepth`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `depth`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在SSL握手阶段，将对端证书链中需要检查的最大证书数量设置为`depth`。设置深度为0意味着不设置最大深度，表示应检查整个证书链。
+证书按发出顺序检查，先是对等方自身的证书，然后是其发行方的证书，依此类推。
 
 ### `void QSslSocket::setPeerVerifyMode(QSslSocket::PeerVerifyMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerVerifyMode`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSslSocket::PeerVerifyMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套接字的验证模式设置为`mode`。该模式决定`QSslSocket`应向对端请求证书（即客户端向服务器请求证书，或服务器向客户端请求证书），以及是否要求该证书有效。
+默认模式是`AutoVerifyPeer`，告诉`QSslSocket`客户端使用`VerifyPeer`，服务器使用`QueryPeer`。
+加密开始后设置此模式不会影响当前连接。
 
 ### `void QSslSocket::setPeerVerifyName(const QString &hostName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPeerVerifyName`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hostName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为证书验证设置一个不同的主机名，由`hostName`给出，而不是用于TCP连接的主机。
 
 ### `void QSslSocket::setPrivateKey(const QSslKey &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrivateKey`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QSslKey &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套接字的私有`key`设置为`key`。私钥和本地`certificate`被需要向SSL对等端证明身份的客户端和服务器使用。
+如果你创建 SSL 服务器套接字，密钥和本地证书都是必需的。如果你创建 SSL 客户端套接字，那么如果客户端必须向 SSL 服务器识别自己，密钥和本地证书是必需的。
 
 ### `void QSslSocket::setPrivateKey(const QString &fileName, QSsl::KeyAlgorithm algorithm = QSsl::Rsa, QSsl::EncodingFormat format = QSsl::Pem, const QByteArray &passPhrase = QByteArray())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrivateKey`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `algorithm`：类型为 `QSsl::KeyAlgorithm`。默认值为 `QSsl::Rsa`。传入 `QSsl::KeyAlgorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `QSsl::EncodingFormat`。默认值为 `QSsl::Pem`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `passPhrase`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取文件`fileName`中的字符串，并使用指定的`algorithm`和编码`format`解码，构建SSL密钥。如果编码密钥被加密，`passPhrase`用于解密。
+套接字的私钥设置为构造密钥。私钥和本地`certificate`被客户端和服务器使用，他们需要向SSL对等方证明身份。
+如果你创建 SSL 服务器套接字，密钥和本地证书都是必需的。如果你创建 SSL 客户端套接字，那么如果客户端必须向 SSL 服务器识别自己，密钥和本地证书是必需的。
 
 ### `void QSslSocket::setProtocol(QSsl::SslProtocol protocol)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProtocol`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `protocol`：类型为 `QSsl::SslProtocol`。没有默认值，调用时必须提供。传入 `QSsl::SslProtocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套接字的 SSL 协议设置为 `protocol`。这会影响下一次发起的握手;在已加密的套接字上调用此功能不会影响套接字的协议。
 
 ### `[override virtual] void QSslSocket::setReadBufferSize(qint64 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadBufferSize`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重制版本：`QAbstractSocket::setReadBufferSize`（qint64 尺寸）。
+将`QSslSocket`内部读取缓冲区的大小设置为`size`字节。
+将`QAbstractSocket`内部读取缓冲区的大小设置为`size`字节。
+如果缓冲区大小被限制在某个特定大小，`QAbstractSocket`不会缓冲超过这个大小的数据。例外情况下，缓冲区大小为0意味着读取缓冲区是无限的，所有输入数据都被缓冲。这是默认值。
+如果你只在特定时间点读取数据（例如在实时流媒体应用中），或者想保护套接字免受过多数据接收，避免最终导致内存不足，这个选项非常有用。
+只有`QTcpSocket`使用`QAbstractSocket`的内部缓冲区;`QUdpSocket`完全不使用缓冲，而是依赖操作系统提供的隐式缓冲。因此，调用该函数对`QUdpSocket`没有影响。
 
 ### `[override virtual] bool QSslSocket::setSocketDescriptor(qintptr socketDescriptor, QAbstractSocket::SocketState state = ConnectedState, QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketDescriptor`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socketDescriptor`：类型为 `qintptr`。没有默认值，调用时必须提供。传入 `qintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `state`：类型为 `QAbstractSocket::SocketState`。默认值为 `ConnectedState`。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSocket::setSocketDescriptor`（qintptr socketDescriptor， QAbstractSocket：： SocketState socketState， QIODeviceBase：：OpenMode openMode）.
+用本地套接字描述符`socketDescriptor`初始化`QSslSocket`。如果`socketDescriptor`被接受为有效的套接字描述符，返回`true`;否则返回`false`。套接字以`openMode`指定的模式打开，进入`state`指定的套接字状态。
+注意：无法用相同的本地套接字描述符初始化两个套接字。
+用本地套接字描述符`socketDescriptor`初始化`QAbstractSocket`。如果`socketDescriptor`被接受为有效的套接字描述符，返回`true`;否则返回`false`。套接字以`openMode`指定的模式打开，进入`socketState`指定的套接字状态。读取和写缓冲区被清除，丢弃所有待处理的数据。
+注意：无法用相同的本地套接字描述符初始化两个抽象套接字。
 
 ### `[override virtual] void QSslSocket::setSocketOption(QAbstractSocket::SocketOption option, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketOption`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QAbstractSocket::SocketOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSocket::setSocketOption`（QAbstractSocket：：SocketOption option，const QVariant &value）。
+将给定`option`设置为`value`描述的值。
+将给定`option`设置为`value`描述的值。
+注意：由于选项设置在内部套接字上，选项仅在套接字已被创建时生效。这只有在调用`bind()`后或`connected()`已发出时才会生效。
 
 ### `void QSslSocket::setSslConfiguration(const QSslConfiguration &configuration)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSslConfiguration`。调用它会改变 `QSslSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `configuration`：类型为 `const QSslConfiguration &`。没有默认值，调用时必须提供。传入 `const QSslConfiguration &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将套接字的 SSL 配置设置为 `configuration` 的内容。该函数将本地证书、密码、私钥和 CA 证书设置为存储在 `configuration` 中的证书。
+无法设置与SSL状态相关的字段。
 
 ### `[override virtual protected] qint64 QSslSocket::skipData(qint64 maxSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::skipData` 用于计算、查询或取得与“skip、数据访问”相关的操作。调用时要先确认当前状态和 `maxSize` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `maxSize`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构版本：`QAbstractSocket::skipData`（qint64 maxSize）。
 
 ### `[override virtual] QVariant QSslSocket::socketOption(QAbstractSocket::SocketOption option)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::socketOption` 用于计算、查询或取得与“socket、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `option`：类型为 `QAbstractSocket::SocketOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSocket::socketOption`（QAbstractSocket：：SocketOption 选项）。
+返回`option`期权的价值。
+返回`option`期权的价值。
 
 ### `QSslConfiguration QSslSocket::sslConfiguration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::sslConfiguration` 用于计算、查询或取得与“ssl、Configuration”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslConfiguration`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslConfiguration`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套接字的 SSL 配置状态。套接字的默认 SSL 配置是使用默认密码、默认 CA 证书，不使用本地私钥或证书。
+SSL配置还包含可能随时变化且未预警的字段。
 
 ### `[signal] void QSslSocket::sslErrors(const QList<QSslError> &errors)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 发出的通知信号 `sslErrors`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `errors`：类型为 `const QList<QSslError> &`。没有默认值，调用时必须提供。传入 `const QList<QSslError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSslSocket`在SSL握手后发出该信号，表示在建立对等端身份时发生了一个或多个错误。这些错误通常表明`QSslSocket`无法安全识别对等端。除非采取任何措施，否则该信号发出后连接将被中断。
+如果你想在发生错误的情况下继续连接，必须从连接到该信号的槽函数内调用`QSslSocket::ignoreSslErrors()`。如果你需要以后访问错误列表，可以调用`sslHandshakeErrors()`。
+`errors`包含一个或多个错误，阻止`QSslSocket`验证对等端的身份。
+注意：连接该信号时不能使用`Qt::QueuedConnection`，否则调用`QSslSocket::ignoreSslErrors()`也无效。
 
 ### `QList<QSslError> QSslSocket::sslHandshakeErrors() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::sslHandshakeErrors` 用于计算、查询或取得与“ssl、Handshake、Errors”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QSslError>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QSslError>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最近发生的SSL错误列表。这与`QSslSocket`通过`sslErrors()`信号传递的列表相同。如果连接已加密且无错误，该函数将返回一个空列表。
 
 ### `[static] long QSslSocket::sslLibraryBuildVersionNumber()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sslLibraryBuildVersionNumber`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`long`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回编译时正在使用的SSL库的版本号。如果没有SSL支持，则返回-1。
 
 ### `[static] QString QSslSocket::sslLibraryBuildVersionString()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sslLibraryBuildVersionString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回编译时正在使用的SSL库的版本字符串。如果没有SSL支持，则返回空值。
 
 ### `[static] long QSslSocket::sslLibraryVersionNumber()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sslLibraryVersionNumber`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`long`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回正在使用的SSL库的版本号。注意，这是运行时使用的库版本，而非编译时。如果没有SSL支持，则返回-1。
 
 ### `[static] QString QSslSocket::sslLibraryVersionString()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `sslLibraryVersionString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回正在使用的SSL库的版本字符串。注意，这是运行时使用的库版本，而非编译时。如果没有SSL支持，则返回空值。
 
 ### `[slot] void QSslSocket::startClientEncryption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `startClientEncryption`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+启动针对客户端连接的延迟 SSL 握手。当套接字处于 `ConnectedState` 但仍处于 `UnencryptedMode` 时，可以调用此函数。如果尚未连接，或者已经加密，该函数无效。实现 STARTTLS 功能的客户端通常会使用延迟 SSL 握手。大多数其他客户端可以通过使用 `connectToHostEncrypted()` 来避免直接调用此函数，该函数会自动执行握手。
 
 ### `[slot] void QSslSocket::startServerEncryption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `startServerEncryption`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+启动针对服务器连接的延迟 SSL 握手。当套接字处于 `ConnectedState` 但仍处于 `UnencryptedMode` 时，可以调用此函数。如果尚未连接或已经加密，则函数无效。对于服务器套接字，调用此函数是启动 SSL 握手的唯一方式。大多数服务器会在收到连接时立即调用此函数，或者在收到进入 SSL 模式的协议特定命令后调用（例如，服务器可能在收到字符串 "STARTTLS\r\n" 时调用此函数）。实现 SSL 服务器的最常见方法是创建 `QTcpServer` 的子类并重新实现 `QTcpServer::incomingConnection()`。返回的套接字描述符随后传递给 `QSslSocket::setSocketDescriptor()`。
 
 ### `[static, since 6.1] QList<QSsl::SupportedFeature> QSslSocket::supportedFeatures(const QString &backendName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportedFeatures`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSsl::SupportedFeature>`。
-- 参数 `backendName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回由名为 `backendName` 的后端支持的功能。空 `backendName` 被理解为对当前激活后端的查询。
 
 ### `[static, since 6.1] QList<QSsl::SslProtocol> QSslSocket::supportedProtocols(const QString &backendName = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportedProtocols`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QSsl::SslProtocol>`。
-- 参数 `backendName`：类型为 `const QString &`。默认值为 `{}`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有名为 `backendName` 的后端，该函数返回该后端支持的 TLS 协议版本列表。空 `backendName` 被理解为对当前活跃后端的查询。否则，该函数返回空列表。
 
 ### `[static] bool QSslSocket::supportsSsl()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportsSsl`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该平台支持 SSL，返回 `true`;否则返回 false。如果平台不支持 SSL，套接字将在连接阶段失败。
 
 ### `[override virtual] bool QSslSocket::waitForBytesWritten(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::waitForBytesWritten` 用于计算、查询或取得与“等待、For、字节、Written”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::waitForBytesWritten`（int msecs）。
 
 ### `[override virtual] bool QSslSocket::waitForConnected(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::waitForConnected` 用于计算、查询或取得与“等待、For、Connected”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSocket::waitForConnected`（int msecs）。
+等待套筒连接，或`msecs`毫秒，以先到者为准。如果连接已建立，该函数返回`true`;否则返回`false`。
+等待套接字连接，最多可达`msecs`毫秒。如果连接已建立，该函数返回`true`;否则返回`false`。如果返回`false`，你可以调用`error()`来确定错误原因。
+以下示例等待最多一秒以建立连接：
+如果 msecs 为 -1，该函数不会超时。
+注意：该函数可能会比 `msecs` 稍长，具体取决于完成主机查找所需的时间。
+注意：多次调用这些函数不会累计时间。如果函数超时，连接进程将被中止。
+注意：该功能在Windows上可能会随机失效。如果你的软件能在Windows上运行，建议使用事件循环和`connected()`信号。
 
 ### `[override virtual] bool QSslSocket::waitForDisconnected(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::waitForDisconnected` 用于计算、查询或取得与“等待、For、Disconnected”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractSocket::waitForDisconnected`（int msecs）。
+等待套接字断开连接或`msecs`毫秒，以先到者为准。如果连接断开，该函数返回`true`;否则返回`false`。
+等待套接字断开连接，最多可达`msecs`毫秒。如果连接成功断开，该函数返回`true`;否则返回`false`（如果操作超时、发生错误或该`QAbstractSocket`已断开）。如果返回`false`，你可以调用`error()`来确定错误原因。
+以下示例等待连接关闭最多一秒钟：
+如果 msecs 为 -1，该函数不会超时。
+注意：该功能在Windows上可能会随机失效。如果你的软件能在Windows上运行，可以考虑使用事件循环和`disconnected()`信号。
 
 ### `bool QSslSocket::waitForEncrypted(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::waitForEncrypted` 用于计算、查询或取得与“等待、For、Encrypted”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+等待套接字完成SSL握手并发出`encrypted()`毫秒，或`msecs`毫秒，以先到者为准。如果已发出`encrypted()`，该函数返回为true;否则（例如套接字断开或SSL握手失败），则返回false。
+以下示例等待最多一秒钟以实现套接字加密：
+如果 msecs 为 -1，该函数不会超时。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ socket->connectToHostEncrypted("imap", 993);
+ if (socket->waitForEncrypted(1000))
+     qDebug("Encrypted!");
+```
 
 ### `[override virtual] bool QSslSocket::waitForReadyRead(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslSocket::waitForReadyRead` 用于计算、查询或取得与“等待、For、Ready、读取”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractSocket::waitForReadyRead`（int msecs）。
 
 ### `[override virtual protected] qint64 QSslSocket::writeData(const char *data, qint64 len)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 的核心操作 `writeData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `len`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把最多 `len` 字节交给 SSL 层加密并排入发送缓冲区，返回已接受字节数，失败返回 -1。握手完成前写入的数据会排队；`bytesWritten()` 表示写出进度，不能据此假定对端已经处理。
 
 ### `[since 6.0] enum class AlertLevel`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述警报消息的级别。
+该枚举描述了发送或接收的警报消息的级别。
+- `QSslSocket::AlertLevel::Warning`：`0`;非致命警报信息
+- `QSslSocket::AlertLevel::Fatal`：`1`;致命警报消息，底层后端会正确处理此类警报并关闭连接。
+- `QSslSocket::AlertLevel::Unknown`：`2`;严重程度未知的警报。
+该枚举是在Qt 6.0中引入的。
 
 ### `[since 6.0] enum class AlertType`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举警报消息可能包含的代码。
+有关可能的值及其含义，请参见RFC 8446第6节。
+- `QSslSocket::AlertType::CloseNotify`：`0`;,
+- `QSslSocket::AlertType::UnexpectedMessage`：`10`
+- `QSslSocket::AlertType::BadRecordMac`：`20`
+- `QSslSocket::AlertType::RecordOverflow`：`22`
+- `QSslSocket::AlertType::DecompressionFailure`：`30`
+- `QSslSocket::AlertType::HandshakeFailure`：`40`
+- `QSslSocket::AlertType::NoCertificate`：`41`
+- `QSslSocket::AlertType::BadCertificate`：`42`
+- `QSslSocket::AlertType::UnsupportedCertificate`：`43`
+- `QSslSocket::AlertType::CertificateRevoked`：`44`
+- `QSslSocket::AlertType::CertificateExpired`：`45`
+- `QSslSocket::AlertType::CertificateUnknown`：`46`
+- `QSslSocket::AlertType::IllegalParameter`：`47`
+- `QSslSocket::AlertType::UnknownCa`：`48`
+- `QSslSocket::AlertType::AccessDenied`：`49`
+- `QSslSocket::AlertType::DecodeError`：`50`
+- `QSslSocket::AlertType::DecryptError`：`51`
+- `QSslSocket::AlertType::ExportRestriction`：`60`
+- `QSslSocket::AlertType::ProtocolVersion`：`70`
+- `QSslSocket::AlertType::InsufficientSecurity`：`71`
+- `QSslSocket::AlertType::InternalError`：`80`
+- `QSslSocket::AlertType::InappropriateFallback`：`86`
+- `QSslSocket::AlertType::UserCancelled`：`90`
+- `QSslSocket::AlertType::NoRenegotiation`：`100`
+- `QSslSocket::AlertType::MissingExtension`：`109`
+- `QSslSocket::AlertType::UnsupportedExtension`：`110`
+- `QSslSocket::AlertType::CertificateUnobtainable`：`111`
+- `QSslSocket::AlertType::UnrecognizedName`：`112`
+- `QSslSocket::AlertType::BadCertificateStatusResponse`：`113`
+- `QSslSocket::AlertType::BadCertificateHashValue`：`114`
+- `QSslSocket::AlertType::UnknownPskIdentity`：`115`
+- `QSslSocket::AlertType::CertificateRequired`：`116`
+- `QSslSocket::AlertType::NoApplicationProtocol`：`120`
+- `QSslSocket::AlertType::UnknownAlertMessage`：`255`
+该枚举是在Qt 6.0中引入的。
 
 ### `[since 6.1] enum class ImplementedClass`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSslSocket` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举TLS后端实现的类。
+`QtNetwork`中，有些类具有后端特定实现，因此可以保持不实现。枚举中的枚举器表示哪个类在后端有可运行的实现。
+- `QSslSocket::ImplementedClass::Key`：`0`;`QSslKey`级。
+- `QSslSocket::ImplementedClass::Certificate`：`1`;`QSslCertificate`级。
+- `QSslSocket::ImplementedClass::Socket`：`2`;`QSslSocket`级。
+- `QSslSocket::ImplementedClass::DiffieHellman`：`3`;`QSslDiffieHellmanParameters`级。
+- `QSslSocket::ImplementedClass::EllipticCurve`：`4`;`QSslEllipticCurve`级。
+- `QSslSocket::ImplementedClass::Dtls`：`5`;`QDtls`级。
+- `QSslSocket::ImplementedClass::DtlsCookie`：`6`;`QDtlsClientVerifier`级。
+这个枚举是在Qt 6.1引入的。
 
 ### `[since 6.1] enum class SupportedFeature`
 
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `Constant Value Description`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的 `Constant` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertLevel::Warning 0 Non-fatal alert message`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertLevel::Warning 0 Non-fatal alert message`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertLevel::Fatal 1 Fatal alert message, the underlying backend will handle such an alert properly and close the connection.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertLevel::Fatal 1 Fatal alert message, the underlying backend will handle such an alert properly and close the connection.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertLevel::Unknown 2 An alert of unknown level of severity.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertLevel::Unknown 2 An alert of unknown level of severity.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::CloseNotify 0 ,`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::CloseNotify 0 ,`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnexpectedMessage 10`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnexpectedMessage 10`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::BadRecordMac 20`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::BadRecordMac 20`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::RecordOverflow 22`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::RecordOverflow 22`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::DecompressionFailure 30`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::DecompressionFailure 30`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::HandshakeFailure 40`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::HandshakeFailure 40`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::NoCertificate 41`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::NoCertificate 41`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::BadCertificate 42`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::BadCertificate 42`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnsupportedCertificate 43`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnsupportedCertificate 43`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::CertificateRevoked 44`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::CertificateRevoked 44`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::CertificateExpired 45`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::CertificateExpired 45`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::CertificateUnknown 46`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::CertificateUnknown 46`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::IllegalParameter 47`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::IllegalParameter 47`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnknownCa 48`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnknownCa 48`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::AccessDenied 49`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::AccessDenied 49`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::DecodeError 50`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::DecodeError 50`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::DecryptError 51`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::DecryptError 51`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::ExportRestriction 60`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::ExportRestriction 60`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::ProtocolVersion 70`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::ProtocolVersion 70`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::InsufficientSecurity 71`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::InsufficientSecurity 71`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::InternalError 80`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::InternalError 80`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::InappropriateFallback 86`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::InappropriateFallback 86`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UserCancelled 90`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UserCancelled 90`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::NoRenegotiation 100`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::NoRenegotiation 100`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::MissingExtension 109`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::MissingExtension 109`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnsupportedExtension 110`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnsupportedExtension 110`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::CertificateUnobtainable 111`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::CertificateUnobtainable 111`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnrecognizedName 112`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnrecognizedName 112`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::BadCertificateStatusResponse 113`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::BadCertificateStatusResponse 113`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::BadCertificateHashValue 114`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::BadCertificateHashValue 114`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnknownPskIdentity 115`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnknownPskIdentity 115`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::CertificateRequired 116`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::CertificateRequired 116`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::NoApplicationProtocol 120`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::NoApplicationProtocol 120`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::AlertType::UnknownAlertMessage 255`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:AlertType::UnknownAlertMessage 255`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::Key 0 Class QSslKey.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::Key 0 Class QSslKey.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::Certificate 1 Class QSslCertificate.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::Certificate 1 Class QSslCertificate.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::Socket 2 Class QSslSocket.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::Socket 2 Class QSslSocket.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::DiffieHellman 3 Class QSslDiffieHellmanParameters.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::DiffieHellman 3 Class QSslDiffieHellmanParameters.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::EllipticCurve 4 Class QSslEllipticCurve.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::EllipticCurve 4 Class QSslEllipticCurve.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::Dtls 5 Class QDtls.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::Dtls 5 Class QDtls.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::ImplementedClass::DtlsCookie 6 Class QDtlsClientVerifier.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:ImplementedClass::DtlsCookie 6 Class QDtlsClientVerifier.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::CertificateVerification 0 Indicates that QSslCertificate::verify() is implemented by the backend.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** `QSslSocket::verify` 用于计算、查询或取得与“verify”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslSocket::SupportedFeature::CertificateVerification 0 Indicates that`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslSocket::SupportedFeature::CertificateVerification 0 Indicates that`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::ClientSideAlpn 1 Client-side ALPN (Application Layer Protocol Negotiation).`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** `QSslSocket::ALPN` 用于计算、查询或取得与“ALPN”相关的操作。调用时要先确认当前状态和 `Negotiation` 的有效范围；返回类型是 `QSslSocket::SupportedFeature::ClientSideAlpn 1 Client-side`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslSocket::SupportedFeature::ClientSideAlpn 1 Client-side`。
-- 参数 `Negotiation`：类型为 `Application Layer Protocol`。没有默认值，调用时必须提供。传入 `Application Layer Protocol` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::ServerSideAlpn 2 Server-side ALPN.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:SupportedFeature::ServerSideAlpn 2 Server-side ALPN.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::Ocsp 3 OCSP stapling (Online Certificate Status Protocol).`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** `QSslSocket::stapling` 用于计算、查询或取得与“stapling”相关的操作。调用时要先确认当前状态和 `Protocol` 的有效范围；返回类型是 `QSslSocket::SupportedFeature::Ocsp 3 OCSP`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslSocket::SupportedFeature::Ocsp 3 OCSP`。
-- 参数 `Protocol`：类型为 `Online Certificate Status`。没有默认值，调用时必须提供。传入 `Online Certificate Status` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::Psk 4 Pre-shared keys.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:SupportedFeature::Psk 4 Pre-shared keys.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::SessionTicket 5 Session tickets.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:SupportedFeature::SessionTicket 5 Session tickets.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
-
-### `QSslSocket::SupportedFeature::Alerts 6 Information about alert messages sent and received.`
-
-**API 类别：** 相关非成员函数
-
-**中文解读：** 这是 `QSslSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 属性类型：`:SupportedFeature::Alerts 6 Information about alert messages sent and received.`。
-- 属性名：`QSslSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**作用与语义：**
+
+枚举TLS后端可能支持的功能。
+`QtNetwork` TLS 相关类有公共 API，但某些后端可能未实现，例如我们的 SecureTransport 后端不支持服务器端 ALPN。SupportedFeature 枚举的枚举表示某功能被支持。
+- `QSslSocket::SupportedFeature::CertificateVerification`：`0`;表示`QSslCertificate::verify()`由后端实现。
+- `QSslSocket::SupportedFeature::ClientSideAlpn`：`1`;客户端ALPN（应用层协议协商）。
+- `QSslSocket::SupportedFeature::ServerSideAlpn`：`2`;服务器端ALPN。
+- `QSslSocket::SupportedFeature::Ocsp`：`3`;OCSP 订书（在线证书状态协议）。
+- `QSslSocket::SupportedFeature::Psk`：`4`;预先共享密钥。
+- `QSslSocket::SupportedFeature::SessionTicket`：`5`;会议票。
+- `QSslSocket::SupportedFeature::Alerts`：`6`;关于发送和接收的警报消息的信息。
+这个枚举是在Qt 6.1引入的。
 
 ## 6. 深入实践与常见坑
 

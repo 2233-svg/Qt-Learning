@@ -67,74 +67,58 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[pure virtual] bool QRhiRenderPassDescriptor::isCompatible(const QRhiRenderPassDescriptor *other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCompatible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QRhiRenderPassDescriptor *`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other` `QRhiRenderPassDescriptor`与该兼容，则返回为真，意味着`this`和`other`可以在`QRhiGraphicsPipeline::setRenderPassDescriptor()`中互换使用。
+renderpass 描述符的兼容性概念类似于`QRhiShaderResourceBindings`实例的布局兼容性。它们允许更好地重用`QRhiGraphicsPipeline`实例：例如，`QRhiGraphicsPipeline`实例缓存应利用这些函数寻找匹配的流水线，而不仅仅是比较指针，从而允许在流水线中使用不同的`QRhiRenderPassDescriptor`和`QRhiShaderResourceBindings`，只要它们兼容即可。
+兼容性的具体细节取决于底层图形API。来自同一`QRhiTextureRenderTarget`的两个renderpass描述符`created`始终兼容。
+与`QRhiShaderResourceBindings`类似，也可以在没有两个现有对象的情况下测试兼容性。通过调用`serializedFormat()`提取不透明的斑点，可以通过将返回的向量与其他`QRhiRenderPassDescriptor`的`serializedFormat()`进行比较来测试兼容性。这在某些情况下有好处，因为即使流水线最初构建的`QRhiRenderPassDescriptor`已不可用（但从`serializedFormat()`返回的数据仍然存在），也能测试`QRhiRenderPassDescriptor`与`QRhiGraphicsPipeline`的兼容性。
 
 ### `[virtual] const QRhiNativeHandles *QRhiRenderPassDescriptor::nativeHandles()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderPassDescriptor::nativeHandles` 用于计算、查询或取得与“native、Handles”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiNativeHandles *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiNativeHandles *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向后端特定`QRhiNativeHandles`子类的指针，如`QRhiVulkanRenderPassNativeHandles`。当后端不支持暴露底层原生资源时，返回的值`nullptr`。
 
 ### `[pure virtual] QRhiRenderPassDescriptor *QRhiRenderPassDescriptor::newCompatibleRenderPassDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderPassDescriptor::newCompatibleRenderPassDescriptor` 用于计算、查询或取得与“new、Compatible、渲染、Pass、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiRenderPassDescriptor *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QRhiRenderPassDescriptor`，它是与此对象兼容的 `compatible`。 该函数允许克隆一个 `QRhiRenderPassDescriptor`。返回的对象可直接使用，并且所有权转移给调用者。在存储与图形管线相关的数据结构中时，克隆一个 `QRhiRenderPassDescriptor` 对象可能非常有用（以便创建新的管线，而这通常需要渲染通道描述符对象），并且从渲染目标创建的渲染通道描述符的生命周期可能比管线短（例如，因为引擎会与创建渲染通道的纹理和渲染目标一起管理和销毁渲染通道）。在这种情况下，将克隆的版本存储在数据结构中，并转移所有权，将会很有益。
 
 ### `[override virtual] QRhiResource::Type QRhiRenderPassDescriptor::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderPassDescriptor::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `[pure virtual] QVector<quint32> QRhiRenderPassDescriptor::serializedFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiRenderPassDescriptor::serializedFormat` 用于计算、查询或取得与“serialized、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVector<quint32>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个整数向量，包含一个不透明的斑点，描述与`compatibility`相关的数据。
+给定两个`QRhiRenderPassDescriptor`对象`rp1`和`rp2`，如果该函数返回的数据相同，则`rp1->isCompatible(rp2)`，反之亦然。
+注意：返回的数据用于存储内存和在对象所属`QRhi`生命周期内进行比较。它不用于存储在磁盘上、在进程间重复使用，或用于多个可能拥有不同后端的`QRhi`实例。
+注意：调用该函数预计是一项廉价操作，因为后端不应计算该函数中的数据，而是返回已计算出的数据序列。
+当作为库的一部分创建可复用组件时，图形管线是在针对库客户端管理的`QRhiRenderTarget`（无论是交换链还是纹理）时创建和维护，组件必须能够应对变化的 `QRhiRenderPassDescriptor`。例如，因为渲染目标发生变化，导致之前的`QRhiRenderPassDescriptor`失效（至少对新渲染目标而言），原因是颜色格式和附件可能不同。或者因为动态使用了可变速率着色。一个简单的模式是对每一帧执行以下检查，以识别何时需要将流水线关联到新的`QRhiRenderPassDescriptor`，因为渲染目标现在与早期帧有所不同：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVector<quint32>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QRhiRenderPassDescriptor *rp = m_renderTarget->renderPassDescriptor();
+ if (m_pipeline && rp->serializedFormat() != m_renderPassFormat) {
+     m_pipeline->setRenderPassDescriptor(rp);
+     m_renderPassFormat = rp->serializedFormat();
+     m_pipeline->create();
+ }
+ // remember to store m_renderPassFormat also when creating m_pipeline the first time
+```
 
 ## 6. 深入实践与常见坑
 

@@ -96,284 +96,195 @@ if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 21 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QTemporaryFile::QTemporaryFile()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTemporaryFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QTemporaryFile。
+默认文件名模板由`QCoreApplication::applicationName()`返回的应用程序名确定（如果应用名为空则返回`"qt_temp"`），后接`".XXXXXX"`。文件存储在系统的临时目录中，由`QDir::tempPath()`返回。
 
 ### `[explicit] QTemporaryFile::QTemporaryFile(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTemporaryFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有给定`parent`的QTemporaryFile。
+默认文件名模板由应用程序名（`QCoreApplication::applicationName()`返回时确定，若应用名为空则返回`"qt_temp"`），后接`".XXXXXX"`。文件存储在系统临时目录中，由`QDir::tempPath()`返回。
 
 ### `[explicit] QTemporaryFile::QTemporaryFile(const QString &templateName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTemporaryFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `templateName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个以 `templateName` 为文件名模板的 QTemporaryFile。
+打开临时文件后，`templateName` 将被用来创建一个唯一的文件名。
+如果文件名（`templateName` 中最后一个目录路径分隔符后的部分）没有包含`"XXXXXX"`，则会自动添加。
+`"XXXXXX"`将被文件名的动态部分取代，该部分被计算为唯一。
+如果`templateName`是相对路径，路径将相对于当前工作目录。如果你想用系统的临时目录，可以用`QDir::tempPath()`构造`templateName`。
+如果调用`rename()`函数，指定正确的目录非常重要，因为 QTemporaryFile 只能在与临时文件创建时相同的卷/文件系统内重命名文件。
 
 ### `QTemporaryFile::QTemporaryFile(const QString &templateName, QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTemporaryFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `templateName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有指定`parent`的QTemporaryFile，并`templateName`为文件名模板。
+打开临时文件后，`templateName` 将被用来创建一个唯一的文件名。
+如果文件名（`templateName` 中最后一个目录路径分隔符后的部分）没有包含 `"XXXXXX"`，它会自动添加。
+`"XXXXXX"` 将被文件名中的动态部分取代，该部分被计算为唯一。
+如果`templateName`是相对路径，则路径相对于当前工作目录。如果你愿意，可以使用`QDir::tempPath()`构造`templateName`，使用系统的临时目录。如果调用`rename()`函数，指定正确的目录非常重要，因为QTemporaryFile只能在与临时文件创建时相同的卷/文件系统内重命名文件。
 
 ### `[explicit, since 6.7] QTemporaryFile::QTemporaryFile(const std::filesystem::path &templateName, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTemporaryFile` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `templateName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。传入 `const std::filesystem::path &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QTemporaryFile。
+默认文件名模板由`QCoreApplication::applicationName()`返回的应用程序名确定（如果应用名为空则返回`"qt_temp"`），后接`".XXXXXX"`。文件存储在系统的临时目录中，由`QDir::tempPath()`返回。
 
 ### `[virtual noexcept] QTemporaryFile::~QTemporaryFile()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTemporaryFile` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁临时文件对象，必要时自动关闭文件，如果处于自动删除模式，则会自动删除文件。
 
 ### `bool QTemporaryFile::autoRemove() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::autoRemove` 用于计算、查询或取得与“auto、移除”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `QTemporaryFile` 处于自动删除模式，则返回 `true`。自动删除模式会在对象销毁时自动从磁盘删除文件名。这使得在栈上创建你的 `QTemporaryFile` 对象、填充数据、读取数据变得非常容易，并且在函数返回时它会自动完成自身的清理工作。自动删除默认是开启的。
 
 ### `[static] QTemporaryFile *QTemporaryFile::createNativeFile(QFile &file)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `createNativeFile`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+如果`file`还不是原生文件，则会在`QDir::tempPath()`中创建一个`QTemporaryFile`，将`file`的内容复制到其中，并返回指向临时文件的指针。如果已经是本地文件，则返回`file` `0`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QTemporaryFile *`。
-- 参数 `file`：类型为 `QFile &`。没有默认值，调用时必须提供。文件或设备对象。要确认打开状态、读写模式、当前位置和错误状态。
+```cpp
+ QFile f_pointer(":/resources/file.txt");
+ QTemporaryFile::createNativeFile(f_pointer); // Returns a pointer to a temporary file
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QFile f0("/users/qt/file.txt");
+ QTemporaryFile::createNativeFile(f0); // Returns 0
+```
 
 ### `[static] QTemporaryFile *QTemporaryFile::createNativeFile(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `createNativeFile`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QTemporaryFile *`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+作用于给定的`fileName`，而非现有的`QFile`对象。
 
 ### `[static, since 6.7] QTemporaryFile *QTemporaryFile::createNativeFile(const std::filesystem::path &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `createNativeFile`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+如果`file`还不是原生文件，则会在`QDir::tempPath()`中创建一个`QTemporaryFile`，将`file`的内容复制到其中，并返回指向临时文件的指针。如果已经是本地文件，则返回`file` `0`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QTemporaryFile *`。
-- 参数 `fileName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
+```cpp
+ QFile f_pointer(":/resources/file.txt");
+ QTemporaryFile::createNativeFile(f_pointer); // Returns a pointer to a temporary file
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QFile f0("/users/qt/file.txt");
+ QTemporaryFile::createNativeFile(f0); // Returns 0
+```
 
 ### `[override virtual] QString QTemporaryFile::fileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::fileName` 用于计算、查询或取得与“file、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QFile::fileName()` const.
+返回支持`QTemporaryFile`对象的完整唯一文件名。该字符串在`QTemporaryFile`打开前为空，之后包含`fileTemplate()`及额外字符以实现唯一。
+该方法返回的文件名是相对的，也取决于用于构造该对象的文件名模板（或传递给`setFileTemplate()`）的相对或绝对。
 
 ### `QString QTemporaryFile::fileTemplate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::fileTemplate` 用于计算、查询或取得与“file、Template”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件名模板。
+该方法返回的文件名模板，根据用于构造该对象（或传递给`setFileTemplate()`）的文件名模板是相对的，会是绝对的，取决于该模板的相对或绝对。
 
 ### `bool QTemporaryFile::open()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 成功后才能 read/write/seek；失败时检查 `errorString()`，结束时 close 或让对象安全析构。
+在`QIODeviceBase::ReadWrite`模式下打开文件系统中唯一的临时文件。如果文件成功打开或已经打开，返回`true`。否则返回`false`。
+如果第一次调用，open() 会根据 `fileTemplate()` 创建一个唯一的文件名。该文件保证是由该函数创建的（即它以前从未存在过）。
+如果调用`close()`后文件被重新打开，同样的文件会再次被打开。
 
 ### `[override virtual protected] bool QTemporaryFile::open(QIODeviceBase::OpenMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `mode`：类型为 `QIODeviceBase::OpenMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 成功后才能 read/write/seek；失败时检查 `errorString()`，结束时 close 或让对象安全析构。
+重实现自：`QFile::open`（QIODeviceBase：：OpenMode 模式）。
+在文件系统中打开一个带有`mode`标志的唯一临时文件。如果文件已成功打开或已经打开，返回`true`。否则返回`false`。
+如果第一次调用，open() 会根据`fileTemplate()`创建一个唯一的文件名，并以`mode`标志打开。该文件保证是由该函数创建的（即之前从未存在过）。
+如果调用`close()`后重新打开文件，该文件将再次打开并带有`mode`标志。
+如果文件不存在且`mode`意味着创建它，则按照指定的`permissions`创建文件。
+在POSIX系统中，实际权限受`umask`值影响。
+在Windows上，这些权限是通过ACL模拟的。当该组获得的权限比其他组少时，这些ACL可能处于非规范顺序。当打开属性对话框的安全标签时，带有此类权限的文件和目录会生成警告。将所有授予他人的权限授予该组可以避免此类警告。
 
 ### `bool QTemporaryFile::rename(const QString &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::rename` 用于计算、查询或取得与“rename”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前临时文件重命名为`newName`，成功时返回true。
+该功能与`QFile::rename()`有一个重要区别：如果低级系统调用文件重命名失败，它不会执行复制删除，这种情况可能发生在`newName`指定文件位于与临时文件创建时不同的卷或文件系统。换句话说，`QTemporaryFile`只支持原子文件重命名。
+此功能旨在支持将目标文件具现化所有内容，使其他进程无法看到正在写入的未完成文件。`QSaveFile`类也可以用于类似目的，尤其是当目标文件不是临时文件时。
+注意：调用 rename() 并不会禁用 `autoRemove`。如果你想让重命名的文件持续存在，必须在调用 rename() 后调用 `setAutoRemove` 并将其设置为 `false`。否则，当 `QTemporaryFile` 对象被销毁时，该文件将被删除。
+如果`newName`已经存在，这个函数将失败。要替换它，可以用`renameOverwrite()`代替。
 
 ### `[since 6.7] bool QTemporaryFile::rename(const std::filesystem::path &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::rename` 用于计算、查询或取得与“rename”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。传入 `const std::filesystem::path &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前临时文件重命名为`newName`，成功时返回true。
+该功能与`QFile::rename()`有一个重要区别：如果低级系统调用文件重命名失败，它不会执行复制删除，这种情况可能发生在`newName`指定文件位于与临时文件创建时不同的卷或文件系统。换句话说，`QTemporaryFile`只支持原子文件重命名。
+此功能旨在支持将目标文件具现化所有内容，使其他进程无法看到正在写入的未完成文件。`QSaveFile`类也可以用于类似目的，尤其是当目标文件不是临时文件时。
+注意：调用 rename() 并不会禁用 `autoRemove`。如果你想让重命名的文件持续存在，必须在调用 rename() 后调用 `setAutoRemove` 并将其设置为 `false`。否则，当 `QTemporaryFile` 对象被销毁时，该文件将被删除。
+如果`newName`已经存在，这个函数将失败。要替换它，可以用`renameOverwrite()`代替。
 
 ### `[since 6.11] bool QTemporaryFile::renameOverwrite(const QString &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::renameOverwrite` 用于计算、查询或取得与“rename、Overwrite”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这和`rename()`一样，只不过如果`newName`已经存在，它会原子层面地替换它，就像`QSaveFile::commit()`一样。
+如果重命名无法原子方式执行（例如，临时文件和目标文件名分别存在于不同的文件系统/卷/驱动器上），返回`false`。
 
 ### `[since 6.11] bool QTemporaryFile::renameOverwrite(const std::filesystem::path &newName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QTemporaryFile::renameOverwrite` 用于计算、查询或取得与“rename、Overwrite”相关的操作。调用时要先确认当前状态和 `newName` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newName`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。传入 `const std::filesystem::path &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这和`rename()`一样，只不过如果`newName`已经存在，它会原子层面地替换它，就像`QSaveFile::commit()`一样。
+如果重命名无法原子方式执行（例如，临时文件和目标文件名分别存在于不同的文件系统/卷/驱动器上），返回`false`。
 
 ### `void QTemporaryFile::setAutoRemove(bool b)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoRemove`。调用它会改变 `QTemporaryFile` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`true` `b`，会将`QTemporaryFile`设置为自动移除模式。
+自动移除默认是开启的。
+如果你将该属性设置为`false`，确保应用程序提供在文件不再需要时移除该文件的方法，包括将责任交给其他进程。始终使用`fileName()`函数获取名称，切勿试图猜测`QTemporaryFile`生成的名称。
+在某些系统中，如果在关闭文件前未调用`fileName()`，无论该属性的状态如何，临时文件都可能被移除。不应依赖这种行为，因此应用代码应调用`fileName()`或保持自动移除功能为开启。
 
 ### `void QTemporaryFile::setFileTemplate(const QString &templateName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileTemplate`。调用它会改变 `QTemporaryFile` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `templateName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文件名模板设置为`templateName`。
+如果文件名（`templateName` 中最后一个目录路径分隔符后的部分）没有包含 `"XXXXXX"`，则会自动添加。
+`"XXXXXX"`会被文件名中的动态部分取代，该部分被计算为唯一。
+如果 `templateName` 是相对路径，路径将相对于当前工作目录。如果你愿意，可以使用 `QDir::tempPath()` 构建`templateName`，使用系统的临时目录。如果调用 `rename()` 函数，指定正确的目录非常重要，因为`QTemporaryFile`只能重命名与临时文件创建时相同的卷/文件系统内的文件。
 
 ### `[since 6.7] void QTemporaryFile::setFileTemplate(const std::filesystem::path &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileTemplate`。调用它会改变 `QTemporaryFile` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const std::filesystem::path &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文件名模板设置为`templateName`。
+如果文件名（`templateName` 中最后一个目录路径分隔符后的部分）没有包含 `"XXXXXX"`，则会自动添加。
+`"XXXXXX"`会被文件名中的动态部分取代，该部分被计算为唯一。
+如果 `templateName` 是相对路径，路径将相对于当前工作目录。如果你愿意，可以使用 `QDir::tempPath()` 构建`templateName`，使用系统的临时目录。如果调用 `rename()` 函数，指定正确的目录非常重要，因为`QTemporaryFile`只能重命名与临时文件创建时相同的卷/文件系统内的文件。
 
 ## 6. 深入实践与常见坑
 

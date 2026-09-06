@@ -139,1003 +139,570 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 76 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiGraphicsPipeline::BlendFactor`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Blend、Factor`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:BlendFactor`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定混合因子。
+- `QRhiGraphicsPipeline::Zero`：`0`
+- `QRhiGraphicsPipeline::One`：`1`
+- `QRhiGraphicsPipeline::SrcColor`：`2`
+- `QRhiGraphicsPipeline::OneMinusSrcColor`：`3`
+- `QRhiGraphicsPipeline::DstColor`：`4`
+- `QRhiGraphicsPipeline::OneMinusDstColor`：`5`
+- `QRhiGraphicsPipeline::SrcAlpha`：`6`
+- `QRhiGraphicsPipeline::OneMinusSrcAlpha`：`7`
+- `QRhiGraphicsPipeline::DstAlpha`：`8`
+- `QRhiGraphicsPipeline::OneMinusDstAlpha`：`9`
+- `QRhiGraphicsPipeline::ConstantColor`：`10`
+- `QRhiGraphicsPipeline::OneMinusConstantColor`：`11`
+- `QRhiGraphicsPipeline::ConstantAlpha`：`12`
+- `QRhiGraphicsPipeline::OneMinusConstantAlpha`：`13`
+- `QRhiGraphicsPipeline::SrcAlphaSaturate`：`14`
+- `QRhiGraphicsPipeline::Src1Color`：`15`
+- `QRhiGraphicsPipeline::OneMinusSrc1Color`：`16`
+- `QRhiGraphicsPipeline::Src1Alpha`：`17`
+- `QRhiGraphicsPipeline::OneMinusSrc1Alpha`：`18`
 
 ### `enum QRhiGraphicsPipeline::BlendOp`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Blend、Op`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:BlendOp`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定混合操作。
+- `QRhiGraphicsPipeline::Add`：`0`
+- `QRhiGraphicsPipeline::Subtract`：`1`
+- `QRhiGraphicsPipeline::ReverseSubtract`：`2`
+- `QRhiGraphicsPipeline::Min`：`3`
+- `QRhiGraphicsPipeline::Max`：`4`
 
 ### `enum QRhiGraphicsPipeline::ColorMaskComponentflags QRhiGraphicsPipeline::ColorMask`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Color、Mask、Componentflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ColorMaskComponentflags QRhiGraphicsPipeline::ColorMask`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定颜色写入遮罩的标志值。
+- `QRhiGraphicsPipeline::R`：`1 << 0`
+- `QRhiGraphicsPipeline::G`：`1 << 1`
+- `QRhiGraphicsPipeline::B`：`1 << 2`
+- `QRhiGraphicsPipeline::A`：`1 << 3`
+ColorMask类型是QFlags的typedef<ColorMaskComponent>。它存储ColorMaskComponent值的或组合。
 
 ### `enum QRhiGraphicsPipeline::CompareOp`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `比较、Op`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CompareOp`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定深度或模板比较函数。
+- `QRhiGraphicsPipeline::Never`：`0`
+- `QRhiGraphicsPipeline::Less`：`1`;（默认深度）
+- `QRhiGraphicsPipeline::Equal`：`2`
+- `QRhiGraphicsPipeline::LessOrEqual`：`3`
+- `QRhiGraphicsPipeline::Greater`：`4`
+- `QRhiGraphicsPipeline::NotEqual`：`5`
+- `QRhiGraphicsPipeline::GreaterOrEqual`：`6`
+- `QRhiGraphicsPipeline::Always`：`7`;（模板默认）
 
 ### `enum QRhiGraphicsPipeline::CullMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Cull、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CullMode`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定剔除模式。
+- 无`QRhiGraphicsPipeline::None`：`0`;无剔除（默认）
+- `QRhiGraphicsPipeline::Front`：`1`;切割前面
+- `QRhiGraphicsPipeline::Back`：`2`;剔除背面
 
 ### `enum QRhiGraphicsPipeline::Flagflags QRhiGraphicsPipeline::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QRhiGraphicsPipeline::Flags`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于描述管道动态状态的标志值，以及其他选项。视口始终是动态的。
+- `QRhiGraphicsPipeline::UsesBlendConstants`：`1 << 0`;表示通过`QRhiCommandBuffer::setBlendConstants()`设置混合颜色常数
+- `QRhiGraphicsPipeline::UsesStencilRef`：`1 << 1`;表示模板参考值将通过`QRhiCommandBuffer::setStencilRef()`设置
+- `QRhiGraphicsPipeline::UsesScissor`：`1 << 2`;表示通过`QRhiCommandBuffer::setScissor()`设置剪刀矩形
+- `QRhiGraphicsPipeline::CompileShadersWithDebugInfo`：`1 << 3`;启用调试信息的着色器编译请求。这仅在涉及源代码的运行时着色器编译，且底层基础设施支持时才相关。具体例子中，这与Vulkan和SPIR-V无关，因为GLSL到SPIR-V的编译并非运行时完成。另一方面，考虑Direct3D和HLSL，这里有多种选项：当`QShader`包附带预编译字节码（`DXBC`）时，需通过生成`.qsb`文件的工具请求调试信息，类似于Vulkan和SPIR-V的情况。然而，当 HLSL 源代码存在于预或运行时生成的 `QShader` 包中时，编译的第一阶段（从 HLSL 源代码到中间格式）也会在运行时进行，并考虑该标志。调试信息尤其重要于像 RenderDoc 这样的工具，因为它允许在调查流水线和执行顶点或片段着色器调试时看到原始源代码。
+- `QRhiGraphicsPipeline::UsesShadingRate`：`1 << 4`;表示每个绘制（每个流水线）着色率值将通过`QRhiCommandBuffer::setShadingRate()`设定。不指定该标志但仍然调用 setShadingRate() 可能会导致根据底层图形 API 的不同而出现不同且意想不到的结果。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QRhiGraphicsPipeline::FrontFace`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `开头、Face`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FrontFace`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+规定前面绕制顺序。
+- `QRhiGraphicsPipeline::CCW`：`0`;逆时针（默认）
+- `QRhiGraphicsPipeline::CW`：`1`;顺时针
 
 ### `enum QRhiGraphicsPipeline::PolygonMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Polygon、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PolygonMode`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定多边形光栅化模式。
+多边形模式（金属中的三角形填充模式，D3D中的填充模式）指定了光栅化多边形时所使用的填充模式。多边形可以绘制为实体（填充），也可以绘制为线状网格（线）。
+非填充多边形模式的支持是可选的，`QRhi::NonFillPolygonMode`功能表示。在OpenGL ES和部分Vulkan实现中，该功能很可能会被报告为不支持，这意味着除了填充外，无法使用其他值。
+- `QRhiGraphicsPipeline::Fill`：`0`;多边形内部填充（默认）
+- `QRhiGraphicsPipeline::Line`：`1`;多边形的边界边以线段形式绘制。
 
 ### `enum QRhiGraphicsPipeline::StencilOp`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Stencil、Op`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StencilOp`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定模板操作。
+- `QRhiGraphicsPipeline::StencilZero`: `0`
+- `QRhiGraphicsPipeline::Keep`: `1`；（默认）
+- `QRhiGraphicsPipeline::Replace`: `2`
+- `QRhiGraphicsPipeline::IncrementAndClamp`: `3`
+- `QRhiGraphicsPipeline::DecrementAndClamp`: `4`
+- `QRhiGraphicsPipeline::Invert`: `5`
+- `QRhiGraphicsPipeline::IncrementAndWrap`: `6`
+- `QRhiGraphicsPipeline::DecrementAndWrap`: `7`
 
 ### `enum QRhiGraphicsPipeline::Topology`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Topology`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Topology`。
-- 属性名：`QRhiGraphicsPipeline`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定原始拓扑。
+- `QRhiGraphicsPipeline::Triangles`：`0`;（默认）
+- `QRhiGraphicsPipeline::TriangleStrip`：`1`
+- `QRhiGraphicsPipeline::TriangleFan`：`2`;（仅在支持`QRhi::TriangleFanTopology`时使用）
+- `QRhiGraphicsPipeline::Lines`：`3`
+- `QRhiGraphicsPipeline::LineStrip`：`4`
+- `QRhiGraphicsPipeline::Points`：`5`
+- `QRhiGraphicsPipeline::Patches`：`6`;（仅在支持`QRhi::Tessellation`且需要流水线中存在镶嵌阶段时才可用）
 
 ### `const QRhiShaderStage *QRhiGraphicsPipeline::cbeginShaderStages() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::cbeginShaderStages` 用于计算、查询或取得与“cbegin、Shader、Stages”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiShaderStage *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiShaderStage *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 cont 迭代器，指向着色器阶段列表中的第一个项目。
 
 ### `const QRhiGraphicsPipeline::TargetBlend *QRhiGraphicsPipeline::cbeginTargetBlends() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::cbeginTargetBlends` 用于计算、查询或取得与“cbegin、目标、Blends”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiGraphicsPipeline::TargetBlend *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiGraphicsPipeline::TargetBlend *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const迭代器，指向渲染目标混合设置列表中的第一个项目。
 
 ### `const QRhiShaderStage *QRhiGraphicsPipeline::cendShaderStages() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::cendShaderStages` 用于计算、查询或取得与“cend、Shader、Stages”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiShaderStage *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiShaderStage *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const迭代器，指向着色器阶段列表中最后一项之后。
 
 ### `const QRhiGraphicsPipeline::TargetBlend *QRhiGraphicsPipeline::cendTargetBlends() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::cendTargetBlends` 用于计算、查询或取得与“cend、目标、Blends”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiGraphicsPipeline::TargetBlend *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiGraphicsPipeline::TargetBlend *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const迭代器，指向渲染目标混合设置列表中最后一个项目之后。
 
 ### `[pure virtual] bool QRhiGraphicsPipeline::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建对应的本地图形资源。如果由于之前的 create() 已有资源存在且没有相应的 `destroy()`，那么 `destroy()` 会先隐式调用。
+成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终安全。
+注意：这可能是一个昂贵的操作，具体取决于底层的图形API，尤其是在着色器从源码或中间字节码格式编译/优化到GPU自身指令集时。在适用的情况下，`QRhi`后端会自动设置相关的非持久化设施以加速此过程，例如Vulkan后端会自动创建`VkPipelineCache`以提升应用生命周期内的数据重用。
+注意：驱动程序还可能采用各种持久（基于磁盘）的缓存策略来处理着色器和流水线数据，这些数据对 Qt 来说是隐藏的，也不在 Qt 控制范围内。在某些情况下，根据图形 API 和`QRhi`后端，`QRhi` 内部有手动管理此类缓存的功能，允许检索可序列化的 blob，并在应用的未来运行中重新加载，以确保更快的流水线创建速度。详情请参见`QRhi::pipelineCacheData()`和 `QRhi::setPipelineCacheData()`。还需要注意的是，当处理由更高级别Qt框架管理的`QRhi`实例时，例如`QQuickWindow`默认使用基于磁盘的流水线缓存（该缓存是除任何驱动程序缓存外的）。
 
 ### `QRhiGraphicsPipeline::CullMode QRhiGraphicsPipeline::cullMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::cullMode` 用于计算、查询或取得与“cull、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::CullMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::CullMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的面部剔除模式。
 
 ### `int QRhiGraphicsPipeline::depthBias() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::depthBias` 用于计算、查询或取得与“depth、Bias”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的深度偏差。
 
 ### `QRhiGraphicsPipeline::CompareOp QRhiGraphicsPipeline::depthOp() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::depthOp` 用于计算、查询或取得与“depth、Op”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::CompareOp`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::CompareOp`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回深度比较函数。
 
 ### `QRhiGraphicsPipeline::Flags QRhiGraphicsPipeline::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的标志。
 
 ### `QRhiGraphicsPipeline::FrontFace QRhiGraphicsPipeline::frontFace() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::frontFace` 用于计算、查询或取得与“开头、Face”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::FrontFace`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::FrontFace`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设定的前脸模式。
 
 ### `[since 6.11] bool QRhiGraphicsPipeline::hasDepthClamp() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasDepthClamp`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用深度钳，则返回true。
 
 ### `bool QRhiGraphicsPipeline::hasDepthTest() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasDepthTest`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用深度测试，则返回为真。
 
 ### `bool QRhiGraphicsPipeline::hasDepthWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasDepthWrite`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用深度写入，则返回真值。
 
 ### `bool QRhiGraphicsPipeline::hasStencilTest() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasStencilTest`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用模板测试，则返回为真。
 
 ### `float QRhiGraphicsPipeline::lineWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::lineWidth` 用于计算、查询或取得与“行、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的线宽。默认值是1.0f。
 
 ### `[since 6.7] int QRhiGraphicsPipeline::multiViewCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::multiViewCount` 用于计算、查询或取得与“multi、View、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回观看次数。默认值为0，表示没有多视图渲染。
 
 ### `int QRhiGraphicsPipeline::patchControlPointCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::patchControlPointCount` 用于计算、查询或取得与“patch、Control、Point、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的补丁控制点数。
 
 ### `QRhiGraphicsPipeline::PolygonMode QRhiGraphicsPipeline::polygonMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::polygonMode` 用于计算、查询或取得与“polygon、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::PolygonMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::PolygonMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回多边形模式。
 
 ### `QRhiRenderPassDescriptor *QRhiGraphicsPipeline::renderPassDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 的核心操作 `renderPassDescriptor`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QRhiRenderPassDescriptor *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设定的`QRhiRenderPassDescriptor`。
 
 ### `[override virtual] QRhiResource::Type QRhiGraphicsPipeline::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `int QRhiGraphicsPipeline::sampleCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::sampleCount` 用于计算、查询或取得与“sample、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的采样计数。1表示没有多重采样抗锯齿。
 
 ### `void QRhiGraphicsPipeline::setCullMode(QRhiGraphicsPipeline::CullMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCullMode`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QRhiGraphicsPipeline::CullMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置指定的面剔除`mode`。
 
 ### `void QRhiGraphicsPipeline::setDepthBias(int bias)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthBias`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bias`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置深度`bias`。默认值为0。
 
 ### `[since 6.11] void QRhiGraphicsPipeline::setDepthClamp(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthClamp`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`enable`为真时启用深度截获。启用深度截获时，原本会被近距离或远剪裁平面裁剪的图元被光栅化，其深度值被钳为深度范围。禁用（默认情况下）时，这些图元会被裁剪。
+注意：当`QRhi::DepthClamp`功能被报告为不支持时，该设置将被忽略。
 
 ### `void QRhiGraphicsPipeline::setDepthOp(QRhiGraphicsPipeline::CompareOp op)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthOp`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `op`：类型为 `QRhiGraphicsPipeline::CompareOp`。没有默认值，调用时必须提供。传入 `QRhiGraphicsPipeline::CompareOp` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置深度比较函数`op`。
 
 ### `void QRhiGraphicsPipeline::setDepthTest(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthTest`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`enable`启用或禁用深度测试。深度测试和写出深度数据默认被禁用。
 
 ### `void QRhiGraphicsPipeline::setDepthWrite(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthWrite`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`enable`控制深度数据写入深度缓冲区。默认情况下，该功能被禁用。深度写入通常与深度测试一起启用。
+注意：未启用深度测试而启用深度写入可能无法达到预期结果，应避免。
 
 ### `void QRhiGraphicsPipeline::setFlags(QRhiGraphicsPipeline::Flags f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiGraphicsPipeline::Flags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这让标志变得很有点像`f`。
 
 ### `void QRhiGraphicsPipeline::setFrontFace(QRhiGraphicsPipeline::FrontFace f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFrontFace`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiGraphicsPipeline::FrontFace`。没有默认值，调用时必须提供。传入 `QRhiGraphicsPipeline::FrontFace` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置前脸模式`f`。
 
 ### `void QRhiGraphicsPipeline::setLineWidth(float width)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLineWidth`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `width`：类型为 `float`。没有默认值，调用时必须提供。宽度，通常以像素、字符数或元素数量表示；要确认是否允许 0、负数和超出最大值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置行 `width`。如果运行时`QRhi::WideLines`特性被报告为不支持，则忽略除 1.0f 以外的数值。
 
 ### `[since 6.7] void QRhiGraphicsPipeline::setMultiViewCount(int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMultiViewCount`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置视图`count`用于多视图渲染。默认值为0，表示没有多视图渲染。`count`必须达到2或以上才能触发多视图渲染。
+多视图仅在多视图功能被报告为支持时才可用。渲染目标必须是二维纹理数组，渲染目标的颜色附件必须有相同的`count`设置。
+关于多视角渲染的更多细节，请参见 `QRhiColorAttachment::setMultiViewCount()`。
 
 ### `void QRhiGraphicsPipeline::setPatchControlPointCount(int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPatchControlPointCount`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将补丁控制点数设置为`count`。默认值为3。仅在拓扑设置为`Patches`时使用此值。
 
 ### `void QRhiGraphicsPipeline::setPolygonMode(QRhiGraphicsPipeline::PolygonMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPolygonMode`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QRhiGraphicsPipeline::PolygonMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置多边形`mode`。默认是填充。
 
 ### `void QRhiGraphicsPipeline::setRenderPassDescriptor(QRhiRenderPassDescriptor *desc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderPassDescriptor`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `desc`：类型为 `QRhiRenderPassDescriptor *`。没有默认值，调用时必须提供。传入 `QRhiRenderPassDescriptor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与指定的`QRhiRenderPassDescriptor` `desc`合作。
 
 ### `void QRhiGraphicsPipeline::setSampleCount(int s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSampleCount`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `s`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置采样计数。`s`的典型值为1、4或8。流水线必须始终与渲染目标兼容，即采样计数必须匹配。
 
 ### `void QRhiGraphicsPipeline::setShaderResourceBindings(QRhiShaderResourceBindings *srb)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShaderResourceBindings`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `srb`：类型为 `QRhiShaderResourceBindings *`。没有默认值，调用时必须提供。传入 `QRhiShaderResourceBindings *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与`srb`关联描述资源绑定布局及资源本身（`QRhiBuffer`、`QRhiTexture`）。后者是可选的，因为在创建管道时只有布局重要。因此，这里传递的`srb`可以保持实际缓冲区或纹理对象未指定（`nullptr`），只要在记录绘制调用前有另一个`layout-compatible` `QRhiShaderResourceBindings`通过`setShaderResources()`绑定。
 
 ### `void QRhiGraphicsPipeline::setShaderStages(std::initializer_list<QRhiShaderStage> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShaderStages`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiShaderStage>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiShaderStage>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置着色器阶段的 `list`。
 
 ### `template <typename InputIterator> void QRhiGraphicsPipeline::setShaderStages(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShaderStages`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从迭代器`first`和`last`中设置着色器阶段的列表。
 
 ### `void QRhiGraphicsPipeline::setSlopeScaledDepthBias(float bias)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSlopeScaledDepthBias`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bias`：类型为 `float`。没有默认值，调用时必须提供。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置斜率缩放深度`bias`。默认值为0。
 
 ### `void QRhiGraphicsPipeline::setStencilBack(const QRhiGraphicsPipeline::StencilOpState &state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilBack`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `const QRhiGraphicsPipeline::StencilOpState &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置反面模板测试`state`。
 
 ### `void QRhiGraphicsPipeline::setStencilFront(const QRhiGraphicsPipeline::StencilOpState &state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilFront`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `const QRhiGraphicsPipeline::StencilOpState &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置前脸的模板测试`state`。
 
 ### `void QRhiGraphicsPipeline::setStencilReadMask(quint32 mask)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilReadMask`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mask`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置模板读取`mask`。默认值为0xFF。
 
 ### `void QRhiGraphicsPipeline::setStencilTest(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilTest`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`enable`启用或禁用模板测试。默认情况下，该功能被禁用。
 
 ### `void QRhiGraphicsPipeline::setStencilWriteMask(quint32 mask)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStencilWriteMask`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mask`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置模板写入`mask`。默认值为0xFF。
 
 ### `void QRhiGraphicsPipeline::setTargetBlends(std::initializer_list<QRhiGraphicsPipeline::TargetBlend> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTargetBlends`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiGraphicsPipeline::TargetBlend>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiGraphicsPipeline::TargetBlend>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置渲染目标混合设置的 `list`。这是一个列表，因为当使用多个渲染目标（即一个`QRhiTextureRenderTarget`有多个`QRhiColorAttachment`时），每个渲染目标（颜色附件）都需要有`TargetBlend`结构。
+默认情况下，有一个默认构造的 `TargetBlend`。
 
 ### `template <typename InputIterator> void QRhiGraphicsPipeline::setTargetBlends(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTargetBlends`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它会从迭代器`first`和`last`中设置渲染目标混合设置列表。
 
 ### `void QRhiGraphicsPipeline::setTopology(QRhiGraphicsPipeline::Topology t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTopology`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `QRhiGraphicsPipeline::Topology`。没有默认值，调用时必须提供。传入 `QRhiGraphicsPipeline::Topology` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将原始拓扑设定为`t`。
 
 ### `void QRhiGraphicsPipeline::setVertexInputLayout(const QRhiVertexInputLayout &layout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVertexInputLayout`。调用它会改变 `QRhiGraphicsPipeline` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `layout`：类型为 `const QRhiVertexInputLayout &`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定顶点输入 `layout`。
 
 ### `QRhiShaderResourceBindings *QRhiGraphicsPipeline::shaderResourceBindings() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::shaderResourceBindings` 用于计算、查询或取得与“shader、Resource、Bindings”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiShaderResourceBindings *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderResourceBindings *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前关联的`QRhiShaderResourceBindings`对象。
 
 ### `const QRhiShaderStage *QRhiGraphicsPipeline::shaderStageAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::shaderStageAt` 用于计算、查询或取得与“shader、Stage、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `const QRhiShaderStage *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiShaderStage *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定 `index` 返回着色器阶段。
 
 ### `qsizetype QRhiGraphicsPipeline::shaderStageCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::shaderStageCount` 用于计算、查询或取得与“shader、Stage、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该管线中的着色器阶段数量。
 
 ### `float QRhiGraphicsPipeline::slopeScaledDepthBias() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::slopeScaledDepthBias` 用于计算、查询或取得与“slope、Scaled、Depth、Bias”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `float`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`float`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的斜率缩放深度偏差。
 
 ### `QRhiGraphicsPipeline::StencilOpState QRhiGraphicsPipeline::stencilBack() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::stencilBack` 用于计算、查询或取得与“stencil、末尾”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::StencilOpState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::StencilOpState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前模板测试状态的背面。
 
 ### `QRhiGraphicsPipeline::StencilOpState QRhiGraphicsPipeline::stencilFront() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::stencilFront` 用于计算、查询或取得与“stencil、开头”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiGraphicsPipeline::StencilOpState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::StencilOpState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前模板测试状态的正面。
 
 ### `quint32 QRhiGraphicsPipeline::stencilReadMask() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::stencilReadMask` 用于计算、查询或取得与“stencil、读取、Mask”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前模板读掩码。
 
 ### `quint32 QRhiGraphicsPipeline::stencilWriteMask() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::stencilWriteMask` 用于计算、查询或取得与“stencil、写入、Mask”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的模板写掩码。
 
 ### `const QRhiGraphicsPipeline::TargetBlend *QRhiGraphicsPipeline::targetBlendAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::targetBlendAt` 用于计算、查询或取得与“目标、Blend、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `const QRhiGraphicsPipeline::TargetBlend *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiGraphicsPipeline::TargetBlend *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定`index`返回渲染目标混合设置。
 
 ### `qsizetype QRhiGraphicsPipeline::targetBlendCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::targetBlendCount` 用于计算、查询或取得与“目标、Blend、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染目标混合设置的数量。
 
 ### `QRhiGraphicsPipeline::Topology QRhiGraphicsPipeline::topology() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `topology`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QRhiGraphicsPipeline::Topology`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设定的原始拓扑。
 
 ### `QRhiVertexInputLayout QRhiGraphicsPipeline::vertexInputLayout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiGraphicsPipeline::vertexInputLayout` 用于计算、查询或取得与“vertex、Input、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiVertexInputLayout`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiVertexInputLayout`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的顶点输入布局规范。
 
 ### `(since 6.6) struct StencilOpState`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 的 `Stencil、Op、State` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述模板操作状态。
+默认构造的模板操作状态包含以下集合：
+- `failOp` - `Keep`
+- `depthFailOp` - `Keep`
+- `passOp` - `Keep`
+- `compareOp` `Always`
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QRhi`。
 
 ### `(since 6.6) struct TargetBlend`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 的 `目标、Blend` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述单色附件的混合状态。
+默认设置为色彩写入，禁用混合。混合值默认设置为预乘 alpha（1、`OneMinusSrcAlpha`、1、`OneMinusSrcAlpha`）。这意味着要获得 Qt Quick 使用的 alpha 混合模式，只需将 `enable` 标志设置为 true，同时保持其他值为默认即可。
+注意：这是一个具有有限兼容性保证的RHI API，详情请参见 `QRhi`。
 
 ### `flags ColorMask`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定颜色写入遮罩的标志值。
+- `QRhiGraphicsPipeline::R`：`1 << 0`
+- `QRhiGraphicsPipeline::G`：`1 << 1`
+- `QRhiGraphicsPipeline::B`：`1 << 2`
+- `QRhiGraphicsPipeline::A`：`1 << 3`
+ColorMask类型是QFlags的typedef<ColorMaskComponent>。它存储ColorMaskComponent值的或组合。
 
 ### `enum ColorMaskComponent { R, G, B, A }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Color、Mask、Component`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定颜色写入遮罩的标志值。
+- `QRhiGraphicsPipeline::R`：`1 << 0`
+- `QRhiGraphicsPipeline::G`：`1 << 1`
+- `QRhiGraphicsPipeline::B`：`1 << 2`
+- `QRhiGraphicsPipeline::A`：`1 << 3`
+ColorMask类型是QFlags的typedef<ColorMaskComponent>。它存储ColorMaskComponent值的或组合。
 
 ### `enum Flag { UsesBlendConstants, UsesStencilRef, UsesScissor, CompileShadersWithDebugInfo, UsesShadingRate }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于描述管道动态状态的标志值，以及其他选项。视口始终是动态的。
+- `QRhiGraphicsPipeline::UsesBlendConstants`：`1 << 0`;表示通过`QRhiCommandBuffer::setBlendConstants()`设置混合颜色常数
+- `QRhiGraphicsPipeline::UsesStencilRef`：`1 << 1`;表示模板参考值将通过`QRhiCommandBuffer::setStencilRef()`设置
+- `QRhiGraphicsPipeline::UsesScissor`：`1 << 2`;表示通过`QRhiCommandBuffer::setScissor()`设置剪刀矩形
+- `QRhiGraphicsPipeline::CompileShadersWithDebugInfo`：`1 << 3`;启用调试信息的着色器编译请求。这仅在涉及源代码的运行时着色器编译，且底层基础设施支持时才相关。具体例子中，这与Vulkan和SPIR-V无关，因为GLSL到SPIR-V的编译并非运行时完成。另一方面，考虑Direct3D和HLSL，这里有多种选项：当`QShader`包附带预编译字节码（`DXBC`）时，需通过生成`.qsb`文件的工具请求调试信息，类似于Vulkan和SPIR-V的情况。然而，当 HLSL 源代码存在于预或运行时生成的 `QShader` 包中时，编译的第一阶段（从 HLSL 源代码到中间格式）也会在运行时进行，并考虑该标志。调试信息尤其重要于像 RenderDoc 这样的工具，因为它允许在调查流水线和执行顶点或片段着色器调试时看到原始源代码。
+- `QRhiGraphicsPipeline::UsesShadingRate`：`1 << 4`;表示每个绘制（每个流水线）着色率值将通过`QRhiCommandBuffer::setShadingRate()`设定。不指定该标志但仍然调用 setShadingRate() 可能会导致根据底层图形 API 的不同而出现不同且意想不到的结果。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiGraphicsPipeline` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于描述管道动态状态的标志值，以及其他选项。视口始终是动态的。
+- `QRhiGraphicsPipeline::UsesBlendConstants`：`1 << 0`;表示通过`QRhiCommandBuffer::setBlendConstants()`设置混合颜色常数
+- `QRhiGraphicsPipeline::UsesStencilRef`：`1 << 1`;表示模板参考值将通过`QRhiCommandBuffer::setStencilRef()`设置
+- `QRhiGraphicsPipeline::UsesScissor`：`1 << 2`;表示通过`QRhiCommandBuffer::setScissor()`设置剪刀矩形
+- `QRhiGraphicsPipeline::CompileShadersWithDebugInfo`：`1 << 3`;启用调试信息的着色器编译请求。这仅在涉及源代码的运行时着色器编译，且底层基础设施支持时才相关。具体例子中，这与Vulkan和SPIR-V无关，因为GLSL到SPIR-V的编译并非运行时完成。另一方面，考虑Direct3D和HLSL，这里有多种选项：当`QShader`包附带预编译字节码（`DXBC`）时，需通过生成`.qsb`文件的工具请求调试信息，类似于Vulkan和SPIR-V的情况。然而，当 HLSL 源代码存在于预或运行时生成的 `QShader` 包中时，编译的第一阶段（从 HLSL 源代码到中间格式）也会在运行时进行，并考虑该标志。调试信息尤其重要于像 RenderDoc 这样的工具，因为它允许在调查流水线和执行顶点或片段着色器调试时看到原始源代码。
+- `QRhiGraphicsPipeline::UsesShadingRate`：`1 << 4`;表示每个绘制（每个流水线）着色率值将通过`QRhiCommandBuffer::setShadingRate()`设定。不指定该标志但仍然调用 setShadingRate() 可能会导致根据底层图形 API 的不同而出现不同且意想不到的结果。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

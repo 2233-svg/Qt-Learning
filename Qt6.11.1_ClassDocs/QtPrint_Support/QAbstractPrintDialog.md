@@ -76,207 +76,124 @@ target_link_libraries(mytarget PRIVATE Qt6::PrintSupport)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QAbstractPrintDialog::PrintDialogOptionflags QAbstractPrintDialog::PrintDialogOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractPrintDialog` 暴露的类型声明 `Print、Dialog、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PrintDialogOptionflags QAbstractPrintDialog::PrintDialogOptions`。
-- 属性名：`QAbstractPrintDialog`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定打印对话框中哪些部分应可见。
+- `QAbstractPrintDialog::PrintToFile`：`0x0001`;已启用打印到文件的选项。
+- `QAbstractPrintDialog::PrintSelection`：`0x0002`;已启用打印选择选项。
+- `QAbstractPrintDialog::PrintPageRange`：`0x0004`;页面范围选择选项已启用。
+- `QAbstractPrintDialog::PrintShowPageSize`：在`0x0008`;仅在启用页边距时显示页面页边距。
+- `QAbstractPrintDialog::PrintCollateCopies`：`0x0010`;已启用“整理复制”选项
+- `QAbstractPrintDialog::PrintCurrentPage`：`0x0040`;启用了打印当前页面选项
+PrintDialogOptions 类型是 QFlags 的 typedef<PrintDialogOption>。它存储 PrintDialogOption 值的 OR 组合。
 
 ### `enum QAbstractPrintDialog::PrintRange`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractPrintDialog` 暴露的类型声明 `Print、Range`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PrintRange`。
-- 属性名：`QAbstractPrintDialog`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定打印范围选择选项。
+- `QAbstractPrintDialog::AllPages`：`0`;所有页面应印刷。
+- `QAbstractPrintDialog::Selection`：`1`;仅应打印选出部分。
+- `QAbstractPrintDialog::PageRange`：`2`;应打印指定的页数范围。
+- `QAbstractPrintDialog::CurrentPage`：`3`;仅应打印当前可见的页面。
 
 ### `[explicit] QAbstractPrintDialog::QAbstractPrintDialog(QPrinter *printer, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractPrintDialog` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `printer`：类型为 `QPrinter *`。没有默认值，调用时必须提供。传入 `QPrinter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个以 `parent` 为父控件的 `printer` 的抽象打印对话。
 
 ### `int QAbstractPrintDialog::fromPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `fromPage`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回第一页要打印的页面。默认情况下，该值设为0。
 
 ### `int QAbstractPrintDialog::maxPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractPrintDialog::maxPage` 用于计算、查询或取得与“max、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页区内的最大页面。从Qt 4.4起，该函数默认返回INT_MAX。之前版本默认返回1。
 
 ### `int QAbstractPrintDialog::minPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractPrintDialog::minPage` 用于计算、查询或取得与“min、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页区间内的最小页面。默认情况下，该值设置为1。
 
 ### `QAbstractPrintDialog::PrintRange QAbstractPrintDialog::printRange() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractPrintDialog::printRange` 用于计算、查询或取得与“print、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractPrintDialog::PrintRange`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractPrintDialog::PrintRange`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退回打印系列。
 
 ### `QPrinter *QAbstractPrintDialog::printer() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAbstractPrintDialog::printer` 用于计算、查询或取得与“printer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPrinter *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPrinter *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该打印机对话框所操作的打印机。
 
 ### `void QAbstractPrintDialog::setFromTo(int from, int to)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFromTo`。调用它会改变 `QAbstractPrintDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `from`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `to`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在打印对话框中设置范围为从`from`到`to`。
 
 ### `void QAbstractPrintDialog::setMinMax(int min, int max)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMinMax`。调用它会改变 `QAbstractPrintDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `min`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `max`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对话框中的页面范围设置为从`min`到`max`。这也启用了`PrintPageRange`选项。
 
 ### `void QAbstractPrintDialog::setOptionTabs(const QList<QWidget *> &tabs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptionTabs`。调用它会改变 `QAbstractPrintDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tabs`：类型为 `const QList<QWidget *> &`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果支持，请将打印对话框中显示的控件列表设置为 `tabs`。
+目前这个选项只支持X11。
+设置选项标签页会把它们的所有权转移到打印对话框。
 
 ### `void QAbstractPrintDialog::setPrintRange(QAbstractPrintDialog::PrintRange range)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrintRange`。调用它会改变 `QAbstractPrintDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `range`：类型为 `QAbstractPrintDialog::PrintRange`。没有默认值，调用时必须提供。传入 `QAbstractPrintDialog::PrintRange` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将打印范围选项设置为`range`。
 
 ### `int QAbstractPrintDialog::toPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPage`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后一页要打印的页面。默认情况下，这个值设置为0。
 
 ### `enum PrintDialogOption { PrintToFile, PrintSelection, PrintPageRange, PrintShowPageSize, PrintCollateCopies, PrintCurrentPage }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractPrintDialog` 暴露的类型声明 `Print、Dialog、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定打印对话框中哪些部分应可见。
+- `QAbstractPrintDialog::PrintToFile`：`0x0001`;已启用打印到文件的选项。
+- `QAbstractPrintDialog::PrintSelection`：`0x0002`;已启用打印选择选项。
+- `QAbstractPrintDialog::PrintPageRange`：`0x0004`;页面范围选择选项已启用。
+- `QAbstractPrintDialog::PrintShowPageSize`：在`0x0008`;仅在启用页边距时显示页面页边距。
+- `QAbstractPrintDialog::PrintCollateCopies`：`0x0010`;已启用“整理复制”选项
+- `QAbstractPrintDialog::PrintCurrentPage`：`0x0040`;启用了打印当前页面选项
+PrintDialogOptions 类型是 QFlags 的 typedef<PrintDialogOption>。它存储 PrintDialogOption 值的 OR 组合。
 
 ### `flags PrintDialogOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QAbstractPrintDialog` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于指定打印对话框中哪些部分应可见。
+- `QAbstractPrintDialog::PrintToFile`：`0x0001`;已启用打印到文件的选项。
+- `QAbstractPrintDialog::PrintSelection`：`0x0002`;已启用打印选择选项。
+- `QAbstractPrintDialog::PrintPageRange`：`0x0004`;页面范围选择选项已启用。
+- `QAbstractPrintDialog::PrintShowPageSize`：在`0x0008`;仅在启用页边距时显示页面页边距。
+- `QAbstractPrintDialog::PrintCollateCopies`：`0x0010`;已启用“整理复制”选项
+- `QAbstractPrintDialog::PrintCurrentPage`：`0x0040`;启用了打印当前页面选项
+PrintDialogOptions 类型是 QFlags 的 typedef<PrintDialogOption>。它存储 PrintDialogOption 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

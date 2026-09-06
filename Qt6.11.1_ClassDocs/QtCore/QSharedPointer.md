@@ -134,921 +134,520 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 69 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QSharedPointer::QSharedPointer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个空的QSharedPoint （对象持有对`nullptr`的引用）。
 
 ### `[noexcept] template <typename X> QSharedPointer::QSharedPointer(QSharedPointer<X> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QSharedPointer<X> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move构建一个QSharedPointer实例，使其指向`other`指向的同一个对象。
+只有当`X*`隐式转换为`T*`时，才参与重载决议。
 
 ### `[explicit] template <typename X> QSharedPointer::QSharedPointer(X *ptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `ptr`：类型为 `X *`。没有默认值，调用时必须提供。传入 `X *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建指向`ptr`的QSharedPointer。指针`ptr`由该QSharedPointer管理，且不得传递给其他QSharedPointer对象或在该对象外部删除。
+自Qt 5.8起，当对该QSharedPointer的最后一次引用被销毁时，`ptr`将通过调用`X`的解构器被删除（即使`X`与QSharedPointer的模板参数`T`不同）。此前，`T`的重构器被调用。
 
 ### `QSharedPointer::QSharedPointer(const QWeakPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过将弱引用 `other` 提升为强引用并共享其指针，创建 QSharedPointer。
+如果`T`是该类模板参数的派生类型，QSharedPointer 会自动执行 cast。否则，编译器会出错。
 
 ### `QSharedPointer::QSharedPointer(std::nullptr_t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个空的 QSharedPointer。这相当于 QSharedPointer 的默认构造函数。
 
 ### `template <typename X, typename Deleter> QSharedPointer::QSharedPointer(X *ptr, Deleter d)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+创建指向`ptr`的QSharedPointer。指针`ptr`由该QSharedPointer管理，且不得传递给其他QSharedPointer对象或在该对象外部删除。
+删除器参数`d`指定该对象的自定义删除器。当强引用计数降至0时，调用自定义删除器代替 delete()。例如，这对于调用`QObject`上的 `deleteLater()` 非常有用：
+注意，即使QSharedPointer模板参数`T`不同，自定义删除器函数也会通过指向类型`X`的指针被调用。
+也可以直接指定成员函数，例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `ptr`：类型为 `X *`。没有默认值，调用时必须提供。传入 `X *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `d`：类型为 `Deleter`。没有默认值，调用时必须提供。传入 `Deleter` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ static void doDeleteLater(MyObject *obj)
+ {
+     obj->deleteLater();
+ }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void otherFunction()
+ {
+     QSharedPointer<MyObject> obj =
+         QSharedPointer<MyObject>(new MyObject, doDeleteLater);
+
+     // continue using obj
+     obj.clear();    // calls obj->deleteLater();
+ }
+```
 
 ### `template <typename Deleter> QSharedPointer::QSharedPointer(std::nullptr_t, Deleter d)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `d`：类型为 `Deleter`。没有默认值，调用时必须提供。传入 `Deleter` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个空的 QSharedPointer。这相当于 QSharedPointer 的默认构造函数。
+删除器参数`d`指定该对象的自定义删除器。当强引用计数降至0时，调用自定义删除器代替运算符delete()。
 
 ### `QSharedPointer::QSharedPointer(const QSharedPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个共享`other`指针的QSharedPointer对象。
+如果`T`是该类模板参数的派生类型，QSharedPoint 将自动执行 cast。否则，编译器将出现错误。
 
 ### `[noexcept] QSharedPointer::QSharedPointer(QSharedPointer<T> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QSharedPointer<T> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-构造一个QSharedPointer实例，使其指向`other`指向的同一个对象。
 
 ### `QSharedPointer::~QSharedPointer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁该`QSharedPointer`对象。如果它是对该指针的最后引用，也会删除该指针。
 
 ### `void QSharedPointer::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除该`QSharedPointer`对象，丢弃它可能指向指针的引用。如果这是最后一个引用，那么指针本身将被删除。
 
 ### `template <typename X> QSharedPointer<X> QSharedPointer::constCast() const &`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::constCast` 用于计算、查询或取得与“const、Cast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename X> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该指针类型`const_cast`到`X`，并返回共享引用的`QSharedPointer`。该函数可用于上投和下投，但更适合上投。
 
 ### `[since 6.9] template <typename X> QSharedPointer<X> QSharedPointer::constCast() &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::constCast` 用于计算、查询或取得与“const、Cast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename X> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还的`QSharedPointer`与`*this`相同的共同所有者共同拥有所有权。
+这一职能`resets` `*this`以成功`nullptr`。
+注意：该功能会让`QSharedPointer::constCast()`重载。
 
 ### `[static] template <typename... Args> QSharedPointer<T> QSharedPointer::create(Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `create`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QSharedPointer<T>`。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建`QSharedPointer`对象并分配一个类型为`T`的新项。`QSharedPointer`内部和对象被分配到一个内存分配中，这有助于减少长时间运行应用中的内存碎片。
+该函数将尝试调用一个类型为`T`的构造函数，该构造函数能够接受所有传递的参数（`args`）。参数将被完美转发。
 
 ### `T *QSharedPointer::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QSharedPointer` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象所引用指针的值。
+注意：不要删除该函数返回的指针，也不要将其传递给可能删除该指针的其他函数，包括创建`QSharedPointer`或`QWeakPointer`对象。
 
 ### `template <typename X> QSharedPointer<X> QSharedPointer::dynamicCast() const &`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::dynamicCast` 用于计算、查询或取得与“dynamic、Cast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename X> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该指针类型对`X`进行动态投射，返回共享引用的`QSharedPointer`。如果使用该函数进行上投，`QSharedPointer`将执行`dynamic_cast`，这意味着如果该`QSharedPointer`指向的对象不是类型`X`，返回的对象将为空。
+注意：模板类型`X`必须与该对象模板相同的const和volatile限定词，否则cast会失败。如果需要去掉这些限定词，请使用`constCast()`。
 
 ### `[since 6.9] template <typename X> QSharedPointer<X> QSharedPointer::dynamicCast() &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::dynamicCast` 用于计算、查询或取得与“dynamic、Cast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename X> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还的`QSharedPointer`与`*this`相同的共同所有者共同拥有所有权。
+这个功能`resets` `*this` `nullptr`成功。
+注意：该功能会让`QSharedPointer::dynamicCast()`重载。
 
 ### `T *QSharedPointer::get() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的核心操作 `get`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`data()`一样。
+此功能是为了与`std::shared_ptr`的API兼容性而提供。
 
 ### `bool QSharedPointer::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该对象指代 `nullptr`，返回`true`。
 
 ### `template <typename X> QSharedPointer<X> QSharedPointer::objectCast() const &`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::objectCast` 用于计算、查询或取得与“object、Cast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename X> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该指针类型`qobject_cast()`到`X`，返回共享引用的`QSharedPointer`。如果使用该函数进行上抛，`QSharedPointer`将执行`qobject_cast`，这意味着如果该`QSharedPointer`指向的对象类型不是`X`，返回的对象为空。
+注意：模板类型`X`必须与该对象模板的const和volatile限定符相同，否则cast会失败。如果需要去掉这些限定符，请使用`constCast()`。
 
 ### `[since 6.9] template <typename X> QSharedPointer<X> QSharedPointer::objectCast() &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::objectCast` 用于计算、查询或取得与“object、Cast”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename X> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还`QSharedPointer`与`*this`相同的共同所有者共同拥有所有权。
+这个职能`resets` `*this`以成功`nullptr`。
+注意：该功能会`QSharedPointer::objectCast()`重载。
 
 ### `[noexcept, since 6.7] template <typename X> bool QSharedPointer::owner_before(const QWeakPointer<X> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::owner_before` 用于计算、查询或取得与“owner、before”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> bool`。
-- 参数 `other`：类型为 `const QWeakPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `true`当且仅当该智能指针在实现定义的基于所有者的排序中先于`other`。该排序使得两个智能指针如果都是空的，或者它们都拥有同一对象（即使它们的表观类型和指针不同），则视为等价的。
 
 ### `[noexcept, since 6.7] template <typename X> bool QSharedPointer::owner_equal(const QWeakPointer<X> &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::owner_equal` 用于计算、查询或取得与“owner、equal”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> bool`。
-- 参数 `other`：类型为 `const QWeakPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回报`true`当且仅当该智能指针和`other`持股时才会有回报。
 
 ### `[noexcept, since 6.7] size_t QSharedPointer::owner_hash() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::owner_hash` 用于计算、查询或取得与“owner、hash”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于所有者的该智能指针对象的哈希值。比较相等（如`owner_equal`）的智能指针将拥有相同的基于所有者的哈希值。
 
 ### `void QSharedPointer::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`clear()`一样。关于性病：：shared_ptr兼容性。
 
 ### `void QSharedPointer::reset(T *t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
+将该`QSharedPointer`对象重置为指向`t`。等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `t`：类型为 `T *`。没有默认值，调用时必须提供。传入 `T *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSharedPointer<T> other(t); this->swap(other);
+```
 
 ### `template <typename Deleter> void QSharedPointer::reset(T *t, Deleter deleter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
+将该`QSharedPointer`对象重置为指向`t`，并使用删除器`deleter`。等价于：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Deleter> void`。
-- 参数 `t`：类型为 `T *`。没有默认值，调用时必须提供。传入 `T *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deleter`：类型为 `Deleter`。没有默认值，调用时必须提供。传入 `Deleter` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSharedPointer<T> other(t, deleter); this->swap(other);
+```
 
 ### `template <typename X> QSharedPointer<X> QSharedPointer::staticCast() const &`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `staticCast`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该指针类型执行静态投射到 `X`，并返回共享引用的`QSharedPointer`。该函数可用于上投和下投，但更适合上投。
+注意：模板类型`X`必须与该对象模板相同的const和volatile限定词，否则cast会失败。如果需要去掉这些限定词，请使用`constCast()`。
 
 ### `[since 6.9] template <typename X> QSharedPointer<X> QSharedPointer::staticCast() &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `staticCast`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<X>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还`QSharedPointer`与`*this`相同的共同所有者共同拥有所有权。
+这一职能`resets` `*this`以成功`nullptr`。
+注意：该功能会让`QSharedPointer::staticCast()`重载。
 
 ### `[noexcept] void QSharedPointer::swap(QSharedPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QSharedPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将共享指针实例与`other`交换。该操作非常快且从未失败。
 
 ### `QWeakPointer<T> QSharedPointer::toWeakRef() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toWeakRef`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QWeakPointer<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个弱参考对象，该对象共享该对象所引用的指针。
 
 ### `QSharedPointer::operator bool() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果包含的指针不`nullptr`，返回`true`。该函数适用于`if-constructs`，例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (sharedptr) { /*...*/ }
+```
 
 ### `bool QSharedPointer::operator!() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果该对象指向`nullptr`，返回`true`。该函数适合用于`if-constructs`，如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (!sharedptr) { /*...*/ }
+```
 
 ### `T &QSharedPointer::operator*() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供对共享指针成员的访问。
+如果包含的指针是`nullptr`的，则行为未定义。
 
 ### `T *QSharedPointer::operator->() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供对共享指针成员的访问。
+如果包含的指针是`nullptr`的，则行为未定义。
 
 ### `[noexcept] QSharedPointer<T> &QSharedPointer::operator=(QSharedPointer<T> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSharedPointer<T> &`。
-- 参数 `other`：类型为 `QSharedPointer<T> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QSharedPointer`实例。
 
 ### `[noexcept] template <typename X> QSharedPointer<T> &QSharedPointer::operator=(QSharedPointer<X> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename X> QSharedPointer<T> &`。
-- 参数 `other`：类型为 `QSharedPointer<X> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到这个`QSharedPointer`实例。
+只有当`X*`隐式转换为`T*`时，才参与重载决议。
 
 ### `QSharedPointer<T> &QSharedPointer::operator=(const QSharedPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSharedPointer<T> &`。
-- 参数 `other`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使该对象共享`other`的指针。当前指针引用被丢弃，如果是最后一个，指针也会被删除。
+如果`T`是该类模板参数的派生类型，`QSharedPointer`会执行自动铸造。否则，编译器会出错。
 
 ### `QSharedPointer<T> &QSharedPointer::operator=(const QWeakPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSharedPointer<T> &`。
-- 参数 `other`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`提升为强引用，并使该对象共享指向其所引用指针的引用。当前指针引用被丢弃，如果是最后一个，该指针将被删除。
+如果`T`是该类模板参数的派生类型，`QSharedPointer`会自动执行cast。否则，编译器会出错。
 
 ### `[noexcept] template <typename T> size_t qHash(const QSharedPointer<T> &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `template <typename T> size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> size_t`。
-- 参数 `key`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerCast(const QSharedPointer<T> &other)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerCast` 用于计算、查询或取得与“q、Shared、Pointer、Cast”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `other`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指针，指向`other`持有的指针，投射为类型`X`。类型 `T` 和 `X` 必须属于一个层级结构，`static_cast`才能成功。
+注意`X`必须拥有与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用`qSharedPointerConstCast`来消除一致性。
 
 ### `[since 6.9] template <typename X, typename T> QSharedPointer<X> qSharedPointerCast(QSharedPointer<T> &&other)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerCast` 用于计算、查询或取得与“q、Shared、Pointer、Cast”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `other`：类型为 `QSharedPointer<T> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还`QSharedPointer`与`other`相同的共同所有者共同拥有所有权。
+这个功能`resets` `other`用来`nullptr`成功。
+注意：该函数会超载 `QSharedPointer::qSharedPointerCast`（const QSharedPointer<T> 等）。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerCast(const QWeakPointer<T> &other)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerCast` 用于计算、查询或取得与“q、Shared、Pointer、Cast”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `other`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指针，指向`other`持有的指针，投射为类型`X`。类型`T`和`X`必须属于一个层级结构，才能`static_cast`成功。
+`other`对象首先被转换为强引用。如果转换失败（因为它指向的对象已被删除），该函数返回空`QSharedPointer`。
+注意`X`必须拥有与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用`qSharedPointerConstCast`来去除一致性。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerConstCast(const QSharedPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerConstCast` 用于计算、查询或取得与“q、Shared、Pointer、Const、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指针，指向`src`持有的指针，投射为类型`X`。类型`T`和`X`必须属于一个层级结构，`const_cast`才能成功。忽略`T`和`X`之间的`const`和`volatile`差异。
 
 ### `[since 6.9] template <typename X, typename T> QSharedPointer<X> qSharedPointerConstCast(QSharedPointer<T> &&src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerConstCast` 用于计算、查询或取得与“q、Shared、Pointer、Const、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `QSharedPointer<T> &&`。没有默认值，调用时必须提供。传入 `QSharedPointer<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还`QSharedPointer`与`src`相同的共同所有者共同拥有所有权。
+这个功能`resets` `src`以成功`nullptr`。
+注意：该函数会超载 `QSharedPointer::qSharedPointerConstCast`（const QSharedPointer<T> &src）。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerConstCast(const QWeakPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerConstCast` 用于计算、查询或取得与“q、Shared、Pointer、Const、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指针，指向`src`持有的指针，投射为类型`X`。类型`T`和`X`必须属于一个层级结构，`const_cast`才能成功。忽略`T`和`X`之间的 `const` 和 `volatile` 差异。
+`src`对象首先被转换为强引用。如果转换失败（因为它指向的对象已被删除），该函数返回空`QSharedPointer`。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerDynamicCast(const QSharedPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerDynamicCast` 用于计算、查询或取得与“q、Shared、Pointer、Dynamic、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指向`src`持有的指针的指针，使用动态投射类型 `X` 以获得相应类型的内部指针。如果`dynamic_cast`失败，返回的对象将为空。
+注意`X`必须拥有与`T`相同的cv修饰符（`const`和`volatile`），否则代码将无法编译。使用`qSharedPointerConstCast`来去除一致性。
 
 ### `[since 6.9] template <typename X, typename T> QSharedPointer<X> qSharedPointerDynamicCast(QSharedPointer<T> &&src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerDynamicCast` 用于计算、查询或取得与“q、Shared、Pointer、Dynamic、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `QSharedPointer<T> &&`。没有默认值，调用时必须提供。传入 `QSharedPointer<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还`QSharedPointer`与`src`相同的共同所有者共同拥有所有权。
+这一职能`resets` `src`对成功的`nullptr`。
+注意：该函数会超载 `QSharedPointer::qSharedPointerDynamicCast`（const QSharedPointer<T> & src）。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerDynamicCast(const QWeakPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerDynamicCast` 用于计算、查询或取得与“q、Shared、Pointer、Dynamic、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指向`src`持有的指针的指针，使用动态投射方式，类型为`X`以获得相应类型的内部指针。如果`dynamic_cast`失败，返回的对象将为空。
+`src`对象首先被转换为强引用。如果转换失败（因为它指向的对象已被删除），该函数也会返回空`QSharedPointer`。
+注意`X`必须拥有与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用`qSharedPointerConstCast`来去除一致性。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerObjectCast(const QSharedPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerObjectCast` 用于计算、查询或取得与“q、Shared、Pointer、Object、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qSharedPointerObjectCast函数用于投射共享指针。
+返回一个共享指向`src`持有的指针的共享指针，使用类型`qobject_cast()` 以获得相应类型的内部指针 `X`。如果`qobject_cast`失败，返回的对象将为空。
+注意`X`必须与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用`qSharedPointerConstCast`来去除一致性。
 
 ### `[since 6.9] template <typename X, typename T> QSharedPointer<X> qSharedPointerObjectCast(QSharedPointer<T> &&src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerObjectCast` 用于计算、查询或取得与“q、Shared、Pointer、Object、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `QSharedPointer<T> &&`。没有默认值，调用时必须提供。传入 `QSharedPointer<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返还的`QSharedPointer`与`src`相同的共同所有者共同拥有所有权。
+这个功能`resets` `src` `nullptr`成功。
+注意：该函数会超载 `QSharedPointer::qSharedPointerObjectCast`（const QSharedPointer<T> & src）。
 
 ### `template <typename X, typename T> QSharedPointer<X> qSharedPointerObjectCast(const QWeakPointer<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerObjectCast` 用于计算、查询或取得与“q、Shared、Pointer、Object、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> QSharedPointer<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> QSharedPointer<X>`。
-- 参数 `src`：类型为 `const QWeakPointer<T> &`。没有默认值，调用时必须提供。传入 `const QWeakPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qSharedPointerObjectCast函数用于投射共享指针。
+返回一个共享指针指向`src`持有的指针，使用类型`qobject_cast()` 类型 到 `X` 以获得相应类型的内部指针。如果`qobject_cast`失败，返回的对象将为空。
+`src`对象首先被转换为强引用。如果转换失败（因为它指向的对象已被删除），该函数也会返回空`QSharedPointer`。
+注意`X`必须拥有与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用 `qSharedPointerConstCast` 来去除一致性。
 
 ### `template <typename X, typename T> std::shared_ptr<X> qSharedPointerObjectCast(const std::shared_ptr<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerObjectCast` 用于计算、查询或取得与“q、Shared、Pointer、Object、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> std::shared_ptr<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> std::shared_ptr<X>`。
-- 参数 `src`：类型为 `const std::shared_ptr<T> &`。没有默认值，调用时必须提供。传入 `const std::shared_ptr<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指向`src`持有的指针的指针，使用类型`qobject_cast()` 类型 到 `X` 以获得相应类型的内部指针。如果`qobject_cast`失败，返回的对象将为空。
+注意，`X`必须拥有与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用const_pointer_cast来消除一致性。
 
 ### `template <typename X, typename T> std::shared_ptr<X> qSharedPointerObjectCast(std::shared_ptr<T> &&src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qSharedPointerObjectCast` 用于计算、查询或取得与“q、Shared、Pointer、Object、Cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> std::shared_ptr<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> std::shared_ptr<X>`。
-- 参数 `src`：类型为 `std::shared_ptr<T> &&`。没有默认值，调用时必须提供。传入 `std::shared_ptr<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指针指向`src`持有的指针，使用类型 `qobject_cast()` 类型 `X` 以获得相应类型的内部指针。
+如果`qobject_cast`成功，函数将返回一个有效的共享指针，`src`重置为空指针。如果`qobject_cast`失败，返回的对象将为空，且`src`不会被修改。
+注意，`X`必须拥有与`T`相同的cv限定符（`const`和`volatile`），否则代码将无法编译。使用 const_pointer_cast 来去除一致性。
 
 ### `template <typename X, typename T> std::shared_ptr<X> qobject_pointer_cast(const std::shared_ptr<T> &src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qobject_pointer_cast` 用于计算、查询或取得与“qobject、pointer、cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> std::shared_ptr<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> std::shared_ptr<X>`。
-- 参数 `src`：类型为 `const std::shared_ptr<T> &`。没有默认值，调用时必须提供。传入 `const std::shared_ptr<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个共享指针到`src`持有的指针。
+与`qSharedPointerObjectCast()`相同。此功能是为了STL兼容性而提供。
 
 ### `template <typename X, typename T> std::shared_ptr<X> qobject_pointer_cast(std::shared_ptr<T> &&src)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::qobject_pointer_cast` 用于计算、查询或取得与“qobject、pointer、cast”相关的操作。调用时要先确认当前状态和 `src` 的有效范围；返回类型是 `template <typename X, typename T> std::shared_ptr<X>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename X, typename T> std::shared_ptr<X>`。
-- 参数 `src`：类型为 `std::shared_ptr<T> &&`。没有默认值，调用时必须提供。传入 `std::shared_ptr<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与`qSharedPointerObjectCast()`相同。此功能旨在与STL兼容。
 
 ### `template <typename T, typename X> bool operator!=(const QSharedPointer<T> &lhs, const QSharedPointer<X> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `lhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 指向不同的指针，则返回 `true`。
+如果 `rhs` 的模板参数与 `lhs` 的不同，`QSharedPointer` 需要首先确保它们是兼容类型。它将尝试执行自动 `static_cast`，将类型 `T` 和 `X` 转换为它们的复合指针类型。如果 `rhs` 的模板参数既不是 `lhs` 的基类也不是派生类，则会出现编译器错误。
 
 ### `template <typename T, typename X> bool operator!=(const QSharedPointer<T> &lhs, const X *rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `lhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const X *`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 指向不同的指针，则返回 `true`。
+如果 `rhs` 的模板参数与 `lhs` 的不同，`QSharedPointer` 需要首先确保它们是兼容类型。它将尝试执行自动 `static_cast`，将类型 `T` 和 `X` 转换为它们的复合指针类型。如果 `rhs` 的模板参数既不是 `lhs` 的基类也不是派生类，则会出现编译器错误。
 
 ### `template <typename T> bool operator!=(const QSharedPointer<T> &lhs, std::nullptr_t)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `lhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`指的是有效（即非空）指针，返回`true`。
 
 ### `template <typename T, typename X> bool operator!=(const T *lhs, const QSharedPointer<X> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `lhs`：类型为 `const T *`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果指针`lhs`与`rhs`引用的指针不同，则返回`true`。
+如果`rhs`的模板参数与`lhs`的不符，`QSharedPointer`首先需要确保它们的类型兼容。它会尝试执行自动`static_cast`，将`T`和`X`类型转换为复合指针类型。如果`rhs`的模板参数不是基于`lhs`的基或派生类型，编译器会出错。
 
 ### `template <typename T> bool operator!=(std::nullptr_t, const QSharedPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `rhs` 指向一个有效（即非空）指针，则返回 `true`。
 
 ### `template <typename T> QDebug operator<<(QDebug debug, const QSharedPointer<T> &ptr)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ptr`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。传入 `const QSharedPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`ptr`追踪的指针写入调试对象 `debug` 以便调试。
 
 ### `template <typename T, typename X> bool operator==(const QSharedPointer<T> &lhs, const QSharedPointer<X> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `lhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 指向同一个指针，则返回 `true`。
+如果 `rhs` 的模板参数与 `lhs` 的不同，`QSharedPointer` 首先需要确保它们是兼容类型。它将尝试执行自动 `static_cast`，将 `T` 和 `X` 类型转换为它们的复合指针类型。如果 `rhs` 的模板参数既不是 `lhs` 的基类型也不是派生类型，则会得到编译器错误。
 
 ### `template <typename T, typename X> bool operator==(const QSharedPointer<T> &lhs, const X *rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `lhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const X *`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 指向同一个指针，则返回 `true`。
+如果 `rhs` 的模板参数与 `lhs` 的不同，`QSharedPointer` 首先需要确保它们是兼容类型。它将尝试执行自动 `static_cast`，将 `T` 和 `X` 类型转换为它们的复合指针类型。如果 `rhs` 的模板参数既不是 `lhs` 的基类型也不是派生类型，则会得到编译器错误。
 
 ### `template <typename T> bool operator==(const QSharedPointer<T> &lhs, std::nullptr_t)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `lhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`指`nullptr`，返回会`true`。
 
 ### `template <typename T, typename X> bool operator==(const T *lhs, const QSharedPointer<X> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, typename X> bool`。
-- 参数 `lhs`：类型为 `const T *`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果指针`lhs`与`rhs`引用的指针相同，返回`true`。
+如果`rhs`的模板参数与`lhs`的不同，`QSharedPointer`首先需要确保它们的类型兼容。它会尝试执行自动的`static_cast`，将`T`和`X`类型转换为复合指针类型。如果`rhs`的模板参数不是基于`lhs`的基或派生类型，编译器会出错。
 
 ### `template <typename T> bool operator==(std::nullptr_t, const QSharedPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QSharedPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> bool`。
-- 参数 `nullptr_t`：类型为 `std::`。没有默认值，调用时必须提供。传入 `std::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rhs`：类型为 `const QSharedPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `rhs` 指的是 `nullptr`，则返回 `true`。
 
 ### `(since 6.7) bool owner_before(const QSharedPointer<X> &other) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::owner_before` 用于计算、查询或取得与“owner、before”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `true`当且仅当该智能指针在实现定义的基于所有者的排序中先于`other`。该排序使得两个智能指针如果都是空的，或者它们都拥有同一对象（即使它们的表观类型和指针不同），则视为等价的。
 
 ### `(since 6.7) bool owner_equal(const QSharedPointer<X> &other) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSharedPointer::owner_equal` 用于计算、查询或取得与“owner、equal”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSharedPointer<X> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回报`true`当且仅当该智能指针和`other`持股时才会有回报。
 
 ## 6. 深入实践与常见坑
 

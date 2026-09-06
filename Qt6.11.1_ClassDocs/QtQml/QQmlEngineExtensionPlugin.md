@@ -73,49 +73,37 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QQmlEngineExtensionPlugin::QQmlEngineExtensionPlugin(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngineExtensionPlugin` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有给定`parent`的QML扩展插件。
+注意，该构造函数由`Q_PLUGIN_METADATA()`宏自动调用，因此无需显式调用。
 
 ### `[override virtual] void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngineExtensionPlugin::initializeEngine` 用于执行与“initialize、Engine”相关的操作。调用时要先确认当前状态和 `engine`、`uri` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uri`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`engine`初始化`uri`扩展。例如，应用插件可能会将某些数据或对象暴露给QML，作为引擎根上下文的上下文属性。
 
 ### `[since 6.2] Q_IMPORT_QML_PLUGIN(PluginName)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngineExtensionPlugin::Q_IMPORT_QML_PLUGIN` 用于执行与“PLUGIN”相关的操作。调用时要先确认当前状态和 `PluginName` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+确保名为 `PluginName` 的插件扩展类（用于声明元数据的插件扩展类）在静态构建中被链接。对于使用 qt_add_qml_module 创建的模块，默认插件扩展类名称是从 QML 模块 URI 计算得出，将点替换为下划线，除非指定了 `CLASS_NAME` 参数。
+此宏在 Qt 6.2 中引入。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `PluginName`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ qt_add_qml_module(myplugin
+     # The plugin extension class name in this case is my_Company_QmlComponents.
+     URI my.Company.QmlComponents
+     ...
+ )
+```
 
 ## 6. 深入实践与常见坑
 

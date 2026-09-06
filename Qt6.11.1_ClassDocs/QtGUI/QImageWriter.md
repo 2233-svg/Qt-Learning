@@ -98,442 +98,270 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 33 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QImageWriter::ImageWriterError`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageWriter` 暴露的类型声明 `Image、Writer、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ImageWriterError`。
-- 属性名：`QImageWriter`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了在用`QImageWriter`写图像时可能出现的错误。
+- `QImageWriter::DeviceError`：`1`;`QImageWriter`在写入图像数据时遇到设备错误。请查阅您的设备以了解问题所在。
+- `QImageWriter::UnsupportedFormatError`：`2`;Qt 不支持所请求的图像格式。
+- `QImageWriter::InvalidImageError`：`3`;尝试写入无效的`QImage`。无效图像的一个例子是空`QImage`。
+- `QImageWriter::UnknownError`：`0`;发生了未知错误。如果调用`write()`后得到该值，很可能是由`QImageWriter`中的某个漏洞引起的。
 
 ### `QImageWriter::QImageWriter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的 QImageWriter 对象。在写入之前，你必须调用 `setFormat()` 设置图像格式，然后调用 `setDevice()` 或 `setFileName()`。
 
 ### `[explicit] QImageWriter::QImageWriter(QIODevice *device, const QByteArray &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `format`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用设备`device`和图像格式`format`构建QImageWriter对象。
 
 ### `[explicit] QImageWriter::QImageWriter(const QString &fileName, const QByteArray &format = QByteArray())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageWriter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `format`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QImageWriter 对象，使用图像格式 `format` 写入名为 `fileName` 的文件。如果未提供`format`，QImageWriter 将通过检查 `fileName` 的扩展名来检测图像格式。
 
 ### `[noexcept] QImageWriter::~QImageWriter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageWriter` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QImageWriter`物体。
 
 ### `bool QImageWriter::canWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canWrite`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `QImageWriter` 可以写入图像，即图像格式受支持且分配的设备已打开以供读取，则返回 `true`。
 
 ### `int QImageWriter::compression() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::compression` 用于计算、查询或取得与“compression”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图像的压缩。
 
 ### `QIODevice *QImageWriter::device() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::device` 用于计算、查询或取得与“device”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QIODevice *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QIODevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前分配给`QImageWriter`的设备，若未分配设备则返回`nullptr`。
 
 ### `QImageWriter::ImageWriterError QImageWriter::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QImageWriter::ImageWriterError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QImageWriter::ImageWriterError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后一次发生的错误类型。
 
 ### `QString QImageWriter::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对最后一次错误的人类可读描述。
 
 ### `QString QImageWriter::fileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::fileName` 用于计算、查询或取得与“file、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果当前分配的设备是一个文件，或者`setFileName()`被调用过，该函数返回`QImageWriter`写入的文件名称。否则（即未分配设备或设备不是文件），返回空`QString`。
 
 ### `QByteArray QImageWriter::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QImageWriter`用于写图片的格式。
 
 ### `[static] QList<QByteArray> QImageWriter::imageFormatsForMimeType(const QByteArray &mimeType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `imageFormatsForMimeType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数 `mimeType`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应`mimeType`的图像格式列表。
+注意，调用该函数前必须创建`QGuiApplication`实例。
 
 ### `bool QImageWriter::optimizedWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::optimizedWrite` 用于计算、查询或取得与“optimized、写入”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回是否开启了写入图像的优化。
 
 ### `bool QImageWriter::progressiveScanWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::progressiveScanWrite` 用于计算、查询或取得与“progressive、Scan、写入”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图像是否应以逐行图像形式书写。
 
 ### `int QImageWriter::quality() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::quality` 用于计算、查询或取得与“quality”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图像格式的画质设置。
 
 ### `void QImageWriter::setCompression(int compression)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCompression`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `compression`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个针对图像格式的特定函数，用于设置图像的压缩。对于不支持设置压缩的图像格式，该值被忽略。
+`compression`的值范围取决于图像格式。例如，“tiff”格式支持两个值，0（无压缩）和1（LZW压缩）。
 
 ### `void QImageWriter::setDevice(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDevice`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QImageWriter`的设备设置为`device`。如果设备已被设置，旧设备会从`QImageWriter`中移除，其他设置保持不变。
+如果设备尚未打开，`QImageWriter`会通过调用open()尝试以`QIODeviceBase::WriteOnly`模式打开设备。注意，这对某些设备不适用，如`QProcess`、`QTcpSocket`和`QUdpSocket`，因为需要更多逻辑才能打开设备。
 
 ### `void QImageWriter::setFileName(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileName`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QImageWriter`的文件名设置为`fileName`。内部，`QImageWriter`会创建一个`QFile`并以`QIODevice::WriteOnly`模式打开，写入图像时使用该文件。
 
 ### `void QImageWriter::setFormat(const QByteArray &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将`QImageWriter`在写入图片时使用的格式设置为`format`。`format` 是一个不区分大小写的文本字符串。示例：
+你可以致电`supportedImageFormats()`获取完整的格式`QImageWriter`支持列表。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QImageWriter writer;
+ writer.setFormat("png"); // same as writer.setFormat("PNG");
+```
 
 ### `void QImageWriter::setOptimizedWrite(bool optimize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptimizedWrite`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `optimize`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个针对图像格式的专用函数，用于在写入图像时设置`optimize`标志。对于不支持设置`optimize`标志的图像格式，该值被忽略。
+默认是假的。
 
 ### `void QImageWriter::setProgressiveScanWrite(bool progressive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProgressiveScanWrite`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `progressive`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是一个针对图像格式的专用功能，在写入图像时启用`progressive`扫描。对于不支持设置`progressive`扫描标志的图像格式，该值被忽略。
+默认是假的。
 
 ### `void QImageWriter::setQuality(int quality)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setQuality`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `quality`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将图像格式的画质设置设置为`quality`。
+某些图像格式，尤其是有损格式，涉及在a）图像的视觉质量和b）编码执行时间及压缩水平之间进行权衡。该函数为支持该格式的图像格式设定了该权衡水平。对于其他格式，这一值被忽略。
+`quality`的数值范围取决于图像格式。例如，“jpeg”格式支持从0（低视觉质量，高压缩率）到100（高视觉质量，低压缩）的质量范围。
 
 ### `void QImageWriter::setSubType(const QByteArray &type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSubType`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+这是一个针对图像格式的函数，将图像的子类型设置为`type`。子类型可以被处理程序用来决定保存图像时应采用哪种格式。
+例如，将图像保存为DDS格式，子类型A8R8G8R8：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `type`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QImageWriter writer("some/image.dds");
+ if (writer.supportsOption(QImageIOHandler::SubType))
+     writer.setSubType("A8R8G8B8");
+ writer.write(image);
+```
 
 ### `void QImageWriter::setText(const QString &key, const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setText`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将与关键图关联的图像文本设置为`key`为`text`。这对于存储版权信息或其他关于图片的信息非常有用。示例：
+如果你想存储单个数据块（例如注释），可以传递空键，或者使用通用键，比如“描述”。
+调用`write()`后，密钥和文本会嵌入到图像数据中。
+该选项的支持通过`QImageIOHandler::Description`实现。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QImage image("some/image.jpeg");
+ QImageWriter writer("images/outimage.png", "png");
+ writer.setText("Author", "John Smith");
+ writer.write(image);
+```
 
 ### `void QImageWriter::setTransformation(QImageIOHandler::Transformations transform)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTransformation`。调用它会改变 `QImageWriter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `transform`：类型为 `QImageIOHandler::Transformations`。没有默认值，调用时必须提供。传入 `QImageIOHandler::Transformations` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置图像变换的元数据，包括`transform`的方向。
+如果图像格式不支持变换元数据，则在写入前应用变换。
 
 ### `QByteArray QImageWriter::subType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::subType` 用于计算、查询或取得与“sub、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图像的子类型。
 
 ### `[static] QList<QByteArray> QImageWriter::supportedImageFormats()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportedImageFormats`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QImageWriter`支持的图像格式列表。
+默认情况下，Qt 可以编写以下格式：
+- `Format`：哑剧类型;描述
+- `BMP`：image/bmp;Windows 位图
+- `JPG`：图像/jpeg;联合摄影专家组
+- `PNG`：image/png;便携式网络图形
+- `PBM`：image/x-可移植位图;便携位图
+- `PGM`：image/x-可移植灰图;便携灰图
+- `PPM`：image/x-便携像素地图;便携像素地图
+- `XBM`：image/x-xbitmap;X11 位图
+- `XPM`：image/x-xpixmap;X11 像素映射
+通过 Qt SVG 模块支持读写 SVG 文件。Qt 图像格式模块支持其他图像格式。
+注意，调用该函数前必须创建 `QApplication` 实例。
 
 ### `[static] QList<QByteArray> QImageWriter::supportedMimeTypes()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportedMimeTypes`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QImageWriter`支持的MIME类型列表。
+注意，调用该函数前必须创建 `QApplication` 实例。
 
 ### `QList<QByteArray> QImageWriter::supportedSubTypes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::supportedSubTypes` 用于计算、查询或取得与“supported、Sub、Types”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图像支持的子类型列表。
 
 ### `bool QImageWriter::supportsOption(QImageIOHandler::ImageOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `supportsOption`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果写者支持`option`，则返回`true`;否则返回 false。
+不同的图片格式支持不同的选项。调用该函数来判断当前格式是否支持某个选项。例如，PNG格式允许您将文本嵌入图片的元数据中（参见文本（text））。
+选项可以在作者与某种格式关联后进行测试。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `option`：类型为 `QImageIOHandler::ImageOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QImageWriter writer(fileName);
+ if (writer.supportsOption(QImageIOHandler::Description))
+     writer.setText("Author", "John Smith");
+```
 
 ### `QImageIOHandler::Transformations QImageWriter::transformation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageWriter::transformation` 用于计算、查询或取得与“transformation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QImageIOHandler::Transformations`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QImageIOHandler::Transformations`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图像被设定为写入的变换和方向。
 
 ### `bool QImageWriter::write(const QImage &image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageWriter` 的核心操作 `write`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `image`：类型为 `const QImage &`。没有默认值，调用时必须提供。传入 `const QImage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将映像`image`写入指定的设备或文件名。成功时返回`true`;否则返回`false`。如果操作失败，你可以调用`error()`查找发生的错误类型，或`errorString()`获取人力可读的错误描述。
 
 ## 6. 深入实践与常见坑
 

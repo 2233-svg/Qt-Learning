@@ -95,377 +95,179 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 28 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QExplicitlySharedDataPointer::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的配置属性。初始化或状态切换时通过 `setType(...)` 设置，之后用 `Type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QExplicitlySharedDataPointer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是共享数据对象的类型。d 指针指向该类型的对象。
 
 ### `[noexcept] QExplicitlySharedDataPointer::QExplicitlySharedDataPointer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个以 `nullptr` 为 d 指针初始化的 QExplicitlySharedDataPointer。
 
 ### `[explicit noexcept] QExplicitlySharedDataPointer::QExplicitlySharedDataPointer(T *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `T *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QExplicitlySharedDataPointer，d指针设为`data`并递增`data`的引用计数。
 
 ### `[noexcept] template <typename X> QExplicitlySharedDataPointer::QExplicitlySharedDataPointer(const QExplicitlySharedDataPointer<X> &o)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `o`：类型为 `const QExplicitlySharedDataPointer<X> &`。没有默认值，调用时必须提供。传入 `const QExplicitlySharedDataPointer<X> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此复制构造函数的不同之处在于，它允许`o`是不同类型的显式共享数据指针，但其共享数据对象是兼容的。
+默认情况下，将`o`（类型为`X *`）的d指针隐式转换为`T *`类型；此转换的结果被设置为此对象的d指针，共享数据对象的引用计数增加。
 
 ### `[noexcept] QExplicitlySharedDataPointer::QExplicitlySharedDataPointer(const QExplicitlySharedDataPointer<T> &o)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `o`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。传入 `const QExplicitlySharedDataPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该标准复制构造器将该数据的d指针映射到d指针`o`并递增共享数据对象的引用计数。
 
 ### `[noexcept] QExplicitlySharedDataPointer::QExplicitlySharedDataPointer(QExplicitlySharedDataPointer<T> &&o)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `o`：类型为 `QExplicitlySharedDataPointer<T> &&`。没有默认值，调用时必须提供。传入 `QExplicitlySharedDataPointer<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-构建一个QExplicitlySharedDataPointer实例，使其指向`o`所指向的同一对象。
 
 ### `QExplicitlySharedDataPointer::~QExplicitlySharedDataPointer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+减少共享数据对象的引用计数。如果引用计数为0，共享数据对象将被删除。随后会被销毁。
 
 ### `[protected] T *QExplicitlySharedDataPointer::clone()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QExplicitlySharedDataPointer::clone` 用于计算、查询或取得与“clone”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `T *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回当前数据的深度副本。当引用计数大于1时，`detach()`调用该函数以创建新副本。该函数使用运算符new，调用类型为T的复制构造器。
+关于如何使用，请参见 `QSharedDataPointer`<T>：：clone() 一节。
 
 ### `[noexcept] const T *QExplicitlySharedDataPointer::constData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `constData`，用于取得 `QExplicitlySharedDataPointer` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向共享数据对象的const指针。
 
 ### `[noexcept] T *QExplicitlySharedDataPointer::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QExplicitlySharedDataPointer` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向共享数据对象的指针。
 
 ### `void QExplicitlySharedDataPointer::detach()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QExplicitlySharedDataPointer::detach` 用于执行与“detach”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果共享数据对象的引用计数大于1，该函数会创建共享数据对象的深度副本，并将其d指针映射到该副本。
+由于`QExplicitlySharedDataPointer`不执行`QSharedDataPointer`成员所做的自动复制写操作，detach() 在该类的成员函数中不会被自动调用。如果你发现代码中处处调用 detach()，可以考虑使用 `QSharedDataPointer`。
 
 ### `[noexcept, since 6.0] T *QExplicitlySharedDataPointer::get() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的核心操作 `get`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与`data()`相同。此功能旨在与STL兼容。
 
 ### `[noexcept, since 6.0] void QExplicitlySharedDataPointer::reset(T *ptr = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ptr`：类型为 `T *`。默认值为 `nullptr`。传入 `T *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该数据的 d 指针设为 `ptr`，如果 `ptr` 未被`nullptr`，则增加`ptr`的引用计数。旧共享数据对象的引用计数减少，如果引用计数为 0，则该对象被删除。
 
 ### `[noexcept] void QExplicitlySharedDataPointer::swap(QExplicitlySharedDataPointer<T> &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QExplicitlySharedDataPointer::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这个显式共享的数据指针与`other`交换。该操作非常快且从未失败。
 
 ### `[noexcept] T *QExplicitlySharedDataPointer::take()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QExplicitlySharedDataPointer::take` 用于计算、查询或取得与“取出”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `T *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向共享对象的指针，并将其重置为`nullptr`。（也就是说，该函数将该对象的d指针设为`nullptr`。）。
+注意：返回对象的引用计数不会被递减。该函数可以与构造函数一起使用，构造函数通过`QAdoptSharedDataTag`标签对象传输共享数据对象，无需中断原子操作。
 
 ### `[noexcept] QExplicitlySharedDataPointer::operator bool() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 d 指针不是空指针，则返回 `true`。
 
 ### `[noexcept] bool QExplicitlySharedDataPointer::operator!() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 d指针为`nullptr`，则返回 `true`。
 
 ### `T &QExplicitlySharedDataPointer::operator*() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供对共享数据对象成员的访问。
 
 ### `[noexcept] T *QExplicitlySharedDataPointer::operator->()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供对共享数据对象成员的访问。
 
 ### `[noexcept] T *QExplicitlySharedDataPointer::operator->() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`T *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供对共享数据对象成员的const访问。
 
 ### `[noexcept] QExplicitlySharedDataPointer<T> &QExplicitlySharedDataPointer::operator=(QExplicitlySharedDataPointer<T> &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QExplicitlySharedDataPointer<T> &`。
-- 参数 `other`：类型为 `QExplicitlySharedDataPointer<T> &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动分配`other`到该`QExplicitlySharedDataPointer`实例。
 
 ### `[noexcept] QExplicitlySharedDataPointer<T> &QExplicitlySharedDataPointer::operator=(T *o)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QExplicitlySharedDataPointer<T> &`。
-- 参数 `o`：类型为 `T *`。没有默认值，调用时必须提供。传入 `T *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该数据的 d 指针设为 `o`，并增加`o`的引用计数。旧共享数据对象的引用计数被递减。如果旧共享数据对象的引用计数为 0，则该旧共享数据对象被删除。
 
 ### `[noexcept] QExplicitlySharedDataPointer<T> &QExplicitlySharedDataPointer::operator=(const QExplicitlySharedDataPointer<T> &o)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QExplicitlySharedDataPointer<T> &`。
-- 参数 `o`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。传入 `const QExplicitlySharedDataPointer<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该数据对象的d指针设置为`o`的d指针，并递增共享数据对象的引用计数。旧共享数据对象的引用计数递减。如果旧共享数据对象的引用计数为0，则该旧共享数据对象被删除。
 
 ### `[noexcept] bool operator!=(const QExplicitlySharedDataPointer<T> &lhs, const QExplicitlySharedDataPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 没有相同的 d 指针，则返回 `true`。
 
 ### `[noexcept] bool operator!=(const T *const &lhs, const QExplicitlySharedDataPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const T *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`rhs`的d指针不`lhs`，则返回`true`。
 
 ### `[noexcept] bool operator==(const QExplicitlySharedDataPointer<T> &lhs, const QExplicitlySharedDataPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 拥有相同的 d 指针，则返回 `true`。
 
 ### `[noexcept] bool operator==(const T *const &lhs, const QExplicitlySharedDataPointer<T> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const T *const &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QExplicitlySharedDataPointer<T> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`rhs`的d指针是`lhs`，则返回`true`。
 
 ### `Type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QExplicitlySharedDataPointer` 的 `类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是共享数据对象的类型。d 指针指向该类型的对象。
 
 ## 6. 深入实践与常见坑
 

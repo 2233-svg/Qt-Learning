@@ -102,387 +102,255 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 29 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QLocalServer::SocketOptionflags QLocalServer::SocketOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 暴露的类型声明 `Socket、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SocketOptionflags QLocalServer::SocketOptions`。
-- 属性名：`QLocalServer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可用于创建套接字的可能选项。这改变了支持套接字访问权限的平台（Linux、Windows）上的访问权限。GroupAccess 和 OtherAccess 的含义可能因平台而略有不同。在 Linux 和 Android 上，可以使用抽象地址的套接字;对于此类套接字来说，套接字权限没有意义。
+- `QLocalServer::NoOptions`：`0x0`;未设置访问限制。
+- `QLocalServer::UserAccessOption`：`0x01`;访问仅限于创建该套接字的进程的同一用户。
+- `QLocalServer::GroupAccessOption`：`0x2`;访问仅限于同一组，但不限于在 Linux 上创建该套接字的用户。在 Windows 上，访问仅限进程的主组
+- `QLocalServer::OtherAccessOption`：`0x4`;在 Linux 上，除了创建该套接字的用户和组外，所有人都可以访问。在 Windows 上，所有人都可以访问。
+- `QLocalServer::WorldAccessOption`：`0x7`;无访问限制。
+- `QLocalServer::AbstractNamespaceOption`：`0x8`;监听套接字将在抽象命名空间中创建。该标志是Linux专用的。在其他平台，为了代码的可移植性，该标志等同于WorldAccessOption。
+SocketOptions 类型是 QFlags 的 typedef<SocketOption>。它存储 SocketOption 值的 OR 组合。
 
 ### `[bindable] socketOptions : SocketOptions`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 的配置属性。初始化或状态切换时通过 `setSocketOptions(...)` 设置，之后用 `socketOptions()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性包含控制套接字如何操作的套接字选项。
+例如，套接字可能会限制用户ID可以连接到该套接字的权限。
+这些选项必须在`listen()`被调用前设置好。
+在某些情况下，比如Linux上的Unix域套接字，对该套接字的访问由文件系统权限决定，并基于umask创建。设置访问标志会覆盖该权限，并根据指定限制或允许访问。
+其他基于 Unix 的操作系统，如 macOS，不承认 Unix 域套接字的文件权限，默认使用 WorldAccess，这些权限标志不会生效。
+在 Windows 上，`UserAccessOption` 足以让非提升进程连接到由同一用户运行的提升进程创建的本地服务器。`GroupAccessOption` 指进程的主组（参见 Windows 文档中的 TokenPrimaryGroup）。`OtherAccessOption` 指的是著名的“Everyone”组。
+在 Linux 平台上，可以在抽象命名空间中创建一个 socket，该命名空间与文件系统无关。使用这种 socket 意味着忽略权限选项。在其他平台上`AbstractNamespaceOption`相当于 `WorldAccessOption`。
+默认情况下，任何标志都未被设置，访问权限是平台默认设置。
 
-**签名拆解：**
-
-- 属性类型：`SocketOptions`。
-- 属性名：`socketOptions`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `socketOptions()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QLocalServer::QLocalServer(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的本地套接字服务器，并使用给定的 `parent`。
 
 ### `[virtual noexcept] QLocalServer::~QLocalServer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁`QLocalServer`对象。如果服务器正在监听连接，则会自动关闭连接。
+任何仍然连接的客户端QLocalSocket必须断开连接或重新父级，然后服务器才会被删除。
 
 ### `[protected, since 6.8] void QLocalServer::addPendingConnection(QLocalSocket *socket)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QLocalServer` 添加依赖、数据或子对象的 API `addPendingConnection`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socket`：类型为 `QLocalSocket *`。没有默认值，调用时必须提供。传入 `QLocalSocket *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QLocalServer::incomingConnection()`调用该函数，将该`socket`添加到待处理的入站连接列表中。
+注意：如果你不想破坏待处理连接机制，别忘了从重构`incomingConnection()`调用该成员。该函数在套接字添加后发出`newConnection()`信号。
 
 ### `void QLocalServer::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+停止监听来电连接。现有连接不受影响，但任何新连接都会被拒绝。
 
 ### `QString QLocalServer::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与当前`serverError()`报告错误相符的人类可读消息。如果没有合适的字符串可用，则返回一个空字符串。
 
 ### `QString QLocalServer::fullServerName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::fullServerName` 用于计算、查询或取得与“full、Server、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回服务器监听的完整路径。
+注意：这取决于特定平台。
 
 ### `[virtual] bool QLocalServer::hasPendingConnections() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasPendingConnections`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果服务器有待处理连接，返回`true`;否则返回`false`。
 
 ### `[virtual protected] void QLocalServer::incomingConnection(quintptr socketDescriptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::incomingConnection` 用于执行与“incoming、Connection”相关的操作。调用时要先确认当前状态和 `socketDescriptor` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketDescriptor`：类型为 `quintptr`。没有默认值，调用时必须提供。传入 `quintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当有新连接可用时，`QLocalServer`调用该虚拟函数。`socketDescriptor` 是接受连接的本地套接字描述符。
+基础实现创建`QLocalSocket`，设置套接字描述符，然后将`QLocalSocket`存储在待处理连接的内部列表中。最后`newConnection()`被发出。
+重新实现该函数以改变连接可用时服务器的行为。
 
 ### `bool QLocalServer::isListening() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isListening`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果服务器正在监听`true`连接，返回`false`。
 
 ### `bool QLocalServer::listen(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `listen`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+告诉服务器监听`name`的来电连接。如果服务器已经监听，listen() 将失败。成功时返回`true`，否则`false`。
+`name`可以是一个单一名称，`QLocalServer`会确定正确的平台特定路径。`serverName()`会返回传入 listen() 的名称。
+通常你会直接输入像“foo”这样的名称，但在Unix上，这也可以是路径，比如“/tmp/foo”，在Windows上也可以是管道路径，比如“\\.\pipe\foo”。
+注意：在Unix上，如果服务器之前崩溃且未关闭，listen() 会导致 AddressInUseError 失败。要创建新服务器，应先移除该文件。在 Windows 上，两个本地服务器可以同时监听同一个管道，但每个入站连接都会指向其中任意一个。
 
 ### `bool QLocalServer::listen(qintptr socketDescriptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `listen`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socketDescriptor`：类型为 `qintptr`。没有默认值，调用时必须提供。传入 `qintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指示服务器监听`socketDescriptor`的入站连接。如果服务器当前监听，属性返回`false`。成功时返回`true`;否则返回`false`。套接字必须准备好接受新的连接，且不调用任何额外的平台特定函数。套接字设置为非阻塞模式。
+`serverName()`，如果平台支持`fullServerName()`可以返回带有名称的字符串;否则返回空的`QString`。特别是，Linux 支持的抽象命名空间中的套接字地址如果包含不可打印字符，就不会生成有用的名称。
 
 ### `[since 6.3] int QLocalServer::listenBacklogSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `listenBacklogSize`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回待接受连接的队列大小。
 
 ### `int QLocalServer::maxPendingConnections() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::maxPendingConnections` 用于计算、查询或取得与“max、Pending、Connections”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最大待处理接受连接数。默认为30。
 
 ### `[signal] void QLocalServer::newConnection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 发出的通知信号 `newConnection`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当有新连接可用时，该信号都会发出。
 
 ### `[virtual] QLocalSocket *QLocalServer::nextPendingConnection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::nextPendingConnection` 用于计算、查询或取得与“移动到下一项、Pending、Connection”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLocalSocket *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLocalSocket *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回下一个待处理连接，作为连接`QLocalSocket`对象。
+套接字是作为服务器的子节点创建的，这意味着当`QLocalServer`对象被销毁时，它会自动被删除。使用完毕后明确删除该对象仍然是个好主意，以避免浪费内存。
+如果在没有待处理连接的情况下调用该函数，`nullptr`返回。
 
 ### `[static] bool QLocalServer::removeServer(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `removeServer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除可能导致调用`listen()`失败的服务器实例，成功时返回`true`;否则返回`false`。该函数旨在从崩溃中恢复，前提是之前的服务器实例尚未清理。
+在 Windows 上，这个函数没有作用;在 Unix 上，它会移除 `name` 给出的套接字文件。
+警告：请谨慎避免移除运行实例的套接字。
 
 ### `QAbstractSocket::SocketError QLocalServer::serverError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::serverError` 用于计算、查询或取得与“server、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractSocket::SocketError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractSocket::SocketError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上次或`NoError`次发生的错误类型。
 
 ### `QString QLocalServer::serverName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::serverName` 用于计算、查询或取得与“server、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果服务器正在监听连接，则返回服务器名称;否则返回 QString()。
 
 ### `[since 6.3] void QLocalServer::setListenBacklogSize(int size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setListenBacklogSize`。调用它会改变 `QLocalServer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `int`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将待办队列大小设置为可接受的连接`size`。操作系统可能会减少或忽略该值。默认情况下，队列大小为50。
+注意：该属性必须在调用`listen()`之前设置。
 
 ### `void QLocalServer::setMaxPendingConnections(int numConnections)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMaxPendingConnections`。调用它会改变 `QLocalServer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `numConnections`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将待接受连接的最大数量设置为`numConnections`。`QLocalServer`在调用`nextPendingConnection()`前最多只接受`numConnections`个入站连接。
+注意：尽管`QLocalServer`在达到最大待处理连接数后停止接受新连接，操作系统仍可能将其留在队列中，导致客户端发出已连接信号。
 
 ### `qintptr QLocalServer::socketDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::socketDescriptor` 用于计算、查询或取得与“socket、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qintptr`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qintptr`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回服务器用来监听指令的本地套接字描述符，如果服务器未监听，则返回-1。
+描述符的类型取决于平台：
+- 在Windows上，返回的值是Winsock 2的套接字句柄。
+- 在INTEGRITY中，返回的值是`QTcpServer`套接字描述符，类型由`socketDescriptor`定义。
+- 在所有其他类 UNIX 操作系统中，类型是表示监听套接字的文件描述符。
 
 ### `QLocalServer::SocketOptions QLocalServer::socketOptions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::socketOptions` 用于计算、查询或取得与“socket、Options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLocalServer::SocketOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLocalServer::SocketOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套筒上的套筒选项设置。
+注意：属性socketOptions的Getter函数。
 
 ### `bool QLocalServer::waitForNewConnection(int msec = 0, bool *timedOut = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalServer::waitForNewConnection` 用于计算、查询或取得与“等待、For、New、Connection”相关的操作。调用时要先确认当前状态和 `msec`、`timedOut` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msec`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timedOut`：类型为 `bool *`。默认值为 `nullptr`。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+最多等待`msec`毫秒，或直到有来电连接可用。如果有连接可用，返回`true`;否则返回`false`。如果操作超时且`timedOut`未`nullptr`，*timedOut 将设置为 true。
+这是一个阻塞函数调用。在单线程的 GUI 应用中不建议使用它，因为整个应用程序会停止响应，直到函数返回。waitForNewConnection() 主要在没有事件循环时非常有用。
+非阻断的替代方案是连接到`newConnection()`信号。
+如果 msec 为 -1，该函数不会超时。
 
 ### `enum SocketOption { NoOptions, UserAccessOption, GroupAccessOption, OtherAccessOption, WorldAccessOption, AbstractNamespaceOption }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 暴露的类型声明 `Socket、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可用于创建套接字的可能选项。这改变了支持套接字访问权限的平台（Linux、Windows）上的访问权限。GroupAccess 和 OtherAccess 的含义可能因平台而略有不同。在 Linux 和 Android 上，可以使用抽象地址的套接字;对于此类套接字来说，套接字权限没有意义。
+- `QLocalServer::NoOptions`：`0x0`;未设置访问限制。
+- `QLocalServer::UserAccessOption`：`0x01`;访问仅限于创建该套接字的进程的同一用户。
+- `QLocalServer::GroupAccessOption`：`0x2`;访问仅限于同一组，但不限于在 Linux 上创建该套接字的用户。在 Windows 上，访问仅限进程的主组
+- `QLocalServer::OtherAccessOption`：`0x4`;在 Linux 上，除了创建该套接字的用户和组外，所有人都可以访问。在 Windows 上，所有人都可以访问。
+- `QLocalServer::WorldAccessOption`：`0x7`;无访问限制。
+- `QLocalServer::AbstractNamespaceOption`：`0x8`;监听套接字将在抽象命名空间中创建。该标志是Linux专用的。在其他平台，为了代码的可移植性，该标志等同于WorldAccessOption。
+SocketOptions 类型是 QFlags 的 typedef<SocketOption>。它存储 SocketOption 值的 OR 组合。
 
 ### `flags SocketOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalServer` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可用于创建套接字的可能选项。这改变了支持套接字访问权限的平台（Linux、Windows）上的访问权限。GroupAccess 和 OtherAccess 的含义可能因平台而略有不同。在 Linux 和 Android 上，可以使用抽象地址的套接字;对于此类套接字来说，套接字权限没有意义。
+- `QLocalServer::NoOptions`：`0x0`;未设置访问限制。
+- `QLocalServer::UserAccessOption`：`0x01`;访问仅限于创建该套接字的进程的同一用户。
+- `QLocalServer::GroupAccessOption`：`0x2`;访问仅限于同一组，但不限于在 Linux 上创建该套接字的用户。在 Windows 上，访问仅限进程的主组
+- `QLocalServer::OtherAccessOption`：`0x4`;在 Linux 上，除了创建该套接字的用户和组外，所有人都可以访问。在 Windows 上，所有人都可以访问。
+- `QLocalServer::WorldAccessOption`：`0x7`;无访问限制。
+- `QLocalServer::AbstractNamespaceOption`：`0x8`;监听套接字将在抽象命名空间中创建。该标志是Linux专用的。在其他平台，为了代码的可移植性，该标志等同于WorldAccessOption。
+SocketOptions 类型是 QFlags 的 typedef<SocketOption>。它存储 SocketOption 值的 OR 组合。
 
 ### `QBindable<QLocalServer::SocketOptions> bindableSocketOptions()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableSocketOptions`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性包含控制套接字如何操作的套接字选项。
+例如，套接字可能会限制用户ID可以连接到该套接字的权限。
+这些选项必须在`listen()`被调用前设置好。
+在某些情况下，比如Linux上的Unix域套接字，对该套接字的访问由文件系统权限决定，并基于umask创建。设置访问标志会覆盖该权限，并根据指定限制或允许访问。
+其他基于 Unix 的操作系统，如 macOS，不承认 Unix 域套接字的文件权限，默认使用 WorldAccess，这些权限标志不会生效。
+在 Windows 上，`UserAccessOption` 足以让非提升进程连接到由同一用户运行的提升进程创建的本地服务器。`GroupAccessOption` 指进程的主组（参见 Windows 文档中的 TokenPrimaryGroup）。`OtherAccessOption` 指的是著名的“Everyone”组。
+在 Linux 平台上，可以在抽象命名空间中创建一个 socket，该命名空间与文件系统无关。使用这种 socket 意味着忽略权限选项。在其他平台上`AbstractNamespaceOption`相当于 `WorldAccessOption`。
+默认情况下，任何标志都未被设置，访问权限是平台默认设置。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QLocalServer::SocketOptions>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableSocketOptions()` 取得 `socketOptions` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `void setSocketOptions(QLocalServer::SocketOptions options)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketOptions`。调用它会改变 `QLocalServer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性包含控制套接字如何操作的套接字选项。
+例如，套接字可能会限制用户ID可以连接到该套接字的权限。
+这些选项必须在`listen()`被调用前设置好。
+在某些情况下，比如Linux上的Unix域套接字，对该套接字的访问由文件系统权限决定，并基于umask创建。设置访问标志会覆盖该权限，并根据指定限制或允许访问。
+其他基于 Unix 的操作系统，如 macOS，不承认 Unix 域套接字的文件权限，默认使用 WorldAccess，这些权限标志不会生效。
+在 Windows 上，`UserAccessOption` 足以让非提升进程连接到由同一用户运行的提升进程创建的本地服务器。`GroupAccessOption` 指进程的主组（参见 Windows 文档中的 TokenPrimaryGroup）。`OtherAccessOption` 指的是著名的“Everyone”组。
+在 Linux 平台上，可以在抽象命名空间中创建一个 socket，该命名空间与文件系统无关。使用这种 socket 意味着忽略权限选项。在其他平台上`AbstractNamespaceOption`相当于 `WorldAccessOption`。
+默认情况下，任何标志都未被设置，访问权限是平台默认设置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QLocalServer::SocketOptions`。没有默认值，调用时必须提供。传入 `QLocalServer::SocketOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSocketOptions(...)` 修改 `socketOptions`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

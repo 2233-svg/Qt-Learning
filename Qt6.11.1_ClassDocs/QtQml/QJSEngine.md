@@ -115,564 +115,460 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 42 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QJSEngine::Extensionflags QJSEngine::Extensions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 暴露的类型声明 `Extensionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Extensionflags QJSEngine::Extensions`。
-- 属性名：`QJSEngine`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定通过`installExtensions()`安装的扩展。
+- `QJSEngine::TranslationExtension`：`0x1`;表示应安装翻译函数（例如，像 `qsTr()`）。这也会安装 Qt.`uiLanguage` 属性。
+- `QJSEngine::ConsoleExtension`：`0x2`;表示应安装控制台功能（例如`console.log()`）。
+- `QJSEngine::GarbageCollectionExtension`：`0x4`;表示应安装垃圾回收功能（例如`gc()`）。
+- `QJSEngine::AllExtensions`：`0xffffffff`;表示所有延长部分都应安装。
+翻译扩展。
+脚本翻译函数与C翻译函数之间的关系如下表描述：
+- `Script Function`：对应的C函数
+- `qsTr()`：`QObject::tr()`
+- `QT_TR_NOOP()`：`QT_TR_NOOP()`
+- `qsTranslate()`：`QCoreApplication::translate()`
+- `QT_TRANSLATE_NOOP()`：`QT_TRANSLATE_NOOP()`
+- `qsTrId()`：`qtTrId()`
+- `QT_TRID_NOOP()`：`QT_TRID_NOOP()`
+该标志还为字符串原型添加了一个`arg()`函数。
+更多信息请参见Qt国际化文档。
+控制台扩展。
+控制台对象实现了控制台API的一个子集，该API提供了熟悉的日志功能，如`console.log()`。
+新增的功能列表如下：
+- `console.assert()`
+- `console.debug()`
+- `console.exception()`
+- `console.info()`
+- `console.log()`（相当于`console.debug()`）
+- `console.error()`
+- `console.time()`
+- `console.timeEnd()`
+- `console.trace()`
+- `console.count()`
+- `console.warn()`
+- `print()`（相当于`console.debug()`）
+欲了解更多信息，请参阅控制台API文档。
+垃圾回收扩展。
+`gc()`函数等价于调用`collectGarbage()`。
+扩展类型是QFlag的typedef<Extension>。它存储扩展值的或组合。
 
 ### `enum QJSEngine::ObjectOwnership`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 暴露的类型声明 `Object、Ownership`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ObjectOwnership`。
-- 属性名：`QJSEngine`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ObjectOwnership 控制 JavaScript 内存管理器是否在对应的 JavaScript 对象被引擎垃圾回收时自动销毁`QObject`。两种所有权选项为：
+- `QJSEngine::CppOwnership`：`0`;该对象由 C 代码拥有，JavaScript 内存管理器永远不会删除它。JavaScript 的 destroy() 方法不能用于这些对象。该选项类似于 QScriptEngine：：QtOwnership。
+- `QJSEngine::JavaScriptOwnership`：`1`;该对象归 JavaScript 所有。当该对象作为方法调用的返回值返回到 JavaScript 内存管理器时，JavaScript 内存管理器会跟踪该对象，并在没有剩余 JavaScript 引用且无`QObject::parent()`时删除它。一个`QJSEngine`跟踪的对象将在该`QJSEngine`的解构器过程中被删除。因此，如果删除其中一个引擎，两个不同引擎中具有 JavaScriptOwnership 的对象之间的 JavaScript 引用将无效。该选项类似于 QScriptEngine：：ScriptOwnership。
+通常应用程序不需要显式设置对象的所有权。JavaScript内存管理器使用启发式方法设置默认所有权。默认情况下，JavaScript内存管理器创建的对象具有JavaScriptOwnership。例外是调用`QQmlComponent::create()`或`QQmlComponent::beginCreate()`创建的根对象，默认拥有CppOwnership。这些根级对象的所有权被视为已转移给C调用者。
+未由 JavaScript 内存管理器创建的对象默认具有 CppOwnership。例外是从 C 方法调用返回的对象;它们的所有权将设置为 JavaScriptOwnership。这仅适用于显式调用`Q_INVOKABLE`方法或槽函数，但不适用于属性获取调用。
+调用`setObjectOwnership()`会覆盖默认所有权。
 
 ### `uiLanguage : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 的配置属性。初始化或状态切换时通过 `setUiLanguage(...)` 设置，之后用 `uiLanguage()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+此属性保存用于翻译用户界面字符串的语言。
+此属性保存用于用户界面字符串翻译的语言名称。当 `QJSEngine::TranslationExtension` 安装到引擎中时，可作为 `Qt.uiLanguage` 进行读写。在 `QQmlEngine` 的实例中始终可用。
+您可以自由设置其值并在绑定中使用。建议在应用程序中安装翻译器后设置。按约定，空字符串表示不打算对源代码使用的语言进行翻译。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`uiLanguage`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `uiLanguage()` 读取当前值；它不会修改应用状态。
 
 ### `QJSEngine::QJSEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QJSEngine对象。
+`globalObject()`初始化为具有ECMA-262第15.1节描述的属性。
 
 ### `[explicit] QJSEngine::QJSEngine(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个具有给定`parent`的QJSEngine对象。
+`globalObject()`初始化为具有ECMA-262第15.1节描述的属性。
 
 ### `[override virtual noexcept] QJSEngine::~QJSEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁了这个`QJSEngine`。
+在`QJSEngine`销毁期间，垃圾不会从持久的JS堆中收集。如果你需要释放所有内存，在销毁`QJSEngine`前手动调用`collectGarbage()`。
 
 ### `[since Qt 6.1] QJSValue QJSEngine::catchError()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::catchError` 用于计算、查询或取得与“catch、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果异常当前待处理，则捕获该异常并返回为`QJSValue`。否则返回未定义的 `QJSValue`。调用该方法后，`hasError()`返回`false`。
 
 ### `template <typename From, typename To> To QJSEngine::coerceValue(const From &from)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::coerceValue` 用于计算、查询或取得与“coerce、值访问”相关的操作。调用时要先确认当前状态和 `from` 的有效范围；返回类型是 `template <typename From, typename To> To`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename From, typename To> To`。
-- 参数 `from`：类型为 `const From &`。没有默认值，调用时必须提供。传入 `const From &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的`from`转换为模板类型 `To`。转换采用 JavaScript 语义完成。这些语义与 `qvariant_cast` 语义不同。JavaScript 等价类型之间存在许多默认不执行的隐式转换`qvariant_cast`。该方法是该类中所有转换方法的推广。
 
 ### `void QJSEngine::collectGarbage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::collectGarbage` 用于执行与“collect、Garbage”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+负责垃圾收集。
+垃圾回收器会通过寻找并丢弃脚本环境中无法访问的对象来尝试回收内存。
+通常你不需要调用这个函数;当`QJSEngine`认为有必要时（即新对象已创建一定数量时），垃圾回收器会自动被调用。不过，你可以调用这个函数，明确请求尽快执行垃圾回收。
 
 ### `QJSValue QJSEngine::evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1, QStringList *exceptionStackTrace = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::evaluate` 用于计算、查询或取得与“evaluate”相关的操作。调用时要先确认当前状态和 `program`、`fileName`、`lineNumber`、`exceptionStackTrace` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `program`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `fileName`：类型为 `const QString &`。默认值为 `QString()`。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `lineNumber`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `exceptionStackTrace`：类型为 `QStringList *`。默认值为 `nullptr`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以`lineNumber`为基线编号，计算`program`，并返回评估结果。
+脚本代码将在全局对象的上下文中进行评估。
+注意：如果你需要在QML上下文中进行评估，请使用`QQmlExpression`。
+`program`的求值可能导致引擎出现`exception`;此时返回值将是被抛出的异常（通常是`Error`对象;参见`QJSValue::isError()`）。
+`lineNumber`用于指定`program`的起始行号;引擎报告的与此评估相关的行号信息将基于该参数。例如，如果`program`由两行代码组成，且第二行的语句引发脚本异常，例外行号为`lineNumber`加一。当未指定起始行号时，行号基于1。
+`fileName`用于错误报告。例如，在错误对象中，如果文件名带有该功能，可以通过“fileName”属性访问文件名。
+`exceptionStackTrace`用于报告是否投掷了未捕获的异常。如果你将非空指针传递给该指针的`QStringList`，如果脚本抛出未处理异常，它会将其设置为“栈框消息列表”，否则设置为空列表。堆栈框架消息的格式函数为 name：line number：column：file name。
+注意：在某些情况下，例如原生函数，函数名和文件名可以为空，行号和列可以为-1。
+注意：如果抛出异常且异常值不是错误实例（即返回`QJSValue::isError()`返回`false`），异常值仍会返回。使用`exceptionStackTrace->isEmpty()`区分该值是正常返回值还是例外返回值。
 
 ### `template <typename T> T QJSEngine::fromManagedValue(const QJSManagedValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `fromManagedValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> T`。
-- 参数 `value`：类型为 `const QJSManagedValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回已转换成模板类型`value` `T`。
 
 ### `template <typename T> T QJSEngine::fromPrimitiveValue(const QJSPrimitiveValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `fromPrimitiveValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> T`。
-- 参数 `value`：类型为 `const QJSPrimitiveValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的`value`转换为模板类型`T`。
+由于`QJSPrimitiveValue`只能保留int、bool、double、`QString`以及JavaScript的等价物，`null`和`undefined`，如果你请求任何其他类型，这个值会被强行强制。
 
 ### `template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `fromScriptValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> T`。
-- 参数 `value`：类型为 `const QJSValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回已转换成模板类型`value` `T`。
 
 ### `template <typename T> T QJSEngine::fromVariant(const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `fromVariant`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> T`。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定的 `value`转换为模板类型 `T`。转换采用 JavaScript 语义。这些语义与 `qvariant_cast` 的语义不同。JavaScript 等价类型之间存在许多隐式转换，默认情况下`qvariant_cast`不会执行。
 
 ### `QJSValue QJSEngine::globalObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::globalObject` 用于计算、查询或取得与“global、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该引擎的全局对象。
+默认情况下，全局对象包含 ECMA-262 内建的对象，如数学、日期和字符串。此外，你可以设置全局对象的属性，使所有脚本代码都能使用自己的扩展。脚本代码中的非本地变量将作为全局对象的属性创建，全局代码中的本地变量也会被创建。
 
 ### `[since Qt 6.1] bool QJSEngine::hasError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果最后一次 JavaScript 执行出现异常，或者调用了 `throwError()`，返回 `true`。否则返回 `false`。请注意，`evaluate()` 会捕捉评估代码中抛出的任何异常。
 
 ### `QJSValue QJSEngine::importModule(const QString &fileName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::importModule` 用于计算、查询或取得与“import、Module”相关的操作。调用时要先确认当前状态和 `fileName` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+导入位于 `fileName` 的模块，并返回一个模块命名空间对象，其中包含所有导出的变量、常量和函数作为属性。
+如果这是引擎中第一次导入该模块，则会从本地文件系统或 Qt 资源系统的指定位置加载文件，并作为 ECMAScript 模块进行评估。文件应以 UTF-8 文本编码。
+随后对同一模块的导入将返回先前导入的实例。模块为单例，直至引擎被销毁。
+指定的 `fileName` 将使用 `QFileInfo::canonicalFilePath()` 内部规范化。这意味着使用不同相对路径多次导入同一磁盘文件将只加载一次。
+注意：如果在加载模块期间抛出异常，返回值将为异常（通常为 `Error` 对象；参见 `QJSValue::isError()`）。
 
 ### `void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSValue &object = QJSValue())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QJSEngine` 添加依赖、数据或子对象的 API `installExtensions`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+安装JavaScript `extensions`以添加标准ECMAScript实现中不具备的功能。
+扩展安装在给定的`object`上，或者如果没有指定对象，则安装在全局对象上。
+通过`OR`枚举值，可以同时安装多个扩展：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `extensions`：类型为 `QJSEngine::Extensions`。没有默认值，调用时必须提供。传入 `QJSEngine::Extensions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `object`：类型为 `const QJSValue &`。默认值为 `QJSValue()`。传入 `const QJSValue &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ installExtensions(QJSEngine::TranslationExtension | QJSEngine::ConsoleExtension);
+```
 
 ### `bool QJSEngine::isInterrupted() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInterrupted`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回JavaScript执行是否当前中断。
 
 ### `QJSValue QJSEngine::newArray(uint length = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newArray` 用于计算、查询或取得与“new、Array”相关的操作。调用时要先确认当前状态和 `length` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `length`：类型为 `uint`。默认值为 `0`。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个带有给定`length`的 Java 对象 Array 类。
 
 ### `QJSValue QJSEngine::newErrorObject(QJSValue::ErrorType errorType, const QString &message = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newErrorObject` 用于计算、查询或取得与“new、错误、Object”相关的操作。调用时要先确认当前状态和 `errorType`、`message` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `errorType`：类型为 `QJSValue::ErrorType`。没有默认值，调用时必须提供。传入 `QJSValue::ErrorType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 Error 类的 JavaScript 对象，错误消息为 `message`。
+所创建对象的原型将`errorType`。
 
 ### `QJSValue QJSEngine::newObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newObject` 用于计算、查询或取得与“new、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建类为 Object 的 JavaScript 对象。
+创建对象的原型将是对象原型对象。
 
 ### `template <typename T> QJSValue QJSEngine::newQMetaObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newQMetaObject` 用于计算、查询或取得与“new、Q、Meta、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename T> QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QJSValue`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 JavaScript 对象，包裹与类 `T` 关联的静态`QMetaObject`。
 
 ### `QJSValue QJSEngine::newQMetaObject(const QMetaObject *metaObject)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newQMetaObject` 用于计算、查询或取得与“new、Q、Meta、Object”相关的操作。调用时要先确认当前状态和 `metaObject` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `metaObject`：类型为 `const QMetaObject *`。没有默认值，调用时必须提供。传入 `const QMetaObject *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个包裹给定`QMetaObject`元对象的JavaScript对象`metaObject`必须比脚本引擎更持久。建议仅在静态元对象时使用此方法。
+当被调用为构造函数时，会创建一个新的类实例。只有`Q_INVOKABLE`暴露的构造器才会从脚本引擎中可见。
 
 ### `QJSValue QJSEngine::newQObject(QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newQObject` 用于计算、查询或取得与“new、Q、Object”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个JavaScript对象，用`JavaScriptOwnership`包裹给定的`QObject` `object`。
+信号和槽函数、`object`的属性和子节点作为创建`QJSValue`的属性可用。
+如果`object`是空指针，该函数返回空值。
+如果为`object`的类（或递归地）注册了默认原型，那么新脚本对象的原型将被设置为该默认原型。
+如果给定`object`在引擎控制之外被删除，任何通过JavaScript封装对象（无论是脚本代码还是C语言）访问已删除`QObject`成员的任何尝试都会导致脚本异常。
 
 ### `[since 6.2] QJSValue QJSEngine::newSymbol(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::newSymbol` 用于计算、查询或取得与“new、Symbol”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QJSValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSValue`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个类为 Symbol 的 JavaScript 对象，值为 `name`。
+创建对象的原型将是符号原型对象。
 
 ### `[static] QJSEngine::ObjectOwnership QJSEngine::objectOwnership(QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `objectOwnership`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QJSEngine::ObjectOwnership`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+归还`object`的所有权。
 
 ### `bool QJSEngine::registerModule(const QString &moduleName, const QJSValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::registerModule` 用于计算、查询或取得与“注册、Module”相关的操作。调用时要先确认当前状态和 `moduleName`、`value` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `moduleName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `value`：类型为 `const QJSValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册一个`QJSValue`作为模块。调用该函数后，所有导入`moduleName`的模块将导入`value`值，而不是从文件系统加载`moduleName`。
+任何有效的`QJSValue`都可以注册，但命名导出（即`import { name } from "info"`被视为对象的成员，因此默认导出必须使用newXYZ的某个`QJSEngine`方法之一创建。
+由于这允许导入文件系统中不存在的模块，脚本应用程序可以利用这一点提供内置模块，类似于 Node.js。
+成功时`true`回报，`false`其他情况。
+注意：`QJSValue` `value`在被其他模块使用之前不会被调用或读取。这意味着没有代码可评估，因此在另一个模块尝试加载该模块时抛出异常之前，不会看到错误。
+警告：尝试访问非对象`QJSValue`的命名导出将触发`exception`。
 
 ### `void QJSEngine::setInterrupted(bool interrupted)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setInterrupted`。调用它会改变 `QJSEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `interrupted`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+中断或重新启用JavaScript执行。
+如果`interrupted` `true`，该引擎执行的任何JavaScript都会立即中止并返回错误对象，直到该函数再次被调用，`interrupted`值为`false`。
+该函数对线程是安全的。你可以从另一个线程调用它来中断，例如JavaScript中的无限循环。
 
 ### `[static] void QJSEngine::setObjectOwnership(QObject *object, QJSEngine::ObjectOwnership ownership)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setObjectOwnership`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `ownership`：类型为 `QJSEngine::ObjectOwnership`。没有默认值，调用时必须提供。传入 `QJSEngine::ObjectOwnership` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定`object`的`ownership`。
+带有 `JavaScriptOwnership` 的对象只要仍有父对象，即使没有引用，也不会被垃圾回收。
 
 ### `[since Qt 5.12] void QJSEngine::throwError(const QString &message)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::throwError` 用于执行与“throw、错误”相关的操作。调用时要先确认当前状态和 `message` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在给定`message`时抛出运行时错误（例外）。
+该方法是 JavaScript 中 `throw()` 表达式的 C 对应。它使 C 代码能够向 `QJSEngine` 报告运行时错误。因此，它应仅从通过 `QJSEngine` 由 JavaScript 函数调用的 C 代码调用。
+当从C返回时，引擎会中断正常的执行流程，并调用下一个预注册的异常处理程序，并使用包含该`message`的错误对象。错误对象将指向JavaScript调用栈中最顶端的上下文位置;具体来说，它将具有属性`lineNumber`、`fileName`和`stack`。这些属性在脚本异常中有描述。
+在以下示例中，FileAccess.cpp 中的一个 C 方法在 qmlFile.qml 中，在调用 `readFileAsText()` 的位置抛出错误：
+也可以在 JavaScript 中检测抛出错误：
+如果你需要更具体的运行时错误来描述异常，可以使用 `throwError`（QJSValue：：ErrorType errorType， const QString &message） 重载。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `message`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // qmlFile.qml
+ function someFunction() {
+   ...
+   var text = FileAccess.readFileAsText("/path/to/file.txt");
+ }
+```
 
 ### `[since 6.1] void QJSEngine::throwError(const QJSValue &error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::throwError` 用于执行与“throw、错误”相关的操作。调用时要先确认当前状态和 `error` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `const QJSValue &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+抛出预构的运行时`error`（例外）。这样你可以用`newErrorObject()`创建错误并根据需要进行自定义。
+注意：该功能会让`QJSEngine::throwError()`重载。
 
 ### `[since Qt 5.12] void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJSEngine::throwError` 用于执行与“throw、错误”相关的操作。调用时要先确认当前状态和 `errorType`、`message` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在给定的`errorType`和 `message` 时抛出运行时错误（异常）。
+注意：该功能会让`QJSEngine::throwError()`重载。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `errorType`：类型为 `QJSValue::ErrorType`。没有默认值，调用时必须提供。传入 `QJSValue::ErrorType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+```cpp
+ // Assuming that DataEntry is a QObject-derived class that has been
+ // registered as a singleton type and provides an invokable method
+ // setAge().
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void DataEntry::setAge(int age) {
+   if (age < 0 || age > 200) {
+     jsEngine->throwError(QJSValue::RangeError,
+                          "Age must be between 0 and 200");
+   }
+   ...
+ }
+```
 
 ### `template <typename T> QJSManagedValue QJSEngine::toManagedValue(const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toManagedValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QJSManagedValue`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与给定`value`形成`QJSManagedValue`。
 
 ### `template <typename T> QJSPrimitiveValue QJSEngine::toPrimitiveValue(const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toPrimitiveValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QJSPrimitiveValue`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与给定`value`形成`QJSPrimitiveValue`。
+由于`QJSPrimitiveValue`只能保留int、bool、double、`QString`，以及JavaScript的等效代码`null`和`undefined`，如果你通过其他类型，这个值会被强迫。
 
 ### `template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toScriptValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QJSValue`。
-- 参数 `value`：类型为 `const T &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+与给定`value`形成`QJSValue`。
 
 ### `QJSEngine *qjsEngine(const QObject *object)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QJSEngine::qjsEngine` 用于计算、查询或取得与“qjs、Engine”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `QJSEngine *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJSEngine *`。
-- 参数 `object`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`object`相关的`QJSEngine`（如果有的话）。
+如果你已经将`QObject`暴露给 JavaScript 环境，并且在程序后期想要重新获得访问权限，这个函数非常有用。它不需要你保留从`QJSEngine::newQObject()`返回的包装器。
 
 ### `enum Extension { TranslationExtension, ConsoleExtension, GarbageCollectionExtension, AllExtensions }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 暴露的类型声明 `Extension`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定通过`installExtensions()`安装的扩展。
+- `QJSEngine::TranslationExtension`：`0x1`;表示应安装翻译函数（例如，像 `qsTr()`）。这也会安装 Qt.`uiLanguage` 属性。
+- `QJSEngine::ConsoleExtension`：`0x2`;表示应安装控制台功能（例如`console.log()`）。
+- `QJSEngine::GarbageCollectionExtension`：`0x4`;表示应安装垃圾回收功能（例如`gc()`）。
+- `QJSEngine::AllExtensions`：`0xffffffff`;表示所有延长部分都应安装。
+翻译扩展。
+脚本翻译函数与C翻译函数之间的关系如下表描述：
+- `Script Function`：对应的C函数
+- `qsTr()`：`QObject::tr()`
+- `QT_TR_NOOP()`：`QT_TR_NOOP()`
+- `qsTranslate()`：`QCoreApplication::translate()`
+- `QT_TRANSLATE_NOOP()`：`QT_TRANSLATE_NOOP()`
+- `qsTrId()`：`qtTrId()`
+- `QT_TRID_NOOP()`：`QT_TRID_NOOP()`
+该标志还为字符串原型添加了一个`arg()`函数。
+更多信息请参见Qt国际化文档。
+控制台扩展。
+控制台对象实现了控制台API的一个子集，该API提供了熟悉的日志功能，如`console.log()`。
+新增的功能列表如下：
+- `console.assert()`
+- `console.debug()`
+- `console.exception()`
+- `console.info()`
+- `console.log()`（相当于`console.debug()`）
+- `console.error()`
+- `console.time()`
+- `console.timeEnd()`
+- `console.trace()`
+- `console.count()`
+- `console.warn()`
+- `print()`（相当于`console.debug()`）
+欲了解更多信息，请参阅控制台API文档。
+垃圾回收扩展。
+`gc()`函数等价于调用`collectGarbage()`。
+扩展类型是QFlag的typedef<Extension>。它存储扩展值的或组合。
 
 ### `flags Extensions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJSEngine` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定通过`installExtensions()`安装的扩展。
+- `QJSEngine::TranslationExtension`：`0x1`;表示应安装翻译函数（例如，像 `qsTr()`）。这也会安装 Qt.`uiLanguage` 属性。
+- `QJSEngine::ConsoleExtension`：`0x2`;表示应安装控制台功能（例如`console.log()`）。
+- `QJSEngine::GarbageCollectionExtension`：`0x4`;表示应安装垃圾回收功能（例如`gc()`）。
+- `QJSEngine::AllExtensions`：`0xffffffff`;表示所有延长部分都应安装。
+翻译扩展。
+脚本翻译函数与C翻译函数之间的关系如下表描述：
+- `Script Function`：对应的C函数
+- `qsTr()`：`QObject::tr()`
+- `QT_TR_NOOP()`：`QT_TR_NOOP()`
+- `qsTranslate()`：`QCoreApplication::translate()`
+- `QT_TRANSLATE_NOOP()`：`QT_TRANSLATE_NOOP()`
+- `qsTrId()`：`qtTrId()`
+- `QT_TRID_NOOP()`：`QT_TRID_NOOP()`
+该标志还为字符串原型添加了一个`arg()`函数。
+更多信息请参见Qt国际化文档。
+控制台扩展。
+控制台对象实现了控制台API的一个子集，该API提供了熟悉的日志功能，如`console.log()`。
+新增的功能列表如下：
+- `console.assert()`
+- `console.debug()`
+- `console.exception()`
+- `console.info()`
+- `console.log()`（相当于`console.debug()`）
+- `console.error()`
+- `console.time()`
+- `console.timeEnd()`
+- `console.trace()`
+- `console.count()`
+- `console.warn()`
+- `print()`（相当于`console.debug()`）
+欲了解更多信息，请参阅控制台API文档。
+垃圾回收扩展。
+`gc()`函数等价于调用`collectGarbage()`。
+扩展类型是QFlag的typedef<Extension>。它存储扩展值的或组合。
 
 ### `void setUiLanguage(const QString &language)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUiLanguage`。调用它会改变 `QJSEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+此属性保存用于翻译用户界面字符串的语言。
+此属性保存用于用户界面字符串翻译的语言名称。当 `QJSEngine::TranslationExtension` 安装到引擎中时，可作为 `Qt.uiLanguage` 进行读写。在 `QQmlEngine` 的实例中始终可用。
+您可以自由设置其值并在绑定中使用。建议在应用程序中安装翻译器后设置。按约定，空字符串表示不打算对源代码使用的语言进行翻译。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `language`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUiLanguage(...)` 修改 `uiLanguage`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QString uiLanguage() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJSEngine::uiLanguage` 用于计算、查询或取得与“ui、Language”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+此属性保存用于翻译用户界面字符串的语言。
+此属性保存用于用户界面字符串翻译的语言名称。当 `QJSEngine::TranslationExtension` 安装到引擎中时，可作为 `Qt.uiLanguage` 进行读写。在 `QQmlEngine` 的实例中始终可用。
+您可以自由设置其值并在绑定中使用。建议在应用程序中安装翻译器后设置。按约定，空字符串表示不打算对源代码使用的语言进行翻译。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `uiLanguage()` 读取当前值；它不会修改应用状态。
 
 ### `void uiLanguageChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `uiLanguageChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+此属性保存用于翻译用户界面字符串的语言。
+此属性保存用于用户界面字符串翻译的语言名称。当 `QJSEngine::TranslationExtension` 安装到引擎中时，可作为 `Qt.uiLanguage` 进行读写。在 `QQmlEngine` 的实例中始终可用。
+您可以自由设置其值并在绑定中使用。建议在应用程序中安装翻译器后设置。按约定，空字符串表示不打算对源代码使用的语言进行翻译。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `uiLanguage` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

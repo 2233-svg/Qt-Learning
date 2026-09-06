@@ -127,667 +127,469 @@ if (!database.open())
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 50 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.8] numericalPrecisionPolicy : QSql::NumericalPrecisionPolicy`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的配置属性。初始化或状态切换时通过 `setNumericalPrecisionPolicy(...)` 设置，之后用 `NumericalPrecisionPolicy()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了在该数据库连接上创建的查询所使用的默认数值精度策略。
+注意：不支持低精度取数值的驱动程序将忽略精度策略。你可以用`QSqlDriver::hasFeature()`来了解驱动程序是否支持此功能。
+注意：将默认精度策略设置为`precisionPolicy`不会影响当前正在进行的任何查询。
 
-**签名拆解：**
-
-- 属性类型：`QSql::NumericalPrecisionPolicy`。
-- 属性名：`numericalPrecisionPolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `numericalPrecisionPolicy()` 读取当前值；它不会修改应用状态。
 
 ### `QSqlDatabase::QSqlDatabase()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个空的、无效的 QSqlDatabase 对象。使用 `addDatabase()`、`removeDatabase()` 和 `database()` 获取有效的 QSqlDatabase 对象。
 
 ### `[explicit protected] QSqlDatabase::QSqlDatabase(QSqlDriver *driver)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `driver`：类型为 `QSqlDriver *`。没有默认值，调用时必须提供。传入 `QSqlDriver *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用给定的`driver`创建数据库连接。
 
 ### `[explicit protected] QSqlDatabase::QSqlDatabase(const QString &type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `const QString &`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个使用 `type` 所引用驱动的 QSqlDatabase 连接。如果未识别`type`，数据库连接将无功能。
+目前可用的驱动类型有：
+- `Driver Type`：描述
+- `QDB2`：IBM DB2
+- `QIBASE`：博兰洲际司机
+- `QMYSQL`：MySQL 驱动
+- `QOCI`：Oracle 调用接口驱动
+- `QODBC`：ODBC 驱动（包含 Microsoft SQL Server）
+- `QPSQL`：PostgreSQL 驱动
+- `QSQLITE`：SQLite 版本 3 及以上
+- `QMIMER`：Mimer SQL 11及以上
+额外的第三方驱动，包括你自己的自定义驱动，都可以动态加载。
 
 ### `QSqlDatabase::QSqlDatabase(const QSqlDatabase &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSqlDatabase &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建`other`副本。
 
 ### `[noexcept] QSqlDatabase::~QSqlDatabase()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放所有分配的资源。
+注意：当最后一个连接被摧毁时，解构器隐式调用`close()`以释放数据库连接。
 
 ### `[static] QSqlDatabase QSqlDatabase::addDatabase(const QString &type, const QString &connectionName = defaultConnectionName())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addDatabase`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSqlDatabase`。
-- 参数 `type`：类型为 `const QString &`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `connectionName`：类型为 `const QString &`。默认值为 `defaultConnectionName()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用驱动程序`type`和连接名称 `connectionName` 向数据库连接列表添加数据库。如果已经存在名为 `connectionName` 的数据库连接，该连接将被移除。
+数据库连接由`connectionName`引用。新添加的数据库连接被返回。
+如果`type`无法使用或无法加载，`isValid()`返回`false`。
+如果未指定`connectionName`，新连接将成为应用程序的默认连接，后续调用`database()`但未包含连接名参数时，将返回默认连接。如果这里提供了`connectionName`，请使用 database（`connectionName`） 检索该连接。
+警告：如果你添加了与现有连接名称相同的连接，新连接将替换旧连接。如果你多次调用该函数且未指定`connectionName`，默认连接将被替换。
+在使用该连接之前，必须先初始化。例如，调用部分或全部`setDatabaseName()`、`setUserName()`、`setPassword()`、`setHostName()`、`setPort()`和`setConnectOptions()`，最后调用`open()`。
+注意：该功能是线程安全的。
 
 ### `[static] QSqlDatabase QSqlDatabase::addDatabase(QSqlDriver *driver, const QString &connectionName = defaultConnectionName())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addDatabase`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+当你想用自己实例化的 `driver` 创建数据库连接时，这种重载非常有用。可能是你自己的数据库驱动，或者你只需要自己实例化一个 Qt 驱动。如果你这样做，建议你在应用程序中包含驱动代码。例如，你可以用自己的 QPSQL 驱动创建一个 PostgreSQL 连接，如下：
+上述代码建立 PostgreSQL 连接并实例化 QPSQLDriver 对象。接着调用 addDatabase() 将连接添加到已知连接中，以便 Qt SQL 类使用。当驱动程序实例化连接句柄（或句柄集合）时，Qt 假设你已经打开了数据库连接。
+注意：我们假设`qtdir`是 Qt 安装的目录。这会拉取使用 PostgreSQL 客户端库和实例化 QPSQLDriver 对象所需的代码，前提是你的 include 搜索路径中有 PostgreSQL 的头部。
+记住，你必须将应用与数据库客户端库关联。确保客户端库在链接器的搜索路径中，并在`.pro`文件中添加类似这样的行：
+所述方法适用于所有提供的驱动程序。唯一的区别在于驱动程序构造函数参数。以下是随Qt附带的驱动程序、其源代码文件及构造函数参数的表格：
+- `Driver`：类名;构造函数参数;包含的文件
+- `QPSQL`：QPSQLDriver;PGconn *连接;`qsql_psql.cpp`
+- `QMYSQL`：QMYSQLDriver;MYSQL *连接;`qsql_mysql.cpp`
+- `QOCI`：QOCIDriver;OCIEnv *环境，OCISvcCtx *服务上下文;`qsql_oci.cpp`
+- `QODBC`：QODBCDriver;SQLHANDLE 环境，SQLHANDLE 连接;`qsql_odbc.cpp`
+- `QDB2`：QDB2;SQLHANDLE 环境，SQLHANDLE 连接;`qsql_db2.cpp`
+- `QSQLITE`：QSQLite驱动;sqlite *连接;`qsql_sqlite.cpp`
+- `QMIMER`：QMimerSQLDriver;MimerSession *连接;`qsql_mimer.cpp`
+- `QIBASE`：QIBaseDriver;isc_db_handle连接;`qsql_ibase.cpp`
+警告：添加与现有连接名称相同的数据库连接，会导致现有连接被新的连接替换。
+警告：SQL 框架会对`driver`拥有权。它不得被删除。要移除连接，请使用 `removeDatabase()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QSqlDatabase`。
-- 参数 `driver`：类型为 `QSqlDriver *`。没有默认值，调用时必须提供。传入 `QSqlDriver *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `connectionName`：类型为 `const QString &`。默认值为 `defaultConnectionName()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ PGconn *con = PQconnectdb("host=server user=bart password=simpson dbname=springfield");
+ QPSQLDriver *drv = new QPSQLDriver(con);
+ QSqlDatabase db = QSqlDatabase::addDatabase(drv); // becomes the new default connection
+ QSqlQuery query;
+ query.exec("SELECT NAME, ID FROM STAFF");
+```
 
 ### `[static] QSqlDatabase QSqlDatabase::cloneDatabase(const QSqlDatabase &other, const QString &connectionName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `cloneDatabase`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSqlDatabase`。
-- 参数 `other`：类型为 `const QSqlDatabase &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-- 参数 `connectionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+克隆数据库连接`other`并存储为`connectionName`。原始数据库的所有设置，如`databaseName()`、`hostName()`等，都会被复制过来。如果`other`是无效数据库，则无效。返回新创建的数据库连接。
+注意：新连接尚未开启。使用新连接前，您必须先联系`open()`。
+注意：该函数是重入函数。
 
 ### `[static] QSqlDatabase QSqlDatabase::cloneDatabase(const QString &other, const QString &connectionName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `cloneDatabase`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSqlDatabase`。
-- 参数 `other`：类型为 `const QString &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-- 参数 `connectionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+克隆数据库连接 `other`并存储为 `connectionName`。原始数据库中的所有设置，例如 `databaseName()`、`hostName()` 等，都会被复制到此中。如果`other`是无效数据库，则无效。返回新创建的数据库连接。
+注意：新连接尚未开通。使用新连接前，您必须先调用`open()`。
+这种重载在将另一个线程中的数据库克隆到由`other`表示的数据库使用的线程时非常有用。
 
 ### `void QSqlDatabase::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭数据库连接，释放所有已获得的资源，并使所有与数据库共用的现有`QSqlQuery`对象失效。
+这也会影响该`QSqlDatabase`对象的副本。
 
 ### `bool QSqlDatabase::commit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::commit` 用于计算、查询或取得与“提交”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果驱动程序支持事务且已启动`transaction()`，则向数据库提交事务。如果操作成功，返回`true`。否则返回`false`。
+注意：对于某些数据库，如果数据库有活跃查询`SELECT`，提交会失败并返回`false`。在提交前先`inactive`查询。
+请致电`lastError()`获取有关错误的信息。
 
 ### `QString QSqlDatabase::connectOptions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectOptions`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于该连接的连接选项字符串。字符串可能是空的。
 
 ### `QString QSqlDatabase::connectionName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectionName`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接名，可能为空。
+注意：连接名称不是数据库名称。
 
 ### `[static] QStringList QSqlDatabase::connectionNames()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `connectionNames`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含所有连接名称的列表。
+注意：该功能是线程安全的。
 
 ### `[static] bool QSqlDatabase::contains(const QString &connectionName = defaultConnectionName())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `contains`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `connectionName`：类型为 `const QString &`。默认值为 `defaultConnectionName()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数据库连接列表包含`connectionName`，返回`true`;否则返回`false`。
+注意：该功能是线程安全的。
 
 ### `[static] QSqlDatabase QSqlDatabase::database(const QString &connectionName = defaultConnectionName(), bool open = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `database`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSqlDatabase`。
-- 参数 `connectionName`：类型为 `const QString &`。默认值为 `defaultConnectionName()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `open`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回名为`connectionName`的数据库连接。数据库连接必须是之前随`addDatabase()`添加的。如果`open`为真（默认），且数据库连接尚未打开，现在就打开连接。如果未指定`connectionName`，则使用默认连接。如果数据库列表中不存在`connectionName`，则返回无效连接。
+注意：该功能是线程安全的。
 
 ### `QString QSqlDatabase::databaseName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::databaseName` 用于计算、查询或取得与“database、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接的数据库名称，可能为空。
+注意：数据库名称不是连接名称。
 
 ### `QSqlDriver *QSqlDatabase::driver() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::driver` 用于计算、查询或取得与“driver”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlDriver *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlDriver *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于访问数据库连接的数据库驱动程序。
 
 ### `QString QSqlDatabase::driverName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::driverName` 用于计算、查询或取得与“driver、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接的驱动程序名称。
 
 ### `[static] QStringList QSqlDatabase::drivers()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `drivers`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有可用数据库驱动程序的列表。
 
 ### `QString QSqlDatabase::hostName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::hostName` 用于计算、查询或取得与“host、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接的主机名;可能是空的。
 
 ### `[static] bool QSqlDatabase::isDriverAvailable(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isDriverAvailable`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有名为`name`的司机可用，则返回`true`;否则返回`false`。
 
 ### `bool QSqlDatabase::isOpen() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOpen`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数据库连接当前开放，返回`true`;否则返回`false`。
 
 ### `bool QSqlDatabase::isOpenError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOpenError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数据库连接中出现错误，返回`true`;否则返回`false`。错误信息可以通过`lastError()`函数检索。
 
 ### `bool QSqlDatabase::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果 `QSqlDatabase` 有有效的驱动程序，则返回 `true`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
+```cpp
+ QSqlDatabase db;
+ qDebug() << db.isValid();    // Returns false
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ db = QSqlDatabase::database("sales");
+ qDebug() << db.isValid();    // Returns \c true if "sales" connection exists
+
+ QSqlDatabase::removeDatabase("sales");
+ qDebug() << db.isValid();    // Returns false
+```
 
 ### `QSqlError QSqlDatabase::lastError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::lastError` 用于计算、查询或取得与“末项、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数据库上最后一次发生错误的信息。
+与单个查询相关的失败由`QSqlQuery::lastError()`报告。
 
 ### `[since 6.8] bool QSqlDatabase::moveToThread(QThread *targetThread)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::moveToThread` 用于计算、查询或取得与“移动、转换输出、Thread”相关的操作。调用时要先确认当前状态和 `targetThread` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `targetThread`：类型为 `QThread *`。没有默认值，调用时必须提供。传入 `QThread *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+改变`QSqlDatabase`及其相关驱动的线程亲和力。该函数成功时返回`true`。事件处理将在`targetThread`中继续。
+在此操作过程中，你必须确保该实例没有绑定`QSqlQuery`，否则`QSqlDatabase`不会被移动到给定线程，函数返回`false`。
+由于关联驱动源自`QObject`，所有将 `QObject` 移动到另一个线程的约束也适用于该函数。
 
 ### `QSql::NumericalPrecisionPolicy QSqlDatabase::numericalPrecisionPolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::numericalPrecisionPolicy` 用于计算、查询或取得与“numerical、Precision、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSql::NumericalPrecisionPolicy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSql::NumericalPrecisionPolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 numicalPrecisionPolicy。
+注意：属性 numericalPrecisionPolicy 的获取函数。
 
 ### `bool QSqlDatabase::open()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用当前连接值打开数据库连接。成功时返回`true`;否则返回`false`。错误信息可以通过`lastError()`检索。
 
 ### `bool QSqlDatabase::open(const QString &user, const QString &password)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `user`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `password`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用给定的`user`名和`password`打开数据库连接。成功时返回`true`;否则返回`false`。错误信息可以通过`lastError()`函数检索。
+该函数不存储所获得的密码。相反，密码会直接传递给驱动程序以打开连接，然后将其丢弃。
 
 ### `QString QSqlDatabase::password() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::password` 用于计算、查询或取得与“password”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接的密码。如果密码未设置`setPassword()`，且密码是在 `open()` 调用中提供的，或未使用密码，则返回空字符串。
 
 ### `int QSqlDatabase::port() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::port` 用于计算、查询或取得与“port”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接的端口号。如果端口号未设置，该值为未定义。
 
 ### `QSqlIndex QSqlDatabase::primaryIndex(const QString &tablename) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::primaryIndex` 用于计算、查询或取得与“primary、索引”相关的操作。调用时要先确认当前状态和 `tablename` 的有效范围；返回类型是 `QSqlIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlIndex`。
-- 参数 `tablename`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表`tablename`的主索引。如果不存在主索引，则返回空`QSqlIndex`。
+注意：如果创建时表格未被引用，某些驱动程序（如 QPSQL 驱动程序）可能需要你用小写字母传递`tablename`。更多信息请参见 Qt SQL 驱动文档。
 
 ### `QSqlRecord QSqlDatabase::record(const QString &tablename) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::record` 用于计算、查询或取得与“record”相关的操作。调用时要先确认当前状态和 `tablename` 的有效范围；返回类型是 `QSqlRecord`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlRecord`。
-- 参数 `tablename`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个包含表（或视图）中所有字段名称的`QSqlRecord`，称为 `tablename`。字段在记录中的出现顺序未定义。如果不存在这样的表（或视图），则返回一个空记录。
+注意：某些驱动程序，如 QPSQL 驱动，如果创建时表未引用，可能需要你用小写传递`tablename`。更多信息请参见 Qt SQL 驱动文档。
 
 ### `[static] void QSqlDatabase::registerSqlDriver(const QString &name, QSqlDriverCreatorBase *creator)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerSqlDriver`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+这个函数在SQL框架内注册了一个新的SQL驱动，称为`name`。如果你有自定义SQL驱动，不想编译成插件，这非常有用。
+`QSqlDatabase`会拥有`creator`指针的所有权，所以你不能自己删除它。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `creator`：类型为 `QSqlDriverCreatorBase *`。没有默认值，调用时必须提供。传入 `QSqlDriverCreatorBase *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSqlDatabase::registerSqlDriver("MYDRIVER", new QSqlDriverCreator<QSqlDriver>);
+ QVERIFY(QSqlDatabase::drivers().contains("MYDRIVER"));
+ QSqlDatabase db = QSqlDatabase::addDatabase("MYDRIVER");
+ QVERIFY(db.isValid());
+```
 
 ### `[static] void QSqlDatabase::removeDatabase(const QString &connectionName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `removeDatabase`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+将数据库连接`connectionName`从数据库连接列表中移除。
+警告：调用该函数时，数据库连接不应有未开查询，否则将发生资源泄漏。
+正确的做法是：
+要移除默认连接，该连接可能是通过调用`addDatabase()`未指定连接名称创建的，您可以通过调用`database()`返回的数据库中的 `connectionName()` 来获取默认连接名称。注意，如果没有创建默认数据库，将返回无效数据库。
+注意：该功能是线程安全的。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `connectionName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // WRONG
+ QSqlDatabase db = QSqlDatabase::database("sales");
+ QSqlQuery query("SELECT NAME, DOB FROM EMPLOYEES", db);
+ QSqlDatabase::removeDatabase("sales"); // will output a warning
+ // "db" is now a dangling invalid database connection,
+ // "query" contains an invalid result set
+```
 
 ### `bool QSqlDatabase::rollback()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::rollback` 用于计算、查询或取得与“rollback”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果驱动程序支持事务且已启动`transaction()`，则回滚数据库中的事务。返回`true`操作是否成功。否则返回`false`。
+注意：对于某些数据库，如果数据库中有活跃查询进行`SELECT`，回滚会失败并返回`false`。在回滚前先`inactive`查询。
+请致电`lastError()`获取有关错误的信息。
 
 ### `void QSqlDatabase::setConnectOptions(const QString &options = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setConnectOptions`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置数据库特定的`options`。必须在打开连接前完成，否则无效。另一种可能是关闭连接，调用QSqlDatabase：：setConnectOptions()，然后再次`open()`连接。
+`options`字符串的格式是用分号分隔的选项名称列表或option=value对。选项取决于所使用的数据库客户端，并在SQL数据库驱动程序页面中描述了每个插件。
+示例：
+请参阅客户端库文档以获取关于不同选项的更多信息。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `options`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ db.setConnectOptions("SSL_KEY=client-key.pem;SSL_CERT=client-cert.pem;SSL_CA=ca-cert.pem;CLIENT_IGNORE_SPACE=1"); // use an SSL connection to the server
+ if (!db.open()) {
+     db.setConnectOptions(); // clears the connect option string
+     // ...
+ }
+ // ...
+ // PostgreSQL connection
+ db.setConnectOptions("requiressl=1"); // enable PostgreSQL SSL connections
+ if (!db.open()) {
+     db.setConnectOptions(); // clear options
+     // ...
+ }
+ // ...
+ // ODBC connection
+ db.setConnectOptions("SQL_ATTR_ACCESS_MODE=SQL_MODE_READ_ONLY;SQL_ATTR_TRACE=SQL_OPT_TRACE_ON"); // set ODBC options
+ if (!db.open()) {
+     db.setConnectOptions(); // don't try to set this option
+     // ...
+ }
+ }
+```
 
 ### `void QSqlDatabase::setDatabaseName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDatabaseName`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将连接的数据库名称设置为`name`。要生效，必须在连接`opened`之前设置数据库名称。或者，你可以`close()`连接，设置数据库名称，然后再次调用`open()`。
+注意：数据库名称不是连接名称。连接名称必须在连接对象创建时传递给`addDatabase()`。
+对于QSLITE驱动，如果数据库名称不存在，除非设置了QSQLITE_OPEN_READONLY选项，否则它会帮你创建文件。
+此外，`name` 可以设置为 `":memory:"`，这会创建一个临时数据库，仅在应用的生命周期内可用。
+对于QOCI（Oracle）驱动程序，数据库名称是TNS服务名称。
+对于 QODBC 驱动程序，`name`可以是 DSN、DSN 文件名（此时文件必须有 `.dsn` 扩展名）或连接字符串。
+例如，Microsoft Access 用户可以使用以下连接字符串直接打开 `.mdb` 文件，而无需在 ODBC 管理器中创建 DSN 条目：
+没有默认值。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // ...
+ QSqlDatabase db = QSqlDatabase::addDatabase("QODBC");
+ db.setDatabaseName("DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};FIL={MS Access};DBQ=myaccessfile.mdb");
+ if (db.open()) {
+     // success!
+ }
+ // ...
+```
 
 ### `void QSqlDatabase::setHostName(const QString &host)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHostName`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `host`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接的主机名设置为`host`。要生效，必须在连接`opened`之前设置好主机名。或者，你可以`close()`连接，设置主机名，然后再次调用`open()`。
+没有默认值。
 
 ### `void QSqlDatabase::setNumericalPrecisionPolicy(QSql::NumericalPrecisionPolicy precisionPolicy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNumericalPrecisionPolicy`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了在该数据库连接上创建的查询所使用的默认数值精度策略。
+注意：不支持低精度取数值的驱动程序将忽略精度策略。你可以用`QSqlDriver::hasFeature()`来了解驱动程序是否支持此功能。
+注意：将默认精度策略设置为`precisionPolicy`不会影响当前正在进行的任何查询。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `precisionPolicy`：类型为 `QSql::NumericalPrecisionPolicy`。没有默认值，调用时必须提供。传入 `QSql::NumericalPrecisionPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNumericalPrecisionPolicy(...)` 修改 `numericalPrecisionPolicy`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QSqlDatabase::setPassword(const QString &password)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPassword`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `password`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接密码设置为`password`。要生效，密码必须在连接`opened`之前设置好。或者，你可以`close()`连接，设置密码，然后再次调用`open()`。
+没有默认值。
+警告：该函数将密码以明文形式存储在 Qt 中。请使用以密码为参数的 `open()` 调用以避免此行为。
 
 ### `void QSqlDatabase::setPort(int port)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPort`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `port`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接的端口号设置为`port`。要生效，端口号必须在连接`opened`之前设置好。或者，你也可以`close()`连接，设置端口号，然后再次调用`open()`......
+没有默认值。
 
 ### `void QSqlDatabase::setUserName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUserName`。调用它会改变 `QSqlDatabase` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将连接的用户名设置为`name`。要生效，必须在连接`opened`之前设置好用户名。或者，你可以`close()`连接，设置用户名，然后再次调用`open()`。
+没有默认值。
 
 ### `QStringList QSqlDatabase::tables(QSql::TableType type = QSql::Tables) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::tables` 用于计算、查询或取得与“tables”相关的操作。调用时要先确认当前状态和 `type` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `type`：类型为 `QSql::TableType`。默认值为 `QSql::Tables`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数据库的表、系统表和视图列表，按照参数`type`指定。
 
 ### `[since 6.8] QThread *QSqlDatabase::thread() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::thread` 用于计算、查询或取得与“thread”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QThread *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QThread *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向关联的`QThread`实例的指针。
 
 ### `bool QSqlDatabase::transaction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::transaction` 用于计算、查询或取得与“transaction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果驱动程序支持事务，则在数据库上启动事务。如果操作成功，返回`true`。否则返回`false`。
 
 ### `QString QSqlDatabase::userName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDatabase::userName` 用于计算、查询或取得与“user、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接的用户名;可能是空的。
 
 ### `QSqlDatabase &QSqlDatabase::operator=(const QSqlDatabase &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDatabase` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSqlDatabase &`。
-- 参数 `other`：类型为 `const QSqlDatabase &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该对象分配`other`。
 
 ## 6. 深入实践与常见坑
 

@@ -58,89 +58,47 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QSSGCameraId QSSGFrameData::activeCamera() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGFrameData::activeCamera` 用于计算、查询或取得与“活动状态、Camera”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSSGCameraId`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSSGCameraId`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景的活动摄像机，若找不到则返回空摄像机。
 
 ### `QSSGNodeIdList QSSGFrameData::getLayerNodes(QSSGCameraId cameraId, QSSGFrameData::TypeMask typeMask = NodeMask) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGFrameData` 的核心操作 `getLayerNodes`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSSGNodeIdList`。
-- 参数 `cameraId`：类型为 `QSSGCameraId`。没有默认值，调用时必须提供。传入 `QSSGCameraId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeMask`：类型为 `QSSGFrameData::TypeMask`。默认值为 `NodeMask`。传入 `QSSGFrameData::TypeMask` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`cameraId`与`typeMask`匹配的图层节点列表。如果相机没有图层遮罩，则返回一个空列表。
 
 ### `QSSGNodeIdList QSSGFrameData::getLayerNodes(quint32 layerMask, QSSGFrameData::TypeMask typeMask = NodeMask) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGFrameData` 的核心操作 `getLayerNodes`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSSGNodeIdList`。
-- 参数 `layerMask`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeMask`：类型为 `QSSGFrameData::TypeMask`。默认值为 `NodeMask`。传入 `QSSGFrameData::TypeMask` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回：与`layerMask`和`typeMask`匹配的层节点列表。
 
 ### `QSSGRhiGraphicsPipelineState QSSGFrameData::getPipelineState() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGFrameData` 的核心操作 `getPipelineState`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSSGRhiGraphicsPipelineState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该帧的基础流水线状态。
 
 ### `QSSGFrameData::Result QSSGFrameData::getRenderResult(QSSGFrameData::RenderResult id) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGFrameData` 的核心操作 `getRenderResult`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSSGFrameData::Result`。
-- 参数 `id`：类型为 `QSSGFrameData::RenderResult`。没有默认值，调用时必须提供。传入 `QSSGFrameData::RenderResult` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可渲染的纹理结果来自`id`。`nullptr`如果没有匹配的`id`。
+注意：即使函数返回非空结果，返回的QSSGRhiRenderableTexture可能还没准备好，除非对纹理进行渲染传递。
+注意：返回的值仅在当前帧内有效。每增加一帧，可渲染帧都会被重置，因此应再次查询。
 
 ### `void QSSGFrameData::scheduleRenderResults(QSSGFrameData::RenderResults results) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGFrameData::scheduleRenderResults` 用于执行与“schedule、渲染、Results”相关的操作。调用时要先确认当前状态和 `results` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `results`：类型为 `QSSGFrameData::RenderResults`。没有默认值，调用时必须提供。传入 `QSSGFrameData::RenderResults` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安排该框架提供给定的`results`。
+该函数应仅在`QSSGRenderExtension::prepareData()`的准备阶段调用。
+注意：如果底层不支持请求的结果，或者该层不包含任何需要生成请求结果的数据，`getRenderResult()`返回的可能不会显示。
 
 ## 6. 深入实践与常见坑
 

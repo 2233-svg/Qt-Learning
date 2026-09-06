@@ -98,304 +98,231 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 22 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QFontDialog::FontDialogOptionflags QFontDialog::FontDialogOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 暴露的类型声明 `字体、Dialog、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FontDialogOptionflags QFontDialog::FontDialogOptions`。
-- 属性名：`QFontDialog`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举指定了影响字体对话框外观和感觉的各种选项。
+例如，它允许指定显示哪种字体类型。如果未指定字体，所有可用字体都会被列出。
+请注意，字体过滤选项可能在某些平台（如 Mac）不支持。非原生对话框（在 Windows 或 Linux 上使用）始终支持这些选项。
+- `QFontDialog::NoButtons`：`0x00000001`;不显示确定和取消按钮。（对“实时对话”非常有用。）
+- `QFontDialog::DontUseNativeDialog`：`0x00000002`;在 Mac 上使用 Qt 的标准字体对话框，而非苹果原生字体面板。
+- `QFontDialog::ScalableFonts`：`0x00000004`;显示可扩展字体
+- `QFontDialog::NonScalableFonts`：`0x00000008`;显示不可扩展字体
+- `QFontDialog::MonospacedFonts`：`0x00000010`;显示等宽字体
+- `QFontDialog::ProportionalFonts`：`0x00000020`;显示比例字体
+FontDialogOptions 类型是 QFlags 的 typedef<FontDialogOption>。它存储 FontDialogOption 值的 OR 组合。
 
 ### `currentFont : QFont`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 的配置属性。初始化或状态切换时通过 `setCurrentFont(...)` 设置，之后用 `currentFont()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含当前对话的字体。
 
-**签名拆解：**
-
-- 属性类型：`QFont`。
-- 属性名：`currentFont`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentFont()` 读取当前值；它不会修改应用状态。
 
 ### `options : FontDialogOptions`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 的配置属性。初始化或状态切换时通过 `setOptions(...)` 设置，之后用 `options()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含影响对话视觉和感觉的各种选项。
+默认情况下，所有选项都是被禁用的。
+选项应在显示对话框前设置好。对话框可见时设置选项不保证会立即对对话框产生影响（具体取决于选项和平台）。
 
-**签名拆解：**
-
-- 属性类型：`FontDialogOptions`。
-- 属性名：`options`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `options()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QFontDialog::QFontDialog(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建标准字体对话框。
+用`setCurrentFont()`设置初始字体属性。
+`parent`参数传递给`QDialog`构造器。
 
 ### `[explicit] QFontDialog::QFontDialog(const QFont &initial, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `initial`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`和指定的`initial`字体构建标准字体对话框。
 
 ### `[override virtual protected] void QFontDialog::changeEvent(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontDialog::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QWidget::changeEvent`（QEvent *事件）。
+该事件处理程序可以重新实现以处理状态变化。
+该事件中被更改的状态可以通过提供的`event`检索。
+变更事件包括：`QEvent::ToolBarChange`、`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::WindowTitleChange`、`QEvent::IconTextChange`、`QEvent::ModifiedChange`、`QEvent::MouseTrackingChange`、`QEvent::ParentChange`、`QEvent::WindowStateChange`、`QEvent::LanguageChange`、`QEvent::LocaleChange`、`QEvent::LayoutDirectionChange`、`QEvent::ReadOnlyChange`。
 
 ### `QFont QFontDialog::currentFont() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontDialog::currentFont` 用于计算、查询或取得与“当前、字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前字体。
+注意：当前字体属性的获取函数。
 
 ### `[signal] void QFontDialog::currentFontChanged(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 发出的通知信号 `currentFontChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含当前对话的字体。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `currentFont` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual protected] void QFontDialog::done(int result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontDialog::done` 用于执行与“done”相关的操作。调用时要先确认当前状态和 `result` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `result`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QDialog::done`（int r）。
+关闭对话并将其结果代码设置为`result`。如果该对话显示为`exec()`，done() 会导致本地事件循环结束，`exec()`返回`result`。
+关闭对话并将结果码设置为`r`。`finished()`信号会发出`r`;如果`r`是`QDialog::Accepted`或`QDialog::Rejected`，则分别会发出`accepted()`或`rejected()`信号。
+如果该对话显示为`exec()`，done() 也会使本地事件循环结束，`exec()`返回`r`。
+与`QWidget::close()`一样，如果设置了`Qt::WA_DeleteOnClose`标志，done() 会删除对话。如果对话框是应用程序的主控件，应用程序会终止。如果对话框是最后关闭的窗口，则发出`QGuiApplication::lastWindowClosed()`信号。
 
 ### `[signal] void QFontDialog::fontSelected(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 发出的通知信号 `fontSelected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当字体被选中时，会发出该信号。所选字体在`font`中指定。
+只有当用户选择了最终要使用的字体时，才会发出该信号。在用户在字体对话框中更改当前字体时，信号不会发出。
 
 ### `[static] QFont QFontDialog::getFont(bool *ok, const QFont &initial, QWidget *parent = nullptr, const QString &title = QString(), QFontDialog::FontDialogOptions options = FontDialogOptions())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getFont`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+执行模态字体对话框并返回字体。
+如果用户点击确定，所选字体会返回。如果用户点击取消，则返回`initial`字体。
+对话由给定的`parent`和`options`中指定的选项构成。`title` 作为对话框的窗口标题显示，`initial` 是最初选择的字体。如果 `ok` 参数不是空的，用户点击确定时所指值设为真，点击取消则设为假。
+示例：
+该对话框也可以直接设置小部件的字体：
+在这个例子中，如果用户点击确定，则使用他们选择的字体;如果点击取消，则使用原字体。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QFont`。
-- 参数 `ok`：类型为 `bool *`。没有默认值，调用时必须提供。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `initial`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `title`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `options`：类型为 `QFontDialog::FontDialogOptions`。默认值为 `FontDialogOptions()`。传入 `QFontDialog::FontDialogOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool ok;
+ QFont font = QFontDialog::getFont(&ok, QFont("Times", 12), this);
+ if (ok) {
+     // font is set to the font the user selected
+ } else {
+     // the user canceled the dialog; font is set to the initial
+     // value, in this case Times, 12.
+ }
+```
 
 ### `[static] QFont QFontDialog::getFont(bool *ok, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getFont`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+执行模态字体对话框并返回字体。
+如果用户点击确定，则返回所选字体。如果用户点击取消，则返回 Qt 默认字体。
+对话是基于给定的 `parent` 构建的。如果 `ok` 参数不是空，则当用户点击确定时，所指值设置为真;如果用户点击取消，则设为假。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QFont`。
-- 参数 `ok`：类型为 `bool *`。没有默认值，调用时必须提供。传入 `bool *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool ok;
+ QFont font = QFontDialog::getFont(&ok, this);
+ if (ok) {
+     // font is set to the font the user selected
+ } else {
+     // the user canceled the dialog; font is set to the default
+     // application font, QApplication::font()
+ }
+```
 
 ### `void QFontDialog::open(QObject *receiver, const char *member)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `receiver`：类型为 `QObject *`。没有默认值，调用时必须提供。接收者对象。它决定槽函数所属线程和连接生命周期，必须在回调使用期间有效。
-- 参数 `member`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+打开对话，并将其`fontSelected()`信号连接到`receiver`和`member`指定的槽位。
+当对话关闭时，信号会从槽函数中断开。
 
 ### `QFont QFontDialog::selectedFont() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontDialog::selectedFont` 用于计算、查询或取得与“selected、字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过点击确定或等效按钮返回用户选择的字体。
+注意：该字体不总是与`currentFont`属性所持有的字体相同，因为用户可以在最终选择使用之前选择不同的字体。
 
 ### `void QFontDialog::setCurrentFont(const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentFont`。调用它会改变 `QFontDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含当前对话的字体。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCurrentFont(...)` 修改 `currentFont`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QFontDialog::setOption(QFontDialog::FontDialogOption option, bool on = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOption`。调用它会改变 `QFontDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QFontDialog::FontDialogOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `on`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`option`设为启用，`on`为真;否则，清除给定`option`。
 
 ### `[override virtual] void QFontDialog::setVisible(bool visible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVisible`。调用它会改变 `QFontDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `visible`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QDialog::setVisible`（bool可见）。
+重新实现了属性的访问函数：`QWidget::visible`。
 
 ### `bool QFontDialog::testOption(QFontDialog::FontDialogOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QFontDialog::testOption` 用于计算、查询或取得与“test、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `option`：类型为 `QFontDialog::FontDialogOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用给定`option`，返回 `true`;否则返回 false。
 
 ### `enum FontDialogOption { NoButtons, DontUseNativeDialog, ScalableFonts, NonScalableFonts, MonospacedFonts, ProportionalFonts }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 暴露的类型声明 `字体、Dialog、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举指定了影响字体对话框外观和感觉的各种选项。
+例如，它允许指定显示哪种字体类型。如果未指定字体，所有可用字体都会被列出。
+请注意，字体过滤选项可能在某些平台（如 Mac）不支持。非原生对话框（在 Windows 或 Linux 上使用）始终支持这些选项。
+- `QFontDialog::NoButtons`：`0x00000001`;不显示确定和取消按钮。（对“实时对话”非常有用。）
+- `QFontDialog::DontUseNativeDialog`：`0x00000002`;在 Mac 上使用 Qt 的标准字体对话框，而非苹果原生字体面板。
+- `QFontDialog::ScalableFonts`：`0x00000004`;显示可扩展字体
+- `QFontDialog::NonScalableFonts`：`0x00000008`;显示不可扩展字体
+- `QFontDialog::MonospacedFonts`：`0x00000010`;显示等宽字体
+- `QFontDialog::ProportionalFonts`：`0x00000020`;显示比例字体
+FontDialogOptions 类型是 QFlags 的 typedef<FontDialogOption>。它存储 FontDialogOption 值的 OR 组合。
 
 ### `flags FontDialogOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QFontDialog` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举指定了影响字体对话框外观和感觉的各种选项。
+例如，它允许指定显示哪种字体类型。如果未指定字体，所有可用字体都会被列出。
+请注意，字体过滤选项可能在某些平台（如 Mac）不支持。非原生对话框（在 Windows 或 Linux 上使用）始终支持这些选项。
+- `QFontDialog::NoButtons`：`0x00000001`;不显示确定和取消按钮。（对“实时对话”非常有用。）
+- `QFontDialog::DontUseNativeDialog`：`0x00000002`;在 Mac 上使用 Qt 的标准字体对话框，而非苹果原生字体面板。
+- `QFontDialog::ScalableFonts`：`0x00000004`;显示可扩展字体
+- `QFontDialog::NonScalableFonts`：`0x00000008`;显示不可扩展字体
+- `QFontDialog::MonospacedFonts`：`0x00000010`;显示等宽字体
+- `QFontDialog::ProportionalFonts`：`0x00000020`;显示比例字体
+FontDialogOptions 类型是 QFlags 的 typedef<FontDialogOption>。它存储 FontDialogOption 值的 OR 组合。
 
 ### `QFontDialog::FontDialogOptions options() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QFontDialog::options` 用于计算、查询或取得与“options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFontDialog::FontDialogOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含影响对话视觉和感觉的各种选项。
+默认情况下，所有选项都是被禁用的。
+选项应在显示对话框前设置好。对话框可见时设置选项不保证会立即对对话框产生影响（具体取决于选项和平台）。
 
-**签名拆解：**
-
-- 返回值：`QFontDialog::FontDialogOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `options()` 读取当前值；它不会修改应用状态。
 
 ### `void setOptions(QFontDialog::FontDialogOptions options)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptions`。调用它会改变 `QFontDialog` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含影响对话视觉和感觉的各种选项。
+默认情况下，所有选项都是被禁用的。
+选项应在显示对话框前设置好。对话框可见时设置选项不保证会立即对对话框产生影响（具体取决于选项和平台）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QFontDialog::FontDialogOptions`。没有默认值，调用时必须提供。传入 `QFontDialog::FontDialogOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOptions(...)` 修改 `options`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

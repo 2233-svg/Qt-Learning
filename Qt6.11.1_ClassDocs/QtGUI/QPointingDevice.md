@@ -86,233 +86,157 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPointingDevice::GrabTransition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 暴露的类型声明 `抓取、Transition`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:GrabTransition`。
-- 属性名：`QPointingDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举表示从一个对象（可能是`nullptr`）到另一个对象（可能是`nullptr`）的专属或被动抓取的过渡。它作为`QPointingDevice::grabChanged()`信号的参数发出。
+有效数值如下：
+- `QPointingDevice::GrabExclusive`：`0x10`;`QPointerEvent::setExclusiveGrabber()`后发射。
+- `QPointingDevice::UngrabExclusive`：`0x20`;当抓取器设为`nullptr`时，发出`QPointerEvent::setExclusiveGrabber()`后发出，以通知抓取已正常终止。
+- `QPointingDevice::CancelGrabExclusive`：`0x30`;当抓取器设置为其他物体时，`QPointerEvent::setExclusiveGrabber()`后发出，以通知旧抓取器的抓取被“偷走”。
+- `QPointingDevice::GrabPassive`：`0x01`;在`QPointerEvent::addPassiveGrabber()`后发射。
+- `QPointingDevice::UngrabPassive`：`0x02`;当被动抓斗正常终止时发射，例如`QPointerEvent::removePassiveGrabber()`后。
+- `QPointingDevice::CancelGrabPassive`：`0x03`;当被动抓取异常终止（手势被取消）时发出。
+- `QPointingDevice::OverrideGrabPassive`：`0x04`;该值目前未被使用。
 
 ### `enum class QPointingDevice::PointerTypeflags QPointingDevice::PointerTypes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PointerTypeflags QPointingDevice::PointerTypes`。
-- 属性名：`QPointingDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表与指向设备交互的内容。
+该属性与`QInputDevice::DeviceType`之间存在一定的冗余。例如，如果使用触摸屏，则`DeviceType`为`TouchScreen`，而`PointerType`为`Finger`（始终如此）。但在绘图板上，通常可以同时使用触控笔的两端，程序需要区分它们。因此，该概念被扩展为每个`QPointerEvent`都有一个PointerType，并且可以简化一些事件处理代码，使得忽略DeviceType，并根据仅PointerType的不同做出不同的反应。
+有效数值如下：
+- `QPointingDevice::PointerType::Unknown`：`0`;指针类型未知。
+- `QPointingDevice::PointerType::Generic`：`0x0001`;一个鼠标或类似鼠标的物体（X11 上的 core 指针）。
+- `QPointingDevice::PointerType::Finger`：`0x0002`;使用者的手指。
+- `QPointingDevice::PointerType::Pen`：`0x0004`;笔尖的绘图端。
+- `QPointingDevice::PointerType::Eraser`：`0x0008`;唱针的另一端（如果另一端有虚拟橡皮擦）。
+- `QPointingDevice::PointerType::Cursor`：`0x0010`;一个带有十字线的透明圆圈，类似于`Puck`装置上的。
+- `QPointingDevice::PointerType::AllPointerTypes`：`0x7FFF`;上述任意一种（用作默认滤波器值）。
+PointerTypes 类型是 QFlag 的 typedef<PointerType>。它存储 PointerType 值的 OR 组合。
 
 ### `[read-only] buttonCount : const int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的状态/能力属性。通常通过 `buttonCount()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含了可检测到的最大设备内按钮数量。
 
-**签名拆解：**
-
-- 属性类型：`const int`。
-- 属性名：`buttonCount`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `buttonCount()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] maximumPoints : const int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的状态/能力属性。通常通过 `maximumPoints()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该特性包含了可检测的最大同时触点数（手指）。
 
-**签名拆解：**
-
-- 属性类型：`const int`。
-- 属性名：`maximumPoints`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumPoints()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] pointerType : const PointerType`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的状态/能力属性。通常通过 `pointerType()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+此属性保存指针类型。
 
-**签名拆解：**
-
-- 属性类型：`const PointerType`。
-- 属性名：`pointerType`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `pointerType()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] uniqueId : const QPointingDeviceUniqueId`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的状态/能力属性。通常通过 `uniqueId()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性为该设备保留了唯一的ID（效用存疑）。
+你可能更应该关注的是QPointerEventPoint：：uniqueId()。
 
-**签名拆解：**
-
-- 属性类型：`const QPointingDeviceUniqueId`。
-- 属性名：`uniqueId`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `uniqueId()` 读取当前值；它不会修改应用状态。
 
 ### `QPointingDevice::QPointingDevice(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+作为`parent`的子节点创建一个新的无效指向设备实例。
 
 ### `QPointingDevice::QPointingDevice(const QString &name, qint64 id, QInputDevice::DeviceType deviceType, QPointingDevice::PointerType pointerType, QInputDevice::Capabilities capabilities, int maxPoints, int buttonCount, const QString &seatName = QString(), QPointingDeviceUniqueId uniqueId = QPointingDeviceUniqueId(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `id`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deviceType`：类型为 `QInputDevice::DeviceType`。没有默认值，调用时必须提供。传入 `QInputDevice::DeviceType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pointerType`：类型为 `QPointingDevice::PointerType`。没有默认值，调用时必须提供。传入 `QPointingDevice::PointerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `capabilities`：类型为 `QInputDevice::Capabilities`。没有默认值，调用时必须提供。传入 `QInputDevice::Capabilities` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `maxPoints`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `buttonCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `seatName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `uniqueId`：类型为 `QPointingDeviceUniqueId`。默认值为 `QPointingDeviceUniqueId()`。传入 `QPointingDeviceUniqueId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的指向设备实例，包含给定的`name`、`deviceType`、`pointerType`、`capabilities`、`maxPoints`、`buttonCount`、`seatName`、`uniqueId`和`parent`。
 
 ### `int QPointingDevice::buttonCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointingDevice::buttonCount` 用于计算、查询或取得与“button、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可检测到的最大设备上按钮数量。
+注意：属性buttonCount的Getter函数。
 
 ### `[signal] void QPointingDevice::grabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 发出的通知信号 `grabChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `grabber`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `transition`：类型为 `QPointingDevice::GrabTransition`。没有默认值，调用时必须提供。传入 `QPointingDevice::GrabTransition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `event`：类型为 `const QPointerEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-- 参数 `point`：类型为 `const QEventPoint &`。没有默认值，调用时必须提供。传入 `const QEventPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`grabber`对象在传递`event`时获得或失去专属或被动的`point`抓取时，该信号会发出。`transition`从`grabber`对象的角度讲述发生了什么。
+注意：从一个物体切换到另一个物体时，会产生两个信号，分别通知一个物体失去抓取，以及通知有另一个抓取器存在。在其他情况下，当从非抓取状态过渡到或转换时，只发出一个信号：`grabber`参数永远不会`nullptr`。
 
 ### `int QPointingDevice::maximumPoints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointingDevice::maximumPoints` 用于计算、查询或取得与“最大值、Points”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可检测的最大同时触点数（手指）。
+注意：属性最大点的获取函数。
 
 ### `QPointingDevice::PointerType QPointingDevice::pointerType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointingDevice::pointerType` 用于计算、查询或取得与“pointer、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointingDevice::PointerType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointingDevice::PointerType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指针类型。
+注意：属性指针Type的Getter函数。
 
 ### `[static] const QPointingDevice *QPointingDevice::primaryPointingDevice(const QString &seatName = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `primaryPointingDevice`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QPointingDevice *`。
-- 参数 `seatName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主指针装置（核心指针，传统上被认为是鼠标）在指定座椅`seatName`上。
+如果注册了多个指向设备，该功能会优先选择与给定`seatName`匹配且没有其他设备作为父设备的鼠标或触摸板。通常只有一个主设备或核心设备没有父设备。但如果找不到此类设备，该功能会创建一个新的虚拟“核心指针”鼠标。因此，Qt 继续在尚未进行输入设备发现和注册的平台上工作。
 
 ### `QPointingDeviceUniqueId QPointingDevice::uniqueId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPointingDevice::uniqueId` 用于计算、查询或取得与“unique、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointingDeviceUniqueId`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointingDeviceUniqueId`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它会返回一个设备的唯一ID（实用性存疑）。
+你可能更应该关注的是QPointerEventPoint：：uniqueId()。
+注意：属性 uniqueId 的 Getter 函数。
 
 ### `enum class PointerType { Unknown, Generic, Finger, Pen, Eraser, …, AllPointerTypes }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表与指向设备交互的内容。
+该属性与`QInputDevice::DeviceType`之间存在一定的冗余。例如，如果使用触摸屏，则`DeviceType`为`TouchScreen`，而`PointerType`为`Finger`（始终如此）。但在绘图板上，通常可以同时使用触控笔的两端，程序需要区分它们。因此，该概念被扩展为每个`QPointerEvent`都有一个PointerType，并且可以简化一些事件处理代码，使得忽略DeviceType，并根据仅PointerType的不同做出不同的反应。
+有效数值如下：
+- `QPointingDevice::PointerType::Unknown`：`0`;指针类型未知。
+- `QPointingDevice::PointerType::Generic`：`0x0001`;一个鼠标或类似鼠标的物体（X11 上的 core 指针）。
+- `QPointingDevice::PointerType::Finger`：`0x0002`;使用者的手指。
+- `QPointingDevice::PointerType::Pen`：`0x0004`;笔尖的绘图端。
+- `QPointingDevice::PointerType::Eraser`：`0x0008`;唱针的另一端（如果另一端有虚拟橡皮擦）。
+- `QPointingDevice::PointerType::Cursor`：`0x0010`;一个带有十字线的透明圆圈，类似于`Puck`装置上的。
+- `QPointingDevice::PointerType::AllPointerTypes`：`0x7FFF`;上述任意一种（用作默认滤波器值）。
+PointerTypes 类型是 QFlag 的 typedef<PointerType>。它存储 PointerType 值的 OR 组合。
 
 ### `flags PointerTypes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPointingDevice` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表与指向设备交互的内容。
+该属性与`QInputDevice::DeviceType`之间存在一定的冗余。例如，如果使用触摸屏，则`DeviceType`为`TouchScreen`，而`PointerType`为`Finger`（始终如此）。但在绘图板上，通常可以同时使用触控笔的两端，程序需要区分它们。因此，该概念被扩展为每个`QPointerEvent`都有一个PointerType，并且可以简化一些事件处理代码，使得忽略DeviceType，并根据仅PointerType的不同做出不同的反应。
+有效数值如下：
+- `QPointingDevice::PointerType::Unknown`：`0`;指针类型未知。
+- `QPointingDevice::PointerType::Generic`：`0x0001`;一个鼠标或类似鼠标的物体（X11 上的 core 指针）。
+- `QPointingDevice::PointerType::Finger`：`0x0002`;使用者的手指。
+- `QPointingDevice::PointerType::Pen`：`0x0004`;笔尖的绘图端。
+- `QPointingDevice::PointerType::Eraser`：`0x0008`;唱针的另一端（如果另一端有虚拟橡皮擦）。
+- `QPointingDevice::PointerType::Cursor`：`0x0010`;一个带有十字线的透明圆圈，类似于`Puck`装置上的。
+- `QPointingDevice::PointerType::AllPointerTypes`：`0x7FFF`;上述任意一种（用作默认滤波器值）。
+PointerTypes 类型是 QFlag 的 typedef<PointerType>。它存储 PointerType 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

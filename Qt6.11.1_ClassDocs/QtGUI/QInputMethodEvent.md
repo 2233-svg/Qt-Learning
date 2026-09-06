@@ -72,142 +72,75 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QInputMethodEvent::AttributeType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputMethodEvent` 暴露的类型声明 `Attribute、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AttributeType`。
-- 属性名：`QInputMethodEvent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QInputMethodEvent::TextFormat`：`0`;预编辑字符串中由起始和长度指定的部分的`QTextCharFormat`。值包含一个类型为`QTextFormat`的`QVariant`，指定该部分的渲染。预编辑字符串的每个部分最多应有一种格式。如果字符串中任一字符指定多个格式，则行为未定义。符合规范的实现至少应尊重格式的背景色、文本色和fontUnderline属性。
+- `QInputMethodEvent::Cursor`：`1`;如果设置，预编辑字符串中应显示一个光标，位置起始位置。长度变量决定光标是否可见。长度为0时光标不可见。如果值为`QColor`类型的`QVariant`，则该颜色用于渲染光标，否则使用周围文本的颜色。每个事件最多应有一个光标属性。如果指定多个，则行为未定义。
+- `QInputMethodEvent::Language`：`2`;该变体包含一个`QLocale`对象，指定预编辑字符串某部分的语言。预编辑字符串的每个部分最多应设置一种语言。如果字符串中任一字符指定多个语言，则行为未定义。
+- `QInputMethodEvent::Ruby`：`3`;预编辑字符串部分的 Ruby 文本。预编辑字符串的每个部分最多应设置一个 Ruby 文本。如果字符串中任一字符指定多个 Ruby 文本，则行为未定义。
+- `QInputMethodEvent::Selection`：`4`;如果设置为，编辑光标应移动到编辑器文本内容中指定的位置。与`Cursor`不同，该属性不适用于预编辑文本，而是对周围文本生效。提交字符串提交后，光标会移动，预编辑字符串将位于新的编辑位置。起始位置指定新位置，长度变量可用于从该点开始设置选择。该值未被使用。
+- `QInputMethodEvent::MimeData`：`5`;如果设置为，变体包含一个`QMimeData`对象表示已提交文本。`commitString()`仍然提供提交文本的明文表示。
 
 ### `QInputMethodEvent::QInputMethodEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputMethodEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造类型为`QEvent::InputMethod`的事件。`attributes()`、`preeditString()`、`commitString()`、`replacementStart()`和`replacementLength()`初始化为默认值。
 
 ### `QInputMethodEvent::QInputMethodEvent(const QString &preeditText, const QList<QInputMethodEvent::Attribute> &attributes)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputMethodEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `preeditText`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `attributes`：类型为 `const QList<QInputMethodEvent::Attribute> &`。没有默认值，调用时必须提供。传入 `const QList<QInputMethodEvent::Attribute> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造类型为`QEvent::InputMethod`的事件。预编辑文本设置为`preeditText`，属性设置为`attributes`。
+`commitString()`、`replacementStart()`和`replacementLength()`的数值可以用`setCommitString()`设置。
 
 ### `const QList<QInputMethodEvent::Attribute> &QInputMethodEvent::attributes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputMethodEvent::attributes` 用于计算、查询或取得与“attributes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QList<QInputMethodEvent::Attribute> &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QList<QInputMethodEvent::Attribute> &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回传递给`QInputMethodEvent`构造器的属性列表。属性控制预编辑字符串的视觉外观（预编辑字符串外文本的视觉外观仅由控件控制）。
 
 ### `const QString &QInputMethodEvent::commitString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputMethodEvent::commitString` 用于计算、查询或取得与“提交、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QString &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回应添加（或替换）编辑器控件文本部分内容的文本。这通常是输入操作的结果，必须直接插入到控件文本中，位于预编辑字符串之前。
 
 ### `const QString &QInputMethodEvent::preeditString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputMethodEvent::preeditString` 用于计算、查询或取得与“preedit、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QString &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QString &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回预编辑文本，即用户开始编辑前的文本。
 
 ### `int QInputMethodEvent::replacementLength() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputMethodEvent::replacementLength` 用于计算、查询或取得与“replacement、Length”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回预编辑字符串中需要替换的字符数。
 
 ### `int QInputMethodEvent::replacementStart() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputMethodEvent::replacementStart` 用于计算、查询或取得与“replacement、启动”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从预编辑字符串起始位置，以相对位置替换字符。
 
 ### `void QInputMethodEvent::setCommitString(const QString &commitString, int replaceFrom = 0, int replaceLength = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCommitString`。调用它会改变 `QInputMethodEvent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `commitString`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `replaceFrom`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `replaceLength`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将提交字符串设置为`commitString`。
+提交字符串是应添加（或替换）编辑器控件文本部分内容的文本。它通常是输入操作的结果，必须在预编辑字符串之前直接插入控件文本中。
+如果提交字符串应替换编辑器中的部分文本，`replaceLength` 指定要替换的字符数。`replaceFrom` 指定从预编辑字符串起始起位置，替换字符的位置。
 
 ### `class Attribute`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QInputMethodEvent` 暴露的类型声明 `Attribute`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QInputMethodEvent：：Attribute 类存储输入法属性。
 
 ## 6. 深入实践与常见坑
 

@@ -84,304 +84,154 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 22 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QObjectBindableProperty::QObjectBindableProperty()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有默认构造实例T的属性。
 
 ### `[explicit] template <typename Functor> QObjectBindableProperty::QObjectBindableProperty(Functor &&f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `f`：类型为 `Functor &&`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个与所给绑定表达式绑定的属性`f`。该属性的值被设置为评估新绑定的结果。每当绑定的依赖发生变化时，绑定将被重新评估，属性值也会相应更新。
 
 ### `[explicit] QObjectBindableProperty::QObjectBindableProperty(T &&initialValue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `initialValue`：类型为 `T &&`。没有默认值，调用时必须提供。传入 `T &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用提供的 Move-Constructs 一个属性`initialValue`。
 
 ### `[explicit] QObjectBindableProperty::QObjectBindableProperty(const T &initialValue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `initialValue`：类型为 `const T &`。没有默认值，调用时必须提供。传入 `const T &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用提供的`initialValue`构造一个物业。
 
 ### `[default] QObjectBindableProperty::QObjectBindableProperty(Class *owner, QPropertyBinding<T> &&binding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `owner`：类型为 `Class *`。没有默认值，调用时必须提供。传入 `Class *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `binding`：类型为 `QPropertyBinding<T> &&`。没有默认值，调用时必须提供。传入 `QPropertyBinding<T> &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个与所给`binding`表达式绑定的属性。该属性的值被设置为评估新绑定的结果。每当绑定的依赖发生变化时，绑定将被重新评估，属性值也会相应更新。
+当属性值发生变化时，`owner`会通过回调函数通知。
 
 ### `[default] QObjectBindableProperty::QObjectBindableProperty(Class *owner, const QPropertyBinding<T> &binding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `owner`：类型为 `Class *`。没有默认值，调用时必须提供。传入 `Class *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `binding`：类型为 `const QPropertyBinding<T> &`。没有默认值，调用时必须提供。传入 `const QPropertyBinding<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个与所给`binding`表达式绑定的属性。该属性的值被设置为评估新绑定的结果。每当绑定的依赖发生变化时，绑定将被重新评估，属性值也会相应更新。
+当属性值发生变化时，`owner`会通过回调函数通知。
 
 ### `[default] QObjectBindableProperty::~QObjectBindableProperty()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QObjectBindableProperty` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁坏了属性。
 
 ### `template <typename Functor> QPropertyNotifier QObjectBindableProperty::addNotifier(Functor f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QObjectBindableProperty` 添加依赖、数据或子对象的 API `addNotifier`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyNotifier`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定函子`f`作为回调，每当该属性的值发生变化时调用。
+回调`f`应是一个类型，带有一个普通调用运算符()''，没有任何参数。这意味着你可以提供C lambda表达式、std：：函数，甚至带有调用运算符的自定义结构体。
+返回的属性变更处理对象负责跟踪订阅情况。当订阅超出范围时，回调会被取消订阅。
+在某些情况下，这种方法比 `onValueChanged()` 更易使用，因为返回的对象不是模板。因此它可以更容易存储，例如作为类中的成员。
 
 ### `QPropertyBinding<T> QObjectBindableProperty::binding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `binding`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该属性相关的绑定表达式。<T>如果不存在此类关联，将返回默认构造的QPropertyBinding。
 
 ### `bool QObjectBindableProperty::hasBinding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasBinding`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该属性与绑定相关，则返回真;否则返回为假。
 
 ### `void QObjectBindableProperty::notify()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QObjectBindableProperty::notify` 用于执行与“notify”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+程序化地表示属性的变化。任何依赖该属性的绑定都会被通知，如果属性有信号，则会被发出。
+这与 setValueBypassingBindings 结合使用时非常有用，可以推迟到类不变恢复后才发出变更信号。
+注意：如果该属性具有绑定（即`hasBinding()`返回为真），当调用notify()时该绑定不会被重新评估。任何依赖该属性的绑定仍会像往常一样重新评估。
 
 ### `template <typename Functor> QPropertyChangeHandler<Functor> QObjectBindableProperty::onValueChanged(Functor f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `onValueChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyChangeHandler<Functor>`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定函子`f`注册为回调，每当属性值变化时应调用。每次值变更时，处理程序要么立即调用，要么延迟调用，具体取决于上下文。
+回调`f`预期是一个带有普通调用运算符()''的类型，没有任何参数。这意味着你可以提供C λ表达式、std：：函数，甚至带有调用运算符的自定义结构。
+返回的属性变更处理对象负责跟踪注册情况。当它超出作用域时，回调会被取消注册。
 
 ### `QPropertyBinding<T> QObjectBindableProperty::setBinding(const QPropertyBinding<T> &newBinding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QObjectBindableProperty` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数 `newBinding`：类型为 `const QPropertyBinding<T> &`。没有默认值，调用时必须提供。传入 `const QPropertyBinding<T> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该属性的值与提供的`newBinding`表达式关联，并返回之前关联的绑定。该属性的值被设置为评估新绑定的结果。每当绑定的依赖发生变化，绑定将被重新评估，属性值相应更新。当属性值发生变化时，所有者通过回调函数收到通知。
 
 ### `template <typename Functor> QPropertyBinding<T> QObjectBindableProperty::setBinding(Functor f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QObjectBindableProperty` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyBinding<T>`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该属性的值与所提供的函子 `f` 关联，并返回之前关联的绑定。该属性的值被设置为通过调用运算符 ()'` of `f' 计算新绑定的结果。每当绑定的依赖发生变化时，绑定将被重新评估，属性值相应更新。
+当房产价值发生变化时，业主会通过回调函数收到通知。
 
 ### `bool QObjectBindableProperty::setBinding(const QUntypedPropertyBinding &newBinding)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QObjectBindableProperty` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `newBinding`：类型为 `const QUntypedPropertyBinding &`。没有默认值，调用时必须提供。传入 `const QUntypedPropertyBinding &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该属性的值与提供的`newBinding`表达式关联起来。属性的值被设置为评估新绑定的结果。每当绑定的依赖发生变化时，绑定会被重新评估，属性的值也会相应更新。
+返回 `true` 如果该属性的类型与绑定函数返回的类型相同;否则`false`。
 
 ### `void QObjectBindableProperty::setValue(QObjectBindableProperty<Class, T, Offset, Signal>::rvalue_ref newValue)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValue`。调用它会改变 `QObjectBindableProperty` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newValue`：类型为 `QObjectBindableProperty<Class, T, Offset, Signal>::rvalue_ref`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newValue`赋入该属性，并移除该属性相关的绑定（如存在）。如果属性值因此发生变化，则调用回调函数`owner`。
 
 ### `template <typename Functor> QPropertyChangeHandler<Functor> QObjectBindableProperty::subscribe(Functor f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QObjectBindableProperty::subscribe` 用于计算、查询或取得与“subscribe”相关的操作。调用时要先确认当前状态和 `f` 的有效范围；返回类型是 `template <typename Functor> QPropertyChangeHandler<Functor>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename Functor> QPropertyChangeHandler<Functor>`。
-- 参数 `f`：类型为 `Functor`。没有默认值，调用时必须提供。回调或函数对象。要确认可调用签名、捕获对象生命周期和执行线程，不要在回调中做长时间阻塞工作。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定函子`f`作为回调，立即调用，且每当属性值未来发生变化时。每次值变更时，处理程序要么立即调用，要么延迟调用，具体取决于上下文。
+回调`f`预期是一个类型，带有一个普通调用运算符()''，没有任何参数。这意味着你可以提供一个C λ表达式、一个std：：函数，甚至一个带有调用运算符的自定义结构体。
+返回的属性变更处理对象负责跟踪订阅情况。当订阅超出范围时，回调会被取消订阅。
 
 ### `QPropertyBinding<T> QObjectBindableProperty::takeBinding()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QObjectBindableProperty::takeBinding` 用于计算、查询或取得与“取出、Binding”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPropertyBinding<T>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPropertyBinding<T>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将绑定表达式与该属性分离并返回。调用该函数后，只有当你赋予它新的值或设置新的绑定时，属性的值才会发生变化。
 
 ### `QObjectBindableProperty<Class, T, Offset, Signal>::parameter_type QObjectBindableProperty::value() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QObjectBindableProperty` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QObjectBindableProperty<Class, T, Offset, Signal>::parameter_type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该属性的值。这可能会在返回值之前，评估与该属性相关的绑定表达式。
 
 ### `[since 6.0] Q_OBJECT_BINDABLE_PROPERTY(containingClass, type, name, signal)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QObjectBindableProperty::Q_OBJECT_BINDABLE_PROPERTY` 用于执行与“PROPERTY”相关的操作。调用时要先确认当前状态和 `containingClass`、`type`、`name`、`signal` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `containingClass`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `未标注`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `signal`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在类型为`type`的`containingClass`中声明一个名为`name`的`QObjectBindableProperty`。如果给出可选参数`signal`，当该属性被标记为脏时，该信号将被发出。
+该宏在Qt 6.0中引入。
 
 ### `[since 6.0] Q_OBJECT_BINDABLE_PROPERTY_WITH_ARGS(containingClass, type, name, initialvalue, signal)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QObjectBindableProperty::Q_OBJECT_BINDABLE_PROPERTY_WITH_ARGS` 用于执行与“ARGS”相关的操作。调用时要先确认当前状态和 `containingClass`、`type`、`name`、`initialvalue`、`signal` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `containingClass`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `未标注`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `initialvalue`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signal`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在类型为`type`的`containingClass`中声明一个`QObjectBindableProperty`，名为`name`，初始化为`initialvalue`。如果给出可选参数`signal`，当该属性被标记为脏时，该信号将被发射。
+该宏在Qt 6.0中引入。
 
 ### `void setValue(QObjectBindableProperty<Class, T, Offset, Signal>::parameter_type newValue)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValue`。调用它会改变 `QObjectBindableProperty` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newValue`：类型为 `QObjectBindableProperty<Class, T, Offset, Signal>::parameter_type`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`newValue`赋入该属性，并移除该属性相关的绑定（如存在）。如果属性值因此发生变化，则调用回调函数`owner`。
 
 ## 6. 深入实践与常见坑
 

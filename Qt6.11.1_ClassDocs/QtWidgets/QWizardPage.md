@@ -94,355 +94,280 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 26 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `subTitle : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizardPage` 的配置属性。初始化或状态切换时通过 `setSubTitle(...)` 设置，之后用 `subTitle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了该页面的副标题。
+字幕通过`QWizard`显示，位于标题和实际页面之间。字幕为可选。在`ClassicStyle`和`ModernStyle`中，使用字幕是让标题显示的必要条件。在 `MacStyle` 中，字幕以文本标签的形式显示在实际页面上方。
+副标题可以是纯文本，也可以是HTML，具体取决于`QWizard::subTitleFormat`属性的值。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`subTitle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `subTitle()` 读取当前值；它不会修改应用状态。
 
 ### `title : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizardPage` 的配置属性。初始化或状态切换时通过 `setTitle(...)` 设置，之后用 `title()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了页面的标题。
+标题通过`QWizard`显示，位于实际页面上方。所有页面都应有标题。
+标题可以是纯文本，也可以是HTML格式，具体取决于`QWizard::titleFormat`属性的价值。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`title`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `title()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QWizardPage::QWizardPage(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizardPage` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`构建一个向导页面。
+当页面通过`QWizard::addPage()`或`QWizard::setPage()`插入向导时，父页面会自动被设置为向导。
 
 ### `[virtual noexcept] QWizardPage::~QWizardPage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizardPage` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `QString QWizardPage::buttonText(QWizard::WizardButton which) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::buttonText` 用于计算、查询或取得与“button、文本”相关的操作。调用时要先确认当前状态和 `which` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `which`：类型为 `QWizard::WizardButton`。没有默认值，调用时必须提供。传入 `QWizard::WizardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本页按钮`which`的文字。
+如果文本使用 `setButtonText()` 设置了 ben，则返回该文本。否则，如果文本使用 `QWizard::setButtonText()` 设置，则返回该文本。
+默认情况下，按钮上的文字取决于`QWizard::wizardStyle`。例如，在macOS上，“下一个”按钮叫做“继续”。
 
 ### `[virtual] void QWizardPage::cleanupPage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::cleanupPage` 用于执行与“cleanup、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户通过点击返回离开页面时（除非设置了`QWizard::IndependentPages`选项），`QWizard::cleanupPage()`会调用这个虚拟功能。
+默认实现会将页面字段重置为其原始值（即调用`initializePage()`之前的值）。
 
 ### `[signal] void QWizardPage::completeChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizardPage` 发出的通知信号 `completeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当页面的完整状态（即`isComplete()`值）发生变化时，该信号就会发出。
+如果你重新实现`isComplete()`，确保每当 `isComplete()` 值发生变化时，都发出 completeChanged() `QWizard`，以确保  更新其按钮的启用或禁用状态。
 
 ### `[protected] QVariant QWizardPage::field(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::field` 用于计算、查询或取得与“field”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回称为 `name` 的字段值。该函数可用于访问向导任一页面的字段。它等价于调用 `wizard()`->field（`name`）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVariant`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+         const QString emailAddress = field("details.email").toString();
+         licenseText = tr("<u>First-Time License Agreement:</u> "
+                          "You can use this software subject to the license "
+                          "you will receive by email sent to %1.").arg(emailAddress);
+```
 
 ### `[virtual] void QWizardPage::initializePage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::initializePage` 用于执行与“initialize、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+`QWizard::initializePage()`调用该虚拟函数，在页面显示前准备页面，无论是因`QWizard::restart()`被调用，还是用户点击“Next”。（但如果设置了`QWizard::IndependentPages`选项，该函数仅在页面首次显示时调用。）。
+通过重新实现该函数，你可以确保页面的字段基于之前页面的字段正确初始化。例如：
+默认实现什么都不做。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ void ConclusionPage::initializePage()
+ {
+     QString licenseText;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     if (wizard()->hasVisitedPage(LicenseWizard::Page_Evaluate)) {
+         licenseText = tr("<u>Evaluation License Agreement:</u> "
+                          "You can use this software for 30 days and make one "
+                          "backup, but you are not allowed to distribute it.");
+     } else if (wizard()->hasVisitedPage(LicenseWizard::Page_Details)) {
+         const QString emailAddress = field("details.email").toString();
+         licenseText = tr("<u>First-Time License Agreement:</u> "
+                          "You can use this software subject to the license "
+                          "you will receive by email sent to %1.").arg(emailAddress);
+     } else {
+         licenseText = tr("<u>Upgrade License Agreement:</u> "
+                          "This software is licensed under the terms of your "
+                          "current license.");
+     }
+     bottomLabel->setText(licenseText);
+ }
+```
 
 ### `bool QWizardPage::isCommitPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCommitPage`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该页面是提交页面，返回`true`;否则返回`false`。
 
 ### `[virtual] bool QWizardPage::isComplete() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isComplete`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QWizard`调用该虚拟功能来决定下一步或完成按钮应启用或禁用。
+默认实现返回`true`，如果所有必填字段均已填满;否则返回`false`。
+如果你重构该函数，确保每当isComplete()值变化时，从实现的其他部分发出`completeChanged()`。这确保`QWizard`更新按钮的启用或禁用状态。重实现的示例可见此处。
 
 ### `bool QWizardPage::isFinalPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isFinalPage`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QWizard`调用该函数来判断该页面是否应该显示完成按钮。
+默认情况下，如果没有下一页（即返回`nextId()`返回-1），则返回`true`;否则返回`false`。
+通过明确调用 `setFinalPage`（true），用户可以执行“提前完成”。
 
 ### `[virtual] int QWizardPage::nextId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::nextId` 用于计算、查询或取得与“移动到下一项、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+`QWizard::nextId()`调用该虚拟功能，以确定用户点击“下一步”按钮时应显示的页面。
+返回值为下一页的ID，若无页面后进则为-1。
+默认情况下，该函数返回大于当前页面ID的最低ID，如果没有该ID则返回-1。
+通过重新实现该函数，你可以指定动态页面顺序。例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int IntroPage::nextId() const
+ {
+     if (evaluateRadioButton->isChecked()) {
+         return LicenseWizard::Page_Evaluate;
+     } else {
+         return LicenseWizard::Page_Register;
+     }
+ }
+```
 
 ### `QPixmap QWizardPage::pixmap(QWizard::WizardPixmap which) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::pixmap` 用于计算、查询或取得与“pixmap”相关的操作。调用时要先确认当前状态和 `which` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `which`：类型为 `QWizard::WizardPixmap`。没有默认值，调用时必须提供。传入 `QWizard::WizardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回角色`which`的像素映射集。
+像素映射也可以用`QWizard::setPixmap()`为整个向导设置，这样就适用于所有没有指定像素映射的页面。
 
 ### `[protected] void QWizardPage::registerField(const QString &name, QWidget *widget, const char *property = nullptr, const char *changedSignal = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::registerField` 用于执行与“注册、Field”相关的操作。调用时要先确认当前状态和 `name`、`widget`、`property`、`changedSignal` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `property`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `changedSignal`：类型为 `const char *`。默认值为 `nullptr`。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个称为`name`的场，与给定`widget`的给定`property`相关联。从此，该属性通过`field()`和`setField()`变得可访问。
+字段是全局覆盖整个向导的，使任何单一页面都能轻松访问另一页面存储的信息，无需将所有逻辑放入`QWizard`，也无需页面间明确知道彼此。
+如果`name`以星号（`*`）结尾，则该字段为必填字段。当页面有必填字段时，只有当所有必填字段都填满后，“下一”和/或“结束”按钮才会启用。这需要指定一个`changedSignal`，告诉`QWizard`重新检查强制字段存储的值。
+`QWizard`知道最常见的Qt控件。对于这些（或其子类），你无需指定`property`或`changedSignal`。下表列出了这些控件：
+- `Widget`：属性;变更通知信号
+- `QAbstractButton`：bool `checked`;`toggled()`
+- `QAbstractSlider`：智力`value`;`valueChanged()`
+- `QComboBox`：智力`currentIndex`;`currentIndexChanged()`
+- `QDateTimeEdit`：`QDateTime` `dateTime`;`dateTimeChanged()`
+- `QLineEdit`：`QString` `text`;`textChanged()`
+- `QListWidget`：智力`currentRow`;`currentRowChanged()`
+- `QSpinBox`：智力`value`;`valueChanged()`
+你可以用`QWizard::setDefaultProperty()`向该表添加条目或覆盖已有条目。
+要将字段视为“已填”，`QWizard`只需检查其当前值是否等于原始值（即调用`initializePage()`前的值）。对于`QLineEdit`，还会检查`hasAcceptableInput()`返回为真，以尊重任何验证者或掩码。
+`QWizard`强制字段机制为方便而提供。通过重新实现`QWizardPage::isComplete()`可以绕过。
 
 ### `void QWizardPage::setButtonText(QWizard::WizardButton which, const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setButtonText`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `which`：类型为 `QWizard::WizardButton`。没有默认值，调用时必须提供。传入 `QWizard::WizardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将按钮`which`上的文字设置为`text`于此页面。
+默认情况下，按钮上的文字依赖于`QWizard::wizardStyle`，但可以通过`QWizard::setButtonText()`重新定义整个向导。
 
 ### `void QWizardPage::setCommitPage(bool commitPage)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCommitPage`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `commitPage`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`commitPage`为真，则将该页面设置为提交页面;否则，将其设置为普通页面。
+提交页面表示一个操作，无法通过点击返回或取消来撤销。
+提交按钮取代提交页面上的“下一步”按钮。点击该按钮就像点击下一步一样，直接调用`QWizard::next()`。
+直接从提交页面进入的页面会被禁用“返回”按钮。
 
 ### `[protected] void QWizardPage::setField(const QString &name, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setField`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将称为`name`的字段值设置为`value`。
+该函数可用于在向导的任何页面上设置字段。它等价于调用 `wizard()`->setField（`name`， `value`）。
 
 ### `void QWizardPage::setFinalPage(bool finalPage)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFinalPage`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `finalPage`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`finalPage`为真，明确设置该页面为最终页面。
+调用 setFinalPage（true） 后，`isFinalPage()` 返回 `true`，完成按钮可见（如果 `isComplete()` 返回 true，则启用）。
+调用 setFinalPage（false） 后，`isFinalPage()` 返回 `true`，如果 `nextId()`返回 -1;否则返回 `false`。
 
 ### `void QWizardPage::setPixmap(QWizard::WizardPixmap which, const QPixmap &pixmap)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPixmap`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `which`：类型为 `QWizard::WizardPixmap`。没有默认值，调用时必须提供。传入 `QWizard::WizardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将角色`which`的像素映射设置为`pixmap`。
+像素地图是 `QWizard` 在显示页面时使用的。具体使用哪些像素地图取决于向导的样式。
+像素映射也可以用`QWizard::setPixmap()`为整个向导设置，这样就适用于所有没有指定像素映射的页面。
 
 ### `[virtual] bool QWizardPage::validatePage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validatePage`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户点击“下一步”或“完成”进行最后时刻验证时，`QWizard::validateCurrentPage()`调用了这个虚拟功能。如果返回`true`，下一页就会显示（或向导完成）;否则，当前页面保持在线。
+默认实现返回`true`。
+如果可能，通常禁用 Next 或 Finish 按钮（通过指定强制字段或重新实现 `isComplete()`）比重新实现 validPage() 更合适。
 
 ### `[protected] QWizard *QWizardPage::wizard() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizardPage::wizard` 用于计算、查询或取得与“wizard”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWizard *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWizard *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该页面关联的向导，或者如果该页面尚未入`QWizard`，则返回`nullptr`。
 
 ### `void setSubTitle(const QString &subTitle)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSubTitle`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了该页面的副标题。
+字幕通过`QWizard`显示，位于标题和实际页面之间。字幕为可选。在`ClassicStyle`和`ModernStyle`中，使用字幕是让标题显示的必要条件。在 `MacStyle` 中，字幕以文本标签的形式显示在实际页面上方。
+副标题可以是纯文本，也可以是HTML，具体取决于`QWizard::subTitleFormat`属性的值。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `subTitle`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSubTitle(...)` 修改 `subTitle`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTitle(const QString &title)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTitle`。调用它会改变 `QWizardPage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了页面的标题。
+标题通过`QWizard`显示，位于实际页面上方。所有页面都应有标题。
+标题可以是纯文本，也可以是HTML格式，具体取决于`QWizard::titleFormat`属性的价值。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `title`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTitle(...)` 修改 `title`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QString subTitle() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizardPage::subTitle` 用于计算、查询或取得与“sub、Title”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了该页面的副标题。
+字幕通过`QWizard`显示，位于标题和实际页面之间。字幕为可选。在`ClassicStyle`和`ModernStyle`中，使用字幕是让标题显示的必要条件。在 `MacStyle` 中，字幕以文本标签的形式显示在实际页面上方。
+副标题可以是纯文本，也可以是HTML，具体取决于`QWizard::subTitleFormat`属性的值。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `subTitle()` 读取当前值；它不会修改应用状态。
 
 ### `QString title() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizardPage::title` 用于计算、查询或取得与“title”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含了页面的标题。
+标题通过`QWizard`显示，位于实际页面上方。所有页面都应有标题。
+标题可以是纯文本，也可以是HTML格式，具体取决于`QWizard::titleFormat`属性的价值。
+默认情况下，该属性包含空字符串。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `title()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

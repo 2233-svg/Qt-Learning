@@ -53,24 +53,16 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 1 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[static] void QSSGRenderExtensionHelpers::registerRenderResult(const QSSGFrameData &frameData, QSSGExtensionId extension, QRhiTexture *texture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerRenderResult`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `extension`：类型为 `QSSGExtensionId`。没有默认值，调用时必须提供。传入 `QSSGExtensionId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `texture`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为此`extension`注册一个渲染结果，以纹理的形式。纹理注册后，扩展可以作为QML中的{QtQuick3D：：Texture：：textureProvider}{texture provider}使用。
+注意：为了确保`texture`可用于可渲染对象，例如用于{QtQuick3D：：Texture}项目，纹理应在扩展调用`QSSGRenderExtension::prepareData`时注册。
+注意：用新纹理调用该函数会取消之前注册的任何纹理。要取消注册纹理，请用`nullptr`纹理调用该函数。
+`frameData`。
 
 ## 6. 深入实践与常见坑
 

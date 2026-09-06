@@ -87,243 +87,128 @@ void Widget::paintEvent(QPaintEvent *)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QBrush QPaintEngineState::backgroundBrush() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::backgroundBrush` 用于计算、查询或取得与“background、Brush”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前绘画引擎状态的背景画笔。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyBackground`标志的组合时使用。
 
 ### `Qt::BGMode QPaintEngineState::backgroundMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::backgroundMode` 用于计算、查询或取得与“background、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::BGMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::BGMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前绘画引擎状态的背景模式。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyBackgroundMode`标志的组合时使用。
 
 ### `QBrush QPaintEngineState::brush() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::brush` 用于计算、查询或取得与“brush”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QBrush`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QBrush`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将画笔返回当前的油漆引擎状态。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyBrush`标志的组合时使用。
 
 ### `bool QPaintEngineState::brushNeedsResolving() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::brushNeedsResolving` 用于计算、查询或取得与“brush、Needs、Resolving”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回填充坐标是否被当前渲染操作定义为有界，并需解决（关于当前渲染的原件）。
 
 ### `QPointF QPaintEngineState::brushOrigin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::brushOrigin` 用于计算、查询或取得与“brush、Origin”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将画笔原点返回当前的油漆引擎状态。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyBrushOrigin`标志的组合时使用。
 
 ### `Qt::ClipOperation QPaintEngineState::clipOperation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::clipOperation` 用于计算、查询或取得与“clip、Operation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::ClipOperation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ClipOperation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在当前的绘画引擎状态下返回剪辑操作。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyClipPath`或`QPaintEngine::DirtyClipRegion`标志的组合时使用。
 
 ### `QPainterPath QPaintEngineState::clipPath() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::clipPath` 用于计算、查询或取得与“clip、Path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPainterPath`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前绘制引擎状态下的剪辑路径。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyClipPath`标志的组合时使用。
 
 ### `QRegion QPaintEngineState::clipRegion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::clipRegion` 用于计算、查询或取得与“clip、Region”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegion`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegion`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前绘画引擎状态下的剪辑区域。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyClipRegion`标志的组合时使用。
 
 ### `QPainter::CompositionMode QPaintEngineState::compositionMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::compositionMode` 用于计算、查询或取得与“composition、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPainter::CompositionMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainter::CompositionMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前绘图引擎状态的合成模式。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyCompositionMode`标志的组合时使用。
 
 ### `QFont QPaintEngineState::font() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::font` 用于计算、查询或取得与“字体”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会返回当前的绘图引擎状态的字体。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyFont`标志的组合时使用。
 
 ### `bool QPaintEngineState::isClipEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isClipEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在当前绘制引擎状态下，返回是否启用裁剪。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyClipEnabled`标志的组合时使用。
 
 ### `qreal QPaintEngineState::opacity() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::opacity` 用于计算、查询或取得与“opacity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前涂装引擎状态下的不透明度。
 
 ### `QPainter *QPaintEngineState::painter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngineState` 的核心操作 `painter`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QPainter *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向正在更新喷漆引擎的画师的指针。
 
 ### `QPen QPaintEngineState::pen() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::pen` 用于计算、查询或取得与“pen”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPen`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPen`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将笔返回当前的涂装引擎状态。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyPen`标志的组合时使用。
 
 ### `bool QPaintEngineState::penNeedsResolving() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::penNeedsResolving` 用于计算、查询或取得与“pen、Needs、Resolving”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回笔画坐标是否已被当前渲染操作指定为有界，并需围绕当前渲染的原图进行解析。
 
 ### `QPainter::RenderHints QPaintEngineState::renderHints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngineState` 的核心操作 `renderHints`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QPainter::RenderHints`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前绘画引擎状态下的渲染提示。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyHints`标志的组合时使用。
 
 ### `QPaintEngine::DirtyFlags QPaintEngineState::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPaintEngine::DirtyFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPaintEngine::DirtyFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一组标志，标识在更新绘图引擎状态时需要更新的属性集合（即调用`QPaintEngine::updateState()`函数时）。
 
 ### `QTransform QPaintEngineState::transform() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngineState::transform` 用于计算、查询或取得与“transform”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTransform`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTransform`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前涂装引擎状态的矩阵。
+该变量仅在`state()`返回包含`QPaintEngine::DirtyTransform`标志的组合时使用。
 
 ## 6. 深入实践与常见坑
 

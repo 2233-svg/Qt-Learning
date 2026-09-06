@@ -103,437 +103,323 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMetaMethod::Access`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaMethod` 暴露的类型声明 `Access`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Access`。
-- 属性名：`QMetaMethod`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述方法的访问层级，遵循 C 语言中使用的惯例。
+- `QMetaMethod::Private`：`0`
+- `QMetaMethod::Protected`：`1`
+- `QMetaMethod::Public`：`2`
 
 ### `QMetaMethod::Access QMetaMethod::access() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::access` 用于计算、查询或取得与“access”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaMethod::Access`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaMethod::Access`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的访问规范（私有、受保护或公共）。
+注意：信号总是公开的，但你应将其视为实现细节。几乎总是从其类别外发出信号是个坏主意。
 
 ### `[static] template <typename PointerToMemberFunction> QMetaMethod QMetaMethod::fromSignal(PointerToMemberFunction signal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromSignal`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回对应给定`signal`的元方法，或如果`signal`是`nullptr`或不是该类信号，则返回无效`QMetaMethod`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename PointerToMemberFunction> QMetaMethod`。
-- 参数 `signal`：类型为 `PointerToMemberFunction`。没有默认值，调用时必须提供。传入 `PointerToMemberFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMetaMethod destroyedSignal = QMetaMethod::fromSignal(&QObject::destroyed);
+```
 
 ### `[since 6.5] template <typename... Args> bool QMetaMethod::invoke(QObject *obj, Args &&... arguments) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::invoke` 用于计算、查询或取得与“invoke”相关的操作。调用时要先确认当前状态和 `obj`、`arguments` 的有效范围；返回类型是 `template <typename... Args> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在对象`object`上调用此方法。返回`true`该成员是否可被调用。返回 `false` 如果没有该成员或参数不匹配。
+对于带有QTemplatedMetaMethodReturnArgument参数的超载，`member`函数调用的返回值会放在`ret`中。对于没有该成员的超载，将丢弃被调用函数的返回值（如果有的话）。QTemplatedMetaMethodReturnArgument是一个内部类型，不应直接使用。相反，可以使用qReturnArg()函数。
+带有`Qt::ConnectionType` `type`参数的超载允许明确选择调用是否同步：
+- 如果`type` `Qt::DirectConnection`，该成员将立即在当前线程中被调用。
+- 如果`type` `Qt::QueuedConnection`，应用程序进入该`obj`创建或移动的线程中的事件循环时，会发送`QEvent`并立即调用该成员。
+- 如果`type` `Qt::BlockingQueuedConnection`，方法的调用方式与对`Qt::QueuedConnection`相同，但当前线程会阻塞直到事件被传递。使用这种连接类型在同一线程中的对象之间通信会导致死锁。
+- 如果`type` `Qt::AutoConnection`，则如果`obj`与调用者在同一线程中，则该成员会被同步调用;否则将异步调用该成员。这就是没有`type`参数的超载的行为。
+要异步调用`QPushButton`上的`animateClick()`槽：
+异步方法调用中，参数必须是可复制类型，因为Qt需要复制参数以便在幕后事件中存储。自Qt 6.5起，该函数自动注册所使用的类型;但作为副作用，无法使用仅前向声明的类型进行调用。此外，也无法使用非const限定类型作为参数的异步调用。
+要同步调用任意对象的`compute(QString, int, double)`槽`obj`检索其返回值：
+如果“计算”槽没有按指定顺序恰好取一个`QString`、一个`int`和一个`double`，调用将失败。注意必须明确说明`QString`类型，因为字符的字面值并非完全匹配的类型。如果方法取的是`QByteArray`、`qint64`和`long double`，调用需要写成：
+同样的调用也可以通过 `Q_ARG()` 和 `Q_RETURN_ARG()` 宏执行，具体如下：
+警告：此方法不会检验参数的有效性：`object`必须是本`QMetaMethod`所构造`QMetaObject`类的实例。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename... Args> bool`。
-- 参数 `obj`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `arguments`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int methodIndex = pushButton->metaObject()->indexOfMethod("animateClick()");
+ QMetaMethod method = metaObject->method(methodIndex);
+ method.invoke(pushButton, Qt::QueuedConnection);
+```
 
 ### `[since 6.5] template <typename... Args> bool QMetaMethod::invokeOnGadget(void *gadget, Args &&... arguments) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::invokeOnGadget` 用于计算、查询或取得与“invoke、On、Gadget”相关的操作。调用时要先确认当前状态和 `gadget`、`arguments` 的有效范围；返回类型是 `template <typename... Args> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> bool`。
-- 参数 `gadget`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arguments`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`Q_GADGET`上调用此方法。返回`true`是否可以调用该成员。返回 `false` 如果没有该成员或参数不匹配。
+指针`gadget`必须指向该小工具类的一个实例。
+祈祷始终是同步的。
+对于带有QTemplatedMetaMethodReturnArgument参数的超载，`member`函数调用的返回值放在`ret`。对于没有该参数的超载，被调用函数的返回值（如果有的话）将被丢弃。QTemplatedMetaMethodReturnArgument是一个内部类型，不应直接使用。相反，可以使用qReturnArg()函数。
+警告：此方法不会测试参数的有效性：`gadget`必须是构建本`QMetaMethod`所用`QMetaObject`类的一个实例。
 
 ### `[since 6.2] bool QMetaMethod::isConst() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isConst`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回方法是否符合条件条件。
+注意：如果 const 方法属于基于旧版 Qt 编译的库，该方法可能会错误返回 `false`。
 
 ### `bool QMetaMethod::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该方法有效（可内省和调用），返回 `true`，否则返回 `false`。
 
 ### `int QMetaMethod::methodIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::methodIndex` 用于计算、查询或取得与“method、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的索引。
 
 ### `QByteArray QMetaMethod::methodSignature() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::methodSignature` 用于计算、查询或取得与“method、Signature”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的签名（例如，`setValue(double)`）。
 
 ### `QMetaMethod::MethodType QMetaMethod::methodType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::methodType` 用于计算、查询或取得与“method、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaMethod::MethodType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaMethod::MethodType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的类型（信号、槽或方法）。
 
 ### `QByteArray QMetaMethod::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的名称。
 
 ### `[since 6.9] QByteArrayView QMetaMethod::nameView() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::nameView` 用于计算、查询或取得与“名称、View”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArrayView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的名称。返回的`QByteArrayView`只要该方法所属类的元对象有效，就有效。
 
 ### `int QMetaMethod::parameterCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::parameterCount` 用于计算、查询或取得与“parameter、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的参数数量。
 
 ### `[since 6.0] QMetaType QMetaMethod::parameterMetaType(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::parameterMetaType` 用于计算、查询或取得与“parameter、Meta、类型”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`index`处参数的元类型。
+如果`index`小于零或大于`parameterCount()`，则返回无效`QMetaType`。
 
 ### `QList<QByteArray> QMetaMethod::parameterNames() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::parameterNames` 用于计算、查询或取得与“parameter、Names”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回参数名称列表。
 
 ### `int QMetaMethod::parameterType(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::parameterType` 用于计算、查询或取得与“parameter、类型”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`index`处参数的类型。
+返回值是`QMetaType`注册的类型之一，如果类型未注册，则`QMetaType::UnknownType`。
 
 ### `[since 6.0] QByteArray QMetaMethod::parameterTypeName(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::parameterTypeName` 用于计算、查询或取得与“parameter、类型、名称”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回位置 `index` 的类型名称 如果 `index` 处无参数，返回空 `QByteArray`。
 
 ### `QList<QByteArray> QMetaMethod::parameterTypes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::parameterTypes` 用于计算、查询或取得与“parameter、Types”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回参数类型列表。
 
 ### `[since 6.0] int QMetaMethod::relativeMethodIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::relativeMethodIndex` 用于计算、查询或取得与“relative、Method、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的本地索引。
 
 ### `[since 6.0] QMetaType QMetaMethod::returnMetaType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::returnMetaType` 用于计算、查询或取得与“return、Meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的返回类型。
 
 ### `int QMetaMethod::returnType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::returnType` 用于计算、查询或取得与“return、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的返回类型。
+返回值是`QMetaType`注册的类型之一，如果类型未注册则`QMetaType::UnknownType`。
 
 ### `int QMetaMethod::revision() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::revision` 用于计算、查询或取得与“revision”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`Q_REVISION`指定了方法版本，则返回该版本，否则返回0。自Qt 6.0起，非零值被编码，并可用`QTypeRevision::fromEncodedVersion()`解码。
 
 ### `const char *QMetaMethod::tag() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::tag` 用于计算、查询或取得与“tag”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回与该方法关联的标签。
+标签是`moc`识别的特殊宏，使得添加方法的更多信息成为可能。
+标签信息可以通过函数声明中以下方式添加：
+信息可通过以下方式访问：
+目前，`moc`会提取并记录所有标签，但不会专门处理其中任何标签。你可以用标签来对方法进行不同的注释，并根据应用的具体需求进行处理。
+注意：`moc` 扩展了预处理器宏，因此定义周围必须用 `#ifndef` `Q_MOC_RUN` 包围，如上方示例所示。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     // In the class MainWindow declaration
+     #ifndef Q_MOC_RUN
+     // define the tag text as empty, so the compiler doesn't see it
+     #  define MY_CUSTOM_TAG
+     #endif
+     //...
+     private slots:
+         MY_CUSTOM_TAG void testFunc();
+```
 
 ### `const char *QMetaMethod::typeName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::typeName` 用于计算、查询或取得与“类型、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该方法的返回类型名称。如果该方法是构造函数，该函数返回空字符串（构造函数没有返回类型）。
+注意：在Qt 7中，该函数将返回构造函数的空指针。
 
 ### `[noexcept] bool operator!=(const QMetaMethod &lhs, const QMetaMethod &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaMethod` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaMethod &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaMethod &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果方法`lhs`与方法`rhs`不等于，返回`true`，否则返回`false`。
 
 ### `[noexcept] bool operator==(const QMetaMethod &lhs, const QMetaMethod &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaMethod` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaMethod &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaMethod &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果方法`lhs`等于方法`rhs`，返回`true`，否则返回`false`。
 
 ### `Q_METAMETHOD_INVOKE_MAX_ARGS`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaMethod` 的 `ARGS` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+等于通过`QMetaMethod::invoke()`执行方法的最大参数数。
 
 ### `enum MethodType { Method, Signal, Slot, Constructor }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaMethod` 暴露的类型声明 `Method、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QMetaMethod::Method`：`QMETHOD_CODE`;该函数是一个普通成员函数。
+- `QMetaMethod::Signal`：`1`;该功能是一个信号。
+- `QMetaMethod::Slot`：`2`;功能是一个槽。
+- `QMetaMethod::Constructor`：`3`;函数是一个构造函数。
 
 ### `(since 6.5) bool invoke(QObject *obj, QTemplatedMetaMethodReturnArgument<ReturnArg> ret, Args &&... arguments) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::invoke` 用于计算、查询或取得与“invoke”相关的操作。调用时要先确认当前状态和 `obj`、`ret`、`arguments` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在对象`object`上调用此方法。返回`true`该成员是否可被调用。返回 `false` 如果没有该成员或参数不匹配。
+对于带有QTemplatedMetaMethodReturnArgument参数的超载，`member`函数调用的返回值会放在`ret`中。对于没有该成员的超载，将丢弃被调用函数的返回值（如果有的话）。QTemplatedMetaMethodReturnArgument是一个内部类型，不应直接使用。相反，可以使用qReturnArg()函数。
+带有`Qt::ConnectionType` `type`参数的超载允许明确选择调用是否同步：
+- 如果`type` `Qt::DirectConnection`，该成员将立即在当前线程中被调用。
+- 如果`type` `Qt::QueuedConnection`，应用程序进入该`obj`创建或移动的线程中的事件循环时，会发送`QEvent`并立即调用该成员。
+- 如果`type` `Qt::BlockingQueuedConnection`，方法的调用方式与对`Qt::QueuedConnection`相同，但当前线程会阻塞直到事件被传递。使用这种连接类型在同一线程中的对象之间通信会导致死锁。
+- 如果`type` `Qt::AutoConnection`，则如果`obj`与调用者在同一线程中，则该成员会被同步调用;否则将异步调用该成员。这就是没有`type`参数的超载的行为。
+要异步调用`QPushButton`上的`animateClick()`槽：
+异步方法调用中，参数必须是可复制类型，因为Qt需要复制参数以便在幕后事件中存储。自Qt 6.5起，该函数自动注册所使用的类型;但作为副作用，无法使用仅前向声明的类型进行调用。此外，也无法使用非const限定类型作为参数的异步调用。
+要同步调用任意对象的`compute(QString, int, double)`槽`obj`检索其返回值：
+如果“计算”槽没有按指定顺序恰好取一个`QString`、一个`int`和一个`double`，调用将失败。注意必须明确说明`QString`类型，因为字符的字面值并非完全匹配的类型。如果方法取的是`QByteArray`、`qint64`和`long double`，调用需要写成：
+同样的调用也可以通过 `Q_ARG()` 和 `Q_RETURN_ARG()` 宏执行，具体如下：
+警告：此方法不会检验参数的有效性：`object`必须是本`QMetaMethod`所构造`QMetaObject`类的实例。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `obj`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `ret`：类型为 `QTemplatedMetaMethodReturnArgument<ReturnArg>`。没有默认值，调用时必须提供。传入 `QTemplatedMetaMethodReturnArgument<ReturnArg>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arguments`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int methodIndex = pushButton->metaObject()->indexOfMethod("animateClick()");
+ QMetaMethod method = metaObject->method(methodIndex);
+ method.invoke(pushButton, Qt::QueuedConnection);
+```
 
 ### `(since 6.5) bool invoke(QObject *obj, Qt::ConnectionType type, Args &&... arguments) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::invoke` 用于计算、查询或取得与“invoke”相关的操作。调用时要先确认当前状态和 `obj`、`type`、`arguments` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在对象`object`上调用此方法。返回`true`该成员是否可被调用。返回 `false` 如果没有该成员或参数不匹配。
+对于带有QTemplatedMetaMethodReturnArgument参数的超载，`member`函数调用的返回值会放在`ret`中。对于没有该成员的超载，将丢弃被调用函数的返回值（如果有的话）。QTemplatedMetaMethodReturnArgument是一个内部类型，不应直接使用。相反，可以使用qReturnArg()函数。
+带有`Qt::ConnectionType` `type`参数的超载允许明确选择调用是否同步：
+- 如果`type` `Qt::DirectConnection`，该成员将立即在当前线程中被调用。
+- 如果`type` `Qt::QueuedConnection`，应用程序进入该`obj`创建或移动的线程中的事件循环时，会发送`QEvent`并立即调用该成员。
+- 如果`type` `Qt::BlockingQueuedConnection`，方法的调用方式与对`Qt::QueuedConnection`相同，但当前线程会阻塞直到事件被传递。使用这种连接类型在同一线程中的对象之间通信会导致死锁。
+- 如果`type` `Qt::AutoConnection`，则如果`obj`与调用者在同一线程中，则该成员会被同步调用;否则将异步调用该成员。这就是没有`type`参数的超载的行为。
+要异步调用`QPushButton`上的`animateClick()`槽：
+异步方法调用中，参数必须是可复制类型，因为Qt需要复制参数以便在幕后事件中存储。自Qt 6.5起，该函数自动注册所使用的类型;但作为副作用，无法使用仅前向声明的类型进行调用。此外，也无法使用非const限定类型作为参数的异步调用。
+要同步调用任意对象的`compute(QString, int, double)`槽`obj`检索其返回值：
+如果“计算”槽没有按指定顺序恰好取一个`QString`、一个`int`和一个`double`，调用将失败。注意必须明确说明`QString`类型，因为字符的字面值并非完全匹配的类型。如果方法取的是`QByteArray`、`qint64`和`long double`，调用需要写成：
+同样的调用也可以通过 `Q_ARG()` 和 `Q_RETURN_ARG()` 宏执行，具体如下：
+警告：此方法不会检验参数的有效性：`object`必须是本`QMetaMethod`所构造`QMetaObject`类的实例。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `obj`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `type`：类型为 `Qt::ConnectionType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `arguments`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int methodIndex = pushButton->metaObject()->indexOfMethod("animateClick()");
+ QMetaMethod method = metaObject->method(methodIndex);
+ method.invoke(pushButton, Qt::QueuedConnection);
+```
 
 ### `(since 6.5) bool invoke(QObject *obj, Qt::ConnectionType type, QTemplatedMetaMethodReturnArgument<ReturnArg> ret, Args &&... arguments) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::invoke` 用于计算、查询或取得与“invoke”相关的操作。调用时要先确认当前状态和 `obj`、`type`、`ret`、`arguments` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在对象`object`上调用此方法。返回`true`该成员是否可被调用。返回 `false` 如果没有该成员或参数不匹配。
+对于带有QTemplatedMetaMethodReturnArgument参数的超载，`member`函数调用的返回值会放在`ret`中。对于没有该成员的超载，将丢弃被调用函数的返回值（如果有的话）。QTemplatedMetaMethodReturnArgument是一个内部类型，不应直接使用。相反，可以使用qReturnArg()函数。
+带有`Qt::ConnectionType` `type`参数的超载允许明确选择调用是否同步：
+- 如果`type` `Qt::DirectConnection`，该成员将立即在当前线程中被调用。
+- 如果`type` `Qt::QueuedConnection`，应用程序进入该`obj`创建或移动的线程中的事件循环时，会发送`QEvent`并立即调用该成员。
+- 如果`type` `Qt::BlockingQueuedConnection`，方法的调用方式与对`Qt::QueuedConnection`相同，但当前线程会阻塞直到事件被传递。使用这种连接类型在同一线程中的对象之间通信会导致死锁。
+- 如果`type` `Qt::AutoConnection`，则如果`obj`与调用者在同一线程中，则该成员会被同步调用;否则将异步调用该成员。这就是没有`type`参数的超载的行为。
+要异步调用`QPushButton`上的`animateClick()`槽：
+异步方法调用中，参数必须是可复制类型，因为Qt需要复制参数以便在幕后事件中存储。自Qt 6.5起，该函数自动注册所使用的类型;但作为副作用，无法使用仅前向声明的类型进行调用。此外，也无法使用非const限定类型作为参数的异步调用。
+要同步调用任意对象的`compute(QString, int, double)`槽`obj`检索其返回值：
+如果“计算”槽没有按指定顺序恰好取一个`QString`、一个`int`和一个`double`，调用将失败。注意必须明确说明`QString`类型，因为字符的字面值并非完全匹配的类型。如果方法取的是`QByteArray`、`qint64`和`long double`，调用需要写成：
+同样的调用也可以通过 `Q_ARG()` 和 `Q_RETURN_ARG()` 宏执行，具体如下：
+警告：此方法不会检验参数的有效性：`object`必须是本`QMetaMethod`所构造`QMetaObject`类的实例。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `obj`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `type`：类型为 `Qt::ConnectionType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `ret`：类型为 `QTemplatedMetaMethodReturnArgument<ReturnArg>`。没有默认值，调用时必须提供。传入 `QTemplatedMetaMethodReturnArgument<ReturnArg>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arguments`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int methodIndex = pushButton->metaObject()->indexOfMethod("animateClick()");
+ QMetaMethod method = metaObject->method(methodIndex);
+ method.invoke(pushButton, Qt::QueuedConnection);
+```
 
 ### `(since 6.5) bool invokeOnGadget(void *gadget, QTemplatedMetaMethodReturnArgument<ReturnArg> ret, Args &&... arguments) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMetaMethod::invokeOnGadget` 用于计算、查询或取得与“invoke、On、Gadget”相关的操作。调用时要先确认当前状态和 `gadget`、`ret`、`arguments` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `gadget`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ret`：类型为 `QTemplatedMetaMethodReturnArgument<ReturnArg>`。没有默认值，调用时必须提供。传入 `QTemplatedMetaMethodReturnArgument<ReturnArg>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arguments`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`Q_GADGET`上调用此方法。返回`true`是否可以调用该成员。返回 `false` 如果没有该成员或参数不匹配。
+指针`gadget`必须指向该小工具类的一个实例。
+祈祷始终是同步的。
+对于带有QTemplatedMetaMethodReturnArgument参数的超载，`member`函数调用的返回值放在`ret`。对于没有该参数的超载，被调用函数的返回值（如果有的话）将被丢弃。QTemplatedMetaMethodReturnArgument是一个内部类型，不应直接使用。相反，可以使用qReturnArg()函数。
+警告：此方法不会测试参数的有效性：`gadget`必须是构建本`QMetaMethod`所用`QMetaObject`类的一个实例。
 
 ## 6. 深入实践与常见坑
 

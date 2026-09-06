@@ -103,470 +103,298 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 31 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.8] enum class QQuickRenderTarget::Flagflags QQuickRenderTarget::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QQuickRenderTarget::Flags`。
-- 属性名：`QQuickRenderTarget`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+静态`QQuickRenderTarget`构造函数的标志。
+- `QQuickRenderTarget::Flag::MultisampleResolve`：`0x01`;表示`sampleCount`参数不是所提供纹理的采样数（且纹理仍非多重采样纹理），而是多采样抗锯齿所需的采样。触发自动创建和管理中间多采样纹理（或纹理数组）作为颜色缓冲区，对应用程序透明。采样在渲染结束时自动解析为提供的纹理。当该标志未被设置且`sampleCount`参数大于1时，表示提供的纹理是多重采样的。当`sampleCount`为1时，该标志无效（表明不涉及多重采样）。
+这个枚举是在Qt 6.8引入的。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `QQuickRenderTarget::QQuickRenderTarget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个默认的QQuickRenderTarget，不引用任何本地对象。
 
 ### `[noexcept] QQuickRenderTarget::~QQuickRenderTarget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
 
 ### `[since 6.8] QRhiTexture *QQuickRenderTarget::depthTexture() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderTarget::depthTexture` 用于计算、查询或取得与“depth、Texture”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiTexture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的深度纹理，或者在大多数情况下返回`nullptr`。
+只有在调用`setDepthTexture()`时，该值才非空。
 
 ### `[since 6.3] qreal QQuickRenderTarget::devicePixelRatio() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderTarget::devicePixelRatio` 用于计算、查询或取得与“device、Pixel、Ratio”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染目标的设备像素比。这是设备像素与设备无关像素之间的比值。
+默认的设备像素比是1.0。
 
 ### `[static, since 6.4] QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint format, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromD3D11Texture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QQuickRenderTarget`，该对象引用由 `texture` 指定的 D3D11 纹理对象。
+`format` 指定纹理的 DXGI_FORMAT。只能使用 Qt 渲染基础设施支持的纹理格式。
+`pixelSize` 指定图像的大小，以像素为单位。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不多重采样，而像 4 或 8 这样的值表示原生对象是多重采样纹理。
+该纹理用作 Qt Quick 场景图使用的渲染目标的第一个颜色附件。如适用，将自动创建并使用深度模板缓冲区。
+注意：生成的 `QQuickRenderTarget` 不拥有任何原生资源，它仅包含引用以及相关的大小和采样数元数据。调用者有责任确保原生资源在必要时存在。
 
 ### `[static] QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromD3D11Texture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QQuickRenderTarget`，该对象引用由 `texture` 指定的 D3D11 纹理对象。该纹理被假定为具有 DXGI_FORMAT_R8G8B8A8_UNORM 格式。
+`pixelSize` 指定图像的大小，以像素为单位。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不多重采样，而像 4 或 8 这样的值表示原生对象是多重采样纹理。
+该纹理用作 Qt Quick 场景图使用的渲染目标的第一个颜色附件。如适用，将自动创建并使用深度模板缓冲区。
+注意：生成的 `QQuickRenderTarget` 不拥有任何原生资源，它仅包含引用以及相关的大小和采样数元数据。调用者有责任确保原生资源在必要时存在。
 
 ### `[static, since 6.8] QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, uint format, QSize pixelSize, int sampleCount, QQuickRenderTarget::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromD3D11Texture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `QSize`。没有默认值，调用时必须提供。传入 `QSize` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QQuickRenderTarget::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`texture`指定的D3D11纹理对象。
+`format` 指定了纹理的 Tyty DXGI_FORMAT。只应使用 Qt 渲染基础设施支持的纹理格式。
+`pixelSize` 表示图像的大小，单位为像素。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示原生对象为多采样纹理，除非`flags`包含 `MultisampleResolve`。此时，`texture` 被假定为非多采样的二维纹理，`sampleCount`定义所需的采样数量。最终的`QQuickRenderTarget`将使用中间自动生成的多采样纹理作为颜色附加，并将采样解析为`texture`。这是当原生纹理尚未多采样时，执行 MSAA 的推荐方法。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如果适用，深度模板缓冲区会自动创建并使用。当颜色缓冲区为多重采样时，深度模板缓冲区也会自动为多重采样。
+注意：生成的`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static, since 6.6] QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture, int resourceState, uint format, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromD3D12Texture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `resourceState`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`texture`指定的D3D12纹理对象。
+`resourceState`必须有一个有效的位掩码，位来自D3D12_RESOURCE_STATES，指定资源当前状态。
+`format` 指定纹理的 DXGI_FORMAT 1。仅应使用 Qt 渲染基础设施支持的纹理格式。
+`pixelSize` 指定图像的像素大小。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而像 4 或 8 这样的值表示本地对象是多采样纹理。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如适用，深度模板缓冲区会自动创建并使用。
+注意：最终`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源持续存在直到必要。
 
 ### `[static, since 6.8] QQuickRenderTarget QQuickRenderTarget::fromD3D12Texture(void *texture, int resourceState, uint format, uint viewFormat, QSize pixelSize, int sampleCount, int arraySize, QQuickRenderTarget::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromD3D12Texture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `resourceState`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `viewFormat`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `QSize`。没有默认值，调用时必须提供。传入 `QSize` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arraySize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QQuickRenderTarget::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`texture`指定的D3D12二维纹理或二维纹理数组对象。
+`resourceState`必须有一个有效的位掩码，包含D3D12_RESOURCE_STATES位，指定资源当前状态。
+`format` 指定纹理的 DXGI_FORMAT。仅应使用 Qt 渲染基础设施支持的纹理格式。
+`viewFormat` 是渲染目标视图（RTV）使用的DXGI_FORMAT。通常与 `format` 相同。只有在驱动支持宽松格式投射时才能正常工作，否则该参数会被忽略。实际上，预计 Windows 10 1703 及以后版本应始终支持。
+`pixelSize` 指定图像的大小，单位为像素。目前仅支持 2D 纹理和 2D 纹理数组。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而像 4 或 8 这样的值表示该对象是多采样纹理，除非 `flags` 包含 `MultisampleResolve`。此时，`texture` 被假定为非多采样的二维纹理或二维纹理数组，`sampleCount` 定义了所需的采样数。生成的 `QQuickRenderTarget` 会使用中间自动生成的多采样纹理（或纹理数组）作为颜色附加，并将采样解析为`texture`。这是当原生 D3D12 纹理尚未多采样时，执行 MSAA 的推荐方法。
+数组元素（图层）的数量以`arraySize`表示。当大于1时，表示多视图渲染（视图实例化），这在VR/AR中尤为重要。`arraySize`是视图数量，通常为`2`。有关在Qt Quick场景图中启用多视图渲染的详细信息，请参见 `QSGMaterial::viewCount()`。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如果适用，深度模板缓冲区会自动创建并使用。当颜色缓冲区为多采样时，深度模板缓冲区也会自动为多重采样。对于多视图渲染，深度模板纹理会自动组成与匹配`arraySize`的数组。
+注意：最终`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static, since 6.4] QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromMetalTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `MTLTexture *`。没有默认值，调用时必须提供。传入 `MTLTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`texture`指定的金属纹理对象。
+`format` 指定了纹理的 MTLPixelFormat。仅应使用 Qt 渲染基础设施支持的纹理格式。
+`pixelSize` 指定图像的大小，单位为像素。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示原生对象是多采样纹理。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如适用，深度模板缓冲区会自动创建并使用。
+注意：最终的`QQuickRenderTarget`不拥有任何原生资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源持续存在直到必要。
 
 ### `[static] QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromMetalTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `MTLTexture *`。没有默认值，调用时必须提供。传入 `MTLTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QQuickRenderTarget`，它引用由 `texture` 指定的 Metal 纹理对象。该纹理假定格式为 MTLPixelFormatRGBA8Unorm。
+`pixelSize` 指定图像的尺寸，以像素为单位。目前仅支持 2D 纹理。
+`sampleCount` 指定样本数量。0 或 1 表示不进行多重采样，而像 4 或 8 这样的值表示原生对象是多重采样纹理。
+该纹理被用作 Qt Quick 场景图使用的渲染目标的第一个颜色附件。深度模板缓冲区（如适用）会被自动创建和使用。
+注意：生成的 `QQuickRenderTarget` 不拥有任何原生资源，它仅包含引用及尺寸和样本数量的相关元数据。调用者有责任确保原生资源在必要的时间内存在。
 
 ### `[static, since 6.8] QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, uint format, uint viewFormat, QSize pixelSize, int sampleCount, int arraySize, QQuickRenderTarget::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromMetalTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `texture`：类型为 `MTLTexture *`。没有默认值，调用时必须提供。传入 `MTLTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `viewFormat`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `QSize`。没有默认值，调用时必须提供。传入 `QSize` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arraySize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QQuickRenderTarget::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用`texture`中给出的金属二维纹理或二维纹理数组。
+`format`指定了纹理的MTLPixel格式。仅应使用Qt渲染基础设施支持的纹理格式。
+`viewFormat`通常与`format`值相同。在某些情况下，例如渲染为`_SRGB`格式的纹理时，且不需要在着色器写入时隐式线性>sRGB转换，值可能会不同。但请注意，当运行时`QRhi`报告`QRhi::TextureViewFormat`功能不支持时，Qt可能会忽略该值。
+`pixelSize` 指定图像的像素大小。目前仅支持二维纹理和二维纹理数组。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 等值表示原生对象是多采样纹理，除非`flags`包含 `MultisampleResolve`。此时，`texture` 被假设为非多采样的二维纹理或二维纹理数组，`sampleCount` 定义所需的采样数量。最终的`QQuickRenderTarget`将使用中间自动生成的多采样纹理（或纹理数组）作为颜色附加，并将采样解析为`texture`。这是当原生金属纹理尚未多采样时，执行MSAA的推荐方法。
+数组元素（图层）的数量以`arraySize`表示。当数值大于1时，表示多视角渲染，这在VR/AR中尤为重要。`arraySize`是视角数量，通常为`2`。有关在Qt Quick场景图中启用多视角渲染的详细信息，请参见 `QSGMaterial::viewCount()`。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如果适用，深度模板缓冲区会自动创建并使用。当颜色缓冲区为多重采样时，深度模板缓冲区也会自动为多重采样。对于多视图渲染，深度模板纹理会自动组成与匹配`arraySize`的数组。
+注意：最终`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static, since 6.2] QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferId, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromOpenGLRenderBuffer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `renderbufferId`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`renderbufferId`指定的OpenGL渲染缓冲对象。
+渲染缓冲区将作为内部帧缓冲对象的颜色附件。该功能旨在支持应用程序创建的渲染缓冲区，这些缓冲区下方有外部缓冲区，例如 EGLImageKHR。一旦应用程序调用了 glEGLImageTargetRenderbufferStorageOES，渲染缓冲区就可以传递给该函数。
+`pixelSize` 指定图像的大小，单位为像素。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示本地对象是多采样渲染缓冲区。
+注意：最终`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static, since 6.4] QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint format, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromOpenGLTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `textureId`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`textureId`指定的OpenGL纹理对象。
+`format` 指定了纹理的原生内部格式。仅应使用 Qt 渲染基础设施支持的纹理格式。
+`pixelSize` 指定图像的大小，单位为像素。目前仅支持 2D 纹理。
+`sampleCount` 表示采样数量。0 或 1 表示不进行多重采样，而 4 或 8 这样的值表示该对象是多采样纹理。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如适用，深度模板缓冲区会自动创建并使用。
+OpenGL 对象名 `textureId` 必须是 Qt 快速场景图渲染上下文中的有效名称。
+注意：生成的`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数量的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static] QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromOpenGLTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `textureId`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`textureId`指定的OpenGL纹理对象。该纹理假设格式为GL_RGBA（GL_RGBA8）。
+`pixelSize` 指定图像的大小，单位为像素。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示本地对象是多采样纹理。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如适用，深度模板缓冲区会自动创建并使用。
+OpenGL 对象名 `textureId` 必须在 Qt Quick 场景图所使用的渲染上下文中是有效名称。
+注意：最终的`QQuickRenderTarget`不拥有任何原生资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源持续存在直到必要。
 
 ### `[static, since 6.8] QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, uint format, QSize pixelSize, int sampleCount, int arraySize, QQuickRenderTarget::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromOpenGLTexture`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `textureId`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `uint`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `QSize`。没有默认值，调用时必须提供。传入 `QSize` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arraySize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QQuickRenderTarget::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回引用 `textureId` 指定的 OpenGL 2D 纹理或纹理数组对象的新`QQuickRenderTarget`。
+`format` 指定了纹理的原生内部格式。仅应使用 Qt 渲染基础设施支持的纹理格式。
+`pixelSize` 指定图像的像素大小。目前仅支持 2D 纹理和 2D 纹理数组。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示原生对象是多采样纹理，除非 `flags` 包含 `MultisampleResolve`。此时，`textureId` 被假定为非多采样的二维纹理或二维纹理数组，`sampleCount` 定义了所需的采样数。最终的`QQuickRenderTarget`将使用中间自动生成的多采样纹理（或纹理数组）作为颜色附加，并将采样分解为`textureId`。这是当原生 OpenGL 纹理尚未多采样时，执行 MSAA 的推荐方法。
+当`arraySize`大于1时，意味着多视角渲染（GL_OVR_multiview、`QRhiColorAttachment::setMultiViewCount()`），这在VR/AR中尤为重要。此时`arraySize`为视角数量，通常为`2`。有关在Qt Quick场景图中启用多视角渲染的详细信息，请参见 `QSGMaterial::viewCount()`。
+如果适用，深度模板缓冲区会自动创建并使用。当颜色缓冲区为多重采样时，深度模板缓冲区也会自动为多重采样。对于多视图渲染，深度模板纹理会自动组成数组，`arraySize`匹配。
+OpenGL 对象名 `textureId` 必须是 Qt Quick 场景图渲染上下文中的有效二维纹理名称。当 `arraySize` 大于 1 时，`textureId` 必须是有效的二维纹理数组名称。
+注意：最终`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用方有责任确保本地资源在必要时间内持续存在。
+注意：该超载的实现与 OpenGL ES 2.0 或 3.0 不兼容，至少需要 OpenGL ES 3.1。（桌面端则需 OpenGL 3.0）。
 
 ### `[static, since 6.4] QQuickRenderTarget QQuickRenderTarget::fromPaintDevice(QPaintDevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromPaintDevice`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `device`：类型为 `QPaintDevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`device`指定的绘画设备对象。
+这种将渲染重定向到`QPaintDevice`的选项仅在运行 Qt Quick `software` 后端时才可用。
+注意：`QQuickRenderTarget`不承担`device`所有权，调用者有责任确保该物体在必要时间内持续存在。
 
 ### `[static, since 6.6] QQuickRenderTarget QQuickRenderTarget::fromRhiRenderTarget(QRhiRenderTarget *renderTarget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromRhiRenderTarget`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `renderTarget`：类型为 `QRhiRenderTarget *`。没有默认值，调用时必须提供。传入 `QRhiRenderTarget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个引用现有`renderTarget`的新`QQuickRenderTarget`。
+`renderTarget`大多数情况下会是一个`QRhiTextureRenderTarget`，允许将Qt Quick场景的渲染直接导入`QRhiTexture`。
+注意：最终的`QQuickRenderTarget`不拥有`renderTarget`及任何底层原生资源，仅包含引用及相关大小和样本数量的元数据。调用者有责任确保被引用资源持续存在，直到必要时间为止。
 
 ### `[static, since 6.4] QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromVulkanImage`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `image`：类型为 `VkImage`。没有默认值，调用时必须提供。传入 `VkImage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layout`：类型为 `VkImageLayout`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `format`：类型为 `VkFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的 `QQuickRenderTarget`，它引用由 `image` 指定的 Vulkan 图像对象。图像的当前 `layout` 也必须提供。
+`format` 指定图像的 VkFormat。仅应使用 Qt 渲染基础设施支持的图像格式。
+`pixelSize` 指定图像的尺寸，以像素为单位。目前仅支持 2D 纹理。
+`sampleCount` 指定样本数量。0 或 1 表示不进行多重采样，而像 4 或 8 这样的值表示原生对象是多重采样纹理。
+该图像被用作 Qt Quick 场景图使用的渲染目标的第一个颜色附件。深度模板缓冲区（如适用）会被自动创建和使用。
+注意：生成的 `QQuickRenderTarget` 不拥有任何原生资源，它仅包含引用及尺寸和样本数量的相关元数据。调用者有责任确保原生资源在必要的时间内存在。
 
 ### `[static] QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromVulkanImage`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `image`：类型为 `VkImage`。没有默认值，调用时必须提供。传入 `VkImage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layout`：类型为 `VkImageLayout`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `pixelSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`image`指定的Vulkan图像对象。假设该图像格式为VK_FORMAT_R8G8B8A8_UNORM。
+`pixelSize` 指定图像的大小，单位为像素。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示本地对象是多采样纹理。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。如适用，深度模板缓冲区会自动创建并使用。
+注意：最终`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `[static, since 6.8] QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, VkFormat format, VkFormat viewFormat, QSize pixelSize, int sampleCount, int arraySize, QQuickRenderTarget::Flags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromVulkanImage`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuickRenderTarget`。
-- 参数 `image`：类型为 `VkImage`。没有默认值，调用时必须提供。传入 `VkImage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layout`：类型为 `VkImageLayout`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `format`：类型为 `VkFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `viewFormat`：类型为 `VkFormat`。没有默认值，调用时必须提供。传入 `VkFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixelSize`：类型为 `QSize`。没有默认值，调用时必须提供。传入 `QSize` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sampleCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `arraySize`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QQuickRenderTarget::Flags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个新的`QQuickRenderTarget`，引用由`image`指定的Vulkan图像对象。还必须提供当前图像的当前`layout`。图像必须是2D纹理或2D纹理数组。
+`format` 指定了图像的 VkFormat。仅应使用 Qt 渲染基础设施支持的图像格式。
+`viewFormat`通常与`format`值相同。在某些情况下，比如渲染为`_SRGB`格式的纹理时，且不需要在着色器写入时隐式线性>sRGB转换，值可能会不同。（例如，`format`为`VK_FORMAT_R8G8B8A8_SRGB`，`viewFormat`为`VK_FORMAT_R8G8B8A8_UNORM`）。
+`pixelSize` 指定图像的大小，单位为像素。目前仅支持 2D 纹理。
+`sampleCount` 指定采样数量。0 或 1 表示不进行多重采样，而 4 或 8 表示原生对象是多采样纹理，除非 `flags` 包含 `MultisampleResolve`。此时，`image` 被假定为非多采样的二维纹理或二维纹理数组，`sampleCount`定义了所需的采样数量。最终的`QQuickRenderTarget`将使用中间自动生成的多采样纹理（或纹理数组）作为颜色附加，并将采样解析为`image`。这是当原生Vulkan图像尚未多采样时，执行MSAA的推荐方法。
+数组元素（图层）的数量以`arraySize`表示。当数组大于1时，表示多视角渲染（VK_KHR_multiview），这在VR/AR中尤为重要。`arraySize`表示视图数量，通常为`2`。有关在Qt Quick场景图中启用多视图渲染的详细信息，请参见 `QSGMaterial::viewCount()`。
+纹理作为 Qt Quick 场景图渲染目标的第一个颜色附加。深度模板缓冲区（如适用）会自动创建并使用。当颜色缓冲区为多重采样时，深度模板缓冲区也会自动为多重采样。对于多视图渲染，深度模板纹理会自动组成数组，`arraySize`匹配。
+注意：生成的`QQuickRenderTarget`不拥有任何本地资源，仅包含引用及相关大小和样本数的元数据。调用者有责任确保本地资源在必要时间内持续存在。
 
 ### `bool QQuickRenderTarget::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该 `QQuickRenderTarget` 是默认构造的，且不引用本地对象，则返回为真。
 
 ### `[since 6.4] bool QQuickRenderTarget::mirrorVertically() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickRenderTarget::mirrorVertically` 用于计算、查询或取得与“mirror、Vertically”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 返回渲染目标是否垂直镜像。
+默认值是`false`。
 
 ### `[since 6.8] void QQuickRenderTarget::setDepthTexture(QRhiTexture *texture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDepthTexture`。调用它会改变 `QQuickRenderTarget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `texture`：类型为 `QRhiTexture *`。没有默认值，调用时必须提供。传入 `QRhiTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用给定`texture`作为深度或深度模板缓冲区的请求。不对`texture`所有权。
+只有在相关时才会考虑请求。例如，调用该函数对`fromRhiRenderTarget()`、`fromPaintDevice()`或 `fromOpenGLRenderBuffer()` 没有影响。
+通常深度模板缓冲区是自动创建的，对`QQuickRenderTarget`用户透明。因此，在大多数情况下使用`QQuickRenderTarget`时无需调用该函数。但在特殊情况下，能够提供纹理来渲染深度（或深度和模板）数据变得至关重要，而不是让 Qt Quick 自行创建中间纹理或缓冲区。一个例子是 OpenXR 及其扩展如 XR_KHR_composition_layer_depth。为了“提交深度缓冲区”给 XR 合成器，实际上必须从 OpenXR（来自 XrSwapchain）中获取已创建的深度（深度模板）纹理，并以此作为深度数据的渲染目标。没有这个函数，这是不可能实现的。
+注意：`texture`始终预期为非多重采样的2D纹理或纹理数组（用于多视图）。如果涉及MSAA，采样在渲染结束时会被解析为`texture`，无论是否设置了`MultisampleResolve`标志。MSAA仅在底层3D API支持深度（深度模板）纹理时支持，且该支持并非普遍可用。详情请参见相关的QRhi功能标志。当不支持该标志且请求多重采样并结合自定义深度纹理时，渲染过程中不会触碰`texture`，并会打印警告。
+注意：在 OpenGL 和 OpenGL ES 中，使用 depth textures 在 OpenGL ES 2.0 上不可用，且至少需要 OpenGL ES 3.0。没有至少 OpenGL ES 3.1 或桌面版 OpenGL 3.0，则无法支持多重采样（MSAA）。
 
 ### `[since 6.3] void QQuickRenderTarget::setDevicePixelRatio(qreal ratio)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDevicePixelRatio`。调用它会改变 `QQuickRenderTarget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ratio`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该渲染目标的设备像素比设置为`ratio`。这是设备像素与设备无关像素之间的比值。
+注意，如果重新实现`QQuickRenderControl::renderWindow()`返回有效`QWindow`，指定的设备像素比率值将被忽略。
 
 ### `[since 6.4] void QQuickRenderTarget::setMirrorVertically(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMirrorVertically`。调用它会改变 `QQuickRenderTarget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+绘制时渲染目标内容的尺寸应垂直镜像到`enable`。这便于轻松集成不符合标准期望的第三方渲染代码。
+注意：使用`software`后端时不应使用此函数。
 
 ### `[noexcept] bool operator!=(const QQuickRenderTarget &a, const QQuickRenderTarget &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QQuickRenderTarget &`。没有默认值，调用时必须提供。传入 `const QQuickRenderTarget &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QQuickRenderTarget &`。没有默认值，调用时必须提供。传入 `const QQuickRenderTarget &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`a`和`b`指的是不同的本地对象集，或者相关数据（大小、样本数）不匹配，则返回为真。
 
 ### `[noexcept] bool operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QQuickRenderTarget &`。没有默认值，调用时必须提供。传入 `const QQuickRenderTarget &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QQuickRenderTarget &`。没有默认值，调用时必须提供。传入 `const QQuickRenderTarget &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`a`和`b`引用相同的本地对象集合且关联数据（大小、样本数）相匹配，则返回为真。
 
 ### `(since 6.8) enum class Flag { MultisampleResolve }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+静态`QQuickRenderTarget`构造函数的标志。
+- `QQuickRenderTarget::Flag::MultisampleResolve`：`0x01`;表示`sampleCount`参数不是所提供纹理的采样数（且纹理仍非多重采样纹理），而是多采样抗锯齿所需的采样。触发自动创建和管理中间多采样纹理（或纹理数组）作为颜色缓冲区，对应用程序透明。采样在渲染结束时自动解析为提供的纹理。当该标志未被设置且`sampleCount`参数大于1时，表示提供的纹理是多重采样的。当`sampleCount`为1时，该标志无效（表明不涉及多重采样）。
+这个枚举是在Qt 6.8引入的。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickRenderTarget` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+静态`QQuickRenderTarget`构造函数的标志。
+- `QQuickRenderTarget::Flag::MultisampleResolve`：`0x01`;表示`sampleCount`参数不是所提供纹理的采样数（且纹理仍非多重采样纹理），而是多采样抗锯齿所需的采样。触发自动创建和管理中间多采样纹理（或纹理数组）作为颜色缓冲区，对应用程序透明。采样在渲染结束时自动解析为提供的纹理。当该标志未被设置且`sampleCount`参数大于1时，表示提供的纹理是多重采样的。当`sampleCount`为1时，该标志无效（表明不涉及多重采样）。
+这个枚举是在Qt 6.8引入的。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

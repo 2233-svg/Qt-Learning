@@ -90,299 +90,223 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 22 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QTaskTree::QTaskTree(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空任务树，并带有给定的`parent`。使用`setRecipe()`传递声明式描述，说明任务树应如何执行任务以及如何处理已完成的任务。
+启动空任务树是无操作操作，相关警告信息会被触发。
 
 ### `[explicit] QTaskTree::QTaskTree(const QtTaskTree::Group &recipe, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `recipe`：类型为 `const QtTaskTree::Group &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Group &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建具有给定`recipe`和`parent`的任务树。任务树启动后，执行`recipe`内的任务，并根据传递的描述处理已完成的任务。
 
 ### `[override virtual noexcept] QTaskTree::~QTaskTree()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏任务树。
+当任务树在被销毁时运行，它会立即取消所有正在运行的任务。在这种情况下，不会调用处理程序，甚至组和任务的已完成处理程序或`onStorageDone()`处理程序也不会被调用。任务树也不会发出任何来自解构器的信号，甚至没有`done()`或`progressValueChanged()`信号。这种行为可以始终依赖。销毁运行中的任务树是完全安全的。
+销毁运行任务树是常见的模式。只要任务以非阻塞的方式实现其解构器，销毁任务就能保证快速运行，无需等待当前任务完成。
+注意：不要直接从运行任务的处理程序或任务树信号调用解构器。在这种情况下，请使用`deleteLater()`。
 
 ### `qsizetype QTaskTree::asyncCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::asyncCount` 用于计算、查询或取得与“async、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前异步调用链的实际数量。
+返回的值表示在任务树运行期间控制返回到调用者事件循环的次数。最初，此值为 `0`。如果任务树的执行完全同步完成，则此值保持为 `0`。如果任务树包含在调用 `start()` 时成功启动的任何异步任务，则在调用 `start()` 完成之前，此值被提升为 `1`。之后，当任何异步任务完成且启动任何可能的继续执行时，此值会再次增加。增加过程持续直到任务树完成。当任务树发出 `done()` 信号时，增加停止。此值每次增加时都会发出 `asyncCountChanged()` 信号。
 
 ### `[signal] void QTaskTree::asyncCountChanged(qsizetype count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 发出的通知信号 `asyncCountChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当运行中的任务树即将将控制权返回调用者的事件循环时，该信号会发出。当任务树启动时，该信号以`0`值`count`发出，之后每当`asyncCount()`值增加时，`count`值会更新。每一个发送的信号（除最初值为`0`的信号外）都保证发射后任务树仍在异步运行。
 
 ### `void QTaskTree::cancel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `cancel`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消运行任务树的执行。
+立即取消所有正在运行的任务。所有正在运行的任务和组结束时都会有错误，并调用其已完成的处理程序`DoneWith::Cancel`。存储的`onStorageDone()`处理程序也会被调用。`progressValueChanged()`信号也在发送。这种行为可以始终依赖。
+cancel() 函数是同步执行的，因此在调用 cancel() 后，所有正在运行的任务都已完成，树也已经被取消。只要所用任务以非阻塞的方式实现其结构函数，cancel() 就能保证运行得很快，无需阻塞等待当前任务完成。
+当任务树为空，即用默认构造函数构建时，调用cancel()为no-op，相关警告消息会被触发。
+否则，当任务树未启动时，取消()调用会被忽略。
+注意：不要直接从运行任务的处理器或任务树信号调用该函数。
 
 ### `[signal] void QTaskTree::done(QtTaskTree::DoneWith result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 发出的通知信号 `done`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `result`：类型为 `QtTaskTree::DoneWith`。没有默认值，调用时必须提供。传入 `QtTaskTree::DoneWith` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在任务树结束时发出，传递执行的最后`result`。任务树既不调用任何处理程序，也不再发出信号。
+注意：不要直接从该信号的处理程序中删除任务树。请使用`deleteLater()`。
 
 ### `[override virtual protected] bool QTaskTree::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
 
 ### `bool QTaskTree::isRunning() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRunning`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果任务树当前运行，返回`true`;否则返回`false`。
 
 ### `template <typename StorageStruct, typename Handler> void QTaskTree::onStorageDone(const QtTaskTree::Storage<StorageStruct> &storage, Handler &&handler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::onStorageDone` 用于计算、查询或取得与“on、Storage、Done”相关的操作。调用时要先确认当前状态和 `storage`、`handler` 的有效范围；返回类型是 `template <typename StorageStruct, typename Handler> void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+安装一个存储，`handler`为`storage`动态检索运行中的任务树中的最终数据。
+`StorageHandler`对`StorageStruct`实例进行了`const`引用：
+当运行中的任务树即将离开放置`storage`的`Group`时，它会销毁一个`StorageStruct`实例。就在`StorageStruct`实例被摧毁之前，且在该组所有可能的处理器被调用后，任务树调用传递的`handler`。这使得能够动态读取给定存储的最终内容，并将其进一步处理到任务树之外。
+当运行树被取消时，也会调用该处理程序。但当运行树被摧毁时，处理程序不会被调用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename StorageStruct, typename Handler> void`。
-- 参数 `storage`：类型为 `const QtTaskTree::Storage<StorageStruct> &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Storage<StorageStruct> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `handler`：类型为 `Handler &&`。没有默认值，调用时必须提供。传入 `Handler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ static QByteArray load(const QString &fileName) { ... }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Storage<QByteArray> storage;
+
+ const auto onLoaderSetup = [](QThreadFunction<QByteArray> &task) {
+     task.setThreadFunctionData(&load, "foo.txt");
+ };
+ const auto onLoaderDone = [storage](const QThreadFunction<QByteArray> &task) {
+     *storage = task.result();
+ };
+
+ const Group root {
+     storage,
+     QThreadFunctionTask(onLoaderSetup, onLoaderDone, CallDoneFlag::OnSuccess)
+ };
+
+ QTaskTree taskTree(root);
+ auto collectStorage = [](const QByteArray &storage){
+     qDebug() << "final content" << storage;
+ };
+ taskTree.onStorageDone(storage, collectStorage);
+ taskTree.start();
+```
 
 ### `template <typename StorageStruct, typename Handler> void QTaskTree::onStorageSetup(const QtTaskTree::Storage<StorageStruct> &storage, Handler &&handler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::onStorageSetup` 用于计算、查询或取得与“on、Storage、Setup”相关的操作。调用时要先确认当前状态和 `storage`、`handler` 的有效范围；返回类型是 `template <typename StorageStruct, typename Handler> void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+安装存储设置 `handler`，`storage` 将初始数据动态传递到运行中的任务树。
+`StorageHandler`引用了`StorageStruct`实例：
+当运行中的任务树进入`storage`所在的组时，会创建一个`StorageStruct`实例，准备在该组内使用。在创建`StorageStruct`实例后，且在调用该组的任何处理程序之前，任务树调用传递的 `handler`。这使得动态设置给定存储的初始内容成为可能。随后，当调用任何组的处理程序时，任务树会激活已创建和初始化的存储，使其在任何组的处理程序中可用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename StorageStruct, typename Handler> void`。
-- 参数 `storage`：类型为 `const QtTaskTree::Storage<StorageStruct> &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Storage<StorageStruct> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `handler`：类型为 `Handler &&`。没有默认值，调用时必须提供。传入 `Handler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ static void save(const QString &fileName, const QByteArray &array) { ... }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Storage<QByteArray> storage;
+
+ const auto onSaverSetup = [storage](QThreadFunction<QByteArray> &task) {
+     task.setThreadFunctionData(&save, "foo.txt", *storage);
+ };
+
+ const Group root {
+     storage,
+     QThreadFunctionTask(onSaverSetup)
+ };
+
+ QTaskTree taskTree(root);
+ auto initStorage = [](QByteArray &storage){
+     storage = "initial content";
+ };
+ taskTree.onStorageSetup(storage, initStorage);
+ taskTree.start();
+```
 
 ### `qsizetype QTaskTree::progressMaximum() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::progressMaximum` 用于计算、查询或取得与“progress、最大值”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最大额度`progressValue()`。
+注意：目前和`taskCount()`一样。未来可能会改变。
 
 ### `qsizetype QTaskTree::progressValue() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::progressValue` 用于计算、查询或取得与“progress、值访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前进度值，该值介于 `0` 和 `progressMaximum()` 之间。
+返回的数字表示在任务树运行期间已有多少任务已完成、取消或跳过。当任务树启动时，此数字设置为 `0`。当任务树完成时，此数字总是等于 `progressMaximum()`。
 
 ### `[signal] void QTaskTree::progressValueChanged(qsizetype value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 发出的通知信号 `progressValueChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `value`：类型为 `qsizetype`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当运行中的任务树完成、取消或跳过某些任务时，该信号会发出。`value`显示当前已完成、取消或跳过的任务总数。当任务树启动且`started()`信号发出后，该信号初始 `value` 为 `0`。当任务树即将结束且`done()`信号发出前，该信号以最后`value` `progressMaximum()` 发出。
 
 ### `QtTaskTree::DoneWith QTaskTree::runBlocking()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::runBlocking` 用于计算、查询或取得与“运行、Blocking”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QtTaskTree::DoneWith`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::DoneWith`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 `QEventLoop::ExcludeUserInputEvents` 执行本地事件循环并启动任务树。
+如果任务树成功完成，返回`DoneWith::Success`;否则返回`DoneWith::Error`。
+注意：避免在主线程中使用此方法。请使用异步`start()`。该方法适用于非主线程或自动测试。
 
 ### `[static] QtTaskTree::DoneWith QTaskTree::runBlocking(const QtTaskTree::Group &recipe)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `runBlocking`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::DoneWith`。
-- 参数 `recipe`：类型为 `const QtTaskTree::Group &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Group &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用传递的`recipe`构建临时任务树并以阻塞方式运行。
+如果任务树成功完成，返回`DoneWith::Success`;否则返回`DoneWith::Error`。
+注意：避免在主线程中使用此方法。请使用异步`start()`。该方法适用于非主线程或自动测试。
 
 ### `QtTaskTree::DoneWith QTaskTree::runBlocking(const QFuture<void> &future)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::runBlocking` 用于计算、查询或取得与“运行、Blocking”相关的操作。调用时要先确认当前状态和 `future` 的有效范围；返回类型是 `QtTaskTree::DoneWith`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::DoneWith`。
-- 参数 `future`：类型为 `const QFuture<void> &`。没有默认值，调用时必须提供。传入 `const QFuture<void> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+传递的`future`用于监听取消事件。当任务树被取消时，该方法取消已传递的`future`。
+注意：该功能会让`QTaskTree::runBlocking()`重载。
 
 ### `[static] QtTaskTree::DoneWith QTaskTree::runBlocking(const QtTaskTree::Group &recipe, const QFuture<void> &future)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `runBlocking`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QtTaskTree::DoneWith`。
-- 参数 `recipe`：类型为 `const QtTaskTree::Group &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Group &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `future`：类型为 `const QFuture<void> &`。没有默认值，调用时必须提供。传入 `const QFuture<void> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+传递的`future`用于监听取消事件。当任务树被取消时，该方法会取消已传递的`future`。
+注意：该函数会超载 QTaskTree：：runBlocking（const Group 和 recipe）。
 
 ### `void QTaskTree::setRecipe(const QtTaskTree::Group &recipe)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRecipe`。调用它会改变 `QtTaskTree::QTaskTree` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `recipe`：类型为 `const QtTaskTree::Group &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Group &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为任务树设置给定的`recipe`。任务树启动后，执行`recipe`中包含的任务，并根据传递的描述处理已完成的任务。
+注意：当被调用运行任务树时，该调用被忽略。
 
 ### `void QTaskTree::start()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `start`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常与完成、取消、错误和安全退出信号配合；启动成功不等于任务完成。
+启动任务树。
+使用`setRecipe()`或构造函数来设置声明式描述，任务树将执行包含的任务并处理已完成的任务。
+当任务树为空，即用默认构造函数构建时，调用start()为no-op，并发出相应的警告消息。
+否则，当任务树已经运行时，调用start()会被忽略，并发出相应的警告消息。
+否则，任务树开始运行。
+启动任务树可能同步结束，例如当主组的起始处理器返回`SetupResult::StopWithError`时。因此，应在调用start()之前建立与已完成信号的连接。使用`isRunning()`检测任务树在调用start（后是否仍在运行）。
+任务树的实现依赖于运行事件循环。调用该方法时，确保你有`QEventLoop`、`QCoreApplication`或其子类正在运行（或即将运行）。
 
 ### `[signal] void QTaskTree::started()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QTaskTree` 发出的通知信号 `started`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常与完成、取消、错误和安全退出信号配合；启动成功不等于任务完成。
+该信号在任务树启动时发出。该信号发出后，`progressValueChanged()`信号同步发出初始`0`值。
 
 ### `qsizetype QTaskTree::taskCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QtTaskTree::QTaskTree::taskCount` 用于计算、查询或取得与“task、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储配方中包含的异步任务数量。
+注意：退回的编号不包括`QSyncTask`任务。
+注意：任何使用 withTimeout() 设置的任务或组都会使任务总数增加`1`。
 
 ## 6. 深入实践与常见坑
 

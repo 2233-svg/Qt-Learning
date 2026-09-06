@@ -79,192 +79,111 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QOffscreenSurface::QOffscreenSurface(QScreen *targetScreen = nullptr, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOffscreenSurface` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `targetScreen`：类型为 `QScreen *`。默认值为 `nullptr`。传入 `QScreen *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`为`targetScreen`创建一个屏幕外的表面。
+底层平台表面直到`create()`被调用后才会形成。
 
 ### `[virtual noexcept] QOffscreenSurface::~QOffscreenSurface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOffscreenSurface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了幕外的表面。
 
 ### `void QOffscreenSurface::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOffscreenSurface::create` 用于执行与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+分配与屏幕外表面相关的平台资源。
+此时，使用`setFormat()`的曲面格式被解析为实际的原生曲面。
+如有必要，`destroy()`释放平台资源。
+注意：有些平台要求在主线（GUI）线程中调用该函数。
 
 ### `void QOffscreenSurface::destroy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOffscreenSurface::destroy` 用于执行与“destroy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放与该幕外表面相关的原生平台资源。
 
 ### `[override virtual] QSurfaceFormat QOffscreenSurface::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QSurface::format()` const.
+返回这个屏幕外表面的实际格式。
+创建出屏外表面后，该函数会返回实际的表面格式。如果平台无法满足请求的格式，它可能会与请求的格式不同。
+返回表面的格式。
 
 ### `bool QOffscreenSurface::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该屏幕外表面有效，返回`true`;否则返回`false`。
+如果平台资源已成功分配，屏幕外的表面是有效的。
 
 ### `template <typename QNativeInterface> QNativeInterface *QOffscreenSurface::nativeInterface() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOffscreenSurface::nativeInterface` 用于计算、查询或取得与“native、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename QNativeInterface> QNativeInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename QNativeInterface> QNativeInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该表面的本地接口。
+该功能提供访问 QOffScreenSurface 的平台特定功能，定义在 `QNativeInterface` 命名空间中：
+- `QNativeInterface::QAndroidOffscreenSurface`：Android屏幕外表面的原生接口
+如果请求的接口不可用，则返回`nullptr`。
 
 ### `QSurfaceFormat QOffscreenSurface::requestedFormat() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOffscreenSurface` 的核心操作 `requestedFormat`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该屏幕外表面的请求表面格式。
+如果请求的格式未被平台实现支持，requestedFormat 将与实际的屏幕外表面格式不同。
+这是与`setFormat()`值的集合。
 
 ### `QScreen *QOffscreenSurface::screen() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOffscreenSurface::screen` 用于计算、查询或取得与“screen”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QScreen *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QScreen *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回连接屏幕外表面的屏幕。
 
 ### `[signal] void QOffscreenSurface::screenChanged(QScreen *screen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOffscreenSurface` 发出的通知信号 `screenChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `screen`：类型为 `QScreen *`。没有默认值，调用时必须提供。传入 `QScreen *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当屏幕外表面的`screen`发生变化时，该信号会发出，无论是通过显式设置`setScreen()`，还是在窗口屏幕移除时自动触发。
 
 ### `void QOffscreenSurface::setFormat(const QSurfaceFormat &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QOffscreenSurface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定了幕后表面`format`。
+曲面格式将在`create()`函数中解析。在`create()`后调用该函数不会重新解析本地曲面的曲面格式。
 
 ### `void QOffscreenSurface::setScreen(QScreen *newScreen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setScreen`。调用它会改变 `QOffscreenSurface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newScreen`：类型为 `QScreen *`。没有默认值，调用时必须提供。传入 `QScreen *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置屏幕外表面连接的屏幕。
+如果屏幕外的表面已经创建，它会在`newScreen`上重新创建。
 
 ### `[override virtual] QSize QOffscreenSurface::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QOffscreenSurface` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QSurface::size()` const.
+返回屏幕外表面的大小。
+返回表面的像素大小。
 
 ### `[override virtual] QSurface::SurfaceType QOffscreenSurface::surfaceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOffscreenSurface::surfaceType` 用于计算、查询或取得与“surface、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSurface::SurfaceType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSurface::SurfaceType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QSurface::surfaceType()` const.
+返回屏幕外表面的表面类型。
+屏幕外表面的表面类型总是`QSurface::OpenGLSurface`。
+返回表面类型。
 
 ## 6. 深入实践与常见坑
 

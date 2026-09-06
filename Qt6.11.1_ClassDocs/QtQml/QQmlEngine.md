@@ -131,612 +131,427 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 46 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `offlineStoragePath : QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngine` 的配置属性。初始化或状态切换时通过 `setOfflineStoragePath(...)` 设置，之后用 `offlineStoragePath()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含用于存储离线用户数据的目录。
+返回放置 SQL 和其他离线存储的目录。
+用`openDatabaseSync()`创建的SQL数据库存储在这里。
+默认设置为平台标准用户应用数据目录中的 QML/OfflineStorage。
+请注意，该路径可能目前不存在于文件系统中，因此希望在该位置创建新文件的调用者应先创建路径——详见`QDir::mkpath()`。
 
-**签名拆解：**
-
-- 属性类型：`QString`。
-- 属性名：`offlineStoragePath`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `offlineStoragePath()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QQmlEngine::QQmlEngine(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的QQmlEngine，使用给定的`parent`。
 
 ### `[override virtual noexcept] QQmlEngine::~QQmlEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngine` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QQmlEngine`。
+该引擎上创建的任何`QQmlContext`都会被无效，但不会被销毁（除非它们被父级到`QQmlEngine`对象）。
+关于清理 JS 引擎的详细信息，请参见 ~`QJSEngine()`。
 
 ### `void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBase *provider)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQmlEngine` 添加依赖、数据或子对象的 API `addImageProvider`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `providerId`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `provider`：类型为 `QQmlImageProviderBase *`。没有默认值，调用时必须提供。传入 `QQmlImageProviderBase *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置通过 image： url scheme 请求的图片的`provider`，并带有主机 `providerId`。`QQmlEngine` 拥有 `provider`。
+图像提供者支持pixmap和线程图像请求。有关实现和使用图像提供者的详细信息，请参见`QQuickImageProvider`文档。
+所有必要的图像提供者应在加载任何QML源文件之前加入引擎。
 
 ### `void QQmlEngine::addImportPath(const QString &path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQmlEngine` 添加依赖、数据或子对象的 API `addImportPath`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加`path`作为一个目录，引擎在基于URL的目录结构中搜索已安装模块。
+`path`可以是本地文件系统目录、Qt 资源路径（`:/imports`）、Qt 资源 URL（`qrc:/imports`）或 URL。
+`path`会在加入导入路径列表之前被转换为规范形式。
+新加入的`path`将率先进入`importPathList()`。
 
 ### `void QQmlEngine::addPluginPath(const QString &path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQmlEngine` 添加依赖、数据或子对象的 API `addPluginPath`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加`path`作为一个目录，引擎在该目录中搜索导入模块的本地插件（在`qmldir`文件中引用）。
+默认情况下，列表只包含`.`，即引擎在`qmldir`文件本身的目录中进行搜索。
+新加入的`path`将率先进入`pluginPathList()`。
 
 ### `void QQmlEngine::addUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQmlEngine` 添加依赖、数据或子对象的 API `addUrlInterceptor`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `urlInterceptor`：类型为 `QQmlAbstractUrlInterceptor *`。没有默认值，调用时必须提供。传入 `QQmlAbstractUrlInterceptor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+增加了用于解析 QML URL 的`urlInterceptor`。这同样适用于用于加载脚本文件和 QML 类型的 URL。在加载文件时，不应修改 URL 拦截器，否则 URL 选择可能不一致。多个 URL 拦截器（如有）将按添加顺序调用。
+`QQmlEngine`不拥有拦截者，也不会删除它。
 
 ### `QUrl QQmlEngine::baseUrl() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::baseUrl` 用于计算、查询或取得与“base、Url”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该引擎的基础URL。基础URL仅在向`QQmlComponent`构造函数传递相对URL时用于解析组件。
+如果没有显式设置基础 URL，该方法返回应用当前的工作目录。
 
 ### `void QQmlEngine::clearComponentCache()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::clearComponentCache` 用于执行与“清空、Component、Cache”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除发动机内部组件缓存。
+该函数会摧毁引擎之前加载的大多数组件的属性元数据。它通过从引擎的组件缓存中丢弃未被引用的组件来实现。它不会丢弃仍然被引用的组件，因为这几乎肯定会导致后续崩溃。
+如果没有引用任何组件，该函数将引擎返回到不包含任何已加载组件数据的状态。这对于重新加载前一个组件集的较小子集，或加载先前加载组件的新版本时可能非常有用。
+组件缓存清除后，必须先加载组件，才能创建任何新对象。
+注意：由 QML 组件创建的任何现有对象都会保留其类型，即使你清除了组件缓存。这包括单例对象。如果你在清除缓存后从同一 QML 代码创建了更多对象，新的对象类型会与旧的不同。将这样的新对象分配给其声明类型中属于该对象的属性，而该属性属于清除缓存前创建的对象，是行不通的。
+一般来说，清除组件缓存时，确保没有由QML组件创建的对象处于活体状态。
 
 ### `void QQmlEngine::clearSingletons()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::clearSingletons` 用于执行与“清空、Singletons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除发动机所有单条。
+该函数会丢弃所有单例实例，删除引擎在其中拥有的任何 QObject。这有助于确保调用 `clearComponentCache()` 前没有剩余 QML 创建的对象。
+如果引擎拥有基于`QObject`的单例实例，QML属性将变为空，若引擎不拥有则保留其值。访问现有QML创建对象时，这些单例不会被自动重建。只有当新组件实例化时，这些单例才会被重新创建。
 
 ### `[static] QQmlContext *QQmlEngine::contextForObject(const QObject *object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `contextForObject`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQmlContext *`。
-- 参数 `object`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`object`的`QQmlContext`，若未设置上下文则返回 nullptr。
+当`QQmlEngine`实例化`QObject`时，内部上下文会自动分配给它。此类内部上下文是只读的。你无法在它们上设置上下文属性。
 
 ### `[override virtual protected] bool QQmlEngine::event(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
 
 ### `[signal] void QQmlEngine::exit(int retCode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngine` 发出的通知信号 `exit`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `retCode`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当引擎加载的QML希望以指定返回码`retCode`退出事件循环时，会发出该信号。
 
 ### `QQmlImageProviderBase *QQmlEngine::imageProvider(const QString &providerId) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::imageProvider` 用于计算、查询或取得与“image、Provider”相关的操作。调用时要先确认当前状态和 `providerId` 的有效范围；返回类型是 `QQmlImageProviderBase *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlImageProviderBase *`。
-- 参数 `providerId`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果找到，返回设置为`providerId`的图像提供者;否则返回`nullptr`。
 
 ### `QStringList QQmlEngine::importPathList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::importPathList` 用于计算、查询或取得与“import、Path、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回引擎在基于URL的目录结构中搜索已安装模块的目录列表。
+例如，如果路径中有`/opt/MyApp/lib/imports`，导入`com.mycompany.Feature`的QML会使`QQmlEngine`在`/opt/MyApp/lib/imports/com/mycompany/Feature/`中查找该模块提供的组件。定义版本映射类型以及可能的QML扩展插件需要`qmldir`文件。
+默认情况下，此列表包含QML导入路径中提到的路径。
 
 ### `QQmlIncubationController *QQmlEngine::incubationController() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::incubationController` 用于计算、查询或取得与“incubation、Controller”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlIncubationController *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlIncubationController *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设定的孵化控制器，若未设置控制器则返回0。
 
 ### `QUrl QQmlEngine::interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::interceptUrl` 用于计算、查询或取得与“intercept、Url”相关的操作。调用时要先确认当前状态和 `url`、`type` 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-- 参数 `type`：类型为 `QQmlAbstractUrlInterceptor::DataType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定`type`的`url`上运行当前的URL拦截器并返回结果。
 
 ### `[since 6.6] void QQmlEngine::markCurrentFunctionAsTranslationBinding()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::markCurrentFunctionAsTranslationBinding` 用于执行与“mark、当前、Function、As、Translation、Binding”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+如果该方法被调用在QML中绑定的一部分函数内，则该绑定将被视为平移绑定。
+注意：该函数主要适用于你想提供 qsTr 函数的替代方案。为了确保 C 类暴露的属性在语言变更时更新，建议对 `LanguageChange` 事件进行反应。这是一种更通用的机制，在非 QML 环境中使用该类时也能有效，且开销略小。然而，当类已经与 QML 引擎紧密关联时，使用 `markCurrentFunctionAsTranslationBinding` 也可以接受。更多细节请参见“为动态语言变更做准备”。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ class I18nAwareClass : public QObject {
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+   //...
+
+    QString text() const
+    {
+         if (auto engine = qmlEngine(this))
+             engine->markCurrentFunctionAsTranslationBinding();
+         return tr("Hello, world!");
+    }
+ };
+```
 
 ### `QNetworkAccessManager *QQmlEngine::networkAccessManager() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::networkAccessManager` 用于计算、查询或取得与“network、Access、Manager”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNetworkAccessManager *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNetworkAccessManager *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个通用`QNetworkAccessManager`，可被该引擎实例化的任何QML类型使用。
+如果`QQmlNetworkAccessManagerFactory`已设置且尚未创建`QNetworkAccessManager`，则使用该`QQmlNetworkAccessManagerFactory`来创建`QNetworkAccessManager`;否则返回的`QNetworkAccessManager`将没有代理或缓存设置。
 
 ### `QQmlNetworkAccessManagerFactory *QQmlEngine::networkAccessManagerFactory() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::networkAccessManagerFactory` 用于计算、查询或取得与“network、Access、Manager、Factory”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlNetworkAccessManagerFactory *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlNetworkAccessManagerFactory *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前`QQmlNetworkAccessManagerFactory`。
 
 ### `QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::offlineStorageDatabaseFilePath` 用于计算、查询或取得与“offline、Storage、Database、File、Path”相关的操作。调用时要先确认当前状态和 `databaseName` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `databaseName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有标识符`databaseName`的本地存储数据库所在（或将会被定位）的文件路径。
 
 ### `[signal, since 6.5] void QQmlEngine::offlineStoragePathChanged()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `offlineStoragePathChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含用于存储离线用户数据的目录。
+返回放置 SQL 和其他离线存储的目录。
+用`openDatabaseSync()`创建的SQL数据库存储在这里。
+默认设置为平台标准用户应用数据目录中的 QML/OfflineStorage。
+请注意，该路径可能目前不存在于文件系统中，因此希望在该位置创建新文件的调用者应先创建路径——详见`QDir::mkpath()`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `offlineStoragePath` 的变化，不要把它当作普通函数主动调用。
 
 ### `bool QQmlEngine::outputWarningsToStandardError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::outputWarningsToStandardError` 用于计算、查询或取得与“output、Warnings、转换输出、Standard、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果警告消息除了`warnings()`信号发出外还会输出到stderr，则返回true;否则返回false。
+默认值为真。
 
 ### `QStringList QQmlEngine::pluginPathList() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::pluginPathList` 用于计算、查询或取得与“plugin、Path、List”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回引擎搜索导入模块本地插件的目录列表（`qmldir`文件中引用）。
+默认情况下，列表只包含`.`，即引擎在`qmldir`文件本身的目录中进行搜索。
 
 ### `[signal] void QQmlEngine::quit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngine` 发出的通知信号 `quit`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当引擎加载的QML想要退出时，会发出这个信号。
 
 ### `void QQmlEngine::removeImageProvider(const QString &providerId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeImageProvider`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `providerId`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`providerId`时移除了图像提供商。
 
 ### `void QQmlEngine::removeUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeUrlInterceptor`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `urlInterceptor`：类型为 `QQmlAbstractUrlInterceptor *`。没有默认值，调用时必须提供。传入 `QQmlAbstractUrlInterceptor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除之前用 `addUrlInterceptor` 添加的 `urlInterceptor`。在引擎加载文件时不应修改 URL 拦截器，否则 URL 选择可能不一致。
+这不会删除拦截器，只是将其从发动机中移除。之后你可以在同一台或不同的发动机上重复使用它。
 
 ### `[slot] void QQmlEngine::retranslate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `retranslate`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+刷新所有使用标记为翻译字符串的绑定表达式。
+安装带`QCoreApplication::installTranslator`的新译文后调用此功能，确保用户界面显示最新的翻译内容。
 
 ### `QQmlContext *QQmlEngine::rootContext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::rootContext` 用于计算、查询或取得与“root、Context”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlContext *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlContext *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回引擎的根上下文。
+根上下文由`QQmlEngine`自动创建。所有由引擎实例实例化的QML组件实例应可用的数据应放在根上下文中。
+应将仅部分组件实例可用的额外数据添加到根上下文的子上下文中。
 
 ### `void QQmlEngine::setBaseUrl(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBaseUrl`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该引擎的基础URL设置为`url`。
 
 ### `[static] void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setContextForObject`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `context`：类型为 `QQmlContext *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`object`的 `QQmlContext` 设置为 `context`。如果`object`已经有上下文，则会输出警告，但上下文不会被更改。
+当`QQmlEngine`实例化`QObject`时，上下文会自动设置。
 
 ### `void QQmlEngine::setImportPathList(const QStringList &paths)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setImportPathList`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `paths`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 `paths` 设置为搜索引擎在基于 URL 的目录结构中搜索已安装模块的目录列表。
+默认情况下，此列表包含QML导入路径中提到的路径。
+警告：调用 setImportPathList 不会保留默认导入路径。
 
 ### `void QQmlEngine::setIncubationController(QQmlIncubationController *controller)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIncubationController`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `controller`：类型为 `QQmlIncubationController *`。没有默认值，调用时必须提供。传入 `QQmlIncubationController *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定发动机的孵化时间`controller`。发动机只能有一个主动控制器，且不拥有该控制器。
 
 ### `void QQmlEngine::setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *factory)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNetworkAccessManagerFactory`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `factory`：类型为 `QQmlNetworkAccessManagerFactory *`。没有默认值，调用时必须提供。传入 `QQmlNetworkAccessManagerFactory *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于创建`QNetworkAccessManager`的`factory`。
+`QNetworkAccessManager` 用于 QML 的所有网络访问。通过实现工厂，可以创建带有专门缓存、代理和 cookie 支持的自定义`QNetworkAccessManager`。
+必须在发动机运行前设置好工厂设置。
+注意：`QQmlEngine`不对工厂拥有所有权。
 
 ### `void QQmlEngine::setOutputWarningsToStandardError(bool enabled)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOutputWarningsToStandardError`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置警告消息是否输出到 stderr 到 `enabled`。
+如果`enabled`为真，QML生成的任何警告消息都会输出到stderr并由`warnings()`信号发出。如果`enabled`为假，则只发出`warnings()`信号。这使得应用程序能够自行处理警告输出。
+默认值为真。
 
 ### `void QQmlEngine::setPluginPathList(const QStringList &paths)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPluginPathList`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `paths`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将引擎用于搜索导入模块本地插件的目录列表（在`qmldir`文件中引用）设置为`paths`。
+默认情况下，列表只包含`.`，即引擎在`qmldir`文件本身的目录中进行搜索。
 
 ### `template <typename T> T QQmlEngine::singletonInstance(int qmlTypeId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::singletonInstance` 用于计算、查询或取得与“singleton、Instance”相关的操作。调用时要先确认当前状态和 `qmlTypeId` 的有效范围；返回类型是 `template <typename T> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回注册在`qmlTypeId`下的单例类型实例。
+模板参数 T 可以是`QJSValue`或指向 `QObject` 派生类型的指针，具体取决于单例的注册方式。如果尚未创建 T 实例，则现在创建。如果 `qmlTypeId` 不代表有效的单例类型，则返回默认构造 `QJSValue` 或返回 `nullptr`。
+`QObject`* 示例：
+`QJSValue`例：
+建议将QML类型ID（例如作为单例类中的静态成员）存储。通过`qmlTypeId()`查找成本较高。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> T`。
-- 参数 `qmlTypeId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ class MySingleton : public QObject {
+     Q_OBJECT
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     // Register as default constructed singleton.
+     QML_ELEMENT
+     QML_SINGLETON
+
+     static int typeId;
+     // ...
+ };
+
+     MySingleton::typeId = qmlTypeId(...);
+
+     // Retrieve as QObject*
+     QQmlEngine engine;
+     MySingleton* instance = engine.singletonInstance<MySingleton*>(MySingleton::typeId);
+```
 
 ### `[since 6.5] template <typename T> T QQmlEngine::singletonInstance(QAnyStringView uri, QAnyStringView typeName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::singletonInstance` 用于计算、查询或取得与“singleton、Instance”相关的操作。调用时要先确认当前状态和 `uri`、`typeName` 的有效范围；返回类型是 `template <typename T> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回由`uri`指定的模块中名为`typeName`的单例类型实例。
+该方法可作为调用`qmlTypeId`随后基于id的singletonInstance超载的替代方案。当只需一次性设置单例时，这非常方便;如果需要多次访问单例，缓存其typeId将允许通过基于类型ID的超载更快地访问。
+模板参数 T 可以是`QJSValue`或指向 `QObject` 派生类型的指针，具体取决于单例的注册方式。如果尚未创建 T 实例，则现在进行创建。如果 `typeName`不代表有效的单例类型，则返回默认构造`QJSValue`或`nullptr`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> T`。
-- 参数 `uri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QQmlEngine engine;
+     MySingleton *singleton = engine.singletonInstance<MySingleton *>("mymodule", "MySingleton");
+```
 
 ### `void QQmlEngine::trimComponentCache()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::trimComponentCache` 用于执行与“trim、Component、Cache”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+修剪发动机内部组件缓存。
+该函数会删除当前未被使用的加载组件的属性元数据。
+如果该组件存在任何现存的组件实例、使用该组件的其他组件实例，或由这些组件实例化的任何对象，则该组件被视为正在使用中。
 
 ### `QList<QQmlAbstractUrlInterceptor *> QQmlEngine::urlInterceptors() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::urlInterceptors` 用于计算、查询或取得与“url、Interceptors”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QQmlAbstractUrlInterceptor *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QQmlAbstractUrlInterceptor *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前活跃的URL拦截器列表。
 
 ### `[signal] void QQmlEngine::warnings(const QList<QQmlError> &warnings)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlEngine` 发出的通知信号 `warnings`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `warnings`：类型为 `const QList<QQmlError> &`。没有默认值，调用时必须提供。传入 `const QList<QQmlError> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当QML生成`warnings`消息时，该信号会被发射。
 
 ### `QQmlContext *qmlContext(const QObject *object)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::qmlContext` 用于计算、查询或取得与“qml、Context”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `QQmlContext *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlContext *`。
-- 参数 `object`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`object`相关的`QQmlContext`（如果有的话）。这等价于`QQmlEngine::contextForObject`（对象）。
+注意：添加`#include <QtQml>`以使用此功能。
 
 ### `QQmlEngine *qmlEngine(const QObject *object)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::qmlEngine` 用于计算、查询或取得与“qml、Engine”相关的操作。调用时要先确认当前状态和 `object` 的有效范围；返回类型是 `QQmlEngine *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlEngine *`。
-- 参数 `object`：类型为 `const QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`object`相关的`QQmlEngine`（如果有的话）。这等价于`QQmlEngine::contextForObject`（对象）->engine()，但效率更高。
+注意：添加`#include <QtQml>`以使用此功能。
 
 ### `QML_NAMESPACE_EXTENDED(EXTENSION_NAMESPACE)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::QML_NAMESPACE_EXTENDED` 用于执行与“EXTENDED”相关的操作。调用时要先确认当前状态和 `EXTENSION_NAMESPACE` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+行为方式与`QML_EXTENDED_NAMESPACE`相同，但被扩展的是命名空间而非类型。
+声明包围命名空间使用 `EXTENSION_NAMESPACE` 作为扩展，在 QML 中提供进一步枚举。如果扩展命名空间通过 `QML_ELEMENT` 或 `QML_NAMED_ELEMENT()` 宏暴露于 QML，则该功能生效。枚举需要暴露给元对象系统才能实现。
+例如，在以下C代码中，。
+命名空间`NS1`通过 `NS2` 扩展，`E2`枚举在 `NS1` 内即可从QML获得。
+注意：`EXTENSION_NAMESPACE`也可以是`QObject`或QGadget;在这种情况下——与同样暴露方法和属性的`QML_EXTENDED`不同——只暴露其枚举。
+注意：`EXTENSION_NAMESPACE`必须有一个元对象;即它必须是包含`Q_NAMESPACE`宏的命名空间，或者是`QObject`/QGadget。
+注意：类名必须完全经过限定，即使你已经在命名空间内。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `EXTENSION_NAMESPACE`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ namespace NS2 {
+     Q_NAMESPACE
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     enum class E2 { D = 3, E, F };
+     Q_ENUM_NS(E2)
+ }
+
+ namespace NS1 {
+     Q_NAMESPACE
+     QML_ELEMENT
+
+     enum class E1 { A, B, C };
+     Q_ENUM_NS(E1)
+
+     // Extends NS1 with NS2
+     QML_NAMESPACE_EXTENDED(NS2)
+ }
+```
 
 ### `QString offlineStoragePath() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQmlEngine::offlineStoragePath` 用于计算、查询或取得与“offline、Storage、Path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含用于存储离线用户数据的目录。
+返回放置 SQL 和其他离线存储的目录。
+用`openDatabaseSync()`创建的SQL数据库存储在这里。
+默认设置为平台标准用户应用数据目录中的 QML/OfflineStorage。
+请注意，该路径可能目前不存在于文件系统中，因此希望在该位置创建新文件的调用者应先创建路径——详见`QDir::mkpath()`。
 
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `offlineStoragePath()` 读取当前值；它不会修改应用状态。
 
 ### `void setOfflineStoragePath(const QString &dir)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOfflineStoragePath`。调用它会改变 `QQmlEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含用于存储离线用户数据的目录。
+返回放置 SQL 和其他离线存储的目录。
+用`openDatabaseSync()`创建的SQL数据库存储在这里。
+默认设置为平台标准用户应用数据目录中的 QML/OfflineStorage。
+请注意，该路径可能目前不存在于文件系统中，因此希望在该位置创建新文件的调用者应先创建路径——详见`QDir::mkpath()`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dir`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOfflineStoragePath(...)` 修改 `offlineStoragePath`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

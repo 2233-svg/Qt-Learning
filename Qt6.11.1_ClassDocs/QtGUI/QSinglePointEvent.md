@@ -76,153 +76,110 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `exclusivePointGrabber : QObject*`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSinglePointEvent` 的配置属性。初始化或状态切换时通过 `setExclusivePointGrabber(...)` 设置，之后用 `exclusivePointGrabber()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含将接受未来更新的对象。
+独占抓取器是一个选择接收所有未来更新事件和包含该事件相同点的发布事件的对象。
+设置 exclusivePointGrabber 属性是一种方便，等同于：
 
-**签名拆解：**
+**如何使用：** 调用 `exclusivePointGrabber()` 读取当前值；它不会修改应用状态。
 
-- 属性类型：`QObject*`。
-- 属性名：`exclusivePointGrabber`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setExclusiveGrabber(points().first(), exclusiveGrabber);
+```
 
 ### `Qt::MouseButton QSinglePointEvent::button() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSinglePointEvent::button` 用于计算、查询或取得与“button”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseButton`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseButton`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回导致事件的按钮。
+返回的值总是`Qt::NoButton`鼠标移动事件，以及`TabletMove`、`TabletEnterProximity`和`TabletLeaveProximity`事件。
 
 ### `Qt::MouseButtons QSinglePointEvent::buttons() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSinglePointEvent::buttons` 用于计算、查询或取得与“buttons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseButtons`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseButtons`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回事件生成时的按钮状态。
+按钮状态结合了`Qt::LeftButton`、`Qt::RightButton`和`Qt::MiddleButton`，使用了OR操作符。
+鼠标移动或`TabletMove`事件，都是按住的按钮。
+对于鼠标按压、双击或`TabletPress`事件，这包括导致事件的按钮。
+对于鼠标释放或`TabletRelease`事件，这会排除导致事件的按钮。
 
 ### `QPointF QSinglePointEvent::globalPosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSinglePointEvent::globalPosition` 用于计算、查询或取得与“global、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该事件中点在屏幕或虚拟桌面上的位置。
+注意：鼠标指针的全局位置会在事件发生时被记录。这在像X11这样的异步窗口系统中非常重要;每当你根据鼠标事件移动小部件时，globalPosition() 可能与当前光标位置差异很大，`QCursor::pos()` 返回。
 
 ### `[override virtual] bool QSinglePointEvent::isBeginEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBeginEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该事件代表被按下的`button`，返回`true`。
 
 ### `[override virtual] bool QSinglePointEvent::isEndEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEndEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该事件代表`button`释放，返回`true`。
 
 ### `[override virtual] bool QSinglePointEvent::isUpdateEvent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isUpdateEvent`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该事件不包含按钮状态的变化，返回`true`。
 
 ### `QPointF QSinglePointEvent::position() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSinglePointEvent::position` 用于计算、查询或取得与“position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该事件中点相对于接收事件的控件或项目的位置。
+如果你会根据鼠标事件移动小部件，建议用`globalPosition()`。
 
 ### `QPointF QSinglePointEvent::scenePosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSinglePointEvent::scenePosition` 用于计算、查询或取得与“scene、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该事件中点相对于窗口或场景的位置。
 
 ### `QObject * exclusivePointGrabber() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSinglePointEvent::exclusivePointGrabber` 用于计算、查询或取得与“exclusive、Point、Grabber”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含将接受未来更新的对象。
+独占抓取器是一个选择接收所有未来更新事件和包含该事件相同点的发布事件的对象。
+设置 exclusivePointGrabber 属性是一种方便，等同于：
 
-**签名拆解：**
+**如何使用：** 调用 `exclusivePointGrabber()` 读取当前值；它不会修改应用状态。
 
-- 返回值：`QObject *`。
-- 参数：无。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setExclusiveGrabber(points().first(), exclusiveGrabber);
+```
 
 ### `void setExclusivePointGrabber(QObject *exclusiveGrabber)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setExclusivePointGrabber`。调用它会改变 `QSinglePointEvent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含将接受未来更新的对象。
+独占抓取器是一个选择接收所有未来更新事件和包含该事件相同点的发布事件的对象。
+设置 exclusivePointGrabber 属性是一种方便，等同于：
 
-**签名拆解：**
+**如何使用：** 调用 `setExclusivePointGrabber(...)` 修改 `exclusivePointGrabber`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
-- 返回值：`void`。
-- 参数 `exclusiveGrabber`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
+**官方示例：**
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ setExclusiveGrabber(points().first(), exclusiveGrabber);
+```
 
 ## 6. 深入实践与常见坑
 

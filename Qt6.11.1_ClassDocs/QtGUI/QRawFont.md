@@ -118,693 +118,346 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 51 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRawFont::AntialiasingType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 暴露的类型声明 `Antialiasing、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AntialiasingType`。
-- 属性名：`QRawFont`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举表示字形在函数`alphaMapForGlyph()`中光栅化的不同方式。
+- `QRawFont::PixelAntialiasing`：`0`;通过测量该形状在整像素上的覆盖度来进行光栅化。返回的图像包含每个像素基于字形覆盖率的α值。
+- `QRawFont::SubPixelAntialiasing`：`1`;通过测量每个子像素的覆盖率进行光栅化，分别返回每个像素的红、绿、蓝分量的单独α值。
 
 ### `enum QRawFont::LayoutFlagflags QRawFont::LayoutFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 暴露的类型声明 `Layout、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:LayoutFlagflags QRawFont::LayoutFlags`。
-- 属性名：`QRawFont`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举告诉函数 `advancesForGlyphIndexes()` 如何计算前进量。
+- `QRawFont::SeparateAdvances`: `0`; 将为每个字形单独计算前进量。
+- `QRawFont::KernedAdvances`: `1`; 在相邻字形之间应用字距调整。请注意，目前不支持基于 OpenType GPOS 的字距调整。
+- `QRawFont::UseDesignMetrics`: `2`; 使用设计指标而不是调整到绘图设备分辨率的提示指标。可以与上述任意选项进行或运算。
+LayoutFlags 类型是 QFlags<LayoutFlag> 的一个 typedef。它存储 LayoutFlag 值的或组合。
 
 ### `QRawFont::QRawFont()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个无效的QRawFont。
 
 ### `QRawFont::QRawFont(const QByteArray &fontData, qreal pixelSize, QFont::HintingPreference hintingPreference = QFont::PreferDefaultHinting)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `fontData`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pixelSize`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hintingPreference`：类型为 `QFont::HintingPreference`。默认值为 `QFont::PreferDefaultHinting`。传入 `QFont::HintingPreference` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QRawFont，表示所提供`fontData`中包含的字体，大小（像素`pixelSize`），并使用`hintingPreference`指定的提示偏好。
+注意：数据必须包含 TrueType 或 OpenType 字体。
 
 ### `QRawFont::QRawFont(const QString &fileName, qreal pixelSize, QFont::HintingPreference hintingPreference = QFont::PreferDefaultHinting)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `pixelSize`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hintingPreference`：类型为 `QFont::HintingPreference`。默认值为 `QFont::PreferDefaultHinting`。传入 `QFont::HintingPreference` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QRawFont，表示`fileName`引用的文件中字体，尺寸（像素）由`pixelSize`给出，并使用`hintingPreference`指定的提示偏好。
+注意：所引用的文件必须包含 TrueType 或 OpenType 字体。
 
 ### `QRawFont::QRawFont(const QRawFont &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QRawFont &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个QRawFont，是`other`的复制品。
 
 ### `[noexcept] QRawFont::~QRawFont()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QRawFont`。
 
 ### `QList<QPointF> QRawFont::advancesForGlyphIndexes(const QList<quint32> &glyphIndexes, QRawFont::LayoutFlags layoutFlags) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::advancesForGlyphIndexes` 用于计算、查询或取得与“advances、For、Glyph、Indexes”相关的操作。调用时要先确认当前状态和 `glyphIndexes`、`layoutFlags` 的有效范围；返回类型是 `QList<QPointF>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QPointF>`。
-- 参数 `glyphIndexes`：类型为 `const QList<quint32> &`。没有默认值，调用时必须提供。传入 `const QList<quint32> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layoutFlags`：类型为 `QRawFont::LayoutFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回每个`glyphIndexes`的前进`QRawFont`像素单位。前进给出了从给定字形位置到下一个字形绘制位置的距离，使得两个字形看起来像是无间隔。进阶的计算方式由`layoutFlags`控制。
+注意：当请求`KernedAdvances`时，该函数会从TrueType表`KERN`应用字距调整规则（如果字体中有相应功能）。在许多现代字体中，字距调整通过OpenType规则或AAT规则处理，这需要应用完整的形状步骤。要获得完整形状文本的结果，请使用`QTextLayout`。
 
 ### `bool QRawFont::advancesForGlyphIndexes(const quint32 *glyphIndexes, QPointF *advances, int numGlyphs, QRawFont::LayoutFlags layoutFlags) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::advancesForGlyphIndexes` 用于计算、查询或取得与“advances、For、Glyph、Indexes”相关的操作。调用时要先确认当前状态和 `glyphIndexes`、`advances`、`numGlyphs`、`layoutFlags` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `glyphIndexes`：类型为 `const quint32 *`。没有默认值，调用时必须提供。传入 `const quint32 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `advances`：类型为 `QPointF *`。没有默认值，调用时必须提供。传入 `QPointF *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `numGlyphs`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `layoutFlags`：类型为 `QRawFont::LayoutFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回每个`QRawFont` `glyphIndexes`的前进，单位为像素单位。前进给出了从给定字形位置到下一个字形应绘制位置的距离，使两个字形看起来像是无间距。字形索引由数组给出`glyphIndexes`虽然结果通过`advances`返回，但两者都必须包含`numGlyphs`元素。前进的计算方式由`layoutFlags`控制。
+注意：当请求`KernedAdvances`时，该函数会从字体中提供 TrueType 表 `KERN` 的字距调整规则（如果字体中有此功能）。在许多现代字体中，字距调整通过 OpenType 规则或 AAT 规则处理，这需要应用完整的塑形步骤。要获得完全整形文本的结果，请使用 `QTextLayout`。
 
 ### `QList<QPointF> QRawFont::advancesForGlyphIndexes(const QList<quint32> &glyphIndexes) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::advancesForGlyphIndexes` 用于计算、查询或取得与“advances、For、Glyph、Indexes”相关的操作。调用时要先确认当前状态和 `glyphIndexes` 的有效范围；返回类型是 `QList<QPointF>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QPointF>`。
-- 参数 `glyphIndexes`：类型为 `const QList<quint32> &`。没有默认值，调用时必须提供。传入 `const QList<quint32> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回每个`glyphIndexes`的`QRawFont`的提前，单位为像素。这些推进给出了从给定字形位置到下一个字形应绘制位置的距离，使得看起来两个字形之间没有间隔。每个字形的前进是单独计算的。
 
 ### `bool QRawFont::advancesForGlyphIndexes(const quint32 *glyphIndexes, QPointF *advances, int numGlyphs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::advancesForGlyphIndexes` 用于计算、查询或取得与“advances、For、Glyph、Indexes”相关的操作。调用时要先确认当前状态和 `glyphIndexes`、`advances`、`numGlyphs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `glyphIndexes`：类型为 `const quint32 *`。没有默认值，调用时必须提供。传入 `const quint32 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `advances`：类型为 `QPointF *`。没有默认值，调用时必须提供。传入 `QPointF *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `numGlyphs`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回每个`glyphIndexes`的 `QRawFont` 的进度（像素单位）。前进给出了从给定字形位置到下一个字形绘制位置的距离，使两个字形看起来像是无间距。字形索引由数组给出`glyphIndexes`虽然结果通过 `advances` 返回，但两者都必须包含`numGlyphs`元素。每个字形的前进分别计算。
 
 ### `QImage QRawFont::alphaMapForGlyph(quint32 glyphIndex, QRawFont::AntialiasingType antialiasingType = SubPixelAntialiasing, const QTransform &transform = QTransform()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::alphaMapForGlyph` 用于计算、查询或取得与“alpha、映射、For、Glyph”相关的操作。调用时要先确认当前状态和 `glyphIndex`、`antialiasingType`、`transform` 的有效范围；返回类型是 `QImage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QImage`。
-- 参数 `glyphIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `antialiasingType`：类型为 `QRawFont::AntialiasingType`。默认值为 `SubPixelAntialiasing`。传入 `QRawFont::AntialiasingType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `transform`：类型为 `const QTransform &`。默认值为 `QTransform()`。传入 `const QTransform &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数返回底层字体中给定`glyphIndex`的字形光栅化图像，使用指定的`transform`。如果`QRawFont`无效，该函数将返回无效`QImage`。
+如果字体是彩色字体，那么生成的图像将包含当前像素大小的渲染字形。在这种情况下，`antialiasingType`将被忽略。
+否则，如果`antialiasingType`设置为`QRawFont::SubPixelAntialiasing`，则生成的图像将处于`QImage::Format_RGB32`，每个像素的RGB值将代表该像素在光栅化中的子像素不透明度。否则，图像将采用`QImage::Format_Indexed8`格式，每个像素包含光栅化中该像素的不透明度。
 
 ### `qreal QRawFont::ascent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::ascent` 用于计算、查询或取得与“ascent”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`的上升，单位为像素单位。
+字体的上升是指从基线到字符最高位置的距离。实际上，一些字体设计师会打破这一规则，例如当他们在一个字符上加多个重音符号，或为了适应异国语言中的特殊字符时，因此（虽然罕见）这个值可能会过小。
 
 ### `qreal QRawFont::averageCharWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::averageCharWidth` 用于计算、查询或取得与“average、Char、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`的平均字符宽度（像素单位）。
 
 ### `QRectF QRawFont::boundingRect(quint32 glyphIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::boundingRect` 用于计算、查询或取得与“bounding、Rect”相关的操作。调用时要先确认当前状态和 `glyphIndex` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `glyphIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含给定`glyphIndex`字形的最小矩形。
 
 ### `qreal QRawFont::capHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::capHeight` 用于计算、查询或取得与“cap、高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`的电容高度，单位为像素单位。
+字体的大写高度是指大写字母高于基线的高度。它具体指的是扁平的大写字母（如H或I）的高度，与圆头字母如O或尖头字母（如A）相对，后者可能显示超升。
 
 ### `qreal QRawFont::descent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::descent` 用于计算、查询或取得与“descent”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`的下降，单位为像素单位。
+下降是指从基线到字符延伸到最低点的距离。实际上，一些字体设计师会打破这一规则，例如为了适应异国语言中的特殊字符，因此（虽然罕见）这个值可能过小。
 
 ### `QString QRawFont::familyName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::familyName` 用于计算、查询或取得与“family、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原了这个`QRawFont`的姓氏。
 
 ### `[since 6.7] QByteArray QRawFont::fontTable(QFont::Tag tag) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::fontTable` 用于计算、查询或取得与“字体、Table”相关的操作。调用时要先确认当前状态和 `tag` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `tag`：类型为 `QFont::Tag`。没有默认值，调用时必须提供。传入 `QFont::Tag` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从底层物理字体中检索`tag`指定的sfnt表，若未发现空字节数组则检索。返回的字体表的字节顺序为大端序，符合sfnt格式的规定。
 
 ### `QByteArray QRawFont::fontTable(const char *tag) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::fontTable` 用于计算、查询或取得与“字体、Table”相关的操作。调用时要先确认当前状态和 `tag` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `tag`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+名称必须是四字符字符串。
+注意：该函数会超载 `fontTable`（QFont：：Tag）。
 
 ### `[static] QRawFont QRawFont::fromFont(const QFont &font, QFontDatabase::WritingSystem writingSystem = QFontDatabase::Any)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromFont`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QRawFont`。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `writingSystem`：类型为 `QFontDatabase::WritingSystem`。默认值为 `QFontDatabase::Any`。传入 `QFontDatabase::WritingSystem` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于`font`查询获取物理表示。返回的物理字体是Qt优先显示选定`writingSystem`文本的字体。
+警告：该函数可能成本较高，不应在性能敏感代码中调用。
 
 ### `[since 6.11] quint32 QRawFont::glyphCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::glyphCount` 用于计算、查询或取得与“glyph、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`中的符文数量。
 
 ### `bool QRawFont::glyphIndexesForChars(const QChar *chars, int numChars, quint32 *glyphIndexes, int *numGlyphs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::glyphIndexesForChars` 用于计算、查询或取得与“glyph、Indexes、For、Chars”相关的操作。调用时要先确认当前状态和 `chars`、`numChars`、`glyphIndexes`、`numGlyphs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `chars`：类型为 `const QChar *`。没有默认值，调用时必须提供。传入 `const QChar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `numChars`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `glyphIndexes`：类型为 `quint32 *`。没有默认值，调用时必须提供。传入 `quint32 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `numGlyphs`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用底层字体中的 CMAP 表将一串 Unicode 点转换为字形索引。该函数的工作原理与 `glyphIndexesForString()` 类似，但它接收一个数组（`chars`），结果会返回`glyphIndexes`，但数组和字形数量会在 `numGlyphs` 中设置。数组的大小`glyphIndexes`至少要`numChars`，如果还不够，这个函数会返回 false，然后你可以根据 `numGlyphs` 返回的大小调整 `glyphIndexes`。
 
 ### `QList<quint32> QRawFont::glyphIndexesForString(const QString &text) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::glyphIndexesForString` 用于计算、查询或取得与“glyph、Indexes、For、字符串”相关的操作。调用时要先确认当前状态和 `text` 的有效范围；返回类型是 `QList<quint32>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<quint32>`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用底层字体中的 CMAP 表将 `text` 给出的 Unicode 点串转换为字形索引，并返回包含结果的列表。
+注意，如果字体中存在其他影响文本形状的表格，返回的字形索引无法正确表示文本的渲染。要获得正确形状的文本，您可以使用`QTextLayout`布局和塑造文本，然后调用 QTextLayout：：glyphs() 获取字形索引列表和`QRawFont`对。
 
 ### `[since 6.11] QString QRawFont::glyphName(quint32 glyphIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::glyphName` 用于计算、查询或取得与“glyph、名称”相关的操作。调用时要先确认当前状态和 `glyphIndex` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `glyphIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`glyphIndex`的名称。
+如果字体中没有明确名称，则根据字形索引合成名称。
 
 ### `QFont::HintingPreference QRawFont::hintingPreference() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::hintingPreference` 用于计算、查询或取得与“hinting、Preference”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont::HintingPreference`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont::HintingPreference`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于构造该`QRawFont`的提示偏好。
 
 ### `bool QRawFont::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `QRawFont` 有效，则返回 `true`，否则返回 false。
 
 ### `qreal QRawFont::leading() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::leading` 用于计算、查询或取得与“leading”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`的前导像素单位。
+这就是自然的行间距。
 
 ### `qreal QRawFont::lineThickness() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::lineThickness` 用于计算、查询或取得与“行、Thickness”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回绘制线条（下划线、划线等）的粗细，同时返回用该字体绘制的文字。
 
 ### `void QRawFont::loadFromData(const QByteArray &fontData, qreal pixelSize, QFont::HintingPreference hintingPreference)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `loadFromData`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fontData`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pixelSize`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hintingPreference`：类型为 `QFont::HintingPreference`。没有默认值，调用时必须提供。传入 `QFont::HintingPreference` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`fontData` `pixelSize`给出的尺寸（像素）的字体替换当前`QRawFont`，并使用`hintingPreference`指定的提示偏好。
+`fontData`必须包含TrueType或OpenType字体。
 
 ### `void QRawFont::loadFromFile(const QString &fileName, qreal pixelSize, QFont::HintingPreference hintingPreference)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `loadFromFile`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `pixelSize`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `hintingPreference`：类型为 `QFont::HintingPreference`。没有默认值，调用时必须提供。传入 `QFont::HintingPreference` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`fileName`引用的文件内容替换当前`QRawFont`，文件大小（以像素计）由`pixelSize`给出，并使用`hintingPreference`指定的提示偏好。
+文件必须引用 TrueType 或 OpenType 字体。
 
 ### `qreal QRawFont::maxCharWidth() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::maxCharWidth` 用于计算、查询或取得与“max、Char、宽度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字体中最宽字符的宽度。
 
 ### `QPainterPath QRawFont::pathForGlyph(quint32 glyphIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::pathForGlyph` 用于计算、查询或取得与“path、For、Glyph”相关的操作。调用时要先确认当前状态和 `glyphIndex` 的有效范围；返回类型是 `QPainterPath`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPainterPath`。
-- 参数 `glyphIndex`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QRawFont`有效，该函数返回底层字体某一`glyphIndex`的字形形状。否则，返回空`QPainterPath`。
+归还的符文永远不会被暗示。
 
 ### `qreal QRawFont::pixelSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::pixelSize` 用于计算、查询或取得与“pixel、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`设定的像素大小。像素大小影响字形的光栅化方式、`pathForGlyph()`返回的字形大小，并用于将内部度量从设计单元转换为逻辑像素单元。
 
 ### `void QRawFont::setPixelSize(qreal pixelSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPixelSize`。调用它会改变 `QRawFont` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pixelSize`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该字体渲染的像素大小设置为`pixelSize`。
 
 ### `QFont::Style QRawFont::style() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::style` 用于计算、查询或取得与“style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QFont::Style`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QFont::Style`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回归了本`QRawFont`的风格。
 
 ### `QString QRawFont::styleName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::styleName` 用于计算、查询或取得与“style、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+恢复了本`QRawFont`的样式名称。
 
 ### `QList<QFontDatabase::WritingSystem> QRawFont::supportedWritingSystems() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::supportedWritingSystems` 用于计算、查询或取得与“supported、Writing、Systems”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QFontDatabase::WritingSystem>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QFontDatabase::WritingSystem>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回字体文件中设计者提供的信息支持的书写系统列表。请注意，这并不保证支持字体中的某个特定 Unicode 点。您可以使用`supportsCharacter()`检查对单个特定字符的支持。
+注意：该列表基于字体OS/2表中设置的Unicode范围和代码页范围确定，且底层字体文件中必须有此类表。
 
 ### `bool QRawFont::supportsCharacter(QChar character) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `supportsCharacter`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `character`：类型为 `QChar`。没有默认值，调用时必须提供。传入 `QChar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字体的字形对应给定`character`，返回`true`。
 
 ### `bool QRawFont::supportsCharacter(uint ucs4) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `supportsCharacter`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `ucs4`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果字体的字形对应于UCS-4编码的字符`ucs4`，返回`true`。
 
 ### `[noexcept] void QRawFont::swap(QRawFont &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QRawFont &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将原始字体替换为`other`。这个操作非常快，从未失败过。
 
 ### `qreal QRawFont::underlinePosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::underlinePosition` 用于计算、查询或取得与“underline、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从基线开始绘制下划线的位置，用于在用该字体渲染的文本下方绘制下划线。
 
 ### `qreal QRawFont::unitsPerEm() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::unitsPerEm` 用于计算、查询或取得与“units、Per、Em”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回设计单元数量定义了该`QRawFont`的电磁矩形的宽度和高度。该数值与像素大小一起用于将设计度量转换为像素单位，因为内部指标在设计单位中指定，像素大小表示1电磁尺（像素单位）。
 
 ### `int QRawFont::weight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::weight` 用于计算、查询或取得与“weight”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原了这`QRawFont`的重量。
 
 ### `qreal QRawFont::xHeight() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRawFont::xHeight` 用于计算、查询或取得与“x、高度”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRawFont`的xHeight（像素单位）。
+这通常但不总是等同于字符“x”的高度。
 
 ### `bool QRawFont::operator!=(const QRawFont &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QRawFont &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QRawFont`不等于`other`，则返回`true`。否则，返回`false`。
 
 ### `QRawFont &QRawFont::operator=(const QRawFont &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRawFont &`。
-- 参数 `other`：类型为 `const QRawFont &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+分配`other`到这个`QRawFont`。
 
 ### `bool QRawFont::operator==(const QRawFont &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QRawFont &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QRawFont`等于`other`，则返回`true`。否则返回`false`。
 
 ### `[noexcept] size_t qHash(const QRawFont &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRawFont::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRawFont &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `enum LayoutFlag { SeparateAdvances, KernedAdvances, UseDesignMetrics }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 暴露的类型声明 `Layout、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举告诉函数 `advancesForGlyphIndexes()` 如何计算前进量。
+- `QRawFont::SeparateAdvances`: `0`; 将为每个字形单独计算前进量。
+- `QRawFont::KernedAdvances`: `1`; 在相邻字形之间应用字距调整。请注意，目前不支持基于 OpenType GPOS 的字距调整。
+- `QRawFont::UseDesignMetrics`: `2`; 使用设计指标而不是调整到绘图设备分辨率的提示指标。可以与上述任意选项进行或运算。
+LayoutFlags 类型是 QFlags<LayoutFlag> 的一个 typedef。它存储 LayoutFlag 值的或组合。
 
 ### `flags LayoutFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRawFont` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举告诉函数 `advancesForGlyphIndexes()` 如何计算前进量。
+- `QRawFont::SeparateAdvances`: `0`; 将为每个字形单独计算前进量。
+- `QRawFont::KernedAdvances`: `1`; 在相邻字形之间应用字距调整。请注意，目前不支持基于 OpenType GPOS 的字距调整。
+- `QRawFont::UseDesignMetrics`: `2`; 使用设计指标而不是调整到绘图设备分辨率的提示指标。可以与上述任意选项进行或运算。
+LayoutFlags 类型是 QFlags<LayoutFlag> 的一个 typedef。它存储 LayoutFlag 值的或组合。
 
 ## 6. 深入实践与常见坑
 

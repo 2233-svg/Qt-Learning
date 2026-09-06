@@ -106,444 +106,363 @@ qWarning() << "operation failed";
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QLoggingCategory::CategoryFilter`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLoggingCategory` 的配置属性。初始化或状态切换时通过 `setCategoryFilter(...)` 设置，之后用 `CategoryFilter()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这是指向函数签名如下的指针的类型def：
+带有该签名的函数可以用`installFilter()`安装。
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:CategoryFilter`。
-- 属性名：`QLoggingCategory`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void myCategoryFilter(QLoggingCategory *);
+```
 
 ### `[explicit] QLoggingCategory::QLoggingCategory(const char *category, QtMsgType enableForLevel = QtDebugMsg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLoggingCategory` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `category`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enableForLevel`：类型为 `QtMsgType`。默认值为 `QtDebugMsg`。传入 `QtMsgType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有`category`名称的QLoggingCategory对象，并启用所有类型至少与`enableForLevel`一样冗长的消息，默认为`QtDebugMsg`（启用所有类别）。
+如果`category` `nullptr`，则使用类别名称`"default"`。
+注意：`category`必须在该对象的生命周期内保持有效。通常使用字符串字面值来实现这一点。
 
 ### `[noexcept] QLoggingCategory::~QLoggingCategory()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLoggingCategory` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁一个`QLoggingCategory`物体。
 
 ### `const char *QLoggingCategory::categoryName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::categoryName` 用于计算、查询或取得与“类别、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回类别名称。
 
 ### `[static] QLoggingCategory *QLoggingCategory::defaultCategory()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultCategory`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QLoggingCategory *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向全局范畴`"default"`的指针，例如被 `qDebug()`、`qInfo()`、`qWarning()`、`qCritical()` 或 `qFatal()` 使用。
+注意：在销毁静态对象时，返回的指针可能是空的。另外，不要`delete`该指针，因为类别的所有权不会转移。
 
 ### `[static] QLoggingCategory::CategoryFilter QLoggingCategory::installFilter(QLoggingCategory::CategoryFilter filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `installFilter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+掌控日志分类的配置。
+安装一个函数`filter`，用于确定应启用哪些类别和消息类型。如果`filter` `nullptr`，默认消息过滤器将被恢复。返回指向之前安装的过滤器的指针。
+所有已存在的`QLoggingCategory`对象都会在`installFilter()`返回前传递给过滤器，过滤器可以自由地用`setEnabled()`更改每个类别的配置。任何未被更改的类别都会保留之前过滤器给出的配置，因此新过滤器在首次处理现有类别时无需委托给之前的过滤器。
+之后添加的任何新类别都会传递给新过滤器;仅针对少数特定类别的配置调整，而非完全覆盖日志策略的过滤器，可以先将新类别传递给前一个过滤器，使其获得标准配置，然后根据需要调整该类别，前提是该类别对过滤器有特定兴趣。安装新过滤器的代码可以记录`installFilter()`返回，供过滤器在后续调用中使用。
+定义过滤器时，请注意它可以从不同线程调用;但绝不能同时调用。该过滤器不能调用`QLoggingCategory`中的任何静态函数。
+安装（例如`main()`）由。
+或者，你可以通过`setFilterRules()`配置默认过滤器。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QLoggingCategory::CategoryFilter`。
-- 参数 `filter`：类型为 `QLoggingCategory::CategoryFilter`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
+```cpp
+ static QLoggingCategory::CategoryFilter oldCategoryFilter = nullptr;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void myCategoryFilter(QLoggingCategory *category)
+ {
+     // For a category set up after this filter is installed, we first set it up
+     // with the old filter. This ensures that any driver.usb logging configured
+     // by the user is kept, aside from the one level we override; and any new
+     // categories we're not interested in get configured by the old filter.
+     if (oldCategoryFilter)
+         oldCategoryFilter(category);
+
+     // Tweak driver.usb's logging, over-riding the default filter:
+     if (qstrcmp(category->categoryName(), "driver.usb") == 0)
+         category->setEnabled(QtDebugMsg, true);
+ }
+```
 
 ### `bool QLoggingCategory::isCriticalEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCriticalEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此类别应显示关键消息，则返回 `true`；否则返回 `false`。
+注意：`qCCritical()` 宏在执行任何代码之前已经进行了此检查。然而，调用此方法可能有助于避免仅为调试输出而生成数据的高开销。
 
 ### `bool QLoggingCategory::isDebugEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDebugEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`该类别是否应显示调试消息;否则`false`。
+注意：`qCDebug()`宏在运行任何代码前已经完成了这种检查。不过，调用此方法可能有助于避免仅用于调试输出时生成昂贵的数据。
 
 ### `bool QLoggingCategory::isEnabled(QtMsgType msgtype) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msgtype`：类型为 `QtMsgType`。没有默认值，调用时必须提供。传入 `QtMsgType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该类别应显示类型为`msgtype`的消息，返回`true`;否则`false`。
 
 ### `bool QLoggingCategory::isInfoEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInfoEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该类别需要显示信息信息，返回`true`;否则`false`。
+注意：`qCInfo()`宏在执行任何代码前已经完成了此检查。不过，调用此方法可能有助于避免仅为调试输出生成昂贵的数据。
 
 ### `bool QLoggingCategory::isWarningEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isWarningEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`该类别是否应显示警告信息;否则`false`。
+注意：`qCWarning()`宏在执行任何代码前已经会进行此检查。不过，调用此方法可能有助于避免仅为调试输出生成昂贵的数据。
 
 ### `void QLoggingCategory::setEnabled(QtMsgType type, bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEnabled`。调用它会改变 `QLoggingCategory` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QtMsgType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该类别的消息类型`type`更改为`enable`。
+该方法仅适用于安装在`installFilter()`的过滤器内部使用。关于如何全局配置类别的概述，请参见“配置类别”。
+注意：`QtFatalMsg`无法更改;它将始终保持`true`。
 
 ### `[static] void QLoggingCategory::setFilterRules(const QString &rules)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setFilterRules`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+通过一组 `rules`配置应启用哪些类别和消息类型。
+注意：如果`installFilter()`安装了自定义类别过滤器，或用户已定义`QT_LOGGING_CONF`或`QT_LOGGING_RULES`环境变量，规则可能会被忽略。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `rules`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory::setFilterRules(QStringLiteral("driver.usb.debug=true"));
+```
 
 ### `QLoggingCategory &QLoggingCategory::operator()()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLoggingCategory` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QLoggingCategory &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对象本身。这允许同时使用`QLoggingCategory`变量和返回`QLoggingCategory`的工厂方法，分别用于`qCDebug()`、`qCWarning()`、`qCCritical()`或`qCFatal()`宏。
 
 ### `const QLoggingCategory &QLoggingCategory::operator()() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLoggingCategory` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QLoggingCategory &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对象本身。这允许同时使用`QLoggingCategory`变量和返回`QLoggingCategory`的工厂方法，分别用于`qCDebug()`、`qCWarning()`、`qCCritical()`或`qCFatal()`宏。
 
 ### `[since 6.5] Q_DECLARE_EXPORTED_LOGGING_CATEGORY(name, EXPORT_MACRO)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::Q_DECLARE_EXPORTED_LOGGING_CATEGORY` 用于执行与“类别”相关的操作。调用时要先确认当前状态和 `name`、`EXPORT_MACRO` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+声明日志类别`name`。宏可用来声明程序不同部分共享的通用日志类别。
+这与`Q_DECLARE_LOGGING_CATEGORY()`完全相同。然而，该宏声明的日志类别还带有 `EXPORT_MACRO` 的限定。如果日志类别需要从动态库导出，这非常有用。
+该宏必须在类或函数之外使用。
+该宏在第6.5季度引入。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `EXPORT_MACRO`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ Q_DECLARE_EXPORTED_LOGGING_CATEGORY(lcCore, LIB_EXPORT_MACRO)
+```
 
 ### `Q_DECLARE_LOGGING_CATEGORY(name)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::Q_DECLARE_LOGGING_CATEGORY` 用于执行与“类别”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+声明日志类别`name`。宏可用于声明程序不同部分共享的日志类别。
+该宏必须在类或方法之外使用。
 
 ### `Q_LOGGING_CATEGORY(name, string)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::Q_LOGGING_CATEGORY` 用于执行与“类别”相关的操作。调用时要先确认当前状态和 `name`、`string` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `string`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义日志类别`name`，并使其可根据`string`标识符进行配置。默认情况下，所有消息类型均为启用。
+库或可执行文件中只有一个翻译单元可以定义带有特定名称的类别。隐式定义的`QLoggingCategory`对象在首次使用时以线程安全的方式创建。
+该宏必须在类或方法之外使用。
 
 ### `Q_LOGGING_CATEGORY(name, string, msgType)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::Q_LOGGING_CATEGORY` 用于执行与“类别”相关的操作。调用时要先确认当前状态和 `name`、`string`、`msgType` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `string`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msgType`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义日志类别`name`，并使其可配置为`string`标识符。默认情况下，`QtMsgType` `msgType`及更严重的消息被启用，低严重程度的类型被禁用。
+库或可执行文件中只有一个翻译单元可以定义带有特定名称的类别。隐式定义的`QLoggingCategory`对象在首次使用时以线程安全的方式创建。
+该宏必须在类或方法之外使用。
 
 ### `[since 6.9] Q_STATIC_LOGGING_CATEGORY(name, string)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `Q_STATIC_LOGGING_CATEGORY`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `string`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义静态日志类别`name`，并使其可配置为`string`标识符。默认情况下，所有消息类型均为启用。
+日志类别是用`static`限定符创建的，这样你只能在同一翻译单元中访问它。这样可以避免符号的意外冲突。
+隐式定义的`QLoggingCategory`对象在首次使用时以线程安全的方式创建。
+该宏必须在类或方法之外使用。
+该宏在Qt 6.9引入。
 
 ### `[since 6.9] Q_STATIC_LOGGING_CATEGORY(name, string, msgType)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `Q_STATIC_LOGGING_CATEGORY`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `name`：类型为 `未标注`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `string`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msgType`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+定义静态日志类别`name`，并使其可配置为`string`标识符。默认情况下，`QtMsgType` `msgType`及更严重的消息被启用，严重性较低的类型被禁用。
+日志类别是用`static`限定词创建的，所以你只能在同一翻译单元中访问它。这样可以避免符号的意外冲突。
+隐式定义的`QLoggingCategory`对象在首次使用时以线程安全的方式创建。
+该宏必须在类或方法之外使用。
+该宏在Qt 6.9引入。
 
 ### `qCCritical(category)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCCritical` 用于执行与“q、C、Critical”相关的操作。调用时要先确认当前状态和 `category` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回日志类别`category`的关键消息输出流。
+宏扩展为检查`QLoggingCategory::isCriticalEnabled()`是否对`true`进行评估的代码。如果是，流的参数会被处理并发送给消息处理程序。
+注意：如果某个类别的临界输出未被启用，参数将不会被处理，因此不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCCritical(category) << "a critical message";
+```
 
 ### `qCCritical(category, const char *message, ...)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCCritical` 用于执行与“q、C、Critical”相关的操作。调用时要先确认当前状态和 `category`、`message`、`...` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+记录日志类别中的关键消息 `message` `category`。`message` 可能包含占位符，并用额外参数替换，类似于 C 的 printf() 函数。
+注意：如果某个类别的临界输出未被启用，参数将不会被处理，因此不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCCritical(category, "a critical message logged into category %s", category.categoryName());
+```
 
 ### `qCDebug(category)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCDebug` 用于执行与“q、C、调试输出”相关的操作。调用时要先确认当前状态和 `category` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回日志类别`category`的调试消息输出流。
+宏展开为检测`QLoggingCategory::isDebugEnabled()`是否对`true`进行评估的代码。如果是，流的参数会被处理并发送给消息处理器。
+注意：如果该`category`的调试输出未启用，参数不会被处理，所以不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCDebug(category) << "a debug message";
+```
 
 ### `qCDebug(category, const char *message, ...)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCDebug` 用于执行与“q、C、调试输出”相关的操作。调用时要先确认当前状态和 `category`、`message`、`...` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+记录日志类别`category`中的调试消息`message`。`message`可能包含用额外参数替换的占位符，类似于C的printf()函数。
+注意：如果该`category`的调试输出未启用，参数不会被处理，所以不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCDebug(category, "a debug message logged into category %s", category.categoryName());
+```
 
 ### `[since 6.5] qCFatal(category)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCFatal` 用于执行与“q、C、Fatal”相关的操作。调用时要先确认当前状态和 `category` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回日志类别中致命消息的输出流，`category`。
+如果你使用默认的消息处理程序，返回的流会中止以创建核心转储。在 Windows 上，对于调试构建，这个函数会报告一个`_CRT_ERROR`，使你能够将调试器连接到应用程序。
+该宏在第6.5季度引入。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCFatal(category) << "a fatal message. Program will be terminated!";
+```
 
 ### `[since 6.5] qCFatal(category, const char *message, ...)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCFatal` 用于执行与“q、C、Fatal”相关的操作。调用时要先确认当前状态和 `category`、`message`、`...` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在日志类别`category`中记录致命消息`message`。`message`可能包含占位符，并用额外的参数替换，类似于 C 的 printf() 函数。
+如果你使用默认消息处理程序，这个函数会中止以创建核心转储。在 Windows 上，对于调试构建，这个函数会报告一个`_CRT_ERROR`，使你能够将调试器连接到应用程序。
+该宏在第6.5季度引入。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCFatal(category, "a fatal message. Program will be terminated!");
+```
 
 ### `qCInfo(category)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCInfo` 用于执行与“q、C、Info”相关的操作。调用时要先确认当前状态和 `category` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回日志类别`category`的信息消息输出流。
+宏扩展为检查 `QLoggingCategory::isInfoEnabled()` 是否对 `true` 进行评估的代码。如果是，流的参数会被处理并发送给消息处理程序。
+注意：如果某个类别的调试输出未被启用，参数将不会被处理，因此不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCInfo(category) << "an informational message";
+```
 
 ### `qCInfo(category, const char *message, ...)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCInfo` 用于执行与“q、C、Info”相关的操作。调用时要先确认当前状态和 `category`、`message`、`...` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+记录日志类别中的信息消息 `message`，`category`。`message` 可能包含用额外参数替换的占位符，类似于 C 的 printf() 函数。
+注意：如果某个类别的调试输出未被启用，参数将不会被处理，因此不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCInfo(category, "an informational message logged into category %s", category.categoryName());
+```
 
 ### `qCWarning(category)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCWarning` 用于执行与“q、C、Warning”相关的操作。调用时要先确认当前状态和 `category` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回日志类别`category`的警告消息输出流。
+宏扩展为检查`QLoggingCategory::isWarningEnabled()`是否对`true`进行评估的代码。如果是，流的参数会被处理并发送给消息处理程序。
+注意：如果某个类别的警告输出未被启用，论元将不会被处理，因此不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCWarning(category) << "a warning message";
+```
 
 ### `qCWarning(category, const char *message, ...)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QLoggingCategory::qCWarning` 用于执行与“q、C、Warning”相关的操作。调用时要先确认当前状态和 `category`、`message`、`...` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在日志类别`category`中记录警告消息 `message`。`message` 可能包含用额外参数替换的占位符，类似于 C 的 printf() 函数。
+注意：如果某个类别的警告输出未被启用，论元将不会被处理，因此不要依赖任何副作用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `category`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     QLoggingCategory category("driver.usb");
+     qCWarning(category, "a warning message logged into category %s", category.categoryName());
+```
 
 ### `CategoryFilter`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLoggingCategory` 的 `类别、Filter` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+这是指向函数签名如下的指针的类型def：
+带有该签名的函数可以用`installFilter()`安装。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void myCategoryFilter(QLoggingCategory *);
+```
 
 ## 6. 深入实践与常见坑
 

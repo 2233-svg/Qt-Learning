@@ -120,669 +120,639 @@ restoreGeometry(settings.value(QStringLiteral("MainWindow/geometry")).toByteArra
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 49 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSettings::Format`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 暴露的类型声明 `格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+该枚举类型指定`QSettings`使用的存储格式。
+- `QSettings::NativeFormat`：`0`;使用最适合平台的存储格式存储设置。在 Windows 上，这意味着系统注册表;在 macOS 和 iOS 上，这意味着 CFPreferences API;在 Unix 上，这意味着 INI 格式的文本配置文件。
+- `QSettings::Registry32Format`：`2`;仅限Windows：从运行在64位Windows上的64位应用程序中显式访问32位系统注册表。在32位Windows或64位Windows上的32位应用程序中，这与指定NativeFormat相同。该枚举值在Qt 5.7中加入。
+- `QSettings::Registry64Format`：`3`;仅限Windows：从运行在64位Windows上的32位应用程序中显式访问64位系统注册表。在32位Windows或64位Windows上的64位应用程序中，这与指定NativeFormat相同。该枚举值是在Qt 5.7中添加的。
+- `QSettings::IniFormat`：`1`;将设置存储在INI文件中。注意，INI文件失去了数字数据与用于编码的字符串之间的区别，因此以数字形式写入的数值应被读回为`QString`。
+- `QSettings::WebLocalStorageFormat`：`4`;仅WASM：将当前源区的设置存储在window.localStorage中。如果不允许使用Cookie，则退回到INI格式。这为每个源区提供最多5MiB的存储空间，但访问是同步的，且不需要JSPI。
+- `QSettings::WebIndexedDBFormat`：`5`;仅WASM：将当前来源的设置存储在索引数据库中。如果不允许使用cookie，则退回到INI格式。这需要JSPI，但比WebLocalStorageFormat提供更多存储空间。
+- `QSettings::InvalidFormat`：`16`;特殊值由`registerFormat()`返回。
+在Unix上，NativeFormat和IniFormat含义相同，只是文件扩展名不同（`.conf`代表NativeFormat，`.ini`代表IniFormat）。
+INI 文件格式是 Qt 在所有平台上支持的 Windows 文件格式。在缺乏 INI 标准的情况下，我们尽量遵循 Microsoft 的做法，但有以下例外：
+- 如果你存储了`QVariant`无法转换为`QString`的类型（例如 `QPoint`、`QRect` 和 `QSize`），Qt 使用基于`@`的语法来编码该类型。例如：
+pos = @`QPoint`（100 100）。
 
-**签名拆解：**
+为了减少兼容性问题，任何不出现在值首位或没有Qt类型（`Point`、`Rect`、`Size`等）的`@`都被视为正常字符。
+- 虽然反斜杠是 INI 文件中的特殊字符，但大多数 Windows 应用程序在文件路径中不会逃逸反斜线（`\`）：
+windir = C：\Windows。
 
-- 属性类型：`:Format`。
-- 属性名：`QSettings`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSettings`始终将反斜线视为特殊字符，且不提供读写此类条目的API。
+- INI 文件格式对键的语法有严格限制。Qt 通过在键中使用 `%` 作为转义字符来绕过这些限制。此外，如果你保存顶级设置（如无斜杠的键，如“someKey”），它会出现在 INI 文件的“General”部分。为避免覆盖其他键，如果你用“General/someKey”等键保存内容，键将位于“%General”部分，而非“General”部分。
+- 与当今大多数实现一致，`QSettings` 将假定 INI 文件中的值是 UTF-8 编码的。这意味着这些值将被解码为 UTF-8 编码项并以 UTF-8 写回。为了与旧版本 Qt 向后兼容，INI 文件中的键以 %-编码格式写入，但可以以 %-编码和 UTF-8 格式读取。
+请注意，这种行为与 Qt 6 之前版本中的 `QSettings` 行为不同。用 Qt 5 或更早版本写的 INI 文件仍可被基于 Qt 6 的应用程序完全读取（除非设置了非 utf8 的 ini 编码）。但是，用 Qt 6 写的 INI 文件只能被旧版本 Qt 读取，如果你将“iniCodec”设置为 UTF-8 文本编码。
 
 ### `QSettings::ReadFunc`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的配置属性。初始化或状态切换时通过 `setReadFunc(...)` 设置，之后用 `ReadFunc()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+Typedef 指针指向具有以下签名的函数：
+`ReadFunc` 在 `registerFormat()` 中用作指向读取一组键值对的函数的指针。`ReadFunc`应一次性读取所有选项，并返回 `SettingsMap` 容器中的所有设置，该容器最初是空的。
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:ReadFunc`。
-- 属性名：`QSettings`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool myReadFunc(QIODevice &device, QSettings::SettingsMap &map);
+```
 
 ### `enum QSettings::Scope`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 暴露的类型声明 `Scope`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Scope`。
-- 属性名：`QSettings`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举指定设置是用户专属还是同一系统的所有用户共享。
+- `QSettings::UserScope`：`0`;将设置存储在当前用户的特定位置（例如用户的主目录中）。
+- `QSettings::SystemScope`：`1`;将设置存储在全局位置，使同一台机器上的所有用户都能访问同一套设置。
 
 ### `QSettings::SettingsMap`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的配置属性。初始化或状态切换时通过 `setSettingsMap(...)` 设置，之后用 `SettingsMap()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:SettingsMap`。
-- 属性名：`QSettings`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`QMap`<`QString`，`QVariant`>。
 
 ### `enum QSettings::Status`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 暴露的类型声明 `状态`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Status`。
-- 属性名：`QSettings`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以下状态值可能存在：
+- `QSettings::NoError`：`0`;未发生错误。
+- `QSettings::AccessError`：`1`;发生访问错误（例如尝试写入只读文件）。
+- `QSettings::FormatError`：`2`;发生格式错误（例如加载一个格式错误的 INI 文件）。
 
 ### `QSettings::WriteFunc`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的配置属性。初始化或状态切换时通过 `setWriteFunc(...)` 设置，之后用 `WriteFunc()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+Typedef 指针指向具有以下签名的函数：
+`WriteFunc` 在 `registerFormat()` 中用作指向函数的指针，该函数写入一组键值对。`WriteFunc` 只调用一次，所以你需要一次性输出所有设置。
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:WriteFunc`。
-- 属性名：`QSettings`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool myWriteFunc(QIODevice &device, const QSettings::SettingsMap &map);
+```
 
 ### `[explicit] QSettings::QSettings(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个QSettings对象，用于访问之前通过调用`QCoreApplication::setOrganizationName()`、`QCoreApplication::setOrganizationDomain()`和`QCoreApplication::setApplicationName()`的应用程序和组织集的设置。
+作用域`QSettings::UserScope`，格式为`defaultFormat()`（默认为`QSettings::NativeFormat`）。在调用该构造函数之前，请使用`setDefaultFormat()`来更改该构造函数所使用的默认格式。
+代码。
+等价于。
+如果之前没有调用`QCoreApplication::setOrganizationName()`和`QCoreApplication::setApplicationName()`，QSettings对象将无法读取或写入任何设置，`status()`返回`AccessError`。
+你应该同时提供域名（macOS和iOS默认使用）和名称（其他地方默认使用），不过代码如果只提供一个域名，且该域名会被使用（所有平台），这与非默认平台文件命名的做法不一致。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSettings settings("Moose Soft", "Facturo-Pro");
+```
 
 ### `[explicit] QSettings::QSettings(QSettings::Scope scope, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `scope`：类型为 `QSettings::Scope`。没有默认值，调用时必须提供。传入 `QSettings::Scope` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造QSettings对象的方式与QSettings（`QObject` *parent）相同，但采用给定的`scope`。
 
 ### `QSettings::QSettings(const QString &fileName, QSettings::Format format, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `format`：类型为 `QSettings::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个名为 `fileName` 的 QSettings 对象，用于访问文件中存储的设置，并带有父`parent`。如果该文件尚未存在，则会被创建。
+如果 `format` 是`QSettings::NativeFormat`，`fileName` 的含义取决于平台。在 Unix 上，`fileName` 是 INI 文件的名称。在 macOS 和 iOS 上，`fileName` 是`.plist`文件的名称。在 Windows 上，`fileName` 是系统注册表中的一条路径。
+如果`format` `QSettings::IniFormat`，`fileName` 是 INI 文件的名称。
+警告：此功能仅为方便而提供。它在访问由 Qt 生成的 INI 或 `.plist` 文件时表现良好，但在其他程序发起的某些文件中出现的语法上可能会失败。特别请注意以下限制：
+- QSettings 不提供读取 INI “路径”条目的方法，即带有未脱义斜杠字符的条目。（这是因为这些条目具有歧义，无法自动解析。）
+- 在INI文件中，QSettings在某些上下文中将`@`字符作为元字符来编码Qt特定的数据类型（例如，`@Rect`），因此在纯INI文件中出现时可能会误解。
 
 ### `[explicit] QSettings::QSettings(const QString &organization, const QString &application = QString(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个QSettings对象，用于访问名为`application`的应用程序设置，来自名为`organization`的组织，并带有父`parent`。
+作用域设置为`QSettings::UserScope`，格式设置为`QSettings::NativeFormat`（即在调用该构造函数之前调用`setDefaultFormat()`无效）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `organization`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `application`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSettings settings("Moose Tech", "Facturo-Pro");
+```
 
 ### `QSettings::QSettings(QSettings::Scope scope, const QString &organization, const QString &application = QString(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `scope`：类型为 `QSettings::Scope`。没有默认值，调用时必须提供。传入 `QSettings::Scope` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `organization`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `application`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QSettings对象，用于访问名为`application`的应用程序设置，来自名为`organization`的组织，并带有父`parent`。
+如果`scope` `QSettings::UserScope`，QSettings 对象会先搜索用户特定的设置，然后再作为备选搜索系统范围的设置。如果`scope` `QSettings::SystemScope`，QSettings 对象会忽略用户特定的设置，提供系统范围的设置访问。
+存储格式设置为`QSettings::NativeFormat`（即在调用该构造函数之前调用`setDefaultFormat()`无效）。
+如果没有应用程序名称，QSettings 对象只访问全组织范围的 `locations`。
 
 ### `QSettings::QSettings(QSettings::Format format, QSettings::Scope scope, const QString &organization, const QString &application = QString(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `format`：类型为 `QSettings::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `scope`：类型为 `QSettings::Scope`。没有默认值，调用时必须提供。传入 `QSettings::Scope` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `organization`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `application`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QSettings对象，用于访问名为`application`的应用程序设置，来自名为`organization`的组织，并带有父`parent`。
+如果`scope` `QSettings::UserScope`，QSettings 对象会先搜索用户特定的设置，然后再搜索系统范围的设置作为备选。如果`scope` `QSettings::SystemScope`，QSettings 对象会忽略用户特定的设置，提供系统范围的设置访问。
+如果`format` `QSettings::NativeFormat`，则使用原生API存储设置。如果`format`为`QSettings::IniFormat`，则使用INI格式。
+如果没有应用程序名称，QSettings 对象只能访问整个组织的 `locations`。
 
 ### `[virtual noexcept] QSettings::~QSettings()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QSettings`物体。
+任何未保存的更改最终都会写入永久存储。
 
 ### `QStringList QSettings::allKeys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::allKeys` 用于计算、查询或取得与“all、Keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回所有键的列表，包括子键，这些键可以用`QSettings`对象读取。
+如果用`beginGroup()`设置一个组，则只返回组中的键，且不带组前缀：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数：无。
+```cpp
+ QSettings settings;
+ settings.setValue("fridge/color", QColor(Qt::white));
+ settings.setValue("fridge/size", QSize(32, 96));
+ settings.setValue("sofa", true);
+ settings.setValue("tv", false);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QStringList keys = settings.allKeys();
+ // keys: ["fridge/color", "fridge/size", "sofa", "tv"]
+```
 
 ### `QString QSettings::applicationName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::applicationName` 用于计算、查询或取得与“application、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于存储设置的应用程序名称。
 
 ### `void QSettings::beginGroup(QAnyStringView prefix)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginGroup`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+附加`prefix`当前组。
+当前组会自动加在所有指定为`QSettings`的键前。此外，查询函数如`childGroups()`、`childKeys()`和`allKeys()`基于该组。默认情况下，不会设置组。
+组有助于避免反复输入相同的设置路径。例如：
+这将设定三个设置的数值：
+- `mainwindow/size`
+- `mainwindow/active`
+- `outputpanel/visible`
+调用 `endGroup()` 将当前组重置到对应的 beginGroup() 调用之前的状态。组可以嵌套。
+注意：在6.4之前的Qt版本中，该功能是取`QString`，而非取`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `prefix`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ settings.beginGroup("mainwindow");
+ settings.setValue("size", win->size());
+ settings.setValue("active", win->isActive());
+ settings.endGroup();
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ settings.beginGroup("outputpanel");
+ settings.setValue("visible", panel->isVisible());
+ settings.endGroup();
+```
 
 ### `int QSettings::beginReadArray(QAnyStringView prefix)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginReadArray`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+向当前组添加`prefix`，并开始从数组读取数据。返回数组大小。
+首先用`beginWriteArray()`来写入数组。
+注意：在6.4之前的Qt版本中，该功能采用`QString`，而非取`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`int`。
-- 参数 `prefix`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ struct Login {
+     QString userName;
+     QString password;
+ };
+ QList<Login> logins;
+ //...
+ void some_function()
+ {
+     //...
+     QSettings settings;
+     int size = settings.beginReadArray("logins");
+     for (int i = 0; i < size; ++i) {
+         settings.setArrayIndex(i);
+         Login login;
+         login.userName = settings.value("userName").toString();
+         login.password = settings.value("password").toString();
+         logins.append(login);
+     }
+     settings.endArray();
+     //...
+ }
+```
 
 ### `void QSettings::beginWriteArray(QAnyStringView prefix, int size = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginWriteArray`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+向当前组添加`prefix`，并开始写入大小为`size`的数组。如果`size`为-1（默认值），则根据写入的条目索引自动确定。
+如果你某一组密钥多次出现，可以使用数组来简化操作。例如，假设你想保存一个可变长度的用户名和密码列表。你可以写成：
+生成的密钥将具有以下形式。
+- `logins/size`
+- `logins/1/userName`
+- `logins/1/password`
+- `logins/2/userName`
+- `logins/2/password`
+- `logins/3/userName`
+- `logins/3/password`
+- ...
+要读取数组，使用`beginReadArray()`。
+注意：在6.4之前的Qt版本中，该功能采用`QString`，而非取`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `prefix`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `size`：类型为 `int`。默认值为 `-1`。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ struct Login {
+     QString userName;
+     QString password;
+ };
+ QList<Login> logins;
+ //...
+ void some_function()
+ {
+     //...
+     QSettings settings;
+     settings.beginWriteArray("logins");
+     for (qsizetype i = 0; i < logins.size(); ++i) {
+         settings.setArrayIndex(i);
+         settings.setValue("userName", logins.at(i).userName);
+         settings.setValue("password", logins.at(i).password);
+     }
+     settings.endArray();
+     //...
+ }
+```
 
 ### `QStringList QSettings::childGroups() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::childGroups` 用于计算、查询或取得与“child、Groups”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回所有包含可用`QSettings`对象读取的键的顶层密钥组列表。
+如果用`beginGroup()`设置一个组，则返回该组的第一层键，且不带组前缀。
+你可以用 `childKeys()` 和 childGroups() 递归地浏览整个设置层级。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数：无。
+```cpp
+ QSettings settings;
+ settings.setValue("fridge/color", QColor(Qt::white));
+ settings.setValue("fridge/size", QSize(32, 96));
+ settings.setValue("sofa", true);
+ settings.setValue("tv", false);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QStringList groups = settings.childGroups();
+ // groups: ["fridge"]
+```
 
 ### `QStringList QSettings::childKeys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::childKeys` 用于计算、查询或取得与“child、Keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回所有可用`QSettings`对象读取的顶层密钥列表。
+如果用`beginGroup()`设置一个组，则返回该组的顶层键，但不会带组前缀：
+你可以用 childKeys() 和递归方式`childGroups()`整个设置层级。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数：无。
+```cpp
+ QSettings settings;
+ settings.setValue("fridge/color", QColor(Qt::white));
+ settings.setValue("fridge/size", QSize(32, 96));
+ settings.setValue("sofa", true);
+ settings.setValue("tv", false);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QStringList keys = settings.childKeys();
+ // keys: ["sofa", "tv"]
+```
 
 ### `void QSettings::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除与该`QSettings`对象关联的主位置中的所有条目。
+备选位置的条目不会被删除。
+如果你只想删除当前`group()`中的条目，可以用 remove（“”） 代替。
 
 ### `bool QSettings::contains(QAnyStringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `key`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果存在名为 `key` 的设置，则返回 `true`;否则返回 false。
+如果用`beginGroup()`来设置一个群，则取`key`相对于该群。
+密钥查找会根据文件格式和操作系统的不同，对大小写敏感或不敏感。为避免可移植性问题，请参见章节和密钥语法规则。
+注意：在6.4之前的Qt版本中，该功能采用`QString`，而非取`QAnyStringView`。
 
 ### `[static] QSettings::Format QSettings::defaultFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `defaultFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSettings::Format`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于存储 `QSettings`（`QObject` *） 构造函数设置的默认文件格式。如果未设置默认格式，则使用 `QSettings::NativeFormat`。
 
 ### `void QSettings::endArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endArray`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭用`beginReadArray()`或`beginWriteArray()`开始的数组。
 
 ### `void QSettings::endGroup()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endGroup`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+将组重置到相应`beginGroup()`调用前的状态。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ settings.beginGroup("alpha");
+ // settings.group() == "alpha"
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ settings.beginGroup("beta");
+ // settings.group() == "alpha/beta"
+
+ settings.endGroup();
+ // settings.group() == "alpha"
+
+ settings.endGroup();
+ // settings.group() == ""
+```
 
 ### `[override virtual protected] bool QSettings::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::event`（QEvent *e）。
+该虚拟函数接收对象事件，如果事件`e`被识别并处理，应返回真。
+event() 函数可以重新实现，以自定义对象的行为。
+确保你调用所有未处理的事件的父事件类实现。
 
 ### `bool QSettings::fallbacksEnabled() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::fallbacksEnabled` 用于计算、查询或取得与“fallbacks、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了备援，返回`true`;否则返回`false`。
+默认情况下，备援是启用的。
 
 ### `QString QSettings::fileName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::fileName` 用于计算、查询或取得与“file、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回使用该`QSettings`对象编写设置的路径。
+在 Windows 上，如果格式是`QSettings::NativeFormat`，返回值是系统注册表路径，而不是文件路径。
 
 ### `QSettings::Format QSettings::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QSettings::Format`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储设置的格式。
 
 ### `QString QSettings::group() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::group` 用于计算、查询或取得与“group”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的组别。
 
 ### `bool QSettings::isAtomicSyncRequired() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAtomicSyncRequired`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QSettings`仅允许执行设置的原子保存和重载（同步），则返回`true`。如果允许将设置内容直接保存到配置文件中，则返回`false`。默认值为`true`。
 
 ### `bool QSettings::isWritable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isWritable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果可以使用该`QSettings`对象编写设置，返回`true`;否则返回`false`。
+isWritable() 可能返回 false 的一个原因是 `QSettings` 操作只读文件。
+警告：该功能并非完全可靠，因为文件权限可能随时发生变化。
 
 ### `QString QSettings::organizationName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::organizationName` 用于计算、查询或取得与“organization、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于存储设置的组织名称。
 
 ### `[static] QSettings::Format QSettings::registerFormat(const QString &extension, QSettings::ReadFunc readFunc, QSettings::WriteFunc writeFunc, Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+注册自定义存储格式。成功时，返回一个特殊的格式值，随后可传递给`QSettings`构造器。失败时，返回`InvalidFormat`。
+`extension`是与格式相关的文件扩展名（不含“.”）。
+`readFunc`和`writeFunc`参数是读取和写入一组键值对的函数的指针。读写函数的`QIODevice`参数总是以二进制模式打开（即不带`QIODeviceBase::Text`标志）。
+`caseSensitivity`参数指定键是否区分大小写。这在使用`QSettings`查找值时会产生影响。默认是区分大小写。在Unix系统上，参数必须`Qt::CaseSensitive`。
+默认情况下，如果你使用以组织名称和应用程序名称为单位的构造函数，文件系统位置与`IniFormat`相同。使用`setPath()`来指定其他位置。
+注意：该功能是线程安全的。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QSettings::Format`。
-- 参数 `extension`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `readFunc`：类型为 `QSettings::ReadFunc`。没有默认值，调用时必须提供。传入 `QSettings::ReadFunc` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `writeFunc`：类型为 `QSettings::WriteFunc`。没有默认值，调用时必须提供。传入 `QSettings::WriteFunc` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `caseSensitivity`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseSensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ bool readXmlFile(QIODevice &device, QSettings::SettingsMap &map);
+ bool writeXmlFile(QIODevice &device, const QSettings::SettingsMap &map);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ int main(int argc, char *argv[])
+ {
+     const QSettings::Format XmlFormat =
+             QSettings::registerFormat("xml", readXmlFile, writeXmlFile);
+
+     QSettings settings(XmlFormat, QSettings::UserScope, "MySoft",
+                        "Star Runner");
+
+     //...
+ }
+```
 
 ### `void QSettings::remove(QAnyStringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+移除设置`key`及`key`的任何子设置。
+请注意，如果某个备用位置包含相同键的设置，调用 remove() 后该设置将被可见。
+如果 `key` 是空字符串，当前 `group()` 中的所有键都会被移除。例如：
+密钥查找会根据文件格式和操作系统的不同，对大小写敏感或不敏感。为避免可移植性问题，请参见章节和密钥语法规则。
+注意：在6.4之前的Qt版本中，该功能采用`QString`，而非取`QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `key`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
+```cpp
+ QSettings settings;
+ settings.setValue("ape", 0);
+ settings.setValue("monkey", 1);
+ settings.setValue("monkey/sea", 2);
+ settings.setValue("monkey/doe", 4);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ settings.remove("monkey");
+ QStringList keys = settings.allKeys();
+ // keys: ["ape"]
+```
 
 ### `QSettings::Scope QSettings::scope() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::scope` 用于计算、查询或取得与“scope”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSettings::Scope`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSettings::Scope`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于存储设置的示波器。
 
 ### `void QSettings::setArrayIndex(int i)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setArrayIndex`。调用它会改变 `QSettings` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `i`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前数组索引设置为`i`。调用 `setValue()`、`value()`、`remove()` 和 `contains()` 等函数时，将对该索引的数组条目进行操作。
+您必须先调用`beginReadArray()`或`beginWriteArray()`才能调用此功能。
 
 ### `void QSettings::setAtomicSyncRequired(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAtomicSyncRequired`。调用它会改变 `QSettings` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+配置是否需要`QSettings`来执行设置的原子保存和重新加载（同步）。如果`enable`参数为`true`（默认），`sync()`只执行原子同步操作。如果无法实现，`sync()`将失败，`status()`将成为错误状态。
+将该属性设置为`false`，`QSettings`可以直接写入配置文件，并忽略试图与其他进程同时写入时锁定配置文件的错误。由于可能存在损坏风险，该选项应谨慎使用，但在某些情况下是必需的，比如存在于不可写目录中的`QSettings::IniFormat`配置文件或NTFS备用数据流。
+有关该功能的更多信息，请参见`QSaveFile`。
 
 ### `[static] void QSettings::setDefaultFormat(QSettings::Format format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setDefaultFormat`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `QSettings::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将默认文件格式设置为给定的`format`，用于存储 `QSettings`（`QObject` *） 构造函数的设置。
+如果没有设置默认格式，则使用 `QSettings::NativeFormat`。请参阅你所使用的`QSettings`构造函数的文档，看看该构造函数是否会忽略该函数。
 
 ### `void QSettings::setFallbacksEnabled(bool b)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFallbacksEnabled`。调用它会改变 `QSettings` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置是否启用了`b`的备选。
+默认情况下，备援是启用的。
 
 ### `[static] void QSettings::setPath(QSettings::Format format, QSettings::Scope scope, const QString &path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setPath`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `QSettings::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `scope`：类型为 `QSettings::Scope`。没有默认值，调用时必须提供。传入 `QSettings::Scope` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将存储给定`format`和`scope`设置的路径设置为`path`。`format`可以是自定义格式。
+下表总结了默认值：
+- `Platform`：格式;范围;路径
+- `Windows`：`IniFormat`;`UserScope`;`FOLDERID_RoamingAppData`
+- `SystemScope`：`FOLDERID_ProgramData`
+- `Unix`：`NativeFormat`，`IniFormat`;`UserScope`;`$HOME/.config`
+- `SystemScope`：`/etc/xdg`
+- `macOS and iOS`：`IniFormat`;`UserScope`;`$HOME/.config`
+- `SystemScope`：`/etc/xdg`
+Unix、macOS 和 iOS 上的默认 `UserScope` 路径（`$HOME/.config` 或 $HOME/设置）可以通过设置 `XDG_CONFIG_HOME` 环境变量被用户覆盖。Unix、macOS 和 iOS（`/etc/xdg`）上的默认 `SystemScope` 路径可以在使用 `configure` 脚本的 `-sysconfdir` 标志构建 Qt 库时被覆盖（详见 `QLibraryInfo` 部分）。
+在Windows、macOS和iOS上设置`NativeFormat`路径都没有影响。
+警告：此函数不影响现有的`QSettings`对象。
 
 ### `void QSettings::setValue(QAnyStringView key, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setValue`。调用它会改变 `QSettings` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将 `key` 设为 `value` 的值。如果`key`已经存在，则覆盖之前的值。
+密钥查找会根据文件格式和操作系统的不同，对大小写敏感或不敏感。为避免可移植性问题，请参见章节和密钥语法规则。
+注意：在6.4之前的Qt版本中，该功能采用了`QString`，而非 `QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `key`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
+```cpp
+ QSettings settings;
+ settings.setValue("interval", 30);
+ settings.value("interval").toInt();     // returns 30
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ settings.setValue("interval", 6.55);
+ settings.value("interval").toDouble();  // returns 6.55
+```
 
 ### `QSettings::Status QSettings::status() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::status` 用于计算、查询或取得与“状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSettings::Status`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSettings::Status`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回状态码，表示`QSettings`遇到的第一个错误，若未发生错误则返回`QSettings::NoError`。
+请注意，`QSettings`会延迟执行某些操作。因此，你可能需要先调用`sync()`，确保存储在`QSettings`中的数据已经写入磁盘，再调用状态()。
 
 ### `void QSettings::sync()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSettings::sync` 用于执行与“sync”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将未保存的更改写入永久存储，并重新加载其他应用程序在此期间更改的设置。
+这个函数会从`QSettings`的解构器和事件循环定期调用，所以通常你不需要自己调用它。
 
 ### `QVariant QSettings::value(QAnyStringView key, const QVariant &defaultValue) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QSettings` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
+返回设置`key`的值。如果设置不存在，返回`defaultValue`。
+如果没有指定默认值，则返回一个默认的`QVariant`。
+密钥查找会根据文件格式和操作系统的不同，对大小写敏感或不敏感。为避免可移植性问题，请参见章节和密钥语法规则。
+注意：在 6.4 之前的 Qt 版本中，该功能采用了 `QString` 的频率，而非 `QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVariant`。
-- 参数 `key`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `defaultValue`：类型为 `const QVariant &`。没有默认值，调用时必须提供。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSettings settings;
+ settings.setValue("animal/snake", 58);
+ settings.value("animal/snake", 1024).toInt();   // returns 58
+ settings.value("animal/zebra", 1024).toInt();   // returns 1024
+ settings.value("animal/zebra").toInt();         // returns 0
+```
 
 ### `ReadFunc`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的 `读取、Func` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+Typedef 指针指向具有以下签名的函数：
+`ReadFunc` 在 `registerFormat()` 中用作指向读取一组键值对的函数的指针。`ReadFunc`应一次性读取所有选项，并返回 `SettingsMap` 容器中的所有设置，该容器最初是空的。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool myReadFunc(QIODevice &device, QSettings::SettingsMap &map);
+```
 
 ### `SettingsMap`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的 `Settings、映射` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`QMap`<`QString`，`QVariant`>。
 
 ### `WriteFunc`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSettings` 的 `写入、Func` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+Typedef 指针指向具有以下签名的函数：
+`WriteFunc` 在 `registerFormat()` 中用作指向函数的指针，该函数写入一组键值对。`WriteFunc` 只调用一次，所以你需要一次性输出所有设置。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ bool myWriteFunc(QIODevice &device, const QSettings::SettingsMap &map);
+```
 
 ### `QVariant value(QAnyStringView key) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QSettings` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
+返回设置`key`的值。如果设置不存在，返回`defaultValue`。
+如果没有指定默认值，则返回一个默认的`QVariant`。
+密钥查找会根据文件格式和操作系统的不同，对大小写敏感或不敏感。为避免可移植性问题，请参见章节和密钥语法规则。
+注意：在 6.4 之前的 Qt 版本中，该功能采用了 `QString` 的频率，而非 `QAnyStringView`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVariant`。
-- 参数 `key`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSettings settings;
+ settings.setValue("animal/snake", 58);
+ settings.value("animal/snake", 1024).toInt();   // returns 58
+ settings.value("animal/zebra", 1024).toInt();   // returns 1024
+ settings.value("animal/zebra").toInt();         // returns 0
+```
 
 ## 6. 深入实践与常见坑
 

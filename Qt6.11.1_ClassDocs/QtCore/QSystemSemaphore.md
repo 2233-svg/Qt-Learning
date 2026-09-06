@@ -75,186 +75,113 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSystemSemaphore::AccessMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSystemSemaphore` 暴露的类型声明 `Access、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AccessMode`。
-- 属性名：`QSystemSemaphore`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+此枚举由构造函数和 `setKey()` 使用。其目的是处理 Unix 实现的信号量在崩溃后仍然存在的问题。在 Unix 中，当信号量在崩溃后仍然存在时，我们需要一种方法在系统重用信号量时强制其重置资源计数。在 Windows 中，由于信号量无法在崩溃后存活，此枚举没有作用。
+- `QSystemSemaphore::Open`: `0`；如果信号量已存在，其初始资源计数不会被重置。如果信号量不存在，则创建它并设置其初始资源计数。
+- `QSystemSemaphore::Create`: `1`；`QSystemSemaphore` 拥有信号量的所有权，并将其资源计数设置为请求的值，无论信号量是否已经存在（通过存活崩溃）。当构造特定键的第一个信号量时，并且您知道如果信号量已存在它只能是由于崩溃造成的，应将此值传递给构造函数。在 Windows 中，由于信号量无法存活崩溃，Create 和 Open 的行为相同。
 
 ### `QSystemSemaphore::QSystemSemaphore(const QNativeIpcKey &key, int initialValue = 0, QSystemSemaphore::AccessMode mode = Open)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSystemSemaphore` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QNativeIpcKey &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `initialValue`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QSystemSemaphore::AccessMode`。默认值为 `Open`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+请求指定`key`的系统信号量。参数`initialValue`和`mode`根据以下规则使用，这些规则取决于系统。
+在Unix中，如果`mode` `Open`且系统已有`key`识别的信号量，则使用该信号量，且信号量的资源计数不被更改，即忽略`initialValue`。但如果系统尚未有`key`标识的信号量，则为该键创建新的信号量，并将资源计数设为`initialValue`。
+在Unix中，如果`mode` `Create`且系统已有`key`识别的信号量，则使用该信号量，其资源计数设为`initialValue`。如果系统尚未有`key`识别的信号量，则为该键创建新的信号量，并将资源计数设为`initialValue`。
+在Windows中，`mode`被忽略，系统总是尝试为指定`key`创建信号量。如果系统没有被识别为`key`的信号量，系统会创建该信号量并将资源计数设置为`initialValue`。但如果系统已有被识别为`key`的信号量，则使用该信号量并忽略`initialValue`。
+`mode`参数仅用于Unix系统中处理信号量在进程崩溃后幸存的情况。在这种情况下，下一个分配具有相同`key`的信号量的进程将获得幸存的信号量，除非`mode` `Create`，否则资源计数不会重置为`initialValue`，而是保留崩溃进程最初给出的值。
 
 ### `QSystemSemaphore::QSystemSemaphore(const QString &key, int initialValue = 0, QSystemSemaphore::AccessMode mode = Open)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSystemSemaphore` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `initialValue`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QSystemSemaphore::AccessMode`。默认值为 `Open`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+请求由遗留密钥识别的系统信号量`key`。
 
 ### `[noexcept] QSystemSemaphore::~QSystemSemaphore()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSystemSemaphore` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+析构函数销毁 `QSystemSemaphore` 对象，但底层系统信号量不会从系统中移除，除非此 `QSystemSemaphore` 实例是该系统信号量存在的最后一个实例。
+析构函数的两个重要副作用取决于系统。在 Windows 中，如果已为该信号量调用过 `acquire()` 但未调用 `release()`，则析构函数不会调用 `release()`，也不会在进程正常退出时释放资源。这将是一个程序错误，可能导致另一个尝试获取相同资源的进程发生死锁。在 Unix 中，在调用析构函数之前未释放的已获取资源将在进程退出时自动释放。
 
 ### `bool QSystemSemaphore::acquire()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSystemSemaphore::acquire` 用于计算、查询或取得与“acquire”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有该信号量保护的资源，获取其中一个资源，并返回`true`。如果该信号量保护的所有资源已被获取，调用会阻塞，直到另一个拥有相同键的信号量的进程或线程释放其中一个资源。
+如果返回 false，表示系统发生了错误。调用 `error()` 以获得 `QSystemSemaphore::SystemSemaphoreError` 值，表示发生了哪个错误。
 
 ### `QSystemSemaphore::SystemSemaphoreError QSystemSemaphore::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSystemSemaphore::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSystemSemaphore::SystemSemaphoreError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSystemSemaphore::SystemSemaphoreError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个值，表示是否发生了错误，如果发生了，以及是哪一个错误。
 
 ### `QString QSystemSemaphore::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSystemSemaphore::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后一次错误的文本描述。如果`error()`返回错误值，调用该函数获取描述错误的文本字符串。
 
 ### `QString QSystemSemaphore::key() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSystemSemaphore::key` 用于计算、查询或取得与“key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回分配给该系统信号量的遗留密钥。密钥是可从其他进程访问该信号量的名称。
 
 ### `QNativeIpcKey QSystemSemaphore::nativeIpcKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSystemSemaphore::nativeIpcKey` 用于计算、查询或取得与“native、Ipc、Key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QNativeIpcKey`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QNativeIpcKey`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回分配给该系统信号量的密钥。密钥是信号量可从其他进程访问的名称。
+您可以使用原生密钥访问未由 Qt 创建的系统信号量，或授权非 Qt 应用程序访问。更多信息请参见本地 IPC 密钥。
 
 ### `bool QSystemSemaphore::release(int n = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSystemSemaphore::release` 用于计算、查询或取得与“释放”相关的操作。调用时要先确认当前状态和 `n` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+释放`n`由信号板保护的资源。除非系统出现错误，否则返回`true`。
+示例：创建一个包含五种资源的系统信号量;全部收集后全部释放。
+该函数还可以“创建”资源。例如，紧接上述语句序列后，假设我们添加以下语句：
+现在有十个新资源被信号灯守护，除了已有的五个。你通常不会用这个功能来创造更多资源。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `n`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSystemSemaphore sem(QSystemSemaphore::platformSafeKey("market"), 5, QSystemSemaphore::Create);
+ for (int i = 0; i < 5; ++i)  // acquire all 5 resources
+     sem.acquire();
+ sem.release(5);              // release the 5 resources
+```
 
 ### `void QSystemSemaphore::setKey(const QString &key, int initialValue = 0, QSystemSemaphore::AccessMode mode = Open)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKey`。调用它会改变 `QSystemSemaphore` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `initialValue`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QSystemSemaphore::AccessMode`。默认值为 `Open`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数的工作原理与构造函数相同。它重建了`QSystemSemaphore`对象。如果新`key`与旧键不同，调用该函数就像用旧键调用信号量的解构器，然后调用构造器用新`key`创建新的信号量。`initialValue`和`mode`参数与构造函数定义相同。
 
 ### `void QSystemSemaphore::setNativeKey(const QNativeIpcKey &key, int initialValue = 0, QSystemSemaphore::AccessMode mode = Open)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNativeKey`。调用它会改变 `QSystemSemaphore` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QNativeIpcKey &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `initialValue`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QSystemSemaphore::AccessMode`。默认值为 `Open`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数的工作原理与构造函数相同。它重建了这个`QSystemSemaphore`对象。如果新`key`与旧键不同，调用该函数就像用旧键调用信号量的解构器，然后调用构造器用新`key`创建新的信号量。`initialValue`和`mode`参数与构造函数定义相同。
+如果本地密钥是从其他进程共享的，这个功能非常有用。更多信息请参见本地IPC密钥。
 
 ### `enum SystemSemaphoreError { NoError, PermissionDenied, KeyError, AlreadyExists, NotFound, …, UnknownError }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSystemSemaphore` 暴露的类型声明 `System、Semaphore、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSystemSemaphore::NoError`: `0`; 没有发生错误。
+- `QSystemSemaphore::PermissionDenied`: `1`; 操作失败，因为调用者没有所需的权限。
+- `QSystemSemaphore::KeyError`: `2`; 操作失败，因为键无效。
+- `QSystemSemaphore::AlreadyExists`: `3`; 操作失败，因为指定键的系统信号量已经存在。
+- `QSystemSemaphore::NotFound`: `4`; 操作失败，因为无法找到指定键的系统信号量。
+- `QSystemSemaphore::OutOfResources`: `5`; 操作失败，因为没有足够的内存来完成请求。
+- `QSystemSemaphore::UnknownError`: `6`; 发生了其他情况，且情况很糟。
 
 ## 6. 深入实践与常见坑
 

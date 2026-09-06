@@ -104,461 +104,319 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 34 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDialogButtonBox::ButtonLayout`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 暴露的类型声明 `Button、Layout`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ButtonLayout`。
-- 属性名：`QDialogButtonBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了在排列按钮框中按钮时应使用的布局策略。
+- `QDialogButtonBox::WinLayout`：`0`;使用适合Windows应用的策略。
+- `QDialogButtonBox::MacLayout`：`1`;使用适用于macOS应用的策略。
+- `QDialogButtonBox::KdeLayout`：`2`;使用适合 KDE 应用的策略。
+- `QDialogButtonBox::GnomeLayout`：`3`;使用适合GNOME应用的策略。
+- `QDialogButtonBox::AndroidLayout`：`4`;使用适用于Android应用的策略。该枚举值是在Qt 5.10中添加的。
+按键布局由当前样式指定。但在 X11 平台上，可能会受到桌面环境的影响。
 
 ### `enum QDialogButtonBox::ButtonRole`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 暴露的类型声明 `Button、角色`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ButtonRole`。
-- 属性名：`QDialogButtonBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了可以用来描述按钮框中按钮的角色。这些角色的组合作为标志，用来描述其行为的不同方面。
+- `QDialogButtonBox::InvalidRole`：`-1`;按钮无效。
+- `QDialogButtonBox::AcceptRole`：`0`;点击按钮会使对话被接受（例如确定）。
+- `QDialogButtonBox::RejectRole`：`1`;点击按钮会导致对话被拒绝（例如取消）。
+- `QDialogButtonBox::DestructiveRole`：`2`;点击按钮会造成破坏性变化（例如丢弃更改），并关闭对话框。
+- `QDialogButtonBox::ActionRole`：`3`;点击按钮会改变对话框中的元素。
+- `QDialogButtonBox::HelpRole`：`4`;按钮可点击请求帮助。
+- `QDialogButtonBox::YesRole`：`5`;按钮类似“是”。
+- `QDialogButtonBox::NoRole`：`6`;按钮是类似“否”按钮。
+- `QDialogButtonBox::ApplyRole`：`8`;按钮应用当前变化。
+- `QDialogButtonBox::ResetRole`：`7`;按钮将对话框字段重置为默认值。
 
 ### `enum QDialogButtonBox::StandardButtonflags QDialogButtonBox::StandardButtons`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 暴露的类型声明 `Standard、Buttonflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StandardButtonflags QDialogButtonBox::StandardButtons`。
-- 属性名：`QDialogButtonBox`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些枚举描述了标准按钮的标志。每个按钮都有定义的`ButtonRole`。
+- `QDialogButtonBox::Ok`：`0x00000400`;一个“OK”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Open`：`0x00002000`;一个“打开”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Save`：`0x00000800`;一个“保存”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Cancel`：`0x00400000`;一个“取消”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Close`：`0x00200000`;一个“关闭”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Discard`：`0x00800000`;根据平台不同，`DestructiveRole`定义为“弃牌”或“不保存”按钮。
+- `QDialogButtonBox::Apply`：`0x02000000`;一个“应用”按钮，定义为`ApplyRole`。
+- `QDialogButtonBox::Reset`：`0x04000000`;一个“重置”按钮，定义为`ResetRole`。
+- `QDialogButtonBox::RestoreDefaults`：`0x08000000`;一个由`ResetRole`定义的“恢复默认值”按钮。
+- `QDialogButtonBox::Help`：`0x01000000`;一个“帮助”按钮，定义为`HelpRole`。
+- `QDialogButtonBox::SaveAll`：`0x00001000`;一个“全部保存”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Yes`：`0x00004000`;一个“是”按钮，定义为`YesRole`。
+- `QDialogButtonBox::YesToAll`：`0x00008000`;一个“对全部”按钮，定义为`YesRole`。
+- `QDialogButtonBox::No`：`0x00010000`;一个带有`NoRole`定义的“否”按钮。
+- `QDialogButtonBox::NoToAll`：`0x00020000`;一个“否对全部”按钮，定义为`NoRole`。
+- `QDialogButtonBox::Abort`：`0x00040000`;一个“中止”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Retry`：`0x00080000`;一个用`AcceptRole`定义的“重试”按钮。
+- `QDialogButtonBox::Ignore`：`0x00100000`;一个用`AcceptRole`定义的“忽略”按钮。
+- `QDialogButtonBox::NoButton`：`0x00000000`;一个无效按钮。
+StandardButtons 类型是 QFlags 的 typedef<StandardButton>。它存储 StandardButton 值的 OR 组合。
 
 ### `centerButtons : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的配置属性。初始化或状态切换时通过 `setCenterButtons(...)` 设置，之后用 `centerButtons()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定按钮框内的按钮是否居中。
+默认情况下，该属性为`false`。这种行为适用于大多数类型的对话。一个显著的例外是大多数平台（如Windows）的消息框，按钮框水平置中。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`centerButtons`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `centerButtons()` 读取当前值；它不会修改应用状态。
 
 ### `orientation : Qt::Orientation`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的配置属性。初始化或状态切换时通过 `setOrientation(...)` 设置，之后用 `Orientation()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了按钮盒的方向。
+默认方向是水平的（即按钮并排排列）。可能的方向有`Qt::Horizontal`和有`Qt::Vertical`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::Orientation`。
-- 属性名：`orientation`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `orientation()` 读取当前值；它不会修改应用状态。
 
 ### `standardButtons : StandardButtons`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的配置属性。初始化或状态切换时通过 `setStandardButtons(...)` 设置，之后用 `standardButtons()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+按钮盒中的标准按钮集合。
+该属性控制按钮盒使用哪些标准按钮。
 
-**签名拆解：**
-
-- 属性类型：`StandardButtons`。
-- 属性名：`standardButtons`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `standardButtons()` 读取当前值；它不会修改应用状态。
 
 ### `QDialogButtonBox::QDialogButtonBox(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`构造一个空的水平按钮框。
 
 ### `[explicit] QDialogButtonBox::QDialogButtonBox(QDialogButtonBox::StandardButtons buttons, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `buttons`：类型为 `QDialogButtonBox::StandardButtons`。没有默认值，调用时必须提供。传入 `QDialogButtonBox::StandardButtons` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个水平按钮盒，包含`buttons`指定的标准按钮`parent`。
 
 ### `QDialogButtonBox::QDialogButtonBox(Qt::Orientation orientation, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空按钮框，包含给定的`orientation`和`parent`。
 
 ### `QDialogButtonBox::QDialogButtonBox(QDialogButtonBox::StandardButtons buttons, Qt::Orientation orientation, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `buttons`：类型为 `QDialogButtonBox::StandardButtons`。没有默认值，调用时必须提供。传入 `QDialogButtonBox::StandardButtons` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有`orientation`和`parent`的按钮框，包含`buttons`指定的标准按钮。
 
 ### `[virtual noexcept] QDialogButtonBox::~QDialogButtonBox()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+能摧毁按钮盒。
 
 ### `[signal] void QDialogButtonBox::accepted()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 发出的通知信号 `accepted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当按钮框内的按钮被点击时，只要该按钮是用`AcceptRole`或`YesRole`定义的，就会发出该信号。
 
 ### `QPushButton *QDialogButtonBox::addButton(QDialogButtonBox::StandardButton button)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDialogButtonBox` 添加依赖、数据或子对象的 API `addButton`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QPushButton *`。
-- 参数 `button`：类型为 `QDialogButtonBox::StandardButton`。没有默认值，调用时必须提供。传入 `QDialogButtonBox::StandardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果按钮框有效，会添加一个标准`button`，并返回一个按键。如果`button`无效，则不添加到按钮框中，返回零。
 
 ### `void QDialogButtonBox::addButton(QAbstractButton *button, QDialogButtonBox::ButtonRole role)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDialogButtonBox` 添加依赖、数据或子对象的 API `addButton`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `QAbstractButton *`。没有默认值，调用时必须提供。传入 `QAbstractButton *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `role`：类型为 `QDialogButtonBox::ButtonRole`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定的`button`添加到按钮框中，并附有指定的`role`。如果角色无效，按钮不会被添加。
+如果按钮已经被添加，则会移除并重新添加新角色。
+注意：按钮盒对按钮拥有所有权。
 
 ### `QPushButton *QDialogButtonBox::addButton(const QString &text, QDialogButtonBox::ButtonRole role)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QDialogButtonBox` 添加依赖、数据或子对象的 API `addButton`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QPushButton *`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-- 参数 `role`：类型为 `QDialogButtonBox::ButtonRole`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定`text`创建一个按钮，添加到指定`role`的按钮框中，返回相应的按钮。如果`role`无效，则不生成按钮，返回零。
 
 ### `QPushButton *QDialogButtonBox::button(QDialogButtonBox::StandardButton which) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::button` 用于计算、查询或取得与“button”相关的操作。调用时要先确认当前状态和 `which` 的有效范围；返回类型是 `QPushButton *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPushButton *`。
-- 参数 `which`：类型为 `QDialogButtonBox::StandardButton`。没有默认值，调用时必须提供。传入 `QDialogButtonBox::StandardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应标准按钮`which`的`QPushButton`，如果该按钮盒中没有标准按钮，则返回`nullptr`。
 
 ### `QDialogButtonBox::ButtonRole QDialogButtonBox::buttonRole(QAbstractButton *button) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::buttonRole` 用于计算、查询或取得与“button、角色”相关的操作。调用时要先确认当前状态和 `button` 的有效范围；返回类型是 `QDialogButtonBox::ButtonRole`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDialogButtonBox::ButtonRole`。
-- 参数 `button`：类型为 `QAbstractButton *`。没有默认值，调用时必须提供。传入 `QAbstractButton *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指定`button`的按钮角色。如果`button` `nullptr`或未添加到按钮框中，该函数返回`InvalidRole`。
 
 ### `QList<QAbstractButton *> QDialogButtonBox::buttons() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::buttons` 用于计算、查询或取得与“buttons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QAbstractButton *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QAbstractButton *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有已添加到按钮框中的按钮列表。
 
 ### `[override virtual protected] void QDialogButtonBox::changeEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::changeEvent` 用于执行与“change、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QWidget::changeEvent`（QEvent *事件）。
+该事件处理程序可以重新实现以处理状态变化。
+该事件中被更改的状态可以通过提供的`event`检索。
+变更事件包括：`QEvent::ToolBarChange`、`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::WindowTitleChange`、`QEvent::IconTextChange`、`QEvent::ModifiedChange`、`QEvent::MouseTrackingChange`、`QEvent::ParentChange`、`QEvent::WindowStateChange`、`QEvent::LanguageChange`、`QEvent::LocaleChange`、`QEvent::LayoutDirectionChange`、`QEvent::ReadOnlyChange`。
 
 ### `void QDialogButtonBox::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除按钮框，删除其中的所有按钮。
 
 ### `[signal] void QDialogButtonBox::clicked(QAbstractButton *button)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 发出的通知信号 `clicked`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `QAbstractButton *`。没有默认值，调用时必须提供。传入 `QAbstractButton *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当按钮盒内的按钮被点击时，该信号会发出。具体按下的按钮由`button`指定。
 
 ### `[override virtual protected] bool QDialogButtonBox::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `[signal] void QDialogButtonBox::helpRequested()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 发出的通知信号 `helpRequested`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只要按钮框内的按钮被点击，只要该按钮是用`HelpRole`定义的，就会发出该信号。
 
 ### `[signal] void QDialogButtonBox::rejected()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 发出的通知信号 `rejected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+只要按钮框内的按钮被按下，只要该按钮用`RejectRole`或`NoRole`定义，就会发出该信号。
 
 ### `void QDialogButtonBox::removeButton(QAbstractButton *button)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeButton`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `button`：类型为 `QAbstractButton *`。没有默认值，调用时必须提供。传入 `QAbstractButton *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从按钮框中移除`button`，但不删除它，并将其父节点设为零。
 
 ### `QDialogButtonBox::StandardButton QDialogButtonBox::standardButton(QAbstractButton *button) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::standardButton` 用于计算、查询或取得与“standard、Button”相关的操作。调用时要先确认当前状态和 `button` 的有效范围；返回类型是 `QDialogButtonBox::StandardButton`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDialogButtonBox::StandardButton`。
-- 参数 `button`：类型为 `QAbstractButton *`。没有默认值，调用时必须提供。传入 `QAbstractButton *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应给定`button`的标准按钮枚举值，如果给定`button`不是标准按钮，则返回`NoButton`。
 
 ### `enum StandardButton { Ok, Open, Save, Cancel, Close, …, NoButton }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 暴露的类型声明 `Standard、Button`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些枚举描述了标准按钮的标志。每个按钮都有定义的`ButtonRole`。
+- `QDialogButtonBox::Ok`：`0x00000400`;一个“OK”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Open`：`0x00002000`;一个“打开”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Save`：`0x00000800`;一个“保存”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Cancel`：`0x00400000`;一个“取消”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Close`：`0x00200000`;一个“关闭”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Discard`：`0x00800000`;根据平台不同，`DestructiveRole`定义为“弃牌”或“不保存”按钮。
+- `QDialogButtonBox::Apply`：`0x02000000`;一个“应用”按钮，定义为`ApplyRole`。
+- `QDialogButtonBox::Reset`：`0x04000000`;一个“重置”按钮，定义为`ResetRole`。
+- `QDialogButtonBox::RestoreDefaults`：`0x08000000`;一个由`ResetRole`定义的“恢复默认值”按钮。
+- `QDialogButtonBox::Help`：`0x01000000`;一个“帮助”按钮，定义为`HelpRole`。
+- `QDialogButtonBox::SaveAll`：`0x00001000`;一个“全部保存”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Yes`：`0x00004000`;一个“是”按钮，定义为`YesRole`。
+- `QDialogButtonBox::YesToAll`：`0x00008000`;一个“对全部”按钮，定义为`YesRole`。
+- `QDialogButtonBox::No`：`0x00010000`;一个带有`NoRole`定义的“否”按钮。
+- `QDialogButtonBox::NoToAll`：`0x00020000`;一个“否对全部”按钮，定义为`NoRole`。
+- `QDialogButtonBox::Abort`：`0x00040000`;一个“中止”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Retry`：`0x00080000`;一个用`AcceptRole`定义的“重试”按钮。
+- `QDialogButtonBox::Ignore`：`0x00100000`;一个用`AcceptRole`定义的“忽略”按钮。
+- `QDialogButtonBox::NoButton`：`0x00000000`;一个无效按钮。
+StandardButtons 类型是 QFlags 的 typedef<StandardButton>。它存储 StandardButton 值的 OR 组合。
 
 ### `flags StandardButtons`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDialogButtonBox` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些枚举描述了标准按钮的标志。每个按钮都有定义的`ButtonRole`。
+- `QDialogButtonBox::Ok`：`0x00000400`;一个“OK”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Open`：`0x00002000`;一个“打开”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Save`：`0x00000800`;一个“保存”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Cancel`：`0x00400000`;一个“取消”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Close`：`0x00200000`;一个“关闭”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Discard`：`0x00800000`;根据平台不同，`DestructiveRole`定义为“弃牌”或“不保存”按钮。
+- `QDialogButtonBox::Apply`：`0x02000000`;一个“应用”按钮，定义为`ApplyRole`。
+- `QDialogButtonBox::Reset`：`0x04000000`;一个“重置”按钮，定义为`ResetRole`。
+- `QDialogButtonBox::RestoreDefaults`：`0x08000000`;一个由`ResetRole`定义的“恢复默认值”按钮。
+- `QDialogButtonBox::Help`：`0x01000000`;一个“帮助”按钮，定义为`HelpRole`。
+- `QDialogButtonBox::SaveAll`：`0x00001000`;一个“全部保存”按钮，定义为`AcceptRole`。
+- `QDialogButtonBox::Yes`：`0x00004000`;一个“是”按钮，定义为`YesRole`。
+- `QDialogButtonBox::YesToAll`：`0x00008000`;一个“对全部”按钮，定义为`YesRole`。
+- `QDialogButtonBox::No`：`0x00010000`;一个带有`NoRole`定义的“否”按钮。
+- `QDialogButtonBox::NoToAll`：`0x00020000`;一个“否对全部”按钮，定义为`NoRole`。
+- `QDialogButtonBox::Abort`：`0x00040000`;一个“中止”按钮，定义为`RejectRole`。
+- `QDialogButtonBox::Retry`：`0x00080000`;一个用`AcceptRole`定义的“重试”按钮。
+- `QDialogButtonBox::Ignore`：`0x00100000`;一个用`AcceptRole`定义的“忽略”按钮。
+- `QDialogButtonBox::NoButton`：`0x00000000`;一个无效按钮。
+StandardButtons 类型是 QFlags 的 typedef<StandardButton>。它存储 StandardButton 值的 OR 组合。
 
 ### `bool centerButtons() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::centerButtons` 用于计算、查询或取得与“center、Buttons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定按钮框内的按钮是否居中。
+默认情况下，该属性为`false`。这种行为适用于大多数类型的对话。一个显著的例外是大多数平台（如Windows）的消息框，按钮框水平置中。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `centerButtons()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::Orientation orientation() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::orientation` 用于计算、查询或取得与“orientation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Orientation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了按钮盒的方向。
+默认方向是水平的（即按钮并排排列）。可能的方向有`Qt::Horizontal`和有`Qt::Vertical`。
 
-**签名拆解：**
-
-- 返回值：`Qt::Orientation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `orientation()` 读取当前值；它不会修改应用状态。
 
 ### `void setCenterButtons(bool center)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCenterButtons`。调用它会改变 `QDialogButtonBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定按钮框内的按钮是否居中。
+默认情况下，该属性为`false`。这种行为适用于大多数类型的对话。一个显著的例外是大多数平台（如Windows）的消息框，按钮框水平置中。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `center`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCenterButtons(...)` 修改 `centerButtons`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setOrientation(Qt::Orientation orientation)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOrientation`。调用它会改变 `QDialogButtonBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定了按钮盒的方向。
+默认方向是水平的（即按钮并排排列）。可能的方向有`Qt::Horizontal`和有`Qt::Vertical`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOrientation(...)` 修改 `orientation`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setStandardButtons(QDialogButtonBox::StandardButtons buttons)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStandardButtons`。调用它会改变 `QDialogButtonBox` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+按钮盒中的标准按钮集合。
+该属性控制按钮盒使用哪些标准按钮。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `buttons`：类型为 `QDialogButtonBox::StandardButtons`。没有默认值，调用时必须提供。传入 `QDialogButtonBox::StandardButtons` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setStandardButtons(...)` 修改 `standardButtons`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QDialogButtonBox::StandardButtons standardButtons() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QDialogButtonBox::standardButtons` 用于计算、查询或取得与“standard、Buttons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDialogButtonBox::StandardButtons`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+按钮盒中的标准按钮集合。
+该属性控制按钮盒使用哪些标准按钮。
 
-**签名拆解：**
-
-- 返回值：`QDialogButtonBox::StandardButtons`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `standardButtons()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

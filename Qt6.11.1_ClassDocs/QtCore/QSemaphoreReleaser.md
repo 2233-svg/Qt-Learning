@@ -68,128 +68,73 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QSemaphoreReleaser::QSemaphoreReleaser()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphoreReleaser` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+默认构造函数。创建一个无效的QSemaphoreReleaser。
 
 ### `[explicit noexcept] QSemaphoreReleaser::QSemaphoreReleaser(QSemaphore &sem, int n = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphoreReleaser` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `sem`：类型为 `QSemaphore &`。没有默认值，调用时必须提供。传入 `QSemaphore &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `n`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造函数。在解构器中存储参数并调用 `sem`.release（`n`）。
 
 ### `[explicit noexcept] QSemaphoreReleaser::QSemaphoreReleaser(QSemaphore *sem, int n = 1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphoreReleaser` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `sem`：类型为 `QSemaphore *`。没有默认值，调用时必须提供。传入 `QSemaphore *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `n`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造函数。存储参数并在解散器中调用 `sem`->release（`n`）。
 
 ### `[noexcept] QSemaphoreReleaser::QSemaphoreReleaser(QSemaphoreReleaser &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphoreReleaser` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QSemaphoreReleaser &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动构造器。接管从`other`调用`QSemaphore::release()`的责任，而调用则被取消。
 
 ### `[noexcept] QSemaphoreReleaser::~QSemaphoreReleaser()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphoreReleaser` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+除非被取消，调用`QSemaphore::release()`基于构造函数的参数，或通过最后一步赋值进行调用。
 
 ### `[noexcept] QSemaphore *QSemaphoreReleaser::cancel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `cancel`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+取消该`QSemaphoreReleaser`，使得解构函数不再调用`semaphore()->release()`。返回调用前的值`semaphore()`。调用结束后，`semaphore()`返回`nullptr`。
+要再次启用，需重新分配一个`QSemaphoreReleaser`：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QSemaphore *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ releaser.cancel(); // avoid releasing old semaphore()
+ releaser = QSemaphoreReleaser(sem, 42);
+ // now will call sem.release(42) when 'releaser' is destroyed
+```
 
 ### `[noexcept] QSemaphore *QSemaphoreReleaser::semaphore() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphoreReleaser::semaphore` 用于计算、查询或取得与“semaphore”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSemaphore *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSemaphore *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向构造函数提供的`QSemaphore`对象的指针，或通过最后一步的指针（如有）返回。否则返回`nullptr`。
 
 ### `[noexcept] void QSemaphoreReleaser::swap(QSemaphoreReleaser &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSemaphoreReleaser::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QSemaphoreReleaser &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+交换`*this`和`other`的责任。
+与移动分配不同，这两件物体交换后从未释放信号板（如果有的话）。
+因此，这个函数非常快速且从未失效。
 
 ### `[noexcept] QSemaphoreReleaser &QSemaphoreReleaser::operator=(QSemaphoreReleaser &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSemaphoreReleaser` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSemaphoreReleaser &`。
-- 参数 `other`：类型为 `QSemaphoreReleaser &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移动分配操作员。接管调用`QSemaphore::release()`的责任，`other`调用后被取消。
+如果这个信号量释放器负责调用某个`QSemaphore::release()`，它会先执行调用，然后接管`other`。
 
 ## 6. 深入实践与常见坑
 

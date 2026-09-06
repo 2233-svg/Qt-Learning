@@ -76,192 +76,94 @@ target_link_libraries(mytarget PRIVATE Qt6::Help)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QString QHelpFilterEngine::activeFilter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::activeFilter` 用于计算、查询或取得与“活动状态、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前激活过滤器的名称。
 
 ### `QStringList QHelpFilterEngine::availableComponents() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::availableComponents` 用于计算、查询或取得与“可用量、Components”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有注册文档文件中定义的所有可用组件列表。
 
 ### `QList<QVersionNumber> QHelpFilterEngine::availableVersions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::availableVersions` 用于计算、查询或取得与“可用量、Versions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QVersionNumber>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QVersionNumber>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有注册文档文件中定义的所有可用版本列表。
 
 ### `[signal] void QHelpFilterEngine::filterActivated(const QString &newFilter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpFilterEngine` 发出的通知信号 `filterActivated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newFilter`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当激活滤波器被设置时，该信号会发出。`newFilter` 指定滤波器的名称。
 
 ### `QHelpFilterData QHelpFilterEngine::filterData(const QString &filterName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::filterData` 用于计算、查询或取得与“filter、数据访问”相关的操作。调用时要先确认当前状态和 `filterName` 的有效范围；返回类型是 `QHelpFilterData`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHelpFilterData`。
-- 参数 `filterName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`filterName`相关的筛选信息。
 
 ### `QStringList QHelpFilterEngine::filters() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::filters` 用于计算、查询或取得与“filters”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回滤波器引擎内定义的所有滤波器名称列表。
 
 ### `QStringList QHelpFilterEngine::indices() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::indices` 用于计算、查询或取得与“indices”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个排序的可用索引列表。返回的列表内容取决于活动过滤器，因此只有激活过滤器注册的索引会被返回。
 
 ### `QStringList QHelpFilterEngine::indices(const QString &filterName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::indices` 用于计算、查询或取得与“indices”相关的操作。调用时要先确认当前状态和 `filterName` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `filterName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个排序后的可用索引列表，按`filterName`过滤。返回的列表内容取决于通过的过滤器，因此只有该过滤器注册的索引会返回。如果你想让所有可用索引都未过滤，可以将空字符串传给`filterName`。
 
 ### `QMap<QString, QString> QHelpFilterEngine::namespaceToComponent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::namespaceToComponent` 用于计算、查询或取得与“namespace、转换输出、Component”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMap<QString, QString>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMap<QString, QString>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有可用命名空间的映射，作为键，并返回它们相关的组件作为值。
 
 ### `QMap<QString, QVersionNumber> QHelpFilterEngine::namespaceToVersion() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::namespaceToVersion` 用于计算、查询或取得与“namespace、转换输出、Version”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMap<QString, QVersionNumber>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMap<QString, QVersionNumber>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有可用命名空间的映射，作为键，并返回其对应的版本作为值。
 
 ### `QStringList QHelpFilterEngine::namespacesForFilter(const QString &filterName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpFilterEngine::namespacesForFilter` 用于计算、查询或取得与“namespaces、For、Filter”相关的操作。调用时要先确认当前状态和 `filterName` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `filterName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有与`filterName`识别的过滤器匹配的注册文档命名空间列表。
 
 ### `bool QHelpFilterEngine::removeFilter(const QString &filterName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeFilter`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `filterName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`filterName`识别的滤波器。
+如果成功移除滤波器，返回`true`，否则返回`false`。
 
 ### `bool QHelpFilterEngine::setActiveFilter(const QString &filterName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setActiveFilter`。调用它会改变 `QHelpFilterEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `filterName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前激活的过滤器改为`filterName`。
+如果更换滤波器成功，返回`true`，否则返回`false`。
 
 ### `bool QHelpFilterEngine::setFilterData(const QString &filterName, const QHelpFilterData &filterData)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFilterData`。调用它会改变 `QHelpFilterEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `filterName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `filterData`：类型为 `const QHelpFilterData &`。没有默认值，调用时必须提供。传入 `const QHelpFilterData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更改`filterName`识别为`filterData`的过滤器的现有细节。如果该过滤器不存在，则创建一个新的过滤器。
+如果设置过滤器成功，返回`true`，否则返回`false`。
 
 ## 6. 深入实践与常见坑
 

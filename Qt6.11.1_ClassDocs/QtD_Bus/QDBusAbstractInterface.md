@@ -77,257 +77,179 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QDBusAbstractInterface::~QDBusAbstractInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusAbstractInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放该物体的资源。
 
 ### `template <typename... Args> QDBusPendingCall QDBusAbstractInterface::asyncCall(const QString &method, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::asyncCall` 用于计算、查询或取得与“async、Call”相关的操作。调用时要先确认当前状态和 `method`、`args` 的有效范围；返回类型是 `template <typename... Args> QDBusPendingCall`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用该接口上的方法`method`并将`args`传递给该方法。所有`args`必须可转换为`QVariant`。
+`call`的参数通过D-Bus作为输入参数传递给远程函数。返回的`QDBusPendingCall`对象可用于获取关于回复的信息。
+它可以以下方式使用：
+本示例展示了函数调用时参数为0、1和2，并展示了每个参数中传递的不同参数类型（第一次调用`"ProcessWorkUnicode"`包含一个Unicode字符串，第二次调用`"ProcessWork"`包含一个字符串和一个字节数组）。有关分组（同步）调用的同一示例，请参见`call()`。
+注意：在Qt 5.14之前，该函数最多只接受八（8）个参数。
+注意：由于实现限制，对本地`QDBusServer`的方法调用从不异步。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename... Args> QDBusPendingCall`。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QDBusPendingCall pcall = interface->asyncCall("GetAPIVersion"_L1);
+ auto watcher = new QDBusPendingCallWatcher(pcall, this);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this,
+                  [&](QDBusPendingCallWatcher *w) {
+     QString value = retrieveValue();
+     QDBusPendingReply<int> reply(*w);
+     QDBusPendingCall pcall;
+     if (reply.argumentAt<0>() >= 14)
+         pcall = interface->asyncCall("ProcessWorkUnicode"_L1, value);
+     else
+         pcall = interface->asyncCall("ProcessWork"_L1, "UTF-8"_L1, value.toUtf8());
+
+     w = new QDBusPendingCallWatcher(pcall);
+     QObject::connect(w,  &QDBusPendingCallWatcher::finished, this,
+                      &Abstract_DBus_Interface::callFinishedSlot);
+ });
+```
 
 ### `QDBusPendingCall QDBusAbstractInterface::asyncCallWithArgumentList(const QString &method, const QList<QVariant> &args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::asyncCallWithArgumentList` 用于计算、查询或取得与“async、Call、With、Argument、List”相关的操作。调用时要先确认当前状态和 `method`、`args` 的有效范围；返回类型是 `QDBusPendingCall`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDBusPendingCall`。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `const QList<QVariant> &`。没有默认值，调用时必须提供。传入 `const QList<QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该接口上`method`指定的远程方法，使用`args`作为参数。该函数返回一个`QDBusPendingCall`对象，可用于跟踪回复状态并在回复到达后访问其内容。
+通常，你应该用`asyncCall()`打电话。
+注意：由于实现限制，应用程序自身注册对象的方法调用从不异步。
+注意：该功能是线程安全的。
 
 ### `template <typename... Args> QDBusMessage QDBusAbstractInterface::call(const QString &method, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::call` 用于计算、查询或取得与“call”相关的操作。调用时要先确认当前状态和 `method`、`args` 的有效范围；返回类型是 `template <typename... Args> QDBusMessage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用该接口上的`method`方法，并将`args`传递给该方法。所有`args`必须可转换为`QVariant`。
+`call`的参数通过D-Bus作为输入参数传递给远程函数。输出参数返回于`QDBusMessage`回复中。如果回复是错误回复，`lastError()`也会被设置为错误消息的内容。
+它可以以下方式使用：
+本示例展示了使用0、1和2参数的函数调用，并展示了每个参数中传递的不同参数类型（第一次调用`"ProcessWorkUnicode"`包含一个Unicode字符串，第二次调用`"ProcessWork"`包含一个字符串和一个字节数组）。关于非分组（异步）调用中的同一示例，请参见`asyncCall()`。
+注意：在Qt 5.14之前，该函数最多只接受八（8）个参数。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename... Args> QDBusMessage`。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QString value = retrieveValue();
+ QDBusMessage reply;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ QDBusReply<int> api = interface->call("GetAPIVersion"_L1);
+ if (api >= 14)
+   reply = interface->call("ProcessWorkUnicode"_L1, value);
+ else
+   reply = interface->call("ProcessWork"_L1, "UTF-8"_L1, value.toUtf8());
+```
 
 ### `template <typename... Args> QDBusMessage QDBusAbstractInterface::call(QDBus::CallMode mode, const QString &method, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::call` 用于计算、查询或取得与“call”相关的操作。调用时要先确认当前状态和 `mode`、`method`、`args` 的有效范围；返回类型是 `template <typename... Args> QDBusMessage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename... Args> QDBusMessage`。
-- 参数 `mode`：类型为 `QDBus::CallMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该接口上的方法`method`并将`args`传递给该方法。所有`args`必须可转换为`QVariant`。
+如果`mode` `NoWaitForReply`，则该函数在发出调用后立即返回，无需等待远程方法的回复。否则，`mode`指示该函数是否应在等待回复到达时激活Qt事件循环。
+如果该函数重新进入Qt事件循环以等待回复，则会排除用户输入。在等待期间，它可能会向你的应用程序传递信号和其他方法调用。因此，必须准备好在调用时处理重入。
+注意：在Qt 5.14之前，该函数最多只接受八（8）个参数。
 
 ### `QDBusMessage QDBusAbstractInterface::callWithArgumentList(QDBus::CallMode mode, const QString &method, const QList<QVariant> &args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::callWithArgumentList` 用于计算、查询或取得与“call、With、Argument、List”相关的操作。调用时要先确认当前状态和 `mode`、`method`、`args` 的有效范围；返回类型是 `QDBusMessage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDBusMessage`。
-- 参数 `mode`：类型为 `QDBus::CallMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `const QList<QVariant> &`。没有默认值，调用时必须提供。传入 `const QList<QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该接口上`method`指定的远程方法，使用`args`作为参数。该函数返回收到的回复消息，回复可以是正常`QDBusMessage::ReplyMessage`（表示成功）或`QDBusMessage::ErrorMessage`（如果调用失败）。`mode`参数指定该调用的配置方式。
+如果调用成功，`lastError()`将被清除;否则，它将包含该调用产生的错误。
+通常，你应该用`call()`打电话。
+警告：如果您使用 `UseEventLoop`，您的代码必须准备好应对任何重入：在该函数返回之前，可能会先传递其他方法调用和信号，以及其他 Qt 队列中的信号和事件。
+注意：该功能是线程安全的。
 
 ### `bool QDBusAbstractInterface::callWithCallback(const QString &method, const QList<QVariant> &args, QObject *receiver, const char *returnMethod, const char *errorMethod)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::callWithCallback` 用于计算、查询或取得与“call、With、Callback”相关的操作。调用时要先确认当前状态和 `method`、`args`、`receiver`、`returnMethod`、`errorMethod` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `const QList<QVariant> &`。没有默认值，调用时必须提供。传入 `const QList<QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `receiver`：类型为 `QObject *`。没有默认值，调用时必须提供。接收者对象。它决定槽函数所属线程和连接生命周期，必须在回调使用期间有效。
-- 参数 `returnMethod`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `errorMethod`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该接口上`method`指定的远程方法，使用`args`作为参数。该函数在排队调用后立即返回。远程函数的回复会传递给对象`receiver`的`returnMethod`。如果发生错误，则调用对象`receiver`的`errorMethod`。
+如果队列成功，该函数返回`true`。它并不表示已执行调用成功。如果失败，调用`errorMethod`。如果队列失败，该函数返回`false`，且不会调用任何槽位。
+`returnMethod`必须包含函数调用返回的类型作为参数。可选地，其最后或唯一的参数可以是`QDBusMessage`参数。`errorMethod`必须以`QDBusError`作为唯一的参数。
+注意：由于实现限制，应用程序自身注册对象的方法调用从不异步。
 
 ### `bool QDBusAbstractInterface::callWithCallback(const QString &method, const QList<QVariant> &args, QObject *receiver, const char *slot)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::callWithCallback` 用于计算、查询或取得与“call、With、Callback”相关的操作。调用时要先确认当前状态和 `method`、`args`、`receiver`、`slot` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `method`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `args`：类型为 `const QList<QVariant> &`。没有默认值，调用时必须提供。传入 `const QList<QVariant> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `receiver`：类型为 `QObject *`。没有默认值，调用时必须提供。接收者对象。它决定槽函数所属线程和连接生命周期，必须在回调使用期间有效。
-- 参数 `slot`：类型为 `const char *`。没有默认值，调用时必须提供。槽函数或回调。要确认签名、执行线程、上下文生命周期和是否可能阻塞。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数已被弃用。请使用重载版本。
+调用该接口上`method`指定的远程方法，使用`args`作为参数。该函数在排队调用后立即返回。远程函数的回复或其发出的任何错误会被传递到对象`receiver`的`slot`槽。
+该函数返回`true`队列是否成功：它并不表示调用成功。如果失败，该槽位将被调用并发送错误消息。在这种情况下，`lastError()`不会被设置。
 
 ### `QDBusConnection QDBusAbstractInterface::connection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connection`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QDBusConnection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该接口关联的连接。
 
 ### `QString QDBusAbstractInterface::interface() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::interface` 用于计算、查询或取得与“interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该接口的名称。
 
 ### `[since 6.7] bool QDBusAbstractInterface::isInteractiveAuthorizationAllowed() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isInteractiveAuthorizationAllowed`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回异步调用时，调用者是否准备等待交互式授权。
+默认是`false`。
 
 ### `bool QDBusAbstractInterface::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`是否为远程对象的有效引用。如果在创建该接口时出现错误（例如，远程应用程序不存在），它返回`false`。
+注意：处理远程对象时，创建`QDBusInterface`时并不总能确定其存在。
 
 ### `QDBusError QDBusAbstractInterface::lastError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::lastError` 用于计算、查询或取得与“末项、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDBusError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDBusError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上一次操作产生的错误，或返回无效错误（如果上一次操作未产生错误）。
 
 ### `QString QDBusAbstractInterface::path() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::path` 用于计算、查询或取得与“path”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该接口关联的对象路径。
 
 ### `QString QDBusAbstractInterface::service() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::service` 用于计算、查询或取得与“service”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该接口所关联的服务名称。
 
 ### `[since 6.7] void QDBusAbstractInterface::setInteractiveAuthorizationAllowed(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setInteractiveAuthorizationAllowed`。调用它会改变 `QDBusAbstractInterface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+配置异步通话时，调用者是否愿意等待交互式授权。
+如果`enable`设置为`true`，通过该接口为异步调用生成的D-Bus消息将设置`ALLOW_INTERACTIVE_AUTHORIZATION`标志。
+该标志仅在非特权代码调用更高特权的方法调用时有用，且部署了允许交互式授权的授权框架。
+默认是`false`。
 
 ### `void QDBusAbstractInterface::setTimeout(int timeout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTimeout`。调用它会改变 `QDBusAbstractInterface` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timeout`：类型为 `int`。没有默认值，调用时必须提供。超时时间或超时对象，可能表示等待时长，也可能表示 QNetworkReply/QTimer 等异步对象，不能只看名称判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为所有未来向`timeout`调用的DBus设置毫秒超时。-1表示默认的DBus超时（通常为25秒）。
 
 ### `int QDBusAbstractInterface::timeout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusAbstractInterface::timeout` 用于计算、查询或取得与“超时”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前超时值（毫秒）。-1 表示默认的 DBus 超时（通常为 25 秒）。
 
 ## 6. 深入实践与常见坑
 

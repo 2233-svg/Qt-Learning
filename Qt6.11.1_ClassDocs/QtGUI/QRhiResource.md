@@ -71,127 +71,100 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiResource::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiResource` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QRhiResource`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定资源类型。
+- `QRhiResource::Buffer`：`0`
+- `QRhiResource::Texture`：`1`
+- `QRhiResource::Sampler`：`2`
+- `QRhiResource::RenderBuffer`：`3`
+- `QRhiResource::RenderPassDescriptor`：`4`
+- `QRhiResource::SwapChainRenderTarget`：`5`
+- `QRhiResource::TextureRenderTarget`：`6`
+- `QRhiResource::ShaderResourceBindings`：`7`
+- `QRhiResource::GraphicsPipeline`：`8`
+- `QRhiResource::SwapChain`：`9`
+- `QRhiResource::ComputePipeline`：`10`
+- `QRhiResource::CommandBuffer`：`11`
+- `QRhiResource::ShadingRateMap`：`12`
 
 ### `[virtual noexcept] QRhiResource::~QRhiResource()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiResource` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁灭者。
+发布（或请求推迟发布）底层的原生图形资源（如果有的话）。
+注意：当前帧命令引用的资源，在`QRhi::endFrame()`提交框架之前不应释放。
 
 ### `void QRhiResource::deleteLater()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `deleteLater`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
+当调用时未记录帧，该函数等同于删除对象。然而，`QRhi::beginFrame()`和 `QRhi::endFrame()` 之间的行为不同：`QRhiResource`不会被销毁，直到帧通过`QRhi::endFrame()`提交，从而满足不更改被记录帧所引用`QRhiResource`对象的`QRhi`要求。
+如果创建该对象的`QRhi`已经被销毁，该对象将立即被删除。
+在许多情况下，使用deleteLater()可以带来便利，并且它补充了底层的保证（底层的原生图形对象在安全之前不会被销毁，并且确定GPU在仍在运行帧中不会使用它们），因为它提供了一种方式，确保C语对象实例（如`QRhiBuffer`、`QRhiTexture`等）本身也能保持有效直到当前帧结束。
+以下示例展示了一种方便地创建一次性缓冲区的方法，该缓冲区只在一帧中使用，并在 endFrame() 中自动释放。（对于底层原生缓冲区，通常适用保证：`QRhi` 后端推迟释放这些缓冲区，直到保证 GPU 访问缓冲区的帧已完成）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ rhi->beginFrame(swapchain);
+ QRhiBuffer *buf = rhi->newBuffer(QRhiBuffer::Immutable, QRhiBuffer::VertexBuffer, 256);
+ buf->deleteLater(); // !
+ u = rhi->nextResourceUpdateBatch();
+ u->uploadStaticBuffer(buf, data);
+ // ... draw with buf
+ rhi->endFrame();
+```
 
 ### `[pure virtual] void QRhiResource::destroy()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResource::destroy` 用于执行与“destroy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+释放（或请求延迟释放）底层的本地图形资源。多次调用是安全的，后续调用则不行。
+一旦调用 destroy()，`QRhiResource`实例可以再次调用 `create()` 来重用。这样才能在下面创建新的本地图形资源。
+注意：当前帧的命令引用的资源，在`QRhi::endFrame()`提交框架之前不应释放。
+`QRhiResource` 解构器也执行同样的任务，因此在删除`QRhiResource`之前无需调用该函数。
 
 ### `quint64 QRhiResource::globalResourceId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResource::globalResourceId` 用于计算、查询或取得与“global、Resource、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QRhiResource`的全局唯一标识符。
+用户代码很少需要直接处理该数值。它用于内部的跟踪和簿记目的。
 
 ### `QByteArray QRhiResource::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResource::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的对象名称。默认情况下，该名称为空。
 
 ### `[pure virtual] QRhiResource::Type QRhiResource::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResource::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回资源类型。
 
 ### `QRhi *QRhiResource::rhi() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiResource::rhi` 用于计算、查询或取得与“rhi”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhi *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhi *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回创建该资源的`QRhi`。
+如果创建该对象的 `QRhi` 已经被摧毁，结果就是`nullptr`。
 
 ### `void QRhiResource::setName(const QByteArray &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setName`。调用它会改变 `QRhiResource` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该对象设置`name`。
+这使得在图形调试工具（如 RenderDoc 和 XCode）中，为原生图形资源获得描述性名称。
+在通过相应的图形API中继本地对象命名时，请注意当`QRhi::DebugMarkers`不支持时名称会被忽略，而根据后端不同，如果`QRhi::EnableDebugMarkers`未设置，也可能被忽略。
+注意：对于缓冲区、渲染缓冲区和纹理以外的对象，名称可能会被忽略，具体取决于后端。
+注意：名称可能会被修改。对于有槽资源，例如由多个原生缓冲区支持的`QRhiBuffer`，`QRhi`会附加后缀，使底层的原生缓冲区易于区分。
 
 ## 6. 深入实践与常见坑
 

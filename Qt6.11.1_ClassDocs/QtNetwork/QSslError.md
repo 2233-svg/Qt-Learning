@@ -75,180 +75,123 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSslError::SslError`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 暴露的类型声明 `Ssl、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SslError`。
-- 属性名：`QSslError`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述SSL握手过程中可能出现的所有识别错误。
+- `QSslError::NoError`：`0`
+- `QSslError::UnableToGetIssuerCertificate`：`1`
+- `QSslError::UnableToDecryptCertificateSignature`：`2`
+- `QSslError::UnableToDecodeIssuerPublicKey`：`3`
+- `QSslError::CertificateSignatureFailed`：`4`
+- `QSslError::CertificateNotYetValid`：`5`
+- `QSslError::CertificateExpired`：`6`
+- `QSslError::InvalidNotBeforeField`：`7`
+- `QSslError::InvalidNotAfterField`：`8`
+- `QSslError::SelfSignedCertificate`：`9`
+- `QSslError::SelfSignedCertificateInChain`：`10`
+- `QSslError::UnableToGetLocalIssuerCertificate`：`11`
+- `QSslError::UnableToVerifyFirstCertificate`：`12`
+- `QSslError::CertificateRevoked`：`13`
+- `QSslError::InvalidCaCertificate`：`14`
+- `QSslError::PathLengthExceeded`：`15`
+- `QSslError::InvalidPurpose`：`16`
+- `QSslError::CertificateUntrusted`：`17`
+- `QSslError::CertificateRejected`：`18`
+- `QSslError::SubjectIssuerMismatch`：`19`
+- `QSslError::AuthorityIssuerSerialNumberMismatch`：`20`
+- `QSslError::NoPeerCertificate`：`21`
+- `QSslError::HostNameMismatch`：`22`
+- `QSslError::UnspecifiedError`：`-1`
+- `QSslError::NoSslSupport`：`23`
+- `QSslError::CertificateBlacklisted`：`24`
+- `QSslError::CertificateStatusUnknown`：`25`
+- `QSslError::OcspNoResponseFound`：`26`
+- `QSslError::OcspMalformedRequest`：`27`
+- `QSslError::OcspMalformedResponse`：`28`
+- `QSslError::OcspInternalError`：`29`
+- `QSslError::OcspTryLater`：`30`
+- `QSslError::OcspSigRequred`：`31`
+- `QSslError::OcspUnauthorized`：`32`
+- `QSslError::OcspResponseCannotBeTrusted`：`33`
+- `QSslError::OcspResponseCertIdUnknown`：`34`
+- `QSslError::OcspResponseExpired`：`35`
+- `QSslError::OcspStatusUnknown`：`36`
 
 ### `QSslError::QSslError()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个无错误且默认证书的QSslError对象。
 
 ### `[explicit] QSslError::QSslError(QSslError::SslError error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `error`：类型为 `QSslError::SslError`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QSslError对象。参数指定发生的`error`。
 
 ### `QSslError::QSslError(QSslError::SslError error, const QSslCertificate &certificate)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `error`：类型为 `QSslError::SslError`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-- 参数 `certificate`：类型为 `const QSslCertificate &`。没有默认值，调用时必须提供。传入 `const QSslCertificate &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QSslError对象。这两个参数分别指定了发生的`error`，以及错误与哪个`certificate`相关。
 
 ### `QSslError::QSslError(const QSslError &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QSslError &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+制造了一个与`other`一模一样的复制品。
 
 ### `[noexcept] QSslError::~QSslError()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QSslError`物体。
 
 ### `QSslCertificate QSslError::certificate() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslError::certificate` 用于计算、查询或取得与“certificate”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslCertificate`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslCertificate`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该错误相关的证书，或者如果错误与任何证书无关，则返回空证书。
 
 ### `QSslError::SslError QSslError::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslError::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSslError::SslError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSslError::SslError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回错误类型。
 
 ### `QString QSslError::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslError::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个简短且易于理解的本地错误描述。
 
 ### `[noexcept] void QSslError::swap(QSslError &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSslError::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QSslError &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该错误实例与`other`交换。该操作非常快速且从未失败。
 
 ### `bool QSslError::operator!=(const QSslError &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSslError &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果误差不等于 `other`，返回 `true`;否则返回 false。
 
 ### `QSslError &QSslError::operator=(const QSslError &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QSslError &`。
-- 参数 `other`：类型为 `const QSslError &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`的内容分配给该错误。
 
 ### `bool QSslError::operator==(const QSslError &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSslError` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QSslError &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果误差等于 `other`，则返回 `true`;否则返回 `false`。
 
 ## 6. 深入实践与常见坑
 

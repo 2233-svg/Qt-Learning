@@ -117,589 +117,360 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 44 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QLocalSocket::LocalSocketError`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 暴露的类型声明 `Local、Socket、错误`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:LocalSocketError`。
-- 属性名：`QLocalSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+LocalServerError枚举表示可能发生的错误。最近的错误可以通过调用`QLocalSocket::error()`检索。
+- `QLocalSocket::ConnectionRefusedError`：`QAbstractSocket::ConnectionRefusedError`;连接被对等端拒绝（或超时）。
+- `QLocalSocket::PeerClosedError`：`QAbstractSocket::RemoteHostClosedError`;远程套接字关闭了连接。注意，客户端套接字（即该套接字）在发送远程关闭通知后会关闭。
+- `QLocalSocket::ServerNotFoundError`：`QAbstractSocket::HostNotFoundError`;未找到本地套接字名称。
+- `QLocalSocket::SocketAccessError`：`QAbstractSocket::SocketAccessError`;套接字操作失败，因为应用程序缺乏所需的权限。
+- `QLocalSocket::SocketResourceError`：`QAbstractSocket::SocketResourceError`;本地系统资源耗尽（例如套接字过多）。
+- `QLocalSocket::SocketTimeoutError`：`QAbstractSocket::SocketTimeoutError`;套筒操作超时。
+- `QLocalSocket::DatagramTooLargeError`：`QAbstractSocket::DatagramTooLargeError`;数据报大于操作系统的限制（最低可达8192字节）。
+- `QLocalSocket::ConnectionError`：`QAbstractSocket::NetworkError`;连接发生错误。
+- `QLocalSocket::UnsupportedSocketOperationError`：`QAbstractSocket::UnsupportedSocketOperationError`;请求的套接字操作不被本地操作系统支持。
+- `QLocalSocket::OperationError`：`QAbstractSocket::OperationError`;在套筒处于不允许操作的状态下尝试操作。
+- `QLocalSocket::UnknownSocketError`：`QAbstractSocket::UnknownSocketError`;发生了未识别错误。
 
 ### `enum QLocalSocket::LocalSocketState`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 暴露的类型声明 `Local、Socket、State`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:LocalSocketState`。
-- 属性名：`QLocalSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了套筒可能处于的不同状态。
+- `QLocalSocket::UnconnectedState`：`QAbstractSocket::UnconnectedState`;套接字未连接。
+- `QLocalSocket::ConnectingState`：`QAbstractSocket::ConnectingState`;套接字已开始建立连接。
+- `QLocalSocket::ConnectedState`：`QAbstractSocket::ConnectedState`;建立联系。
+- `QLocalSocket::ClosingState`：`QAbstractSocket::ClosingState`;套接字即将关闭（数据可能仍在等待写入）。
 
 ### `[since 6.2] enum QLocalSocket::SocketOptionflags QLocalSocket::SocketOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 暴露的类型声明 `Socket、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SocketOptionflags QLocalSocket::SocketOptions`。
-- 属性名：`QLocalSocket`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可用于连接服务器的可能选项。目前，在Linux和Android上，它用于指定连接到绑定抽象地址的套接字的服务器。
+- `QLocalSocket::NoOptions`：`0x00`;尚未设置任何选项。
+- `QLocalSocket::AbstractNamespaceOption`：`0x01`;套接字会尝试连接到一个抽象地址。该标志仅限于Linux和Android。在其他平台上则被忽略。
+这个枚举是在Qt 6.2引入的。
+SocketOptions 类型是 QFlags 的 typedef<SocketOption>。它存储 SocketOption 值的 OR 组合。
 
 ### `[bindable, since 6.2] socketOptions : SocketOptions`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的配置属性。初始化或状态切换时通过 `setSocketOptions(...)` 设置，之后用 `socketOptions()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性包含套筒选项。
+选项必须在套接字处于`UnconnectedState`状态时设置。
 
-**签名拆解：**
-
-- 属性类型：`SocketOptions`。
-- 属性名：`socketOptions`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `socketOptions()` 读取当前值；它不会修改应用状态。
 
 ### `QLocalSocket::QLocalSocket(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的本地套接字。`parent`参数传递给`QObject`的构造函数。
 
 ### `[virtual noexcept] QLocalSocket::~QLocalSocket()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁套接字，必要时关闭连接。
 
 ### `void QLocalSocket::abort()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `abort`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+中止当前连接并重置套接字。与`disconnectFromServer()`不同，该函数会立即关闭套接字，清除写入缓冲区中的任何待处理数据。
 
 ### `[override virtual] qint64 QLocalSocket::bytesAvailable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesAvailable`，返回 `QLocalSocket` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::bytesAvailable()` const.
 
 ### `[override virtual] qint64 QLocalSocket::bytesToWrite() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `bytesToWrite`，返回 `QLocalSocket` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::bytesToWrite()` const.
 
 ### `[override virtual] bool QLocalSocket::canReadLine() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canReadLine`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::canReadLine()` const.
 
 ### `[override virtual] void QLocalSocket::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::close()`。
+关闭套接字的I/O设备，并调用`disconnectFromServer()`关闭套接字连接。
+请参见 `QIODevice::close()` 关于 I/O 设备关闭时发生的动作描述。
 
 ### `void QLocalSocket::connectToServer(QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToServer`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试连接`serverName()`。必须在打开连接前调用`setServerName()`。或者你也可以使用 connectToServer（const `QString` &name， OpenMode openMode）;
+套接字在给定的`openMode`中打开，首先进入`ConnectingState`。如果建立连接，`QLocalSocket`进入`ConnectedState`并发出`connected()`。
+调用该函数后，套接字可以发出`errorOccurred()`来表示发生错误。
 
 ### `void QLocalSocket::connectToServer(const QString &name, QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectToServer`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置服务器`name`并尝试连接它。
+套接字在给定`openMode`中打开，首先进入`ConnectingState`。如果建立连接，`QLocalSocket`进入`ConnectedState`并发出`connected()`。
+调用该函数后，套接字可以发出`errorOccurred()`来表示发生错误。
 
 ### `[signal] void QLocalSocket::connected()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 发出的通知信号 `connected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在`connectToServer()`被调用并成功建立连接后发出的。
 
 ### `void QLocalSocket::disconnectFromServer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `disconnectFromServer`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试关闭套接字。如果有待写入的数据，`QLocalSocket`会进入`ClosingState`并等待所有数据写入。最终，它会进入`UnconnectedState`并发出`disconnected()`信号。
 
 ### `[signal] void QLocalSocket::disconnected()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 发出的通知信号 `disconnected`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当套接字断开时，该信号会发出。
 
 ### `QLocalSocket::LocalSocketError QLocalSocket::error() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::error` 用于计算、查询或取得与“错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLocalSocket::LocalSocketError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLocalSocket::LocalSocketError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后一次发生的错误类型。
 
 ### `[signal] void QLocalSocket::errorOccurred(QLocalSocket::LocalSocketError socketError)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 发出的通知信号 `errorOccurred`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketError`：类型为 `QLocalSocket::LocalSocketError`。没有默认值，调用时必须提供。传入 `QLocalSocket::LocalSocketError` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号是在错误发生后发出的。`socketError`参数描述了发生的错误类型。
+`QLocalSocket::LocalSocketError`不是注册元类型，所以对于队列中的连接，你需要用`Q_DECLARE_METATYPE()`和 `qRegisterMetaType()` 来注册。
 
 ### `bool QLocalSocket::flush()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::flush` 用于计算、查询或取得与“刷新”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数尽可能多地从内部写入缓冲区写入套接字，且不阻塞。如果写入了任何数据，该函数返回`true`;否则返回 false。
+如果你需要`QLocalSocket`立即开始发送缓冲数据，可以调用该函数。成功写入的字节数取决于操作系统。在大多数情况下，你不需要调用这个函数，因为一旦控制返回事件循环，系统会自动开始发送数据`QLocalSocket`。如果没有事件循环，则调用`waitForBytesWritten()`。
 
 ### `QString QLocalSocket::fullServerName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::fullServerName` 用于计算、查询或取得与“full、Server、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该套接字连接的服务器路径。
+注意：该函数的返回值是针对特定平台的。
 
 ### `[override virtual] bool QLocalSocket::isSequential() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSequential`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::isSequential()` const.
 
 ### `bool QLocalSocket::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果套接字有效且准备好使用，返回`true`;否则返回`false`。
+注意：套接字的状态必须`ConnectedState`才能进行读写。
 
 ### `[override virtual] bool QLocalSocket::open(QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QIODevice::open`（QIODeviceBase：：OpenMode 模式）。
+相当于`connectToServer`（OpenMode 模式）。套接字在由 `setServerName()` 定义的服务器中以指定`openMode`开启。
+注意，与大多数其他`QIODevice`子类不同，open() 不能直接打开设备。如果套接字已经连接，或者连接服务器未定义，则该函数返回 false，其他情况下为真。`connected()` 或 `errorOccurred()` 信号将在设备实际打开（或连接失败）时发出。
+详情请参见`connectToServer()`。
 
 ### `qint64 QLocalSocket::readBufferSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的核心操作 `readBufferSize`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回内部读取缓冲区的大小。这限制了客户端在调用`read()`或`readAll()`之前能接收的数据量。读取缓冲区大小为0（默认值）意味着缓冲区没有大小限制，确保不会丢失数据。
 
 ### `[override virtual protected] qint64 QLocalSocket::readData(char *data, qint64 c)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的核心操作 `readData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `c`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从本地套接字接收缓冲区复制最多 `c` 字节到 `data`，返回读取字节数，失败返回 -1。它由 `QIODevice::read()` 间接调用；应在 `readyRead()` 后读取，并处理断开和 `errorOccurred()`。
 
 ### `[override virtual protected] qint64 QLocalSocket::readLineData(char *data, qint64 maxSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的核心操作 `readLineData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `maxSize`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现：`QIODevice::readLineData`（char *data， qint64 maxSize）.
 
 ### `QString QLocalSocket::serverName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::serverName` 用于计算、查询或取得与“server、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对等节点的名称，如`setServerName()`指定，若未调用或`setServerName()` `connectToServer()`失败，则返回空 `QString`。
 
 ### `void QLocalSocket::setReadBufferSize(qint64 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setReadBufferSize`。调用它会改变 `QLocalSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `qint64`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QLocalSocket`内部读取缓冲区的大小设置为`size`字节。
+如果缓冲区大小受限于某个大小，`QLocalSocket`不会缓冲超过该大小的数据。例外情况下，缓冲区大小为0意味着读取缓冲区是无限的，所有入站数据都被缓冲。这是默认设置。
+如果你只在特定时间点读取数据（例如在实时流媒体应用中），或者想保护套接字免受过多数据接收，避免最终导致内存不足，这个选项非常有用。
 
 ### `void QLocalSocket::setServerName(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setServerName`。调用它会改变 `QLocalSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置连接节点的对`name`。在Windows上，名称是命名管道的名称;在Unix上，名称是本地域套接字的名称。
+当套筒未连接时必须调用该函数。
 
 ### `bool QLocalSocket::setSocketDescriptor(qintptr socketDescriptor, QLocalSocket::LocalSocketState socketState = ConnectedState, QIODeviceBase::OpenMode openMode = ReadWrite)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketDescriptor`。调用它会改变 `QLocalSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `socketDescriptor`：类型为 `qintptr`。没有默认值，调用时必须提供。传入 `qintptr` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `socketState`：类型为 `QLocalSocket::LocalSocketState`。默认值为 `ConnectedState`。传入 `QLocalSocket::LocalSocketState` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `openMode`：类型为 `QIODeviceBase::OpenMode`。默认值为 `ReadWrite`。传入 `QIODeviceBase::OpenMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用本地套接字描述符`socketDescriptor`初始化`QLocalSocket`。如果`socketDescriptor`被接受为有效的套接字描述符，返回`true`;否则返回`false`。套接字以`openMode`指定的模式打开，进入`socketState`指定的套接字状态。
+注意：无法用相同的本地套接字描述符初始化两个本地套接字。
 
 ### `[override virtual protected] qint64 QLocalSocket::skipData(qint64 maxSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::skipData` 用于计算、查询或取得与“skip、数据访问”相关的操作。调用时要先确认当前状态和 `maxSize` 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `maxSize`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QIODevice::skipData`（qint64 maxSize）。
 
 ### `qintptr QLocalSocket::socketDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::socketDescriptor` 用于计算、查询或取得与“socket、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qintptr`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qintptr`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有本地套接字描述符，返回`QLocalSocket`对象的本地套接字描述符;否则返回 -1。
+当`QLocalSocket`处于`UnconnectedState`时，套接字描述符不可用。描述符的类型取决于平台：
+- 在Windows上，返回的值是Winsock 2的套接字句柄。
+- 在INTEGRITY中，返回的值是`QTcpSocket`套接字描述符，类型由`socketDescriptor`定义。
+- 在所有其他类 UNIX 操作系统中，类型是表示套接字的文件描述符。
 
 ### `QLocalSocket::LocalSocketState QLocalSocket::state() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::state` 用于计算、查询或取得与“state”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLocalSocket::LocalSocketState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QLocalSocket::LocalSocketState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回套筒的状态。
 
 ### `[signal] void QLocalSocket::stateChanged(QLocalSocket::LocalSocketState socketState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 发出的通知信号 `stateChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `socketState`：类型为 `QLocalSocket::LocalSocketState`。没有默认值，调用时必须提供。传入 `QLocalSocket::LocalSocketState` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当`QLocalSocket`的状态发生变化时，该信号都会发出。`socketState`参数即为新状态。
+QLocalSocket：：SocketState 不是注册元类型，因此对于排队连接，你需要用 `Q_DECLARE_METATYPE()` 和 `qRegisterMetaType()` 来注册。
 
 ### `[override virtual] bool QLocalSocket::waitForBytesWritten(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::waitForBytesWritten` 用于计算、查询或取得与“等待、For、字节、Written”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QIODevice::waitForBytesWritten`（int msecs）。
 
 ### `bool QLocalSocket::waitForConnected(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::waitForConnected` 用于计算、查询或取得与“等待、For、Connected”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+等待套接字连接，最多可达`msecs`毫秒。如果连接已建立，该函数返回`true`;否则返回`false`。如果返回`false`，你可以调用`error()`来确定错误原因。
+以下示例等待最多一秒以建立连接：
+如果`msecs`为-1，该函数不会超时。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ socket->connectToServer("market");
+ if (socket->waitForConnected(1000))
+     qDebug("Connected!");
+```
 
 ### `bool QLocalSocket::waitForDisconnected(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::waitForDisconnected` 用于计算、查询或取得与“等待、For、Disconnected”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+等待套接字断开连接，最多可达`msecs`毫秒。如果连接成功断开，该函数返回`true`;否则返回`false`（如果操作超时、发生错误或该`QLocalSocket`已断开）。如果返回`false`，你可以调用`error()`来确定错误原因。
+以下示例等待连接关闭最多一秒钟：
+如果`msecs`为-1，该函数不会超时。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ socket->disconnectFromServer();
+ if (socket->state() == QLocalSocket::UnconnectedState
+     || socket->waitForDisconnected(1000)) {
+     qDebug("Disconnected!");
+ }
+```
 
 ### `[override virtual] bool QLocalSocket::waitForReadyRead(int msecs = 30000)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::waitForReadyRead` 用于计算、查询或取得与“等待、For、Ready、读取”相关的操作。调用时要先确认当前状态和 `msecs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `msecs`：类型为 `int`。默认值为 `30000`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QIODevice::waitForReadyRead`（int msecs）。
+该功能会阻塞，直到数据可用且`readyRead()`信号已发出。该函数在`msecs`毫秒后超时;默认超时为30000毫秒。
+如果数据可用，函数返回`true`;否则返回`false`（如果发生错误或操作超时）。
 
 ### `[override virtual protected] qint64 QLocalSocket::writeData(const char *data, qint64 c)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的核心操作 `writeData`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `c`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把最多 `c` 字节加入本地套接字发送缓冲区，返回已接受字节数，失败返回 -1。数据可能稍后才写入系统；用 `bytesWritten()` 或在确有阻塞需要时用 `waitForBytesWritten()` 判断进度。
 
 ### `(since 6.2) enum SocketOption { NoOptions, AbstractNamespaceOption }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 暴露的类型声明 `Socket、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可用于连接服务器的可能选项。目前，在Linux和Android上，它用于指定连接到绑定抽象地址的套接字的服务器。
+- `QLocalSocket::NoOptions`：`0x00`;尚未设置任何选项。
+- `QLocalSocket::AbstractNamespaceOption`：`0x01`;套接字会尝试连接到一个抽象地址。该标志仅限于Linux和Android。在其他平台上则被忽略。
+这个枚举是在Qt 6.2引入的。
+SocketOptions 类型是 QFlags 的 typedef<SocketOption>。它存储 SocketOption 值的 OR 组合。
 
 ### `flags SocketOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QLocalSocket` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了可用于连接服务器的可能选项。目前，在Linux和Android上，它用于指定连接到绑定抽象地址的套接字的服务器。
+- `QLocalSocket::NoOptions`：`0x00`;尚未设置任何选项。
+- `QLocalSocket::AbstractNamespaceOption`：`0x01`;套接字会尝试连接到一个抽象地址。该标志仅限于Linux和Android。在其他平台上则被忽略。
+这个枚举是在Qt 6.2引入的。
+SocketOptions 类型是 QFlags 的 typedef<SocketOption>。它存储 SocketOption 值的 OR 组合。
 
 ### `QBindable<QLocalSocket::SocketOptions> bindableSocketOptions()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableSocketOptions`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性包含套筒选项。
+选项必须在套接字处于`UnconnectedState`状态时设置。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QLocalSocket::SocketOptions>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableSocketOptions()` 取得 `socketOptions` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `void setSocketOptions(QLocalSocket::SocketOptions option)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSocketOptions`。调用它会改变 `QLocalSocket` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性包含套筒选项。
+选项必须在套接字处于`UnconnectedState`状态时设置。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QLocalSocket::SocketOptions`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSocketOptions(...)` 修改 `socketOptions`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QLocalSocket::SocketOptions socketOptions() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QLocalSocket::socketOptions` 用于计算、查询或取得与“socket、Options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QLocalSocket::SocketOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性包含套筒选项。
+选项必须在套接字处于`UnconnectedState`状态时设置。
 
-**签名拆解：**
-
-- 返回值：`QLocalSocket::SocketOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `socketOptions()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

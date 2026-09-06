@@ -112,457 +112,316 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 34 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QQuickPaintedItem::PerformanceHintflags QQuickPaintedItem::PerformanceHints`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 暴露的类型声明 `Performance、Hintflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PerformanceHintflags QQuickPaintedItem::PerformanceHints`。
-- 属性名：`QQuickPaintedItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以启用以提升渲染性能的标志`QQuickPaintedItem`。默认情况下，这些标志都没有被设置。
+- `QQuickPaintedItem::FastFBOResizing`：`0x1`;从Qt 6.0开始，该值被忽略。
+PerformanceHints 类型是 QFlags 的 typedef<PerformanceHint>。它存储 PerformanceHint 值的 OR 组合。
 
 ### `enum QQuickPaintedItem::RenderTarget`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 暴露的类型声明 `渲染、目标`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RenderTarget`。
-- 属性名：`QQuickPaintedItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QQuickPaintedItem`的渲染目标。渲染目标是`QPainter`在物体被渲染到屏幕上之前绘制的表面。
+- `QQuickPaintedItem::Image`：`0`;默认操作;`QPainter` 使用光栅绘图引擎绘制到一个`QImage`。图像内容需要在之后上传到图形内存，如果物品较大，操作可能会较慢。该渲染目标支持高质量抗锯齿和快速的物品大小调整。
+- `QQuickPaintedItem::FramebufferObject`：`1`;从Qt 6.9开始，只要渲染API是OpenGL，该值将支持硬件加速绘画，否则将被忽略。对于Qt 6.0至Qt 6.8版本，所有渲染API都会忽略该值。这通常能带来更好的渲染性能，但代价是抗锯齿质量。
+- `QQuickPaintedItem::InvertedYFramebufferObject`：`2`;与FramebufferObject相同，但渲染方向绕X轴反转。
 
 ### `fillColor : QColor`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的配置属性。初始化或状态切换时通过 `setFillColor(...)` 设置，之后用 `fillColor()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留物品的背景填充颜色。
+默认情况下，填充颜色设置为`Qt::transparent`。
+将填充颜色设置为无效颜色（例如 QColor()），以禁用背景填充。这可能会提升性能，如果 `paint()` 函数绘制到每帧的所有像素，这样做是安全的。
 
-**签名拆解：**
-
-- 属性类型：`QColor`。
-- 属性名：`fillColor`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `fillColor()` 读取当前值；它不会修改应用状态。
 
 ### `renderTarget : RenderTarget`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的配置属性。初始化或状态切换时通过 `setRenderTarget(...)` 设置，之后用 `renderTarget()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含了该物品的渲染目标。
+该属性定义了`QPainter`渲染的目标，可以是`QQuickPaintedItem::Image`、`QQuickPaintedItem::FramebufferObject`或`QQuickPaintedItem::InvertedYFramebufferObject`。
+每种对象都有其优势，通常是性能与质量的区别。使用帧缓冲对象避免了将图像内容上传到图形内存纹理的高成本，同时使用图像实现高质量抗锯齿。
+警告：调整帧缓冲区对象大小是一项昂贵操作，如果物品经常被调整大小，请避免使用`QQuickPaintedItem::FramebufferObject`渲染目标。
+默认情况下，渲染目标是`QQuickPaintedItem::Image`。
 
-**签名拆解：**
-
-- 属性类型：`RenderTarget`。
-- 属性名：`renderTarget`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `renderTarget()` 读取当前值；它不会修改应用状态。
 
 ### `textureSize : QSize`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的配置属性。初始化或状态切换时通过 `setTextureSize(...)` 设置，之后用 `textureSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+定义了纹理的大小。
+改变贴图大小不会影响`paint()`中使用的坐标系。取而代之的是应用缩放因子，因此绘画应在0,0到`width()`，`height()`之间完成。
+默认情况下，纹理大小与该物品大小相同。
+注意：如果物品位于一个设备像素比与1不同的窗口上，这个缩放因子会隐含地应用到纹理尺寸上。
 
-**签名拆解：**
-
-- 属性类型：`QSize`。
-- 属性名：`textureSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textureSize()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QQuickPaintedItem::QQuickPaintedItem(QQuickItem *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QQuickItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`项构造一个QQuickPaintedItem。
 
 ### `[override virtual noexcept] QQuickPaintedItem::~QQuickPaintedItem()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了`QQuickPaintedItem`。
 
 ### `bool QQuickPaintedItem::antialiasing() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::antialiasing` 用于计算、查询或取得与“antialiasing”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用抗锯齿绘画，则返回 true;否则返回 false。
+默认情况下，抗锯齿未被启用。
 
 ### `[override virtual] bool QQuickPaintedItem::isTextureProvider() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isTextureProvider`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QQuickItem::isTextureProvider()` const.
+如果该项是纹理提供者，则返回 true。默认实现返回 false。
+该函数可以从任何线程调用。
 
 ### `[override virtual protected] void QQuickPaintedItem::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::itemChange` 用于执行与“项目访问、Change”相关的操作。调用时要先确认当前状态和 `change`、`value` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `change`：类型为 `QQuickItem::ItemChange`。没有默认值，调用时必须提供。传入 `QQuickItem::ItemChange` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QQuickItem::ItemChangeData &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QQuickItem::itemChange`（QQuickItem：：ItemChange change，const QQuickItem：：ItemChangeData &value）。
+当`change`发生时调用此物品。
+`value`包含与变更相关的额外信息（如适用）。
+如果你在子类中重新实现此方法，务必调用。
+通常在实现结束时，确保`windowChanged()`信号会被发射。
 
 ### `bool QQuickPaintedItem::mipmap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::mipmap` 用于计算、查询或取得与“mipmap”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用了 mipmaps，则返回 true;否则，返回 false。
+默认情况下，mipmapping 并未被启用。
 
 ### `bool QQuickPaintedItem::opaquePainting() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::opaquePainting` 用于计算、查询或取得与“opaque、Painting”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该项不透明，则返回 true;否则返回 false。
+默认情况下，涂装物品不是不透明的。
 
 ### `[pure virtual] void QQuickPaintedItem::paint(QPainter *painter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的核心操作 `paint`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数通常由QML场景图调用，它将元素的内容绘制为局部坐标。
+底层纹理的大小由设置时的`textureSize`定义，或者物品大小乘以窗口的像素比。
+该函数是在物品被填充`fillColor`后调用的。
+在`QQuickPaintedItem`子类中重新实现该函数，使用`painter`来实现该物品的绘画实现。
+注意：QML场景图使用两个独立线程，主线程负责处理事件或更新动画，另一线程负责实际发布图形资源更新和绘制调用记录。因此，paint()不是从主GUI线程调用，而是调用支持GL的渲染器线程。在调用paint()时，GUI线程被阻塞，因此是线程安全的。
+警告：在创建QObject、发射信号、启动计时器等功能时必须极度谨慎，因为这些会与渲染线程产生关联。
 
 ### `QQuickPaintedItem::PerformanceHints QQuickPaintedItem::performanceHints() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::performanceHints` 用于计算、查询或取得与“performance、Hints”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQuickPaintedItem::PerformanceHints`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQuickPaintedItem::PerformanceHints`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回性能提示。
+默认情况下，不会启用性能提示。
 
 ### `[override virtual protected] void QQuickPaintedItem::releaseResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::releaseResources` 用于执行与“释放、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QQuickItem::releaseResources()`。
+当某个项目需要释放尚未由`QQuickItem::updatePaintNode()`返回节点管理的图形资源时，调用该函数。
+当该项即将从之前渲染的窗口中移除时，就会发生这种情况。当调用该函数时，该项必定会有`window`。
+该函数在图形界面线程中被调用，渲染线程的状态（使用时）未知。对象不应直接删除，而应通过`QQuickWindow::scheduleRenderJob()`调度进行清理。
 
 ### `void QQuickPaintedItem::setAntialiasing(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAntialiasing`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enable`正确，则启用了抗锯齿绘画。
+默认情况下，抗锯齿未被启用。
 
 ### `void QQuickPaintedItem::setMipmap(bool enable)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMipmap`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enable`为真，则关联纹理上已启用多频映射。
+当物品缩小时，多重映射提升渲染速度并减少锯齿伪影。
+默认情况下，mipmapping 并未被启用。
 
 ### `void QQuickPaintedItem::setOpaquePainting(bool opaque)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOpaquePainting`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `opaque`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`opaque`为真，则该物品是不透明的;否则，它被视为半透明的。
+不透明物品不会与场景其他部分融合，如果物品内容是不透明，你应该将此设置为为真以加快渲染速度。
+默认情况下，涂装物品不是不透明的。
 
 ### `void QQuickPaintedItem::setPerformanceHint(QQuickPaintedItem::PerformanceHint hint, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPerformanceHint`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hint`：类型为 `QQuickPaintedItem::PerformanceHint`。没有默认值，调用时必须提供。传入 `QQuickPaintedItem::PerformanceHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`enabled`为真，则将该项的给定表现`hint`设定;否则清除性能提示。
+默认情况下，没有启用性能提示/。
 
 ### `void QQuickPaintedItem::setPerformanceHints(QQuickPaintedItem::PerformanceHints hints)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPerformanceHints`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hints`：类型为 `QQuickPaintedItem::PerformanceHints`。没有默认值，调用时必须提供。传入 `QQuickPaintedItem::PerformanceHints` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将性能提示设置为`hints`。
+默认情况下，没有启用性能提示/。
 
 ### `[override virtual] QSGTextureProvider *QQuickPaintedItem::textureProvider() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::textureProvider` 用于计算、查询或取得与“texture、Provider”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTextureProvider *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTextureProvider *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QQuickItem::textureProvider()` const.
+返回某个物品的纹理提供者。默认实现返回`nullptr`。
+该函数只能在渲染线程中调用。
 
 ### `void QQuickPaintedItem::update(const QRect &rect = QRect())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::update` 用于执行与“更新”相关的操作。调用时要先确认当前状态和 `rect` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。默认值为 `QRect()`。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+安排重新绘制该物品中`rect`覆盖区域。每当物品需要重新绘制时，比如外观或大小变化，都可以调用此函数。
+该函数不会立即绘制;它会安排一个绘画请求，当下一帧渲染时由QML场景图处理。只有当该物品可见时才会被重新绘制。
 
 ### `[override virtual protected] QSGNode *QQuickPaintedItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::updatePaintNode` 用于计算、查询或取得与“更新、绘制、Node”相关的操作。调用时要先确认当前状态和 `oldNode`、`data` 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数 `oldNode`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `QQuickItem::UpdatePaintNodeData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QQuickItem::updatePaintNode`（QSGNode *oldNode， QQuickItem：：UpdatePaintNodeData *updatePaintNodeData）.
+在渲染线程中调用，当需要将物品状态与场景图同步时。
+如果用户在该项上设置了`QQuickItem::ItemHasContents`标志，则该函数是因`QQuickItem::update()`而被调用的。
+该函数应返回该项场景图子树的根。大多数实现会返回包含该项视觉表示的单`QSGGeometryNode`。`oldNode` 是函数上次调用时返回的节点。`updatePaintNodeData` 提供指向该`QQuickItem`关联`QSGTransformNode`的指针。
+在执行该函数时，主线程会被阻塞，因此可以安全地读取`QQuickItem`实例和主线程中其他对象的值。
+如果没有调用 QQuickItem：：updatePaintNode() 而不会导致实际的场景图变化，比如`QSGNode::markDirty()`节点或添加和移除节点，那么底层实现可能会决定不再渲染场景，因为视觉效果是相同的。
+警告：图形操作和与场景图的交互必须完全发生在渲染线程上，主要发生在 QQuickItem：：updatePaintNode() 调用期间。最好的经验法则是只在 QQuickItem：：updatePaintNode() 函数中使用带有“QSG” 前缀的类。
+警告：该函数在渲染线程中被调用。这意味着任何创建的QObject或线程本地存储都会与渲染线程有关联，因此在此函数中进行除渲染外的其他操作时请谨慎。信号同样，它们会在渲染线程中发出，因此通常通过排队连接传递。
+注意：所有带有 QSG 前缀的类应仅用于场景图的渲染线程。更多信息请参见场景图与渲染。
 
 ### `enum PerformanceHint { FastFBOResizing }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 暴露的类型声明 `Performance、Hint`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以启用以提升渲染性能的标志`QQuickPaintedItem`。默认情况下，这些标志都没有被设置。
+- `QQuickPaintedItem::FastFBOResizing`：`0x1`;从Qt 6.0开始，该值被忽略。
+PerformanceHints 类型是 QFlags 的 typedef<PerformanceHint>。它存储 PerformanceHint 值的 OR 组合。
 
 ### `flags PerformanceHints`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了你可以启用以提升渲染性能的标志`QQuickPaintedItem`。默认情况下，这些标志都没有被设置。
+- `QQuickPaintedItem::FastFBOResizing`：`0x1`;从Qt 6.0开始，该值被忽略。
+PerformanceHints 类型是 QFlags 的 typedef<PerformanceHint>。它存储 PerformanceHint 值的 OR 组合。
 
 ### `QColor fillColor() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::fillColor` 用于计算、查询或取得与“fill、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留物品的背景填充颜色。
+默认情况下，填充颜色设置为`Qt::transparent`。
+将填充颜色设置为无效颜色（例如 QColor()），以禁用背景填充。这可能会提升性能，如果 `paint()` 函数绘制到每帧的所有像素，这样做是安全的。
 
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `fillColor()` 读取当前值；它不会修改应用状态。
 
 ### `QQuickPaintedItem::RenderTarget renderTarget() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QQuickPaintedItem` 的核心操作 `renderTarget`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+该属性包含了该物品的渲染目标。
+该属性定义了`QPainter`渲染的目标，可以是`QQuickPaintedItem::Image`、`QQuickPaintedItem::FramebufferObject`或`QQuickPaintedItem::InvertedYFramebufferObject`。
+每种对象都有其优势，通常是性能与质量的区别。使用帧缓冲对象避免了将图像内容上传到图形内存纹理的高成本，同时使用图像实现高质量抗锯齿。
+警告：调整帧缓冲区对象大小是一项昂贵操作，如果物品经常被调整大小，请避免使用`QQuickPaintedItem::FramebufferObject`渲染目标。
+默认情况下，渲染目标是`QQuickPaintedItem::Image`。
 
-**签名拆解：**
-
-- 返回值：`QQuickPaintedItem::RenderTarget`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `renderTarget()` 读取当前值；它不会修改应用状态。
 
 ### `void setFillColor(const QColor &)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFillColor`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留物品的背景填充颜色。
+默认情况下，填充颜色设置为`Qt::transparent`。
+将填充颜色设置为无效颜色（例如 QColor()），以禁用背景填充。这可能会提升性能，如果 `paint()` 函数绘制到每帧的所有像素，这样做是安全的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `const QColor &`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFillColor(...)` 修改 `fillColor`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setRenderTarget(QQuickPaintedItem::RenderTarget target)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderTarget`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含了该物品的渲染目标。
+该属性定义了`QPainter`渲染的目标，可以是`QQuickPaintedItem::Image`、`QQuickPaintedItem::FramebufferObject`或`QQuickPaintedItem::InvertedYFramebufferObject`。
+每种对象都有其优势，通常是性能与质量的区别。使用帧缓冲对象避免了将图像内容上传到图形内存纹理的高成本，同时使用图像实现高质量抗锯齿。
+警告：调整帧缓冲区对象大小是一项昂贵操作，如果物品经常被调整大小，请避免使用`QQuickPaintedItem::FramebufferObject`渲染目标。
+默认情况下，渲染目标是`QQuickPaintedItem::Image`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `target`：类型为 `QQuickPaintedItem::RenderTarget`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setRenderTarget(...)` 修改 `renderTarget`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTextureSize(const QSize &size)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextureSize`。调用它会改变 `QQuickPaintedItem` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+定义了纹理的大小。
+改变贴图大小不会影响`paint()`中使用的坐标系。取而代之的是应用缩放因子，因此绘画应在0,0到`width()`，`height()`之间完成。
+默认情况下，纹理大小与该物品大小相同。
+注意：如果物品位于一个设备像素比与1不同的窗口上，这个缩放因子会隐含地应用到纹理尺寸上。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTextureSize(...)` 修改 `textureSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QSize textureSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuickPaintedItem::textureSize` 用于计算、查询或取得与“texture、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+定义了纹理的大小。
+改变贴图大小不会影响`paint()`中使用的坐标系。取而代之的是应用缩放因子，因此绘画应在0,0到`width()`，`height()`之间完成。
+默认情况下，纹理大小与该物品大小相同。
+注意：如果物品位于一个设备像素比与1不同的窗口上，这个缩放因子会隐含地应用到纹理尺寸上。
 
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `textureSize()` 读取当前值；它不会修改应用状态。
 
 ### `void fillColorChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `fillColorChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性保留物品的背景填充颜色。
+默认情况下，填充颜色设置为`Qt::transparent`。
+将填充颜色设置为无效颜色（例如 QColor()），以禁用背景填充。这可能会提升性能，如果 `paint()` 函数绘制到每帧的所有像素，这样做是安全的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `fillColor` 的变化，不要把它当作普通函数主动调用。
 
 ### `void renderTargetChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `renderTargetChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含了该物品的渲染目标。
+该属性定义了`QPainter`渲染的目标，可以是`QQuickPaintedItem::Image`、`QQuickPaintedItem::FramebufferObject`或`QQuickPaintedItem::InvertedYFramebufferObject`。
+每种对象都有其优势，通常是性能与质量的区别。使用帧缓冲对象避免了将图像内容上传到图形内存纹理的高成本，同时使用图像实现高质量抗锯齿。
+警告：调整帧缓冲区对象大小是一项昂贵操作，如果物品经常被调整大小，请避免使用`QQuickPaintedItem::FramebufferObject`渲染目标。
+默认情况下，渲染目标是`QQuickPaintedItem::Image`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `renderTarget` 的变化，不要把它当作普通函数主动调用。
 
 ### `void textureSizeChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `textureSizeChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+定义了纹理的大小。
+改变贴图大小不会影响`paint()`中使用的坐标系。取而代之的是应用缩放因子，因此绘画应在0,0到`width()`，`height()`之间完成。
+默认情况下，纹理大小与该物品大小相同。
+注意：如果物品位于一个设备像素比与1不同的窗口上，这个缩放因子会隐含地应用到纹理尺寸上。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `textureSize` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

@@ -104,465 +104,348 @@ void Widget::paintEvent(QPaintEvent *)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 34 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPaintEngine::DirtyFlagflags QPaintEngine::DirtyFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 暴露的类型声明 `Dirty、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DirtyFlagflags QPaintEngine::DirtyFlags`。
-- 属性名：`QPaintEngine`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QPaintEngine::DirtyPen`：`0x0001`;笔脏了，需要更新。
+- `QPaintEngine::DirtyBrush`：`0x0002`;画刷脏了，需要更新。
+- `QPaintEngine::DirtyBrushOrigin`：`0x0004`;画刷原点脏，需要更新。
+- `QPaintEngine::DirtyFont`：`0x0008`;字体脏了，需要更新。
+- `QPaintEngine::DirtyBackground`：`0x0010`;背景脏了，需要更新。
+- `QPaintEngine::DirtyBackgroundMode`：`0x0020`;后台模式很脏，需要更新。
+- `QPaintEngine::DirtyTransform`：`0x0040`;变换是脏的，需要更新。
+- `QPaintEngine::DirtyClipRegion`：`0x0080`;剪辑区域脏了，需要更新。
+- `QPaintEngine::DirtyClipPath`：`0x0100`;剪辑路径是脏的，需要更新。
+- `QPaintEngine::DirtyHints`：`0x0200`;渲染提示是脏的，需要更新。
+- `QPaintEngine::DirtyCompositionMode`：`0x0400`;合成模式很脏，需要更新。
+- `QPaintEngine::DirtyClipEnabled`：`0x0800`;是否启用裁剪是不规则的，需要更新。
+- `QPaintEngine::DirtyOpacity`：`0x1000`;常数不透明度发生变化，需要作为状态变化的一部分进行更新`QPaintEngine::updateState()`。
+- `QPaintEngine::AllDirty`：`0xffff`;内部使用的便利枚举。
+这些类型被`QPainter`用来触发`QPaintEngine`中各状态的懒惰更新，使用`QPaintEngine::updateState()`。
+喷漆引擎必须更新所有脏状态。
+DirtyFlags 类型是 QFlags 的 typedef<DirtyFlag>。它存储 DirtyFlag 值的 OR 组合。
 
 ### `enum QPaintEngine::PaintEngineFeatureflags QPaintEngine::PaintEngineFeatures`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 暴露的类型声明 `绘制、Engine、Featureflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PaintEngineFeatureflags QPaintEngine::PaintEngineFeatures`。
-- 属性名：`QPaintEngine`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于描述绘图引擎的特性或能力。如果某个功能不被引擎支持，`QPainter`系统会尽力通过其他方式模拟该功能，并将 alpha 混合`QImage`与模拟结果传递给引擎。有些功能无法被模拟：AlphaBlend 和 PorterDuff。
+- `QPaintEngine::AlphaBlend`：`0x00000080`;该引擎可以alpha混合原语。
+- `QPaintEngine::Antialiasing`：`0x00000400`;该引擎可以使用抗锯齿来改善渲染图元的外观。
+- `QPaintEngine::BlendModes`：`0x00008000`;引擎支持混合模式。
+- `QPaintEngine::BrushStroke`：`0x00000800`;引擎支持以笔刷为填充的绘画笔画，而不仅仅是纯色（例如宽度为2的虚线渐变线）。
+- `QPaintEngine::ConicalGradientFill`：`0x00000040`;发动机支持锥形梯度填充。
+- `QPaintEngine::ConstantOpacity`：`0x00001000`;该发动机支持`QPainter::setOpacity()`提供的特性。
+- `QPaintEngine::LinearGradientFill`：`0x00000010`;发动机支持线性梯度填充。
+- `QPaintEngine::MaskedBrush`：`0x00002000`;该引擎能够渲染带有 alpha 通道或遮罩的纹理笔刷。
+- `QPaintEngine::ObjectBoundingModeGradients`：`0x00010000`;引擎原生支持坐标模式`QGradient::ObjectBoundingMode`的梯度。否则，如果支持 QPaintEngine：:P atternTransform，则物体边界模式梯度会转换为坐标模式为 `QGradient::LogicalMode` 的梯度，并带有坐标映射的画刷变换。
+- `QPaintEngine::PainterPaths`：`0x00000200`;发动机有路径支撑。
+- `QPaintEngine::PaintOutsidePaintEvent`：`0x20000000`;该引擎能够在喷漆事件之外进行喷漆。
+- `QPaintEngine::PatternBrush`：`0x00000008`;该引擎能够渲染`Qt::BrushStyle`中指定的画刷图案。
+- `QPaintEngine::PatternTransform`：`0x00000002`;引擎支持笔刷图案的转换。
+- `QPaintEngine::PerspectiveTransform`：`0x00004000`;该引擎支持对原件进行透视变换。
+- `QPaintEngine::PixmapTransform`：`0x00000004`;引擎可以转换像素贴图，包括旋转和剪切。
+- `QPaintEngine::PorterDuff`：`0x00000100`;该发动机支持波特-达夫的运营
+- `QPaintEngine::PrimitiveTransform`：`0x00000001`;该引擎支持绘图原语的变换。
+- `QPaintEngine::RadialGradientFill`：`0x00000020`;发动机支持径向梯度填充。
+- `QPaintEngine::RasterOpModes`：`0x00020000`;该引擎支持位形扫描。
+- `QPaintEngine::AllFeatures`：`0xffffffff`;上述所有特征。该枚举值通常用作位遮罩。
+PaintEngineFeatures 类型是 QFlags 的 typedef<PaintEngineFeature>。它存储 PaintEngineFeature 值的 OR 组合。
 
 ### `[explicit] QPaintEngine::QPaintEngine(QPaintEngine::PaintEngineFeatures caps = PaintEngineFeatures())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `caps`：类型为 `QPaintEngine::PaintEngineFeatures`。默认值为 `PaintEngineFeatures()`。传入 `QPaintEngine::PaintEngineFeatures` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个带有`caps`指定特征集的绘画引擎。
 
 ### `[virtual noexcept] QPaintEngine::~QPaintEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会毁掉喷漆引擎。
 
 ### `[pure virtual] bool QPaintEngine::begin(QPaintDevice *pdev)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `pdev`：类型为 `QPaintDevice *`。没有默认值，调用时必须提供。传入 `QPaintDevice *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 开始后要在合法设备上绘制，结束时调用 `end()` 或让 painter 析构；绘制状态可用 `save()`/`restore()` 隔离。
+重新实现该函数，在绘制设备开始绘制时初始化绘图引擎`pdev`。如果初始化成功，则返回 true;否则返回 false。
 
 ### `[virtual] void QPaintEngine::drawEllipse(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawEllipse`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+重新实现该函数，绘制出矩形`rect`内能包含的最大椭圆。
+默认实现调用`drawPolygon()`。
 
 ### `[virtual] void QPaintEngine::drawEllipse(const QRect &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawEllipse`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRect &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+该函数的默认实现调用该函数的浮点版本。
 
 ### `[virtual] void QPaintEngine::drawImage(const QRectF &rectangle, const QImage &image, const QRectF &sr, Qt::ImageConversionFlags flags = Qt::AutoColor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawImage`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rectangle`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `image`：类型为 `const QImage &`。没有默认值，调用时必须提供。传入 `const QImage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sr`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `Qt::ImageConversionFlags`。默认值为 `Qt::AutoColor`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+重新实现这个函数，用给定的转换旗标绘制给定`rectangle`中`sr`矩形指定的`image`部分，`flags`，并将其转换为像素映射。
 
 ### `[virtual] void QPaintEngine::drawLines(const QLineF *lines, int lineCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawLines`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `lines`：类型为 `const QLineF *`。没有默认值，调用时必须提供。传入 `const QLineF *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lineCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+默认实现将 `lines` 中的行列表拆分为 `lineCount` 个独立调用 `drawPath()` 或 `drawPolygon()`，具体取决于绘图引擎的特性集。
 
 ### `[virtual] void QPaintEngine::drawLines(const QLine *lines, int lineCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawLines`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `lines`：类型为 `const QLine *`。没有默认值，调用时必须提供。传入 `const QLine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lineCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+默认实现将 `lines` 中的前 `lineCount` 行转换为 `QLineF`，并调用该函数的浮点版本。
 
 ### `[virtual] void QPaintEngine::drawPath(const QPainterPath &path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawPath`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `path`：类型为 `const QPainterPath &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+默认实现忽略 `path`，不执行任何操作。
 
 ### `[pure virtual] void QPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawPixmap`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `r`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pm`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sr`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+重新实现该函数，绘制给定`r`中`sr`矩形指定的`pm`部分。
 
 ### `[virtual] void QPaintEngine::drawPoints(const QPoint *points, int pointCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawPoints`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `points`：类型为 `const QPoint *`。没有默认值，调用时必须提供。传入 `const QPoint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pointCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+绘制缓冲区中的前`pointCount`点`points`。
+默认实现会将`points`中的前`pointCount` QPoint转换为QPointF，并调用drawPoint的浮点版本。
 
 ### `[virtual] void QPaintEngine::drawPoints(const QPointF *points, int pointCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawPoints`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `points`：类型为 `const QPointF *`。没有默认值，调用时必须提供。传入 `const QPointF *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pointCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+绘制缓冲区的前`pointCount`点`points`。
 
 ### `[virtual] void QPaintEngine::drawPolygon(const QPointF *points, int pointCount, QPaintEngine::PolygonDrawMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawPolygon`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `points`：类型为 `const QPointF *`。没有默认值，调用时必须提供。传入 `const QPointF *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pointCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QPaintEngine::PolygonDrawMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+重新实现这个虚拟函数，用模式`mode`绘制`points`中`pointCount`点定义的多边形。
+注意：至少有一个 drawPolygon() 函数必须重新实现。
 
 ### `[virtual] void QPaintEngine::drawPolygon(const QPoint *points, int pointCount, QPaintEngine::PolygonDrawMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawPolygon`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `points`：类型为 `const QPoint *`。没有默认值，调用时必须提供。传入 `const QPoint *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pointCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QPaintEngine::PolygonDrawMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+重新实现这个虚拟函数，用模式`mode`绘制`points`中`pointCount`点定义的多边形。
+注意：至少有一个 drawPolygon() 函数必须重新实现。
 
 ### `[virtual] void QPaintEngine::drawRects(const QRectF *rects, int rectCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawRects`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rects`：类型为 `const QRectF *`。没有默认值，调用时必须提供。传入 `const QRectF *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rectCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+在缓冲区`rects`绘制前`rectCount`矩形。该函数的默认实现调用 `drawPath()` 或 `drawPolygon()`，具体取决于绘图引擎的功能集。
 
 ### `[virtual] void QPaintEngine::drawRects(const QRect *rects, int rectCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawRects`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rects`：类型为 `const QRect *`。没有默认值，调用时必须提供。传入 `const QRect *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rectCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+默认实现将缓冲区 `rects` 中的前 `rectCount` 矩形转换为 `QRectF`，并调用该函数的浮点版本。
 
 ### `[virtual] void QPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawTextItem`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `textItem`：类型为 `const QTextItem &`。没有默认值，调用时必须提供。传入 `const QTextItem &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+该函数绘制位于位置`p`的文本项`textItem`。该函数的默认实现是将文本转换为`QPainterPath`并绘制生成路径。
 
 ### `[virtual] void QPaintEngine::drawTiledPixmap(const QRectF &rect, const QPixmap &pixmap, const QPointF &p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `drawTiledPixmap`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `p`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 绘制结果受当前 pen、brush、font、transform、clip 和 composition mode 共同影响。
+重新实现该函数，从给定`p`开始绘制给定`rect`的`pixmap`。像素映射将反复绘制，直到`rect`填满。
 
 ### `[pure virtual] bool QPaintEngine::end()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现该函数以完成当前绘画设备上的绘画。如果绘画成功完成，则返回 true;否则返回 false。
 
 ### `bool QPaintEngine::hasFeature(QPaintEngine::PaintEngineFeatures feature) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasFeature`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `feature`：类型为 `QPaintEngine::PaintEngineFeatures`。没有默认值，调用时必须提供。传入 `QPaintEngine::PaintEngineFeatures` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果涂装引擎支持指定`feature`，返回`true`;否则返回`false`。
 
 ### `bool QPaintEngine::isActive() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isActive`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果油漆引擎正在绘制，返回`true`;否则返回`false`。
 
 ### `QPaintDevice *QPaintEngine::paintDevice() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `paintDevice`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QPaintDevice *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果正在绘制，返回该引擎正在绘制的装置;否则返回`nullptr`。
 
 ### `QPainter *QPaintEngine::painter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的核心操作 `painter`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QPainter *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原喷漆引擎的油漆工。
 
 ### `void QPaintEngine::setActive(bool state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setActive`。调用它会改变 `QPaintEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `bool`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将涂装引擎的激活状态设置为`state`。
 
 ### `[pure virtual] QPaintEngine::Type QPaintEngine::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngine::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPaintEngine::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPaintEngine::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现这个函数，返回绘画引擎`Type`。
 
 ### `[pure virtual] void QPaintEngine::updateState(const QPaintEngineState &state)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPaintEngine::updateState` 用于执行与“更新、State”相关的操作。调用时要先确认当前状态和 `state` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `state`：类型为 `const QPaintEngineState &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新实现这个函数以更新绘图引擎的状态。
+实现后，该函数负责检查绘图引擎当前`state`并更新被更改的属性。使用`QPaintEngineState::state()`函数找出需要更新的属性，然后使用相应的get函数获取当前属性的值。
 
 ### `enum DirtyFlag { DirtyPen, DirtyBrush, DirtyBrushOrigin, DirtyFont, DirtyBackground, …, AllDirty }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 暴露的类型声明 `Dirty、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QPaintEngine::DirtyPen`：`0x0001`;笔脏了，需要更新。
+- `QPaintEngine::DirtyBrush`：`0x0002`;画刷脏了，需要更新。
+- `QPaintEngine::DirtyBrushOrigin`：`0x0004`;画刷原点脏，需要更新。
+- `QPaintEngine::DirtyFont`：`0x0008`;字体脏了，需要更新。
+- `QPaintEngine::DirtyBackground`：`0x0010`;背景脏了，需要更新。
+- `QPaintEngine::DirtyBackgroundMode`：`0x0020`;后台模式很脏，需要更新。
+- `QPaintEngine::DirtyTransform`：`0x0040`;变换是脏的，需要更新。
+- `QPaintEngine::DirtyClipRegion`：`0x0080`;剪辑区域脏了，需要更新。
+- `QPaintEngine::DirtyClipPath`：`0x0100`;剪辑路径是脏的，需要更新。
+- `QPaintEngine::DirtyHints`：`0x0200`;渲染提示是脏的，需要更新。
+- `QPaintEngine::DirtyCompositionMode`：`0x0400`;合成模式很脏，需要更新。
+- `QPaintEngine::DirtyClipEnabled`：`0x0800`;是否启用裁剪是不规则的，需要更新。
+- `QPaintEngine::DirtyOpacity`：`0x1000`;常数不透明度发生变化，需要作为状态变化的一部分进行更新`QPaintEngine::updateState()`。
+- `QPaintEngine::AllDirty`：`0xffff`;内部使用的便利枚举。
+这些类型被`QPainter`用来触发`QPaintEngine`中各状态的懒惰更新，使用`QPaintEngine::updateState()`。
+喷漆引擎必须更新所有脏状态。
+DirtyFlags 类型是 QFlags 的 typedef<DirtyFlag>。它存储 DirtyFlag 值的 OR 组合。
 
 ### `flags DirtyFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QPaintEngine::DirtyPen`：`0x0001`;笔脏了，需要更新。
+- `QPaintEngine::DirtyBrush`：`0x0002`;画刷脏了，需要更新。
+- `QPaintEngine::DirtyBrushOrigin`：`0x0004`;画刷原点脏，需要更新。
+- `QPaintEngine::DirtyFont`：`0x0008`;字体脏了，需要更新。
+- `QPaintEngine::DirtyBackground`：`0x0010`;背景脏了，需要更新。
+- `QPaintEngine::DirtyBackgroundMode`：`0x0020`;后台模式很脏，需要更新。
+- `QPaintEngine::DirtyTransform`：`0x0040`;变换是脏的，需要更新。
+- `QPaintEngine::DirtyClipRegion`：`0x0080`;剪辑区域脏了，需要更新。
+- `QPaintEngine::DirtyClipPath`：`0x0100`;剪辑路径是脏的，需要更新。
+- `QPaintEngine::DirtyHints`：`0x0200`;渲染提示是脏的，需要更新。
+- `QPaintEngine::DirtyCompositionMode`：`0x0400`;合成模式很脏，需要更新。
+- `QPaintEngine::DirtyClipEnabled`：`0x0800`;是否启用裁剪是不规则的，需要更新。
+- `QPaintEngine::DirtyOpacity`：`0x1000`;常数不透明度发生变化，需要作为状态变化的一部分进行更新`QPaintEngine::updateState()`。
+- `QPaintEngine::AllDirty`：`0xffff`;内部使用的便利枚举。
+这些类型被`QPainter`用来触发`QPaintEngine`中各状态的懒惰更新，使用`QPaintEngine::updateState()`。
+喷漆引擎必须更新所有脏状态。
+DirtyFlags 类型是 QFlags 的 typedef<DirtyFlag>。它存储 DirtyFlag 值的 OR 组合。
 
 ### `enum PaintEngineFeature { AlphaBlend, Antialiasing, BlendModes, BrushStroke, ConicalGradientFill, …, AllFeatures }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 暴露的类型声明 `绘制、Engine、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于描述绘图引擎的特性或能力。如果某个功能不被引擎支持，`QPainter`系统会尽力通过其他方式模拟该功能，并将 alpha 混合`QImage`与模拟结果传递给引擎。有些功能无法被模拟：AlphaBlend 和 PorterDuff。
+- `QPaintEngine::AlphaBlend`：`0x00000080`;该引擎可以alpha混合原语。
+- `QPaintEngine::Antialiasing`：`0x00000400`;该引擎可以使用抗锯齿来改善渲染图元的外观。
+- `QPaintEngine::BlendModes`：`0x00008000`;引擎支持混合模式。
+- `QPaintEngine::BrushStroke`：`0x00000800`;引擎支持以笔刷为填充的绘画笔画，而不仅仅是纯色（例如宽度为2的虚线渐变线）。
+- `QPaintEngine::ConicalGradientFill`：`0x00000040`;发动机支持锥形梯度填充。
+- `QPaintEngine::ConstantOpacity`：`0x00001000`;该发动机支持`QPainter::setOpacity()`提供的特性。
+- `QPaintEngine::LinearGradientFill`：`0x00000010`;发动机支持线性梯度填充。
+- `QPaintEngine::MaskedBrush`：`0x00002000`;该引擎能够渲染带有 alpha 通道或遮罩的纹理笔刷。
+- `QPaintEngine::ObjectBoundingModeGradients`：`0x00010000`;引擎原生支持坐标模式`QGradient::ObjectBoundingMode`的梯度。否则，如果支持 QPaintEngine：:P atternTransform，则物体边界模式梯度会转换为坐标模式为 `QGradient::LogicalMode` 的梯度，并带有坐标映射的画刷变换。
+- `QPaintEngine::PainterPaths`：`0x00000200`;发动机有路径支撑。
+- `QPaintEngine::PaintOutsidePaintEvent`：`0x20000000`;该引擎能够在喷漆事件之外进行喷漆。
+- `QPaintEngine::PatternBrush`：`0x00000008`;该引擎能够渲染`Qt::BrushStyle`中指定的画刷图案。
+- `QPaintEngine::PatternTransform`：`0x00000002`;引擎支持笔刷图案的转换。
+- `QPaintEngine::PerspectiveTransform`：`0x00004000`;该引擎支持对原件进行透视变换。
+- `QPaintEngine::PixmapTransform`：`0x00000004`;引擎可以转换像素贴图，包括旋转和剪切。
+- `QPaintEngine::PorterDuff`：`0x00000100`;该发动机支持波特-达夫的运营
+- `QPaintEngine::PrimitiveTransform`：`0x00000001`;该引擎支持绘图原语的变换。
+- `QPaintEngine::RadialGradientFill`：`0x00000020`;发动机支持径向梯度填充。
+- `QPaintEngine::RasterOpModes`：`0x00020000`;该引擎支持位形扫描。
+- `QPaintEngine::AllFeatures`：`0xffffffff`;上述所有特征。该枚举值通常用作位遮罩。
+PaintEngineFeatures 类型是 QFlags 的 typedef<PaintEngineFeature>。它存储 PaintEngineFeature 值的 OR 组合。
 
 ### `flags PaintEngineFeatures`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于描述绘图引擎的特性或能力。如果某个功能不被引擎支持，`QPainter`系统会尽力通过其他方式模拟该功能，并将 alpha 混合`QImage`与模拟结果传递给引擎。有些功能无法被模拟：AlphaBlend 和 PorterDuff。
+- `QPaintEngine::AlphaBlend`：`0x00000080`;该引擎可以alpha混合原语。
+- `QPaintEngine::Antialiasing`：`0x00000400`;该引擎可以使用抗锯齿来改善渲染图元的外观。
+- `QPaintEngine::BlendModes`：`0x00008000`;引擎支持混合模式。
+- `QPaintEngine::BrushStroke`：`0x00000800`;引擎支持以笔刷为填充的绘画笔画，而不仅仅是纯色（例如宽度为2的虚线渐变线）。
+- `QPaintEngine::ConicalGradientFill`：`0x00000040`;发动机支持锥形梯度填充。
+- `QPaintEngine::ConstantOpacity`：`0x00001000`;该发动机支持`QPainter::setOpacity()`提供的特性。
+- `QPaintEngine::LinearGradientFill`：`0x00000010`;发动机支持线性梯度填充。
+- `QPaintEngine::MaskedBrush`：`0x00002000`;该引擎能够渲染带有 alpha 通道或遮罩的纹理笔刷。
+- `QPaintEngine::ObjectBoundingModeGradients`：`0x00010000`;引擎原生支持坐标模式`QGradient::ObjectBoundingMode`的梯度。否则，如果支持 QPaintEngine：:P atternTransform，则物体边界模式梯度会转换为坐标模式为 `QGradient::LogicalMode` 的梯度，并带有坐标映射的画刷变换。
+- `QPaintEngine::PainterPaths`：`0x00000200`;发动机有路径支撑。
+- `QPaintEngine::PaintOutsidePaintEvent`：`0x20000000`;该引擎能够在喷漆事件之外进行喷漆。
+- `QPaintEngine::PatternBrush`：`0x00000008`;该引擎能够渲染`Qt::BrushStyle`中指定的画刷图案。
+- `QPaintEngine::PatternTransform`：`0x00000002`;引擎支持笔刷图案的转换。
+- `QPaintEngine::PerspectiveTransform`：`0x00004000`;该引擎支持对原件进行透视变换。
+- `QPaintEngine::PixmapTransform`：`0x00000004`;引擎可以转换像素贴图，包括旋转和剪切。
+- `QPaintEngine::PorterDuff`：`0x00000100`;该发动机支持波特-达夫的运营
+- `QPaintEngine::PrimitiveTransform`：`0x00000001`;该引擎支持绘图原语的变换。
+- `QPaintEngine::RadialGradientFill`：`0x00000020`;发动机支持径向梯度填充。
+- `QPaintEngine::RasterOpModes`：`0x00020000`;该引擎支持位形扫描。
+- `QPaintEngine::AllFeatures`：`0xffffffff`;上述所有特征。该枚举值通常用作位遮罩。
+PaintEngineFeatures 类型是 QFlags 的 typedef<PaintEngineFeature>。它存储 PaintEngineFeature 值的 OR 组合。
 
 ### `enum PolygonDrawMode { OddEvenMode, WindingMode, ConvexMode, PolylineMode }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 暴露的类型声明 `Polygon、绘制、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QPaintEngine::OddEvenMode`：`0`;多边形应使用奇偶填充规则绘制。
+- `QPaintEngine::WindingMode`：`1`;多边形应使用绕过填充规则绘制。
+- `QPaintEngine::ConvexMode`：`2`;该多边形是一个凸多边形，可用专业算法绘制。
+- `QPaintEngine::PolylineMode`：`3`;只需绘制多边形的轮廓。
 
 ### `enum Type { X11, Windows, MacPrinter, CoreGraphics, QuickDraw, …, Direct2D }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QPaintEngine` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QPaintEngine::X11`: `0`
+- `QPaintEngine::Windows`: `1`
+- `QPaintEngine::MacPrinter`: `4`
+- `QPaintEngine::CoreGraphics`: `3`；macOS 的 Quartz2D（CoreGraphics）
+- `QPaintEngine::QuickDraw`: `2`；macOS 的 QuickDraw
+- `QPaintEngine::QWindowSystem`: `5`；嵌入式 Linux 的 Qt
+- `QPaintEngine::OpenGL`: `6`
+- `QPaintEngine::Picture`: `7`；`QPicture` 格式
+- `QPaintEngine::SVG`: `8`；可缩放矢量图 XML 格式
+- `QPaintEngine::Raster`: `9`
+- `QPaintEngine::Direct3D`: `10`；仅限 Windows，基于 Direct3D 的引擎
+- `QPaintEngine::Pdf`: `11`；可移植文档格式（PDF）
+- `QPaintEngine::OpenVG`: `12`
+- `QPaintEngine::User`: `50`；第一个用户类型 ID
+- `QPaintEngine::MaxUser`: `100`；最后一个用户类型 ID
+- `QPaintEngine::OpenGL2`: `13`
+- `QPaintEngine::PaintBuffer`: `14`
+- `QPaintEngine::Blitter`: `15`
+- `QPaintEngine::Direct2D`: `16`；仅限 Windows，基于 Direct2D 的引擎
 
 ## 6. 深入实践与常见坑
 

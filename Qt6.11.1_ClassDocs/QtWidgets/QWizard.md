@@ -146,899 +146,670 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 67 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QWizard::WizardButton`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 暴露的类型声明 `Wizard、Button`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WizardButton`。
-- 属性名：`QWizard`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举指定了巫师中的按钮。
+- `QWizard::BackButton`：`0`;返回按钮（macOS上为返回）
+- `QWizard::NextButton`：`1`;下一键（macOS上继续）
+- `QWizard::CommitButton`：`2`;提交按钮
+- `QWizard::FinishButton`：`3`;完成按钮（macOS上完成）
+- `QWizard::CancelButton`：`4`;取消按钮（参见`NoCancelButton`）
+- `QWizard::HelpButton`：`5`;帮助按钮（另见`HaveHelpButton`）
+- `QWizard::CustomButton1`：`6`;第一个用户自定义按钮（参见 `HaveCustomButton1`）
+- `QWizard::CustomButton2`：`7`;第二个用户自定义按钮（参见`HaveCustomButton2`）
+- `QWizard::CustomButton3`：`8`;第三个用户自定义按钮（参见`HaveCustomButton3`）
+以下数值仅在调用`setButtonLayout()`时有用：
+- `QWizard::Stretch`：`9`;按钮布局中的水平拉伸
 
 ### `enum QWizard::WizardOptionflags QWizard::WizardOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 暴露的类型声明 `Wizard、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WizardOptionflags QWizard::WizardOptions`。
-- 属性名：`QWizard`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举具体说明了各种影响巫师外观和感觉的选项。
+- `QWizard::IndependentPages`：`0x00000001`;这些页面彼此独立（即它们不互相推导值）。
+- `QWizard::IgnoreSubTitles`：`0x00000002`;即使字幕已设置，也不要显示。
+- `QWizard::ExtendedWatermarkPixmap`：`0x00000004`;将任何`WatermarkPixmap`延伸到窗边。
+- `QWizard::NoDefaultButton`：`0x00000008`;不要把“下一步”或“结束”按钮设为对话的默认按钮。
+- `QWizard::NoBackButtonOnStartPage`：`0x00000010`;开始页上不要显示返回按钮。
+- `QWizard::NoBackButtonOnLastPage`：`0x00000020`;最后一页不要显示返回按钮。
+- `QWizard::DisabledBackButtonOnLastPage`：`0x00000040`;禁用最后一页的返回按钮。
+- `QWizard::HaveNextButtonOnLastPage`：`0x00000080`;在最后一页显示（禁用的）下一页按钮。
+- `QWizard::HaveFinishButtonOnEarlyPages`：`0x00000100`;在非最终页面显示（禁用的）结束按钮。
+- `QWizard::NoCancelButton`：`0x00000200`;不要显示取消按钮。
+- `QWizard::CancelButtonOnLeft`：`0x00000400`;取消按钮放在返回的左侧（而不是结束或下一步的右侧）。
+- `QWizard::HaveHelpButton`：`0x00000800`;显示帮助按钮。
+- `QWizard::HelpButtonOnRight`：`0x00001000`;将帮助按钮放在按钮布局的最右侧（而不是最左侧）。
+- `QWizard::HaveCustomButton1`：`0x00002000`;显示第一个用户自定义按钮（`CustomButton1`）。
+- `QWizard::HaveCustomButton2`：`0x00004000`;显示第二个用户自定义按钮（`CustomButton2`）。
+- `QWizard::HaveCustomButton3`：`0x00008000`;显示第三个用户自定义按钮（`CustomButton3`）。
+- `QWizard::NoCancelButtonOnLastPage`：`0x00010000`;最后一页不要显示取消按钮。
+- `QWizard::StretchBanner`：`0x00020000`;如果有`banner`，就将其拉伸到整个向导宽度。
+WizardOptions 类型是 QFlags 的 typedef<WizardOption>。它存储 WizardOption 值的 OR 组合。
 
 ### `enum QWizard::WizardPixmap`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 暴露的类型声明 `Wizard、Pixmap`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WizardPixmap`。
-- 属性名：`QWizard`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举指定了可以关联到页面的像素映射。
+- `QWizard::WatermarkPixmap`：`0`;`ClassicStyle`或`ModernStyle`页左侧的高像素地图
+- `QWizard::LogoPixmap`：`1`;`ClassicStyle`或`ModernStyle`页眉右侧的小像素图
+- `QWizard::BannerPixmap`：`2`;占据`ModernStyle`页头背景的像素地图
+- `QWizard::BackgroundPixmap`：`3`;占据`MacStyle`巫师背景的像素地图
 
 ### `enum QWizard::WizardStyle`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 暴露的类型声明 `Wizard、Style`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WizardStyle`。
-- 属性名：`QWizard`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了`QWizard`支持的不同外观。
+- `QWizard::ClassicStyle`：`0`;经典Windows外观
+- `QWizard::ModernStyle`：`1`;现代Windows外观
+- `QWizard::MacStyle`：`2`;macOS 风格
+- `QWizard::AeroStyle`：`3`;Windows Aero外观
 
 ### `currentId : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的配置属性。初始化或状态切换时通过 `setCurrentId(...)` 设置，之后用 `currentId()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含当前页面的 ID。
+默认情况下，该属性的值为-1，表示当前没有显示任何页面。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`currentId`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentId()` 读取当前值；它不会修改应用状态。
 
 ### `options : WizardOptions`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的配置属性。初始化或状态切换时通过 `setOptions(...)` 设置，之后用 `options()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这个房产包含了影响巫师外观和感觉的各种选项。
+默认情况下，以下选项根据平台而定：
+- Windows：`HelpButtonOnRight`。
+- macOS：`NoDefaultButton` 和 `NoCancelButton`。
+- X11 和 QWS（嵌入式 Linux 的 Qt）：无。
 
-**签名拆解：**
-
-- 属性类型：`WizardOptions`。
-- 属性名：`options`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `options()` 读取当前值；它不会修改应用状态。
 
 ### `startId : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的配置属性。初始化或状态切换时通过 `setStartId(...)` 设置，之后用 `startId()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含首页的 ID。
+如果该属性未被显式设置，则默认为该向导中最低的页面 ID，若尚未插入页面则为 -1。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`startId`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `startId()` 读取当前值；它不会修改应用状态。
 
 ### `subTitleFormat : Qt::TextFormat`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的配置属性。初始化或状态切换时通过 `setTextFormat(...)` 设置，之后用 `TextFormat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了页面字幕所使用的文本格式。
+默认格式是`Qt::AutoText`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::TextFormat`。
-- 属性名：`subTitleFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `subTitleFormat()` 读取当前值；它不会修改应用状态。
 
 ### `titleFormat : Qt::TextFormat`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的配置属性。初始化或状态切换时通过 `setTextFormat(...)` 设置，之后用 `TextFormat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含页面标题所使用的文本格式。
+默认格式是`Qt::AutoText`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::TextFormat`。
-- 属性名：`titleFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `titleFormat()` 读取当前值；它不会修改应用状态。
 
 ### `wizardStyle : WizardStyle`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的配置属性。初始化或状态切换时通过 `setWizardStyle(...)` 设置，之后用 `wizardStyle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这处房产拥有巫师的外观和氛围。
+默认情况下，`QWizard` 在启用 alpha 合成的 Windows Vista 系统上使用该`AeroStyle`，无论当前控件样式为何。如果不是这样，默认向导样式取决于当前控件样式，具体如下：`MacStyle` 是当前控件样式 QMacStyle，`ModernStyle` 是默认，`ClassicStyle` 是其他所有情况下的默认。
 
-**签名拆解：**
-
-- 属性类型：`WizardStyle`。
-- 属性名：`wizardStyle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wizardStyle()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QWizard::QWizard(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `flags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`和窗口`flags`构造一个巫师。
 
 ### `[virtual noexcept] QWizard::~QWizard()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁巫师及其页面，释放所有分配的资源。
 
 ### `int QWizard::addPage(QWizardPage *page)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QWizard` 添加依赖、数据或子对象的 API `addPage`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `page`：类型为 `QWizardPage *`。没有默认值，调用时必须提供。传入 `QWizardPage *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定的`page`添加到向导中，并返回页面的ID。
+该ID保证比`QWizard`中其他ID都要大。
 
 ### `[slot] void QWizard::back()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `back`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+回到上一页。
+这相当于按下返回键。
 
 ### `QAbstractButton *QWizard::button(QWizard::WizardButton which) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::button` 用于计算、查询或取得与“button”相关的操作。调用时要先确认当前状态和 `which` 的有效范围；返回类型是 `QAbstractButton *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractButton *`。
-- 参数 `which`：类型为 `QWizard::WizardButton`。没有默认值，调用时必须提供。传入 `QWizard::WizardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对应角色`which`的按钮。
 
 ### `QString QWizard::buttonText(QWizard::WizardButton which) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::buttonText` 用于计算、查询或取得与“button、文本”相关的操作。调用时要先确认当前状态和 `which` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `which`：类型为 `QWizard::WizardButton`。没有默认值，调用时必须提供。传入 `QWizard::WizardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回按钮`which`的文本。
+如果文本的 ben 设置为 `setButtonText()`，则返回该文本。
+默认情况下，按钮上的文字取决于`wizardStyle`。例如，在macOS上，“下一”按钮称为“继续”。
 
 ### `[virtual protected] void QWizard::cleanupPage(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::cleanupPage` 用于执行与“cleanup、Page”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QWizard`调用该虚拟功能，在用户点击返回前（除非设置了`QWizard::IndependentPages`选项）以清理页面 `id`。
+默认实现调用在 page（`id`） 上`QWizardPage::cleanupPage()`。
 
 ### `[signal] void QWizard::currentIdChanged(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 发出的通知信号 `currentIdChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该属性包含当前页面的 ID。
+默认情况下，该属性的值为-1，表示当前没有显示任何页面。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `currentId` 的变化，不要把它当作普通函数主动调用。
 
 ### `QWizardPage *QWizard::currentPage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::currentPage` 用于计算、查询或取得与“当前、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWizardPage *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWizardPage *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前页面的指针，若没有当前页面（例如在向导显示之前），则返回`nullptr`。
+这相当于调用 page（`currentId()`）。
 
 ### `[signal] void QWizard::customButtonClicked(int which)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 发出的通知信号 `customButtonClicked`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `which`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户点击自定义按钮时，会发出该信号。`which`可以是`CustomButton1`、`CustomButton2`或`CustomButton3`。
+默认情况下，不会显示自定义按钮。用`HaveCustomButton1`、`HaveCustomButton2`或`HaveCustomButton3`调用`setOption()`，并用`setButtonText()`或`setButton()`来配置。
 
 ### `[override virtual protected] void QWizard::done(int result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::done` 用于执行与“done”相关的操作。调用时要先确认当前状态和 `result` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `result`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QDialog::done`（int r）。
+关闭对话并将结果代码设置为`r`。`finished()`信号会发出`r`;如果`r`是`QDialog::Accepted`或`QDialog::Rejected`，则分别会发出`accepted()`或`rejected()`信号。
+如果该对话以`exec()`显示，done() 也会导致本地事件循环结束，`exec()`返回`r`。
+与`QWidget::close()`一样，如果设置了`Qt::WA_DeleteOnClose`标志，done() 会删除对话。如果对话框是应用程序的主控件，应用程序将终止。如果对话框是最后关闭的窗口，则发出`QGuiApplication::lastWindowClosed()`信号。
 
 ### `[override virtual protected] bool QWizard::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `QVariant QWizard::field(const QString &name) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::field` 用于计算、查询或取得与“field”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回称为 `name` 的字段值。该函数可用于访问向导任意页面上的字段。
 
 ### `bool QWizard::hasVisitedPage(int id) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasVisitedPage`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果页面历史包含页面`id`，返回`true`;否则返回`false`。
+按返回键再次将当前页面标记为“未访问”。
 
 ### `[signal] void QWizard::helpRequested()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 发出的通知信号 `helpRequested`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+当用户点击帮助按钮时，会发出该信号。
+默认情况下，不会显示帮助按钮。调用`setOption`（`HaveHelpButton`，true）以获得帮助按钮。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ LicenseWizard::LicenseWizard(QWidget *parent)
+     : QWizard(parent)
+ {
+     ...
+     setOption(HaveHelpButton, true);
+     connect(this, &QWizard::helpRequested, this, &LicenseWizard::showHelp);
+     ...
+ }
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ void LicenseWizard::showHelp()
+ {
+     static QString lastHelpMessage;
+
+     QString message;
+
+     switch (currentId()) {
+     case Page_Intro:
+         message = tr("The decision you make here will affect which page you "
+                      "get to see next.");
+         break;
+     ...
+     default:
+         message = tr("This help is likely not to be of any help.");
+     }
+
+     QMessageBox::information(this, tr("License Wizard Help"), message);
+
+ }
+```
 
 ### `[virtual protected] void QWizard::initializePage(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::initializePage` 用于执行与“initialize、Page”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QWizard`调用该虚拟函数，在页面`id`显示前准备页面，无论是因调用`QWizard::restart()`或用户点击“Next”而显示。（但如果设置了`QWizard::IndependentPages`选项，该函数仅在页面首次显示时调用。）。
+通过重新实现这个功能，你可以确保页面的字段是基于之前页面字段正确初始化的。
+默认实现调用在 page（`id`） 上`QWizardPage::initializePage()`。
 
 ### `[override virtual protected] bool QWizard::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::nativeEvent` 用于计算、查询或取得与“native、Event”相关的操作。调用时要先确认当前状态和 `eventType`、`message`、`result` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `eventType`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `message`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `result`：类型为 `qintptr *`。没有默认值，调用时必须提供。传入 `qintptr *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QWidget::nativeEvent`（const QByteArray &eventType， void *message， qintptr *result）.
+该特殊事件处理程序可在子类中重新实现，以接收由`eventType`识别的本地平台事件，这些事件通过`message`参数传递。
+在你重新实现该函数时，如果你想停止事件被 Qt 处理，请返回 true，设置 `result`。`result` 参数仅在 Windows 上有意义。如果你返回 false，这个原生事件会返回给 Qt，Qt 将事件转换成 Qt 事件并发送给控件。
+注意：只有当该控件具有本地窗口句柄时，事件才会传递到该事件处理程序。
+注意：该函数对Qt 4的事件过滤函数x11Event()、winEvent()和macEvent()进行了超种。
+- `Platform`：事件类型标识符;消息类型;结果类型
+- `Windows`：“windows_generic_MSG”;MSG *;LRESULT
+- `macOS`：“NSEvent”;NSEvent *
+- `XCB`：“xcb_generic_event_t”;xcb_generic_event_t *
 
 ### `[slot] void QWizard::next()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `next`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+推进到下一页。
+这相当于按下“下一步”或“提交”按钮。
 
 ### `[virtual] int QWizard::nextId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::nextId` 用于计算、查询或取得与“移动到下一项、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QWizard`调用该虚拟功能，以确定用户点击“下一页”时应显示哪个页面。
+返回值为下一页的ID，若无页面后进则为-1。
+默认实现调用在`currentPage()`上`QWizardPage::nextId()`。
+通过重新实现这个函数，你可以指定动态页面顺序。
 
 ### `QWizardPage *QWizard::page(int id) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::page` 用于计算、查询或取得与“page”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `QWizardPage *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWizardPage *`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回带有指定页面`id`的页面，若无该页面则返回`nullptr`。
 
 ### `[signal] void QWizard::pageAdded(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 发出的通知信号 `pageAdded`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当向导添加页面时，该信号都会发出。页面的 `id` 作为参数传递。
 
 ### `QList<int> QWizard::pageIds() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::pageIds` 用于计算、查询或取得与“page、Ids”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<int>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回页面ID列表。
 
 ### `[signal] void QWizard::pageRemoved(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 发出的通知信号 `pageRemoved`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当页面从向导中移除时，该信号都会发出。该页面的 `id` 作为参数传递。
 
 ### `[override virtual protected] void QWizard::paintEvent(QPaintEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的核心操作 `paintEvent`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QPaintEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
+绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
+- `repaint()`或`update()`被援引，
+- 小部件被遮挡，现已被发现，或
+- 还有很多其他原因。
+许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
+Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
+当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
+背景可以用`setBackgroundRole()`和`setPalette()`设置。
+自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
+注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
+警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
 
 ### `QPixmap QWizard::pixmap(QWizard::WizardPixmap which) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::pixmap` 用于计算、查询或取得与“pixmap”相关的操作。调用时要先确认当前状态和 `which` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `which`：类型为 `QWizard::WizardPixmap`。没有默认值，调用时必须提供。传入 `QWizard::WizardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回角色`which`的像素映射集。
+默认情况下，macOS上唯一设置的像素地图是`BackgroundPixmap`。
 
 ### `void QWizard::removePage(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removePage`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除带有指定`id`的页面。如有需要，`cleanupPage()`将被调用。
+注意：删除页面可能会影响`startId`房产的价值。
 
 ### `[override virtual protected] void QWizard::resizeEvent(QResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QDialog::resizeEvent`（QResizeEvent *）。
 
 ### `[slot] void QWizard::restart()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `restart`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在开始页面重启向导。当向导显示时，该函数会自动调用。
 
 ### `void QWizard::setButton(QWizard::WizardButton which, QAbstractButton *button)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setButton`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `which`：类型为 `QWizard::WizardButton`。没有默认值，调用时必须提供。传入 `QWizard::WizardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `button`：类型为 `QAbstractButton *`。没有默认值，调用时必须提供。传入 `QAbstractButton *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将对应角色`which`的按钮设置为`button`。
+要向向导添加额外按钮（例如打印按钮），一种方法是调用 setButton() 并以 `CustomButton1` `CustomButton3`，并通过`HaveCustomButton1` `HaveCustomButton3`选项使按钮可见。
 
 ### `void QWizard::setButtonLayout(const QList<QWizard::WizardButton> &layout)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setButtonLayout`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将按钮显示顺序设置为`layout`，其中`layout`是`WizardButton`的列表。
+默认布局取决于设置的选项（例如是否`HelpButtonOnRight`）。如果你需要比 `options` 现有的更控制按钮布局，可以调用这个函数。
+你可以用`Stretch`在布局中指定水平拉伸。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `layout`：类型为 `const QList<QWizard::WizardButton> &`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ MyWizard::MyWizard(QWidget *parent)
+     : QWizard(parent)
+ {
+     //...
+     QList<QWizard::WizardButton> layout;
+     layout << QWizard::Stretch << QWizard::BackButton << QWizard::CancelButton
+            << QWizard::NextButton << QWizard::FinishButton;
+     setButtonLayout(layout);
+     //...
+ }
+```
 
 ### `void QWizard::setButtonText(QWizard::WizardButton which, const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setButtonText`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `which`：类型为 `QWizard::WizardButton`。没有默认值，调用时必须提供。传入 `QWizard::WizardButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把按钮`which`上的文字设置为`text`。
+默认情况下，按钮上的文字取决于`wizardStyle`。例如，在macOS上，“下一”按钮称为“继续”。
+要向向导添加额外按钮（例如打印按钮），一种方法是调用 setButtonText() 并使用 `CustomButton1`、`CustomButton2` 或 `CustomButton3` 设置文本，并通过 `HaveCustomButton1`、`HaveCustomButton2` 和/或 `HaveCustomButton3` 选项使按钮可见。
+按钮文本也可以按页面设置，使用`QWizardPage::setButtonText()`。
 
 ### `[slot] void QWizard::setCurrentId(int id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setCurrentId`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含当前页面的 ID。
+默认情况下，该属性的值为-1，表示当前没有显示任何页面。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setCurrentId(...)` 修改 `currentId`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QWizard::setDefaultProperty(const char *className, const char *property, const char *changedSignal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDefaultProperty`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `property`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `changedSignal`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`className`的默认属性设置为`property`，并使相关的变更信号为`changedSignal`。
+当 `className` 实例（或其子类之一）传递给 `QWizardPage::registerField()` 且未指定属性时，默认属性被使用。
+`QWizard`知道最常见的Qt控件。对于这些（或其子类），你不需要指定`property`或`changedSignal`。下表列出了这些控件：
+- `Widget`：属性;变更通知信号
+- `QAbstractButton`：bool `checked`;`toggled()`
+- `QAbstractSlider`：智力`value`;`valueChanged()`
+- `QComboBox`：智力`currentIndex`;`currentIndexChanged()`
+- `QDateTimeEdit`：`QDateTime` `dateTime`;`dateTimeChanged()`
+- `QLineEdit`：`QString` `text`;`textChanged()`
+- `QListWidget`：智力`currentRow`;`currentRowChanged()`
+- `QSpinBox`：智力`value`;`valueChanged()`
 
 ### `void QWizard::setField(const QString &name, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setField`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将称为`name`的字段值设置为`value`。
+该函数可用于在向导的任何页面上设置字段。
 
 ### `void QWizard::setOption(QWizard::WizardOption option, bool on = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOption`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `option`：类型为 `QWizard::WizardOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `on`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`option`设为启用，`on`为真;否则，清除给定`option`。
 
 ### `void QWizard::setPage(int id, QWizardPage *page)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPage`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `page`：类型为 `QWizardPage *`。没有默认值，调用时必须提供。传入 `QWizardPage *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用指定`id`将给定的`page`加到法师上。
+注意：如果页面未被明确设置，添加页面可能会影响`startId`属性的价值。
 
 ### `void QWizard::setPixmap(QWizard::WizardPixmap which, const QPixmap &pixmap)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPixmap`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `which`：类型为 `QWizard::WizardPixmap`。没有默认值，调用时必须提供。传入 `QWizard::WizardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将角色`which`的像素映射设置为`pixmap`。
+像素地图是`QWizard`在显示页面时使用的。具体使用哪些像素地图取决于向导的风格。
+像素地图也可以用`QWizardPage::setPixmap()`为特定页面设置。
 
 ### `void QWizard::setSideWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSideWidget`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`widget`设置在向导左侧显示。对于使用`WatermarkPixmap`的样式（`ClassicStyle`和`ModernStyle`），侧边小部件显示在水印顶部;对于其他样式或未提供水印时，侧边小部件显示在向导左侧。
+传递`nullptr`时没有侧边小部件。
+当`widget`不`nullptr`时，巫师会重新养育它。
+之前的侧边小部件都被隐藏了。
+你可以在不同时间调用 setSideWidget() 使用相同的控件。
+当小部件被销毁时，所有设置在这里的控件都会被向导删除，除非你在设置其他侧边小部件（或`nullptr`）后单独重新子长该小部件。
+默认情况下，没有任何侧边小部件。
 
 ### `[override virtual] void QWizard::setVisible(bool visible)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVisible`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `visible`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QDialog::setVisible`（bool可见）。
+重新实现了属性的访问函数：`QWidget::visible`。
 
 ### `QWidget *QWizard::sideWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::sideWidget` 用于计算、查询或取得与“side、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回向导或`nullptr`左侧的小部件。
+默认情况下，没有任何侧边小部件。
 
 ### `[override virtual] QSize QWizard::sizeHint() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QDialog::sizeHint()` const.
+重新实现了属性的访问函数：`QWidget::sizeHint`。
 
 ### `bool QWizard::testOption(QWizard::WizardOption option) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::testOption` 用于计算、查询或取得与“test、Option”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `option`：类型为 `QWizard::WizardOption`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果启用给定`option`，返回 `true`;否则返回 false。
 
 ### `[virtual] bool QWizard::validateCurrentPage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validateCurrentPage`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户点击“下一步”或“完成”以进行最后时刻的验证时，`QWizard`调用了这个虚拟函数。如果返回`true`，下一页就会显示（或向导完成）;否则，当前页面保持在线。
+默认实现调用在`currentPage()`上`QWizardPage::validatePage()`。
+如果可能，通常禁用 Next 或 Finish 按钮（通过指定必填字段或重新实现 `QWizardPage::isComplete()`）比重新实现 validCurrentPage() 更符合风格。
 
 ### `QList<int> QWizard::visitedIds() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QWizard::visitedIds` 用于计算、查询或取得与“visited、Ids”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<int>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回访问页面的ID列表，按访问顺序排列。
 
 ### `enum WizardOption { IndependentPages, IgnoreSubTitles, ExtendedWatermarkPixmap, NoDefaultButton, NoBackButtonOnStartPage, …, StretchBanner }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 暴露的类型声明 `Wizard、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举具体说明了各种影响巫师外观和感觉的选项。
+- `QWizard::IndependentPages`：`0x00000001`;这些页面彼此独立（即它们不互相推导值）。
+- `QWizard::IgnoreSubTitles`：`0x00000002`;即使字幕已设置，也不要显示。
+- `QWizard::ExtendedWatermarkPixmap`：`0x00000004`;将任何`WatermarkPixmap`延伸到窗边。
+- `QWizard::NoDefaultButton`：`0x00000008`;不要把“下一步”或“结束”按钮设为对话的默认按钮。
+- `QWizard::NoBackButtonOnStartPage`：`0x00000010`;开始页上不要显示返回按钮。
+- `QWizard::NoBackButtonOnLastPage`：`0x00000020`;最后一页不要显示返回按钮。
+- `QWizard::DisabledBackButtonOnLastPage`：`0x00000040`;禁用最后一页的返回按钮。
+- `QWizard::HaveNextButtonOnLastPage`：`0x00000080`;在最后一页显示（禁用的）下一页按钮。
+- `QWizard::HaveFinishButtonOnEarlyPages`：`0x00000100`;在非最终页面显示（禁用的）结束按钮。
+- `QWizard::NoCancelButton`：`0x00000200`;不要显示取消按钮。
+- `QWizard::CancelButtonOnLeft`：`0x00000400`;取消按钮放在返回的左侧（而不是结束或下一步的右侧）。
+- `QWizard::HaveHelpButton`：`0x00000800`;显示帮助按钮。
+- `QWizard::HelpButtonOnRight`：`0x00001000`;将帮助按钮放在按钮布局的最右侧（而不是最左侧）。
+- `QWizard::HaveCustomButton1`：`0x00002000`;显示第一个用户自定义按钮（`CustomButton1`）。
+- `QWizard::HaveCustomButton2`：`0x00004000`;显示第二个用户自定义按钮（`CustomButton2`）。
+- `QWizard::HaveCustomButton3`：`0x00008000`;显示第三个用户自定义按钮（`CustomButton3`）。
+- `QWizard::NoCancelButtonOnLastPage`：`0x00010000`;最后一页不要显示取消按钮。
+- `QWizard::StretchBanner`：`0x00020000`;如果有`banner`，就将其拉伸到整个向导宽度。
+WizardOptions 类型是 QFlags 的 typedef<WizardOption>。它存储 WizardOption 值的 OR 组合。
 
 ### `flags WizardOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QWizard` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举具体说明了各种影响巫师外观和感觉的选项。
+- `QWizard::IndependentPages`：`0x00000001`;这些页面彼此独立（即它们不互相推导值）。
+- `QWizard::IgnoreSubTitles`：`0x00000002`;即使字幕已设置，也不要显示。
+- `QWizard::ExtendedWatermarkPixmap`：`0x00000004`;将任何`WatermarkPixmap`延伸到窗边。
+- `QWizard::NoDefaultButton`：`0x00000008`;不要把“下一步”或“结束”按钮设为对话的默认按钮。
+- `QWizard::NoBackButtonOnStartPage`：`0x00000010`;开始页上不要显示返回按钮。
+- `QWizard::NoBackButtonOnLastPage`：`0x00000020`;最后一页不要显示返回按钮。
+- `QWizard::DisabledBackButtonOnLastPage`：`0x00000040`;禁用最后一页的返回按钮。
+- `QWizard::HaveNextButtonOnLastPage`：`0x00000080`;在最后一页显示（禁用的）下一页按钮。
+- `QWizard::HaveFinishButtonOnEarlyPages`：`0x00000100`;在非最终页面显示（禁用的）结束按钮。
+- `QWizard::NoCancelButton`：`0x00000200`;不要显示取消按钮。
+- `QWizard::CancelButtonOnLeft`：`0x00000400`;取消按钮放在返回的左侧（而不是结束或下一步的右侧）。
+- `QWizard::HaveHelpButton`：`0x00000800`;显示帮助按钮。
+- `QWizard::HelpButtonOnRight`：`0x00001000`;将帮助按钮放在按钮布局的最右侧（而不是最左侧）。
+- `QWizard::HaveCustomButton1`：`0x00002000`;显示第一个用户自定义按钮（`CustomButton1`）。
+- `QWizard::HaveCustomButton2`：`0x00004000`;显示第二个用户自定义按钮（`CustomButton2`）。
+- `QWizard::HaveCustomButton3`：`0x00008000`;显示第三个用户自定义按钮（`CustomButton3`）。
+- `QWizard::NoCancelButtonOnLastPage`：`0x00010000`;最后一页不要显示取消按钮。
+- `QWizard::StretchBanner`：`0x00020000`;如果有`banner`，就将其拉伸到整个向导宽度。
+WizardOptions 类型是 QFlags 的 typedef<WizardOption>。它存储 WizardOption 值的 OR 组合。
 
 ### `int currentId() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizard::currentId` 用于计算、查询或取得与“当前、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含当前页面的 ID。
+默认情况下，该属性的值为-1，表示当前没有显示任何页面。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `currentId()` 读取当前值；它不会修改应用状态。
 
 ### `QWizard::WizardOptions options() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizard::options` 用于计算、查询或取得与“options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWizard::WizardOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+这个房产包含了影响巫师外观和感觉的各种选项。
+默认情况下，以下选项根据平台而定：
+- Windows：`HelpButtonOnRight`。
+- macOS：`NoDefaultButton` 和 `NoCancelButton`。
+- X11 和 QWS（嵌入式 Linux 的 Qt）：无。
 
-**签名拆解：**
-
-- 返回值：`QWizard::WizardOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `options()` 读取当前值；它不会修改应用状态。
 
 ### `void setOptions(QWizard::WizardOptions options)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOptions`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+这个房产包含了影响巫师外观和感觉的各种选项。
+默认情况下，以下选项根据平台而定：
+- Windows：`HelpButtonOnRight`。
+- macOS：`NoDefaultButton` 和 `NoCancelButton`。
+- X11 和 QWS（嵌入式 Linux 的 Qt）：无。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QWizard::WizardOptions`。没有默认值，调用时必须提供。传入 `QWizard::WizardOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setOptions(...)` 修改 `options`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setStartId(int id)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStartId`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含首页的 ID。
+如果该属性未被显式设置，则默认为该向导中最低的页面 ID，若尚未插入页面则为 -1。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `id`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setStartId(...)` 修改 `startId`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSubTitleFormat(Qt::TextFormat format)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSubTitleFormat`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了页面字幕所使用的文本格式。
+默认格式是`Qt::AutoText`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `Qt::TextFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSubTitleFormat(...)` 修改 `subTitleFormat`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTitleFormat(Qt::TextFormat format)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTitleFormat`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含页面标题所使用的文本格式。
+默认格式是`Qt::AutoText`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `Qt::TextFormat`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTitleFormat(...)` 修改 `titleFormat`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setWizardStyle(QWizard::WizardStyle style)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWizardStyle`。调用它会改变 `QWizard` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+这处房产拥有巫师的外观和氛围。
+默认情况下，`QWizard` 在启用 alpha 合成的 Windows Vista 系统上使用该`AeroStyle`，无论当前控件样式为何。如果不是这样，默认向导样式取决于当前控件样式，具体如下：`MacStyle` 是当前控件样式 QMacStyle，`ModernStyle` 是默认，`ClassicStyle` 是其他所有情况下的默认。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `style`：类型为 `QWizard::WizardStyle`。没有默认值，调用时必须提供。传入 `QWizard::WizardStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setWizardStyle(...)` 修改 `wizardStyle`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `int startId() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startId`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+该属性包含首页的 ID。
+如果该属性未被显式设置，则默认为该向导中最低的页面 ID，若尚未插入页面则为 -1。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `startId()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::TextFormat subTitleFormat() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizard::subTitleFormat` 用于计算、查询或取得与“sub、Title、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::TextFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了页面字幕所使用的文本格式。
+默认格式是`Qt::AutoText`。
 
-**签名拆解：**
-
-- 返回值：`Qt::TextFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `subTitleFormat()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::TextFormat titleFormat() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizard::titleFormat` 用于计算、查询或取得与“title、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::TextFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含页面标题所使用的文本格式。
+默认格式是`Qt::AutoText`。
 
-**签名拆解：**
-
-- 返回值：`Qt::TextFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `titleFormat()` 读取当前值；它不会修改应用状态。
 
 ### `QWizard::WizardStyle wizardStyle() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QWizard::wizardStyle` 用于计算、查询或取得与“wizard、Style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWizard::WizardStyle`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+这处房产拥有巫师的外观和氛围。
+默认情况下，`QWizard` 在启用 alpha 合成的 Windows Vista 系统上使用该`AeroStyle`，无论当前控件样式为何。如果不是这样，默认向导样式取决于当前控件样式，具体如下：`MacStyle` 是当前控件样式 QMacStyle，`ModernStyle` 是默认，`ClassicStyle` 是其他所有情况下的默认。
 
-**签名拆解：**
-
-- 返回值：`QWizard::WizardStyle`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `wizardStyle()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

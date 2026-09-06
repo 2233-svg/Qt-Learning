@@ -67,100 +67,110 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[alias] GroupItem::GroupDoneHandler`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的配置属性。初始化或状态切换时通过 `setGroupDoneHandler(...)` 设置，之后用 `GroupDoneHandler()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:GroupDoneHandler`。
-- 属性名：`GroupItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`std::function<DoneResult(DoneWith)>`或 `DoneResult` 的别名类型。
+GroupDoneHandler 是 `onGroupDone()` 元素的一个参数。任何带有上述签名的函数，作为组完成的处理程序传递时，运行中的任务树会在组执行结束时调用。
+`DoneWith`参数是可选的，你的完成处理器可以省略它。当它提供时，它保存了将报告给父组的最终结果信息。
+返回的`DoneResult`值是可选的，你的处理器可以返回`void`。在这种情况下，组的最终结果将等于`DoneWith`参数所指示的值。当处理器返回`DoneResult`值时，组的最终结果可以在完成处理程序的内部通过返回值进行调整。
+对于`DoneResult`类型的GroupDoneHandler，不会执行额外的处理，且该组无条件以传递的`DoneResult`值结束，忽略该组的工作流程策略。
 
 ### `[alias] GroupItem::GroupSetupHandler`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的配置属性。初始化或状态切换时通过 `setGroupSetupHandler(...)` 设置，之后用 `GroupSetupHandler()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:GroupSetupHandler`。
-- 属性名：`GroupItem`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`std::function<SetupResult()>`的别名类型。
+GroupSetupHandler 是 `onGroupSetup()` 元素的一个参数。任何带有上述签名的函数，作为组设置处理程序传递时，运行中的任务树会在组执行开始时调用。
+处理器的返回值指示运行组在调用完成后如何继续。默认返回值`SetupResult::Continue`指示组继续运行，即开始执行其子任务。返回值`SetupResult::StopWithSuccess`或`SetupResult::StopWithError`指示组跳过子任务的执行，并立即成功或错误完成任务。
+当返回类型为`SetupResult::StopWithSuccess`或`SetupResult::StopWithError`时，组的 done handler（如提供）会立即同步调用。
+注意：即使组设置处理程序返回`StopWithSuccess`或`StopWithError`，也会调用组的完成处理程序。这种行为不同于任务完成处理程序，未来可能会有所变化。
+`onGroupSetup()`元素也接受`std::function<void()>`的缩写形式，即返回值为`void`。此时假设返回值为`SetupResult::Continue`。
 
 ### `GroupItem::GroupItem(const QtTaskTree::GroupItems &children)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构造一个包含给定列表的 GroupItem 元素`children`。
+当`QTaskTree`解析该 GroupItem 元素时，它会被替换为其 `children`。
+该构造器在构建包含 GroupItem 元素列表的 `Group` 元素时非常有用：
+如果你想创建子树，可以用`Group`。
+注意：不要将此 GroupItem 与 `Group` 元素混淆，因为 `Group` 在被任务树解析后仍保持子元素嵌套，而该 GroupItem 则不会。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `children`：类型为 `const QtTaskTree::GroupItems &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::GroupItems &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ static GroupItems getItems();
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ ...
+
+ const Group root {
+     parallel,
+     finishAllAndSuccess,
+     getItems(), // GroupItems list is wrapped into a single GroupItem element
+     onGroupSetup(...),
+     onGroupDone(...)
+ };
+```
 
 ### `template <typename StorageStruct> GroupItem::GroupItem(const QtTaskTree::Storage<StorageStruct> &storage)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `storage`：类型为 `const QtTaskTree::Storage<StorageStruct> &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::Storage<StorageStruct> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个包含`storage`对象的 GroupItem 元素。
+当运行任务树输入包含该 GroupItem 的 `Group` 元素时，该`StorageStruct`的实例会动态生成。
+当该组执行后即将被留下时，之前实例化的`StorageStruct`会被删除。
+动态创建的`StorageStruct`实例可通过 `Storage::operator->()`、Storage：：operator*() 或 `Storage::activeStorage()` 方法，从父`Group`元素的任一处理主体（包括嵌套组及其任务）访问。
 
 ### `GroupItem::GroupItem(std::initializer_list<QtTaskTree::GroupItem> children)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构造一个包含给定列表的 GroupItem 元素`children`。
+当`QTaskTree`解析该 GroupItem 元素时，它会被替换为其 `children`。
+该构造器在构建包含 GroupItem 元素列表的 `Group` 元素时非常有用：
+如果你想创建子树，可以用`Group`。
+注意：不要将此 GroupItem 与 `Group` 元素混淆，因为 `Group` 在被任务树解析后仍保持子元素嵌套，而该 GroupItem 则不会。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `children`：类型为 `std::initializer_list<QtTaskTree::GroupItem>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QtTaskTree::GroupItem>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ static GroupItems getItems();
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ ...
+
+ const Group root {
+     parallel,
+     finishAllAndSuccess,
+     getItems(), // GroupItems list is wrapped into a single GroupItem element
+     onGroupSetup(...),
+     onGroupDone(...)
+ };
+```
 
 ### `GroupDoneHandler`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的 `Group、Done、Handler` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`std::function<DoneResult(DoneWith)>`或 `DoneResult` 的别名类型。
+GroupDoneHandler 是 `onGroupDone()` 元素的一个参数。任何带有上述签名的函数，作为组完成的处理程序传递时，运行中的任务树会在组执行结束时调用。
+`DoneWith`参数是可选的，你的完成处理器可以省略它。当它提供时，它保存了将报告给父组的最终结果信息。
+返回的`DoneResult`值是可选的，你的处理器可以返回`void`。在这种情况下，组的最终结果将等于`DoneWith`参数所指示的值。当处理器返回`DoneResult`值时，组的最终结果可以在完成处理程序的内部通过返回值进行调整。
+对于`DoneResult`类型的GroupDoneHandler，不会执行额外的处理，且该组无条件以传递的`DoneResult`值结束，忽略该组的工作流程策略。
 
 ### `GroupSetupHandler`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::GroupItem` 的 `Group、Setup、Handler` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`std::function<SetupResult()>`的别名类型。
+GroupSetupHandler 是 `onGroupSetup()` 元素的一个参数。任何带有上述签名的函数，作为组设置处理程序传递时，运行中的任务树会在组执行开始时调用。
+处理器的返回值指示运行组在调用完成后如何继续。默认返回值`SetupResult::Continue`指示组继续运行，即开始执行其子任务。返回值`SetupResult::StopWithSuccess`或`SetupResult::StopWithError`指示组跳过子任务的执行，并立即成功或错误完成任务。
+当返回类型为`SetupResult::StopWithSuccess`或`SetupResult::StopWithError`时，组的 done handler（如提供）会立即同步调用。
+注意：即使组设置处理程序返回`StopWithSuccess`或`StopWithError`，也会调用组的完成处理程序。这种行为不同于任务完成处理程序，未来可能会有所变化。
+`onGroupSetup()`元素也接受`std::function<void()>`的缩写形式，即返回值为`void`。此时假设返回值为`SetupResult::Continue`。
 
 ## 6. 深入实践与常见坑
 

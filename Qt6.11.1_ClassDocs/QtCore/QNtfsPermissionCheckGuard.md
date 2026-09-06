@@ -67,74 +67,48 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QNtfsPermissionCheckGuard::QNtfsPermissionCheckGuard()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNtfsPermissionCheckGuard` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建守护并调用函数 `qEnableNtfsPermissionChecks()`。
 
 ### `[noexcept] QNtfsPermissionCheckGuard::~QNtfsPermissionCheckGuard()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNtfsPermissionCheckGuard` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁守卫并调用函数`qDisableNtfsPermissionChecks()`。
 
 ### `[noexcept, since 6.6] bool qAreNtfsPermissionChecksEnabled()`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QNtfsPermissionCheckGuard::qAreNtfsPermissionChecksEnabled` 用于计算、查询或取得与“q、Are、Ntfs、Permission、Checks、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+检查NTFS文件系统权限检查的状态。如果检查被启用，返回`true`。
+该功能仅在Windows上可用，使得直接操作`qt_ntfs_permission_lookup`变得过时。
+注意：该函数的线程安全性仅在`qt_ntfs_permission_lookup`没有同时更新的情况下生效。
+注意：该功能是线程安全的。
 
 ### `[noexcept, since 6.6] bool qDisableNtfsPermissionChecks()`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QNtfsPermissionCheckGuard::qDisableNtfsPermissionChecks` 用于计算、查询或取得与“q、Disable、Ntfs、Permission、Checks”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+禁用NTFS文件系统的权限检查。如果检查被禁用，则返回`true`，意味着没有更多用户。
+该功能仅在Windows上可用，使得直接操作`qt_ntfs_permission_lookup`变得过时。
+这是一个低级函数，必须（仅）调用以匹配之前对`qEnableNtfsPermissionChecks()`的调用。请考虑RAII类`QNtfsPermissionCheckGuard`。
+注意：该函数的线程安全仅在没有同时更新 `qt_ntfs_permission_lookup` 时生效。
+注意：该功能是线程安全的。
 
 ### `[noexcept, since 6.6] bool qEnableNtfsPermissionChecks()`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QNtfsPermissionCheckGuard::qEnableNtfsPermissionChecks` 用于计算、查询或取得与“q、Enable、Ntfs、Permission、Checks”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+启用 NTFS 文件系统的权限检查。如果检查在调用该函数之前已启用，则返回`true`，表示存在其他用户。
+此功能仅在Windows上可用，使得直接操作`qt_ntfs_permission_lookup`变得过时。
+这是一个低级函数，请考虑RAII类的`QNtfsPermissionCheckGuard`。
+注意：该函数的线程安全仅在`qt_ntfs_permission_lookup`没有同时更新的情况下生效。
+注意：该功能是线程安全的。
 
 ## 6. 深入实践与常见坑
 

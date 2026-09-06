@@ -61,35 +61,48 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 2 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] If::If(const QtTaskTree::ExecutableItem &condition)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::If` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+创建初始条件元素，并`condition`任务用于条件表达式。运行`QTaskTree`先执行传递的`condition`，完成后，要么执行`Then`分支（成功时），要么选择性地提供`Else`分支或`ElseIf`条件。
+传递的`condition`可以包含多个任务，包含在`Group`元素中，或者是它们的连取或析取，例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `condition`：类型为 `const QtTaskTree::ExecutableItem &`。没有默认值，调用时必须提供。传入 `const QtTaskTree::ExecutableItem &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ const Group subRecipe {
+     parallel,
+     parallelConditionTask1,
+     parallelConditionTask2
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ const Group recipe {
+     If (conditionTask1 && !conditionTask2) >> Then {
+         bodyTask1
+     } >> ElseIf (subRecipe) >> Then {
+         bodyTask2
+     } >> Else {
+         bodyTask3
+     }
+ };
+```
 
 ### `[explicit] template <typename Handler, std::enable_if_t<!std::is_base_of_v<ExecutableItem, std::decay_t<Handler>>, bool> = true> If::If(Handler &&handler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::If` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+一个辅助构造器，接受运行`QTaskTree`在评估初始条件时执行的同步`handler`。
+这是一条快捷方式：
+有关哪些处理器类型被接受，请参见`QSyncTask`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `handler`：类型为 `Handler &&`。没有默认值，调用时必须提供。传入 `Handler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ If (QSyncTask(handler))
+```
 
 ## 6. 深入实践与常见坑
 

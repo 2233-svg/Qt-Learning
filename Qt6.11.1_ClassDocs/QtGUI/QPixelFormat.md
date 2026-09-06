@@ -102,536 +102,294 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 37 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPixelFormat::AlphaPosition`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `Alpha、Position`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AlphaPosition`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的α位置。
+- `QPixelFormat::AtBeginning`：`0`;alpha 通道会放在彩色通道前面。例如 ARGB。
+- `QPixelFormat::AtEnd`：`1`;alpha通道会放在彩色通道的后部。例如RGBA。
 
 ### `enum QPixelFormat::AlphaPremultiplied`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `Alpha、Premultiplied`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AlphaPremultiplied`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的阿尔法通道是否`premultiplied`入色彩通道。
+- `QPixelFormat::NotPremultiplied`：`0`;α通道不与颜色通道相乘。
+- `QPixelFormat::Premultiplied`：`1`;阿尔法通道被乘以颜色通道。
 
 ### `enum QPixelFormat::AlphaUsage`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `Alpha、Usage`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AlphaUsage`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的 alpha 使用情况。
+- `QPixelFormat::IgnoresAlpha`：`1`;不使用阿尔法通道。
+- `QPixelFormat::UsesAlpha`：`0`;使用阿尔法通道。
 
 ### `enum QPixelFormat::ByteOrder`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `Byte、Order`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ByteOrder`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的字节顺序。
+- `QPixelFormat::LittleEndian`：`0`;字节序为小端序。
+- `QPixelFormat::BigEndian`：`1`;字节序为大端序。
+- `QPixelFormat::CurrentSystemEndian`：`2`;该枚举不会被存储，而是在构造器中转换为与当前系统枚举匹配的端序枚举。
 
 ### `enum QPixelFormat::ColorModel`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `Color、Model`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ColorModel`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的颜色模型。
+- `QPixelFormat::RGB`：`0`;颜色模型为RGB。
+- `QPixelFormat::BGR`：`1`;这逻辑上是RGB的相反端序版本。不过，为了便于使用，它有自己的型号。
+- `QPixelFormat::Indexed`：`2`;色彩模型使用色彩调色板。
+- `QPixelFormat::Grayscale`：`3`;彩色模型为灰度。
+- `QPixelFormat::CMYK`：`4`;彩色模型为CMYK。
+- `QPixelFormat::HSL`：`5`;颜色模型为HSL。
+- `QPixelFormat::HSV`：`6`;颜色模型为HSV。
+- `QPixelFormat::YUV`：`7`;颜色模型为YUV。
+- `QPixelFormat::Alpha`：`8`;[自5.5版本起]没有彩色模型，仅使用alpha。
 
 ### `enum QPixelFormat::TypeInterpretation`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `类型、Interpretation`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TypeInterpretation`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的类型解释。
+- `QPixelFormat::UnsignedInteger`：`0`;像素应被读取为一个或多个`unsigned int`。
+- `QPixelFormat::UnsignedShort`：`1`;像素应被读取为一个或多个`unsigned short`。
+- `QPixelFormat::UnsignedByte`：`2`;像素应被读取为一个或多个`byte`。
+- `QPixelFormat::FloatingPoint`：`3`;像素应被读取为一个或多个浮点数，具体类型由颜色/阿尔法通道定义，即`qfloat16` 用于16位半浮点格式，`float`用于32位全浮点格式。
 
 ### `enum QPixelFormat::YUVLayout`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 暴露的类型声明 `YUV、Layout`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:YUVLayout`。
-- 属性名：`QPixelFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了像素格式的YUV布局，前提是它具有`QPixelFormat::YUV`的颜色模型。
+- `QPixelFormat::YUV444`：`0`
+- `QPixelFormat::YUV422`：`1`
+- `QPixelFormat::YUV411`：`2`
+- `QPixelFormat::YUV420P`：`3`
+- `QPixelFormat::YUV420SP`：`4`
+- `QPixelFormat::YV12`：`5`
+- `QPixelFormat::UYVY`：`6`
+- `QPixelFormat::YUYV`：`7`
+- `QPixelFormat::NV12`：`8`
+- `QPixelFormat::NV21`：`9`
+- `QPixelFormat::IMC1`：`10`
+- `QPixelFormat::IMC2`：`11`
+- `QPixelFormat::IMC3`：`12`
+- `QPixelFormat::IMC4`：`13`
+- `QPixelFormat::Y8`：`14`
+- `QPixelFormat::Y16`：`15`
 
 ### `[constexpr noexcept] QPixelFormat::QPixelFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建空像素格式。该格式映射到`QImage::Format_Invalid`。
 
 ### `[constexpr noexcept] QPixelFormat::QPixelFormat(QPixelFormat::ColorModel colorModel, uchar firstSize, uchar secondSize, uchar thirdSize, uchar fourthSize, uchar fifthSize, uchar alphaSize, QPixelFormat::AlphaUsage alphaUsage, QPixelFormat::AlphaPosition alphaPosition, QPixelFormat::AlphaPremultiplied premultiplied, QPixelFormat::TypeInterpretation typeInterpretation, QPixelFormat::ByteOrder byteOrder = CurrentSystemEndian, uchar subEnum = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPixelFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `colorModel`：类型为 `QPixelFormat::ColorModel`。没有默认值，调用时必须提供。传入 `QPixelFormat::ColorModel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `firstSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `secondSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `thirdSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fourthSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fifthSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaUsage`：类型为 `QPixelFormat::AlphaUsage`。没有默认值，调用时必须提供。传入 `QPixelFormat::AlphaUsage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaPosition`：类型为 `QPixelFormat::AlphaPosition`。没有默认值，调用时必须提供。传入 `QPixelFormat::AlphaPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `premultiplied`：类型为 `QPixelFormat::AlphaPremultiplied`。没有默认值，调用时必须提供。传入 `QPixelFormat::AlphaPremultiplied` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。没有默认值，调用时必须提供。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `byteOrder`：类型为 `QPixelFormat::ByteOrder`。默认值为 `CurrentSystemEndian`。传入 `QPixelFormat::ByteOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `subEnum`：类型为 `uchar`。默认值为 `0`。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建QPixel格式，将数据分配给属性。`colorModel`会被放入一个4位的缓冲区。
+`firstSize` `secondSize` `thirdSize` `fourthSize` `fifthSize` `alphaSize` 都用来表示通道的大小。通道会根据`colorModel`的不同用途被使用。对于 RGB 来说，firstSize 代表红色通道。在 CMYK 中，它代表青色通道的数值。
+`alphaUsage`表示是否使用了阿尔法通道。
+`alphaPosition` 是阿尔法通道的位置。
+`premultiplied`表示阿尔法通道是否已经与颜色通道相乘。
+`typeInterpretation`像素是如何被解读的。
+`byteOrder`表示像素格式的端序。默认为`CurrentSystemEndian`，非字节顺序格式的端序解析为系统的端序，`QPixelFormat::UnsignedByte`则`QPixelFormat::BigEndian`。
+`subEnum`用于需要存储额外信息并提供额外枚举的colorModels。YUV用它来存储YUV类型，默认值为0。
+注意：BGR格式有自己的色彩模型，不应使用RGB格式相反的端序来描述。
 
 ### `[constexpr noexcept] QPixelFormat::AlphaPosition QPixelFormat::alphaPosition() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::alphaPosition` 用于计算、查询或取得与“alpha、Position”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::AlphaPosition`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::AlphaPosition`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Accessor 函数用于 alpha 通道相对于颜色通道的位置。
+对于单个通道映射到单个单元的格式，alpha位置相对于这些单元。例如，对于alpha位置为`QPixelFormat::AtEnd`的`QImage::Format_RGBA16FPx4`，alpha是最后读取的`qfloat16`。
+对于将多个通道打包在一个单元中的格式，`QPixelFormat::AtBeginning`和`QPixelFormat::AtEnd`值映射到打包单元中相对于格式自身`byteOrder()`的最高有效和最低有效位。
+例如，对于`QImage::Format_ARGB32`，其类型解释为`QPixelFormat::UnsignedInteger`，且 `byteOrder()`总是与宿主系统匹配，α 位置 `QPixelFormat::AtBeginning` 意味着 alpha 总能在 `0xFF000000` 处找到。
+如果像素格式和主机端序不匹配，必须注意将像素格式布局正确映射到主机内存布局。
 
 ### `[constexpr noexcept] uchar QPixelFormat::alphaSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::alphaSize` 用于计算、查询或取得与“alpha、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Alpha通道大小的访问器功能。
 
 ### `[constexpr noexcept] QPixelFormat::AlphaUsage QPixelFormat::alphaUsage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::alphaUsage` 用于计算、查询或取得与“alpha、Usage”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::AlphaUsage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::AlphaUsage`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+访问器功能用于判断是否使用阿尔法通道。
+有时像素格式会保留一个alpha通道的位置，因此`alphaSize()`会返回0>，但alpha通道不会被使用或忽略。
+例如，对于`QImage::Format_RGB32`，`bitsPerPixel()`是32，因为alpha信道大小为8，但alphaUsage()反映了`QPixelFormat::IgnoresAlpha`。
+注意，在这种情况下，未使用的阿尔法通道的 `position` 仍然很重要，因为它会影响色彩通道的位置。
 
 ### `[constexpr noexcept] uchar QPixelFormat::bitsPerPixel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::bitsPerPixel` 用于计算、查询或取得与“bits、Per、Pixel”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+访问器函数，用于每像素使用的比特。该函数返回所有颜色通道的总和，大小为阿尔法通道大小。
 
 ### `[constexpr noexcept] uchar QPixelFormat::blackSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::blackSize` 用于计算、查询或取得与“black、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+黑色/主色通道的访问器功能。
 
 ### `[constexpr noexcept] uchar QPixelFormat::blueSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::blueSize` 用于计算、查询或取得与“blue、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+蓝色通道大小的附件函数。
 
 ### `[constexpr noexcept] uchar QPixelFormat::brightnessSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::brightnessSize` 用于计算、查询或取得与“brightness、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于亮度通道大小的访问器功能。
 
 ### `[constexpr noexcept] QPixelFormat::ByteOrder QPixelFormat::byteOrder() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::byteOrder` 用于计算、查询或取得与“byte、Order”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::ByteOrder`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::ByteOrder`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+像素格式的字节顺序决定了各个类型单元的内存布局，如 `typeInterpretation()` 所描述。 这个函数永远不会返回 `QPixelFormat::CurrentSystemEndian`，因为该值在构造函数中被转换为系统的字节序值。 对于带有 `typeInterpretation()` `QPixelFormat::UnsignedByte` 的像素格式，这通常会是 `QPixelFormat::BigEndian`，而其他类型解释通常会反映当前系统的字节序。 如果像素格式的字节顺序与当前系统匹配，则可以使用相同的位掩码和操作读取和操作各个类型单元，而不管主机系统的字节序。例如，对于 `QImage::Format_ARGB32`，其类型解释为 `QPixelFormat::UnsignedInteger`，总是可以通过 `0xFF000000` 掩码读取 alpha，无论主机字节序如何。 如果像素格式与主机字节序不匹配，则必须小心处理。像 `QImage` 这样的类在这些情况下不会交换内部位以匹配主机系统的字节序。
 
 ### `[constexpr noexcept] uchar QPixelFormat::channelCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::channelCount` 用于计算、查询或取得与“channel、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通道计数的访问器功能。
+信道计数表示大小为0的信道（颜色和阿尔法），>。
 
 ### `[constexpr noexcept] QPixelFormat::ColorModel QPixelFormat::colorModel() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::colorModel` 用于计算、查询或取得与“color、Model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::ColorModel`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::ColorModel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+颜色模型的附件功能。
+注意，对于`QPixelFormat::YUV`，单个宏像素无法描述。取而代之的是提供YUV格式列表，`bitsPerPixel()`值是从YUV布局中推导出来的。
 
 ### `[constexpr noexcept] uchar QPixelFormat::cyanSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::cyanSize` 用于计算、查询或取得与“cyan、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+青色通道的访问器功能。
 
 ### `[constexpr noexcept] uchar QPixelFormat::greenSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::greenSize` 用于计算、查询或取得与“green、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+绿色通道大小的访问器函数。
 
 ### `[constexpr noexcept] uchar QPixelFormat::hueSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::hueSize` 用于计算、查询或取得与“hue、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Hue通道大小的访问器功能。
 
 ### `[constexpr noexcept] uchar QPixelFormat::lightnessSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::lightnessSize` 用于计算、查询或取得与“lightness、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于通道大小的访问器功能。
 
 ### `[constexpr noexcept] uchar QPixelFormat::magentaSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::magentaSize` 用于计算、查询或取得与“magenta、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Megenta色彩通道的访问器功能。
 
 ### `[constexpr noexcept] QPixelFormat::AlphaPremultiplied QPixelFormat::premultiplied() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::premultiplied` 用于计算、查询或取得与“premultiplied”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::AlphaPremultiplied`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::AlphaPremultiplied`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+访问器函数用于判断 alpha 通道是否乘入彩色通道。
 
 ### `[constexpr noexcept] uchar QPixelFormat::redSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::redSize` 用于计算、查询或取得与“red、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于红色通道大小的访问器函数。
 
 ### `[constexpr noexcept] uchar QPixelFormat::saturationSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::saturationSize` 用于计算、查询或取得与“saturation、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于实现饱和通道大小的访问函数。
 
 ### `[constexpr noexcept] QPixelFormat::TypeInterpretation QPixelFormat::typeInterpretation() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::typeInterpretation` 用于计算、查询或取得与“类型、Interpretation”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::TypeInterpretation`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::TypeInterpretation`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+类型解释决定了每个像素应如何读取。
+每个像素被表示为给定类型的一个或多个单元，按顺序在内存中排列。
+注意：像素格式的字节顺序和主机系统的字节序只影响每个被读取单元的内存布局，而不影响单元的相对顺序。
+例如，`QImage::Format_Mono` 具有每像素 1 位的像素格式和 `QPixelFormat::UnsignedByte` 类型的解释，应当作为单一`byte`读取。同样，`QImage::Format_RGB888` 的像素格式为每像素 24 位，并采用 `QPixelFormat::UnsignedByte` 类型解释，应将其读取为三个连续的 `byte`。
+许多`QImage` `formats`是32位，类型解释为`QPixelFormat::UnsignedInteger`，应当作为单一`unsigned int`读取。
+对于`QImage::Format_RGBA16FPx4`或`QImage::Format_RGBA32FPx4`等`QPixelFormat::FloatingPoint`格式，类型根据单个颜色/alpha通道的大小决定，16位半浮点格式为`qfloat16`，32位全浮点格式为`float`。
 
 ### `[constexpr noexcept] uchar QPixelFormat::yellowSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::yellowSize` 用于计算、查询或取得与“yellow、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `uchar`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`uchar`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+黄色通道的访问器功能。
 
 ### `[constexpr noexcept] QPixelFormat::YUVLayout QPixelFormat::yuvLayout() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::yuvLayout` 用于计算、查询或取得与“yuv、Layout”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPixelFormat::YUVLayout`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat::YUVLayout`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`YUVLayout`的访问器功能。由于YUV色彩模型使用宏像素，描述YUV像素格式的颜色通道较为困难。因此，像素的布局被存储为枚举。
 
 ### `[constexpr noexcept] QPixelFormat qPixelFormatAlpha(uchar channelSize, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::UnsignedInteger)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatAlpha` 用于计算、查询或取得与“q、Pixel、格式化、Alpha”相关的操作。调用时要先确认当前状态和 `channelSize`、`typeInterpretation` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `channelSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::UnsignedInteger`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于创建Alpha格式的构造函数。掩码格式可以通过传递1到`channelSize`来描述。也可以用双重来描述每个像素，将8作为`channelSize`，将`FloatingPoint`作为`typeInterpretation`来定义非常精确的α格式。
 
 ### `[constexpr noexcept] QPixelFormat qPixelFormatCmyk(uchar channelSize, uchar alphaSize = 0, QPixelFormat::AlphaUsage alphaUsage = QPixelFormat::IgnoresAlpha, QPixelFormat::AlphaPosition alphaPosition = QPixelFormat::AtBeginning, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::UnsignedInteger)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatCmyk` 用于计算、查询或取得与“q、Pixel、格式化、Cmyk”相关的操作。调用时要先确认当前状态和 `channelSize`、`alphaSize`、`alphaUsage`、`alphaPosition`、`typeInterpretation` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `channelSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaSize`：类型为 `uchar`。默认值为 `0`。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaUsage`：类型为 `QPixelFormat::AlphaUsage`。默认值为 `QPixelFormat::IgnoresAlpha`。传入 `QPixelFormat::AlphaUsage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaPosition`：类型为 `QPixelFormat::AlphaPosition`。默认值为 `QPixelFormat::AtBeginning`。传入 `QPixelFormat::AlphaPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::UnsignedInteger`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于创建CMYK格式的构造函数。通道数将根据`alphaSize`是否大于零而为4或5。CMYK的色彩通道将全部设置为`channelSize`值。
+`alphaUsage` `alphaPosition`和`typeInterpretation`都可以通过同名的访问器访问。
 
 ### `[constexpr noexcept] QPixelFormat qPixelFormatGrayscale(uchar channelSize, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::UnsignedInteger)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatGrayscale` 用于计算、查询或取得与“q、Pixel、格式化、Grayscale”相关的操作。调用时要先确认当前状态和 `channelSize`、`typeInterpretation` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `channelSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::UnsignedInteger`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于创建灰度格式的构造函数。单色格式可以通过将1传给`channelSize`来描述。也可以用双倍来描述每个像素，将8转为`channelSize`，`FloatingPoint`转为`typeInterpretation`来定义非常精确的灰阶格式。
 
 ### `[constexpr noexcept] QPixelFormat qPixelFormatHsl(uchar channelSize, uchar alphaSize = 0, QPixelFormat::AlphaUsage alphaUsage = QPixelFormat::IgnoresAlpha, QPixelFormat::AlphaPosition alphaPosition = QPixelFormat::AtBeginning, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::FloatingPoint)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatHsl` 用于计算、查询或取得与“q、Pixel、格式化、Hsl”相关的操作。调用时要先确认当前状态和 `channelSize`、`alphaSize`、`alphaUsage`、`alphaPosition`、`typeInterpretation` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `channelSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaSize`：类型为 `uchar`。默认值为 `0`。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaUsage`：类型为 `QPixelFormat::AlphaUsage`。默认值为 `QPixelFormat::IgnoresAlpha`。传入 `QPixelFormat::AlphaUsage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaPosition`：类型为 `QPixelFormat::AlphaPosition`。默认值为 `QPixelFormat::AtBeginning`。传入 `QPixelFormat::AlphaPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::FloatingPoint`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于创建HSL格式的构造函数。信道数会根据`alphaSize`是否大于0而变为3或4。
+`channelSize`会将`hueSize` `saturationSize`和`lightnessSize`设为相同的值。
+`alphaUsage` `alphaPosition`和`typeInterpretation`都可以通过同名的访问器访问。
 
 ### `[constexpr noexcept] QPixelFormat qPixelFormatHsv(uchar channelSize, uchar alphaSize = 0, QPixelFormat::AlphaUsage alphaUsage = QPixelFormat::IgnoresAlpha, QPixelFormat::AlphaPosition alphaPosition = QPixelFormat::AtBeginning, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::FloatingPoint)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatHsv` 用于计算、查询或取得与“q、Pixel、格式化、Hsv”相关的操作。调用时要先确认当前状态和 `channelSize`、`alphaSize`、`alphaUsage`、`alphaPosition`、`typeInterpretation` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `channelSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaSize`：类型为 `uchar`。默认值为 `0`。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaUsage`：类型为 `QPixelFormat::AlphaUsage`。默认值为 `QPixelFormat::IgnoresAlpha`。传入 `QPixelFormat::AlphaUsage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaPosition`：类型为 `QPixelFormat::AlphaPosition`。默认值为 `QPixelFormat::AtBeginning`。传入 `QPixelFormat::AlphaPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::FloatingPoint`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用于创建HSV格式的构造函数。信道数量会根据`alphaSize`是否大于0而为3或4。
+`channelSize`会将`hueSize` `saturationSize`和`brightnessSize`设为相同的值。
+`alphaUsage` `alphaPosition`和`typeInterpretation`都可以通过同名的访问器访问。
 
 ### `[constexpr noexcept] QPixelFormat qPixelFormatRgba(uchar redSize, uchar greenSize, uchar blueSize, uchar alphaSize, QPixelFormat::AlphaUsage alphaUsage, QPixelFormat::AlphaPosition alphaPosition, QPixelFormat::AlphaPremultiplied premultiplied = QPixelFormat::NotPremultiplied, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::UnsignedInteger)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatRgba` 用于计算、查询或取得与“q、Pixel、格式化、Rgba”相关的操作。调用时要先确认当前状态和 `redSize`、`greenSize`、`blueSize`、`alphaSize`、`alphaUsage`、`alphaPosition`、`premultiplied`、`typeInterpretation` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `redSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `greenSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `blueSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaSize`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaUsage`：类型为 `QPixelFormat::AlphaUsage`。没有默认值，调用时必须提供。传入 `QPixelFormat::AlphaUsage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaPosition`：类型为 `QPixelFormat::AlphaPosition`。没有默认值，调用时必须提供。传入 `QPixelFormat::AlphaPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `premultiplied`：类型为 `QPixelFormat::AlphaPremultiplied`。默认值为 `QPixelFormat::NotPremultiplied`。传入 `QPixelFormat::AlphaPremultiplied` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::UnsignedInteger`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造函数生成RGB像素格式。`redSize` `greenSize` `blueSize`表示每个颜色通道的大小。`alphaSize`描述了alpha通道大小，其位置用`alphaPosition`描述。`alphaUsage`用于判断是否使用α通道。将alpha通道大小设置为8，`alphaUsage`设置为`IgnoresAlpha`，可以创建32位格式，其中RGB通道仅使用24位的总和。`premultiplied` `typeInterpretation` 可用同名的访问器访问。
 
 ### `QPixelFormat qPixelFormatYuv(QPixelFormat::YUVLayout yuvLayout, uchar alphaSize = 0, QPixelFormat::AlphaUsage alphaUsage = QPixelFormat::IgnoresAlpha, QPixelFormat::AlphaPosition alphaPosition = QPixelFormat::AtBeginning, QPixelFormat::AlphaPremultiplied premultiplied = QPixelFormat::NotPremultiplied, QPixelFormat::TypeInterpretation typeInterpretation = QPixelFormat::UnsignedByte, QPixelFormat::ByteOrder byteOrder = QPixelFormat::BigEndian)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QPixelFormat::qPixelFormatYuv` 用于计算、查询或取得与“q、Pixel、格式化、Yuv”相关的操作。调用时要先确认当前状态和 `yuvLayout`、`alphaSize`、`alphaUsage`、`alphaPosition`、`premultiplied`、`typeInterpretation`、`byteOrder` 的有效范围；返回类型是 `QPixelFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixelFormat`。
-- 参数 `yuvLayout`：类型为 `QPixelFormat::YUVLayout`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `alphaSize`：类型为 `uchar`。默认值为 `0`。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaUsage`：类型为 `QPixelFormat::AlphaUsage`。默认值为 `QPixelFormat::IgnoresAlpha`。传入 `QPixelFormat::AlphaUsage` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `alphaPosition`：类型为 `QPixelFormat::AlphaPosition`。默认值为 `QPixelFormat::AtBeginning`。传入 `QPixelFormat::AlphaPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `premultiplied`：类型为 `QPixelFormat::AlphaPremultiplied`。默认值为 `QPixelFormat::NotPremultiplied`。传入 `QPixelFormat::AlphaPremultiplied` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeInterpretation`：类型为 `QPixelFormat::TypeInterpretation`。默认值为 `QPixelFormat::UnsignedByte`。传入 `QPixelFormat::TypeInterpretation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `byteOrder`：类型为 `QPixelFormat::ByteOrder`。默认值为 `QPixelFormat::BigEndian`。传入 `QPixelFormat::ByteOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造函数，用于创建描述YUV格式的`QPixelFormat`，`yuvLayout`。`alphaSize`描述潜在Alpha通道的大小，其位置用`alphaPosition`描述。“第一”、“第二”......“第五”通道均设为0。`alphaUsage` `premultiplied` `typeInterpretation`和`byteOrder`将与其他格式相同工作。
 
 ## 6. 深入实践与常见坑
 

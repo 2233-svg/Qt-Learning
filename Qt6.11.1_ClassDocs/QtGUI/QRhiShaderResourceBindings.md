@@ -72,140 +72,75 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `const QRhiShaderResourceBinding *QRhiShaderResourceBindings::bindingAt(qsizetype index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindingAt`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`const QRhiShaderResourceBinding *`。
-- 参数 `index`：类型为 `qsizetype`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定的`index`返回绑定。
 
 ### `qsizetype QRhiShaderResourceBindings::bindingCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindingCount`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回绑定数量。
 
 ### `const QRhiShaderResourceBinding *QRhiShaderResourceBindings::cbeginBindings() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderResourceBindings::cbeginBindings` 用于计算、查询或取得与“cbegin、Bindings”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiShaderResourceBinding *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiShaderResourceBinding *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个 const 迭代器，指向绑定列表中的第一个项。
 
 ### `const QRhiShaderResourceBinding *QRhiShaderResourceBindings::cendBindings() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderResourceBindings::cendBindings` 用于计算、查询或取得与“cend、Bindings”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRhiShaderResourceBinding *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRhiShaderResourceBinding *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个连接迭代器，指向绑定列表最后一项之后。
 
 ### `[pure virtual] bool QRhiShaderResourceBindings::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderResourceBindings::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建对应的资源绑定集。根据底层的图形API，这可能需要创建本地图形资源，因此不应假设这是一项廉价操作。
+如果之前调用过create()，且没有对应的`destroy()`，那么`destroy()`会先隐式调用。
+成功时返回`true`，失败时返回`false`。无论返回值如何，调用`destroy()`始终是安全的。
 
 ### `bool QRhiShaderResourceBindings::isLayoutCompatible(const QRhiShaderResourceBindings *other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLayoutCompatible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QRhiShaderResourceBindings *`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果布局与`other`兼容，返回`true`。布局不包含实际资源（如缓冲区或纹理）及相关参数（如偏移或大小）。但它包含绑定点、流水线阶段和资源类型。绑定的数量和顺序也必须匹配，才能兼容。
+当用该`QRhiShaderResourceBindings`创建`QRhiGraphicsPipeline`且函数返回`true`时，`other`就可以安全地传递给`QRhiCommandBuffer::setShaderResources()`，从而与管道一起替代该`QRhiShaderResourceBindings`。
+注意：该函数必须在成功`create()`后调用，因为它依赖于底层数据结构烘焙过程中生成的数据。这样，函数可以实现比通过两个绑定列表并调用每对`QRhiShaderResourceBinding::isLayoutCompatible()`更高效的比较方法。这在该函数被高频调用时尤为重要。
 
 ### `[override virtual] QRhiResource::Type QRhiShaderResourceBindings::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderResourceBindings::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `QVector<quint32> QRhiShaderResourceBindings::serializedLayoutDescription() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderResourceBindings::serializedLayoutDescription` 用于计算、查询或取得与“serialized、Layout、Description”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVector<quint32>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVector<quint32>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个整数向量，包含一个不透明的斑点，描述了绑定列表的布局，即与布局兼容性测试相关的数据。
+给定两个对象`srb1`和`srb2`，如果该函数返回的数据相同，则`srb1->isLayoutCompatible(srb2)`，反之亦然。
+注意：返回的数据用于存储在内存中，并在对象所属`QRhi`的生命周期内进行比较。它不用于存储在磁盘上、在进程间重复使用，或与多个可能拥有不同后端的`QRhi`实例使用。
 
 ### `void QRhiShaderResourceBindings::setBindings(std::initializer_list<QRhiShaderResourceBinding> list)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBindings`。调用它会改变 `QRhiShaderResourceBindings` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `list`：类型为 `std::initializer_list<QRhiShaderResourceBinding>`。没有默认值，调用时必须提供。传入 `std::initializer_list<QRhiShaderResourceBinding>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设定绑定`list`。
 
 ### `template <typename InputIterator> void QRhiShaderResourceBindings::setBindings(InputIterator first, InputIterator last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBindings`。调用它会改变 `QRhiShaderResourceBindings` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename InputIterator> void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置迭代器 `first` 和 `last` 的绑定列表。
 
 ## 6. 深入实践与常见坑
 

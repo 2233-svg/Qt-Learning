@@ -99,414 +99,246 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 31 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QOpenGLContext::OpenGLModuleType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLContext` 暴露的类型声明 `打开、GL、Module、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OpenGLModuleType`。
-- 属性名：`QOpenGLContext`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举定义了底层OpenGL实现的类型。
+- `QOpenGLContext::LibGL`：`0`;OpenGL
+- `QOpenGLContext::LibGLES`：`1`;OpenGL ES 2.0 或更高版本
 
 ### `[explicit] QOpenGLContext::QOpenGLContext(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLContext` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个带有父对象`parent`的新OpenGL上下文实例。
+在使用之前，你需要设置正确的格式并调用`create()`。
 
 ### `[virtual noexcept] QOpenGLContext::~QOpenGLContext()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLContext` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QOpenGLContext`物体。
+如果这是当前线程上下文，`doneCurrent()`也会被调用。
 
 ### `[signal] void QOpenGLContext::aboutToBeDestroyed()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLContext` 发出的通知信号 `aboutToBeDestroyed`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在底层原生 OpenGL 上下文被破坏之前发出，用户可以清理可能在共享 OpenGL 环境中被搁置的资源。
+如果你想让上下文保持电流以便进行清理，确保只通过直接连接连接到信号。
+注意：在 Qt for Python 中，由于 Python 实例已被销毁，从`QOpenGLWidget`或 `QOpenGLWindow` 的解构器发出该信号时，信号将无法接收。我们建议改用 `QWidget::hideEvent()` 进行清理。
 
 ### `[static] bool QOpenGLContext::areSharing(QOpenGLContext *first, QOpenGLContext *second)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `areSharing`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `first`：类型为 `QOpenGLContext *`。没有默认值，调用时必须提供。传入 `QOpenGLContext *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `second`：类型为 `QOpenGLContext *`。没有默认值，调用时必须提供。传入 `QOpenGLContext *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `first` 和 `second` 上下文共享 OpenGL 资源，则返回 `true`。
 
 ### `bool QOpenGLContext::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试用当前配置创建 OpenGL 上下文。
+当前配置包括格式、共享上下文和屏幕。
+如果你系统上的 OpenGL 实现不支持请求的 OpenGL 上下文版本，`QOpenGLContext` 会尝试创建最接近的版本。实际创建的上下文属性可以通过 `format()` 函数返回的`QSurfaceFormat`查询。例如，如果你请求一个支持 OpenGL 4.3 核心配置文件的上下文，但驱动程序和/或硬件只支持 3.2 版本核心配置文件上下文，那么你会得到一个 3.2 核心配置文件上下文。
+返回 `true` 是否已成功创建本地上下文，并准备好与 `makeCurrent()`、`swapBuffers()` 等一起使用。
+注意：如果上下文已经存在，这个函数会先销毁现有上下文，然后创建一个新的上下文。
 
 ### `[static] QOpenGLContext *QOpenGLContext::currentContext()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `currentContext`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLContext *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前线程中调用`makeCurrent`的最后一个上下文，若无当前上下文则返回`nullptr`。
 
 ### `GLuint QOpenGLContext::defaultFramebufferObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::defaultFramebufferObject` 用于计算、查询或取得与“default、Framebuffer、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `GLuint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`GLuint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用此函数以获取当前表面的默认帧缓冲对象。在某些平台（例如 iOS）上，默认帧缓冲对象依赖于被渲染的表面，可能与 0 不同。因此，如果希望应用能跨不同 Qt 平台工作，而不是调用 glBindFramebuffer(0)，应调用 glBindFramebuffer(ctx->defaultFramebufferObject())。如果在 `QOpenGLFunctions` 中使用 glBindFramebuffer()，则无需担心此问题，因为当传递 0 时，它会自动绑定当前上下文的 defaultFramebufferObject()。注意：通过帧缓冲对象进行渲染的小部件，例如 `QOpenGLWidget` 和 `QQuickWidget`，在绘制时会覆盖此函数返回的值，因为此时正确的“默认”帧缓冲是小部件关联的后台帧缓冲，而不是属于顶层窗口表面的平台特定帧缓冲。这确保了本函数及其他依赖它的类（例如 `QOpenGLFramebufferObject::bindDefault()` 或 `QOpenGLFramebufferObject::release()`）能够正常工作。
 
 ### `void QOpenGLContext::doneCurrent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::doneCurrent` 用于执行与“done、当前”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+方便函数，用于调用 0 曲面的 `makeCurrent`。
+这会导致当前讨论中没有上下文是最新的。
 
 ### `QSet<QByteArray> QOpenGLContext::extensions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::extensions` 用于计算、查询或取得与“extensions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSet<QByteArray>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSet<QByteArray>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该上下文支持的 OpenGL 扩展集合。
+上下文或共享上下文必须是最新的。
 
 ### `QOpenGLExtraFunctions *QOpenGLContext::extraFunctions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::extraFunctions` 用于计算、查询或取得与“extra、Functions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOpenGLExtraFunctions *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLExtraFunctions *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取`QOpenGLExtraFunctions`实例来理解这个背景。
+`QOpenGLContext`提供这种便捷方式，无需手动管理即可访问`QOpenGLExtraFunctions`。
+上下文或共享上下文必须是最新的。
+返回的`QOpenGLExtraFunctions`实例已准备好使用，无需调用初始化OpenGLFunctions()。
+注意：`QOpenGLExtraFunctions`包含不保证运行时可用的功能。运行时可用性取决于平台、图形驱动以及应用程序请求的OpenGL版本。
 
 ### `QSurfaceFormat QOpenGLContext::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QSurfaceFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`create()`被调用，返回底层平台上下文的格式。
+否则，返回请求的格式。
+请求的格式和实际格式可能不同。请求给定的 OpenGL 版本并不意味着最终的上下文会精确定位该请求版本。只要驱动程序能够提供这样的上下文，就保证所创建上下文的版本/配置文件/选项组合与请求兼容。
+例如，请求 OpenGL 3.x 核心配置文件上下文，可能会生成 OpenGL 4.x 核心配置文件上下文。同样，请求 OpenGL 2.1 可能生成启用弃用函数的 OpenGL 3.0 上下文。最后，根据驱动程序不同，不支持版本可能导致上下文创建失败，或上下文支持最高版本。
+缓冲区大小也可能存在类似差异，例如，最终上下文的深度缓冲区可能比请求的更大。这是完全正常的。
 
 ### `QOpenGLFunctions *QOpenGLContext::functions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::functions` 用于计算、查询或取得与“functions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOpenGLFunctions *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLFunctions *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取`QOpenGLFunctions`实例来了解这个背景。
+`QOpenGLContext`提供这种便捷方式，无需手动管理即可访问`QOpenGLFunctions`。
+上下文或共享上下文必须是最新的。
+返回的`QOpenGLFunctions`实例已准备好使用，无需初始化OpenGLFunctions()即可调用。
 
 ### `QFunctionPointer QOpenGLContext::getProcAddress(const QByteArray &procName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLContext` 的核心操作 `getProcAddress`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QFunctionPointer`。
-- 参数 `procName`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解析函数指针指向一个 OpenGL 扩展函数，该函数由 `procName` 标识。
+使用此函数访问OpenGL扩展函数或核心函数，这些函数可能并非所有平台都以链接符号形式提供。
+返回的指针可能依赖于平台。有些系统可能返回的指针不`nullptr`，即使该函数无效或不支持。
+为了可靠地检查函数可用性，可以通过调用`QOpenGLContext::hasExtension()`来测试扩展支持。对于核心函数，通过 `QOpenGLContext::format()` 返回的 `QSurfaceFormat` 中的 `version()` 检查当前上下文的版本。
 
 ### `QFunctionPointer QOpenGLContext::getProcAddress(const char *procName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QOpenGLContext` 的核心操作 `getProcAddress`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QFunctionPointer`。
-- 参数 `procName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+解析函数指针指向一个 OpenGL 扩展函数，该函数由 `procName` 标识。
+使用此函数访问OpenGL扩展函数或核心函数，这些函数可能并非所有平台都以链接符号形式提供。
+返回的指针可能依赖于平台。有些系统可能返回的指针不`nullptr`，即使该函数无效或不支持。
+为了可靠地检查函数可用性，可以通过调用`QOpenGLContext::hasExtension()`来测试扩展支持。对于核心函数，通过 `QOpenGLContext::format()` 返回的 `QSurfaceFormat` 中的 `version()` 检查当前上下文的版本。
 
 ### `[static] QOpenGLContext *QOpenGLContext::globalShareContext()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `globalShareContext`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLContext *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果存在，返回全应用共享的OpenGL上下文。否则，返回`nullptr`。
+如果你需要在创建或展示`QOpenGLWidget`或 `QQuickWidget`之前上传 OpenGL 对象（缓冲区、纹理等）时，这非常有用。
+警告：请勿尝试让该函数返回的上下文在任何表面上保持当前状态。相反，你可以创建一个与全局上下文共享的新上下文，然后使新上下文保持当前状态。
 
 ### `bool QOpenGLContext::hasExtension(const QByteArray &extension) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasExtension`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `extension`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`true`该 OpenGL 上下文是否支持指定的 OpenGL `extension`，`false`否则。
+上下文或共享上下文必须是最新的。
 
 ### `bool QOpenGLContext::isOpenGLES() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOpenGLES`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果上下文是 OpenGL ES 上下文，则返回为真。
+如果上下文尚未创建，结果基于通过`setFormat()`设置的请求格式。
 
 ### `bool QOpenGLContext::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该上下文有效，即成功创建，则返回。
+在某些平台上，之前成功创建的上下文返回`false`值表明该OpenGL上下文已丢失。
+处理应用中上下文丢失场景的典型方法是通过该函数检查`makeCurrent()`失败并返回`false`。如果该函数返回`false`，则通过调用`create()`重建底层的原生OpenGL上下文，再次调用`makeCurrent()`，然后重新初始化所有OpenGL资源。
+在某些平台上，上下文丢失的情况无法避免。但在其他平台上，可能需要选择加入。这可以通过在`QSurfaceFormat`中启用`ResetNotification`实现。这将导致在底层的原生OpenGL环境中设置`RESET_NOTIFICATION_STRATEGY_EXT`为`LOSE_CONTEXT_ON_RESET_EXT`。`QOpenGLContext`随后会通过每个`makeCurrent()`中的`glGetGraphicsResetStatusEXT()`监控状态。
 
 ### `bool QOpenGLContext::makeCurrent(QSurface *surface)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::makeCurrent` 用于计算、查询或取得与“make、当前”相关的操作。调用时要先确认当前状态和 `surface` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `surface`：类型为 `QSurface *`。没有默认值，调用时必须提供。传入 `QSurface *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使上下文在当前线程中保持当前状态，且符合给定`surface`。成功时返回`true`;否则返回`false`。后者可能发生在表面未被暴露，或图形硬件因应用程序暂停等原因不可用时。
+如果`surface` `nullptr`，这等同于调用`doneCurrent()`。
+避免从该实例所在线程以外的线程调用该函数`QOpenGLContext`。如果你想从不同线程使用`QOpenGLContext`，应先确认当前线程中没有当前线程，必要时调用 `doneCurrent()`。然后在另一个线程中使用之前，先调用 moveToThread（otherThread）。
+默认情况下，Qt 会对线程亲和性进行强制执行上述条件的检查。仍然可以通过设置 `Qt::AA_DontCheckOpenGLContextThreadAffinity` 应用属性来禁用该检查。请务必理解从 QObject 线程亲和性文档中解释的，使用其所在线程之外的 QObject 的后果。
 
 ### `template <typename QNativeInterface> QNativeInterface *QOpenGLContext::nativeInterface() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::nativeInterface` 用于计算、查询或取得与“native、Interface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename QNativeInterface> QNativeInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename QNativeInterface> QNativeInterface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上下文中给定类型的本地接口。
+该功能提供访问`QOpenGLContext`特定平台的功能，定义在`QNativeInterface`命名空间中：
+- `QNativeInterface::QCocoaGLContext`：macOS 上 NSOpenGLContext 的原生接口
+- `QNativeInterface::QEGLContext`：与 EGL 上下文的本地接口
+- `QNativeInterface::QGLXContext`：GLX 上下文的本地接口
+- `QNativeInterface::QWGLContext`：Windows上的WGL上下文的本地接口
+如果请求的接口不可用，则返回`nullptr`。
 
 ### `[static] QOpenGLContext::OpenGLModuleType QOpenGLContext::openGLModuleType()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `openGLModuleType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLContext::OpenGLModuleType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回底层的OpenGL实现类型。
+在OpenGL实现未动态加载的平台上，返回值在编译时确定，且永远不会改变。
+注意：桌面OpenGL实现也可能能够创建兼容ES的上下文。因此，在大多数情况下，更合适的做法是检查`QSurfaceFormat::renderableType()`或使用便利函数`isOpenGLES()`。
+注意：该函数要求`QGuiApplication`实例已经被创建。
 
 ### `QScreen *QOpenGLContext::screen() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::screen` 用于计算、查询或取得与“screen”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QScreen *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QScreen *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上下文创建的屏幕。
 
 ### `void QOpenGLContext::setFormat(const QSurfaceFormat &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QOpenGLContext` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `format`：类型为 `const QSurfaceFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置了OpenGL上下文应兼容的`format`。你需要调用`create()`才能生效。
+当该函数未明确设置格式时，将使用`QSurfaceFormat::defaultFormat()`返回的格式。这意味着当有多个上下文时，单个调用该函数可以被一个调用替换，然后再创建一个上下文`QSurfaceFormat::setDefaultFormat()`。
 
 ### `void QOpenGLContext::setScreen(QScreen *screen)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setScreen`。调用它会改变 `QOpenGLContext` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `screen`：类型为 `QScreen *`。没有默认值，调用时必须提供。传入 `QScreen *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它设置了OpenGL上下文应有效的适用`screen`。你需要调用`create()`才能生效。
 
 ### `void QOpenGLContext::setShareContext(QOpenGLContext *shareContext)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShareContext`。调用它会改变 `QOpenGLContext` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `shareContext`：类型为 `QOpenGLContext *`。没有默认值，调用时必须提供。传入 `QOpenGLContext *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它让这个上下文与`shareContext`共享纹理、着色器和其他OpenGL资源。你需要调用`create()`才能生效。
 
 ### `QOpenGLContext *QOpenGLContext::shareContext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::shareContext` 用于计算、查询或取得与“share、Context”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOpenGLContext *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLContext *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回创建该上下文时使用的共享上下文。
+如果底层平台无法支持请求的共享，则返回0。
 
 ### `QOpenGLContextGroup *QOpenGLContext::shareGroup() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::shareGroup` 用于计算、查询或取得与“share、Group”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QOpenGLContextGroup *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QOpenGLContextGroup *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该上下文所属的共享组。
 
 ### `[static] bool QOpenGLContext::supportsThreadedOpenGL()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `supportsThreadedOpenGL`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果平台支持主线程（GUI）之外的OpenGL渲染，返回`true`。
+该值由所使用的平台插件控制，也可能取决于图形驱动程序。
 
 ### `QSurface *QOpenGLContext::surface() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::surface` 用于计算、查询或取得与“surface”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSurface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSurface *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上下文所更新的表面。
+这就是作为论据传递给`makeCurrent()`的表面。
 
 ### `void QOpenGLContext::swapBuffers(QSurface *surface)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QOpenGLContext::swapBuffers` 用于执行与“swap、Buffers”相关的操作。调用时要先确认当前状态和 `surface` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `surface`：类型为 `QSurface *`。没有默认值，调用时必须提供。传入 `QSurface *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把`surface`的前后缓冲区互换。
+调用它以完成一帧 OpenGL 渲染，并在发出任何后续 OpenGL 命令前（例如作为新帧的一部分）再次调用 `makeCurrent()`。
 
 ## 6. 深入实践与常见坑
 

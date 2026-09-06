@@ -82,205 +82,162 @@ for (auto it = container.cbegin(); it != container.cend(); ++it) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QTreeWidgetItemIterator::IteratorFlagflags QTreeWidgetItemIterator::IteratorFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 暴露的类型声明 `Iterator、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:IteratorFlagflags QTreeWidgetItemIterator::IteratorFlags`。
-- 属性名：`QTreeWidgetItemIterator`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志可以传递给 `QTreeWidgetItemIterator` 构造函数（如果使用多个标志，可以进行按位或运算），这样迭代器将只迭代与给定标志匹配的项目。
+- `QTreeWidgetItemIterator::All`: `0x00000000`
+- `QTreeWidgetItemIterator::Hidden`: `0x00000001`
+- `QTreeWidgetItemIterator::NotHidden`: `0x00000002`
+- `QTreeWidgetItemIterator::Selected`: `0x00000004`
+- `QTreeWidgetItemIterator::Unselected`: `0x00000008`
+- `QTreeWidgetItemIterator::Selectable`: `0x00000010`
+- `QTreeWidgetItemIterator::NotSelectable`: `0x00000020`
+- `QTreeWidgetItemIterator::DragEnabled`: `0x00000040`
+- `QTreeWidgetItemIterator::DragDisabled`: `0x00000080`
+- `QTreeWidgetItemIterator::DropEnabled`: `0x00000100`
+- `QTreeWidgetItemIterator::DropDisabled`: `0x00000200`
+- `QTreeWidgetItemIterator::HasChildren`: `0x00000400`
+- `QTreeWidgetItemIterator::NoChildren`: `0x00000800`
+- `QTreeWidgetItemIterator::Checked`: `0x00001000`
+- `QTreeWidgetItemIterator::NotChecked`: `0x00002000`
+- `QTreeWidgetItemIterator::Enabled`: `0x00004000`
+- `QTreeWidgetItemIterator::Disabled`: `0x00008000`
+- `QTreeWidgetItemIterator::Editable`: `0x00010000`
+- `QTreeWidgetItemIterator::NotEditable`: `0x00020000`
+- `QTreeWidgetItemIterator::UserFlag`: `0x01000000`
+IteratorFlags 类型是 QFlags<IteratorFlag> 的 typedef。它存储 IteratorFlag 值的按位或组合。
 
 ### `[explicit] QTreeWidgetItemIterator::QTreeWidgetItemIterator(QTreeWidget *widget, QTreeWidgetItemIterator::IteratorFlags flags = All)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `widget`：类型为 `QTreeWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `flags`：类型为 `QTreeWidgetItemIterator::IteratorFlags`。默认值为 `All`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定`widget`构建一个迭代器，利用指定`flags`确定迭代过程中找到的物品。迭代器设置为指向控件中包含的第一个顶层项目，或者如果顶层项目与标志不匹配，则指向下一个匹配的项目。
 
 ### `[explicit] QTreeWidgetItemIterator::QTreeWidgetItemIterator(QTreeWidgetItem *item, QTreeWidgetItemIterator::IteratorFlags flags = All)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `item`：类型为 `QTreeWidgetItem *`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-- 参数 `flags`：类型为 `QTreeWidgetItemIterator::IteratorFlags`。默认值为 `All`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为给定`item`构建一个迭代器，利用指定`flags`确定迭代过程中发现哪些项目。迭代器指向`item`，或如果`item`与标志不匹配，则指向下一个匹配的项目。
 
 ### `QTreeWidgetItemIterator::QTreeWidgetItemIterator(const QTreeWidgetItemIterator &it)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `it`：类型为 `const QTreeWidgetItemIterator &`。没有默认值，调用时必须提供。传入 `const QTreeWidgetItemIterator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造与`it`相同的`QTreeWidget`迭代器。当前迭代项设置为指向当前`it`项。
 
 ### `[noexcept] QTreeWidgetItemIterator::~QTreeWidgetItemIterator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁迭代器。
 
 ### `QTreeWidgetItem *QTreeWidgetItemIterator::operator*() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTreeWidgetItem *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Dereference 操作符。返回当前项目的指针。
 
 ### `QTreeWidgetItemIterator &QTreeWidgetItemIterator::operator++()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTreeWidgetItemIterator &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+前缀 `++` 运算符（`++it`）将迭代器推进到下一个匹配的项，并返回对结果迭代器的引用。如果当前项是最后一个匹配的项，则将当前指针设置为 `nullptr`。
 
 ### `const QTreeWidgetItemIterator QTreeWidgetItemIterator::operator++(int)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QTreeWidgetItemIterator`。
-- 参数 `int`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+后缀操作符（it ）将迭代器推进到下一个匹配的项，并返回一个迭代器到之前当前的项。
 
 ### `QTreeWidgetItemIterator &QTreeWidgetItemIterator::operator+=(int n)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTreeWidgetItemIterator &`。
-- 参数 `n`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使迭代器通过`n`匹配的项向前移动。（如果n为负，迭代器向后移动。）。
+如果当前项超过上一个项，当前项指针设为`nullptr`。返回结果迭代器。
 
 ### `QTreeWidgetItemIterator &QTreeWidgetItemIterator::operator--()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTreeWidgetItemIterator &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+前缀`--`操作符（`--it`）将迭代器推进到上一个匹配的项，并返回对结果迭代器的引用。如果当前条目是第一个匹配的项，则将当前指针设置为`nullptr`。
 
 ### `const QTreeWidgetItemIterator QTreeWidgetItemIterator::operator--(int)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QTreeWidgetItemIterator`。
-- 参数 `int`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+后缀 – 操作符（it–）使前一个匹配的项目为当前，并返回之前当前的项目的迭代器。
 
 ### `QTreeWidgetItemIterator &QTreeWidgetItemIterator::operator-=(int n)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTreeWidgetItemIterator &`。
-- 参数 `n`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使迭代者通过`n`匹配的项向后移动。（如果n为负，迭代器向前移动。）。
+如果当前项比上一个项更前面，则当前项指针设置为`nullptr`。返回结果迭代器。
 
 ### `QTreeWidgetItemIterator &QTreeWidgetItemIterator::operator=(const QTreeWidgetItemIterator &it)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QTreeWidgetItemIterator &`。
-- 参数 `it`：类型为 `const QTreeWidgetItemIterator &`。没有默认值，调用时必须提供。传入 `const QTreeWidgetItemIterator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+赋值。复制`it`并返回其迭代器的引用。
 
 ### `enum IteratorFlag { All, Hidden, NotHidden, Selected, Unselected, …, UserFlag }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 暴露的类型声明 `Iterator、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志可以传递给 `QTreeWidgetItemIterator` 构造函数（如果使用多个标志，可以进行按位或运算），这样迭代器将只迭代与给定标志匹配的项目。
+- `QTreeWidgetItemIterator::All`: `0x00000000`
+- `QTreeWidgetItemIterator::Hidden`: `0x00000001`
+- `QTreeWidgetItemIterator::NotHidden`: `0x00000002`
+- `QTreeWidgetItemIterator::Selected`: `0x00000004`
+- `QTreeWidgetItemIterator::Unselected`: `0x00000008`
+- `QTreeWidgetItemIterator::Selectable`: `0x00000010`
+- `QTreeWidgetItemIterator::NotSelectable`: `0x00000020`
+- `QTreeWidgetItemIterator::DragEnabled`: `0x00000040`
+- `QTreeWidgetItemIterator::DragDisabled`: `0x00000080`
+- `QTreeWidgetItemIterator::DropEnabled`: `0x00000100`
+- `QTreeWidgetItemIterator::DropDisabled`: `0x00000200`
+- `QTreeWidgetItemIterator::HasChildren`: `0x00000400`
+- `QTreeWidgetItemIterator::NoChildren`: `0x00000800`
+- `QTreeWidgetItemIterator::Checked`: `0x00001000`
+- `QTreeWidgetItemIterator::NotChecked`: `0x00002000`
+- `QTreeWidgetItemIterator::Enabled`: `0x00004000`
+- `QTreeWidgetItemIterator::Disabled`: `0x00008000`
+- `QTreeWidgetItemIterator::Editable`: `0x00010000`
+- `QTreeWidgetItemIterator::NotEditable`: `0x00020000`
+- `QTreeWidgetItemIterator::UserFlag`: `0x01000000`
+IteratorFlags 类型是 QFlags<IteratorFlag> 的 typedef。它存储 IteratorFlag 值的按位或组合。
 
 ### `flags IteratorFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QTreeWidgetItemIterator` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这些标志可以传递给 `QTreeWidgetItemIterator` 构造函数（如果使用多个标志，可以进行按位或运算），这样迭代器将只迭代与给定标志匹配的项目。
+- `QTreeWidgetItemIterator::All`: `0x00000000`
+- `QTreeWidgetItemIterator::Hidden`: `0x00000001`
+- `QTreeWidgetItemIterator::NotHidden`: `0x00000002`
+- `QTreeWidgetItemIterator::Selected`: `0x00000004`
+- `QTreeWidgetItemIterator::Unselected`: `0x00000008`
+- `QTreeWidgetItemIterator::Selectable`: `0x00000010`
+- `QTreeWidgetItemIterator::NotSelectable`: `0x00000020`
+- `QTreeWidgetItemIterator::DragEnabled`: `0x00000040`
+- `QTreeWidgetItemIterator::DragDisabled`: `0x00000080`
+- `QTreeWidgetItemIterator::DropEnabled`: `0x00000100`
+- `QTreeWidgetItemIterator::DropDisabled`: `0x00000200`
+- `QTreeWidgetItemIterator::HasChildren`: `0x00000400`
+- `QTreeWidgetItemIterator::NoChildren`: `0x00000800`
+- `QTreeWidgetItemIterator::Checked`: `0x00001000`
+- `QTreeWidgetItemIterator::NotChecked`: `0x00002000`
+- `QTreeWidgetItemIterator::Enabled`: `0x00004000`
+- `QTreeWidgetItemIterator::Disabled`: `0x00008000`
+- `QTreeWidgetItemIterator::Editable`: `0x00010000`
+- `QTreeWidgetItemIterator::NotEditable`: `0x00020000`
+- `QTreeWidgetItemIterator::UserFlag`: `0x01000000`
+IteratorFlags 类型是 QFlags<IteratorFlag> 的 typedef。它存储 IteratorFlag 值的按位或组合。
 
 ## 6. 深入实践与常见坑
 

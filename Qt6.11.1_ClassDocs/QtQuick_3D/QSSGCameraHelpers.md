@@ -53,23 +53,15 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 1 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[static] QMatrix4x4 QSSGCameraHelpers::getViewProjectionMatrix(const QSSGCameraId cameraId, const QMatrix4x4 *globalTransform = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getViewProjectionMatrix`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QMatrix4x4`。
-- 参数 `cameraId`：类型为 `const QSSGCameraId`。没有默认值，调用时必须提供。传入 `const QSSGCameraId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `globalTransform`：类型为 `const QMatrix4x4 *`。默认值为 `nullptr`。传入 `const QMatrix4x4 *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取`cameraId`的投影矩阵。在计算投影矩阵时，可以选择使用一个可选的变换参数，代替相机的全局变换。
+返回`cameraId`的投影矩阵。
+`globalTransform`。
 
 ## 6. 深入实践与常见坑
 

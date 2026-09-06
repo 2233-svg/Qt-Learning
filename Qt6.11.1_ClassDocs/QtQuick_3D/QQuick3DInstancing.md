@@ -93,334 +93,233 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 24 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `depthSortingEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuick3DInstancing` 的配置属性。初始化或状态切换时通过 `setDepthSortingEnabled(...)` 设置，之后用 `depthSortingEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+保持实例表的深度排序启用值。启用时，实例从距离摄像机最远的实例到最近的实例（即从后到前）排序和渲染。如果禁用（这是默认设置），实例将按照实例表中指定的顺序渲染。
+注意：实例之间仅相互排序。实例不会与场景中其他对象进行排序。
+注意：排序会增加帧准备时间，尤其是在大量实例数下。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`depthSortingEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `depthSortingEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `hasTransparency : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuick3DInstancing` 的状态/能力属性。通常通过 `hasTransparency()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+如果实例表包含渲染模型时应使用的α值，则将该属性设为true。该属性仅在模型不透明时才有影响：如果模型具有透明的`material`或`opacity`小于1，则无论如何都会使用表中的alpha值。
+注意：启用 alpha 混合在实例重叠时可能会引发渲染问题。详情请参见 alpha 混合和实例文档。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`hasTransparency`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `hasTransparency()` 读取当前值；它不会修改应用状态。
 
 ### `instanceCountOverride : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuick3DInstancing` 的配置属性。初始化或状态切换时通过 `setInstanceCountOverride(...)` 设置，之后用 `instanceCountOverride()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+设置该属性限制实例数量，而无需重新生成或重新上传实例表。这允许非常低成本地制作渲染实例数量的动画。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`instanceCountOverride`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `instanceCountOverride()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.9] shadowBoundsMaximum : QVector3D`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuick3DInstancing` 的配置属性。初始化或状态切换时通过 `setShadowBoundsMaximum(...)` 设置，之后用 `shadowBoundsMaximum()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+设定计算实例表中模型阴影映射边界时所用的最大边界。
+默认值：`(-1, -1, -1)`。
+注意：只有当 `shadowBoundsMinimum` 的相关分量小于 shadowBoundsMaximum 中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 属性类型：`QVector3D`。
-- 属性名：`shadowBoundsMaximum`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `shadowBoundsMaximum()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.9] shadowBoundsMinimum : QVector3D`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuick3DInstancing` 的配置属性。初始化或状态切换时通过 `setShadowBoundsMinimum(...)` 设置，之后用 `shadowBoundsMinimum()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+设置计算实例表中模型阴影映射边界时使用的最小界限。
+默认值：`(1, 1, 1)`。
+注意：只有当shadowBoundsMinimal的相关分量小于`shadowBoundsMaximum`中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 属性类型：`QVector3D`。
-- 属性名：`shadowBoundsMinimum`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `shadowBoundsMinimum()` 读取当前值；它不会修改应用状态。
 
 ### `[static protected] QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntry(const QVector3D &position, const QVector3D &scale, const QVector3D &eulerRotation, const QColor &color, const QVector4D &customData = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `calculateTableEntry`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+将`position` `scale` `eulerRotation` `color`和`customData`转换为标准顶点着色器预期的实例表格式。典型模式：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QQuick3DInstancing::InstanceTableEntry`。
-- 参数 `position`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `scale`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `eulerRotation`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `color`：类型为 `const QColor &`。没有默认值，调用时必须提供。传入 `const QColor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `customData`：类型为 `const QVector4D &`。默认值为 `{}`。传入 `const QVector4D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ QByteArray MyInstanceTable::getInstanceBuffer(int *instanceCount)
+ {
+     QByteArray instanceData;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     ...
+
+     auto entry = calculateTableEntry({xPos, yPos, zPos}, {xScale, yScale, zScale}, {xRot, yRot, zRot}, color, {});
+     instanceData.append(reinterpret_cast<const char *>(&entry), sizeof(entry));
+```
 
 ### `[static protected] QQuick3DInstancing::InstanceTableEntry QQuick3DInstancing::calculateTableEntryFromQuaternion(const QVector3D &position, const QVector3D &scale, const QQuaternion &rotation, const QColor &color, const QVector4D &customData = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `calculateTableEntryFromQuaternion`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QQuick3DInstancing::InstanceTableEntry`。
-- 参数 `position`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `scale`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rotation`：类型为 `const QQuaternion &`。没有默认值，调用时必须提供。传入 `const QQuaternion &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `color`：类型为 `const QColor &`。没有默认值，调用时必须提供。传入 `const QColor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `customData`：类型为 `const QVector4D &`。默认值为 `{}`。传入 `const QVector4D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`position` `scale` `rotation` `color`和 `customData` 转换为标准顶点着色器预期的实例表格式。
+这和`calculateTableEntry()`相同，只是用四元数来指定旋转。
 
 ### `[pure virtual protected] QByteArray QQuick3DInstancing::getInstanceBuffer(int *instanceCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQuick3DInstancing` 的核心操作 `getInstanceBuffer`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `instanceCount`：类型为 `int *`。没有默认值，调用时必须提供。传入 `int *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+实现该函数返回实例表的内容。实例数量应以 `instanceCount` 返回。子类负责如有必要缓存结果。如果实例表发生变化，子类应调用 `markDirty()`。
 
 ### `[protected] void QQuick3DInstancing::markDirty()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DInstancing::markDirty` 用于执行与“mark、Dirty”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标记实例数据已更改，必须重新上传。
 
 ### `bool depthSortingEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuick3DInstancing::depthSortingEnabled` 用于计算、查询或取得与“depth、Sorting、启用状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+保持实例表的深度排序启用值。启用时，实例从距离摄像机最远的实例到最近的实例（即从后到前）排序和渲染。如果禁用（这是默认设置），实例将按照实例表中指定的顺序渲染。
+注意：实例之间仅相互排序。实例不会与场景中其他对象进行排序。
+注意：排序会增加帧准备时间，尤其是在大量实例数下。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `depthSortingEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `bool hasTransparency() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasTransparency`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果实例表包含渲染模型时应使用的α值，则将该属性设为true。该属性仅在模型不透明时才有影响：如果模型具有透明的`material`或`opacity`小于1，则无论如何都会使用表中的alpha值。
+注意：启用 alpha 混合在实例重叠时可能会引发渲染问题。详情请参见 alpha 混合和实例文档。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `hasTransparency()` 读取当前值；它不会修改应用状态。
 
 ### `int instanceCountOverride() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuick3DInstancing::instanceCountOverride` 用于计算、查询或取得与“instance、数量统计、Override”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+设置该属性限制实例数量，而无需重新生成或重新上传实例表。这允许非常低成本地制作渲染实例数量的动画。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `instanceCountOverride()` 读取当前值；它不会修改应用状态。
 
 ### `QVector3D shadowBoundsMaximum() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuick3DInstancing::shadowBoundsMaximum` 用于计算、查询或取得与“shadow、Bounds、最大值”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVector3D`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+设定计算实例表中模型阴影映射边界时所用的最大边界。
+默认值：`(-1, -1, -1)`。
+注意：只有当 `shadowBoundsMinimum` 的相关分量小于 shadowBoundsMaximum 中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 返回值：`QVector3D`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `shadowBoundsMaximum()` 读取当前值；它不会修改应用状态。
 
 ### `QVector3D shadowBoundsMinimum() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQuick3DInstancing::shadowBoundsMinimum` 用于计算、查询或取得与“shadow、Bounds、最小值”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVector3D`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+设置计算实例表中模型阴影映射边界时使用的最小界限。
+默认值：`(1, 1, 1)`。
+注意：只有当shadowBoundsMinimal的相关分量小于`shadowBoundsMaximum`中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 返回值：`QVector3D`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `shadowBoundsMinimum()` 读取当前值；它不会修改应用状态。
 
 ### `void setDepthSortingEnabled(bool enabled)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setDepthSortingEnabled`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+保持实例表的深度排序启用值。启用时，实例从距离摄像机最远的实例到最近的实例（即从后到前）排序和渲染。如果禁用（这是默认设置），实例将按照实例表中指定的顺序渲染。
+注意：实例之间仅相互排序。实例不会与场景中其他对象进行排序。
+注意：排序会增加帧准备时间，尤其是在大量实例数下。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDepthSortingEnabled(...)` 修改 `depthSortingEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setHasTransparency(bool hasTransparency)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setHasTransparency`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+如果实例表包含渲染模型时应使用的α值，则将该属性设为true。该属性仅在模型不透明时才有影响：如果模型具有透明的`material`或`opacity`小于1，则无论如何都会使用表中的alpha值。
+注意：启用 alpha 混合在实例重叠时可能会引发渲染问题。详情请参见 alpha 混合和实例文档。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `hasTransparency`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setHasTransparency(...)` 修改 `hasTransparency`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setInstanceCountOverride(int instanceCountOverride)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setInstanceCountOverride`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+设置该属性限制实例数量，而无需重新生成或重新上传实例表。这允许非常低成本地制作渲染实例数量的动画。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `instanceCountOverride`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setInstanceCountOverride(...)` 修改 `instanceCountOverride`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setShadowBoundsMaximum(const QVector3D &newShadowBoundsMinimum)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setShadowBoundsMaximum`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+设定计算实例表中模型阴影映射边界时所用的最大边界。
+默认值：`(-1, -1, -1)`。
+注意：只有当 `shadowBoundsMinimum` 的相关分量小于 shadowBoundsMaximum 中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newShadowBoundsMinimum`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setShadowBoundsMaximum(...)` 修改 `shadowBoundsMaximum`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setShadowBoundsMinimum(const QVector3D &newShadowBoundsMinimum)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setShadowBoundsMinimum`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+设置计算实例表中模型阴影映射边界时使用的最小界限。
+默认值：`(1, 1, 1)`。
+注意：只有当shadowBoundsMinimal的相关分量小于`shadowBoundsMaximum`中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newShadowBoundsMinimum`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setShadowBoundsMinimum(...)` 修改 `shadowBoundsMinimum`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void depthSortingEnabledChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `depthSortingEnabledChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+保持实例表的深度排序启用值。启用时，实例从距离摄像机最远的实例到最近的实例（即从后到前）排序和渲染。如果禁用（这是默认设置），实例将按照实例表中指定的顺序渲染。
+注意：实例之间仅相互排序。实例不会与场景中其他对象进行排序。
+注意：排序会增加帧准备时间，尤其是在大量实例数下。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `depthSortingEnabled` 的变化，不要把它当作普通函数主动调用。
 
 ### `void hasTransparencyChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasTransparencyChanged`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果实例表包含渲染模型时应使用的α值，则将该属性设为true。该属性仅在模型不透明时才有影响：如果模型具有透明的`material`或`opacity`小于1，则无论如何都会使用表中的alpha值。
+注意：启用 alpha 混合在实例重叠时可能会引发渲染问题。详情请参见 alpha 混合和实例文档。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `hasTransparency` 的变化，不要把它当作普通函数主动调用。
 
 ### `void instanceCountOverrideChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `instanceCountOverrideChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+设置该属性限制实例数量，而无需重新生成或重新上传实例表。这允许非常低成本地制作渲染实例数量的动画。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `instanceCountOverride` 的变化，不要把它当作普通函数主动调用。
 
 ### `void shadowBoundsMaximumChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `shadowBoundsMaximumChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+设定计算实例表中模型阴影映射边界时所用的最大边界。
+默认值：`(-1, -1, -1)`。
+注意：只有当 `shadowBoundsMinimum` 的相关分量小于 shadowBoundsMaximum 中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `shadowBoundsMaximum` 的变化，不要把它当作普通函数主动调用。
 
 ### `void shadowBoundsMinimumChanged()`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `shadowBoundsMinimumChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+设置计算实例表中模型阴影映射边界时使用的最小界限。
+默认值：`(1, 1, 1)`。
+注意：只有当shadowBoundsMinimal的相关分量小于`shadowBoundsMaximum`中时，该属性才被启用。否则边界会自动计算。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `shadowBoundsMinimum` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

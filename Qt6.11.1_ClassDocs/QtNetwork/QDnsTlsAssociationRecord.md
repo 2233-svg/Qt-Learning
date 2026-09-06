@@ -75,181 +75,110 @@ target_link_libraries(mytarget PRIVATE Qt6::Network)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 13 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QDnsTlsAssociationRecord::CertificateUsage`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CertificateUsage`。
-- 属性名：`QDnsTlsAssociationRecord`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含TLS关联查询中证书使用字段的有效值。以下列表为RFC 6698第2.1.1节和RFC 7218第2.1节的最新内容。请参阅这些文档以获取关于解释该枚举的权威说明。
+- `QDnsTlsAssociationRecord::CertificateUsage::CertificateAuthorityConstrait`：`0`;表示记录包含与特定证书授权机构的关联，必须在TLS服务器的证书链中找到，并且必须通过PKIX验证。
+- `QDnsTlsAssociationRecord::CertificateUsage::ServiceCertificateConstraint`：`1`;表示记录包含与证书的关联，该证书必须与TLS服务器提供的终端实体证书匹配，并且必须通过PKIX验证。
+- `QDnsTlsAssociationRecord::CertificateUsage::TrustAnchorAssertion`：`2`;表示记录包含必须作为最终信任锚点以验证TLS服务器证书的证书的证书，并且必须通过PKIX验证。
+- `QDnsTlsAssociationRecord::CertificateUsage::DomainIssuedCertificate`：`3`;表示记录包含与证书的关联，必须与TLS服务器提供的终端实体证书匹配。PKIX验证不进行测试。
+- `QDnsTlsAssociationRecord::CertificateUsage::PrivateUse`：`255`;不适用标准含义。
+- `QDnsTlsAssociationRecord::CertificateUsage::PKIX_TA`：`0`;别名;公钥基础设施信托锚点助记符
+- `QDnsTlsAssociationRecord::CertificateUsage::PKIX_EE`：`1`;别名;公钥基础设施终端实体助记法
+- `QDnsTlsAssociationRecord::CertificateUsage::DANE_TA`：`2`;别名;基于DNS认证的命名实体信托锚助记符
+- `QDnsTlsAssociationRecord::CertificateUsage::DANE_EE`：`3`;别名;基于DNS认证命名实体的助记法终端实体
+- `QDnsTlsAssociationRecord::CertificateUsage::PrivCert`：`255`;别名
+其他数值目前为预留值，但未来标准可能已非保留值。即使未提供枚举器，这些数值仍可使用该枚举。
 
 ### `enum class QDnsTlsAssociationRecord::MatchingType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MatchingType`。
-- 属性名：`QDnsTlsAssociationRecord`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含TLS关联查询匹配类型字段的有效值。以下列表符合RFC 6698第2.1.3节和RFC 7218第2.3节的最新信息。请参阅这些文档以获取关于解释该枚举的权威指导。
+- `QDnsTlsAssociationRecord::MatchingType::Exact`：`0`;表示证书或SPKI数据是逐字存储在本记录中。
+- `QDnsTlsAssociationRecord::MatchingType::Sha256`：`1`;表示这是该记录中证书或SPKI数据的SHA-256校验和。
+- `QDnsTlsAssociationRecord::MatchingType::Sha512`：`2`;表示这是本记录中证书或SPKI数据的SHA-512校验和。
+- `QDnsTlsAssociationRecord::MatchingType::PrivateUse`：`255`;不适用标准含义。
+- `QDnsTlsAssociationRecord::MatchingType::PrivMatch`：`PrivateUse`;别名
+其他数值目前为预留值，但未来标准可能已非保留值。即使未提供枚举器，这些数值仍可使用该枚举。
 
 ### `enum class QDnsTlsAssociationRecord::Selector`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Selector`。
-- 属性名：`QDnsTlsAssociationRecord`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举包含TLS关联查询选择器字段的有效值。以下列表为RFC 6698第2.1.2节和RFC 7218第2.2节的最新内容。请参阅这些文档以获取关于解释该枚举的权威指导。
+- `QDnsTlsAssociationRecord::Selector::FullCertificate`：`0`;表示该记录指的是完整证书的二进制结构形式。
+- `QDnsTlsAssociationRecord::Selector::SubjectPublicKeyInfo`：`1`;表示记录指涉证书的主题和公钥信息，采用DER编码的二进制结构形式。
+- `QDnsTlsAssociationRecord::Selector::PrivateUse`：`255`;不适用标准含义。
+- `QDnsTlsAssociationRecord::Selector::Cert`：`FullCertificate`;别名
+- `QDnsTlsAssociationRecord::Selector::SPKI`：`SubjectPublicKeyInfo`;别名
+- `QDnsTlsAssociationRecord::Selector::PrivSel`：`PrivateUse`;别名
+其他数值目前为预留值，但未来标准可能已非保留值。即使未提供枚举器，这些数值仍可使用该枚举。
 
 ### `QDnsTlsAssociationRecord::QDnsTlsAssociationRecord()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的TLS协会记录。
 
 ### `QDnsTlsAssociationRecord::QDnsTlsAssociationRecord(const QDnsTlsAssociationRecord &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QDnsTlsAssociationRecord &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[noexcept] QDnsTlsAssociationRecord::~QDnsTlsAssociationRecord()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁了这个TLS关联记录对象。
 
 ### `QDnsTlsAssociationRecord::MatchingType QDnsTlsAssociationRecord::matchType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsTlsAssociationRecord::matchType` 用于计算、查询或取得与“匹配、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDnsTlsAssociationRecord::MatchingType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDnsTlsAssociationRecord::MatchingType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该记录的匹配类型字段。
 
 ### `QString QDnsTlsAssociationRecord::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsTlsAssociationRecord::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回这张唱片的名称。
 
 ### `QDnsTlsAssociationRecord::Selector QDnsTlsAssociationRecord::selector() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsTlsAssociationRecord::selector` 用于计算、查询或取得与“selector”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDnsTlsAssociationRecord::Selector`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDnsTlsAssociationRecord::Selector`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回本记录的选择器字段。
 
 ### `quint32 QDnsTlsAssociationRecord::timeToLive() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsTlsAssociationRecord::timeToLive` 用于计算、查询或取得与“时间、转换输出、Live”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该记录有效时长（秒数）。
 
 ### `QDnsTlsAssociationRecord::CertificateUsage QDnsTlsAssociationRecord::usage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDnsTlsAssociationRecord::usage` 用于计算、查询或取得与“usage”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDnsTlsAssociationRecord::CertificateUsage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDnsTlsAssociationRecord::CertificateUsage`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该记录的证书使用字段。
 
 ### `QByteArray QDnsTlsAssociationRecord::value() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QDnsTlsAssociationRecord` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该记录的二进制数据字段。对该二进制数据的解释依赖于 certificateUsage()、`selector()` 和 `matchType()` 提供的三个数值字段。
+请注意，这其实是一个二进制字段，即使是校验和，类似于 QCyrptographicHash：：result() 返回的。
 
 ### `QDnsTlsAssociationRecord &QDnsTlsAssociationRecord::operator=(const QDnsTlsAssociationRecord &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDnsTlsAssociationRecord` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDnsTlsAssociationRecord &`。
-- 参数 `other`：类型为 `const QDnsTlsAssociationRecord &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`other`的内容移入该对象。
 
 ## 6. 深入实践与常见坑
 

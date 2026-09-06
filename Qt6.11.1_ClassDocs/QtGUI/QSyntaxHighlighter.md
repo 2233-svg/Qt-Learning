@@ -83,249 +83,158 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QSyntaxHighlighter::QSyntaxHighlighter(QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSyntaxHighlighter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有给定`parent`的QSyntaxHighlighter。
+如果父节点是`QTextEdit`，则会在父文档上安装语法高亮。指定的`QTextEdit`也成为QSyntaxHighlighter的所有者。
 
 ### `[explicit] QSyntaxHighlighter::QSyntaxHighlighter(QTextDocument *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSyntaxHighlighter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QSyntaxHighlighter并将其安装在`parent`上。指定的`QTextDocument`也成为QSyntaxHighlighter的所有者。
 
 ### `[virtual noexcept] QSyntaxHighlighter::~QSyntaxHighlighter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSyntaxHighlighter` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Destructor。卸载了文本文档中的语法高亮。
 
 ### `[protected] QTextBlock QSyntaxHighlighter::currentBlock() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSyntaxHighlighter::currentBlock` 用于计算、查询或取得与“当前、阻塞或屏蔽”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBlock`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlock`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前文本块。
 
 ### `[protected] int QSyntaxHighlighter::currentBlockState() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSyntaxHighlighter::currentBlockState` 用于计算、查询或取得与“当前、阻塞或屏蔽、State”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前文本块的状态。如果未设置值，返回值为-1。
 
 ### `[protected] QTextBlockUserData *QSyntaxHighlighter::currentBlockUserData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSyntaxHighlighter::currentBlockUserData` 用于计算、查询或取得与“当前、阻塞或屏蔽、User、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextBlockUserData *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextBlockUserData *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回之前附加在当前文本块上的`QTextBlockUserData`对象。
 
 ### `QTextDocument *QSyntaxHighlighter::document() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSyntaxHighlighter::document` 用于计算、查询或取得与“document”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTextDocument *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTextDocument *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回安装该语法高亮的`QTextDocument`。
 
 ### `[protected] QTextCharFormat QSyntaxHighlighter::format(int position) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QTextCharFormat`。
-- 参数 `position`：类型为 `int`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回格式在语法高亮当前文本块内的 `position`。
 
 ### `[pure virtual protected] void QSyntaxHighlighter::highlightBlock(const QString &text)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSyntaxHighlighter::highlightBlock` 用于执行与“highlight、阻塞或屏蔽”相关的操作。调用时要先确认当前状态和 `text` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+高亮给定的文本块。当富文本引擎需要时调用此功能，即文本块已更改。
+要提供自己的语法高亮，你需要子类 `QSyntaxHighlighter` 并重新实现 highlightBlock()。在重实现中，你应解析该块的 `text`，并根据需要多次调用 `setFormat()`，以应用所需的字体和颜色更改。例如：
+详见详细说明，了解如何使用`setCurrentBlockState()`、`currentBlockState()`和`previousBlockState()`来处理跨多个文本块的句法结构。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `text`：类型为 `const QString &`。没有默认值，调用时必须提供。文本内容。要区分 Unicode 字符串和 UTF-8/本地编码字节，必要时明确转换。
+```cpp
+ void MyHighlighter::highlightBlock(const QString &text)
+ {
+     QTextCharFormat myClassFormat;
+     myClassFormat.setFontWeight(QFont::Bold);
+     myClassFormat.setForeground(Qt::darkMagenta);
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     QRegularExpression expression("\\bMy[A-Za-z]+\\b");
+     QRegularExpressionMatchIterator i = expression.globalMatch(text);
+     while (i.hasNext()) {
+         QRegularExpressionMatch match = i.next();
+         setFormat(match.capturedStart(), match.capturedLength(), myClassFormat);
+     }
+ }
+```
 
 ### `[protected] int QSyntaxHighlighter::previousBlockState() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSyntaxHighlighter::previousBlockState` 用于计算、查询或取得与“previous、阻塞或屏蔽、State”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回语法高亮器当前区块之前文本块的结束状态。如果之前没有设置过值，返回值为-1。
 
 ### `[slot] void QSyntaxHighlighter::rehighlight()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `rehighlight`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把高亮重新应用到整个文档上。
 
 ### `[slot] void QSyntaxHighlighter::rehighlightBlock(const QTextBlock &block)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `rehighlightBlock`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `block`：类型为 `const QTextBlock &`。没有默认值，调用时必须提供。传入 `const QTextBlock &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重新应用高光给给出的`QTextBlock` `block`。
 
 ### `[protected] void QSyntaxHighlighter::setCurrentBlockState(int newState)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentBlockState`。调用它会改变 `QSyntaxHighlighter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newState`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将当前文本块的状态设置为`newState`。
 
 ### `[protected] void QSyntaxHighlighter::setCurrentBlockUserData(QTextBlockUserData *data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentBlockUserData`。调用它会改变 `QSyntaxHighlighter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将给定`data`附加到当前文本块上。所有权转移给底层文本文档，即当相应的文本块被删除时，提供的`QTextBlockUserData`对象将被删除。
+`QTextBlockUserData` 可以用来存储自定义设置。在语法高亮方面，它作为缓存存储特别有趣，方便你在解析段落文本时发现这些信息。
+例如，在解析文本时，你可以跟踪遇到的括号字符（'{[（' 等），并将其相对位置和实际 `QChar` 存储在由 `QTextBlockUserData` 衍生的简单类中：
+在相关编辑器的光标导航中，你可以询问当前`QTextBlock`（通过`QTextCursor::block()`函数检索）是否有用户数据对象，并将其投射到你的`BlockData`对象。然后你可以检查当前光标位置是否与之前记录的括号位置匹配，并根据括号类型（开或闭）找到同一层的下一个开或闭合括号。
+这样你可以做视觉上的括号匹配，并从当前光标位置高亮到匹配的括号。这样你更容易发现代码中缺少的括号，并在编辑大量括号的代码时找到对应的开闭括号位置。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `data`：类型为 `QTextBlockUserData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
+```cpp
+ struct ParenthesisInfo
+ {
+     QChar character;
+     int position;
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ struct BlockData : public QTextBlockUserData
+ {
+     QList<ParenthesisInfo> parentheses;
+ };
+```
 
 ### `void QSyntaxHighlighter::setDocument(QTextDocument *doc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocument`。调用它会改变 `QSyntaxHighlighter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `doc`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。传入 `QTextDocument *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在给定的`QTextDocument` `doc`上安装语法高亮器。一个`QSyntaxHighlighter`一次只能与一个文档一起使用。
 
 ### `[protected] void QSyntaxHighlighter::setFormat(int start, int count, const QTextCharFormat &format)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QSyntaxHighlighter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `const QTextCharFormat &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该功能应用于语法高亮器的当前文本块（即传递给`highlightBlock()`函数的文本）。
+指定的`format`从`start`位置应用到文本，持续约`count`个字符（如果`count`为0，则不做任何操作）。`format`中设置的格式属性在显示时与文档中直接存储的格式信息合并，例如之前在`QTextCursor`函数中设置的。注意文档本身不会被通过该函数设置的格式修改。
 
 ### `[protected] void QSyntaxHighlighter::setFormat(int start, int count, const QColor &color)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QSyntaxHighlighter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `color`：类型为 `const QColor &`。没有默认值，调用时必须提供。传入 `const QColor &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`start`位置开始，将指定的`color`应用到当前文本块，长度为`count`个字符。
+当前文本块的其他属性，例如字体和背景颜色，重置为默认值。
 
 ### `[protected] void QSyntaxHighlighter::setFormat(int start, int count, const QFont &font)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QSyntaxHighlighter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `font`：类型为 `const QFont &`。没有默认值，调用时必须提供。传入 `const QFont &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`start`位置开始，将指定的`font`应用到当前文本块，长度为`count`个字符。
+当前文本块的其他属性，例如字体和背景颜色，重置为默认值。
 
 ## 6. 深入实践与常见坑
 

@@ -77,171 +77,86 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 12 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiShaderStage::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderStage` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QRhiShaderStage`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定着色器阶段的类型。
+- `QRhiShaderStage::Vertex`：`0`;顶点阶段
+- `QRhiShaderStage::TessellationControl`：`1`;镶嵌控制（船体着色器）阶段。仅在支持`QRhi::Tessellation`功能时使用。
+- `QRhiShaderStage::TessellationEvaluation`：`2`;镶嵌评估（领域着色器）阶段。仅在支持`QRhi::Tessellation`特性时使用。
+- `QRhiShaderStage::Fragment`：`4`;片段（像素着色器）阶段
+- `QRhiShaderStage::Compute`：`5`;计算阶段。仅在支持`QRhi::Compute`特性时使用。
+- `QRhiShaderStage::Geometry`：`3`;几何阶段。仅在支持`QRhi::GeometryShader`特征时使用。
 
 ### `[noexcept] QRhiShaderStage::QRhiShaderStage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderStage` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为顶点阶段构建一个着色器阶段描述，`QShader`为空。
 
 ### `QRhiShaderStage::QRhiShaderStage(QRhiShaderStage::Type type, const QShader &shader, QShader::Variant v = QShader::StandardShader)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderStage` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `QRhiShaderStage::Type`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `shader`：类型为 `const QShader &`。没有默认值，调用时必须提供。传入 `const QShader &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `v`：类型为 `QShader::Variant`。默认值为 `QShader::StandardShader`。传入 `QShader::Variant` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个着色器阶段描述，包含阶段的`type`和`shader`。
+着色器变体默认`v`为`QShader::StandardShader`。一个`QShader`包含多个源码和二进制版本的着色器。此外，着色器还可以包含略有修改代码的变体。`v`可用于选择所需的变体。
 
 ### `void QRhiShaderStage::setShader(const QShader &s)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShader`。调用它会改变 `QRhiShaderStage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `s`：类型为 `const QShader &`。没有默认值，调用时必须提供。传入 `const QShader &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置着色器集合`s`。
 
 ### `void QRhiShaderStage::setShaderVariant(QShader::Variant v)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setShaderVariant`。调用它会改变 `QRhiShaderStage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `v`：类型为 `QShader::Variant`。没有默认值，调用时必须提供。传入 `QShader::Variant` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置请求的着色器变体`v`。
 
 ### `void QRhiShaderStage::setType(QRhiShaderStage::Type t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setType`。调用它会改变 `QRhiShaderStage` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `QRhiShaderStage::Type`。没有默认值，调用时必须提供。传入 `QRhiShaderStage::Type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将舞台类型设置为`t`。在实际操作中很少需要 Setter。大多数应用在大多数情况下可能会使用 `QRhiShaderStage` 构造器。
 
 ### `QShader QRhiShaderStage::shader() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderStage::shader` 用于计算、查询或取得与“shader”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QShader`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QShader`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回图形流水线中用于该阶段的`QShader`。
 
 ### `QShader::Variant QRhiShaderStage::shaderVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderStage::shaderVariant` 用于计算、查询或取得与“shader、Variant”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QShader::Variant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QShader::Variant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回请求的着色器变体。
 
 ### `QRhiShaderStage::Type QRhiShaderStage::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiShaderStage::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiShaderStage::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiShaderStage::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回关卡类型。
 
 ### `[noexcept] size_t qHash(const QRhiShaderStage &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRhiShaderStage::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRhiShaderStage &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRhiShaderStage &a, const QRhiShaderStage &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderStage` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiShaderStage &`。没有默认值，调用时必须提供。传入 `const QRhiShaderStage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiShaderStage &`。没有默认值，调用时必须提供。传入 `const QRhiShaderStage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QRhiShaderStage` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QRhiShaderStage &a, const QRhiShaderStage &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiShaderStage` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiShaderStage &`。没有默认值，调用时必须提供。传入 `const QRhiShaderStage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiShaderStage &`。没有默认值，调用时必须提供。传入 `const QRhiShaderStage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QRhiShaderStage`对象`a`和`b`的值相等，返回`true`。
 
 ## 6. 深入实践与常见坑
 

@@ -178,1298 +178,933 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 96 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.10] enum class QSortFilterProxyModel::Directionflags QSortFilterProxyModel::Directions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Directionflags QSortFilterProxyModel::Directions`。
-- 属性名：`QSortFilterProxyModel`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定当滤波器参数变更时，自定义滤波器的适用方向。
+- `QSortFilterProxyModel::Direction::Rows`：`0x01`;滤波器适用于`rows`
+- `QSortFilterProxyModel::Direction::Columns`：`0x02`;滤波器适用于`columns`
+- `QSortFilterProxyModel::Direction::Both`：`Rows | Columns`;过滤器适用于行和列
+这个枚举是在Qt 6.10引入的。
+Directions 类型是 QFlags 的 typedef<Direction>。它存储 Direction 值的 OR 组合。
 
 ### `[bindable, since 6.0] autoAcceptChildRows : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setAutoAcceptChildRows(...)` 设置，之后用 `autoAcceptChildRows()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+如果成立，代理模型不会过滤掉被接受行的子节点，即使这些子节点本身也会被过滤掉。
+默认值为假。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`autoAcceptChildRows`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoAcceptChildRows()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] dynamicSortFilter : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setDynamicSortFilter(...)` 设置，之后用 `dynamicSortFilter()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性适用于代理模型在源模型内容变化时是否动态排序和过滤。
+注意，当dynamicSortFilter为真时，不应通过代理模型更新源模型。例如，如果你在`QComboBox`上设置代理模型，使用更新模型的函数，如`addItem()`，将无法如预期般工作。另一种方法是将dynamicSortFilter设为false，添加`QComboBox`项后调用`sort()`。
+默认值为真。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`dynamicSortFilter`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dynamicSortFilter()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] filterCaseSensitivity : Qt::CaseSensitivity`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setCaseSensitivity(...)` 设置，之后用 `CaseSensitivity()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于过滤源模型内容的`QRegularExpression`模式的大小写敏感性。
+默认情况下，滤波器是区分大小写的。
+注意：设置该属性会将新的大小写敏感性传播到`filterRegularExpression`属性，从而破坏其绑定。同样，显式设置`filterRegularExpression`会改变当前大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 属性类型：`Qt::CaseSensitivity`。
-- 属性名：`filterCaseSensitivity`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterCaseSensitivity()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] filterKeyColumn : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setFilterKeyColumn(...)` 设置，之后用 `filterKeyColumn()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的关键字的读取列。
+默认值为0。如果值为-1，则所有列的键都会读取。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`filterKeyColumn`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterKeyColumn()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] filterRegularExpression : QRegularExpression`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setFilterRegularExpression(...)` 设置，之后用 `filterRegularExpression()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的`QRegularExpression`。
+通过`QRegularExpression`重载设置该属性会覆盖当前`filterCaseSensitivity`。默认情况下，`QRegularExpression`是一个空字符串，所有内容都匹配。
+如果没有设置`QRegularExpression`或字符串为空，源模型中的所有信息都会被接受。
+注意：设置该属性会将新正则表达式的大小写敏感性传播到`filterCaseSensitivity`属性，从而破坏其绑定。同样，显式设置`filterCaseSensitivity`会改变当前正则表达式的大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 属性类型：`QRegularExpression`。
-- 属性名：`filterRegularExpression`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterRegularExpression()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] filterRole : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setFilterRole(...)` 设置，之后用 `filterRole()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：该特性支持`QProperty`绑定。
+该属性保留了用于查询源模型数据的项目角色，用于筛选项目时。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`filterRole`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterRole()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] isSortLocaleAware : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的状态/能力属性。通常通过 `isSortLocaleAware()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+注意：此特性支持`QProperty`绑定。
+该属性保留了用于排序时用于比较字符串的局部感知设置。
+默认情况下，排序不具备本地感知能力。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`isSortLocaleAware`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isSortLocaleAware()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] recursiveFilteringEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setRecursiveFilteringEnabled(...)` 设置，之后用 `recursiveFilteringEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性决定是否将滤波器递归应用于子节点，对于任意匹配的子节点，其父节点也会被可见。
+默认值为假。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`recursiveFilteringEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `recursiveFilteringEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] sortCaseSensitivity : Qt::CaseSensitivity`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setCaseSensitivity(...)` 设置，之后用 `CaseSensitivity()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于排序时用于比较字符串的大小写敏感性设置。
+默认情况下，排序是区分大小写的。
 
-**签名拆解：**
-
-- 属性类型：`Qt::CaseSensitivity`。
-- 属性名：`sortCaseSensitivity`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortCaseSensitivity()` 读取当前值；它不会修改应用状态。
 
 ### `[bindable] sortRole : int`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的配置属性。初始化或状态切换时通过 `setSortRole(...)` 设置，之后用 `sortRole()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询源模型数据的项目角色，用于排序物品。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 属性类型：`int`。
-- 属性名：`sortRole`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortRole()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QSortFilterProxyModel::QSortFilterProxyModel(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于给定`parent`构造一个排序滤波器模型。
 
 ### `[virtual noexcept] QSortFilterProxyModel::~QSortFilterProxyModel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+破坏了这种排序过滤器模型。
 
 ### `[signal, since 6.0] void QSortFilterProxyModel::autoAcceptChildRowsChanged(bool autoAcceptChildRows)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `autoAcceptChildRowsChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+注意：此特性支持`QProperty`绑定。
+如果成立，代理模型不会过滤掉被接受行的子节点，即使这些子节点本身也会被过滤掉。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `autoAcceptChildRows`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `autoAcceptChildRows` 的变化，不要把它当作普通函数主动调用。
 
 ### `[protected, since 6.9] void QSortFilterProxyModel::beginFilterChange()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginFilterChange`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+准备更换滤网。
+如果你正在实现自定义过滤（例如 `filterAcceptsRow()`），并且你的过滤参数即将被更改，应该调用这个函数。
+一旦过滤器被更改，调用`endFilterChange()`，表示行过滤器时`Direction::Rows`，列过滤器时`Direction::Columns`，或者 `Direction::Columns`|`Direction::Rows`如果行和列都被过滤。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MySortFilterProxyModel::setFilterMaximumDate(QDate date)
+ {
+     beginFilterChange();
+     maxDate = date;
+     endFilterChange(QSortFilterProxyModel::Direction::Rows);
+ }
+```
 
 ### `[override virtual] QModelIndex QSortFilterProxyModel::buddy(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::buddy` 用于计算、查询或取得与“buddy”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::buddy`（const QModelIndex & index） const.
 
 ### `[override virtual] bool QSortFilterProxyModel::canFetchMore(const QModelIndex &parent) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `canFetchMore`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::canFetchMore`（const QModelIndex &parent） const.
 
 ### `[override virtual] int QSortFilterProxyModel::columnCount(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::columnCount` 用于计算、查询或取得与“列、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::columnCount`（const QModelIndex 和 parent） const.
+返回给定`parent`子节点的列数。
+在大多数子类中，列的数量与`parent`无关。
+注意：在实现基于表的模型时，当父模型有效时，columnCount() 应返回 0。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QVariant QSortFilterProxyModel::data(const QModelIndex &index, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QSortFilterProxyModel` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 通常与 role、QModelIndex 有关；数据变化后发 `dataChanged`，不要在 data() 中修改模型。
+重实现自：`QAbstractProxyModel::data`（const QModelIndex &proxyIndex， int role） const.
 
 ### `[override virtual] bool QSortFilterProxyModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::dropMimeData` 用于计算、查询或取得与“drop、Mime、数据访问”相关的操作。调用时要先确认当前状态和 `data`、`action`、`row`、`column`、`parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `const QMimeData *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `action`：类型为 `Qt::DropAction`。没有默认值，调用时必须提供。传入 `Qt::DropAction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::dropMimeData`（const QMimeData *data， Qt：:D ropAction action， int row， int column， const QModelIndex &parent）.
 
 ### `[protected, since 6.10] void QSortFilterProxyModel::endFilterChange(QSortFilterProxyModel::Directions directions = Direction::Both)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endFilterChange`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `directions`：类型为 `QSortFilterProxyModel::Directions`。默认值为 `Direction::Both`。传入 `QSortFilterProxyModel::Directions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在滤波参数变更后，当前的过滤无效。
+如果你实现了自定义过滤（例如`filterAcceptsRow()`），且过滤器参数发生了变化，应调用这个函数。`directions`参数指定自定义过滤器是影响行、列还是两者。
+当滤波器参数即将变更时调用`beginFilterChange()`，并在滤波器参数更改后调用该函数。调用时，`directions`设置为`Direction::Rows`用于行滤波器（即实现了`filterAcceptsRow()`），列滤波器`Direction::Columns`（即实现了`filterAcceptsColumn()`），如果两个滤波器函数都实现了，则`Direction::Both`。
 
 ### `[override virtual] void QSortFilterProxyModel::fetchMore(const QModelIndex &parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的核心操作 `fetchMore`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::fetchMore`（const QModelIndex & parent）。
 
 ### `[virtual protected] bool QSortFilterProxyModel::filterAcceptsColumn(int source_column, const QModelIndex &source_parent) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::filterAcceptsColumn` 用于计算、查询或取得与“filter、Accepts、列”相关的操作。调用时要先确认当前状态和 `source_column`、`source_parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `source_column`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `source_parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果列中由给定`source_column`和`source_parent`应包含在模型中，返回`true`;否则返回`false`。
+注意：默认实现总是返回`true`。您必须重新实现该方法才能获得描述的行为。
 
 ### `[virtual protected] bool QSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::filterAcceptsRow` 用于计算、查询或取得与“filter、Accepts、行”相关的操作。调用时要先确认当前状态和 `source_row`、`source_parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `source_row`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `source_parent`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果给定`source_row`和`source_parent`所示的行中的项目应包含在模型中，返回`true`;否则返回 false。
+默认实现返回`true`，如果相关项所持有的值与过滤字符串、万用符字符串或正则表达式匹配。
+注意：默认情况下，`Qt::DisplayRole`用于判断该行是否应被接受。这可以通过设置`filterRole`属性来更改。
 
 ### `[signal] void QSortFilterProxyModel::filterCaseSensitivityChanged(Qt::CaseSensitivity filterCaseSensitivity)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 发出的通知信号 `filterCaseSensitivityChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于过滤源模型内容的`QRegularExpression`模式的大小写敏感性。
+默认情况下，滤波器是区分大小写的。
+注意：设置该属性会将新的大小写敏感性传播到`filterRegularExpression`属性，从而破坏其绑定。同样，显式设置`filterRegularExpression`会改变当前大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filterCaseSensitivity`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `filterCaseSensitivity` 的变化，不要把它当作普通函数主动调用。
 
 ### `[signal] void QSortFilterProxyModel::filterRoleChanged(int filterRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 发出的通知信号 `filterRoleChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：该特性支持`QProperty`绑定。
+该属性保留了用于查询源模型数据的项目角色，用于筛选项目时。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filterRole`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `filterRole` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual] Qt::ItemFlags QSortFilterProxyModel::flags(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `Qt::ItemFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ItemFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::flags`（const QModelIndex & index） const.
 
 ### `[override virtual] bool QSortFilterProxyModel::hasChildren(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasChildren`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::hasChildren`（const QModelIndex 和 parent） const.
 
 ### `[override virtual] QVariant QSortFilterProxyModel::headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::headerData` 用于计算、查询或取得与“header、数据访问”相关的操作。调用时要先确认当前状态和 `section`、`orientation`、`role` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::headerData`（整数节，Qt：：Orientation orientation， int role）const.
 
 ### `[override virtual] QModelIndex QSortFilterProxyModel::index(int row, int column, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `row`、`column`、`parent` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::index`（整数行，整数列，cont QModelIndex 和parent）const.
+返回由给定`row`、`column`和`parent`索引指定模型中项目的索引。
+在子类中重新实现该函数时，调用 `createIndex()` 生成模型索引，其他组件可以用来引用模型中的项。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QSortFilterProxyModel::insertColumns(int column, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSortFilterProxyModel` 添加依赖、数据或子对象的 API `insertColumns`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::insertColumns`（整数列，整数计数，条件QModelIndex和parent）。
+支持该方法的模型会在给定`column`之前插入`count`列。每个新列中的项都是`parent`模型索引所表示项的子项。
+如果`column`为0，列会加在任何已有列之前。
+如果`column`是`columnCount()`，则这些列会附加到任何已有的列上。
+如果`parent`没有子节点，则插入一行，列`count`。
+如果列成功插入，返回`true`;否则返回`false`。
+基类实现什么都不做，返回`false`。
+如果你实现了自己的模型，如果你想支持插入，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QSortFilterProxyModel::insertRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSortFilterProxyModel` 添加依赖、数据或子对象的 API `insertRows`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::insertRows`（整数行，整数计数，cont QModelIndex 和父）。
+注意：该函数的基类实现不做任何操作，返回`false`。
+支持此操作的模型会在给定`row`之前插入`count`行。新行中的项将是`parent`模型索引所表示项的子项。
+如果`row`为0，则这些行会在父行中的任何已有行之前加。
+如果`row` `rowCount()`，则这些行会附加到父行中已有的行上。
+如果`parent`没有子节点，则插入一列`count`行。
+如果行成功插入，返回`true`;否则返回`false`。
+如果你实现了自己的模型，如果你想支持插入，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。无论哪种情况，你都需要调用 `beginInsertRows()` 和 `endInsertRows()`，通知其他组件模型已更改。
+注意：该函数可以通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[slot] void QSortFilterProxyModel::invalidate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `invalidate`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使当前的排序和过滤失效。
 
 ### `[protected, since 6.0, until 6.13] void QSortFilterProxyModel::invalidateColumnsFilter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::invalidateColumnsFilter` 用于执行与“invalidate、列、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数计划在 6.13 版本中弃用。
+改用`beginFilterChange()`和`endFilterChange`（`Direction::Rows`）。
+使当前列的过滤失效。
+如果你实现了自定义过滤（`filterAcceptsColumn()`），并且你的过滤参数发生了变化，应该调用这个函数。这和`invalidateFilter()`不同，它不会调用`filterAcceptsRow()`，只调用`filterAcceptsColumn()`。如果你想隐藏或显示行不变的列，可以用这个代替`invalidateFilter()`。
+在滤波参数改变之前，先打电话给`beginFilterChange()`。
 
 ### `[protected, until 6.13] void QSortFilterProxyModel::invalidateFilter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::invalidateFilter` 用于执行与“invalidate、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该函数计划在 6.13 版本中弃用。
+改用`beginFilterChange()`和`endFilterChange()`。
+使当前的过滤失效。
+如果你实现了自定义过滤（例如 `filterAcceptsRow()`），并且滤波参数发生了变化，应该调用这个函数。
+在滤网参数改变之前，先打电话给`beginFilterChange()`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MySortFilterProxyModel::setFilterMaximumDate(QDate date)
+ {
+     beginFilterChange();
+     maxDate = date;
+     endFilterChange(QSortFilterProxyModel::Direction::Rows);
+ }
+```
 
 ### `[protected, since 6.0, until 6.13] void QSortFilterProxyModel::invalidateRowsFilter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::invalidateRowsFilter` 用于执行与“invalidate、行、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数计划在 6.13 版本中弃用。
+改用`beginFilterChange()`和`endFilterChange`（`Direction::Columns`）。
+使当前行的过滤失效。
+如果你实现了自定义过滤（通过 `filterAcceptsRow()`），并且你的过滤参数发生了变化，应该调用这个函数。这和 `invalidateFilter()` 不同，它不会调用 `filterAcceptsColumn()`，只调用 `filterAcceptsRow()`。如果你想隐藏或显示列不变的行，可以用这个代替 `invalidateFilter()`。
+在你的过滤器参数改变之前，先打电话给`beginFilterChange()`。
 
 ### `[virtual protected] bool QSortFilterProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::lessThan` 用于计算、查询或取得与“less、Than”相关的操作。调用时要先确认当前状态和 `source_left`、`source_right` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `source_left`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `source_right`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果给定索引`source_left`所引用的项值小于该索引`source_right`所引用项项的值，则返回`true`，否则返回`false`。
+该函数作为排序时的<操作符，处理以下`QVariant`类型：
+- `QMetaType::Int`
+- `QMetaType::UInt`
+- `QMetaType::LongLong`
+- `QMetaType::ULongLong`
+- `QMetaType::Float`
+- `QMetaType::Double`
+- `QMetaType::QChar`
+- `QMetaType::QDate`
+- `QMetaType::QTime`
+- `QMetaType::QDateTime`
+- `QMetaType::QString`
+其他类型会用`QVariant::toString()`转换成`QString`。
+`QString`的比较默认是区分大小写的;这可以通过`sortCaseSensitivity`属性进行更改。
+默认情况下，比较时使用与 `QModelIndex`es 关联的 `Qt::DisplayRole`。这可以通过设置 `sortRole` 属性来更改。
+注意：传递的索引对应源模型。
 
 ### `[override virtual] QModelIndex QSortFilterProxyModel::mapFromSource(const QModelIndex &sourceIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapFromSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `sourceIndex`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::mapFromSource`（const QModelIndex & sourceIndex） const.
+返回给定源模型`sourceIndex`的`QSortFilterProxyModel`中的模型索引。
+重新实现该函数，返回代理模型中对应源模型`sourceIndex`的模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QItemSelection QSortFilterProxyModel::mapSelectionFromSource(const QItemSelection &sourceSelection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapSelectionFromSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QItemSelection`。
-- 参数 `sourceSelection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimpments： `QAbstractProxyModel::mapSelectionFromSource`（const QItemSelection &sourceSelection） const.
+返回从指定 `sourceSelection`映射的代理选择。
+重新实现此方法，将源选择映射到代理选择。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[override virtual] QItemSelection QSortFilterProxyModel::mapSelectionToSource(const QItemSelection &proxySelection) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapSelectionToSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QItemSelection`。
-- 参数 `proxySelection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimpments： `QAbstractProxyModel::mapSelectionToSource`（const QItemSelection &proxySelection） const.
+返回从指定`proxySelection`映射的源选择。
+重新实现该方法，将代理选择映射到源选择。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QModelIndex QSortFilterProxyModel::mapToSource(const QModelIndex &proxyIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapToSource`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `proxyIndex`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::mapToSource`（const QModelIndex & proxyIndex） const.
+返回对应给定`proxyIndex`的源模型索引，该索引来自排序滤波器模型。
+重新实现该函数，返回源模型中对应代理模型`proxyIndex`的模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QModelIndexList QSortFilterProxyModel::match(const QModelIndex &start, int role, const QVariant &value, int hits = 1, Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchStartsWith|Qt::MatchWrap)) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::match` 用于计算、查询或取得与“匹配”相关的操作。调用时要先确认当前状态和 `start`、`role`、`value`、`hits`、`flags` 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数 `start`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `hits`：类型为 `int`。默认值为 `1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `Qt::MatchFlags`。默认值为 `Qt::MatchFlags(Qt::MatchStartsWith|Qt::MatchWrap)`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::match`（const QModelIndex &start， int role， const QVariant &value， int hits， Qt：：MatchFlags flags） const.
+返回`start`索引列中存储在指定`value`下的数据与`role`匹配的项的索引列表。搜索的执行方式由给出的`flags`定义。返回的列表可能是空的。还请注意，如果使用代理模型，列表中结果的顺序可能与模型中的顺序不一致。结果的顺序不能被依赖。
+搜索从`start`索引开始，持续直到匹配数据项数达到`hits`，搜索到达最后一行，或再次达到`start`——具体取决于`flags`中是否指定了`MatchWrap`。如果你想搜索所有匹配的项目，使用`hits` = -1。
+默认情况下，该函数会对所有项目进行环绕、基于字符串的比较，搜索以`value`指定搜索词开头的项目。
+注意：该函数的默认实现仅搜索列。重新实现该函数以包含不同的搜索行为。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] QMimeData *QSortFilterProxyModel::mimeData(const QModelIndexList &indexes) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::mimeData` 用于计算、查询或取得与“mime、数据访问”相关的操作。调用时要先确认当前状态和 `indexes` 的有效范围；返回类型是 `QMimeData *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeData *`。
-- 参数 `indexes`：类型为 `const QModelIndexList &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::mimeData`（const QModelIndexList & indexes） const.
 
 ### `[override virtual] QStringList QSortFilterProxyModel::mimeTypes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::mimeTypes` 用于计算、查询或取得与“mime、Types”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractProxyModel::mimeTypes()` const.
 
 ### `[override virtual] QModelIndex QSortFilterProxyModel::parent(const QModelIndex &child) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::parent` 用于计算、查询或取得与“父对象”相关的操作。调用时要先确认当前状态和 `child` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `child`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。子对象或子节点；要确认它是否由父对象接管，以及调用后原指针是否仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::parent`（const QModelIndex & index） const.
+返回模型项目的父项，并返回给定`index`。如果该项没有父项，则返回无效`QModelIndex`。
+在暴露树状数据结构的模型中，一个常用的惯例是只有第一列的项有子节点。在这种情况下，在子类中重新实现该函数时，返回`QModelIndex`的列将为0。
+在将该函数重新实现到子类中时，要注意避免调用`QModelIndex`成员函数，如`QModelIndex::parent()`，因为属于你模型的索引会直接调用你的实现，导致无限递归。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[signal] void QSortFilterProxyModel::recursiveFilteringEnabledChanged(bool recursiveFilteringEnabled)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 发出的通知信号 `recursiveFilteringEnabledChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：此特性支持`QProperty`绑定。
+该属性决定是否将滤波器递归应用于子节点，对于任意匹配的子节点，其父节点也会被可见。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `recursiveFilteringEnabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `recursiveFilteringEnabled` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual] bool QSortFilterProxyModel::removeColumns(int column, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeColumns`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重构：`QAbstractItemModel::removeColumns`（整数列，整数计数，函数QModelIndex 和parent）。
+在支持此功能的模型中，会从模型中移除`count`列，起始于父 `parent` 下给定`column`。
+如果列被成功移除，返回 返回`true`;否则返回 `false`。
+基类实现什么都不做，只返回`false`。
+如果你实现了自己的模型，如果你想支持删除，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QSortFilterProxyModel::removeRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRows`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::removeRows`（整数行，整数计数，函数QModelIndex 和父）。
+在支持此功能的模型中，会从模型中移除父`parent`下以给定`row`为起始的`count`行。
+如果行被成功移除，返回`true`;否则返回`false`。
+基类实现什么都不做，只返回`false`。
+如果你实现了自己的模型，如果你想支持删除，可以重新实现这个函数。或者，你也可以提供自己的 API 来修改数据。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] int QSortFilterProxyModel::rowCount(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::rowCount`（const QModelIndex & parent）const.
+返回给定`parent`下的行数。当父节点有效时，表示 rowCount 返回的是父节点的子节点数。
+注意：在实现基于表的模型时，当父模型有效时，rowCount() 应返回 0。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[override virtual] bool QSortFilterProxyModel::setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 成功修改后要发出对应 dataChanged；同时确认 flags 包含可编辑能力。
+重实现自：`QAbstractProxyModel::setData`（const QModelIndex & index，const QVariant & value，int role）。
 
 ### `[slot] void QSortFilterProxyModel::setFilterFixedString(const QString &pattern)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setFilterFixedString`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pattern`：类型为 `const QString &`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于过滤源模型内容的固定字符串设置为给定`pattern`。
+该方法会重置正则表达式选项，但尊重大小写区分。
+注意：调用此方法会更新正则表达式，从而破坏`filterRegularExpression`的绑定。但对`filterCaseSensitivity`绑定没有影响。
 
 ### `[slot] void QSortFilterProxyModel::setFilterRegularExpression(const QString &pattern)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setFilterRegularExpression`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的`QRegularExpression`。
+通过`QRegularExpression`重载设置该属性会覆盖当前`filterCaseSensitivity`。默认情况下，`QRegularExpression`是一个空字符串，所有内容都匹配。
+如果没有设置`QRegularExpression`或字符串为空，源模型中的所有信息都会被接受。
+注意：设置该属性会将新正则表达式的大小写敏感性传播到`filterCaseSensitivity`属性，从而破坏其绑定。同样，显式设置`filterCaseSensitivity`会改变当前正则表达式的大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pattern`：类型为 `const QString &`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFilterRegularExpression(...)` 修改 `filterRegularExpression`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[slot] void QSortFilterProxyModel::setFilterWildcard(const QString &pattern)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setFilterWildcard`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pattern`：类型为 `const QString &`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于过滤源模型内容的万用符表达式设置为给定的`pattern`。
+该方法会重置正则表达式选项，但尊重大小写区分。
+注意：调用该方法会更新正则表达式，从而破坏`filterRegularExpression`的绑定。但对`filterCaseSensitivity`绑定没有影响。
 
 ### `[override virtual] bool QSortFilterProxyModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setHeaderData`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::setHeaderData`（整数部分，Qt：：Orientation orientation，const QVariant & value，整数角色）。
 
 ### `[override virtual] void QSortFilterProxyModel::setSourceModel(QAbstractItemModel *sourceModel)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSourceModel`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sourceModel`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。传入 `QAbstractItemModel *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::setSourceModel`（QAbstractItemModel *sourceModel）。
+注意：此特性支持`QProperty`绑定。
+该属性表示该代理模型的源模型。
+注意：这是一个私有信号。它可以用于信号连接，但用户不能发射。
 
 ### `[override virtual] QModelIndex QSortFilterProxyModel::sibling(int row, int column, const QModelIndex &idx) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::sibling` 用于计算、查询或取得与“sibling”相关的操作。调用时要先确认当前状态和 `row`、`column`、`idx` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `idx`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::sibling`（int 行，int column，const QModelIndex &idx） const.
 
 ### `[override virtual] void QSortFilterProxyModel::sort(int column, Qt::SortOrder order = Qt::AscendingOrder)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::sort` 用于执行与“sort”相关的操作。调用时要先确认当前状态和 `column`、`order` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。默认值为 `Qt::AscendingOrder`。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::sort`（整数列，Qt：：排序顺序）。
+按给定`order`中的`column`排序模型。如果排序`column`小于零，模型将按给定`order`中的源模型行排序。
 
 ### `[signal] void QSortFilterProxyModel::sortCaseSensitivityChanged(Qt::CaseSensitivity sortCaseSensitivity)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 发出的通知信号 `sortCaseSensitivityChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于排序时用于比较字符串的大小写敏感性设置。
+默认情况下，排序是区分大小写的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sortCaseSensitivity`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `sortCaseSensitivity` 的变化，不要把它当作普通函数主动调用。
 
 ### `int QSortFilterProxyModel::sortColumn() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::sortColumn` 用于计算、查询或取得与“sort、列”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前用于排序的列。
+返回最近使用的排序列。默认值为 -1，意味着该代理模型不进行排序。
 
 ### `[signal] void QSortFilterProxyModel::sortLocaleAwareChanged(bool sortLocaleAware)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 发出的通知信号 `sortLocaleAwareChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：此特性支持`QProperty`绑定。
+该属性保留了用于排序时用于比较字符串的局部感知设置。
+默认情况下，排序不具备本地感知能力。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sortLocaleAware`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `isSortLocaleAware` 的变化，不要把它当作普通函数主动调用。
 
 ### `Qt::SortOrder QSortFilterProxyModel::sortOrder() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::sortOrder` 用于计算、查询或取得与“sort、Order”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::SortOrder`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::SortOrder`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前用于排序的顺序。
+这会返回最近使用的排序顺序。默认值是`Qt::AscendingOrder`。
 
 ### `[signal] void QSortFilterProxyModel::sortRoleChanged(int sortRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 发出的通知信号 `sortRoleChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询源模型数据的项目角色，用于排序物品。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sortRole`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `sortRole` 的变化，不要把它当作普通函数主动调用。
 
 ### `[override virtual] QSize QSortFilterProxyModel::span(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::span` 用于计算、查询或取得与“span”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractProxyModel::span`（const QModelIndex & index） const.
 
 ### `[override virtual] Qt::DropActions QSortFilterProxyModel::supportedDropActions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::supportedDropActions` 用于计算、查询或取得与“supported、Drop、Actions”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::DropActions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DropActions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractProxyModel::supportedDropActions()` const.
 
 ### `(since 6.10) enum class Direction { Rows, Columns, Both }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定当滤波器参数变更时，自定义滤波器的适用方向。
+- `QSortFilterProxyModel::Direction::Rows`：`0x01`;滤波器适用于`rows`
+- `QSortFilterProxyModel::Direction::Columns`：`0x02`;滤波器适用于`columns`
+- `QSortFilterProxyModel::Direction::Both`：`Rows | Columns`;过滤器适用于行和列
+这个枚举是在Qt 6.10引入的。
+Directions 类型是 QFlags 的 typedef<Direction>。它存储 Direction 值的 OR 组合。
 
 ### `flags Directions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSortFilterProxyModel` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于指定当滤波器参数变更时，自定义滤波器的适用方向。
+- `QSortFilterProxyModel::Direction::Rows`：`0x01`;滤波器适用于`rows`
+- `QSortFilterProxyModel::Direction::Columns`：`0x02`;滤波器适用于`columns`
+- `QSortFilterProxyModel::Direction::Both`：`Rows | Columns`;过滤器适用于行和列
+这个枚举是在Qt 6.10引入的。
+Directions 类型是 QFlags 的 typedef<Direction>。它存储 Direction 值的 OR 组合。
 
 ### `bool autoAcceptChildRows() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::autoAcceptChildRows` 用于计算、查询或取得与“auto、接受、Child、行”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+如果成立，代理模型不会过滤掉被接受行的子节点，即使这些子节点本身也会被过滤掉。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `autoAcceptChildRows()` 读取当前值；它不会修改应用状态。
 
 ### `QBindable<bool> bindableAutoAcceptChildRows()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableAutoAcceptChildRows`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+如果成立，代理模型不会过滤掉被接受行的子节点，即使这些子节点本身也会被过滤掉。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`QBindable<bool>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableAutoAcceptChildRows()` 取得 `autoAcceptChildRows` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<bool> bindableDynamicSortFilter()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableDynamicSortFilter`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性适用于代理模型在源模型内容变化时是否动态排序和过滤。
+注意，当dynamicSortFilter为真时，不应通过代理模型更新源模型。例如，如果你在`QComboBox`上设置代理模型，使用更新模型的函数，如`addItem()`，将无法如预期般工作。另一种方法是将dynamicSortFilter设为false，添加`QComboBox`项后调用`sort()`。
+默认值为真。
 
-**签名拆解：**
-
-- 返回值：`QBindable<bool>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableDynamicSortFilter()` 取得 `dynamicSortFilter` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<Qt::CaseSensitivity> bindableFilterCaseSensitivity()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableFilterCaseSensitivity`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于过滤源模型内容的`QRegularExpression`模式的大小写敏感性。
+默认情况下，滤波器是区分大小写的。
+注意：设置该属性会将新的大小写敏感性传播到`filterRegularExpression`属性，从而破坏其绑定。同样，显式设置`filterRegularExpression`会改变当前大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`QBindable<Qt::CaseSensitivity>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableFilterCaseSensitivity()` 取得 `filterCaseSensitivity` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<int> bindableFilterKeyColumn()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableFilterKeyColumn`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的关键字的读取列。
+默认值为0。如果值为-1，则所有列的键都会读取。
 
-**签名拆解：**
-
-- 返回值：`QBindable<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableFilterKeyColumn()` 取得 `filterKeyColumn` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<QRegularExpression> bindableFilterRegularExpression()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableFilterRegularExpression`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的`QRegularExpression`。
+通过`QRegularExpression`重载设置该属性会覆盖当前`filterCaseSensitivity`。默认情况下，`QRegularExpression`是一个空字符串，所有内容都匹配。
+如果没有设置`QRegularExpression`或字符串为空，源模型中的所有信息都会被接受。
+注意：设置该属性会将新正则表达式的大小写敏感性传播到`filterCaseSensitivity`属性，从而破坏其绑定。同样，显式设置`filterCaseSensitivity`会改变当前正则表达式的大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`QBindable<QRegularExpression>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableFilterRegularExpression()` 取得 `filterRegularExpression` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<int> bindableFilterRole()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableFilterRole`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：该特性支持`QProperty`绑定。
+该属性保留了用于查询源模型数据的项目角色，用于筛选项目时。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`QBindable<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableFilterRole()` 取得 `filterRole` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<bool> bindableIsSortLocaleAware()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableIsSortLocaleAware`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性保留了用于排序时用于比较字符串的局部感知设置。
+默认情况下，排序不具备本地感知能力。
 
-**签名拆解：**
-
-- 返回值：`QBindable<bool>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableIsSortLocaleAware()` 取得 `isSortLocaleAware` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<bool> bindableRecursiveFilteringEnabled()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableRecursiveFilteringEnabled`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性决定是否将滤波器递归应用于子节点，对于任意匹配的子节点，其父节点也会被可见。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`QBindable<bool>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableRecursiveFilteringEnabled()` 取得 `recursiveFilteringEnabled` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<Qt::CaseSensitivity> bindableSortCaseSensitivity()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableSortCaseSensitivity`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于排序时用于比较字符串的大小写敏感性设置。
+默认情况下，排序是区分大小写的。
 
-**签名拆解：**
-
-- 返回值：`QBindable<Qt::CaseSensitivity>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableSortCaseSensitivity()` 取得 `sortCaseSensitivity` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `QBindable<int> bindableSortRole()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableSortRole`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询源模型数据的项目角色，用于排序物品。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`QBindable<int>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `bindableSortRole()` 取得 `sortRole` 的 `QBindable`，用于建立属性绑定；只读取当前值时直接使用普通 getter。
 
 ### `bool dynamicSortFilter() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::dynamicSortFilter` 用于计算、查询或取得与“dynamic、Sort、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性适用于代理模型在源模型内容变化时是否动态排序和过滤。
+注意，当dynamicSortFilter为真时，不应通过代理模型更新源模型。例如，如果你在`QComboBox`上设置代理模型，使用更新模型的函数，如`addItem()`，将无法如预期般工作。另一种方法是将dynamicSortFilter设为false，添加`QComboBox`项后调用`sort()`。
+默认值为真。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dynamicSortFilter()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::CaseSensitivity filterCaseSensitivity() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::filterCaseSensitivity` 用于计算、查询或取得与“filter、Case、Sensitivity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::CaseSensitivity`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于过滤源模型内容的`QRegularExpression`模式的大小写敏感性。
+默认情况下，滤波器是区分大小写的。
+注意：设置该属性会将新的大小写敏感性传播到`filterRegularExpression`属性，从而破坏其绑定。同样，显式设置`filterRegularExpression`会改变当前大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`Qt::CaseSensitivity`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterCaseSensitivity()` 读取当前值；它不会修改应用状态。
 
 ### `int filterKeyColumn() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::filterKeyColumn` 用于计算、查询或取得与“filter、Key、列”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的关键字的读取列。
+默认值为0。如果值为-1，则所有列的键都会读取。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterKeyColumn()` 读取当前值；它不会修改应用状态。
 
 ### `QRegularExpression filterRegularExpression() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::filterRegularExpression` 用于计算、查询或取得与“filter、Regular、Expression”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的`QRegularExpression`。
+通过`QRegularExpression`重载设置该属性会覆盖当前`filterCaseSensitivity`。默认情况下，`QRegularExpression`是一个空字符串，所有内容都匹配。
+如果没有设置`QRegularExpression`或字符串为空，源模型中的所有信息都会被接受。
+注意：设置该属性会将新正则表达式的大小写敏感性传播到`filterCaseSensitivity`属性，从而破坏其绑定。同样，显式设置`filterCaseSensitivity`会改变当前正则表达式的大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`QRegularExpression`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterRegularExpression()` 读取当前值；它不会修改应用状态。
 
 ### `int filterRole() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::filterRole` 用于计算、查询或取得与“filter、角色”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：该特性支持`QProperty`绑定。
+该属性保留了用于查询源模型数据的项目角色，用于筛选项目时。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `filterRole()` 读取当前值；它不会修改应用状态。
 
 ### `bool isRecursiveFilteringEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRecursiveFilteringEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+注意：此特性支持`QProperty`绑定。
+该属性决定是否将滤波器递归应用于子节点，对于任意匹配的子节点，其父节点也会被可见。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isRecursiveFilteringEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `bool isSortLocaleAware() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSortLocaleAware`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+注意：此特性支持`QProperty`绑定。
+该属性保留了用于排序时用于比较字符串的局部感知设置。
+默认情况下，排序不具备本地感知能力。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isSortLocaleAware()` 读取当前值；它不会修改应用状态。
 
 ### `void setAutoAcceptChildRows(bool accept)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAutoAcceptChildRows`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+如果成立，代理模型不会过滤掉被接受行的子节点，即使这些子节点本身也会被过滤掉。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `accept`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAutoAcceptChildRows(...)` 修改 `autoAcceptChildRows`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDynamicSortFilter(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDynamicSortFilter`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性适用于代理模型在源模型内容变化时是否动态排序和过滤。
+注意，当dynamicSortFilter为真时，不应通过代理模型更新源模型。例如，如果你在`QComboBox`上设置代理模型，使用更新模型的函数，如`addItem()`，将无法如预期般工作。另一种方法是将dynamicSortFilter设为false，添加`QComboBox`项后调用`sort()`。
+默认值为真。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDynamicSortFilter(...)` 修改 `dynamicSortFilter`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFilterCaseSensitivity(Qt::CaseSensitivity cs)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFilterCaseSensitivity`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于过滤源模型内容的`QRegularExpression`模式的大小写敏感性。
+默认情况下，滤波器是区分大小写的。
+注意：设置该属性会将新的大小写敏感性传播到`filterRegularExpression`属性，从而破坏其绑定。同样，显式设置`filterRegularExpression`会改变当前大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFilterCaseSensitivity(...)` 修改 `filterCaseSensitivity`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFilterKeyColumn(int column)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFilterKeyColumn`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的关键字的读取列。
+默认值为0。如果值为-1，则所有列的键都会读取。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFilterKeyColumn(...)` 修改 `filterKeyColumn`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFilterRole(int role)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFilterRole`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：该特性支持`QProperty`绑定。
+该属性保留了用于查询源模型数据的项目角色，用于筛选项目时。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFilterRole(...)` 修改 `filterRole`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setRecursiveFilteringEnabled(bool recursive)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRecursiveFilteringEnabled`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性决定是否将滤波器递归应用于子节点，对于任意匹配的子节点，其父节点也会被可见。
+默认值为假。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `recursive`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setRecursiveFilteringEnabled(...)` 修改 `recursiveFilteringEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSortCaseSensitivity(Qt::CaseSensitivity cs)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSortCaseSensitivity`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于排序时用于比较字符串的大小写敏感性设置。
+默认情况下，排序是区分大小写的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。没有默认值，调用时必须提供。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSortCaseSensitivity(...)` 修改 `sortCaseSensitivity`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSortLocaleAware(bool on)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSortLocaleAware`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性保留了用于排序时用于比较字符串的局部感知设置。
+默认情况下，排序不具备本地感知能力。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `on`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSortLocaleAware(...)` 修改 `isSortLocaleAware`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setSortRole(int role)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSortRole`。调用它会改变 `QSortFilterProxyModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询源模型数据的项目角色，用于排序物品。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setSortRole(...)` 修改 `sortRole`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `Qt::CaseSensitivity sortCaseSensitivity() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::sortCaseSensitivity` 用于计算、查询或取得与“sort、Case、Sensitivity”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::CaseSensitivity`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性表示了用于排序时用于比较字符串的大小写敏感性设置。
+默认情况下，排序是区分大小写的。
 
-**签名拆解：**
-
-- 返回值：`Qt::CaseSensitivity`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortCaseSensitivity()` 读取当前值；它不会修改应用状态。
 
 ### `int sortRole() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QSortFilterProxyModel::sortRole` 用于计算、查询或取得与“sort、角色”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+注意：此特性支持`QProperty`绑定。
+该属性包含用于查询源模型数据的项目角色，用于排序物品。
+默认值是`Qt::DisplayRole`。
 
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `sortRole()` 读取当前值；它不会修改应用状态。
 
 ### `void setFilterRegularExpression(const QRegularExpression &regularExpression)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setFilterRegularExpression`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+注意：该特性支持`QProperty`绑定。
+该属性包含用于过滤源模型内容的`QRegularExpression`。
+通过`QRegularExpression`重载设置该属性会覆盖当前`filterCaseSensitivity`。默认情况下，`QRegularExpression`是一个空字符串，所有内容都匹配。
+如果没有设置`QRegularExpression`或字符串为空，源模型中的所有信息都会被接受。
+注意：设置该属性会将新正则表达式的大小写敏感性传播到`filterCaseSensitivity`属性，从而破坏其绑定。同样，显式设置`filterCaseSensitivity`会改变当前正则表达式的大小写敏感性，从而破坏其绑定。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `regularExpression`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFilterRegularExpression(...)` 修改 `filterRegularExpression`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

@@ -62,49 +62,75 @@ if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QDirListing::const_iterator QDirListing::begin() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing::sentinel` 遍历协议中的 `begin`。只能在关联容器/目录范围仍有效时使用；先与 end/sentinel 比较，再解引用或移动，容器结构变化后不要继续使用旧迭代器。
+(c)`begin()` 返回一个可用于遍历目录条目的 `QDirListing::const_iterator`。
+- 这是一个只能向前的、单次遍历迭代器（不能逆向遍历目录条目）
+- 不能复制，只能 `std::move()`。
+- 对模拟 `std::input_iterator` 的对象进行后置递增操作的返回值是部分构造的（一个已经前进的迭代器的副本），对这种对象的唯一有效操作是销毁和赋值一个新的迭代器。因此后置递增操作会前进迭代器并返回 `void`。
+- 不允许随机访问
+- 可用于范围 for 循环；或与不要求随机访问迭代器的 C 20 std::ranges 算法一起使用
+- 对有效迭代器解引用返回 `const DirEntry &`
+- (c)`end()` 返回一个表示迭代结束的 `QDirListing::sentinel`。解引用一个与 `end()` 相等的迭代器是未定义行为
+注意：每次在同一 `QDirListing` 对象上调用 (c)`begin()` 时，内部状态都会被重置，迭代从头开始。
+（上述一些限制由底层系统库函数的实现决定）。
+以下是如何递归查找并读取按名称过滤的所有文件：
+注意：“经典”STL 算法不支持迭代器/哨兵，因此需要使用 C 20 std::ranges 算法进行 `QDirListing`，或者使用提供基于范围算法的 C 17 第三方库。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDirListing::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     qDebug() << dirEntry.filePath();
+     // /etc/.
+     // /etc/..
+     // /etc/X11
+     // /etc/X11/fs
+     // ...
+ }
+```
 
 ### `QDirListing::sentinel QDirListing::end() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing::sentinel` 遍历协议中的 `end`。只能在关联容器/目录范围仍有效时使用；先与 end/sentinel 比较，再解引用或移动，容器结构变化后不要继续使用旧迭代器。
+(c)`begin()` 返回一个可用于遍历目录条目的 `QDirListing::const_iterator`。
+- 这是一个只能向前的、单次遍历迭代器（不能逆向遍历目录条目）
+- 不能复制，只能 `std::move()`。
+- 对模拟 `std::input_iterator` 的对象进行后置递增操作的返回值是部分构造的（一个已经前进的迭代器的副本），对这种对象的唯一有效操作是销毁和赋值一个新的迭代器。因此后置递增操作会前进迭代器并返回 `void`。
+- 不允许随机访问
+- 可用于范围 for 循环；或与不要求随机访问迭代器的 C 20 std::ranges 算法一起使用
+- 对有效迭代器解引用返回 `const DirEntry &`
+- (c)`end()` 返回一个表示迭代结束的 `QDirListing::sentinel`。解引用一个与 `end()` 相等的迭代器是未定义行为
+注意：每次在同一 `QDirListing` 对象上调用 (c)`begin()` 时，内部状态都会被重置，迭代从头开始。
+（上述一些限制由底层系统库函数的实现决定）。
+以下是如何递归查找并读取按名称过滤的所有文件：
+注意：“经典”STL 算法不支持迭代器/哨兵，因此需要使用 C 20 std::ranges 算法进行 `QDirListing`，或者使用提供基于范围算法的 C 17 第三方库。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QDirListing::sentinel`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ using ItFlag = QDirListing::IteratorFlag;
+ for (const auto &dirEntry : QDirListing(u"/etc"_s, ItFlag::Recursive)) {
+     qDebug() << dirEntry.filePath();
+     // /etc/.
+     // /etc/..
+     // /etc/X11
+     // /etc/X11/fs
+     // ...
+ }
+```
 
 ### `bool operator==(QDirListing::const_iterator iterator, QDirListing::sentinel sentinel)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是 `QDirListing::sentinel` 遍历协议中的 `operator==`。只能在关联容器/目录范围仍有效时使用；先与 end/sentinel 比较，再解引用或移动，容器结构变化后不要继续使用旧迭代器。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `iterator`：类型为 `QDirListing::const_iterator`。没有默认值，调用时必须提供。传入 `QDirListing::const_iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sentinel`：类型为 `QDirListing::sentinel`。没有默认值，调用时必须提供。传入 `QDirListing::sentinel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较迭代器与结束哨兵。迭代器已经到达目录遍历末尾时返回 `true`；此时不能再解引用该迭代器，否则行为未定义。它主要供范围 `for` 和标准库范围算法判断遍历是否结束。
 
 ## 6. 深入实践与常见坑
 

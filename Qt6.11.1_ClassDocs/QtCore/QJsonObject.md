@@ -144,1065 +144,594 @@ JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 81 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QJsonObject::ConstIterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setConstIterator(...)` 设置，之后用 `ConstIterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ConstIterator`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt风格的`QJsonObject::const_iterator`同义词。
 
 ### `QJsonObject::Iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setIterator(...)` 设置，之后用 `Iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Iterator`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt风格的`QJsonObject::iterator`同义词。
 
 ### `[since 6.10] QJsonObject::const_key_value_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setConst_key_value_iterator(...)` 设置，之后用 `const_key_value_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:const_key_value_iterator`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJsonObject：：const_key_value_iterator typedef 提供了一个 STL 风格的迭代器用于 `QJsonObject`。
+QJsonObject：：const_key_value_iterator 本质上与 `QJsonObject::const_iterator` 相同，区别在于运算符*() 返回的是键值对而非值。
+这种类型防御是在Qt 6.10中引入的。
 
 ### `QJsonObject::key_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setKey_type(...)` 设置，之后用 `key_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:key_type`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`QString`。提供 STL 兼容性。
 
 ### `[since 6.10] QJsonObject::key_value_iterator`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setKey_value_iterator(...)` 设置，之后用 `key_value_iterator()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:key_value_iterator`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJsonObject：：key_value_iterator typedef 提供了一个 STL 风格的迭代器用于`QJsonObject`。
+QJsonObject：：key_value_iterator 本质上与 `QJsonObject::iterator` 相同，区别在于 operator*() 返回的是键值对而非值。
+这种类型防御是在Qt 6.10中引入的。
 
 ### `QJsonObject::mapped_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setMapped_type(...)` 设置，之后用 `mapped_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:mapped_type`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`QJsonValue`。提供 STL 兼容性。
 
 ### `QJsonObject::size_type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的配置属性。初始化或状态切换时通过 `setSize_type(...)` 设置，之后用 `size_type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:size_type`。
-- 属性名：`QJsonObject`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qsizetype 的 Typedef。为 STL 兼容性提供。
 
 ### `QJsonObject::QJsonObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的JSON对象。
 
 ### `QJsonObject::QJsonObject(std::initializer_list<std::pair<QString, QJsonValue>> args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个从初始化列表初始化`args` QJsonObject实例。例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `args`：类型为 `std::initializer_list<std::pair<QString, QJsonValue>>`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJsonObject object
+ {
+     {"property1", 1},
+     {"property2", 2}
+ };
+```
 
 ### `[noexcept] QJsonObject::QJsonObject(const QJsonObject &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QJsonObject &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建`other`的副本。
+由于QJsonObject是隐式共享的，只要对象不被修改，复制内容就很浅。
 
 ### `[noexcept] QJsonObject::QJsonObject(QJsonObject &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QJsonObject &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-构造一个 QJsonObject，`other`。
 
 ### `[noexcept] QJsonObject::~QJsonObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了该物体。
 
 ### `[since 6.10] auto QJsonObject::asKeyValueRange() const &&`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::asKeyValueRange` 用于计算、查询或取得与“as、Key、值访问、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个范围对象，允许对该对象作为键值对进行循环。例如，该范围对象可以在基于范围的for循环中使用，并结合结构化绑定声明：
+注意，通过这种方式获得的值是对对象中值的引用。具体来说，变更该值会修改对象本身。
+当在r值上调用该方法时（例如在某个范围for循环的初始化器中创建的临时节点），物体将被捕获在该范围内。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`auto`。
-- 参数：无。
+```cpp
+ QJsonObject obj{
+     { "something", "is" },
+     { "in", "this" },
+     { "object", 42 },
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ for (auto [key, value] : obj.asKeyValueRange()) {
+     qDebug() << key << "->" << value;
+     if (key == "object")
+         value = "!"; // modify the object at this key
+ }
+ qDebug() << obj["object"]; // QJsonValue(string, "!")
+```
 
 ### `QJsonObject::iterator QJsonObject::begin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向对象中的第一个项。
 
 ### `QJsonObject::const_iterator QJsonObject::begin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `begin`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向对象中的第一个项。
 
 ### `QJsonObject::const_iterator QJsonObject::constBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constBegin` 用于计算、查询或取得与“const、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向对象中的第一个项。
 
 ### `QJsonObject::const_iterator QJsonObject::constEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constEnd` 用于计算、查询或取得与“const、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向对象最后一个项之后的虚数项。
 
 ### `QJsonObject::const_iterator QJsonObject::constFind(const QString &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constFind` 用于计算、查询或取得与“const、查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个函数迭代器，指向映射中键为`key`的项目。
+如果映射中没有键为`key`的项，函数返回`constEnd()`。
 
 ### `QJsonObject::const_iterator QJsonObject::constFind(QLatin1StringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constFind` 用于计算、查询或取得与“const、查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个函数迭代器，指向映射中键为`key`的项目。
+如果映射中没有键为`key`的项，函数返回`constEnd()`。
 
 ### `QJsonObject::const_iterator QJsonObject::constFind(QStringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constFind` 用于计算、查询或取得与“const、查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个函数迭代器，指向映射中键为`key`的项目。
+如果映射中没有键为`key`的项，函数返回`constEnd()`。
 
 ### `[since 6.10] QJsonObject::const_key_value_iterator QJsonObject::constKeyValueBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constKeyValueBegin` 用于计算、查询或取得与“const、Key、值访问、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向对象的第一个条目。
 
 ### `[since 6.10] QJsonObject::const_key_value_iterator QJsonObject::constKeyValueEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::constKeyValueEnd` 用于计算、查询或取得与“const、Key、值访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL风格的迭代器，指向下一个元素之后的虚数元素。
 
 ### `bool QJsonObject::contains(const QString &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对象包含密钥`key`，返回`true`。
 
 ### `bool QJsonObject::contains(QLatin1StringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对象包含密钥`key`，返回`true`。
 
 ### `bool QJsonObject::contains(QStringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `contains`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对象包含密钥`key`，返回`true`。
 
 ### `qsizetype QJsonObject::count() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `count`，返回 `QJsonObject` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`size()`一样。
 
 ### `bool QJsonObject::empty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::empty` 用于计算、查询或取得与“空状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数旨在满足STL兼容性。它等价于`isEmpty()`，如果对象为空，返回`true`;否则返回`false`。
 
 ### `QJsonObject::iterator QJsonObject::end()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向对象中最后一个项之后的虚数项。
 
 ### `QJsonObject::const_iterator QJsonObject::end() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `end`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向对象中最后一个项之后的虚数项。
 
 ### `QJsonObject::iterator QJsonObject::erase(QJsonObject::iterator it)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::erase` 用于计算、查询或取得与“erase”相关的操作。调用时要先确认当前状态和 `it` 的有效范围；返回类型是 `QJsonObject::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `it`：类型为 `QJsonObject::iterator`。没有默认值，调用时必须提供。传入 `QJsonObject::iterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从映射中移除迭代器`it`指向的（键、值）对，并返回迭代器到映射中的下一个项。
 
 ### `QJsonObject::iterator QJsonObject::find(const QString &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向地图中键`key`的物品。
+如果映射中没有键为`key`的项，函数返回`end()`。
 
 ### `QJsonObject::iterator QJsonObject::find(QLatin1StringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向地图中键`key`的物品。
+如果映射中没有键为`key`的项，函数返回`end()`。
 
 ### `QJsonObject::iterator QJsonObject::find(QStringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向地图中键`key`的物品。
+如果映射中没有键为`key`的项，函数返回`end()`。
 
 ### `QJsonObject::const_iterator QJsonObject::find(QLatin1StringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向地图中键`key`的物品。
+如果映射中没有键为`key`的项，函数返回`end()`。
 
 ### `QJsonObject::const_iterator QJsonObject::find(QStringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向地图中键`key`的物品。
+如果映射中没有键为`key`的项，函数返回`end()`。
 
 ### `QJsonObject::const_iterator QJsonObject::find(const QString &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::find` 用于计算、查询或取得与“查找”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonObject::const_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_iterator`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个迭代器，指向地图中键`key`的物品。
+如果映射中没有键为`key`的项，函数返回`end()`。
 
 ### `[static] QJsonObject QJsonObject::fromVariantHash(const QVariantHash &hash)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromVariantHash`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject`。
-- 参数 `hash`：类型为 `const QVariantHash &`。没有默认值，调用时必须提供。传入 `const QVariantHash &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将变体哈希`hash`转换为`QJsonObject`。
+`hash`中的键将作为 JSON 对象中的键使用，`QVariant`值会转换为 JSON 值。
+注意：从`QVariant`转换并非完全无损。更多信息请参见`QJsonValue::fromVariant()`文档。
 
 ### `[static] QJsonObject QJsonObject::fromVariantMap(const QVariantMap &map)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromVariantMap`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject`。
-- 参数 `map`：类型为 `const QVariantMap &`。没有默认值，调用时必须提供。传入 `const QVariantMap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将变体地图`map`转换为`QJsonObject`。
+`map`中的键将作为 JSON 对象中的键使用，`QVariant`值会转换为 JSON 值。
+注意：从`QVariant`转换并非完全无损。更多信息请参见`QJsonValue::fromVariant()`文档。
 
 ### `QJsonObject::iterator QJsonObject::insert(const QString &key, const QJsonValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QJsonObject` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const QJsonValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个键为`key`、值为`value`的新项。
+如果已经有带有密钥`key`的项目，则该项的值被替换为`value`。
+返回指向插入项的迭代器。
+如果该值被`QJsonValue::Undefined`，关键字将从对象中移除。返回的迭代器随后会指向`end()`。
 
 ### `QJsonObject::iterator QJsonObject::insert(QLatin1StringView key, const QJsonValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QJsonObject` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const QJsonValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个键为`key`、值为`value`的新项。
+如果已经有带有密钥`key`的项目，则该项的值被替换为`value`。
+返回指向插入项的迭代器。
+如果该值被`QJsonValue::Undefined`，关键字将从对象中移除。返回的迭代器随后会指向`end()`。
 
 ### `QJsonObject::iterator QJsonObject::insert(QStringView key, const QJsonValue &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QJsonObject` 添加依赖、数据或子对象的 API `insert`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::iterator`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const QJsonValue &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入一个键为`key`、值为`value`的新项。
+如果已经有带有密钥`key`的项目，则该项的值被替换为`value`。
+返回指向插入项的迭代器。
+如果该值被`QJsonValue::Undefined`，关键字将从对象中移除。返回的迭代器随后会指向`end()`。
 
 ### `bool QJsonObject::isEmpty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEmpty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果对象为空，返回`true`。这与 `size()` == 0 相同。
 
 ### `[since 6.10] QJsonObject::key_value_iterator QJsonObject::keyValueBegin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::keyValueBegin` 用于计算、查询或取得与“key、值访问、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代器，指向对象中的第一个条目。
 
 ### `[since 6.10] QJsonObject::const_key_value_iterator QJsonObject::keyValueBegin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::keyValueBegin` 用于计算、查询或取得与“key、值访问、起始位置”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const STL风格的迭代器，指向对象的第一个条目。
 
 ### `[since 6.10] QJsonObject::key_value_iterator QJsonObject::keyValueEnd()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::keyValueEnd` 用于计算、查询或取得与“key、值访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个STL风格的迭代子，指向对象最后一个条目之后的虚数条目。
 
 ### `[since 6.10] QJsonObject::const_key_value_iterator QJsonObject::keyValueEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::keyValueEnd` 用于计算、查询或取得与“key、值访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QJsonObject::const_key_value_iterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject::const_key_value_iterator`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个const型STL式迭代器，指向对象最后一个条目之后的虚数条目。
 
 ### `QStringList QJsonObject::keys() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::keys` 用于计算、查询或取得与“keys”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象中所有键的列表。
+列表按字母顺序排列。
 
 ### `qsizetype QJsonObject::length() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `length`，返回 `QJsonObject` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+和`size()`一样。
 
 ### `void QJsonObject::remove(const QString &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+去除物体上的 `key`。
 
 ### `void QJsonObject::remove(QLatin1StringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+去除物体上的 `key`。
 
 ### `void QJsonObject::remove(QStringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `remove`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+去除物体上的 `key`。
 
 ### `qsizetype QJsonObject::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QJsonObject` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对象中存储的（键、值）对数。
 
 ### `[noexcept] void QJsonObject::swap(QJsonObject &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QJsonObject &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象与`other`交换。此操作非常快速且从未失败。
 
 ### `QJsonValue QJsonObject::take(const QString &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::take` 用于计算、查询或取得与“取出”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除物体上的`key`。
+返回包含`key`引用值的`QJsonValue`。如果对象中不包含`key`，返回的`QJsonValue`将被`QJsonValue::Undefined`。
 
 ### `QJsonValue QJsonObject::take(QLatin1StringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::take` 用于计算、查询或取得与“取出”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除物体上的`key`。
+返回包含`key`引用值的`QJsonValue`。如果对象中不包含`key`，返回的`QJsonValue`将被`QJsonValue::Undefined`。
 
 ### `QJsonValue QJsonObject::take(QStringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJsonObject::take` 用于计算、查询或取得与“取出”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QJsonValue`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除物体上的`key`。
+返回包含`key`引用值的`QJsonValue`。如果对象中不包含`key`，返回的`QJsonValue`将被`QJsonValue::Undefined`。
 
 ### `QVariantHash QJsonObject::toVariantHash() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toVariantHash`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QVariantHash`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象转换为`QVariantHash`。
+返回已生成的哈希值。
 
 ### `QVariantMap QJsonObject::toVariantMap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toVariantMap`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QVariantMap`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象转换为`QVariantMap`。
+返回已创建的地图。
 
 ### `QJsonValue QJsonObject::value(const QString &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QJsonObject` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个表示密钥`key`值的`QJsonValue`。
+如果密钥不存在，返回的`QJsonValue` `QJsonValue::Undefined`。
 
 ### `QJsonValue QJsonObject::value(QLatin1StringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QJsonObject` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个表示密钥`key`值的`QJsonValue`。
+如果密钥不存在，返回的`QJsonValue` `QJsonValue::Undefined`。
 
 ### `QJsonValue QJsonObject::value(QStringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QJsonObject` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个表示密钥`key`值的`QJsonValue`。
+如果密钥不存在，返回的`QJsonValue` `QJsonValue::Undefined`。
 
 ### `[noexcept] QJsonObject &QJsonObject::operator=(QJsonObject &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject &`。
-- 参数 `other`：类型为 `QJsonObject &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`该对象。
 
 ### `[noexcept] QJsonObject &QJsonObject::operator=(const QJsonObject &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonObject &`。
-- 参数 `other`：类型为 `const QJsonObject &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该对象分配`other`。
 
 ### `QJsonValueRef QJsonObject::operator[](const QString &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValueRef`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `key` 的值。如果对象中没有键 `key` 的值，则创建一个 `QJsonValue::Null` 值，然后返回。
+返回值类型为`QJsonValueRef`，是`QJsonArray`和`QJsonObject`的辅助类。当你获得类型为`QJsonValueRef`的对象时，可以将其作为引用`QJsonValue`使用。如果你赋值，赋值将应用到你获得引用的`QJsonArray`或`QJsonObject`元素上。
 
 ### `QJsonValue QJsonObject::operator[](const QString &key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `const QString &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个表示密钥`key`值的`QJsonValue`。
+这和`value()`一样。
+如果密钥不存在，返回的`QJsonValue`即为`QJsonValue::Undefined`。
 
 ### `QJsonValueRef QJsonObject::operator[](QLatin1StringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValueRef`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `key` 的值。如果对象中没有键 `key` 的值，则创建一个 `QJsonValue::Null` 值，然后返回。
+返回值类型为`QJsonValueRef`，是`QJsonArray`和`QJsonObject`的辅助类。当你获得类型为`QJsonValueRef`的对象时，可以将其作为引用`QJsonValue`使用。如果你赋值，赋值将应用到你获得引用的`QJsonArray`或`QJsonObject`元素上。
 
 ### `QJsonValueRef QJsonObject::operator[](QStringView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValueRef`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `key` 的值。如果对象中没有键 `key` 的值，则创建一个 `QJsonValue::Null` 值，然后返回。
+返回值类型为`QJsonValueRef`，是`QJsonArray`和`QJsonObject`的辅助类。当你获得类型为`QJsonValueRef`的对象时，可以将其作为引用`QJsonValue`使用。如果你赋值，赋值将应用到你获得引用的`QJsonArray`或`QJsonObject`元素上。
 
 ### `QJsonValue QJsonObject::operator[](QLatin1StringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `QLatin1StringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `key` 的值。如果对象中没有键 `key` 的值，则创建一个 `QJsonValue::Null` 值，然后返回。
+返回值类型为`QJsonValueRef`，是`QJsonArray`和`QJsonObject`的辅助类。当你获得类型为`QJsonValueRef`的对象时，可以将其作为引用`QJsonValue`使用。如果你赋值，赋值将应用到你获得引用的`QJsonArray`或`QJsonObject`元素上。
 
 ### `QJsonValue QJsonObject::operator[](QStringView key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QJsonValue`。
-- 参数 `key`：类型为 `QStringView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `key` 的值。如果对象中没有键 `key` 的值，则创建一个 `QJsonValue::Null` 值，然后返回。
+返回值类型为`QJsonValueRef`，是`QJsonArray`和`QJsonObject`的辅助类。当你获得类型为`QJsonValueRef`的对象时，可以将其作为引用`QJsonValue`使用。如果你赋值，赋值将应用到你获得引用的`QJsonArray`或`QJsonObject`元素上。
 
 ### `[noexcept] bool operator!=(const QJsonObject &lhs, const QJsonObject &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJsonObject &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJsonObject &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 对象不等于 `rhs`，则返回 `true`，否则返回 `false`。
 
 ### `[noexcept] bool operator==(const QJsonObject &lhs, const QJsonObject &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QJsonObject &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QJsonObject &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`对象等于`rhs`，返回`true`，否则`false`返回。
 
 ### `class const_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 暴露的类型声明 `const、iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJsonObject：：const_iterator 类为 QJsonObject 提供了一个 STL 风格的 cont 迭代器。
+`QJsonObject::const_iterator`允许你对一个`QJsonObject`进行叠加。如果你想在迭代时修改`QJsonObject`，必须用`QJsonObject::iterator`。通常在非const的`QJsonObject`上使用`QJsonObject::const_iterator`是个好习惯，除非你需要通过迭代器更改`QJsonObject`。Const迭代器速度稍快，且提高了代码的可读性。
+默认的`QJsonObject::const_iterator`构造函数会创建一个未初始化的迭代器。你必须用`QJsonObject`函数如`QJsonObject::constBegin()`、`QJsonObject::constEnd()`或`QJsonObject::find()`初始化它，才能开始迭代。
+多个迭代器可以用于同一个对象。不过，如果对象被修改，现有的迭代器会变得悬挂。
 
 ### `class iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 暴露的类型声明 `iterator`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJsonObject：：iterator 类为 QJsonObject 提供了一个 STL 风格的非const 迭代器。
+`QJsonObject::iterator`允许你对某个`QJsonObject`进行迭代，并修改某个特定键下存储的值（但不能修改键）。如果你想对const的某`QJsonObject`进行迭代，应该使用`QJsonObject::const_iterator`。通常在非const的`QJsonObject`上也使用`QJsonObject::const_iterator`是个好习惯，除非你需要通过迭代器更改`QJsonObject`。const迭代器速度稍快，并且提高了代码的可读性。
+默认的 `QJsonObject::iterator` 构造器会创建一个未初始化的迭代器。你必须先用 `QJsonObject::begin()`、`QJsonObject::end()` 或 `QJsonObject::find()` 等`QJsonObject`函数初始化它，才能开始迭代。
+多个迭代器可以用于同一个对象。然而，一旦对象被修改，现有的迭代器会变得悬浮。
 
 ### `ConstIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的 `Const、Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt风格的`QJsonObject::const_iterator`同义词。
 
 ### `Iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的 `Iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt风格的`QJsonObject::iterator`同义词。
 
 ### `(since 6.10) const_key_value_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的 `const、key、值访问、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJsonObject：：const_key_value_iterator typedef 提供了一个 STL 风格的迭代器用于 `QJsonObject`。
+QJsonObject：：const_key_value_iterator 本质上与 `QJsonObject::const_iterator` 相同，区别在于运算符*() 返回的是键值对而非值。
+这种类型防御是在Qt 6.10中引入的。
 
 ### `key_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的 `key、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`QString`。提供 STL 兼容性。
 
 ### `(since 6.10) key_value_iterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的 `key、值访问、iterator` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QJsonObject：：key_value_iterator typedef 提供了一个 STL 风格的迭代器用于`QJsonObject`。
+QJsonObject：：key_value_iterator 本质上与 `QJsonObject::iterator` 相同，区别在于 operator*() 返回的是键值对而非值。
+这种类型防御是在Qt 6.10中引入的。
 
 ### `mapped_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `mapped_type`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Typedef 用于`QJsonValue`。提供 STL 兼容性。
 
 ### `size_type`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QJsonObject` 的 `尺寸或数量、类型` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+qsizetype 的 Typedef。为 STL 兼容性提供。
 
 ### `(since 6.10) auto asKeyValueRange() &&`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QJsonObject::asKeyValueRange` 用于计算、查询或取得与“as、Key、值访问、Range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回一个范围对象，允许对该对象作为键值对进行循环。例如，该范围对象可以在基于范围的for循环中使用，并结合结构化绑定声明：
+注意，通过这种方式获得的值是对对象中值的引用。具体来说，变更该值会修改对象本身。
+当在r值上调用该方法时（例如在某个范围for循环的初始化器中创建的临时节点），物体将被捕获在该范围内。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`auto`。
-- 参数：无。
+```cpp
+ QJsonObject obj{
+     { "something", "is" },
+     { "in", "this" },
+     { "object", 42 },
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ for (auto [key, value] : obj.asKeyValueRange()) {
+     qDebug() << key << "->" << value;
+     if (key == "object")
+         value = "!"; // modify the object at this key
+ }
+ qDebug() << obj["object"]; // QJsonValue(string, "!")
+```
 
 ## 6. 深入实践与常见坑
 

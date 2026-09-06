@@ -141,1032 +141,564 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 76 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[default] QRangeModelAdapter::QRangeModelAdapter(Range &&range)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `range`：类型为 `Range &&`。没有默认值，调用时必须提供。传入 `Range &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个在`range`上操作的`QRangeModelAdapter`。对于树范围，可选`protocol`将用于树的遍历。
+请参阅`QRangeModel`构造器文档，了解`Range`需求详情，以及`range`的值类别如何改变适配器、型号和范围之间的相互作用。
 
 ### `template < typename NewRange = QRangeModelAdapter<Range, Protocol, Model>::range_type, QRangeModelAdapter<Range, Protocol, Model>::if_assignable_range<NewRange> = true, QRangeModelAdapter<Range, Protocol, Model>::unless_adapter<NewRange> = true > QRangeModelAdapter<Range, Protocol, Model> &QRangeModelAdapter::operator=(NewRange &&newRange)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename NewRange = QRangeModelAdapter<Range, Protocol, Model>::range_type, QRangeModelAdapter<Range, Protocol, Model>::if_assignable_range<NewRange> = true, QRangeModelAdapter<Range, Protocol, Model>::unless_adapter<NewRange> = true > QRangeModelAdapter<Range, Protocol, Model> &`。
-- 参数 `newRange`：类型为 `NewRange &&`。没有默认值，调用时必须提供。传入 `NewRange &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`newRange`中的行替换模型内容，可能使用移动语义。
+该功能使`model()`发出`modelAboutToBeReset()`信号，`modelReset()`信号。
+仅在`Range`可变且`newRange`可分配给`Range`但不能分配给`QRangeModelAdapter`时参与超载解析。
 
 ### `template <typename Row, QRangeModelAdapter<Range, Protocol, Model>::if_assignable_range<std::initializer_list<Row>> = true> QRangeModelAdapter<Range, Protocol, Model> &QRangeModelAdapter::operator=(std::initializer_list<Row> newRange)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Row, QRangeModelAdapter<Range, Protocol, Model>::if_assignable_range<std::initializer_list<Row>> = true> QRangeModelAdapter<Range, Protocol, Model> &`。
-- 参数 `newRange`：类型为 `std::initializer_list<Row>`。没有默认值，调用时必须提供。传入 `std::initializer_list<Row>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`newRange`中的行替换模型内容。
+仅在`Range`可变且`newRange`可分配给`Range`时才参与超载解析。
 
 ### `template < typename InputIterator, typename Sentinel, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > void QRangeModelAdapter::assign(InputIterator first, Sentinel last)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::assign` 用于计算、查询或取得与“assign”相关的操作。调用时要先确认当前状态和 `first`、`last` 的有效范围；返回类型是 `template < typename InputIterator, typename Sentinel, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename InputIterator, typename Sentinel, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > void`。
-- 参数 `first`：类型为 `InputIterator`。没有默认值，调用时必须提供。传入 `InputIterator` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `last`：类型为 `Sentinel`。没有默认值，调用时必须提供。传入 `Sentinel` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`newRange`中的行替换模型内容，可能使用移动语义。
+该功能使`model()`发出`modelAboutToBeReset()`信号，`modelReset()`信号。
+仅在`Range`可变且`newRange`可分配给`Range`但不能分配给`QRangeModelAdapter`时参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto QRangeModelAdapter::operator[](QSpan<const int> path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可变的包装器，包含对 `path` 指定的树行的引用。
+要修改树行，需赋值为其。赋入新树行会将新树行的父节点设置为旧树行的父节点。但旧树行和新树行都必须没有子行。访问树行时，使用`operator*()`取消引用包装器，或使用`operator->()`访问树行成员。
+注意：对范围进行修改将使包装器失效。
+只有当`Range`是树时才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto QRangeModelAdapter::operator[](int listRow)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可变的 `Range` 存储值的引用。
+注意：对该范围的修改将使该引用失效。要修改该引用，需为其分配一个新值。除非`Range`中存储的值是指针，否则无法访问存储值中的单个成员。
+只有当`Range`是可变列表时才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_table<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto QRangeModelAdapter::operator[](int tableRow)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_table<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `tableRow` 处行的引用封装器，存储在 `Range` 中。
+仅当 是可变表时`Range` 才参与超载解析，但不是树。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto QRangeModelAdapter::operator[](int treeRow)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto`。
-- 参数 `treeRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `treeRow` 行的引用包装器，存储在 `Range` 中。
+要修改树行，给它赋值。赋入新树行会将新树行的父节点设置为旧树行的父节点。但旧树行和新树行都必须没有子行。访问树行时，使用`operator*()`反引用包装器，或使用`operator->()`访问树行成员。
+注意：对范围进行修改将使包装器失效。
+只有当`Range`是树时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> decltype(auto) QRangeModelAdapter::operator[](QSpan<const int> path) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> decltype(auto)`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`path`指定的行的常量引用，存储在`Range`中。
+只有当`Range`是树时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> auto QRangeModelAdapter::operator[](int listRow) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> auto`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`listRow`的值，作为存储在`Range`中的类型。
+只有当`Range`是列表时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> decltype(auto) QRangeModelAdapter::operator[](int tableRow) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> decltype(auto)`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对`tableRow`行的常量引用，存储在`Range`中。
+仅在`Range`为表或树时参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto QRangeModelAdapter::at(QSpan<const int> path, int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可变的包装器，包含对 `path` 指定的树行的引用。
+要修改树行，需赋值为其。赋入新树行会将新树行的父节点设置为旧树行的父节点。但旧树行和新树行都必须没有子行。访问树行时，使用`operator*()`取消引用包装器，或使用`operator->()`访问树行成员。
+注意：对范围进行修改将使包装器失效。
+只有当`Range`是树时才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto QRangeModelAdapter::at(int tableRow, int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > auto`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可变的 `Range` 存储值的引用。
+注意：对该范围的修改将使该引用失效。要修改该引用，需为其分配一个新值。除非`Range`中存储的值是指针，否则无法访问存储值中的单个成员。
+只有当`Range`是可变列表时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> auto QRangeModelAdapter::at(QSpan<const int> path, int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> auto`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `tableRow` 处行的引用封装器，存储在 `Range` 中。
+仅当 是可变表时`Range` 才参与超载解析，但不是树。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> auto QRangeModelAdapter::at(int tableRow, int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> auto`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `treeRow` 行的引用包装器，存储在 `Range` 中。
+要修改树行，给它赋值。赋入新树行会将新树行的父节点设置为旧树行的父节点。但旧树行和新树行都必须没有子行。访问树行时，使用`operator*()`反引用包装器，或使用`operator->()`访问树行成员。
+注意：对范围进行修改将使包装器失效。
+只有当`Range`是树时才参与超载解析。
 
 ### `int QRangeModelAdapter::columnCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::columnCount` 用于计算、查询或取得与“列、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回列数。如果`Range`代表列表，则返回列数，否则返回每行的元素数。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> QVariant QRangeModelAdapter::data(int listRow, int role) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> QVariant`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`listRow`时该项在给定`role`下存储的数据的`QVariant`，若无项则返回无效`QVariant`。如果未指定`role`，则返回包含完整项的`QVariant`。
+只有当`Range`是列表时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> QVariant QRangeModelAdapter::data(QSpan<const int> path, int column, int role) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> QVariant`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`listRow`时该项在给定`role`下存储的数据的`QVariant`，若无项则返回无效`QVariant`。如果未指定`role`，则返回包含完整项的`QVariant`。
+只有当`Range`是列表时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> QVariant QRangeModelAdapter::data(int tableRow, int column, int role) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> QVariant`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QVariant`，存储`path`和`column`所指项目在给定`role`下存储的数据;如果该位置或角色没有数据存储，则返回无效`QVariant`。如果未指定`role`，则返回一个包含完整项目的`QVariant`。
+只有当`Range`是树时才参与重载决议。
 
 ### `[constexpr] template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> bool QRangeModelAdapter::hasChildren(QSpan<const int> row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasChildren`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> bool`。
-- 参数 `row`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回是否有行在`row`下。
+只有当`Range`是树时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> QModelIndex QRangeModelAdapter::index(int listRow) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `listRow` 的有效范围；返回类型是 `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true> QModelIndex`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`listRow`还了`QModelIndex`。
+只有当`Range`是一维列表时，才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> QModelIndex QRangeModelAdapter::index(QSpan<const int> path, int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `path`、`column` 的有效范围；返回类型是 `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> QModelIndex`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回树中`path`指定的行的 位于 `column` 项的 `QModelIndex`。
+只有当`Range`是树时才参与重载决议。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> QModelIndex QRangeModelAdapter::index(int tableRow, int column) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `tableRow`、`column` 的有效范围；返回类型是 `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true> QModelIndex`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`tableRow`，`column`时退还该物品的 `QModelIndex`。
+只有当`Range`是表或树时才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertColumns<I> = true> bool QRangeModelAdapter::insertColumn(int before)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertColumn`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertColumns<I> = true> bool`。
-- 参数 `before`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在所有行中插入一个空列`before`，并返回插入是否成功。如果`before`与`columnCount()`值相同，则该列将附加到每行。
+只有当`Range`有支持插入元素的行时，才参与重载决议。
 
 ### `template < typename D, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertColumns<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_column_data<D> = true > bool QRangeModelAdapter::insertColumn(int before, D &&data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertColumn`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename D, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertColumns<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_column_data<D> = true > bool`。
-- 参数 `before`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `D &&`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`before`指定的列之前，从`data`构成的单一列插入到所有行中，并返回插入是否成功。如果`before`与`columnCount()`值相同，则该列将附加到每一行。
+如果 `data` 是一个单一值，那么所有行的新条目都将由该单一值构造出来。
+如果`data`是容器，则该容器中的元素将依次用于构造后续行的列。如果`data`中的元素少于行数，函数会绕行并从第一个元素重新开始。
+只有当`Range`有支持插入元素的行，且元素可以从`data`中的元素构成时，才参与超载解析。
 
 ### `template < typename C, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertColumns<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_column_range<C> = true > bool QRangeModelAdapter::insertColumns(int before, C &&data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertColumns`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename C, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertColumns<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_column_range<C> = true > bool`。
-- 参数 `before`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `C &&`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将由`before` `data`中元素构成的列插入所有行，并返回插入是否成功。如果`before`与`columnCount()`值相同，则该列将附加到每行。
+如果`data`中的元素是值，那么所有行的新条目都会由这些值构造出来。
+如果`data`中的元素是容器，那么外层容器中的元素将依次用于构造每一行的新元素。如果`data`中的元素少于行数，则函数会绕行并从第一个元素重新开始。
+只有当`Range`有支持插入元素的行，并且可以从`data`中的元素构造时，才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::insertRow(QSpan<const int> before)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `before`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。传入 `QSpan<const int>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`before`指定路径的行前插入一行空行，返回插入是否成功。如果`before`与`rowCount()`值相同，则会附加新行。
+只有当`Range`是支持元素插入的树时，才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true> bool QRangeModelAdapter::insertRow(int before)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true> bool`。
-- 参数 `before`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`before`行前插入一行空行，返回插入是否成功。如果`before`与`rowCount()`值相同，则将添加新行。
+仅在支持元素插入`Range`参与超载解析。
 
 ### `template < typename D, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row<D> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::insertRow(QSpan<const int> before, D &&data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename D, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row<D> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `before`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。传入 `QSpan<const int>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `D &&`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`before`的行之前插入一行由`data`构造的单行，并返回插入是否成功。如果`before`与`rowCount()`值相同，则将附加新行。
+只有当`Range`是支持元素插入的树，并且可以由`data`构造行时，才参与超载解析。
 
 ### `template < typename D, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row<D> = true > bool QRangeModelAdapter::insertRow(int before, D &&data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertRow`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename D, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row<D> = true > bool`。
-- 参数 `before`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `D &&`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`before`的行之前插入由`data`构造的单行，并返回插入是否成功。如果`before`与`rowCount()`值相同，则将添加新行。
+只有当`Range`支持元素插入且行可以由`data`构造时，才参与超载解析。
 
 ### `template < typename C, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row_range<C> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::insertRows(QSpan<const int> before, C &&data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertRows`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename C, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row_range<C> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `before`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。传入 `QSpan<const int>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `C &&`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入由`before` `data`中元素构成的行，并返回插入是否成功。如果`before`与`rowCount()`值相同，则将添加新行。
+只有当`Range`是支持元素插入的树状结构，并且可以从`data`中的元素构造行时，才参与超载解析。
 
 ### `template < typename C, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row_range<C> = true > bool QRangeModelAdapter::insertRows(int before, C &&data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QRangeModelAdapter` 添加依赖、数据或子对象的 API `insertRows`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`template < typename C, typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canInsertRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_compatible_row_range<C> = true > bool`。
-- 参数 `before`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `C &&`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入由`before` `data`中元素构成的行，并返回插入是否成功。如果`before`与`rowCount()`值相同，则将附加新行。
+仅在`Range`支持元素插入且能从`data`中的元素构成行时，才参与超载解析。
 
 ### `Model *QRangeModelAdapter::model() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::model` 用于计算、查询或取得与“model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Model *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Model *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由该适配器创建的`QRangeModel`实例。
 
 ### `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool QRangeModelAdapter::moveColumn(int from, int to)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::moveColumn` 用于计算、查询或取得与“移动、列”相关的操作。调用时要先确认当前状态和 `from`、`to` 的有效范围；返回类型是 `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`。
-- 参数 `from`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `to`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`from`的列移动到`to`的列，并返回该列是否成功移动。
+只有当`Range`有支持元素移动的行时，才参与超载解析。
 
 ### `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool QRangeModelAdapter::moveColumns(int from, int count, int to)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::moveColumns` 用于计算、查询或取得与“移动、列”相关的操作。调用时要先确认当前状态和 `from`、`count`、`to` 的有效范围；返回类型是 `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`。
-- 参数 `from`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `to`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`count`从`from`开始的列移动到`to`的位置，并返回列是否成功移动。
+只有当`Range`有支持元素移动的行时，才参与重载决议。
 
 ### `template < typename I, typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::moveRow(QSpan<const int> source, QSpan<const int> destination)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::moveRow` 用于计算、查询或取得与“移动、行”相关的操作。调用时要先确认当前状态和 `source`、`destination` 的有效范围；返回类型是 `template < typename I, typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `source`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `destination`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。目标对象或目标位置；要确认目标可写、容量足够，并且不会与源数据发生不允许的重叠。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将树枝移至树枝`source`至`destination`位置，并返回枝条是否成功移动。
+只有当`Range`是支持元素移动的树时，才参与超载解析。
 
 ### `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool QRangeModelAdapter::moveRow(int source, int destination)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::moveRow` 用于计算、查询或取得与“移动、行”相关的操作。调用时要先确认当前状态和 `source`、`destination` 的有效范围；返回类型是 `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`。
-- 参数 `source`：类型为 `int`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `destination`：类型为 `int`。没有默认值，调用时必须提供。目标对象或目标位置；要确认目标可写、容量足够，并且不会与源数据发生不允许的重叠。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`source`行移动到`destination`的位置，并返回是否成功移动该行。
+只有在`Range`支持元素移动时才参与超载解析。
 
 ### `template < typename I, typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::moveRows(QSpan<const int> source, int count, QSpan<const int> destination)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::moveRows` 用于计算、查询或取得与“移动、行”相关的操作。调用时要先确认当前状态和 `source`、`count`、`destination` 的有效范围；返回类型是 `template < typename I, typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `source`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `destination`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。目标对象或目标位置；要确认目标可写、容量足够，并且不会与源数据发生不允许的重叠。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`count`从`source`开始的树枝移动到`destination`的位置，并返回是否成功移动了这些行。
+仅当`Range`是支持元素移动的树时，才参与超载解析。
 
 ### `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool QRangeModelAdapter::moveRows(int source, int count, int destination)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::moveRows` 用于计算、查询或取得与“移动、行”相关的操作。调用时要先确认当前状态和 `source`、`count`、`destination` 的有效范围；返回类型是 `template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename F, QRangeModelAdapter<Range, Protocol, Model>::if_canMoveItems<F> = true> bool`。
-- 参数 `source`：类型为 `int`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `destination`：类型为 `int`。没有默认值，调用时必须提供。目标对象或目标位置；要确认目标可写、容量足够，并且不会与源数据发生不允许的重叠。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`count`从`source`开始的行移动到`destination`的位置，并返回是否成功移动了这些行。
+只有在`Range`支持元素移动时才参与重载决议。
 
 ### `const QRangeModelAdapter<Range, Protocol, Model>::range_type &QRangeModelAdapter::range() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::range` 用于计算、查询或取得与“range”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QRangeModelAdapter<Range, Protocol, Model>::range_type &`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QRangeModelAdapter<Range, Protocol, Model>::range_type &`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型适配器所工作的范围的const引用。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveColumns<I> = true> bool QRangeModelAdapter::removeColumn(int column)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeColumn`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveColumns<I> = true> bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从每行中移除给定`column`，并返回移除是否成功。
+只有当`Range`行支持移除元素时，才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveColumns<I> = true> bool QRangeModelAdapter::removeColumns(int column, int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeColumns`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveColumns<I> = true> bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从每行移除以给定`column`为起始的`count`列，并返回移除是否成功。
+只有当`Range`行支持移除元素时，才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::removeRow(QSpan<const int> path)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRow`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+删除给定`path`的行，包括该行的所有子节点，并返回移除是否成功。
+只有当`Range`树支持元素移除时，才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true> bool QRangeModelAdapter::removeRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRow`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true> bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除给定的`row`并返回移除是否成功。
+只有在`Range`支持移除元素时才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool QRangeModelAdapter::removeRows(QSpan<const int> path, int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRows`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true > bool`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除`path`指定行起始的`count`行，并返回移除是否成功。
+只有当`Range`树支持元素移除时，才参与超载解析。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true> bool QRangeModelAdapter::removeRows(int row, int count)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRows`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_canRemoveRows<I> = true> bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`row`开始移除`count`行，并返回移除是否成功。
+只有在`Range`支持移除元素时才参与超载解析。
 
 ### `int QRangeModelAdapter::rowCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回行数。如果`Range`代表列表或表，则为行数。对于树，这是顶层行数。
 
 ### `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> int QRangeModelAdapter::rowCount(QSpan<const int> row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true> int`。
-- 参数 `row`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`row`下的行数。
+只有当`Range`是树时才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > bool QRangeModelAdapter::setData(int listRow, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QRangeModelAdapter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > bool`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`listRow`项的`role`数据设置为`value`。
+成功时返回`true`;否则返回`false`。
+只有当`Range`为可变列表时才参与超载解析。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > bool QRangeModelAdapter::setData(QSpan<const int> path, int column, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QRangeModelAdapter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::if_tree<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > bool`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`path`和`column`所提及项目的 `role` 数据设置为 `value`。
+成功时返回`true`;否则返回`false`。
+只有当 是可变树时`Range`才参与重载决议。
 
 ### `template < typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > bool QRangeModelAdapter::setData(int tableRow, int column, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QRangeModelAdapter` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template < typename I, QRangeModelAdapter<Range, Protocol, Model>::unless_list<I> = true, QRangeModelAdapter<Range, Protocol, Model>::if_writable<I> = true > bool`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`tableRow`和`column`所提及项目的 `role` 数据设置为 `value`。
+成功时返回`true`;否则返回`false`。
+只有当`Range`可变时才参与超载解析，而非列表。
 
 ### `[noexcept] bool operator!=(const QRangeModelAdapter<Range, Protocol, Model> &lhs, const QRangeModelAdapter<Range, Protocol, Model> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QRangeModelAdapter<Range, Protocol, Model> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QRangeModelAdapter<Range, Protocol, Model> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`lhs`是否等于`rhs`。如果两个适配器都承载相同的 `model`实例，则它们相等。
 
 ### `[noexcept] bool operator==(const QRangeModelAdapter<Range, Protocol, Model> &lhs, const QRangeModelAdapter<Range, Protocol, Model> &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QRangeModelAdapter<Range, Protocol, Model> &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QRangeModelAdapter<Range, Protocol, Model> &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`lhs`是否等于`rhs`。如果两个适配器都承载同一个`model`实例，则称它们相等。
 
 ### `(preliminary) struct ColumnIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在模型行的列上提供一个STL风格的非const迭代器。
+迭代器模型`std::random_access_iterator`。反引用迭代器返回模型中指向项处的值的 `DataReference` 封装器。
 
 ### `(preliminary) struct ConstColumnIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在模型行的列上提供一个STL风格的非const迭代器。
+迭代器模型`std::random_access_iterator`。反参照迭代器返回模型中指向项的const值。
 
 ### `(preliminary) struct ConstRowIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供一个STL风格的const迭代器，覆盖模型的各行。
+迭代器建模时`std::random_access_iterator`。如果模型是一个列表，那么反参照迭代器会返回模型中指向的项。
+对于表和树，迭代器取消引用会返回指向行的`ConstRowReference`。
 
 ### `(preliminary) struct ConstRowReference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ConstRowReference 是 QRangeModel 中 const 行的引用包装器。
+对于表或树的范围，使用`at()`或下标算符[]的const重载访问`QRangeModelAdapter`行，或通过反引用`ConstRowIterator`，返回指定行的ConstRowReference。
 
 ### `(preliminary) struct DataReference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+DataReference 是 QRangeModel 中环绕项目的引用包装器。
+使用`at()`、下标运算符[]等非const超载访问模型中的项目，或取消引用非const `iterator`，都会返回模型中该项目的DataReference包装器。
+赋值到该引用包装器会通过`QAbstractItemModel` API改变模型中的数据。
+该值本身的const版本可以通过`get()`或算符>()访问。
+与`std::reference_wrapper`不同，将一个DataReference分配给另一个DataReference并不会重新绑定引用，而是通过复制语义设置值。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ adapter[0] = newValue;
+```
 
 ### `(preliminary) struct RowIterator`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提供一个STL风格的非const迭代器，覆盖模型的各行。
+迭代器模型`std::random_access_iterator`。如果模型是一个列表，那么去引用迭代器会返回模型中指向项的 `DataReference` 包装器。
+对于表和树，迭代子取消引用会返回指向行的`RowReference`。
 
 ### `(preliminary) struct RowReference`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+RowReference 是 QRangeModel 中环绕行的引用包装器。
+对于表或树的范围，使用`at()`或下标算子[]的非const超载访问`QRangeModelAdapter`行，或通过反引用`RowIterator`，返回指定行的行引用。
 
 ### `(preliminary) struct RowReferenceBase`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的 `preliminary` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+RowReferenceBase 为 RowReference 和 ConstRowReference 提供了通用的 API。
+对于表或树模型，使用`at()`、下标算子[]或取消`RowIterator`引用该行访问适配器的行，会返回指定行的`RowReference`或`ConstRowReference`。
 
 ### `QRangeModelAdapter(Range &&range, Protocol &&protocol)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRangeModelAdapter` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `range`：类型为 `Range &&`。没有默认值，调用时必须提供。传入 `Range &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `protocol`：类型为 `Protocol &&`。没有默认值，调用时必须提供。传入 `Protocol &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个在`range`上操作的`QRangeModelAdapter`。对于树范围，可选`protocol`将用于树的遍历。
+请参阅`QRangeModel`构造器文档，了解`Range`需求详情，以及`range`的值类别如何改变适配器、型号和范围之间的相互作用。
 
 ### `void assign(NewRange &&newRange)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::assign` 用于执行与“assign”相关的操作。调用时要先确认当前状态和 `newRange` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newRange`：类型为 `NewRange &&`。没有默认值，调用时必须提供。传入 `NewRange &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`newRange`中的行替换模型内容。
+仅在`Range`可变且`newRange`可分配给`Range`时才参与超载解析。
 
 ### `void assign(std::initializer_list<Row> newRange)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::assign` 用于执行与“assign”相关的操作。调用时要先确认当前状态和 `newRange` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newRange`：类型为 `std::initializer_list<Row>`。没有默认值，调用时必须提供。传入 `std::initializer_list<Row>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 [`first`， `last` ] 中的行替换模型的内容。
 
 ### `auto at(QSpan<const int> path)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`path`指定的行的常量引用，存储在`Range`中。
+只有当`Range`是树时才参与超载解析。
 
 ### `auto at(int listRow)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`listRow`的值，作为存储在`Range`中的类型。
+只有当`Range`是列表时才参与超载解析。
 
 ### `auto at(int tableRow)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回对`tableRow`行的常量引用，存储在`Range`中。
+仅在`Range`为表或树时参与超载解析。
 
 ### `auto at(int treeRow)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数 `treeRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可变的引用，指向由`path`和`column`指定为物品的值。如果该项是多功能项，则该项将引用整个项。如果`Range`中的行在不同列存储不同类型，则返回类型为`QVariant`。
+注意：对该范围的修改将使该引用失效。要修改该引用，需为其分配一个新值。除非`Range`中存储的值是指针，否则无法访问存储值中的单个成员。
+仅当 是可变树时`Range`才参与超载解析。
 
 ### `decltype(auto) at(QSpan<const int> path) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`decltype(auto)`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可变的引用，即`tableRow`和`column`指定为物品的值。如果该物品是多功能物品，则该引用将指向整个物品。
+注意：对该范围的修改将使该引用失效。要修改该引用，需赋值一个新值。除非`Range`中存储的值是指针，否则无法访问存储值中的单个成员。
+只有当 `Range` 是可变表时，才参与超载解析。
 
 ### `auto at(int listRow) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`auto`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`path`和`column`指定为物品的值副本。如果该物品是多功能物品，则返回整个物品的副本。如果`Range`中的行在不同列存储不同类型，则返回类型为`QVariant`。
+只有当`Range`是树时才参与超载解析。
 
 ### `decltype(auto) at(int tableRow) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `at`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`decltype(auto)`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`tableRow`和`column`指定为物品的值副本。如果该物品是多功能物品，则返回整个物品的副本。如果`Range`中的行在不同列存储不同类型，则返回类型为`QVariant`。
+只有当`Range`是表或树时才参与超载解析。
 
 ### `QVariant data(int listRow) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `listRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QVariant`，存储`path`和`column`所指项目在给定`role`下存储的数据;如果该位置或角色没有数据存储，则返回无效`QVariant`。如果未指定`role`，则返回一个包含完整项目的`QVariant`。
+只有当`Range`是树时才参与重载决议。
 
 ### `QVariant data(QSpan<const int> path, int column) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `path`：类型为 `QSpan<const int>`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QVariant`，存储`tableRow`和`column`所指项目的指定`role`下的数据;如果该位置或角色没有数据，则返回无效`QVariant`。如果未指定`role`，则返回一个包含完整项目的`QVariant`。
+仅在`Range`为表或树时参与超载解析。
 
 ### `QVariant data(int tableRow, int column) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRangeModelAdapter` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `tableRow`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QVariant`，存储`tableRow`和`column`所指项目的指定`role`下的数据;如果该位置或角色没有数据，则返回无效`QVariant`。如果未指定`role`，则返回一个包含完整项目的`QVariant`。
+仅在`Range`为表或树时参与超载解析。
 
 ### `bool hasChildren(int row) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasChildren`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回是否有行在`row`下。
+只有当`Range`是树时才参与超载解析。
 
 ### `int rowCount(int row) const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRangeModelAdapter::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`row`下的行数。
+只有当`Range`是树时才参与超载解析。
 
 ## 6. 深入实践与常见坑
 

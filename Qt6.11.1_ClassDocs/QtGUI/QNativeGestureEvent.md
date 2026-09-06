@@ -64,82 +64,41 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 5 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.2] QNativeGestureEvent::QNativeGestureEvent(Qt::NativeGestureType type, const QPointingDevice *device, int fingerCount, const QPointF &localPos, const QPointF &scenePos, const QPointF &globalPos, qreal value, const QPointF &delta, quint64 sequenceId = UINT64_MAX)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNativeGestureEvent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `type`：类型为 `Qt::NativeGestureType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `device`：类型为 `const QPointingDevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `fingerCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `localPos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `scenePos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `globalPos`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `qreal`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `delta`：类型为 `const QPointF &`。没有默认值，调用时必须提供。传入 `const QPointF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sequenceId`：类型为 `quint64`。默认值为 `UINT64_MAX`。传入 `quint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个类型`type`的本土手势事件，源自`device`描述`scenePos`涉及`fingerCount`手指的手势。
+`localPos`、`scenePos`和`globalPos`分别指定了手势相对于接收小部件或物品、窗口和屏幕或桌面的位置。
+`value`有手势相关的解释：对于RotateNativeGesture或SwipeNativeGesture，它是度数的角度。对于ZoomNativeGesture，`value`是一个增量缩放因子，通常远小于1，表明目标物品的比例应调整如下：item.scale = item.scale * （1 event.value）。
+对于PanNativeGesture，`delta`表示视口、控件或物品需要移动或平移的像素距离。
+注意：`delta`以单精度（`QVector2D`）存储，因此在某些情况下`delta()`返回的值可能略有不同。这可能会在Qt的未来版本中有所更改。
 
 ### `[since 6.2] QPointF QNativeGestureEvent::delta() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNativeGestureEvent::delta` 用于计算、查询或取得与“delta”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回自上一事件以来移动的距离，单位为像素。平移手势表示目标控件、物品或视口内容应移动的像素距离。
 
 ### `[since 6.2] int QNativeGestureEvent::fingerCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNativeGestureEvent::fingerCount` 用于计算、查询或取得与“finger、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知，返回参与该手势的手指数量。当`gestureType()`为`Qt::BeginNativeGesture`或`Qt::EndNativeGesture`时，通常信息未知，fingerCount() 返回`0`。
 
 ### `Qt::NativeGestureType QNativeGestureEvent::gestureType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNativeGestureEvent::gestureType` 用于计算、查询或取得与“gesture、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::NativeGestureType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::NativeGestureType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回手势类型。
 
 ### `qreal QNativeGestureEvent::value() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `value`，用于取得 `QNativeGestureEvent` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回手势值。该值应根据手势类型进行解释。例如，Zoom 手势提供比例因子的差值，而旋转手势提供旋转的差值。
 
 ## 6. 深入实践与常见坑
 

@@ -76,196 +76,116 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 14 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMimeDatabase::MatchMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMimeDatabase` 暴露的类型声明 `匹配、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MatchMode`。
-- 属性名：`QMimeDatabase`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举规定了如何将文件匹配到MIME类型。
+- `QMimeDatabase::MatchDefault`：`0x0`;文件名和内容均用于匹配
+- `QMimeDatabase::MatchExtension`：`0x1`;仅使用文件名来查找匹配
+- `QMimeDatabase::MatchContent`：`0x2`;文件内容用于寻找匹配
 
 ### `QMimeDatabase::QMimeDatabase()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMimeDatabase` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QMimeDatabase对象。
+每次需要查找时创建 QMimeDatabase 实例完全没问题。mimetypes 的解析可以按需进行（安装共享 mime-info 时），或者在构建第一个实例时（直接解析 XML 文件时）。
 
 ### `[noexcept] QMimeDatabase::~QMimeDatabase()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMimeDatabase` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QMimeDatabase`物体。
 
 ### `QList<QMimeType> QMimeDatabase::allMimeTypes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::allMimeTypes` 用于计算、查询或取得与“all、Mime、Types”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QMimeType>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QMimeType>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有可用的MIME类型列表。
+这对于向用户展示所有 MIME 类型非常有用，例如在 MIME 类型编辑器中。除非非常必要，否则不要使用，出于性能考虑，优先使用`mimeTypeForXxx()`方法。
 
 ### `QMimeType QMimeDatabase::mimeTypeForData(QIODevice *device) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForData` 用于计算、查询或取得与“mime、类型、For、数据访问”相关的操作。调用时要先确认当前状态和 `device` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数据的MIME类型`device`。
+总是返回一个有效的 MIME 类型。如果 `device` 中的数据与已知的 MIME 类型数据不匹配，则返回默认的 MIME 类型（应用程序/八位元组流）。
 
 ### `QMimeType QMimeDatabase::mimeTypeForData(const QByteArray &data) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForData` 用于计算、查询或取得与“mime、类型、For、数据访问”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退回一台MIME类型`data`。
+总是返回一个有效的 MIME 类型。如果 `data` 与已知的 MIME 类型数据不匹配，则返回默认的 MIME 类型（应用程序/八位元组流）。
 
 ### `QMimeType QMimeDatabase::mimeTypeForFile(const QFileInfo &fileInfo, QMimeDatabase::MatchMode mode = MatchDefault) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForFile` 用于计算、查询或取得与“mime、类型、For、File”相关的操作。调用时要先确认当前状态和 `fileInfo`、`mode` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `fileInfo`：类型为 `const QFileInfo &`。没有默认值，调用时必须提供。传入 `const QFileInfo &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QMimeDatabase::MatchMode`。默认值为 `MatchDefault`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退回一台MIME类型`fileInfo`。
+总是返回有效的 MIME 类型。
+默认匹配算法会同时查看文件名和文件内容（如有必要）。文件扩展名优先于内容，但如果文件扩展名未知或匹配多个 MIME 类型，则使用内容。如果 `fileInfo` 是 Unix 符号链接，则使用其所引用的文件。如果文件与已知模式或数据不匹配，则返回默认 MIME 类型（application/octet-stream）。
+当`mode`设置为`MatchExtension`时，只使用文件名，而非文件内容。文件甚至不必存在。如果文件名与已知模式不匹配，返回默认MIME类型（application/octet-stream）。如果多个MIME类型匹配该文件，返回第一个类型（按字母顺序）。
+当`mode`设置为`MatchContent`且文件可读时，仅使用文件内容来确定MIME类型。这相当于调用`mimeTypeForData`，输入设备为`QFile`。
+`fileInfo`可以指绝对路径或相对路径。
 
 ### `QMimeType QMimeDatabase::mimeTypeForFile(const QString &fileName, QMimeDatabase::MatchMode mode = MatchDefault) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForFile` 用于计算、查询或取得与“mime、类型、For、File”相关的操作。调用时要先确认当前状态和 `fileName`、`mode` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `mode`：类型为 `QMimeDatabase::MatchMode`。默认值为 `MatchDefault`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回名为`fileName`的文件的MIME类型，使用`mode`。
 
 ### `QMimeType QMimeDatabase::mimeTypeForFileNameAndData(const QString &fileName, QIODevice *device) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForFileNameAndData` 用于计算、查询或取得与“mime、类型、For、File、名称、And、数据访问”相关的操作。调用时要先确认当前状态和 `fileName`、`device` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`fileName`和`device`数据的MIME类型。
+这种重载在文件处于远程状态时非常有用，我们开始在设备中下载部分数据。这也允许对远程文件进行完整的MIME类型匹配。
+如果设备未打开，该功能将被打开，完成MIME类型检测后关闭设备。
+总是返回一个有效的MIME类型。如果`device`数据与任何已知的MIME类型数据不匹配，则返回默认MIME类型（应用程序/八位元组流）。
+该方法会同时查看文件名和文件内容（如有必要）。文件扩展名优先于内容，但如果文件扩展名未知或匹配多个 MIME 类型，则会使用内容。
 
 ### `QMimeType QMimeDatabase::mimeTypeForFileNameAndData(const QString &fileName, const QByteArray &data) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForFileNameAndData` 用于计算、查询或取得与“mime、类型、For、File、名称、And、数据访问”相关的操作。调用时要先确认当前状态和 `fileName`、`data` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`fileName`和设备`data`的MIME类型。
+这种重载在文件处于远程时非常有用，我们开始下载部分数据。这也允许对远程文件进行完整的MIME类型匹配。
+总是返回一个有效的 MIME 类型。如果`data`与已知的 MIME 类型数据不匹配，则返回默认的 MIME 类型（应用/八元组流）。
+该方法会同时查看文件名和文件内容（如有必要）。文件扩展名优先于内容，但如果文件扩展名未知或匹配多个 MIME 类型，则会使用内容。
 
 ### `QMimeType QMimeDatabase::mimeTypeForName(const QString &nameOrAlias) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForName` 用于计算、查询或取得与“mime、类型、For、名称”相关的操作。调用时要先确认当前状态和 `nameOrAlias` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `nameOrAlias`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果没有找到，则返回一个MIME类型`nameOrAlias`或返回无效类型。
 
 ### `QMimeType QMimeDatabase::mimeTypeForUrl(const QUrl &url) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypeForUrl` 用于计算、查询或取得与“mime、类型、For、Url”相关的操作。调用时要先确认当前状态和 `url` 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退回一辆MIME类型`url`。
+如果URL是本地文件，则调用`mimeTypeForFile`。
+否则匹配仅基于文件名，除非文件名意义不大，比如 HTTP。该方法总是返回 HTTP URL 的默认 mimetype，使用 `QNetworkAccessManager` 正确处理 HTTP URL。
+总是返回有效的 MIME 类型。如果 `url` 与已知的 MIME 类型数据不匹配，则返回默认的 MIME 类型（应用程序/八位元组流）。
 
 ### `QList<QMimeType> QMimeDatabase::mimeTypesForFileName(const QString &fileName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::mimeTypesForFileName` 用于计算、查询或取得与“mime、Types、For、File、名称”相关的操作。调用时要先确认当前状态和 `fileName` 的有效范围；返回类型是 `QList<QMimeType>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QMimeType>`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件名 `fileName` 的 MIME 类型。
+如果文件名与已知模式不匹配，则返回一个空列表。如果多个 MIME 类型匹配该文件，则全部返回。
+该函数不会尝试打开文件。为了在确定MIME类型时也使用内容，请使用`mimeTypeForFile()`或`mimeTypeForFileNameAndData()`。
 
 ### `QString QMimeDatabase::suffixForFileName(const QString &fileName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMimeDatabase::suffixForFileName` 用于计算、查询或取得与“suffix、For、File、名称”相关的操作。调用时要先确认当前状态和 `fileName` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文件`fileName`的后缀，符合MIME数据库的认知。
+这允许预选“tar.bz2”作为 foo.tar.bz2，但仅为 my.file.with.dots.txt 选择“txt”。
 
 ## 6. 深入实践与常见坑
 

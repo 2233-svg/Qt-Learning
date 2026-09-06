@@ -94,313 +94,202 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 23 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[since 6.4] clearButtonEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的配置属性。初始化或状态切换时通过 `setClearButtonEnabled(...)` 设置，之后用 `clearButtonEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定键序列编辑是否在未空时显示清除按钮。
+如果启用，键序列编辑包含文本时会显示一个尾随的清除按钮，否则行编辑不会显示清除按钮（默认设置）。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`clearButtonEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `clearButtonEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.5] finishingKeyCombinations : QList<QKeyCombination>`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的配置属性。初始化或状态切换时通过 `setFinishingKeyCombinations(...)` 设置，之后用 `finishingKeyCombinations()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含完成编辑密钥序列的密钥组合列表。
+列表中任意组合都可以完成按键序列的编辑。所有其他按键组合都可以作为按键序列的一部分被记录。默认情况下，`Qt::Key_Tab`和`Qt::Key_Backtab`会完成按键序列的录制。
 
-**签名拆解：**
-
-- 属性类型：`QList<QKeyCombination>`。
-- 属性名：`finishingKeyCombinations`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `finishingKeyCombinations()` 读取当前值；它不会修改应用状态。
 
 ### `keySequence : QKeySequence`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的配置属性。初始化或状态切换时通过 `setKeySequence(...)` 设置，之后用 `keySequence()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含当前选择的密钥序列。
+快捷方式可以由用户或设置功能更改。
+注意：如果`QKeySequence`长于`maximumSequenceLength`属性，则键序列被截断。
 
-**签名拆解：**
-
-- 属性类型：`QKeySequence`。
-- 属性名：`keySequence`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keySequence()` 读取当前值；它不会修改应用状态。
 
 ### `[since 6.5] maximumSequenceLength : qsizetype`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的配置属性。初始化或状态切换时通过 `setMaximumSequenceLength(...)` 设置，之后用 `maximumSequenceLength()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性表示序列的最大长度。
+用户可输入的最大密钥序列数。值应在1到4之间，默认为4。
 
-**签名拆解：**
-
-- 属性类型：`qsizetype`。
-- 属性名：`maximumSequenceLength`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumSequenceLength()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QKeySequenceEdit::QKeySequenceEdit(QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有给定`parent`的QKeySequenceEdit小部件。
 
 ### `[explicit] QKeySequenceEdit::QKeySequenceEdit(const QKeySequence &keySequence, QWidget *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `keySequence`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有给定`keySequence`和`parent`的QKeySequenceEdit小部件。
 
 ### `[virtual noexcept] QKeySequenceEdit::~QKeySequenceEdit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QKeySequenceEdit`物体。
 
 ### `[slot] void QKeySequenceEdit::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `clear`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除当前键序列。
 
 ### `[signal] void QKeySequenceEdit::editingFinished()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeySequenceEdit` 发出的通知信号 `editingFinished`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当用户完成快捷输入时，该信号会发出。
+注意：在释放最后一个密钥并发出该信号之前，有一个一秒的延迟。
 
 ### `[override virtual protected] bool QKeySequenceEdit::event(QEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `e`：类型为 `QEvent *`。没有默认值，调用时必须提供。传入 `QEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `[override virtual protected] void QKeySequenceEdit::focusOutEvent(QFocusEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。传入 `QFocusEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重现：`QWidget::focusOutEvent`（QFocusEvent *event）。
+该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
+小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
+默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
 
 ### `[override virtual protected] void QKeySequenceEdit::keyPressEvent(QKeyEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyPressEvent`（QKeyEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的按键事件。
+一个小部件必须调用`setFocusPolicy()`先接受焦点，并且必须有焦点才能接收按键事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现会关闭弹出小部件，如果用户按下`QKeySequence::Cancel`的按键序列（通常是 Escape 键）。否则事件会被忽略，以便小部件的父节点能够解释。
+注意`QKeyEvent`以 isAccepted() == true 开头，所以你不需要调用 `QKeyEvent::accept()`——只要你对该键执行时不要调用基类实现即可。
 
 ### `[override virtual protected] void QKeySequenceEdit::keyReleaseEvent(QKeyEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。传入 `QKeyEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::keyReleaseEvent`（QKeyEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该小部件的密钥释放事件。
+小部件必须先接受焦点并拥有焦点，才能接收密钥释放事件。
+如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
+默认实现忽略事件，以便小部件的父节点能够解释事件。
+注意`QKeyEvent`以 isAccepted() == true开头，所以你不需要调用`QKeyEvent::accept()`——只要你对密钥操作时不要调用基类实现即可。
 
 ### `[override virtual protected] void QKeySequenceEdit::timerEvent(QTimerEvent *e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::timerEvent` 用于执行与“timer、Event”相关的操作。调用时要先确认当前状态和 `e` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `e`：类型为 `QTimerEvent *`。没有默认值，调用时必须提供。传入 `QTimerEvent *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QObject::timerEvent`（QTimerEvent *event）。
 
 ### `QList<QKeyCombination> finishingKeyCombinations() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::finishingKeyCombinations` 用于计算、查询或取得与“finishing、Key、Combinations”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QKeyCombination>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含完成编辑密钥序列的密钥组合列表。
+列表中任意组合都可以完成按键序列的编辑。所有其他按键组合都可以作为按键序列的一部分被记录。默认情况下，`Qt::Key_Tab`和`Qt::Key_Backtab`会完成按键序列的录制。
 
-**签名拆解：**
-
-- 返回值：`QList<QKeyCombination>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `finishingKeyCombinations()` 读取当前值；它不会修改应用状态。
 
 ### `bool isClearButtonEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isClearButtonEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定键序列编辑是否在未空时显示清除按钮。
+如果启用，键序列编辑包含文本时会显示一个尾随的清除按钮，否则行编辑不会显示清除按钮（默认设置）。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isClearButtonEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `QKeySequence keySequence() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::keySequence` 用于计算、查询或取得与“key、Sequence”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QKeySequence`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含当前选择的密钥序列。
+快捷方式可以由用户或设置功能更改。
+注意：如果`QKeySequence`长于`maximumSequenceLength`属性，则键序列被截断。
 
-**签名拆解：**
-
-- 返回值：`QKeySequence`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `keySequence()` 读取当前值；它不会修改应用状态。
 
 ### `qsizetype maximumSequenceLength() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QKeySequenceEdit::maximumSequenceLength` 用于计算、查询或取得与“最大值、Sequence、Length”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性表示序列的最大长度。
+用户可输入的最大密钥序列数。值应在1到4之间，默认为4。
 
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `maximumSequenceLength()` 读取当前值；它不会修改应用状态。
 
 ### `void setClearButtonEnabled(bool enable)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setClearButtonEnabled`。调用它会改变 `QKeySequenceEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性决定键序列编辑是否在未空时显示清除按钮。
+如果启用，键序列编辑包含文本时会显示一个尾随的清除按钮，否则行编辑不会显示清除按钮（默认设置）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enable`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setClearButtonEnabled(...)` 修改 `clearButtonEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setFinishingKeyCombinations(const QList<QKeyCombination> &finishingKeyCombinations)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFinishingKeyCombinations`。调用它会改变 `QKeySequenceEdit` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含完成编辑密钥序列的密钥组合列表。
+列表中任意组合都可以完成按键序列的编辑。所有其他按键组合都可以作为按键序列的一部分被记录。默认情况下，`Qt::Key_Tab`和`Qt::Key_Backtab`会完成按键序列的录制。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `finishingKeyCombinations`：类型为 `const QList<QKeyCombination> &`。没有默认值，调用时必须提供。传入 `const QList<QKeyCombination> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFinishingKeyCombinations(...)` 修改 `finishingKeyCombinations`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setKeySequence(const QKeySequence &keySequence)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setKeySequence`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含当前选择的密钥序列。
+快捷方式可以由用户或设置功能更改。
+注意：如果`QKeySequence`长于`maximumSequenceLength`属性，则键序列被截断。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keySequence`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setKeySequence(...)` 修改 `keySequence`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setMaximumSequenceLength(qsizetype count)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setMaximumSequenceLength`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性表示序列的最大长度。
+用户可输入的最大密钥序列数。值应在1到4之间，默认为4。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `count`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setMaximumSequenceLength(...)` 修改 `maximumSequenceLength`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void keySequenceChanged(const QKeySequence &keySequence)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `keySequenceChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含当前选择的密钥序列。
+快捷方式可以由用户或设置功能更改。
+注意：如果`QKeySequence`长于`maximumSequenceLength`属性，则键序列被截断。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `keySequence`：类型为 `const QKeySequence &`。没有默认值，调用时必须提供。传入 `const QKeySequence &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `keySequence` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

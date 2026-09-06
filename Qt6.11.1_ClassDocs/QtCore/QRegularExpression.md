@@ -111,629 +111,439 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 46 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRegularExpression::MatchOptionflags QRegularExpression::MatchOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `匹配、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MatchOptionflags QRegularExpression::MatchOptions`。
-- 属性名：`QRegularExpression`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QRegularExpression::NoMatchOption`：`0x0000`;不设置匹配选项。
+- `QRegularExpression::AnchoredMatchOption`：`AnchorAtOffsetMatchOption`;改用 AnchorAtOffsetMatchOption。
+- `QRegularExpression::AnchorAtOffsetMatchOption`：`0x0001`;匹配被限制必须从传递给`match()`的偏移开始，才能成功，即使模式字符串中没有任何元字符锚定匹配。注意，通过该选项不会将匹配结束点锚定到主语的结尾;如果你想完全锚定正则表达式，可以使用`anchoredPattern()`。该枚举值在Qt 6.0中引入。
+- `QRegularExpression::DontCheckSubjectStringMatchOption`：`0x0002`;在尝试匹配前，主旨字符串不会检查其 UTF-16 有效性。使用此选项时需极度谨慎，因为尝试匹配无效字符串可能导致程序崩溃和/或构成安全问题。该枚举值在 Qt 5.4 中引入。
+MatchOptions 类型是 QFlags 的 typedef<MatchOption>。它存储 MatchOption 值的 OR 组合。
 
 ### `enum QRegularExpression::MatchType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `匹配、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:MatchType`。
-- 属性名：`QRegularExpression`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+MatchType 枚举定义了应针对主题字符串尝试匹配的类型。
+- `QRegularExpression::NormalMatch`：`0`;正常匹配完成。
+- `QRegularExpression::PartialPreferCompleteMatch`：`1`;模式字符串部分匹配主题字符串。如果发现部分匹配，则记录该匹配，并照常尝试其他匹配方案。如果找到完全匹配，则优先采用该匹配而非部分匹配;此时只报告完整匹配。如果找不到完全匹配（仅部分匹配），则报告部分匹配。
+- `QRegularExpression::PartialPreferFirstMatch`：`2`;模式字符串部分与主语字符串匹配。如果发现部分匹配，则匹配停止并报告部分匹配。此时不尝试其他匹配方案（可能导致完全匹配）。此外，这种匹配类型假设主语字符串仅为更大文本的子字符串，且（在本文本中）主语字符串末尾之外还有其他字符。这可能导致令人惊讶的结果;更多细节请参见部分匹配部分的讨论。
+- `QRegularExpression::NoMatch`：`3`;不进行匹配。该值由默认构造的构造`QRegularExpressionMatch`或`QRegularExpressionMatchIterator`返回为匹配类型。使用该匹配类型对用户来说并不太实用，因为从未发生匹配。该枚举值在第5.1个季度引入。
 
 ### `enum QRegularExpression::PatternOptionflags QRegularExpression::PatternOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `Pattern、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PatternOptionflags QRegularExpression::PatternOptions`。
-- 属性名：`QRegularExpression`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+PatternOption 枚举定义了模式字符串应如何解释的修饰符，从而定义模式与主题字符串匹配的方式。
+- `QRegularExpression::NoPatternOption`：`0x0000`;不设置任何图案选项。
+- `QRegularExpression::CaseInsensitiveOption`：`0x0001`;该模式应以不区分大小写的方式与主语字符串匹配。该选项对应于 Perl 正则表达式中的 /i 修饰符。
+- `QRegularExpression::DotMatchesEverythingOption`：`0x0002`;模式字符串中的点元字符（`.`）允许匹配主语字符串中的任意字符，包括换行（通常点不匹配换行）。该选项对应于 Perl 正则表达式中的 `/s` 修饰符。
+- `QRegularExpression::MultilineOption`：`0x0004`;模式字符串中的插入符（`^`）和美元元字符（`$`）分别允许在主题字符串中任何换行之后和之前，以及主题字符串的开头和末尾匹配。该选项对应于 Perl 正则表达式中的 `/m` 修饰符。
+- `QRegularExpression::ExtendedPatternSyntaxOption`：`0x0008`;模式字符串中未转义且不属于字符类的空白部分将被忽略。此外，字符类外的未脱义升号（#）会导致后续所有字符（包括第一行）被忽略。这可用于提高模式字符串的可读性，并将注释放入正则表达式中;这在从文件加载或用户编写的模式字符串中尤为有用，因为在C代码中，字符串文字规则总能将注释置于模式字符串之外。该选项对应Perl正则表达式中的`/x`修饰符。
+- `QRegularExpression::InvertedGreedinessOption`：`0x0010`;量词的贪婪程度是反转的：`*`、`+`、`?`、`{m,n}`等变得懒惰，而它们的懒惰版本（`*?`、`+?`、`??`、`{m,n}?`等）变得贪婪。在Perl正则表达式中没有类似的选项。
+- `QRegularExpression::DontCaptureOption`：`0x0020`;非命名捕获群不捕获子串;命名捕获群仍然按预期工作，且对应整个匹配的隐式捕获组编号0也同样有效。Perl正则表达式中没有对此选项的对应。
+- `QRegularExpression::UseUnicodePropertiesOption`：`0x0040`;`\w`、`\d`等字符类的含义，以及它们对应的字符（`\W`、`\D`等）的含义，从仅匹配ASCII字符改为匹配具有相应Unicode属性的任意字符。例如，`\d`被更改为匹配任何具有Unicode的Nd（十进制数字）属性的字符;`\w`匹配任何具有Unicode字母L（字母）或N（数字）属性的字符，加上下划线，依此类推。该选项对应于 Perl 正则表达式中的 `/u` 修饰符。
+PatternOptions 类型是 QFlags 的 typedef<PatternOption>。它存储 PatternOption 值的 OR 组合。
 
 ### `[since 6.0] enum QRegularExpression::WildcardConversionOptionflags QRegularExpression::WildcardConversionOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `Wildcard、Conversion、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:WildcardConversionOptionflags QRegularExpression::WildcardConversionOptions`。
-- 属性名：`QRegularExpression`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+WildcardConversionOption 枚举定义了将万用字块模式转换为正则表达式模式的方式修饰符。
+- `QRegularExpression::DefaultWildcardConversion`：`0x0`;不设置转换选项。
+- `QRegularExpression::UnanchoredWildcardConversion`：`0x1`;转换不会锚定模式。这允许部分字符串匹配百搭符表达式。
+- `QRegularExpression::NonPathWildcardConversion (since Qt 6.6)`：`0x2`;转换时不会将模式解释为文件路径的滚动。
+该枚举是在Qt 6.0中引入的。
+WildcardConversionOptions 类型是 QFlags 的 typedef<WildcardConversionOption>。它存储 WildcardConversionOption 值的 OR 组合。
 
 ### `QRegularExpression::QRegularExpression()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有空模式且无模式选项的QRegularExpression对象。
 
 ### `[explicit] QRegularExpression::QRegularExpression(const QString &pattern, QRegularExpression::PatternOptions options = NoPatternOption)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `pattern`：类型为 `const QString &`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-- 参数 `options`：类型为 `QRegularExpression::PatternOptions`。默认值为 `NoPatternOption`。传入 `QRegularExpression::PatternOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用给定`pattern`作为模式，`options`作为模式选项，构建一个QRegularExpression对象。
 
 ### `[noexcept] QRegularExpression::QRegularExpression(const QRegularExpression &re)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QRegularExpression对象作为`re`的副本。
 
 ### `[constexpr noexcept, since 6.1] QRegularExpression::QRegularExpression(QRegularExpression &&re)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `re`：类型为 `QRegularExpression &&`。没有默认值，调用时必须提供。传入 `QRegularExpression &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从 到 `re` 构建 QRegularExpression 对象。
+注意，移出 QRegularExpression 只能被销毁或赋值。调用除析构函数或赋值算符外的其他函数效果尚无定义。
 
 ### `[noexcept] QRegularExpression::~QRegularExpression()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QRegularExpression`物体。
 
 ### `[static] QString QRegularExpression::anchoredPattern(QStringView expression)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `anchoredPattern`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `expression`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包裹在`\A`和`\z`锚之间的`expression`，用于精确匹配。
 
 ### `[static] QString QRegularExpression::anchoredPattern(const QString &expression)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `anchoredPattern`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `expression`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包裹在`\A`和`\z`锚之间的`expression`，用于精确匹配。
 
 ### `int QRegularExpression::captureCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::captureCount` 用于计算、查询或取得与“capture、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模式字符串内捕获群的数量，若正则表达式无效则返回-1。
+注意：隐式捕获群0未包含在返回的数字中。
 
 ### `QString QRegularExpression::errorString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回检查正则表达式有效性时发现错误的文本描述，若未发现错误则返回“无错误”。
 
 ### `[static] QString QRegularExpression::escape(QStringView str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `escape`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+转义 `str` 的所有字符，使其在用作正则表达式模式字符串时不再具有特殊含义，并返回转义字符串。例如：
+这对于从任意字符串构建模式非常方便：
+注意：该函数实现了Perl的引用元算法，并以反斜杠逃脱`str`中所有字符，除了`[A-Z]`、`[a-z]`和`[0-9]`范围内的字符，以及下划线（`_`）字符。Perl 唯一的区别是，字面上的 NUL `str` 中转义时，转义时序列为 `"\\0"`（反斜杠 `'0'`），而不是 `"\\\0"`（反斜杠`NUL`）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数 `str`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QString escaped = QRegularExpression::escape("a(x) = f(x) + g(x)");
+ // escaped == "a\\(x\\)\\ \\=\\ f\\(x\\)\\ \\+\\ g\\(x\\)"
+```
 
 ### `[static] QString QRegularExpression::escape(const QString &str)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `escape`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+转义 `str` 的所有字符，使其在用作正则表达式模式字符串时不再具有特殊含义，并返回转义字符串。例如：
+这对于从任意字符串构建模式非常方便：
+注意：该函数实现了Perl的引用元算法，并以反斜杠逃脱`str`中所有字符，除了`[A-Z]`、`[a-z]`和`[0-9]`范围内的字符，以及下划线（`_`）字符。Perl 唯一的区别是，字面上的 NUL `str` 中转义时，转义时序列为 `"\\0"`（反斜杠 `'0'`），而不是 `"\\\0"`（反斜杠`NUL`）。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数 `str`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QString escaped = QRegularExpression::escape("a(x) = f(x) + g(x)");
+ // escaped == "a\\(x\\)\\ \\=\\ f\\(x\\)\\ \\+\\ g\\(x\\)"
+```
 
 ### `[static, since 6.0] QRegularExpression QRegularExpression::fromWildcard(QStringView pattern, Qt::CaseSensitivity cs = Qt::CaseInsensitive, QRegularExpression::WildcardConversionOptions options = DefaultWildcardConversion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromWildcard`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回球状模式的正则表达式`pattern`。如果`cs` `Qt::CaseSensitive`并根据`options`转换，正则表达式将不分大小写。
+等价于。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QRegularExpression`。
-- 参数 `pattern`：类型为 `QStringView`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-- 参数 `cs`：类型为 `Qt::CaseSensitivity`。默认值为 `Qt::CaseInsensitive`。传入 `Qt::CaseSensitivity` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `QRegularExpression::WildcardConversionOptions`。默认值为 `DefaultWildcardConversion`。传入 `QRegularExpression::WildcardConversionOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ auto reOptions = cs == Qt::CaseSensitive ? QRegularExpression::NoPatternOption :
+                                            QRegularExpression::CaseInsensitiveOption;
+ return QRegularExpression(wildcardToRegularExpression(str, options), reOptions);
+```
 
 ### `QRegularExpressionMatchIterator QRegularExpression::globalMatch(const QString &subject, qsizetype offset = 0, QRegularExpression::MatchType matchType = NormalMatch, QRegularExpression::MatchOptions matchOptions = NoMatchOption) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::globalMatch` 用于计算、查询或取得与“global、匹配”相关的操作。调用时要先确认当前状态和 `subject`、`offset`、`matchType`、`matchOptions` 的有效范围；返回类型是 `QRegularExpressionMatchIterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatchIterator`。
-- 参数 `subject`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `offset`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchType`：类型为 `QRegularExpression::MatchType`。默认值为 `NormalMatch`。传入 `QRegularExpression::MatchType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchOptions`：类型为 `QRegularExpression::MatchOptions`。默认值为 `NoMatchOption`。传入 `QRegularExpression::MatchOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试对正则表达式与给定`subject`字符串进行全局匹配，从主体内`offset`位置开始，使用类型匹配`matchType`并尊重给定`matchOptions`。
+返回的`QRegularExpressionMatchIterator`会排在第一场比赛结果之前（如果有的话）。
 
 ### `[since 6.5] QRegularExpressionMatchIterator QRegularExpression::globalMatchView(QStringView subjectView, qsizetype offset = 0, QRegularExpression::MatchType matchType = NormalMatch, QRegularExpression::MatchOptions matchOptions = NoMatchOption) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::globalMatchView` 用于计算、查询或取得与“global、匹配、View”相关的操作。调用时要先确认当前状态和 `subjectView`、`offset`、`matchType`、`matchOptions` 的有效范围；返回类型是 `QRegularExpressionMatchIterator`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatchIterator`。
-- 参数 `subjectView`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `offset`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchType`：类型为 `QRegularExpression::MatchType`。默认值为 `NormalMatch`。传入 `QRegularExpression::MatchType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchOptions`：类型为 `QRegularExpression::MatchOptions`。默认值为 `NoMatchOption`。传入 `QRegularExpression::MatchOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试将正则表达式与给定的`subjectView`字符串视图进行全局匹配，从主体内`offset`位置开始，使用类型为`matchType`的匹配并尊重给定的`matchOptions`。
+返回的`QRegularExpressionMatchIterator`会排在第一场比赛结果（如有）之前。
+注意：只要有`QRegularExpressionMatchIterator`或`QRegularExpressionMatch`对象使用，`subjectView`引用的数据必须保持有效。
 
 ### `bool QRegularExpression::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果正则表达式是有效的正则表达式（即无语法错误等），否则返回`true`。使用`errorString()`获取错误的文本描述。
 
 ### `QRegularExpressionMatch QRegularExpression::match(const QString &subject, qsizetype offset = 0, QRegularExpression::MatchType matchType = NormalMatch, QRegularExpression::MatchOptions matchOptions = NoMatchOption) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::match` 用于计算、查询或取得与“匹配”相关的操作。调用时要先确认当前状态和 `subject`、`offset`、`matchType`、`matchOptions` 的有效范围；返回类型是 `QRegularExpressionMatch`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatch`。
-- 参数 `subject`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `offset`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchType`：类型为 `QRegularExpression::MatchType`。默认值为 `NormalMatch`。传入 `QRegularExpression::MatchType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchOptions`：类型为 `QRegularExpression::MatchOptions`。默认值为 `NoMatchOption`。传入 `QRegularExpression::MatchOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试将正则表达式与给定的`subject`字符串匹配，从主语内部`offset`位置开始，使用类型匹配`matchType`并尊重给定`matchOptions`。
+返回的`QRegularExpressionMatch`对象包含匹配结果。
 
 ### `[since 6.5] QRegularExpressionMatch QRegularExpression::matchView(QStringView subjectView, qsizetype offset = 0, QRegularExpression::MatchType matchType = NormalMatch, QRegularExpression::MatchOptions matchOptions = NoMatchOption) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::matchView` 用于计算、查询或取得与“匹配、View”相关的操作。调用时要先确认当前状态和 `subjectView`、`offset`、`matchType`、`matchOptions` 的有效范围；返回类型是 `QRegularExpressionMatch`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpressionMatch`。
-- 参数 `subjectView`：类型为 `QStringView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `offset`：类型为 `qsizetype`。默认值为 `0`。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchType`：类型为 `QRegularExpression::MatchType`。默认值为 `NormalMatch`。传入 `QRegularExpression::MatchType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matchOptions`：类型为 `QRegularExpression::MatchOptions`。默认值为 `NoMatchOption`。传入 `QRegularExpression::MatchOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试将正则表达式与给定的`subjectView`字符串视图匹配，从主体内`offset`位置开始，使用类型`matchType`匹配并尊重给定`matchOptions`。
+返回的`QRegularExpressionMatch`对象包含匹配结果。
+注意：只要有`QRegularExpressionMatch`对象使用，`subjectView`所引用的数据必须保持有效。
 
 ### `QStringList QRegularExpression::namedCaptureGroups() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::namedCaptureGroups` 用于计算、查询或取得与“named、Capture、Groups”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回`captureCount()` 1元素列表，包含模式字符串中命名捕获群的名称。列表排序为：列表中位置`i`的元素（如果有名称）为第`i`捕获群的名称，若该捕获群无名则为空字符串。
+例如，给定正则表达式。
+namedCaptureGroups() 将返回以下列表：
+这对应于捕获组#0（对应整场比赛）没有名称，捕获组#1名为“Day”，捕获组#2名为“Month”，依此类推。
+如果正则表达式无效，则返回一个空列表。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     (?<day>\d\d)-(?<month>\d\d)-(?<year>\d\d\d\d) (\w+) (?<name>\w+)
+```
 
 ### `void QRegularExpression::optimize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::optimize` 用于执行与“optimize”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+立即编译模式，包括 JIT 编译（如果启用 JIT）以实现优化。
 
 ### `QString QRegularExpression::pattern() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::pattern` 用于计算、查询或取得与“pattern”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回正则表达式的模式字符串。
 
 ### `qsizetype QRegularExpression::patternErrorOffset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::patternErrorOffset` 用于计算、查询或取得与“pattern、错误、Offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模式字符串内的偏移量，该偏移量在检查正则表达式有效性时发现错误。如果未发现错误，则返回-1。
 
 ### `QRegularExpression::PatternOptions QRegularExpression::patternOptions() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::patternOptions` 用于计算、查询或取得与“pattern、Options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression::PatternOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression::PatternOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回正则表达式的模式选项。
 
 ### `void QRegularExpression::setPattern(const QString &pattern)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPattern`。调用它会改变 `QRegularExpression` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pattern`：类型为 `const QString &`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将正规表达式的模式字符串设置为`pattern`。模式选项保持不变。
 
 ### `void QRegularExpression::setPatternOptions(QRegularExpression::PatternOptions options)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPatternOptions`。调用它会改变 `QRegularExpression` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QRegularExpression::PatternOptions`。没有默认值，调用时必须提供。传入 `QRegularExpression::PatternOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`options`设为正则表达式的模式选项。模式字符串保持不变。
 
 ### `[noexcept] void QRegularExpression::swap(QRegularExpression &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QRegularExpression &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将正则表达式与`other`互换。该操作非常快速且从未失败。
 
 ### `[static] QString QRegularExpression::wildcardToRegularExpression(QStringView pattern, QRegularExpression::WildcardConversionOptions options = DefaultWildcardConversion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `wildcardToRegularExpression`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回给定球状`pattern`的正则表达式表示。
+有两种转换方式可选，一种针对文件路径混合，另一种则更通用。
+默认情况下，该转换针对的是文件路径分隔符，这意味着路径分隔符会获得特殊处理。这意味着它不仅仅是从“*”到“.*”等的基本转换。
+更通用的球状变换可以通过在转换`options`中传递`NonPathWildcardConversion`实现。
+该实现紧密遵循球状图案的万用符定义：
+- `c`：任何字符都表示自己，且不包括下面提到的字符。因此，c 与字符 c 匹配。
+- `?`：匹配任意单个字符，除非选择了路径分隔符（如果文件选择了路径大块化）。它与完整正则表达式中的 b{.} 相同。
+- `*`：匹配任意字符的零个或多个，除非路径分隔符（如果文件选择了路径大块化）。它与完整正规表达式中的 .* 相同。
+- `[abc]`：匹配括号中给出的字符。
+- `[a-c]`：匹配括号中所示范围中的一个字符。
+- `[!abc]`：匹配一个未在括号中给出的字符。它与完整正规表达式中的[^abc]相同。
+- `[!a-c]`：匹配一个不属于括号中范围的字符。它与完整正规表达式中的[^a-c]相同。
+注意：出于历史原因，反斜杠（\）字符在此语境中不是转义字符。为了匹配某个特殊字符，请将其置于方括号内（例如`[?]`）。
+关于该实施的更多信息可见：
+- 维基百科球体条目
+- `man 7 glob`
+默认情况下，返回的正则表达式是完全锚定的。换句话说，无需对结果再次调用`anchoredPattern()`。要得到一个未锚定的正则表达式，在转换`options`中传递`UnanchoredWildcardConversion`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数 `pattern`：类型为 `QStringView`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-- 参数 `options`：类型为 `QRegularExpression::WildcardConversionOptions`。默认值为 `DefaultWildcardConversion`。传入 `QRegularExpression::WildcardConversionOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QString wildcard = QRegularExpression::wildcardToRegularExpression("*.jpeg");
+ // Will match files with names like:
+ //    foo.jpeg
+ //    f_o_o.jpeg
+ //    föö.jpeg
+```
 
 ### `[static] QString QRegularExpression::wildcardToRegularExpression(const QString &pattern, QRegularExpression::WildcardConversionOptions options = DefaultWildcardConversion)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `wildcardToRegularExpression`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+返回给定球状`pattern`的正则表达式表示。
+有两种转换方式可选，一种针对文件路径混合，另一种则更通用。
+默认情况下，该转换针对的是文件路径分隔符，这意味着路径分隔符会获得特殊处理。这意味着它不仅仅是从“*”到“.*”等的基本转换。
+更通用的球状变换可以通过在转换`options`中传递`NonPathWildcardConversion`实现。
+该实现紧密遵循球状图案的万用符定义：
+- `c`：任何字符都表示自己，且不包括下面提到的字符。因此，c 与字符 c 匹配。
+- `?`：匹配任意单个字符，除非选择了路径分隔符（如果文件选择了路径大块化）。它与完整正则表达式中的 b{.} 相同。
+- `*`：匹配任意字符的零个或多个，除非路径分隔符（如果文件选择了路径大块化）。它与完整正规表达式中的 .* 相同。
+- `[abc]`：匹配括号中给出的字符。
+- `[a-c]`：匹配括号中所示范围中的一个字符。
+- `[!abc]`：匹配一个未在括号中给出的字符。它与完整正规表达式中的[^abc]相同。
+- `[!a-c]`：匹配一个不属于括号中范围的字符。它与完整正规表达式中的[^a-c]相同。
+注意：出于历史原因，反斜杠（\）字符在此语境中不是转义字符。为了匹配某个特殊字符，请将其置于方括号内（例如`[?]`）。
+关于该实施的更多信息可见：
+- 维基百科球体条目
+- `man 7 glob`
+默认情况下，返回的正则表达式是完全锚定的。换句话说，无需对结果再次调用`anchoredPattern()`。要得到一个未锚定的正则表达式，在转换`options`中传递`UnanchoredWildcardConversion`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数 `pattern`：类型为 `const QString &`。没有默认值，调用时必须提供。匹配模式或格式模板；要确认转义规则、大小写策略和编译失败时的状态。
-- 参数 `options`：类型为 `QRegularExpression::WildcardConversionOptions`。默认值为 `DefaultWildcardConversion`。传入 `QRegularExpression::WildcardConversionOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QString wildcard = QRegularExpression::wildcardToRegularExpression("*.jpeg");
+ // Will match files with names like:
+ //    foo.jpeg
+ //    f_o_o.jpeg
+ //    föö.jpeg
+```
 
 ### `[noexcept] QRegularExpression &QRegularExpression::operator=(QRegularExpression &&re)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression &`。
-- 参数 `re`：类型为 `QRegularExpression &&`。没有默认值，调用时必须提供。传入 `QRegularExpression &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign 正则表达式 `re` 给该对象，并返回结果的引用。模式和模式选项都会被复制。
+注意，移出`QRegularExpression`只能被销毁或分配到。调用除解构器或赋值运算符外的其他函数效果尚无定义。
 
 ### `[noexcept] QRegularExpression &QRegularExpression::operator=(const QRegularExpression &re)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QRegularExpression &`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将正则表达式`re`赋入该对象，并返回对副本的引用。模式和模式选项都被复制。
 
 ### `[noexcept] size_t qHash(const QRegularExpression &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRegularExpression::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRegularExpression &lhs, const QRegularExpression &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`正则表达式与`rhs`不同，返回`true`;否则返回为假。
 
 ### `QDataStream &operator<<(QDataStream &out, const QRegularExpression &re)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `out`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+写入正则表达式`re`流`out`。
 
 ### `QDebug operator<<(QDebug debug, QRegularExpression::PatternOptions patternOptions)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `patternOptions`：类型为 `QRegularExpression::PatternOptions`。没有默认值，调用时必须提供。传入 `QRegularExpression::PatternOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模式选项`patternOptions`写入调试对象`debug`以便调试。
 
 ### `QDebug operator<<(QDebug debug, const QRegularExpression &re)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将正规表达式`re`写入调试对象`debug`以便调试。
 
 ### `[noexcept] bool operator==(const QRegularExpression &lhs, const QRegularExpression &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`正则表达式等于`rhs`，则返回`true`;否则返回假。如果两个`QRegularExpression`对象具有相同的模式字符串和相同的模式选项，则它们相等。
 
 ### `QDataStream &operator>>(QDataStream &in, QRegularExpression &re)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `in`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `re`：类型为 `QRegularExpression &`。没有默认值，调用时必须提供。传入 `QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将流`in`的正则表达式读取到`re`。
 
 ### `enum MatchOption { NoMatchOption, AnchoredMatchOption, AnchorAtOffsetMatchOption, DontCheckSubjectStringMatchOption }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `匹配、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QRegularExpression::NoMatchOption`：`0x0000`;不设置匹配选项。
+- `QRegularExpression::AnchoredMatchOption`：`AnchorAtOffsetMatchOption`;改用 AnchorAtOffsetMatchOption。
+- `QRegularExpression::AnchorAtOffsetMatchOption`：`0x0001`;匹配被限制必须从传递给`match()`的偏移开始，才能成功，即使模式字符串中没有任何元字符锚定匹配。注意，通过该选项不会将匹配结束点锚定到主语的结尾;如果你想完全锚定正则表达式，可以使用`anchoredPattern()`。该枚举值在Qt 6.0中引入。
+- `QRegularExpression::DontCheckSubjectStringMatchOption`：`0x0002`;在尝试匹配前，主旨字符串不会检查其 UTF-16 有效性。使用此选项时需极度谨慎，因为尝试匹配无效字符串可能导致程序崩溃和/或构成安全问题。该枚举值在 Qt 5.4 中引入。
+MatchOptions 类型是 QFlags 的 typedef<MatchOption>。它存储 MatchOption 值的 OR 组合。
 
 ### `flags MatchOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QRegularExpression::NoMatchOption`：`0x0000`;不设置匹配选项。
+- `QRegularExpression::AnchoredMatchOption`：`AnchorAtOffsetMatchOption`;改用 AnchorAtOffsetMatchOption。
+- `QRegularExpression::AnchorAtOffsetMatchOption`：`0x0001`;匹配被限制必须从传递给`match()`的偏移开始，才能成功，即使模式字符串中没有任何元字符锚定匹配。注意，通过该选项不会将匹配结束点锚定到主语的结尾;如果你想完全锚定正则表达式，可以使用`anchoredPattern()`。该枚举值在Qt 6.0中引入。
+- `QRegularExpression::DontCheckSubjectStringMatchOption`：`0x0002`;在尝试匹配前，主旨字符串不会检查其 UTF-16 有效性。使用此选项时需极度谨慎，因为尝试匹配无效字符串可能导致程序崩溃和/或构成安全问题。该枚举值在 Qt 5.4 中引入。
+MatchOptions 类型是 QFlags 的 typedef<MatchOption>。它存储 MatchOption 值的 OR 组合。
 
 ### `enum PatternOption { NoPatternOption, CaseInsensitiveOption, DotMatchesEverythingOption, MultilineOption, ExtendedPatternSyntaxOption, …, UseUnicodePropertiesOption }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `Pattern、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+PatternOption 枚举定义了模式字符串应如何解释的修饰符，从而定义模式与主题字符串匹配的方式。
+- `QRegularExpression::NoPatternOption`：`0x0000`;不设置任何图案选项。
+- `QRegularExpression::CaseInsensitiveOption`：`0x0001`;该模式应以不区分大小写的方式与主语字符串匹配。该选项对应于 Perl 正则表达式中的 /i 修饰符。
+- `QRegularExpression::DotMatchesEverythingOption`：`0x0002`;模式字符串中的点元字符（`.`）允许匹配主语字符串中的任意字符，包括换行（通常点不匹配换行）。该选项对应于 Perl 正则表达式中的 `/s` 修饰符。
+- `QRegularExpression::MultilineOption`：`0x0004`;模式字符串中的插入符（`^`）和美元元字符（`$`）分别允许在主题字符串中任何换行之后和之前，以及主题字符串的开头和末尾匹配。该选项对应于 Perl 正则表达式中的 `/m` 修饰符。
+- `QRegularExpression::ExtendedPatternSyntaxOption`：`0x0008`;模式字符串中未转义且不属于字符类的空白部分将被忽略。此外，字符类外的未脱义升号（#）会导致后续所有字符（包括第一行）被忽略。这可用于提高模式字符串的可读性，并将注释放入正则表达式中;这在从文件加载或用户编写的模式字符串中尤为有用，因为在C代码中，字符串文字规则总能将注释置于模式字符串之外。该选项对应Perl正则表达式中的`/x`修饰符。
+- `QRegularExpression::InvertedGreedinessOption`：`0x0010`;量词的贪婪程度是反转的：`*`、`+`、`?`、`{m,n}`等变得懒惰，而它们的懒惰版本（`*?`、`+?`、`??`、`{m,n}?`等）变得贪婪。在Perl正则表达式中没有类似的选项。
+- `QRegularExpression::DontCaptureOption`：`0x0020`;非命名捕获群不捕获子串;命名捕获群仍然按预期工作，且对应整个匹配的隐式捕获组编号0也同样有效。Perl正则表达式中没有对此选项的对应。
+- `QRegularExpression::UseUnicodePropertiesOption`：`0x0040`;`\w`、`\d`等字符类的含义，以及它们对应的字符（`\W`、`\D`等）的含义，从仅匹配ASCII字符改为匹配具有相应Unicode属性的任意字符。例如，`\d`被更改为匹配任何具有Unicode的Nd（十进制数字）属性的字符;`\w`匹配任何具有Unicode字母L（字母）或N（数字）属性的字符，加上下划线，依此类推。该选项对应于 Perl 正则表达式中的 `/u` 修饰符。
+PatternOptions 类型是 QFlags 的 typedef<PatternOption>。它存储 PatternOption 值的 OR 组合。
 
 ### `flags PatternOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+PatternOption 枚举定义了模式字符串应如何解释的修饰符，从而定义模式与主题字符串匹配的方式。
+- `QRegularExpression::NoPatternOption`：`0x0000`;不设置任何图案选项。
+- `QRegularExpression::CaseInsensitiveOption`：`0x0001`;该模式应以不区分大小写的方式与主语字符串匹配。该选项对应于 Perl 正则表达式中的 /i 修饰符。
+- `QRegularExpression::DotMatchesEverythingOption`：`0x0002`;模式字符串中的点元字符（`.`）允许匹配主语字符串中的任意字符，包括换行（通常点不匹配换行）。该选项对应于 Perl 正则表达式中的 `/s` 修饰符。
+- `QRegularExpression::MultilineOption`：`0x0004`;模式字符串中的插入符（`^`）和美元元字符（`$`）分别允许在主题字符串中任何换行之后和之前，以及主题字符串的开头和末尾匹配。该选项对应于 Perl 正则表达式中的 `/m` 修饰符。
+- `QRegularExpression::ExtendedPatternSyntaxOption`：`0x0008`;模式字符串中未转义且不属于字符类的空白部分将被忽略。此外，字符类外的未脱义升号（#）会导致后续所有字符（包括第一行）被忽略。这可用于提高模式字符串的可读性，并将注释放入正则表达式中;这在从文件加载或用户编写的模式字符串中尤为有用，因为在C代码中，字符串文字规则总能将注释置于模式字符串之外。该选项对应Perl正则表达式中的`/x`修饰符。
+- `QRegularExpression::InvertedGreedinessOption`：`0x0010`;量词的贪婪程度是反转的：`*`、`+`、`?`、`{m,n}`等变得懒惰，而它们的懒惰版本（`*?`、`+?`、`??`、`{m,n}?`等）变得贪婪。在Perl正则表达式中没有类似的选项。
+- `QRegularExpression::DontCaptureOption`：`0x0020`;非命名捕获群不捕获子串;命名捕获群仍然按预期工作，且对应整个匹配的隐式捕获组编号0也同样有效。Perl正则表达式中没有对此选项的对应。
+- `QRegularExpression::UseUnicodePropertiesOption`：`0x0040`;`\w`、`\d`等字符类的含义，以及它们对应的字符（`\W`、`\D`等）的含义，从仅匹配ASCII字符改为匹配具有相应Unicode属性的任意字符。例如，`\d`被更改为匹配任何具有Unicode的Nd（十进制数字）属性的字符;`\w`匹配任何具有Unicode字母L（字母）或N（数字）属性的字符，加上下划线，依此类推。该选项对应于 Perl 正则表达式中的 `/u` 修饰符。
+PatternOptions 类型是 QFlags 的 typedef<PatternOption>。它存储 PatternOption 值的 OR 组合。
 
 ### `(since 6.0) enum WildcardConversionOption { DefaultWildcardConversion, UnanchoredWildcardConversion, NonPathWildcardConversion }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 暴露的类型声明 `Wildcard、Conversion、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+WildcardConversionOption 枚举定义了将万用字块模式转换为正则表达式模式的方式修饰符。
+- `QRegularExpression::DefaultWildcardConversion`：`0x0`;不设置转换选项。
+- `QRegularExpression::UnanchoredWildcardConversion`：`0x1`;转换不会锚定模式。这允许部分字符串匹配百搭符表达式。
+- `QRegularExpression::NonPathWildcardConversion (since Qt 6.6)`：`0x2`;转换时不会将模式解释为文件路径的滚动。
+该枚举是在Qt 6.0中引入的。
+WildcardConversionOptions 类型是 QFlags 的 typedef<WildcardConversionOption>。它存储 WildcardConversionOption 值的 OR 组合。
 
 ### `flags WildcardConversionOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpression` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+WildcardConversionOption 枚举定义了将万用字块模式转换为正则表达式模式的方式修饰符。
+- `QRegularExpression::DefaultWildcardConversion`：`0x0`;不设置转换选项。
+- `QRegularExpression::UnanchoredWildcardConversion`：`0x1`;转换不会锚定模式。这允许部分字符串匹配百搭符表达式。
+- `QRegularExpression::NonPathWildcardConversion (since Qt 6.6)`：`0x2`;转换时不会将模式解释为文件路径的滚动。
+该枚举是在Qt 6.0中引入的。
+WildcardConversionOptions 类型是 QFlags 的 typedef<WildcardConversionOption>。它存储 WildcardConversionOption 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

@@ -95,355 +95,286 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 26 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QInputDevice::Capabilityflags QInputDevice::Capabilities`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Capabilityflags QInputDevice::Capabilities`。
-- 属性名：`QInputDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示输入设备或其驱动程序能提供哪些信息。
+- `QInputDevice::Capability::None`：`0`;没有关于输入设备能力的信息。
+- `QInputDevice::Capability::Position`：`0x0001`;表示位置信息可用，意味着接触点中的位置()函数族返回有效点。
+- `QInputDevice::Capability::Area`：`0x0002`;表示触控区域信息可用，意味着触点中的`QEventPoint::ellipseDiameters()`返回有效值。
+- `QInputDevice::Capability::Pressure`：`0x0004`;表示压力信息可用，意味着`QEventPoint::pressure()`返回有效值。
+- `QInputDevice::Capability::Velocity`：`0x0008`;表示速度信息可用，意味着`QEventPoint::velocity()`返回有效矢量。
+- `QInputDevice::Capability::NormalizedPosition`：`0x0020`;表示归一化位置可用，意味着`QEventPoint::globalPosition()`返回有效值。
+- `QInputDevice::Capability::MouseEmulation`：`0x0040`;表示该设备合成鼠标事件。
+- `QInputDevice::Capability::Scroll`：`0x0100`;表示该设备具备滚动功能。
+- `QInputDevice::Capability::PixelScroll (since Qt 6.2)`：`0x0080`;表示设备（通常是`touchpad`）以像素精度滚动。
+- `QInputDevice::Capability::Hover`：`0x0200`;表示该装置具备悬停能力。
+- `QInputDevice::Capability::Rotation`：`0x0400`;表示`rotation`信息可用。
+- `QInputDevice::Capability::XTilt`：`0x0800`;表示X轴`tilt`信息可用。
+- `QInputDevice::Capability::YTilt`：`0x1000`;表示Y轴`tilt`信息可用。
+- `QInputDevice::Capability::TangentialPressure`：`0x2000`;表示切向压力信息可用。
+- `QInputDevice::Capability::ZPosition`：`0x4000`;表示`Z-axis`位置信息可用。
+- `QInputDevice::Capability::All`：`0x7FFFFFFF`
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `enum class QInputDevice::DeviceTypeflags QInputDevice::DeviceTypes`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DeviceTypeflags QInputDevice::DeviceTypes`。
-- 属性名：`QInputDevice`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表产生`QPointerEvent`的设备类型。
+- `QInputDevice::DeviceType::Unknown`：`0x0000`;无法识别该装置。
+- `QInputDevice::DeviceType::Mouse`：`0x0001`;一只老鼠。
+- `QInputDevice::DeviceType::TouchScreen`：`0x0002`;在这种类型的设备中，触摸面和显示是集成的。这意味着表面和显示通常大小相同，因此触点的物理位置与`QEventPoint`报告的坐标之间存在直接关系。因此，Qt 允许用户同时直接与多个 QWidget、QGraphicsItems 或 Qt 快速项目交互。
+- `QInputDevice::DeviceType::TouchPad`：`0x0004`;在这种类型的设备中，触摸面与显示屏是分开的。物理触摸位置与屏幕坐标之间没有直接关系。它们是相对于当前鼠标位置计算的，用户必须使用触摸板移动该参考点。与触摸屏不同，Qt 允许用户一次只能与单个`QWidget`或`QGraphicsItem`交互。
+- `QInputDevice::DeviceType::Stylus`：`0x0010`;一种类似笔的设备，用于绘图板如Wacom绘图板，或在触摸屏上提供独立的触控笔感应功能。
+- `QInputDevice::DeviceType::Airbrush`：`0x0020`;带有摇滚的触针，用于调节`tangentialPressure`。
+- `QInputDevice::DeviceType::Puck`：`0x0008`;一种类似于扁平鼠标的装置，带有透明圆圈和十字准星。
+- `QInputDevice::DeviceType::Keyboard`：`0x1000`;键盘。
+- `QInputDevice::DeviceType::AllDevices`：`0x7FFFFFFF`;上述任意一种（作为默认滤波器值）。
+DeviceTypes 类型是 QFlag 的 typedef<DeviceType>。它存储 DeviceType 值的 OR 组合。
 
 ### `[read-only] availableVirtualGeometry : QRect`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的状态/能力属性。通常通过 `availableVirtualGeometry()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含该设备可访问的虚拟桌面区域。
+例如，`TouchScreen`输入设备固定在单个物理屏幕上，通常校准使该区域与`QScreen::geometry()`相同，而`Mouse`通常能够访问虚拟桌面上的所有屏幕。
+另外，Wacom图形绘板也可以配置为映射到所有屏幕，或仅映射到用户偏好绘制的屏幕，或仅映射到绘图发生的窗口。
+集成触摸屏的`Stylus`设备可能在物理上仅限于该屏幕。
+如果返回的矩形是`null`的，说明该设备可以访问整个虚拟桌面。
 
-**签名拆解：**
-
-- 属性类型：`QRect`。
-- 属性名：`availableVirtualGeometry`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `availableVirtualGeometry()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] capabilities : Capabilities`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的状态/能力属性。通常通过 `capabilities()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+此属性保存设备能力。
 
-**签名拆解：**
-
-- 属性类型：`Capabilities`。
-- 属性名：`capabilities`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `capabilities()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] name : const QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的状态/能力属性。通常通过 `name()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+此属性保存设备名称。
 
-**签名拆解：**
-
-- 属性类型：`const QString`。
-- 属性名：`name`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `name()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] seatName : const QString`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的状态/能力属性。通常通过 `seatName()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含与设备相关联的座椅。
 
-**签名拆解：**
-
-- 属性类型：`const QString`。
-- 属性名：`seatName`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `seatName()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] systemId : const qint64`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的状态/能力属性。通常通过 `systemId()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该属性包含平台特定的系统ID。
 
-**签名拆解：**
-
-- 属性类型：`const qint64`。
-- 属性名：`systemId`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `systemId()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] type : const DeviceType`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的状态/能力属性。通常通过 `type()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+此属性保存设备类型。
 
-**签名拆解：**
-
-- 属性类型：`const DeviceType`。
-- 属性名：`type`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `type()` 读取当前值；它不会修改应用状态。
 
 ### `QInputDevice::QInputDevice(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+作为`parent`的子节点创建一个新的无效输入设备实例。
 
 ### `QInputDevice::QInputDevice(const QString &name, qint64 id, QInputDevice::DeviceType type, const QString &seatName = QString(), QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `id`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `QInputDevice::DeviceType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `seatName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个新的输入设备实例。给定的`name`通常是制造商分配的型号名称（如有的话），或是其他可识别的名称;`id` 是一个平台特定的编号，每个设备都是唯一的（例如 X11 上的 xinput ID）;`type` 用于识别设备类型。在能够同时处理多个用户或多个输入设备组输入的窗口系统（如 Wayland 或 X11）上，`seatName` 标识将共同使用的设备集合名称。如果设备是子设备或从设备（例如可以轮流移动“核心指针”的几只鼠标之一），主设备应作为`parent`。
+平台插件创建、注册并继续拥有每个设备实例;通常`parent`应为内存管理目的提供，即使某设备没有主节点。
+默认情况下，`capabilities()`是`None`。
 
 ### `QInputDevice::Capabilities QInputDevice::capabilities() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputDevice::capabilities` 用于计算、查询或取得与“capabilities”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QInputDevice::Capabilities`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QInputDevice::Capabilities`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+恢复设备功能。
+注意：属性能力的获取函数。
 
 ### `[static] QList<const QInputDevice *> QInputDevice::devices()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `devices`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QList<const QInputDevice *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有注册输入设备（键盘和指向设备）的列表。
+注意：设备列表并非所有平台都完整。目前，最完整的信息出现在Linux平台启动时及热插拔响应时。大多数其他平台只能在收到事件后提供各种类型的通用设备;大多数平台不会在运行时告知Qt设备已插入或拔除电源。
+注意：返回的列表无法用于添加新设备。若要添加模拟触摸屏进行自动测试，可以使用`QTest::createTouchDevice()`。平台插件应调用QWindowSystemInterface：：registerInputDevice()以添加发现的设备。
 
 ### `bool QInputDevice::hasCapability(QInputDevice::Capability capability) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasCapability`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `capability`：类型为 `QInputDevice::Capability`。没有默认值，调用时必须提供。传入 `QInputDevice::Capability` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回设备能力是否包含给定`capability`。
 
 ### `QString QInputDevice::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputDevice::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回设备名称。
+该字符串可能是空的。不过，在拥有多个输入设备的系统中，它非常有用：可以用来区分`QPointerEvent`的来源。
+注意：物业名称的获取函数。
 
 ### `[static] const QInputDevice *QInputDevice::primaryKeyboard(const QString &seatName = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `primaryKeyboard`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const QInputDevice *`。
-- 参数 `seatName`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将核心键盘或主键盘放回指定座位`seatName`。
 
 ### `QString QInputDevice::seatName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputDevice::seatName` 用于计算、查询或取得与“seat、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果已知，返回该设备所关联的座位;否则为空。
+原本打算由单一用户一起使用的设备，可以配置为相同的座椅名称。目前仅在Wayland和X11平台上支持此功能。
+注意：属性 seatName 的获取函数。
 
 ### `[static, since 6.3] QStringList QInputDevice::seatNames()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `seatNames`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有注册输入设备（键盘和指点设备）的座位名称列表。
 
 ### `qint64 QInputDevice::systemId() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputDevice::systemId` 用于计算、查询或取得与“system、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回平台特定的系统ID（例如X11平台上的xinput ID）。
+所有平台都应为每个设备提供唯一的系统ID。
+注意：属性systemId的Getter函数。
 
 ### `QInputDevice::DeviceType QInputDevice::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QInputDevice::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QInputDevice::DeviceType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QInputDevice::DeviceType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回设备类型。
+注意：属性类型的 Getter 函数。
 
 ### `flags Capabilities`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示输入设备或其驱动程序能提供哪些信息。
+- `QInputDevice::Capability::None`：`0`;没有关于输入设备能力的信息。
+- `QInputDevice::Capability::Position`：`0x0001`;表示位置信息可用，意味着接触点中的位置()函数族返回有效点。
+- `QInputDevice::Capability::Area`：`0x0002`;表示触控区域信息可用，意味着触点中的`QEventPoint::ellipseDiameters()`返回有效值。
+- `QInputDevice::Capability::Pressure`：`0x0004`;表示压力信息可用，意味着`QEventPoint::pressure()`返回有效值。
+- `QInputDevice::Capability::Velocity`：`0x0008`;表示速度信息可用，意味着`QEventPoint::velocity()`返回有效矢量。
+- `QInputDevice::Capability::NormalizedPosition`：`0x0020`;表示归一化位置可用，意味着`QEventPoint::globalPosition()`返回有效值。
+- `QInputDevice::Capability::MouseEmulation`：`0x0040`;表示该设备合成鼠标事件。
+- `QInputDevice::Capability::Scroll`：`0x0100`;表示该设备具备滚动功能。
+- `QInputDevice::Capability::PixelScroll (since Qt 6.2)`：`0x0080`;表示设备（通常是`touchpad`）以像素精度滚动。
+- `QInputDevice::Capability::Hover`：`0x0200`;表示该装置具备悬停能力。
+- `QInputDevice::Capability::Rotation`：`0x0400`;表示`rotation`信息可用。
+- `QInputDevice::Capability::XTilt`：`0x0800`;表示X轴`tilt`信息可用。
+- `QInputDevice::Capability::YTilt`：`0x1000`;表示Y轴`tilt`信息可用。
+- `QInputDevice::Capability::TangentialPressure`：`0x2000`;表示切向压力信息可用。
+- `QInputDevice::Capability::ZPosition`：`0x4000`;表示`Z-axis`位置信息可用。
+- `QInputDevice::Capability::All`：`0x7FFFFFFF`
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `enum class Capability { None, Position, Area, Pressure, Velocity, …, All }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+表示输入设备或其驱动程序能提供哪些信息。
+- `QInputDevice::Capability::None`：`0`;没有关于输入设备能力的信息。
+- `QInputDevice::Capability::Position`：`0x0001`;表示位置信息可用，意味着接触点中的位置()函数族返回有效点。
+- `QInputDevice::Capability::Area`：`0x0002`;表示触控区域信息可用，意味着触点中的`QEventPoint::ellipseDiameters()`返回有效值。
+- `QInputDevice::Capability::Pressure`：`0x0004`;表示压力信息可用，意味着`QEventPoint::pressure()`返回有效值。
+- `QInputDevice::Capability::Velocity`：`0x0008`;表示速度信息可用，意味着`QEventPoint::velocity()`返回有效矢量。
+- `QInputDevice::Capability::NormalizedPosition`：`0x0020`;表示归一化位置可用，意味着`QEventPoint::globalPosition()`返回有效值。
+- `QInputDevice::Capability::MouseEmulation`：`0x0040`;表示该设备合成鼠标事件。
+- `QInputDevice::Capability::Scroll`：`0x0100`;表示该设备具备滚动功能。
+- `QInputDevice::Capability::PixelScroll (since Qt 6.2)`：`0x0080`;表示设备（通常是`touchpad`）以像素精度滚动。
+- `QInputDevice::Capability::Hover`：`0x0200`;表示该装置具备悬停能力。
+- `QInputDevice::Capability::Rotation`：`0x0400`;表示`rotation`信息可用。
+- `QInputDevice::Capability::XTilt`：`0x0800`;表示X轴`tilt`信息可用。
+- `QInputDevice::Capability::YTilt`：`0x1000`;表示Y轴`tilt`信息可用。
+- `QInputDevice::Capability::TangentialPressure`：`0x2000`;表示切向压力信息可用。
+- `QInputDevice::Capability::ZPosition`：`0x4000`;表示`Z-axis`位置信息可用。
+- `QInputDevice::Capability::All`：`0x7FFFFFFF`
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `enum class DeviceType { Unknown, Mouse, TouchScreen, TouchPad, Stylus, …, AllDevices }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表产生`QPointerEvent`的设备类型。
+- `QInputDevice::DeviceType::Unknown`：`0x0000`;无法识别该装置。
+- `QInputDevice::DeviceType::Mouse`：`0x0001`;一只老鼠。
+- `QInputDevice::DeviceType::TouchScreen`：`0x0002`;在这种类型的设备中，触摸面和显示是集成的。这意味着表面和显示通常大小相同，因此触点的物理位置与`QEventPoint`报告的坐标之间存在直接关系。因此，Qt 允许用户同时直接与多个 QWidget、QGraphicsItems 或 Qt 快速项目交互。
+- `QInputDevice::DeviceType::TouchPad`：`0x0004`;在这种类型的设备中，触摸面与显示屏是分开的。物理触摸位置与屏幕坐标之间没有直接关系。它们是相对于当前鼠标位置计算的，用户必须使用触摸板移动该参考点。与触摸屏不同，Qt 允许用户一次只能与单个`QWidget`或`QGraphicsItem`交互。
+- `QInputDevice::DeviceType::Stylus`：`0x0010`;一种类似笔的设备，用于绘图板如Wacom绘图板，或在触摸屏上提供独立的触控笔感应功能。
+- `QInputDevice::DeviceType::Airbrush`：`0x0020`;带有摇滚的触针，用于调节`tangentialPressure`。
+- `QInputDevice::DeviceType::Puck`：`0x0008`;一种类似于扁平鼠标的装置，带有透明圆圈和十字准星。
+- `QInputDevice::DeviceType::Keyboard`：`0x1000`;键盘。
+- `QInputDevice::DeviceType::AllDevices`：`0x7FFFFFFF`;上述任意一种（作为默认滤波器值）。
+DeviceTypes 类型是 QFlag 的 typedef<DeviceType>。它存储 DeviceType 值的 OR 组合。
 
 ### `flags DeviceTypes`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QInputDevice` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举代表产生`QPointerEvent`的设备类型。
+- `QInputDevice::DeviceType::Unknown`：`0x0000`;无法识别该装置。
+- `QInputDevice::DeviceType::Mouse`：`0x0001`;一只老鼠。
+- `QInputDevice::DeviceType::TouchScreen`：`0x0002`;在这种类型的设备中，触摸面和显示是集成的。这意味着表面和显示通常大小相同，因此触点的物理位置与`QEventPoint`报告的坐标之间存在直接关系。因此，Qt 允许用户同时直接与多个 QWidget、QGraphicsItems 或 Qt 快速项目交互。
+- `QInputDevice::DeviceType::TouchPad`：`0x0004`;在这种类型的设备中，触摸面与显示屏是分开的。物理触摸位置与屏幕坐标之间没有直接关系。它们是相对于当前鼠标位置计算的，用户必须使用触摸板移动该参考点。与触摸屏不同，Qt 允许用户一次只能与单个`QWidget`或`QGraphicsItem`交互。
+- `QInputDevice::DeviceType::Stylus`：`0x0010`;一种类似笔的设备，用于绘图板如Wacom绘图板，或在触摸屏上提供独立的触控笔感应功能。
+- `QInputDevice::DeviceType::Airbrush`：`0x0020`;带有摇滚的触针，用于调节`tangentialPressure`。
+- `QInputDevice::DeviceType::Puck`：`0x0008`;一种类似于扁平鼠标的装置，带有透明圆圈和十字准星。
+- `QInputDevice::DeviceType::Keyboard`：`0x1000`;键盘。
+- `QInputDevice::DeviceType::AllDevices`：`0x7FFFFFFF`;上述任意一种（作为默认滤波器值）。
+DeviceTypes 类型是 QFlag 的 typedef<DeviceType>。它存储 DeviceType 值的 OR 组合。
 
 ### `QRect availableVirtualGeometry() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QInputDevice::availableVirtualGeometry` 用于计算、查询或取得与“可用量、Virtual、几何区域”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含该设备可访问的虚拟桌面区域。
+例如，`TouchScreen`输入设备固定在单个物理屏幕上，通常校准使该区域与`QScreen::geometry()`相同，而`Mouse`通常能够访问虚拟桌面上的所有屏幕。
+另外，Wacom图形绘板也可以配置为映射到所有屏幕，或仅映射到用户偏好绘制的屏幕，或仅映射到绘图发生的窗口。
+集成触摸屏的`Stylus`设备可能在物理上仅限于该屏幕。
+如果返回的矩形是`null`的，说明该设备可以访问整个虚拟桌面。
 
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `availableVirtualGeometry()` 读取当前值；它不会修改应用状态。
 
 ### `void availableVirtualGeometryChanged(QRect area)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `availableVirtualGeometryChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含该设备可访问的虚拟桌面区域。
+例如，`TouchScreen`输入设备固定在单个物理屏幕上，通常校准使该区域与`QScreen::geometry()`相同，而`Mouse`通常能够访问虚拟桌面上的所有屏幕。
+另外，Wacom图形绘板也可以配置为映射到所有屏幕，或仅映射到用户偏好绘制的屏幕，或仅映射到绘图发生的窗口。
+集成触摸屏的`Stylus`设备可能在物理上仅限于该屏幕。
+如果返回的矩形是`null`的，说明该设备可以访问整个虚拟桌面。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `QRect`。没有默认值，调用时必须提供。传入 `QRect` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `availableVirtualGeometry` 的变化，不要把它当作普通函数主动调用。
 
 ### `void capabilitiesChanged(QInputDevice::Capabilities capabilities)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `capabilitiesChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+此属性保存设备能力。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `capabilities`：类型为 `QInputDevice::Capabilities`。没有默认值，调用时必须提供。传入 `QInputDevice::Capabilities` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `capabilities` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

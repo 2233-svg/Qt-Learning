@@ -103,472 +103,293 @@ target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 35 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QMediaFormat::AudioCodec`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AudioCodec`。
-- 属性名：`QMediaFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述多媒体文件或流中使用的音频编解码器。
+- `QMediaFormat::AudioCodec::WMA`：`9`;Windows Media 音频
+- `QMediaFormat::AudioCodec::AC3`：`2`;杜比数字
+- `QMediaFormat::AudioCodec::AAC`：`1`;高级音频编码
+- `QMediaFormat::AudioCodec::ALAC`：`10`;苹果无损音频编解码器
+- `QMediaFormat::AudioCodec::DolbyTrueHD`：`5`;杜比TrueHD
+- `QMediaFormat::AudioCodec::EAC3`：`3`;杜比数字加（EAC3）
+- `QMediaFormat::AudioCodec::MP3`：`0`;MPEG-1 音频层 III 或 MPEG-2 音频层 III
+- `QMediaFormat::AudioCodec::Wave`：`8`;波形音频文件格式
+- `QMediaFormat::AudioCodec::Vorbis`：`7`;奥格·沃比斯
+- `QMediaFormat::AudioCodec::FLAC`：`4`;免费无损音频编解码器
+- `QMediaFormat::AudioCodec::Opus`：`6`;Opus 音频格式
+- `QMediaFormat::AudioCodec::Unspecified`：`-1`;未指定编解码器
 
 ### `enum QMediaFormat::ConversionMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 暴露的类型声明 `Conversion、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ConversionMode`。
-- 属性名：`QMediaFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在许多情况下，系统具备非对称能力，且通常能解码比可编码更多的格式或编解码器。该枚举描述了在检查某种文件格式或编解码器是否支持时所请求的转换模式。
+- `QMediaFormat::Encode`：`0`;用于检查某种文件格式或编解码器是否可以编码。
+- `QMediaFormat::Decode`：`1`;用于检查某种文件格式或编解码器是否可以解码。
 
 ### `enum QMediaFormat::FileFormat`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 暴露的类型声明 `File、格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:FileFormat`。
-- 属性名：`QMediaFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述多媒体文件或流中使用的容器格式。
+- `QMediaFormat::WMA`：`9`;Windows Media 音频
+- `QMediaFormat::AAC`：`8`;高级音频编码
+- `QMediaFormat::Matroska`：`2`;马特罗斯卡（MKV）
+- `QMediaFormat::WMV`：`0`;Windows Media 视频
+- `QMediaFormat::MP3`：`10`;MPEG-1 音频层 III 或 MPEG-2 音频层 III
+- `QMediaFormat::Wave`：`12`;波形音频文件格式
+- `QMediaFormat::Ogg`：`4`;奥格
+- `QMediaFormat::MPEG4`：`3`;MPEG-4
+- `QMediaFormat::AVI`：`1`;音视频交错
+- `QMediaFormat::QuickTime`：`5`;QuickTime
+- `QMediaFormat::WebM`：`6`;WebM
+- `QMediaFormat::Mpeg4Audio`：`7`;MPEG-4 第三部分或 MPEG-4 音频（正式名称为 ISO/IEC 14496-3）
+- `QMediaFormat::FLAC`：`11`;免费无损音频编解码器
+- `QMediaFormat::UnspecifiedFormat`：`-1`;格式未明确说明。
 
 ### `enum QMediaFormat::ResolveFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 暴露的类型声明 `Resolve、标志`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ResolveFlags`。
-- 属性名：`QMediaFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述解析 `QMediaRecorder` 的合适格式的要求。
+- `QMediaFormat::NoFlags`: `0`; 无要求
+- `QMediaFormat::RequiresVideo`: `1`; 需要视频编码器
 
 ### `enum class QMediaFormat::VideoCodec`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:VideoCodec`。
-- 属性名：`QMediaFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+描述用于多媒体文件或流媒体的视频编码。
+- `QMediaFormat::VideoCodec::VP8`：`5`;VP8
+- `QMediaFormat::VideoCodec::MPEG2`：`1`;MPEG-2
+- `QMediaFormat::VideoCodec::MPEG1`：`0`;MPEG-1
+- `QMediaFormat::VideoCodec::WMV`：`9`;Windows Media 视频
+- `QMediaFormat::VideoCodec::H265`：`4`;高效视频编码（HEVC）
+- `QMediaFormat::VideoCodec::H264`：`3`;高级视频编码
+- `QMediaFormat::VideoCodec::MPEG4`：`2`;MPEG-4
+- `QMediaFormat::VideoCodec::AV1`：`7`;AOMedia 视频1
+- `QMediaFormat::VideoCodec::MotionJPEG`：`10`;MotionJPEG
+- `QMediaFormat::VideoCodec::VP9`：`6`;VP9
+- `QMediaFormat::VideoCodec::Theora`：`8`;西奥拉
+- `QMediaFormat::VideoCodec::Unspecified`：`-1`;视频编码未指定
 
 ### `audioCodec : AudioCodec`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的配置属性。初始化或状态切换时通过 `setAudioCodec(...)` 设置，之后用 `audioCodec()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含媒体的音频编解码器。
 
-**签名拆解：**
-
-- 属性类型：`AudioCodec`。
-- 属性名：`audioCodec`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `audioCodec()` 读取当前值；它不会修改应用状态。
 
 ### `fileFormat : FileFormat`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的配置属性。初始化或状态切换时通过 `setFileFormat(...)` 设置，之后用 `fileFormat()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含介质的文件（容器）格式。
 
-**签名拆解：**
-
-- 属性类型：`FileFormat`。
-- 属性名：`fileFormat`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `fileFormat()` 读取当前值；它不会修改应用状态。
 
 ### `videoCodec : VideoCodec`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的配置属性。初始化或状态切换时通过 `setVideoCodec(...)` 设置，之后用 `videoCodec()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该特性承载了媒体的视频编解码器。
 
-**签名拆解：**
-
-- 属性类型：`VideoCodec`。
-- 属性名：`videoCodec`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `videoCodec()` 读取当前值；它不会修改应用状态。
 
 ### `QMediaFormat::QMediaFormat(QMediaFormat::FileFormat format = UnspecifiedFormat)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `format`：类型为 `QMediaFormat::FileFormat`。默认值为 `UnspecifiedFormat`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为`format`构建一个QMediaFormat对象。
 
 ### `[noexcept] QMediaFormat::QMediaFormat(const QMediaFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QMediaFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从`other`复制构建QMediaFormat对象。
 
 ### `[constexpr noexcept] QMediaFormat::QMediaFormat(QMediaFormat &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QMediaFormat &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从 `other` 构建 QMediaFormat 对象。
 
 ### `[noexcept] QMediaFormat::~QMediaFormat()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QMediaFormat`物体。
 
 ### `QMediaFormat::AudioCodec QMediaFormat::audioCodec() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::audioCodec` 用于计算、查询或取得与“audio、Codec”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaFormat::AudioCodec`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMediaFormat::AudioCodec`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式中使用的音频编解码器。
+注意：property audioCodec的获取函数。
 
 ### `[static invokable] QString QMediaFormat::audioCodecDescription(QMediaFormat::AudioCodec codec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `audioCodecDescription`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `codec`：类型为 `QMediaFormat::AudioCodec`。没有默认值，调用时必须提供。传入 `QMediaFormat::AudioCodec` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述以供`codec`。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[static invokable] QString QMediaFormat::audioCodecName(QMediaFormat::AudioCodec codec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `audioCodecName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `codec`：类型为 `QMediaFormat::AudioCodec`。没有默认值，调用时必须提供。传入 `QMediaFormat::AudioCodec` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于字符串的`codec`名称。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[static invokable] QString QMediaFormat::fileFormatDescription(QMediaFormat::FileFormat fileFormat)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fileFormatDescription`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `fileFormat`：类型为 `QMediaFormat::FileFormat`。没有默认值，调用时必须提供。传入 `QMediaFormat::FileFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述以供`fileFormat`。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[static invokable] QString QMediaFormat::fileFormatName(QMediaFormat::FileFormat fileFormat)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fileFormatName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `fileFormat`：类型为 `QMediaFormat::FileFormat`。没有默认值，调用时必须提供。传入 `QMediaFormat::FileFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于字符串的 `fileFormat` 名称。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] bool QMediaFormat::isSupported(QMediaFormat::ConversionMode mode) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSupported`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `mode`：类型为 `QMediaFormat::ConversionMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 Qt 多媒体可以根据 `mode` 对此格式进行编码或解码，则返回 `true`。
+注意：此函数可以通过元对象系统和 QML 调用。参见 `Q_INVOKABLE`。
 
 ### `QMimeType QMediaFormat::mimeType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::mimeType` 用于计算、查询或取得与“mime、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMimeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMimeType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该媒体格式中使用的文件格式的MIME类型。
 
 ### `void QMediaFormat::resolveForEncoding(QMediaFormat::ResolveFlags flags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::resolveForEncoding` 用于执行与“resolve、For、Encoding”相关的操作。调用时要先确认当前状态和 `flags` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `flags`：类型为 `QMediaFormat::ResolveFlags`。没有默认值，调用时必须提供。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据`flags`将格式解析为`QMediaRecorder`支持的格式。
+该方法尝试为未指定设置找到最佳匹配。录音机不支持的设置将被修改为最接近的匹配。
+在解析时，优先级按以下顺序确定：
+- 文件格式
+- 视频编解码器
+- 音频编解码器
 
 ### `void QMediaFormat::setAudioCodec(QMediaFormat::AudioCodec codec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAudioCodec`。调用它会改变 `QMediaFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含媒体的音频编解码器。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `codec`：类型为 `QMediaFormat::AudioCodec`。没有默认值，调用时必须提供。传入 `QMediaFormat::AudioCodec` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAudioCodec(...)` 修改 `audioCodec`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void QMediaFormat::setVideoCodec(QMediaFormat::VideoCodec codec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVideoCodec`。调用它会改变 `QMediaFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该特性承载了媒体的视频编解码器。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `codec`：类型为 `QMediaFormat::VideoCodec`。没有默认值，调用时必须提供。传入 `QMediaFormat::VideoCodec` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setVideoCodec(...)` 修改 `videoCodec`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[invokable] QList<QMediaFormat::AudioCodec> QMediaFormat::supportedAudioCodecs(QMediaFormat::ConversionMode m)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::supportedAudioCodecs` 用于计算、查询或取得与“supported、Audio、Codecs”相关的操作。调用时要先确认当前状态和 `m` 的有效范围；返回类型是 `QList<QMediaFormat::AudioCodec>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QMediaFormat::AudioCodec>`。
-- 参数 `m`：类型为 `QMediaFormat::ConversionMode`。没有默认值，调用时必须提供。传入 `QMediaFormat::ConversionMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所选文件格式和视频编解码器（`m`）的音频编解码器列表。
+要获取所有支持的音频编解码器，请在默认构造的编解码器上运行此查询`QMediaFormat`。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[invokable] QList<QMediaFormat::FileFormat> QMediaFormat::supportedFileFormats(QMediaFormat::ConversionMode m)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::supportedFileFormats` 用于计算、查询或取得与“supported、File、Formats”相关的操作。调用时要先确认当前状态和 `m` 的有效范围；返回类型是 `QList<QMediaFormat::FileFormat>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QMediaFormat::FileFormat>`。
-- 参数 `m`：类型为 `QMediaFormat::ConversionMode`。没有默认值，调用时必须提供。传入 `QMediaFormat::ConversionMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`m`指示的音频和视频编解码器文件格式列表。
+要获取所有支持的文件格式，请在默认构造`QMediaFormat`上运行此查询。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] QList<QMediaFormat::VideoCodec> QMediaFormat::supportedVideoCodecs(QMediaFormat::ConversionMode m)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::supportedVideoCodecs` 用于计算、查询或取得与“supported、Video、Codecs”相关的操作。调用时要先确认当前状态和 `m` 的有效范围；返回类型是 `QList<QMediaFormat::VideoCodec>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QMediaFormat::VideoCodec>`。
-- 参数 `m`：类型为 `QMediaFormat::ConversionMode`。没有默认值，调用时必须提供。传入 `QMediaFormat::ConversionMode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所选文件格式和音频编解码器（`m`）的视频编解码器列表。
+要获取所有支持的视频编码器，请在默认构造的MediaFormat上运行此查询。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[noexcept] void QMediaFormat::swap(QMediaFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QMediaFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将媒体格式与`other`互换。
 
 ### `QMediaFormat::VideoCodec QMediaFormat::videoCodec() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::videoCodec` 用于计算、查询或取得与“video、Codec”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaFormat::VideoCodec`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMediaFormat::VideoCodec`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该格式中使用的视频编码器。
+注意：property videoCodec的获取函数。
 
 ### `[static invokable] QString QMediaFormat::videoCodecDescription(QMediaFormat::VideoCodec codec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `videoCodecDescription`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `codec`：类型为 `QMediaFormat::VideoCodec`。没有默认值，调用时必须提供。传入 `QMediaFormat::VideoCodec` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回描述以供`codec`。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[static invokable] QString QMediaFormat::videoCodecName(QMediaFormat::VideoCodec codec)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `videoCodecName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `codec`：类型为 `QMediaFormat::VideoCodec`。没有默认值，调用时必须提供。传入 `QMediaFormat::VideoCodec` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于字符串的`codec`名称。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `bool QMediaFormat::operator!=(const QMediaFormat &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QMediaFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`不等于当前媒体格式，返回`true`，否则返回`false`。
 
 ### `[noexcept] QMediaFormat &QMediaFormat::operator=(QMediaFormat &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMediaFormat &`。
-- 参数 `other`：类型为 `QMediaFormat &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`other` `QMediaFormat`物体。
 
 ### `[noexcept] QMediaFormat &QMediaFormat::operator=(const QMediaFormat &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMediaFormat &`。
-- 参数 `other`：类型为 `const QMediaFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制`other`到这个`QMediaFormat`对象里。
 
 ### `bool QMediaFormat::operator==(const QMediaFormat &other) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMediaFormat` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `other`：类型为 `const QMediaFormat &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`other`等于当前媒体格式，返回`true`;否则返回`false`。
 
 ### `QMediaFormat::FileFormat fileFormat() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMediaFormat::fileFormat` 用于计算、查询或取得与“file、格式化”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMediaFormat::FileFormat`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含介质的文件（容器）格式。
 
-**签名拆解：**
-
-- 返回值：`QMediaFormat::FileFormat`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `fileFormat()` 读取当前值；它不会修改应用状态。
 
 ### `void setFileFormat(QMediaFormat::FileFormat f)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileFormat`。调用它会改变 `QMediaFormat` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含介质的文件（容器）格式。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QMediaFormat::FileFormat`。没有默认值，调用时必须提供。传入 `QMediaFormat::FileFormat` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setFileFormat(...)` 修改 `fileFormat`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

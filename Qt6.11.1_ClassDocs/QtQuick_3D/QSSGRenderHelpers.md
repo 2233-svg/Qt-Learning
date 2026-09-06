@@ -62,126 +62,78 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QSSGRenderHelpers::CreateFlagflags QSSGRenderHelpers::CreateFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderHelpers` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CreateFlagflags QSSGRenderHelpers::CreateFlags`。
-- 属性名：`QSSGRenderHelpers`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSSGRenderHelpers::CreateFlag::None`: `0`；默认值。仅为指定的节点创建 Renderables
+- `QSSGRenderHelpers::CreateFlag::Recurse`: `0x1`；为每个节点及其子节点创建 Renderables
+- `QSSGRenderHelpers::CreateFlag::Steal`: `0x2`；从引擎获取 Renderables，并且不会被 `QtQuick3D` 渲染
+注意：调用 `QSSGRenderHelpers::createRenderables()` 而未设置 {QSSGRenderHelpers::CreateFlag::Steal}{Steal} 标志意味着节点会被复制，并且 `QtQuick3D` 将像正常情况一样渲染它的节点副本。
+CreateFlags 类型是 QFlags<CreateFlag> 的 typedef。它存储 CreateFlag 值的按位或组合。
 
 ### `[static] QSSGPrepResultId QSSGRenderHelpers::commit(const QSSGFrameData &frameData, QSSGPrepContextId prepId, QSSGRenderablesId renderablesId, float lodThreshold = 1.0f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `commit`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGPrepResultId`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `prepId`：类型为 `QSSGPrepContextId`。没有默认值，调用时必须提供。传入 `QSSGPrepContextId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `renderablesId`：类型为 `QSSGRenderablesId`。没有默认值，调用时必须提供。传入 `QSSGRenderablesId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lodThreshold`：类型为 `float`。默认值为 `1.0f`。传入 `float` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+一旦对可渲染文件完成必要的更改，数据就可以标记为准备好提交渲染器。
+返回 id 到准备结果。
+`frameData`，`prepId`，`renderablesId`，`lodThreshold`。
 
 ### `[static] QSSGRenderablesId QSSGRenderHelpers::createRenderables(const QSSGFrameData &frameData, QSSGPrepContextId prepId, const QSSGNodeIdList &nodes, QSSGRenderHelpers::CreateFlags flags = CreateFlag::None)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `createRenderables`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGRenderablesId`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `prepId`：类型为 `QSSGPrepContextId`。没有默认值，调用时必须提供。传入 `QSSGPrepContextId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `nodes`：类型为 `const QSSGNodeIdList &`。没有默认值，调用时必须提供。传入 `const QSSGNodeIdList &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `flags`：类型为 `QSSGRenderHelpers::CreateFlags`。默认值为 `CreateFlag::None`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+获取一个节点 id 列表，创建可渲染的可渲染节点，渲染器可以进一步处理。如果列表中没有节点或没有可渲染节点，返回的 id 将无效。
+默认情况下，该函数不会递归，且在列表中包含了`nodes`的子节点。通过在`flags`参数中传递`Recurse`标志，可以实现递归的启用。
+返回一个id到已创建的可渲染文件。
+`frameData`，`prepId`。
 
 ### `[static] QSSGPrepContextId QSSGRenderHelpers::prepareForRender(const QSSGFrameData &frameData, const QSSGRenderExtension &ext, QSSGCameraId cameraId, quint32 slot = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `prepareForRender`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGPrepContextId`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ext`：类型为 `const QSSGRenderExtension &`。没有默认值，调用时必须提供。传入 `const QSSGRenderExtension &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `cameraId`：类型为 `QSSGCameraId`。没有默认值，调用时必须提供。传入 `QSSGCameraId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `slot`：类型为 `quint32`。默认值为 `0`。槽函数或回调。要确认签名、执行线程、上下文生命周期和是否可能阻塞。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+prepareForRender() 创建上下文，用于收集和存储与该渲染扩展相关的渲染数据信息。
+如果同一节点需要多次渲染但属性不同，例如不同的材质或相机，则需要新的上下文。为一个扩展创建多个上下文时可以使用`slot`参数。默认上下文在槽位0中创建。
+将ID返回到准备上下文。
+`frameData`，`ext`，`cameraId`。
 
 ### `[static] void QSSGRenderHelpers::prepareRenderables(const QSSGFrameData &frameData, QSSGPrepResultId prepId, QRhiRenderPassDescriptor *renderPassDescriptor, QSSGRhiGraphicsPipelineState &ps, QSSGRenderablesFilters filter = QSSGRenderablesFilter::All)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `prepareRenderables`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `prepId`：类型为 `QSSGPrepResultId`。没有默认值，调用时必须提供。传入 `QSSGPrepResultId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `renderPassDescriptor`：类型为 `QRhiRenderPassDescriptor *`。没有默认值，调用时必须提供。传入 `QRhiRenderPassDescriptor *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `ps`：类型为 `QSSGRhiGraphicsPipelineState &`。没有默认值，调用时必须提供。传入 `QSSGRhiGraphicsPipelineState &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `filter`：类型为 `QSSGRenderablesFilters`。默认值为 `QSSGRenderablesFilter::All`。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在调用`renderRenderables`之前，先准备好渲染所需的绘制调用数据。
+返回 id 到准备结果。
+`frameData`，`renderPassDescriptor`，`ps`，`prepId`，`filter`。
 
 ### `[static] void QSSGRenderHelpers::renderRenderables(const QSSGFrameData &frameData, QSSGPrepResultId prepId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `renderRenderables`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `frameData`：类型为 `const QSSGFrameData &`。没有默认值，调用时必须提供。传入 `const QSSGFrameData &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `prepId`：类型为 `QSSGPrepResultId`。没有默认值，调用时必须提供。传入 `QSSGPrepResultId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+渲染可渲染的可渲染。
+`frameData`，`prepId`。
 
 ### `enum class CreateFlag { None, Recurse, Steal }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderHelpers` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSSGRenderHelpers::CreateFlag::None`: `0`；默认值。仅为指定的节点创建 Renderables
+- `QSSGRenderHelpers::CreateFlag::Recurse`: `0x1`；为每个节点及其子节点创建 Renderables
+- `QSSGRenderHelpers::CreateFlag::Steal`: `0x2`；从引擎获取 Renderables，并且不会被 `QtQuick3D` 渲染
+注意：调用 `QSSGRenderHelpers::createRenderables()` 而未设置 {QSSGRenderHelpers::CreateFlag::Steal}{Steal} 标志意味着节点会被复制，并且 `QtQuick3D` 将像正常情况一样渲染它的节点副本。
+CreateFlags 类型是 QFlags<CreateFlag> 的 typedef。它存储 CreateFlag 值的按位或组合。
 
 ### `flags CreateFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderHelpers` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QSSGRenderHelpers::CreateFlag::None`: `0`；默认值。仅为指定的节点创建 Renderables
+- `QSSGRenderHelpers::CreateFlag::Recurse`: `0x1`；为每个节点及其子节点创建 Renderables
+- `QSSGRenderHelpers::CreateFlag::Steal`: `0x2`；从引擎获取 Renderables，并且不会被 `QtQuick3D` 渲染
+注意：调用 `QSSGRenderHelpers::createRenderables()` 而未设置 {QSSGRenderHelpers::CreateFlag::Steal}{Steal} 标志意味着节点会被复制，并且 `QtQuick3D` 将像正常情况一样渲染它的节点副本。
+CreateFlags 类型是 QFlags<CreateFlag> 的 typedef。它存储 CreateFlag 值的按位或组合。
 
 ## 6. 深入实践与常见坑
 

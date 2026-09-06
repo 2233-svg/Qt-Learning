@@ -73,87 +73,49 @@ node->setFlag(QSGNode::OwnsMaterial);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 6 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QSGOpaqueTextureMaterial::setTexture(QSGTexture *texture)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是从 `QSGOpaqueTextureMaterial` 继承的纹理材质 API `setTexture`。设置会影响采样、mipmap 或环绕方式；纹理必须在渲染上下文中有效，并且其生命周期覆盖材质和节点的使用期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `texture`：类型为 `QSGTexture *`。没有默认值，调用时必须提供。传入 `QSGTexture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这些材料的质地设定为`texture`。
+材质并不拥有纹理的所有权。
 
 ### `QSGTexture *QSGOpaqueTextureMaterial::texture() const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是从 `QSGOpaqueTextureMaterial` 继承的纹理材质 API `texture`。设置会影响采样、mipmap 或环绕方式；纹理必须在渲染上下文中有效，并且其生命周期覆盖材质和节点的使用期。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该纹理材质的纹理。
 
 ### `void QSGOpaqueTextureMaterial::setFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是从 `QSGOpaqueTextureMaterial` 继承的纹理材质 API `setFiltering`。设置会影响采样、mipmap 或环绕方式；纹理必须在渲染上下文中有效，并且其生命周期覆盖材质和节点的使用期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把过滤设置为`filtering`。
+过滤模式是在纹理实例绑定渲染前设置的。
 
 ### `void QSGOpaqueTextureMaterial::setMipmapFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是从 `QSGOpaqueTextureMaterial` 继承的纹理材质 API `setMipmapFiltering`。设置会影响采样、mipmap 或环绕方式；纹理必须在渲染上下文中有效，并且其生命周期覆盖材质和节点的使用期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将mipmap模式设置为`filtering`。
+mipmap过滤模式是在纹理实例被绑定渲染之前设置的。
+如果纹理不支持mipmapping，启用mipmapping也无效。
 
 ### `void QSGOpaqueTextureMaterial::setHorizontalWrapMode(QSGTexture::WrapMode mode)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是从 `QSGOpaqueTextureMaterial` 继承的纹理材质 API `setHorizontalWrapMode`。设置会影响采样、mipmap 或环绕方式；纹理必须在渲染上下文中有效，并且其生命周期覆盖材质和节点的使用期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSGTexture::WrapMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将水平包裹模式设置为`mode`。
+水平包裹模式是在纹理实例绑定渲染前设置的。
 
 ### `void QSGOpaqueTextureMaterial::setVerticalWrapMode(QSGTexture::WrapMode mode)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 这是从 `QSGOpaqueTextureMaterial` 继承的纹理材质 API `setVerticalWrapMode`。设置会影响采样、mipmap 或环绕方式；纹理必须在渲染上下文中有效，并且其生命周期覆盖材质和节点的使用期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QSGTexture::WrapMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将垂直包裹模式设置为`mode`。
+垂直包裹模式是在纹理实例绑定渲染前设置的。
 
 ## 6. 深入实践与常见坑
 

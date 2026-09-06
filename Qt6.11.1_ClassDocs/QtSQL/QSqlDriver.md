@@ -119,509 +119,305 @@ if (query.exec()) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 37 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSqlDriver::DriverFeature`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 暴露的类型声明 `Driver、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DriverFeature`。
-- 属性名：`QSqlDriver`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含驱动程序可能支持的功能列表。使用`hasFeature()`查询某个功能是否被支持。部分功能依赖于数据库服务器，因此只有在成功通过`QSqlDatabase::open()`打开数据库连接后才能正确判断。
+- `QSqlDriver::Transactions`：`0`;驱动程序是否支持SQL事务。
+- `QSqlDriver::QuerySize`：`1`;数据库是否能够报告查询的大小。注意，有些数据库不支持返回查询的大小（即返回的行数），此时`QSqlQuery::size()`返回为-1。
+- `QSqlDriver::BLOB`：`2`;驱动程序是否支持二进制大对象字段。
+- `QSqlDriver::Unicode`：`3`;如果数据库服务器支持，驱动程序是否支持Unicode字符串。
+- `QSqlDriver::PreparedQueries`：`4`;驱动程序是否支持预备查询执行。
+- `QSqlDriver::NamedPlaceholders`：`5`;驱动程序是否支持使用命名占位符。
+- `QSqlDriver::PositionalPlaceholders`：`6`;驱动程序是否支持使用位置占位符。
+- `QSqlDriver::LastInsertId`：`7`;驱动程序是否支持返回最后被触碰行的ID。
+- `QSqlDriver::BatchOperations`：`8`;驱动程序是否支持批处理操作，参见`QSqlQuery::execBatch()`
+- `QSqlDriver::SimpleLocking`：`9`;驱动程序是否允许在表上设置写锁，而其他查询则有读取锁。
+- `QSqlDriver::LowPrecisionNumbers`：`10`;驱动程序是否允许低精度获取数值。
+- `QSqlDriver::EventNotifications`：`11`;驱动程序是否支持数据库事件通知。
+- `QSqlDriver::FinishQuery`：`12`;驱动程序在调用`QSqlQuery::finish()`时是否能进行任何低层级资源清理。
+- `QSqlDriver::MultipleResultSets`：`13`;驱动程序是否能访问从批处理语句或存储过程返回的多个结果集。
+- `QSqlDriver::CancelQuery`：`14`;驱动程序是否允许取消正在进行的查询。
+关于支持功能的更多信息可在 Qt SQL 驱动文档中找到。
 
 ### `enum QSqlDriver::IdentifierType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 暴露的类型声明 `Identifier、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:IdentifierType`。
-- 属性名：`QSqlDriver`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含SQL标识符类型的列表。
+- `QSqlDriver::FieldName`：`0`;一个SQL字段名称
+- `QSqlDriver::TableName`：`1`;一个SQL表名称
 
 ### `enum QSqlDriver::NotificationSource`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 暴露的类型声明 `Notification、来源`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:NotificationSource`。
-- 属性名：`QSqlDriver`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含SQL通知源列表。
+- `QSqlDriver::UnknownSource`：`0`;通知源未知
+- `QSqlDriver::SelfSource`：`1`;通知源是该连接
+- `QSqlDriver::OtherSource`：`2`;通知源是另一个连接
 
 ### `enum QSqlDriver::StatementType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 暴露的类型声明 `Statement、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StatementType`。
-- 属性名：`QSqlDriver`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含驱动程序可以创建的SQL语句（或子句）类型列表。
+- `QSqlDriver::WhereStatement`：`0`;一个SQL `WHERE`语句（例如，`WHERE f = 5`）。
+- `QSqlDriver::SelectStatement`：`1`;一个SQL `SELECT`语句（例如，`SELECT f FROM t`）。
+- `QSqlDriver::UpdateStatement`：`2`;一个SQL `UPDATE`语句（例如，`UPDATE TABLE t set f = 1`）。
+- `QSqlDriver::InsertStatement`：`3`;一个SQL `INSERT`语句（例如，`INSERT INTO t (f) values (1)`）。
+- `QSqlDriver::DeleteStatement`：`4`;一个SQL `DELETE`语句（例如，`DELETE FROM t`）。
 
 ### `[since 6.8] numericalPrecisionPolicy : QSql::NumericalPrecisionPolicy`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 的配置属性。初始化或状态切换时通过 `setNumericalPrecisionPolicy(...)` 设置，之后用 `NumericalPrecisionPolicy()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含数据库连接的精度策略。
+注意：设置精度策略不会影响当前正在运行的任何查询。
 
-**签名拆解：**
-
-- 属性类型：`QSql::NumericalPrecisionPolicy`。
-- 属性名：`numericalPrecisionPolicy`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `numericalPrecisionPolicy()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QSqlDriver::QSqlDriver(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`构造一个新的驱动程序。
 
 ### `[virtual noexcept] QSqlDriver::~QSqlDriver()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放所有分配的资源。
 
 ### `[virtual] bool QSqlDriver::beginTransaction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginTransaction`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该函数以启动事务。成功时返回true，否则返回false。默认实现不做任何操作，返回`false`。
 
 ### `[pure virtual] void QSqlDriver::close()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `close`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+派生类必须重新实现这个纯虚拟函数以关闭数据库连接。成功时返回 true，失败时返回 false。
 
 ### `[virtual] bool QSqlDriver::commitTransaction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::commitTransaction` 用于计算、查询或取得与“提交、Transaction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数被调用以提交事务。如果成功，返回true，否则返回false。默认实现不做任何操作，返回`false`。
 
 ### `[since 6.9] QString QSqlDriver::connectionName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `connectionName`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回驱动创建时的数据库连接名称，并附`QSqlDatabase::addDatabase()`。
 
 ### `[pure virtual] QSqlResult *QSqlDriver::createResult() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::createResult` 用于计算、查询或取得与“创建、结果”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlResult *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlResult *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在数据库上创建一个空的 SQL 结果。派生类必须重新实现该函数，并返回一个适合其数据库的 `QSqlResult` 对象给调用者。
 
 ### `[virtual] QString QSqlDriver::escapeIdentifier(const QString &identifier, QSqlDriver::IdentifierType type) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::escapeIdentifier` 用于计算、查询或取得与“escape、Identifier”相关的操作。调用时要先确认当前状态和 `identifier`、`type` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `identifier`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `type`：类型为 `QSqlDriver::IdentifierType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据数据库规则返回转义的`identifier`。`identifier`可以是表名或字段名，具体取决于`type`。
+默认实现什么都不做。
 
 ### `[virtual] QString QSqlDriver::formatValue(const QSqlField &field, bool trimStrings = false) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `formatValue`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `field`：类型为 `const QSqlField &`。没有默认值，调用时必须提供。传入 `const QSqlField &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `trimStrings`：类型为 `bool`。默认值为 `false`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数据库`field`值的字符串表示。例如，在构建INSERT和UPDATE语句时，会使用该字符串。
+默认实现会根据以下规则返回以字符串格式化的值：
+- 如果`field`为字符数据，值以单引号包裹返回，这适用于许多SQL数据库。任何嵌入的单引号字符都被转义（用两个单引号字符替代）。如果`trimStrings`为真（默认为假），则所有后置空白从字段中裁掉。
+- 如果`field`是日期/时间数据，则该值以ISO格式并用单引号包围。如果日期/时间数据无效，则返回“NULL”。
+- 如果`field`是`bytearray`数据，且驱动程序可以编辑二进制字段，则该值被格式化为十六进制字符串。
+- 对于任何其他字段类型，调用 toString() 对其值进行调用，返回结果。
 
 ### `[virtual] QVariant QSqlDriver::handle() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::handle` 用于计算、查询或取得与“handle”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回包裹在`QVariant`或无句柄时的无效变体包裹的低系列据库句柄。
+警告：使用时请极度谨慎，且仅在你知道自己在做什么的情况下使用。
+警告：这里返回的handle如果连接被修改（例如关闭连接），可能会变成过时指针。
+警告：如果连接尚未打开，句柄可能为空。
+这里返回的句柄是数据库相关的，访问前应查询变体的类型名。
+本示例检索了与 sqlite 连接的句柄：
+此摘要返回PostgreSQL或MySQL的句柄：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QSqlDatabase db = QSqlDatabase::database();
+ QVariant v = db.driver()->handle();
+ if (v.isValid() && (qstrcmp(v.typeName(), "sqlite3*") == 0)) {
+     // v.data() returns a pointer to the handle
+     sqlite3 *handle = *static_cast<sqlite3 **>(v.data());
+     if (handle) {
+         // ...
+     }
+ }
+```
 
 ### `[pure virtual] bool QSqlDriver::hasFeature(QSqlDriver::DriverFeature feature) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasFeature`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `feature`：类型为 `QSqlDriver::DriverFeature`。没有默认值，调用时必须提供。传入 `QSqlDriver::DriverFeature` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果驱动支持功能`feature`，返回`true`;否则返回`false`。
+请注意，有些数据库需要先`open()`才能确定这一点。
 
 ### `[virtual] bool QSqlDriver::isIdentifierEscaped(const QString &identifier, QSqlDriver::IdentifierType type) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isIdentifierEscaped`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `identifier`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `type`：类型为 `QSqlDriver::IdentifierType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`identifier`是否符合数据库规则的转义。`identifier`可以是表名或字段名，取决于`type`。
+如果你想在`QSqlDriver`子类中实现自己的实现，可以重新实现这个函数，。
 
 ### `[virtual] bool QSqlDriver::isOpen() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOpen`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果数据库连接是开放的，返回`true`;否则返回 false。
 
 ### `bool QSqlDriver::isOpenError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOpenError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果打开数据库连接时出现错误，返回`true`;否则返回`false`。
 
 ### `QSqlError QSqlDriver::lastError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::lastError` 用于计算、查询或取得与“末项、错误”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlError`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlError`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QSqlError`对象，包含数据库上最后一次错误的信息。
 
 ### `[virtual, since 6.0] int QSqlDriver::maximumIdentifierLength(QSqlDriver::IdentifierType type) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::maximumIdentifierLength` 用于计算、查询或取得与“最大值、Identifier、Length”相关的操作。调用时要先确认当前状态和 `type` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `type`：类型为 `QSqlDriver::IdentifierType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据数据库设置返回标识符的最大长度`type`。如果数据库中没有最大值，则默认返回INT_MAX。
 
 ### `[signal] void QSqlDriver::notification(const QString &name, QSqlDriver::NotificationSource source, const QVariant &payload)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlDriver` 发出的通知信号 `notification`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-- 参数 `source`：类型为 `QSqlDriver::NotificationSource`。没有默认值，调用时必须提供。源对象、源索引或源数据；它通常决定操作的输入，转换后要确认源的生命周期和线程归属。
-- 参数 `payload`：类型为 `const QVariant &`。没有默认值，调用时必须提供。传入 `const QVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当数据库发布事件通知，司机订阅该通知时，该信号会发出。`name`标识事件通知，`source`指示信号源，`payload`存储可随通知一同提供的额外数据。
 
 ### `QSql::NumericalPrecisionPolicy QSqlDriver::numericalPrecisionPolicy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::numericalPrecisionPolicy` 用于计算、查询或取得与“numerical、Precision、Policy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSql::NumericalPrecisionPolicy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSql::NumericalPrecisionPolicy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 numicalPrecisionPolicy。
+注意：属性 numericalPrecisionPolicy 的获取函数。
 
 ### `[pure virtual] bool QSqlDriver::open(const QString &db, const QString &user = QString(), const QString &password = QString(), const QString &host = QString(), int port = -1, const QString &options = QString())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `open`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `db`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `user`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `password`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `host`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `port`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `options`：类型为 `const QString &`。默认值为 `QString()`。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+派生类必须重新实现这个纯虚拟函数，在数据库`db`上开启数据库连接，使用用户名`user`、密码`password`、主机`host`、端口`port`和连接选项`options`。
+函数成功时必须返回真，失败时返回假。
 
 ### `[virtual] QSqlIndex QSqlDriver::primaryIndex(const QString &tableName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::primaryIndex` 用于计算、查询或取得与“primary、索引”相关的操作。调用时要先确认当前状态和 `tableName` 的有效范围；返回类型是 `QSqlIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlIndex`。
-- 参数 `tableName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表`tableName`的主索引。如果表没有主索引，返回空的`QSqlIndex`。默认实现返回的是空索引。
 
 ### `[virtual] QSqlRecord QSqlDriver::record(const QString &tableName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::record` 用于计算、查询或取得与“record”相关的操作。调用时要先确认当前状态和 `tableName` 的有效范围；返回类型是 `QSqlRecord`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlRecord`。
-- 参数 `tableName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QSqlRecord`，包含表`tableName`字段的名称。如果不存在此类表，则返回空记录。默认实现返回空记录。
 
 ### `[virtual] bool QSqlDriver::rollbackTransaction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::rollbackTransaction` 用于计算、查询或取得与“rollback、Transaction”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用该函数用于回滚事务。如果成功，返回 true，否则返回 false。默认实现不做任何操作，返回 `false`。
 
 ### `[virtual protected] void QSqlDriver::setLastError(const QSqlError &error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLastError`。调用它会改变 `QSqlDriver` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `const QSqlError &`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数用于设定数据库中最后一次错误（`error`）的值。
 
 ### `void QSqlDriver::setNumericalPrecisionPolicy(QSql::NumericalPrecisionPolicy precisionPolicy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setNumericalPrecisionPolicy`。调用它会改变 `QSqlDriver` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性包含数据库连接的精度策略。
+注意：设置精度策略不会影响当前正在运行的任何查询。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `precisionPolicy`：类型为 `QSql::NumericalPrecisionPolicy`。没有默认值，调用时必须提供。传入 `QSql::NumericalPrecisionPolicy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setNumericalPrecisionPolicy(...)` 修改 `numericalPrecisionPolicy`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `[virtual protected] void QSqlDriver::setOpen(bool open)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOpen`。调用它会改变 `QSqlDriver` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `open`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数将数据库的开放状态设置为`open`。派生类可以使用该函数报告`open()`的状态。
 
 ### `[virtual protected] void QSqlDriver::setOpenError(bool error)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOpenError`。调用它会改变 `QSqlDriver` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `error`：类型为 `bool`。没有默认值，调用时必须提供。错误输出对象或错误状态。解析/执行后要检查它，而不能只看主返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数将数据库的开放错误状态设置为`error`。派生类可以使用该函数报告`open()`的状态。注意，如果 `error`为真，数据库的开放状态将设置为关闭（即返回`isOpen()`返回`false`）。
 
 ### `[virtual] QString QSqlDriver::sqlStatement(QSqlDriver::StatementType type, const QString &tableName, const QSqlRecord &rec, bool preparedStatement) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::sqlStatement` 用于计算、查询或取得与“sql、Statement”相关的操作。调用时要先确认当前状态和 `type`、`tableName`、`rec`、`preparedStatement` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `type`：类型为 `QSqlDriver::StatementType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-- 参数 `tableName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `rec`：类型为 `const QSqlRecord &`。没有默认值，调用时必须提供。传入 `const QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `preparedStatement`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回表 `type` 类型 `tableName` 的 SQL 语句，`rec` 的值。如果 `preparedStatement`为真，该字符串将包含占位符而非值。
+每个`rec`字段生成的标志决定该字段是否包含在生成语句中。
+该方法可用于操作表，无需担心依赖数据库的SQL方言。对于未准备的语句，值将被正确转义。
+在 WHERE 语句中，`rec` 的每个非空字段指定了一个与字段值相等的过滤条件，或者如果准备好了，则指定占位符。然而，无论是否准备好，空字段都指定条件为 IS NULL，且从不引入占位符。应用程序在执行过程中不得尝试绑定空字段的数据。如果需要占位符，字段必须设置为某个非空值。此外，由于非空字段指定了等价条件，而 SQL NULL 不等于任何东西，甚至不等于它自身，通常将空字段绑定到占位符上并不实用。
 
 ### `[virtual] QString QSqlDriver::stripDelimiters(const QString &identifier, QSqlDriver::IdentifierType type) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::stripDelimiters` 用于计算、查询或取得与“strip、Delimiters”相关的操作。调用时要先确认当前状态和 `identifier`、`type` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `identifier`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `type`：类型为 `QSqlDriver::IdentifierType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回去除前置和后尾分隔符的`identifier`，`identifier`可以是表名或字段名，取决于`type`。如果`identifier`没有前置和后置分隔符字符，则返回`identifier`，无需修改。
+如果你想在`QSqlDriver`子类中提供自己的实现，可以重新实现这个函数，。
 
 ### `[virtual] bool QSqlDriver::subscribeToNotification(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::subscribeToNotification` 用于计算、查询或取得与“subscribe、转换输出、Notification”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数用于订阅数据库中的事件通知。`name` 用于识别事件通知。
+如果成功，返回真，否则返回假。
+调用该函数时，数据库必须处于打开状态。当通过调用关闭数据库时`close()`所有已订阅的事件通知都会自动取消订阅。注意，在已打开的数据库上调用`open()`可能会隐式地导致调用`close()`，从而导致驱动程序取消所有事件通知。
+当数据库发布由`name`识别的事件通知时，`notification()`信号会被发出。
+如果你想在自己的`QSqlDriver`子类中提供事件通知支持，请重新实现这个函数，。
 
 ### `[virtual] QStringList QSqlDriver::subscribedToNotifications() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::subscribedToNotifications` 用于计算、查询或取得与“subscribed、转换输出、Notifications”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前订阅的事件通知名称列表。
+如果你想在自己的 `QSqlDriver` 子类中提供事件通知支持，请重新实现这个函数，。
 
 ### `[virtual] QStringList QSqlDriver::tables(QSql::TableType tableType) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::tables` 用于计算、查询或取得与“tables”相关的操作。调用时要先确认当前状态和 `tableType` 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数 `tableType`：类型为 `QSql::TableType`。没有默认值，调用时必须提供。传入 `QSql::TableType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回数据库中表名称的列表。默认实现返回一个空列表。
+`tableType`参数描述应返回哪些类型的表。由于二进制兼容性，字符串包含枚举QSql：：TableTypes的值作为文本。空字符串应视为`QSql::Tables`以实现向后兼容。
 
 ### `[virtual] bool QSqlDriver::unsubscribeFromNotification(const QString &name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlDriver::unsubscribeFromNotification` 用于计算、查询或取得与“unsubscribe、转换进入、Notification”相关的操作。调用时要先确认当前状态和 `name` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `name`：类型为 `const QString &`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该函数用于取消数据库中的事件通知。`name` 用于识别事件通知。
+如果成功，返回真，否则返回假。
+调用该函数时，数据库必须处于打开状态。所有订阅的事件通知在调用`close()`函数时自动取消订阅。
+调用该函数后，当数据库发布由`name`识别的事件通知时，`notification()`信号将不再发出。
+如果你想在自己的`QSqlDriver`子类中提供事件通知支持，请重新实现这个函数，。
 
 ## 6. 深入实践与常见坑
 

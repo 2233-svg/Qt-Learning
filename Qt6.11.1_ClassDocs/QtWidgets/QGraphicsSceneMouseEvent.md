@@ -74,204 +74,99 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QGraphicsSceneMouseEvent::~QGraphicsSceneMouseEvent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsSceneMouseEvent` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁了整个活动。
 
 ### `Qt::MouseButton QGraphicsSceneMouseEvent::button() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::button` 用于计算、查询或取得与“button”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseButton`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseButton`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回导致事件的鼠标按键（如果有的话）。
 
 ### `QPointF QGraphicsSceneMouseEvent::buttonDownPos(Qt::MouseButton button) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::buttonDownPos` 用于计算、查询或取得与“button、Down、Pos”相关的操作。调用时要先确认当前状态和 `button` 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回点击指定`button`的物品坐标中的鼠标光标位置。
 
 ### `QPointF QGraphicsSceneMouseEvent::buttonDownScenePos(Qt::MouseButton button) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::buttonDownScenePos` 用于计算、查询或取得与“button、Down、Scene、Pos”相关的操作。调用时要先确认当前状态和 `button` 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景坐标中点击指定`button`的鼠标光标位置。
 
 ### `QPoint QGraphicsSceneMouseEvent::buttonDownScreenPos(Qt::MouseButton button) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::buttonDownScreenPos` 用于计算、查询或取得与“button、Down、Screen、Pos”相关的操作。调用时要先确认当前状态和 `button` 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数 `button`：类型为 `Qt::MouseButton`。没有默认值，调用时必须提供。传入 `Qt::MouseButton` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回点击指定`button`的屏幕坐标中的鼠标光标位置。
 
 ### `Qt::MouseButtons QGraphicsSceneMouseEvent::buttons() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::buttons` 用于计算、查询或取得与“buttons”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseButtons`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseButtons`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回事件发送时按下的鼠标组合。
 
 ### `Qt::MouseEventFlags QGraphicsSceneMouseEvent::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseEventFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseEventFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回鼠标事件标志。
+鼠标事件标志提供关于鼠标事件的额外信息。
 
 ### `QPointF QGraphicsSceneMouseEvent::lastPos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::lastPos` 用于计算、查询或取得与“末项、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回物品坐标中最后记录的鼠标光标位置。
 
 ### `QPointF QGraphicsSceneMouseEvent::lastScenePos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::lastScenePos` 用于计算、查询或取得与“末项、Scene、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景坐标中最后记录的鼠标光标位置。最后记录的位置是创建该事件的视图接收到的上一个鼠标事件的位置。
 
 ### `QPoint QGraphicsSceneMouseEvent::lastScreenPos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::lastScreenPos` 用于计算、查询或取得与“末项、Screen、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回屏幕上坐标中最后记录的鼠标光标位置。最后记录的位置是创建该事件的视图接收到的上一个鼠标事件的位置。
 
 ### `Qt::KeyboardModifiers QGraphicsSceneMouseEvent::modifiers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::modifiers` 用于计算、查询或取得与“modifiers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::KeyboardModifiers`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::KeyboardModifiers`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回事件发送时正在使用的键盘修饰键。
 
 ### `QPointF QGraphicsSceneMouseEvent::pos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::pos` 用于计算、查询或取得与“pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回鼠标光标在物品坐标中的位置。
 
 ### `QPointF QGraphicsSceneMouseEvent::scenePos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::scenePos` 用于计算、查询或取得与“scene、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPointF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPointF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场景坐标中的鼠标光标位置。
 
 ### `QPoint QGraphicsSceneMouseEvent::screenPos() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::screenPos` 用于计算、查询或取得与“screen、Pos”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回鼠标光标位置的屏幕坐标。
 
 ### `Qt::MouseEventSource QGraphicsSceneMouseEvent::source() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsSceneMouseEvent::source` 用于计算、查询或取得与“来源”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::MouseEventSource`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::MouseEventSource`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回关于鼠标事件源的信息。
+鼠标事件源可以用来区分真实的鼠标事件和人工鼠标事件。后者是操作系统或 Qt 本身从触摸事件合成出来的事件。
 
 ## 6. 深入实践与常见坑
 

@@ -66,231 +66,120 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOptionSlider::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionSlider::Type`：`SO_Slider`;提供样式选项（本类别`SO_Slider`）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必太担心。
 
 ### `enum QStyleOptionSlider::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionSlider::Version`：`1`;1
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
 
 ### `QStyleOptionSlider::QStyleOptionSlider()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QStyleOptionSlider，将成员变量初始化为默认值。
 
 ### `QStyleOptionSlider::QStyleOptionSlider(const QStyleOptionSlider &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOptionSlider &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`样式选项的副本。
 
 ### `bool QStyleOptionSlider::dialWrapping`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setDialWrapping(...)` 设置，之后用 `dialWrapping()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:dialWrapping`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量决定表盘是否应环绕。
+默认值为假，即表盘未被包裹。
 
 ### `int QStyleOptionSlider::maximum`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setMaximum(...)` 设置，之后用 `maximum()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:maximum`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持滑块的最大值。
+默认值是0。
 
 ### `int QStyleOptionSlider::minimum`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setMinimum(...)` 设置，之后用 `minimum()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:minimum`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持滑块的最小值。
+默认值是0。
 
 ### `qreal QStyleOptionSlider::notchTarget`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setNotchTarget(...)` 设置，之后用 `notchTarget()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:notchTarget`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示凹槽之间的像素数。
+默认值为0.0。
 
 ### `Qt::Orientation QStyleOptionSlider::orientation`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setOrientation(...)` 设置，之后用 `orientation()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:Orientation QStyleOptionSlider::orientation`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示滑块的方向（水平或垂直）。
+默认的方向是`Qt::Horizontal`。
 
 ### `int QStyleOptionSlider::pageStep`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setPageStep(...)` 设置，之后用 `pageStep()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:pageStep`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示滑块的页面步长。
+默认值是0。
 
 ### `int QStyleOptionSlider::singleStep`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setSingleStep(...)` 设置，之后用 `singleStep()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:singleStep`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示滑块单步长的大小。
+默认值是0。
 
 ### `int QStyleOptionSlider::sliderPosition`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setSliderPosition(...)` 设置，之后用 `sliderPosition()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:sliderPosition`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持滑块手柄的位置。
+如果滑块有主动反馈（即`QAbstractSlider::tracking`为真），这个值与`sliderValue`相同。否则，它将保持手柄当前的位置。默认值为0。
 
 ### `int QStyleOptionSlider::sliderValue`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setSliderValue(...)` 设置，之后用 `sliderValue()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:sliderValue`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持滑块的值。
+如果滑块有主动反馈（即`QAbstractSlider::tracking`为真），这个值与`sliderPosition`相同。否则，它将保持滑块在鼠标被按下前的值。
+默认值是0。
 
 ### `int QStyleOptionSlider::tickInterval`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setTickInterval(...)` 设置，之后用 `tickInterval()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:tickInterval`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示应在刻度之间绘制的区间。
+默认值是0。
 
 ### `QSlider::TickPosition QStyleOptionSlider::tickPosition`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setTickPosition(...)` 设置，之后用 `tickPosition()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:TickPosition QStyleOptionSlider::tickPosition`。
-- 属性名：`QSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量表示滑块刻度标记的位置（如果有的话）。
+默认值是`QSlider::NoTicks`。
 
 ### `bool QStyleOptionSlider::upsideDown`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionSlider` 的配置属性。初始化或状态切换时通过 `setUpsideDown(...)` 设置，之后用 `upsideDown()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:upsideDown`。
-- 属性名：`QStyleOptionSlider`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保持滑块控制方向。
+通常滑块在向上或向右移动时会增加;upsideDown 表示它应该相反（随着向下或向左移动而增加）。默认值为假，即滑块随着向上或向右移动而增加。
 
 ## 6. 深入实践与常见坑
 

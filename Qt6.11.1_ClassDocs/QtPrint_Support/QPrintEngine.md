@@ -70,115 +70,87 @@ target_link_libraries(mytarget PRIVATE Qt6::PrintSupport)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QPrintEngine::PrintEnginePropertyKey`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPrintEngine` 暴露的类型声明 `Print、Engine、Property、Key`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:PrintEnginePropertyKey`。
-- 属性名：`QPrintEngine`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于打印引擎与 `QPrinter` 之间的属性交流。某个属性可能被某个打印引擎支持，也可能不支持。
+- `QPrintEngine::PPK_CollateCopies`：`0`;一个布尔值，指示打印输出是否应被整理。
+- `QPrintEngine::PPK_ColorMode`：`1`;指`QPrinter::ColorMode`，颜色或单色。
+- `QPrintEngine::PPK_Creator`：`2`;描述文档创建者的字符串。
+- `QPrintEngine::PPK_Duplex`：`20`;一个布尔值，表示打印时打印时是否应使用打印机纸张的两面。
+- `QPrintEngine::PPK_DocumentName`：`3`;描述加载器中文档名称的字符串。
+- `QPrintEngine::PPK_FontEmbedding`：`19`;一个布尔值，表示文档字体的数据是否应嵌入发送到打印机的数据中。
+- `QPrintEngine::PPK_FullPage`：`4`;描述打印机是否应为全页的布尔值。
+- `QPrintEngine::PPK_NumberOfCopies`：`5`;过时。一个整数表示副本数量。改用PPK_CopyCount。
+- `QPrintEngine::PPK_Orientation`：`6`;指定`QPageLayout::Orientation`值。
+- `QPrintEngine::PPK_OutputFileName`：`7`;输出文件名作为字符串表示。空文件名表示打印机不应打印文件。
+- `QPrintEngine::PPK_PageOrder`：`8`;指定`QPrinter::PageOrder`值。
+- `QPrintEngine::PPK_PageRect`：`9`;指定页面矩形的`QRect`
+- `QPrintEngine::PPK_PageSize`：`10`;已过时。改用PPK_PaperSize。
+- `QPrintEngine::PPK_PaperRect`：`11`;一个指定纸张矩形的`QRect`。
+- `QPrintEngine::PPK_PaperSource`：`12`;指定`QPrinter::PaperSource`值。
+- `QPrintEngine::PPK_PaperSources`：`21`;指定多个`QPrinter::PaperSource`值。
+- `QPrintEngine::PPK_PaperName`：`26`;一个表示论文名称的字符串。
+- `QPrintEngine::PPK_PaperSize`：`PPK_PageSize`;指定QPrinter：:P aperSize值。
+- `QPrintEngine::PPK_PrinterName`：`13`;表示打印机名称的字符串。
+- `QPrintEngine::PPK_PrinterProgram`：`14`;一个字符串，指定用于打印的打印机程序名称，
+- `QPrintEngine::PPK_Resolution`：`15`;描述该打印机每英寸点数的整数。
+- `QPrintEngine::PPK_SelectionOption`：`16`
+- `QPrintEngine::PPK_SupportedResolutions`：`17`;一串整数QVariant，描述打印机支持的分辨率集合。
+- `QPrintEngine::PPK_WindowsPageSize`：`18`;在Windows上指定DM_PAPER条目的整数。
+- `QPrintEngine::PPK_CustomPaperSize`：`22`;`QSizeF`指定`QPrinter::Point`中自定义纸张尺寸。
+- `QPrintEngine::PPK_PageMargins`：`23`;<`QVariant`>包含`QPrinter::Point`单位中左边际、上边际、右边和底边距值的`QList`。
+- `QPrintEngine::PPK_CopyCount`：`24`;一个整数表示要印刷的副本数量。
+- `QPrintEngine::PPK_SupportsMultipleCopies`：`25`;一个布尔值，表示打印机是否支持在一个作业中打印多份副本。
+- `QPrintEngine::PPK_QPageSize`：`27`;使用`QPageSize`对象设置页面大小。
+- `QPrintEngine::PPK_QPageMargins`：`28`;使用`QMarginsF`和`QPageLayout::Unit`的std：:p air设置页边距。
+- `QPrintEngine::PPK_QPageLayout`：`29`;使用`QPageLayout`对象设置页面布局。
+- `QPrintEngine::PPK_CustomBase`：`0xff00`;扩展的基础。
 
 ### `[virtual noexcept] QPrintEngine::~QPrintEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QPrintEngine` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉打印引擎。
 
 ### `[pure virtual] bool QPrintEngine::abort()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `abort`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指示打印引擎中止打印过程。成功时返回真;否则返回`false`。
 
 ### `[pure virtual] int QPrintEngine::metric(QPaintDevice::PaintDeviceMetric id) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPrintEngine::metric` 用于计算、查询或取得与“metric”相关的操作。调用时要先确认当前状态和 `id` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `id`：类型为 `QPaintDevice::PaintDeviceMetric`。没有默认值，调用时必须提供。传入 `QPaintDevice::PaintDeviceMetric` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`id`的度量。
 
 ### `[pure virtual] bool QPrintEngine::newPage()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPrintEngine::newPage` 用于计算、查询或取得与“new、Page”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指示打印引擎开始新页面。如果打印机能够创建新页面，返回`true`;否则返回`false`。
 
 ### `[pure virtual] QPrinter::PrinterState QPrintEngine::printerState() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPrintEngine::printerState` 用于计算、查询或取得与“printer、State”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPrinter::PrinterState`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPrinter::PrinterState`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回打印引擎当前使用的打印机状态。
 
 ### `[pure virtual] QVariant QPrintEngine::property(QPrintEngine::PrintEnginePropertyKey key) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QPrintEngine::property` 用于计算、查询或取得与“property”相关的操作。调用时要先确认当前状态和 `key` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `key`：类型为 `QPrintEngine::PrintEnginePropertyKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`指定打印引擎属性。
 
 ### `[pure virtual] void QPrintEngine::setProperty(QPrintEngine::PrintEnginePropertyKey key, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setProperty`。调用它会改变 `QPrintEngine` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `QPrintEngine::PrintEnginePropertyKey`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`key`指定的打印引擎属性设置为给定的`value`。
 
 ## 6. 深入实践与常见坑
 

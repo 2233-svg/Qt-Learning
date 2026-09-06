@@ -68,126 +68,69 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QAccessibleSelectionInterface::~QAccessibleSelectionInterface()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QAccessibleSelectionInterface` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁掉`QAccessibleSelectionInterface`。
 
 ### `[pure virtual] bool QAccessibleSelectionInterface::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消选择所有可访问的子项目。
+返回所有可访问的子项是否已被从选择中移除，即调用该方法后选择是否为空。
 
 ### `[virtual] bool QAccessibleSelectionInterface::isSelected(QAccessibleInterface *childItem) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSelected`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `childItem`：类型为 `QAccessibleInterface *`。没有默认值，调用时必须提供。传入 `QAccessibleInterface *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`childItem`是否属于当前选择。
+默认实现检查`childItem`是否包含在`QAccessibleSelectionInterface::selectedItems`检索的项列表中。
 
 ### `[pure virtual] bool QAccessibleSelectionInterface::select(QAccessibleInterface *childItem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleSelectionInterface::select` 用于计算、查询或取得与“select”相关的操作。调用时要先确认当前状态和 `childItem` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `childItem`：类型为 `QAccessibleInterface *`。没有默认值，调用时必须提供。传入 `QAccessibleInterface *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向选择添加`childItem`。返回`childItem`是否已被添加到选择中。
+对于仅允许单选的实现，这可能取代当前的选择。
 
 ### `[pure virtual] bool QAccessibleSelectionInterface::selectAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleSelectionInterface::selectAll` 用于计算、查询或取得与“select、All”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+选择所有可访问的子项目。
+返回所有可访问的子项目是否已被添加到选择中。
 
 ### `[virtual] QAccessibleInterface *QAccessibleSelectionInterface::selectedItem(int selectionIndex) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleSelectionInterface::selectedItem` 用于计算、查询或取得与“selected、项目访问”相关的操作。调用时要先确认当前状态和 `selectionIndex` 的有效范围；返回类型是 `QAccessibleInterface *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAccessibleInterface *`。
-- 参数 `selectionIndex`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回选择中索引`selectionIndex`的选中可访问项目。
+注意，索引指的是第n个可选的可访问项（即当前选择中的索引），通常与传递给`QAccessibleInterface::child()`以检索相同项的索引不同。
+默认实现使用`selectionIndex`从`QAccessibleSelectionInterface::selectedItems()`检索的选中物品列表中检索该项。
+特别是对于涉及许多选定项目的实现，出于性能考虑，更高效地重新实现该方法可能更为理想。
 
 ### `[pure virtual] int QAccessibleSelectionInterface::selectedItemCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleSelectionInterface::selectedItemCount` 用于计算、查询或取得与“selected、项目访问、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所选可访问物品的总数。
 
 ### `[pure virtual] QList<QAccessibleInterface *> QAccessibleSelectionInterface::selectedItems() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleSelectionInterface::selectedItems` 用于计算、查询或取得与“selected、Items”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QAccessibleInterface *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QAccessibleInterface *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回可选可访问项目的列表。
 
 ### `[pure virtual] bool QAccessibleSelectionInterface::unselect(QAccessibleInterface *childItem)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QAccessibleSelectionInterface::unselect` 用于计算、查询或取得与“unselect”相关的操作。调用时要先确认当前状态和 `childItem` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `childItem`：类型为 `QAccessibleInterface *`。没有默认值，调用时必须提供。传入 `QAccessibleInterface *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从选择中移除`childItem`。
+返回该可访问物品是否已被从选择中移除。
 
 ## 6. 深入实践与常见坑
 

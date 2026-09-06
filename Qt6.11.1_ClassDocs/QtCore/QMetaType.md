@@ -132,835 +132,715 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 62 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMetaType::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QMetaType`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以下是`QMetaType`支持的内置类型：
+- `QMetaType::Void`：`43`;`void`
+- `QMetaType::Bool`：`1`;`bool`
+- `QMetaType::Int`：`2`;`int`
+- `QMetaType::UInt`：`3`;`unsigned int`
+- `QMetaType::Double`：`6`;`double`
+- `QMetaType::QChar`：`7`;QChar
+- `QMetaType::QString`：`10`;QString
+- `QMetaType::QByteArray`：`12`;QByte数组
+- `QMetaType::Nullptr`：`51`;`std::nullptr_t`
+- `QMetaType::VoidStar`：`31`;`void *`
+- `QMetaType::Long`：`32`;`long`
+- `QMetaType::LongLong`：`4`;朗朗
+- `QMetaType::Short`：`33`;`short`
+- `QMetaType::Char`：`34`;`char`
+- `QMetaType::Char16`：`56`;`char16_t`
+- `QMetaType::Char32`：`57`;`char32_t`
+- `QMetaType::ULong`：`35`;`unsigned long`
+- `QMetaType::ULongLong`：`5`;乌隆隆
+- `QMetaType::UShort`：`36`;`unsigned short`
+- `QMetaType::SChar`：`40`;`signed char`
+- `QMetaType::UChar`：`37`;`unsigned char`
+- `QMetaType::Float`：`38`;`float`
+- `QMetaType::Float16`：`63`;qfloat16
+- `QMetaType::QObjectStar`：`39`;`QObject` *
+- `QMetaType::QBitArray`：`13`;QBitArray
+- `QMetaType::QBitmap`：`0x1009`;QBitmap
+- `QMetaType::QBrush`：`0x1002`;QBrush
+- `QMetaType::QByteArrayList`：`49`;QByteArrayList
+- `QMetaType::QCborArray`：`54`;QCborArray
+- `QMetaType::QCborMap`：`55`;QCborMap
+- `QMetaType::QCborSimpleType`：`52`;QCborSimpleType
+- `QMetaType::QCborValue`：`53`;QCborValue
+- `QMetaType::QColor`：`0x1003`;QColor
+- `QMetaType::QColorSpace`：`0x1017`;QColorSpace（于 Qt 5.15 引入）
+- `QMetaType::QCursor`：`0x100a`;QCursor
+- `QMetaType::QDate`：`14`;QDate
+- `QMetaType::QDateTime`：`16`;QDateTime
+- `QMetaType::QEasingCurve`：`29`;QEasing曲线
+- `QMetaType::QFont`：`0x1000`;QFont
+- `QMetaType::QIcon`：`0x1005`;QIcon
+- `QMetaType::QImage`：`0x1006`;Q法师
+- `QMetaType::QJsonArray`：`47`;QJsonArray
+- `QMetaType::QJsonDocument`：`48`;QJson文档
+- `QMetaType::QJsonObject`：`46`;QJson对象
+- `QMetaType::QJsonValue`：`45`;QJsonValue
+- `QMetaType::QKeySequence`：`0x100b`;QKeySequence
+- `QMetaType::QLine`：`23`;QLine
+- `QMetaType::QLineF`：`24`;QLineF
+- `QMetaType::QLocale`：`18`;QLocale
+- `QMetaType::QMatrix4x4`：`0x1011`;QMatrix4x4
+- `QMetaType::QModelIndex`：`42`;QModelIndex
+- `QMetaType::QPalette`：`0x1004`;QPalette
+- `QMetaType::QPen`：`0x100c`;QPen
+- `QMetaType::QPersistentModelIndex`：`50`;QPersistentModelIndex（在Qt 5.5引入）
+- `QMetaType::QPixmap`：`0x1001`;QPixmap
+- `QMetaType::QPoint`：`25`;QPoint
+- `QMetaType::QPointF`：`26`;QPointF
+- `QMetaType::QPolygon`：`0x1007`;QPolygon
+- `QMetaType::QPolygonF`：`0x1016`;QPolygonF
+- `QMetaType::QQuaternion`：`0x1015`;QQuaternion
+- `QMetaType::QRect`：`19`;QRect
+- `QMetaType::QRectF`：`20`;QRectF
+- `QMetaType::QRegion`：`0x1008`;QRegion
+- `QMetaType::QRegularExpression`：`44`;QRegular表达式
+- `QMetaType::QSize`：`21`;QSize
+- `QMetaType::QSizeF`：`22`;QSizeF
+- `QMetaType::QSizePolicy`：`0x2000`;QSizePolicy
+- `QMetaType::QStringList`：`11`;QStringList
+- `QMetaType::QTextFormat`：`0x100e`;QTextFormat
+- `QMetaType::QTextLength`：`0x100d`;QTextLength（量子长度）
+- `QMetaType::QTime`：`15`;Qtime
+- `QMetaType::QTransform`：`0x1010`;QTransform
+- `QMetaType::QUrl`：`17`;QUrl
+- `QMetaType::QUuid`：`30`;QUuid
+- `QMetaType::QVariant`：`41`;QVariant
+- `QMetaType::QVariantHash`：`28`;QVariantHash
+- `QMetaType::QVariantList`：`9`;QVariantList
+- `QMetaType::QVariantMap`：`8`;QVariantMap
+- `QMetaType::QVariantPair`：`58`;QVariantPair
+- `QMetaType::QVector2D`：`0x1012`;QVector2D
+- `QMetaType::QVector3D`：`0x1013`;QVector3D
+- `QMetaType::QVector4D`：`0x1014`;QVector4D
+- `QMetaType::User`：`65536`;用户类型的基础值
+- `QMetaType::UnknownType`：`0`;这是一个无效的类型ID。对于未注册的类型，`QMetaType`返回该ID。
+其他类型可以通过`qRegisterMetaType()`或调用`registerType()`注册。
 
 ### `enum QMetaType::TypeFlagflags QMetaType::TypeFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 暴露的类型声明 `类型、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TypeFlagflags QMetaType::TypeFlags`。
-- 属性名：`QMetaType`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举描述由`QMetaType`支持的属性。
+- `QMetaType::NeedsConstruction`：`0x1`;该类型有默认构造函数。如果未设置标志，实例可以安全地初始化为 memset为 0。
+- `QMetaType::NeedsCopyConstruction (since Qt 6.5)`：`0x4000`;该类型有一个非平凡的复制构造器。如果未设置标志，实例可以用 memcpy 复制。
+- `QMetaType::NeedsMoveConstruction (since Qt 6.5)`：`0x8000`;这种类型有一个非平凡的移动构造函数。如果没有设置标志，实例可以用 memcpy 移动。
+- `QMetaType::NeedsDestruction`：`0x2`;这种类型有一个非平凡的解构器。如果没有设置该标志，丢弃对象前无需调用该解构器。
+- `QMetaType::RelocatableType`：`0x4`;具有该属性的类型实例可以通过 memcpy 安全地迁移到不同的内存位置。
+- `QMetaType::IsEnumeration`：`0x10`;这种类型是枚举。
+- `QMetaType::IsUnsignedEnumeration`：`0x100`;如果类型是枚举，其底层类型是无符号的。
+- `QMetaType::PointerToQObject`：`0x8`;该类型指向由`QObject`派生的类的指针。
+- `QMetaType::IsPointer`：`0x800`;该类型指向另一种类型。
+- `QMetaType::IsConst`：`0x2000`;表示此类值是不可变的;例如，因为它们是指向const对象的指针。
+注意：在Qt 6.5之前，如果复制构造者或解构器中的任意一个非平凡（即类型不平凡），NeedsConstruction和NeedsDestruction标志都会被错误设置。
+注意，需求标志可以被设置，但元类型可能没有相关类型的公开可访问构造器或公开可访问的解构器。
+TypeFlags 类型是 QFlags 的 typedef<TypeFlag>。它存储 TypeFlag 值的 OR 组合。
 
 ### `[constexpr noexcept, since 6.0] QMetaType::QMetaType()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个默认的、无效的QMetaType对象。
 
 ### `[explicit] QMetaType::QMetaType(int typeId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `typeId`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个包含类型`typeId`所有信息的QMetaType对象。
 
 ### `[constexpr, since 6.0] qsizetype QMetaType::alignOf() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::alignOf` 用于计算、查询或取得与“align、Of”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回类型以字节为单位的对齐（即alignof（T），其中T是该`QMetaType`实例所构建的实际类型）。
+该函数通常与`construct()`一起使用，用于对类型所用内存进行底层管理。
 
 ### `[static] bool QMetaType::canConvert(QMetaType fromType, QMetaType toType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `canConvert`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fromType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QMetaType::convert`能从`fromType`转换到返回`toType`，返回`true`。注意，这主要关乎执行转换的能力，而实际转换尝试时可能失败（例如将浮点数转换为超出其范围的整数）。
+`registerConverter()`函数可用于注册额外的转换，无论是内置类型与非内置类型之间，还是两个非内置类型之间。如果转换路径被注册，该函数将返回`true`。
+Qt 支持以下转换：
+- `Type`：自动投射
+- `QMetaType::Bool`：`QMetaType::QChar`、`QMetaType::Double`、`QMetaType::Int`、`QMetaType::LongLong`、`QMetaType::QString`、`QMetaType::UInt`、`QMetaType::ULongLong`
+- `QMetaType::QByteArray`：`QMetaType::Double`，`QMetaType::Int`，`QMetaType::LongLong`，`QMetaType::QString`，`QMetaType::UInt`，`QMetaType::ULongLong`，`QMetaType::QUuid`
+- `QMetaType::QChar`：`QMetaType::Bool`、`QMetaType::Int`、`QMetaType::UInt`、`QMetaType::LongLong`、`QMetaType::ULongLong`
+- `QMetaType::QColor`：`QMetaType::QString`
+- `QMetaType::QDate`：`QMetaType::QDateTime`，`QMetaType::QString`
+- `QMetaType::QDateTime`：`QMetaType::QDate`，`QMetaType::QString`，`QMetaType::QTime`
+- `QMetaType::Double`：`QMetaType::Bool`、`QMetaType::Int`、`QMetaType::LongLong`、`QMetaType::QString`、`QMetaType::UInt`、`QMetaType::ULongLong`
+- `QMetaType::QFont`：`QMetaType::QString`
+- `QMetaType::Int`：`QMetaType::Bool`、`QMetaType::QChar`、`QMetaType::Double`、`QMetaType::LongLong`、`QMetaType::QString`、`QMetaType::UInt`、`QMetaType::ULongLong`
+- `QMetaType::QKeySequence`：`QMetaType::Int`，`QMetaType::QString`
+- `QMetaType::QVariantList`：`QMetaType::QStringList`（如果列表中的项目可以转换为QStriings）
+- `QMetaType::LongLong`：`QMetaType::Bool`、`QMetaType::QByteArray`、`QMetaType::QChar`、`QMetaType::Double`、`QMetaType::Int`、`QMetaType::QString`、`QMetaType::UInt`、`QMetaType::ULongLong`
+- `QMetaType::QPoint`：`QMetaType::QPointF`
+- `QMetaType::QRect`：`QMetaType::QRectF`
+- `QMetaType::QString`：`QMetaType::Bool`、`QMetaType::QByteArray`、`QMetaType::QChar`、`QMetaType::QColor`、`QMetaType::QDate`、`QMetaType::QDateTime`、`QMetaType::Double`、`QMetaType::QFont`、`QMetaType::Int`、`QMetaType::QKeySequence`、`QMetaType::LongLong`、`QMetaType::QStringList`、`QMetaType::QTime`、`QMetaType::UInt`、`QMetaType::ULongLong`、`QMetaType::QUuid`
+- `QMetaType::QStringList`：`QMetaType::QVariantList`，`QMetaType::QString`（如果列表中恰好包含一个项目）
+- `QMetaType::QTime`：`QMetaType::QString`
+- `QMetaType::UInt`：`QMetaType::Bool`、`QMetaType::QChar`、`QMetaType::Double`、`QMetaType::Int`、`QMetaType::LongLong`、`QMetaType::QString`、`QMetaType::ULongLong`
+- `QMetaType::ULongLong`：`QMetaType::Bool`、`QMetaType::QChar`、`QMetaType::Double`、`QMetaType::Int`、`QMetaType::LongLong`、`QMetaType::QString`、`QMetaType::UInt`
+- `QMetaType::QUuid`：`QMetaType::QByteArray`，`QMetaType::QString`
+其他支持的转换还包括所有原始类型（`int`、`float`、`bool`等，包括所有枚举）以及任何指针类型与`std::nullptr_t`之间的转换。枚举也可以转换为`QString`和`QByteArray`。
+如果`fromType`和`toType`都是从`QObject`派生的类型（或指向它们的指针），那么如果其中一个类型是从另一个类型派生的，该函数也会返回`true`。也就是说，如果`static_cast<>`从`fromType`描述的类型到`toType`描述的类型，则该函数返回为真。`convert()`函数的操作方式类似于`qobject_cast()`，并验证`QVariant`指向对象的动态类型。
+如果顺序容器的铸造，如果`toType`是`QVariantList`，该函数也会返回真。
+类似地，来自关联容器的铸造也会返回该函数的 true，`toType` 为 `QVariantHash` 或 `QVariantMap`。
 
 ### `[static] bool QMetaType::canView(QMetaType fromType, QMetaType toType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `canView`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fromType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`QMetaType::view`能够在类型`fromType`上创建可变的类型`toType`视图，返回`true`。
+在从`QObject`派生的类型之间转换时，如果从`fromType`描述的类型成功`qobject_cast`到`toType`描述的类型，则该函数将返回真。
+你可以在任何注册给`Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE()`的容器上创建类型`QMetaSequence::Iterable`的可变视图。
+同样，你可以在任何注册给`Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE()`的容器上创建类型`QMetaAssociation::Iterable`的可变视图。
 
 ### `[since 6.0] QPartialOrdering QMetaType::compare(const void *lhs, const void *rhs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::compare` 用于计算、查询或取得与“比较”相关的操作。调用时要先确认当前状态和 `lhs`、`rhs` 的有效范围；返回类型是 `QPartialOrdering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPartialOrdering`。
-- 参数 `lhs`：类型为 `const void *`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const void *`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较`lhs`和`rhs`的对象以进行排序。
+如果不支持比较或数值未排序，返回`QPartialOrdering::Unordered`。否则，如果 `lhs` 小于、等价于或大于 `rhs`，则返回`QPartialOrdering::Less`、`QPartialOrdering::Equivalent` 或 `QPartialOrdering::Greater`。
+两个对象都必须属于该元类型所描述的类型。如果`lhs`或`rhs` `nullptr`，则值为无序。只有当类型小于算符被元类型声明可见时，才支持比较。
+如果该类型的等式算子也可见，只有当等号算符表示值相等时，值才会比较。在没有等号算子的情况下，当任一值都不小于另一方时，值被视为相等;如果等号也存在且两个这样的值不相等，则它们被视为无序，就像浮点类型的 NaN（非数字）值不在其排序之外一样。
+注意：如果元类型声明中不小于 算符，即使宣告中可见的等号算符认为值相等，值仍无序：`compare() == 0` 仅在小于 算符可见时与 `equals()`一致。
 
 ### `void *QMetaType::construct(void *where, const void *copy = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::construct` 用于计算、查询或取得与“construct”相关的操作。调用时要先确认当前状态和 `where`、`copy` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `where`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `copy`：类型为 `const void *`。默认值为 `nullptr`。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`where`寻址的现有内存中构造该`QMetaType`实例所构造的值，即`copy`的副本，返回`where`。如果`copy`为零，则该值为默认构造值。
+这是一个用于显式管理存储类型内存的低级函数。如果你不需要这种级别的控制（即使用“new”而不是“placement new”），可以考虑调用`create()`。
+你必须确保`where`指向可以存储新值的位置，并且`where`对齐得当。类型大小可以通过调用`sizeOf()`查询。
+对齐的经验法则是，类型对齐到其自然边界，即大于类型的最大2的幂次方，除非该对齐大于平台的最大有用对齐。实际操作中，比对大于2 * sizeof（void*）的对齐仅适用于特殊硬件指令（例如，x86上的对齐SSE加载和存储）。
 
 ### `[static] bool QMetaType::convert(QMetaType fromType, const void *from, QMetaType toType, void *to)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `convert`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fromType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `const void *`。没有默认值，调用时必须提供。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `to`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`from`的对象从`fromType`转换为预分配的空间`to`类型`toType`。如果转换成功，返回`true`，否则返回false。
+`from`和`to`都必须是有效的指示。
 
 ### `void *QMetaType::create(const void *copy = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 `copy` 的有效范围；返回类型是 `void *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void *`。
-- 参数 `copy`：类型为 `const void *`。默认值为 `nullptr`。传入 `const void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一份`copy`副本，前提是该 `QMetaType` 实例的类型。如果`copy` `nullptr`，则创建默认构造实例。
 
 ### `bool QMetaType::debugStream(QDebug &dbg, const void *rhs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::debugStream` 用于计算、查询或取得与“调试输出、Stream”相关的操作。调用时要先确认当前状态和 `dbg`、`rhs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `dbg`：类型为 `QDebug &`。没有默认值，调用时必须提供。传入 `QDebug &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `rhs`：类型为 `const void *`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`rhs`的对象流到调试流`dbg`。成功时返回`true`，否则返回false。
 
 ### `void QMetaType::destroy(void *data) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::destroy` 用于执行与“destroy”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`data`是本`QMetaType`实例创建时所用的类型，则销毁该。
 
 ### `void QMetaType::destruct(void *data) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::destruct` 用于执行与“destruct”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+假设该值属于该实例构造所用的类型，则会摧毁位于`data`的值`QMetaType`。
+与`destroy()`不同，这个函数只调用该类型的解构函数，不调用删除操作符。
 
 ### `[since 6.0] bool QMetaType::equals(const void *lhs, const void *rhs) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::equals` 用于计算、查询或取得与“equals”相关的操作。调用时要先确认当前状态和 `lhs`、`rhs` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const void *`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const void *`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较`lhs`和`rhs`的物体以求相等。
+两个对象必须属于该元类型描述的类型。只有当元类型声明中可见该类型的小于或等号算子时，才能比较两个对象。否则，元类型永远不会将值视为相等。当元类型声明可见等号算子时，它是权威的;否则，如果小于 且任一值都不小于另一方，则两者视为相等。如果值无序（详见 `compare()`），则两者不相等。
+如果两个对象相等，则返回真，否则为真。
 
 ### `[constexpr] QMetaType::TypeFlags QMetaType::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType::TypeFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType::TypeFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QMetaType`实例构建时所依赖类型的标志。要检查特定类型特征，建议使用“is-”函数而非直接使用标志。
 
 ### `[static] QMetaType QMetaType::fromName(QByteArrayView typeName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数 `typeName`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QMetaType`匹配的`typeName`。如果类型名（typeName）`QMetaType`不知道，返回对象无效。
 
 ### `[static constexpr] template <typename T> QMetaType QMetaType::fromType()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模板参数中对应类型的`QMetaType`。
 
 ### `[static] bool QMetaType::hasRegisteredConverterFunction(QMetaType fromType, QMetaType toType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hasRegisteredConverterFunction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fromType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型系统注册了从元类型ID `fromType`转换为`toType`，返回`true`。
 
 ### `[static] template <typename From, typename To> bool QMetaType::hasRegisteredConverterFunction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hasRegisteredConverterFunction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename From, typename To> bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型系统有从类型 From 到 To 类型的注册转换，返回`true`。
 
 ### `[since 6.1] bool QMetaType::hasRegisteredDataStreamOperators() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasRegisteredDataStreamOperators`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型系统为该元类型注册了数据流操作符，返回`true`。
 
 ### `[since 6.0] bool QMetaType::hasRegisteredDebugStreamOperator() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasRegisteredDebugStreamOperator`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型系统有该元类型注册的调试流操作符，则返回`true`。
 
 ### `[static] bool QMetaType::hasRegisteredMutableViewFunction(QMetaType fromType, QMetaType toType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hasRegisteredMutableViewFunction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fromType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型系统对元类型ID有一个注册的可变视图，则返回`true`，`fromType`元类型ID为`toType`。
 
 ### `[static, since 6.0] template <typename From, typename To> bool QMetaType::hasRegisteredMutableViewFunction()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hasRegisteredMutableViewFunction`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename From, typename To> bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型系统对类型 From 类型有注册的可变视图，则返回`true`。
 
 ### `int QMetaType::id() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::id` 用于计算、查询或取得与“id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QMetaType`实例所持有的 id 类型。
 
 ### `[noexcept, since 6.5] bool QMetaType::isCopyConstructible() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isCopyConstructible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该类型可以被复制构造，则返回为真。如果可以，则`construct()`和`create()`可以与非空的`copy`参数一起使用。
 
 ### `[noexcept, since 6.5] bool QMetaType::isDefaultConstructible() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDefaultConstructible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该类型可以被默认构造，则返回真。如果可以，则`construct()`和`create()`可以与空参数的`copy`一起使用。
 
 ### `[noexcept, since 6.5] bool QMetaType::isDestructible() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDestructible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该类型可以被销毁，则返回为真。如果可以，则可以调用`destroy()`和 `destruct()`。
 
 ### `bool QMetaType::isEqualityComparable() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isEqualityComparable`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型描述的类型有小于或等号的算子在元类型声明中可见，返回`true`，否则`false`。
 
 ### `[noexcept, since 6.5] bool QMetaType::isMoveConstructible() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isMoveConstructible`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该类型可以通过移动构造，则返回 true。`QMetaType`目前没有 API 来利用该特性。
 
 ### `bool QMetaType::isOrdered() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isOrdered`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果元类型描述的类型小于算子对元类型声明可见，则返回`true`，否则`false`。
 
 ### `[noexcept] bool QMetaType::isRegistered() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRegistered`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QMetaType`对象已注册于 Qt 全局元类型注册表，则返回`true`。注册允许通过类型名称（使用`QMetaType::fromName()`）或通过其 ID（使用构造函数）来查找类型。
 
 ### `[static] bool QMetaType::isRegistered(int type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isRegistered`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `type`：类型为 `int`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果注册了编号为`type`的数据类型，返回`true`;否则返回`false`。
 
 ### `[constexpr noexcept] bool QMetaType::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QMetaType`对象包含关于某一类型的有效信息，则返回`true`，否则返回为假。
 
 ### `bool QMetaType::load(QDataStream &stream, void *data) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `load`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该类型的对象从给定`stream`读取到`data`。如果对象成功加载，返回`true`;否则返回`false`。
+通常情况下，你不需要直接调用这个函数。相反，可以使用`QVariant`的`operator>>()`，它依赖于 load() 来流式自定义类型。
 
 ### `[constexpr] const QMetaObject *QMetaType::metaObject() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::metaObject` 用于计算、查询或取得与“meta、Object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QMetaObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QMetaObject *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回相对于该类型的`QMetaObject`。
+如果类型是指向`QObject`子类的指针类型，`flags()`包含`QMetaType::PointerToQObject`，该函数返回相应的`QMetaObject`。这可以与`QMetaObject::newInstance()`结合使用，生成该类型的QObject。
+如果类型是`Q_GADGET`，`flags()`包含`QMetaType::IsGadget`。如果类型是指向`Q_GADGET`的指针，`flags()`包含`QMetaType::PointerToGadget`。在这两种情况下，该函数都会返回其`QMetaObject`。这可以用来检索`QMetaMethod`和`QMetaProperty`，并用于此类指针，例如，如 `QVariant::data()` 所示。
+如果类型是枚举，`flags()`包含`QMetaType::IsEnumeration`。在这种情况下，如果枚举被注册为`Q_ENUM`，该函数返回包围对象的 `QMetaObject`，否则`nullptr`。
 
 ### `[constexpr] const char *QMetaType::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与该`QMetaType`关联的类型名称，若未找到匹配类型则返回空指针。返回的指针不得被删除。
 
 ### `[static] template <typename From, typename To> bool QMetaType::registerConverter()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerConverter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+登记元类型系统中从类型 From 隐式转换为类型 To 的可能性。如果注册成功，返回 `true`，否则返回 false。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename From, typename To> bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ class Counter {
+   int number = 0;
+ public:
+   int value() const { return number; }
+   operator int() const { return value(); }
+   void increment() {++number;}
+ };
+ QMetaType::registerConverter<Counter, int>();
+```
 
 ### `[static] template <typename From, typename To> bool QMetaType::registerConverter(To (From::*)() const function)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerConverter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+寄存方法`function`如 To From：：function() const 作为类型转换器，从 类型从 From 到 类型 To 。如果注册成功，返回 `true`，否则返回 false。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename From, typename To> bool`。
-- 参数 `function`：类型为 `To (From::*)() const`。没有默认值，调用时必须提供。传入 `To (From::*)() const` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ struct Coordinates {
+   int x;
+   int y;
+   int z;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+   QString toString() const { return u"[x: %1; y: %2, z: %3]"_s.arg(QString::number(x),
+     QString::number(y),
+     QString::number(z)); }
+ };
+ QMetaType::registerConverter<Coordinates, QString>(&Coordinates::toString);
+```
 
 ### `[static] template <typename From, typename To> bool QMetaType::registerConverter(To (From::*)(bool *) const function)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerConverter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+在元类型系统中，寄存一个`function`方法，类似于 To From：：function（bool *ok） const 作为从 From 类型到类型 To 的转换器。如果注册成功，返回 `true`，否则返回 false。
+函数可以使用`ok`指针来表示转换是否成功。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename From, typename To> bool`。
-- 参数 `function`：类型为 `To (From::*)(bool *) const`。没有默认值，调用时必须提供。传入 `To (From::*)(bool *) const` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ struct BigNumber {
+     long long l;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     int toInt(bool *ok = nullptr) const {
+       const bool canConvertSafely = l < std::numeric_limits<int>::max();
+       if (ok)
+         *ok = canConvertSafely;
+       return l;
+     }
+ };
+ QMetaType::registerConverter<BigNumber, int>(&BigNumber::toInt);
+```
 
 ### `[static] template < typename From, typename To, typename UnaryFunction > bool QMetaType::registerConverter(UnaryFunction function)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerConverter`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+在元类型系统中，将一元函数对象`function`作为从 From 类型到类型 To 的转换器注册。如果注册成功，则返回`true`，否则返回 false。
+`function`必须接受类型为`From`的实例并返回`To`的实例。它可以是函数指针、λ或函子对象。自Qt 6.5起，`function`还可以返回`std::optional<To>`实例，以表示转换失败。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template < typename From, typename To, typename UnaryFunction > bool`。
-- 参数 `function`：类型为 `UnaryFunction`。没有默认值，调用时必须提供。传入 `UnaryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMetaType::registerConverter<CustomStringType, QString>([](const CustomStringType &str) {
+     return QString::fromUtf8(str.data());
+ });
+ QMetaType::registerConverter<QJsonValue, CustomPointType>(
+           [](const QJsonValue &value) -> std::optional<CustomPointType> {
+     const auto object = value.toObject();
+     if (!object.contains("x") || !object.contains("y"))
+         return std::nullopt;  // The conversion fails if the required properties are missing
+     return CustomPointType{object["x"].toDouble(), object["y"].toDouble()};
+ });
+```
 
 ### `[static, since 6.0] template <typename From, typename To> bool QMetaType::registerMutableView(To (From::*)() function)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerMutableView`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename From, typename To> bool`。
-- 参数 `function`：类型为 `To (From::*)()`。没有默认值，调用时必须提供。传入 `To (From::*)()` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在元类型系统中，寄存一个方法`function`类似`To From::function()`，作为类型 `To` 在类型 `From` 上的可变视图。如果注册成功，返回 `true`，否则返回`false`。
 
 ### `[static, since 6.0] template < typename From, typename To, typename UnaryFunction > bool QMetaType::registerMutableView(UnaryFunction function)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerMutableView`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template < typename From, typename To, typename UnaryFunction > bool`。
-- 参数 `function`：类型为 `UnaryFunction`。没有默认值，调用时必须提供。传入 `UnaryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在元类型系统中，将一元函数对象`function`为类型 To 的可变视图 To 注册。如果注册成功，返回 `true`，否则返回 `false`。
 
 ### `[since 6.5] void QMetaType::registerType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::registerType` 用于执行与“注册、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将此`QMetaType`注册表注册为类型注册表，以便通过名称查找，使用`QMetaType::fromName()`。
 
 ### `bool QMetaType::save(QDataStream &stream, const void *data) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::save` 用于计算、查询或取得与“保存”相关的操作。调用时要先确认当前状态和 `stream`、`data` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `stream`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`data`指向的对象写入给定的`stream`。如果目标成功保存，返回`true`;否则返回`false`。
+通常，你不需要直接调用这个函数。相反，可以使用`QVariant`的`operator<<()`，它依赖于save()来流式自定义类型。
 
 ### `[constexpr] qsizetype QMetaType::sizeOf() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::sizeOf` 用于计算、查询或取得与“尺寸或数量、Of”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qsizetype`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qsizetype`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回类型大小（字节单位）（即 sizeof（T），其中 T 是该`QMetaType`实例所构建的实际类型）。
+该函数通常与`construct()`一起使用，用于对类型所用内存进行底层管理。
 
 ### `[since 6.6] QMetaType QMetaType::underlyingType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::underlyingType` 用于计算、查询或取得与“underlying、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMetaType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该元类型代表枚举，该方法返回的元类型是符号性和大小与枚举底层类型相同的数值类。如果代表`QFlags`类型，返回`QMetaType::Int`。在其他所有情况下，返回无效的`QMetaType`。
 
 ### `[static, since 6.0] bool QMetaType::view(QMetaType fromType, void *from, QMetaType toType, void *to)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `view`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `fromType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `from`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `to`：类型为 `void *`。没有默认值，调用时必须提供。传入 `void *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在预分配空间中`fromType` `from` 的对象创建可变视图`to`类型`toType`。转换成功时返回`true`，否则返回 false。
 
 ### `[since 6.4] size_t qHash(QMetaType key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QMetaType::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `QMetaType`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[constexpr] template <typename T> int qMetaTypeId()`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QMetaType::qMetaTypeId` 用于计算、查询或取得与“q、Meta、类型、Id”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename T> int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+在编译时返回类型`T`的元类型ID。如果类型未用`Q_DECLARE_METATYPE()`声明，编译将失败。
+典型用法：
+QMetaType：：type() 返回与 qMetaTypeId() 相同的 ID，但在运行时根据类型名称进行查找。QMetaType：：type() 稍慢，但如果未注册类型，编译会成功。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int id = qMetaTypeId<QString>();    // id is now QMetaType::QString
+ id = qMetaTypeId<MyStruct>();       // compile error if MyStruct not declared
+```
 
 ### `[constexpr] template <typename T> int qRegisterMetaType()`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QMetaType::qRegisterMetaType` 用于计算、查询或取得与“q、注册、Meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename T> int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用此函数以注册类型 `T`。返回元类型 ID。此函数要求在调用时 `T` 是完全定义的类型。对于指针类型，还要求被指向的类型是完全定义的。使用 `Q_DECLARE_OPAQUE_POINTER()` 可以注册向前声明类型的指针。要在 `QMetaType`、`QVariant` 或 `QObject::property()` API 中使用 `T` 类型，无需注册。要在排队信号与槽连接中使用 `T` 类型，必须在第一次建立连接之前调用 `qRegisterMetaType<T>()`。通常在使用 `T` 的类的构造函数中完成，或在 `main()` 函数中完成。一旦类型注册完成，可以使用 `QMetaType::fromName()` 通过名称找到它。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ int id = qRegisterMetaType<MyStruct>();
+```
 
 ### `[since 6.5] int qRegisterMetaType(QMetaType meta)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QMetaType::qRegisterMetaType` 用于计算、查询或取得与“q、注册、Meta、类型”相关的操作。调用时要先确认当前状态和 `meta` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `meta`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注册元类型 `meta`，并返回其类型 Id。
+该函数要求调用点的  是完全定义的类型`T`。对于指针类型，也要求指向的类型是完全定义的。使用 `Q_DECLARE_OPAQUE_POINTER()` 来注册指向前发声明的类型。
+在`QMetaType`、`QVariant`或`QObject::property()` API中使用类型`T`，无需注册。
+要在队列信号和槽函数连接中使用类型`T`，必须在建立第一个连接前调用`qRegisterMetaType<T>()`。这通常在使用 `T` 的类的构造函数中完成，或在 `main()` 函数中完成。
+类型注册后，可以通过`QMetaType::fromName()`的名称查找。
 
 ### `[noexcept] bool operator!=(const QMetaType &lhs, const QMetaType &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaType &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaType &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `QMetaType` `lhs` 表示的类型与 `QMetaType` `rhs` 不同，则返回 `QMetaType` `rhs`，否则返回 `false`。
 
 ### `[since 6.5] QDebug operator<<(QDebug d, QMetaType m)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `d`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `m`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`QMetaType` `m`写入流`d`，并返回流。
 
 ### `[noexcept] bool operator==(const QMetaType &lhs, const QMetaType &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QMetaType &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QMetaType &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `QMetaType` `lhs` 表示与 `QMetaType` `rhs` 相同的类型，则返回 `rhs`，否则返回 `false`。
 
 ### `Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(Container)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE` 用于执行与“METATYPE”相关的操作。调用时要先确认当前状态和 `Container` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该宏使容器`Container` `QMetaType`为关联容器。这使得如果 T 和 U 本身已知`QMetaType`，就可以将 Container<T， U> 实例放入`QVariant`。
+注意所有 Qt 关联容器本身就内置支持，因此不必使用该宏。std：：map 容器也内置支持。
+这个例子展示了Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE()的典型用法：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `Container`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ #include <unordered_map>
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::unordered_map)
+
+ void someFunction()
+ {
+     std::unordered_map<int, bool> container;
+     QVariant var = QVariant::fromValue(container);
+     // ...
+ }
+```
 
 ### `Q_DECLARE_METATYPE(Type)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::Q_DECLARE_METATYPE` 用于执行与“METATYPE”相关的操作。调用时要先确认当前状态和 `Type` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+只要该宏提供公共默认构造函数、公共复制构造器和公共结构化器，该类型`Type` `QMetaType`已知。在 `QVariant` 中使用类型 `Type` 作为自定义类型是必要的。
+该宏要求`Type`在其使用点是完全定义的类型。对于指针类型，还要求指向的类型必须被完全定义。与`Q_DECLARE_OPAQUE_POINTER()`结合使用，用于注册指向转发声明的类型。
+理想情况下，这个宏应放在类或结构体声明的下方。如果无法做到，可以将其放入私有首文件中，每次在`QVariant`中使用该类型时都必须包含该文件。
+添加 Q_DECLARE_METATYPE() 后，所有基于模板的函数（包括 `QVariant`）都能知道该类型。注意，如果你打算在队列中的信号和槽函数连接或 `QObject` 的属性系统中使用该类型，也必须调用 `qRegisterMetaType()`，因为这些名称在运行时已解析。
+此示例展示了Q_DECLARE_METATYPE()的典型用例：
+如果`MyStruct`位于命名空间中，Q_DECLARE_METATYPE()宏必须位于命名空间之外：
+由于`MyStruct`现已被`QMetaType`知晓，它可以用于`QVariant`：
+有些类型会自动注册，不需要这个宏：
+- 指向由`QObject`派生的类的指针
+- `QList`<T>、`QQueue`<T>、`QStack`<T>或`QSet`，<T>其中T为注册元类型
+- `QHash`<T1、T2>、`QMap`<T1、T2>或std：:p air<T1、T2>其中T1和T2为注册元类型
+- `QPointer`<T>、`QSharedPointer`<T>、`QWeakPointer`<T>，其中 T 是从 `QObject` 衍生的类
+- 登记在`Q_ENUM`或`Q_FLAG`的列举
+- 具有`Q_GADGET`宏的类
+注意：如果流和调试操作符在注册时可见，该方法也会注册。由于在某些地方会自动完成，强烈建议在类型本身之后直接声明流操作符。由于C的参数相关查找规则，也强烈建议在与类型相同命名空间中声明操作符。
+流操作符应具备以下签名：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `Type`：类型为 `未标注`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
+```cpp
+ struct MyStruct
+ {
+     int i;
+     //...
+ };
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Q_DECLARE_METATYPE(MyStruct)
+```
 
 ### `Q_DECLARE_OPAQUE_POINTER(PointerType)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::Q_DECLARE_OPAQUE_POINTER` 用于执行与“POINTER”相关的操作。调用时要先确认当前状态和 `PointerType` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`由运算符声明决定`。
-- 参数 `PointerType`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该宏允许通过`Q_DECLARE_METATYPE()`或`qRegisterMetaType()`向`QMetaType`注册指向前向声明类型（`PointerType`）的指针。
+不要用该宏来避免MOC对不完整属性类型提出的投诉或错误，尤其是在该pointee类型被用作程序其他上下文的完全类型时。当类型的完整定义可用，但你更倾向于在头部使用前向声明以减少编译时间时，应使用`Q_MOC_INCLUDE`。
+警告：不要使用带有指向`Q_OBJECT`或小工具类的指针的 Q_DECLARE_OPAQUE_POINTERT的 S ，因为这可能导致元类型系统中的信息不一致。
 
 ### `Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(Container)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE` 用于执行与“METATYPE”相关的操作。调用时要先确认当前状态和 `Container` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该宏使容器`Container` `QMetaType`为顺序容器。<T>这使得如果 T 本身已知`QMetaType`，可以将容器实例放入`QVariant`。
+注意，所有 Qt 顺序容器都已内置支持，且不必使用该宏。std：：vector 和 std：：list 容器也内置支持。
+这个例子展示了Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE()的典型用法：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `Container`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ #include <deque>
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::deque)
+
+ void someFunc()
+ {
+     std::deque<QFile*> container;
+     QVariant var = QVariant::fromValue(container);
+     // ...
+ }
+```
 
 ### `Q_DECLARE_SMART_POINTER_METATYPE(SmartPointer)`
 
-**API 类别：** 宏说明
+**作用与语义：**
 
-**中文解读：** `QMetaType::Q_DECLARE_SMART_POINTER_METATYPE` 用于执行与“METATYPE”相关的操作。调用时要先确认当前状态和 `SmartPointer` 的有效范围；返回类型是 `未标注`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该宏使得智能指针`SmartPointer`被`QMetaType`为智能指针。这使得如果 T 是一个继承 `QObject` 的类型，就可以将 SmartPointer<T> 实例放入`QVariant`中。
+请注意，`QWeakPointer`、`QSharedPointer`和`QPointer`已经内置支持，因此不必使用该宏。
+此示例展示了Q_DECLARE_SMART_POINTER_METATYPE()的典型用法：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`由运算符声明决定`。
-- 参数 `SmartPointer`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+```cpp
+ #include <memory>
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+
+ void someMethod()
+ {
+     auto smart_ptr = std::make_shared<QFile>();
+     QVariant var = QVariant::fromValue(smart_ptr);
+     // ...
+     if (var.canConvert<QObject*>()) {
+         QObject *sp = var.value<QObject*>();
+         qDebug() << sp->metaObject()->className(); // Prints 'QFile'.
+     }
+ }
+```
 
 ### `enum TypeFlag { NeedsConstruction, NeedsCopyConstruction, NeedsMoveConstruction, NeedsDestruction, RelocatableType, …, IsConst }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 暴露的类型声明 `类型、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举描述由`QMetaType`支持的属性。
+- `QMetaType::NeedsConstruction`：`0x1`;该类型有默认构造函数。如果未设置标志，实例可以安全地初始化为 memset为 0。
+- `QMetaType::NeedsCopyConstruction (since Qt 6.5)`：`0x4000`;该类型有一个非平凡的复制构造器。如果未设置标志，实例可以用 memcpy 复制。
+- `QMetaType::NeedsMoveConstruction (since Qt 6.5)`：`0x8000`;这种类型有一个非平凡的移动构造函数。如果没有设置标志，实例可以用 memcpy 移动。
+- `QMetaType::NeedsDestruction`：`0x2`;这种类型有一个非平凡的解构器。如果没有设置该标志，丢弃对象前无需调用该解构器。
+- `QMetaType::RelocatableType`：`0x4`;具有该属性的类型实例可以通过 memcpy 安全地迁移到不同的内存位置。
+- `QMetaType::IsEnumeration`：`0x10`;这种类型是枚举。
+- `QMetaType::IsUnsignedEnumeration`：`0x100`;如果类型是枚举，其底层类型是无符号的。
+- `QMetaType::PointerToQObject`：`0x8`;该类型指向由`QObject`派生的类的指针。
+- `QMetaType::IsPointer`：`0x800`;该类型指向另一种类型。
+- `QMetaType::IsConst`：`0x2000`;表示此类值是不可变的;例如，因为它们是指向const对象的指针。
+注意：在Qt 6.5之前，如果复制构造者或解构器中的任意一个非平凡（即类型不平凡），NeedsConstruction和NeedsDestruction标志都会被错误设置。
+注意，需求标志可以被设置，但元类型可能没有相关类型的公开可访问构造器或公开可访问的解构器。
+TypeFlags 类型是 QFlags 的 typedef<TypeFlag>。它存储 TypeFlag 值的 OR 组合。
 
 ### `flags TypeFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMetaType` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+枚举描述由`QMetaType`支持的属性。
+- `QMetaType::NeedsConstruction`：`0x1`;该类型有默认构造函数。如果未设置标志，实例可以安全地初始化为 memset为 0。
+- `QMetaType::NeedsCopyConstruction (since Qt 6.5)`：`0x4000`;该类型有一个非平凡的复制构造器。如果未设置标志，实例可以用 memcpy 复制。
+- `QMetaType::NeedsMoveConstruction (since Qt 6.5)`：`0x8000`;这种类型有一个非平凡的移动构造函数。如果没有设置标志，实例可以用 memcpy 移动。
+- `QMetaType::NeedsDestruction`：`0x2`;这种类型有一个非平凡的解构器。如果没有设置该标志，丢弃对象前无需调用该解构器。
+- `QMetaType::RelocatableType`：`0x4`;具有该属性的类型实例可以通过 memcpy 安全地迁移到不同的内存位置。
+- `QMetaType::IsEnumeration`：`0x10`;这种类型是枚举。
+- `QMetaType::IsUnsignedEnumeration`：`0x100`;如果类型是枚举，其底层类型是无符号的。
+- `QMetaType::PointerToQObject`：`0x8`;该类型指向由`QObject`派生的类的指针。
+- `QMetaType::IsPointer`：`0x800`;该类型指向另一种类型。
+- `QMetaType::IsConst`：`0x2000`;表示此类值是不可变的;例如，因为它们是指向const对象的指针。
+注意：在Qt 6.5之前，如果复制构造者或解构器中的任意一个非平凡（即类型不平凡），NeedsConstruction和NeedsDestruction标志都会被错误设置。
+注意，需求标志可以被设置，但元类型可能没有相关类型的公开可访问构造器或公开可访问的解构器。
+TypeFlags 类型是 QFlags 的 typedef<TypeFlag>。它存储 TypeFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

@@ -81,278 +81,146 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 19 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QMessageAuthenticationCode::QMessageAuthenticationCode(QCryptographicHash::Algorithm method, QByteArrayView key = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageAuthenticationCode` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `QByteArrayView`。默认值为 `{}`。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个对象，可用于利用方法`method`和密钥`key`从数据中创建密码学哈希。
+注意：在 6.6 之前的 Qt 版本中，这个函数的参数是 `QByteArray`，而不是 `QByteArrayView`。如果你遇到编译错误，那是因为你的代码传递的对象是隐式可转换为 `QByteArray`，但不能`QByteArrayView`。将相应的参数包裹在 `QByteArray{~~~}` 中，使 cast 显式化。这与旧版 Qt 版本兼容。
 
 ### `[noexcept, since 6.6] QMessageAuthenticationCode::QMessageAuthenticationCode(QMessageAuthenticationCode &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageAuthenticationCode` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `QMessageAuthenticationCode &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`other`中构建一个新的QMessageAuthenticationCode。
+注意：移出对象`other`处于部分成形状态，唯一有效的操作是销毁和新对象的赋值。
 
 ### `[noexcept] QMessageAuthenticationCode::~QMessageAuthenticationCode()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageAuthenticationCode` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁了该物体。
 
 ### `[noexcept] void QMessageAuthenticationCode::addData(QByteArrayView data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMessageAuthenticationCode` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这让信息更有深度`data`。
+注意：在 6.6 之前的 Qt 版本中，这个函数的参数是 `QByteArray`，而不是 `QByteArrayView`。如果你遇到编译错误，那是因为你的代码传递的对象是隐式可转换为 `QByteArray`，但不能`QByteArrayView`。将相应的参数包裹在 `QByteArray{~~~}` 中，使 cast 显式化。这与旧的 Qt 版本是向后兼容的。
 
 ### `bool QMessageAuthenticationCode::addData(QIODevice *device)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMessageAuthenticationCode` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取打开`QIODevice` `device`的数据直到它结束并添加到消息中。如果读取成功，返回`true`。
+注意：`device`必须已经开封。
 
 ### `void QMessageAuthenticationCode::addData(const char *data, qsizetype length)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMessageAuthenticationCode` 添加依赖、数据或子对象的 API `addData`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const char *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `length`：类型为 `qsizetype`。没有默认值，调用时必须提供。传入 `qsizetype` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+给消息添加前`length`字`data`字。
 
 ### `[static] QByteArray QMessageAuthenticationCode::hash(QByteArrayView message, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hash`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数 `message`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码`message`使用密钥`key`和方法的`method`。
+注意：在 6.6 之前的 Qt 版本中，这个函数的参数是 `QByteArray`，而不是 `QByteArrayView`。如果你遇到编译错误，那是因为你的代码传递的对象是隐式可转换为 `QByteArray`，但不能`QByteArrayView`。将对应参数包裹在 `QByteArray{~~~}` 中，使 cast 显式化。这与旧版 Qt 版本向后兼容。
 
 ### `[static noexcept, since 6.8] QByteArrayView QMessageAuthenticationCode::hashInto(QSpan<std::byte> buffer, QByteArrayView message, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hashInto`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数 `buffer`：类型为 `QSpan<std::byte>`。没有默认值，调用时必须提供。传入 `QSpan<std::byte>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码（`message`，或在`QSpan`重载时，`messageParts`的连接），使用密钥`key`和方法返回`method`。
+返回值将是`buffer`的子张成，除非`buffer`大小不足，此时返回空`QByteArrayView`。
 
 ### `[noexcept] void QMessageAuthenticationCode::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重置消息数据。调用这个函数不会影响密钥。
 
 ### `QByteArray QMessageAuthenticationCode::result() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageAuthenticationCode::result` 用于计算、查询或取得与“结果”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最终认证码。
 
 ### `[noexcept, since 6.6] QByteArrayView QMessageAuthenticationCode::resultView() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageAuthenticationCode::resultView` 用于计算、查询或取得与“结果、View”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArrayView`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最终哈希值。
+注意，返回的视图只有在`QMessageAuthenticationCode`对象未被其他方式修改时才有效。
 
 ### `[noexcept] void QMessageAuthenticationCode::setKey(QByteArrayView key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setKey`。调用它会改变 `QMessageAuthenticationCode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+设置秘密`key`。调用该函数会自动重置对象状态。
+为了最佳性能，只需调用该函数来更改激活键，而不是设置初始键，如。
+倾向于将初始密钥作为构造函数参数传递：
+你可以用std：：optional来延迟`QMessageAuthenticationCode`的建造，直到你知道密钥：
+注意：在 6.6 之前的 Qt 版本中，这个函数的参数是 `QByteArray`，而不是 `QByteArrayView`。如果你遇到编译错误，那是因为你的代码传递的对象是隐式可转换为 `QByteArray`，但不能`QByteArrayView`。将对应的参数包裹在 `QByteArray{~~~}` 中，使 cast 显式化。这与旧版 Qt 版本兼容。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMessageAuthenticationCode mac(method);
+ mac.setKey(key); // does extra work
+ use(mac);
+```
 
 ### `[noexcept, since 6.6] void QMessageAuthenticationCode::swap(QMessageAuthenticationCode &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageAuthenticationCode::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QMessageAuthenticationCode &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该消息认证码与`other`交换。该操作非常快且从未失败。
 
 ### `[noexcept, since 6.6] QMessageAuthenticationCode &QMessageAuthenticationCode::operator=(QMessageAuthenticationCode &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageAuthenticationCode` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QMessageAuthenticationCode &`。
-- 参数 `other`：类型为 `QMessageAuthenticationCode &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-assign `other`到该`QMessageAuthenticationCode`实例。
+注意：移出对象`other`处于部分成形状态，唯一有效的操作是销毁和新对象的赋值。
 
 ### `(since 6.8) QByteArrayView hashInto(QSpan<char> buffer, QByteArrayView message, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 静态公有成员
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hashInto`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数 `buffer`：类型为 `QSpan<char>`。没有默认值，调用时必须提供。传入 `QSpan<char>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码（`message`，或在`QSpan`重载时，`messageParts`的连接），使用密钥`key`和方法返回`method`。
+返回值将是`buffer`的子张成，除非`buffer`大小不足，此时返回空`QByteArrayView`。
 
 ### `(since 6.8) QByteArrayView hashInto(QSpan<char> buffer, QSpan<const QByteArrayView> messageParts, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 静态公有成员
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hashInto`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数 `buffer`：类型为 `QSpan<char>`。没有默认值，调用时必须提供。传入 `QSpan<char>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `messageParts`：类型为 `QSpan<const QByteArrayView>`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码（`message`，或在`QSpan`重载时，`messageParts`的连接），使用密钥`key`和方法返回`method`。
+返回值将是`buffer`的子张成，除非`buffer`大小不足，此时返回空`QByteArrayView`。
 
 ### `(since 6.8) QByteArrayView hashInto(QSpan<std::byte> buffer, QSpan<const QByteArrayView> messageParts, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 静态公有成员
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hashInto`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数 `buffer`：类型为 `QSpan<std::byte>`。没有默认值，调用时必须提供。传入 `QSpan<std::byte>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `messageParts`：类型为 `QSpan<const QByteArrayView>`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码（`message`，或在`QSpan`重载时，`messageParts`的连接），使用密钥`key`和方法返回`method`。
+返回值将是`buffer`的子张成，除非`buffer`大小不足，此时返回空`QByteArrayView`。
 
 ### `(since 6.8) QByteArrayView hashInto(QSpan<uchar> buffer, QByteArrayView message, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 静态公有成员
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hashInto`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数 `buffer`：类型为 `QSpan<uchar>`。没有默认值，调用时必须提供。传入 `QSpan<uchar>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `message`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码（`message`，或在`QSpan`重载时，`messageParts`的连接），使用密钥`key`和方法返回`method`。
+返回值将是`buffer`的子张成，除非`buffer`大小不足，此时返回空`QByteArrayView`。
 
 ### `(since 6.8) QByteArrayView hashInto(QSpan<uchar> buffer, QSpan<const QByteArrayView> messageParts, QByteArrayView key, QCryptographicHash::Algorithm method)`
 
-**API 类别：** 静态公有成员
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `hashInto`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QByteArrayView`。
-- 参数 `buffer`：类型为 `QSpan<uchar>`。没有默认值，调用时必须提供。传入 `QSpan<uchar>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `messageParts`：类型为 `QSpan<const QByteArrayView>`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `key`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `method`：类型为 `QCryptographicHash::Algorithm`。没有默认值，调用时必须提供。传入 `QCryptographicHash::Algorithm` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回消息的认证码（`message`，或在`QSpan`重载时，`messageParts`的连接），使用密钥`key`和方法返回`method`。
+返回值将是`buffer`的子张成，除非`buffer`大小不足，此时返回空`QByteArrayView`。
 
 ## 6. 深入实践与常见坑
 

@@ -85,49 +85,27 @@ int main(int argc, char *argv[])
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QContactsPermission::AccessMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QContactsPermission` 暴露的类型声明 `Access、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:AccessMode`。
-- 属性名：`QContactsPermission`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于控制对联系人数据的访问。
+- `QContactsPermission::ReadOnly`：`0`;只读联系人数据访问（默认）。
+- `QContactsPermission::ReadWrite`：`1`;联系人数据的读写访问。
 
 ### `QContactsPermission::AccessMode QContactsPermission::accessMode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QContactsPermission::accessMode` 用于计算、查询或取得与“access、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QContactsPermission::AccessMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QContactsPermission::AccessMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当请求是读写时返回`AccessMode::ReadWrite`，当请求是只读访问联系人时返回`AccessMode::ReadOnly`。
 
 ### `void QContactsPermission::setAccessMode(QContactsPermission::AccessMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAccessMode`。调用它会改变 `QContactsPermission` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `mode`：类型为 `QContactsPermission::AccessMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置请求是对联系人的读写（`mode` == `AccessMode::ReadWrite`）还是只读（`mode` == `AccessMode::ReadOnly`）访问。
 
 ## 6. 深入实践与常见坑
 

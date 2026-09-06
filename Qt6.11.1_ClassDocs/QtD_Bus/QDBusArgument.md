@@ -118,700 +118,481 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 53 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QDBusArgument::ElementType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 暴露的类型声明 `Element、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ElementType`。
-- 属性名：`QDBusArgument`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了该论元所持有的元素类型。
+- `QDBusArgument::BasicType`：`0`;一个基本元素，`QVariant`理解。以下类型被视为基本：bool、byte、short、ushort、int、uint、qint64、quint64、double、`QString`、`QByteArray`、`QDBusObjectPath`、`QDBusSignature`
+- `QDBusArgument::VariantType`：`1`;变体元素（`QDBusVariant`）
+- `QDBusArgument::ArrayType`：`2`;一个数组元素，通常用`QList`表示<T>。注意：`QByteArray`和关联映射不被视为数组，即使D-总线协议将其传输为数组。
+- `QDBusArgument::StructureType`：`3`;一种由结构表示的自定义类型，如 `QDateTime`、`QPoint` 等。
+- `QDBusArgument::MapType`：`4`;一个关联容器，如`QMap`<键、值>或`QHash`<键、值>
+- `QDBusArgument::MapEntryType`：`5`;关联容器中的一个条目：键和值都构成一个映射条目类型。
+- `QDBusArgument::UnknownType`：`-1`;类型未知，或已至列表末尾。
 
 ### `QDBusArgument::QDBusArgument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个空的QDBusArgument参数。
+空的QDBusArgument对象不允许读取或写入。
 
 ### `QDBusArgument::QDBusArgument(const QDBusArgument &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QDBusArgument &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other` QDBusArgument对象的副本。
+因此，从此两个对象都包含相同的状态。QDBusArguments是显式共享的，因此对任一副本的任何修改都会影响另一份。
 
 ### `[noexcept] QDBusArgument::~QDBusArgument()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理与该`QDBusArgument`对象相关的资源。
 
 ### `QVariant QDBusArgument::asVariant() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusArgument::asVariant` 用于计算、查询或取得与“as、Variant”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+以`QVariant`的形式返回当前参数。基本类型会在`QVariant`中解码并返回，但对于复杂类型，该函数会返回`QVariant`中的`QDBusArgument`对象。调用者负责解码参数（例如调用其中的 asVariant()。
+例如，如果当前参数是INT32，该函数会返回一个类型为`QMetaType::Int`的`QVariant`。对于INT32的数组，它会返回包含`QDBusArgument`的`QVariant`。
+如果发生错误或没有更多可解码参数（即参数列表已到末尾），该函数将返回无效`QVariant`。
 
 ### `bool QDBusArgument::atEnd() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusArgument::atEnd` 用于计算、查询或取得与“按位置访问、结束”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果没有其他元素需要从该`QDBusArgument`提取，返回`true`。该函数通常用于从`beginMap()`和 `beginArray()`返回的`QDBusArgument`对象。
 
 ### `void QDBusArgument::beginArray() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginArray`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+递归到D-Bus数组，以便提取数组元素。
+该函数通常用于`operator>>`流算子，如下示例：
+如果你想分组的类型是`QList`或Qt中任何一个模板参数的容器类，你无需为它声明`operator>>`函数，因为Qt D-Bus提供通用模板来完成数据分组工作。STL的序列容器，如`std::list`、`std::vector`等，情况相同。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ // Extract a MyArray array of MyElement elements
+ const QDBusArgument &operator>>(const QDBusArgument &argument, MyArray &myArray)
+ {
+     argument.beginArray();
+     myArray.clear();
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     while (!argument.atEnd()) {
+         MyElement element;
+         argument >> element;
+         myArray.append(element);
+     }
+
+     argument.endArray();
+     return argument;
+ }
+```
 
 ### `void QDBusArgument::beginArray(QMetaType id)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginArray`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+打开一个适合附加元类型`id`元素的新D-总线数组。
+该函数通常用于`operator<<`流算子，如下示例：
+如果你想编组的类型是`QList`或 Qt 的任何容器类，且它们使用一个模板参数，你无需为它声明`operator<<`函数，因为 Qt D-Bus 提供了通用模板来完成数据编组工作。STL 的序列容器，如 `std::list`、`std::vector` 等，情况也是如此。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `id`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // Append an array of MyElement types
+ QDBusArgument &operator<<(QDBusArgument &argument, const MyArray &myArray)
+ {
+     argument.beginArray(qMetaTypeId<MyElement>());
+     for (const auto &element : myArray)
+         argument << element;
+     argument.endArray();
+     return argument;
+ }
+```
 
 ### `void QDBusArgument::beginMap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginMap`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+递归到D-Bus地图，以便提取地图元素。
+该函数通常用于`operator>>`流算子，如下示例：
+如果你想去分组的类型是`QMap`或`QHash`，你无需为它声明`operator>>`函数，因为Qt D-Bus提供了通用模板来完成数据的分组工作。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
+```cpp
+ // Extract a MyDictionary map that associates integers to MyElement items
+ const QDBusArgument &operator>>(const QDBusArgument &argument, MyDictionary &myDict)
+ {
+     argument.beginMap();
+     myDict.clear();
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+     while (!argument.atEnd()) {
+         int key;
+         MyElement value;
+         argument.beginMapEntry();
+         argument >> key >> value;
+         argument.endMapEntry();
+         myDict.insert(key, value);
+     }
+
+     argument.endMap();
+     return argument;
+ }
+```
 
 ### `void QDBusArgument::beginMap(QMetaType keyMetaType, QMetaType valueMetaType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginMap`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+打开一个适合添加元素的新D-总线映射。映射是将一个条目（键）关联到另一个条目（值）的容器，例如Qt的`QMap`或`QHash`值。映射的键和值元类型的id必须分别以`keyMetaType`和值`valueMetaType`传递。
+该函数通常用于`operator<<`流算子，如下示例：
+通常你不需要为关联容器（如 `QHash` 或 std：：map）提供`operator<<`或`operator>>`函数，因为 Qt D-Bus 提供了通用模板来完成数据编组工作。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `keyMetaType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `valueMetaType`：类型为 `QMetaType`。没有默认值，调用时必须提供。传入 `QMetaType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ // Append a dictionary that associates ints to MyValue types
+ QDBusArgument &operator<<(QDBusArgument &argument, const MyDictionary &myDict)
+ {
+     argument.beginMap(QMetaType::fromType<int>(), QMetaType::fromType<MyValue>());
+     MyDictionary::const_iterator i;
+     for (i = myDict.cbegin(); i != myDict.cend(); ++i) {
+         argument.beginMapEntry();
+         argument << i.key() << i.value();
+         argument.endMapEntry();
+     }
+     argument.endMap();
+     return argument;
+ }
+```
 
 ### `void QDBusArgument::beginMapEntry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginMapEntry`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+打开适合附加键和值项的D-Bus映射条目。该函数仅在映射已以`beginMap()`打开时有效。
+该函数的用例请参见 `beginMap()`。
 
 ### `void QDBusArgument::beginMapEntry() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginMapEntry`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+递归到D-Bus映射的条目中，以便提取键和值对。
+请参见`beginMap()`，了解该函数通常的使用方式。
 
 ### `void QDBusArgument::beginStructure()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginStructure`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+开启一个适合附加新参数的 D-总线结构。
+该函数通常用于`operator<<`流算子，如下示例：
+结构可以包含其他结构，因此以下代码同样有效：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QDBusArgument &operator<<(QDBusArgument &argument, const MyStructure &myStruct)
+ {
+     argument.beginStructure();
+     argument << myStruct.member1 << myStruct.member2;
+     argument.endStructure();
+     return argument;
+ }
+```
 
 ### `void QDBusArgument::beginStructure() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginStructure`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+开启适合提取元素的D-总线结构。
+该函数通常用于`operator>>`流算子，如下示例：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ const QDBusArgument &operator>>(const QDBusArgument &argument, MyStructure &myStruct)
+ {
+     argument.beginStructure();
+     argument >> myStruct.member1 >> myStruct.member2 >> myStruct.member3;
+     argument.endStructure();
+     return argument;
+ }
+```
 
 ### `QDBusArgument::ElementType QDBusArgument::currentType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusArgument::currentType` 用于计算、查询或取得与“当前、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDBusArgument::ElementType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument::ElementType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前元素类型的分类。如果解码该类型出现错误，或者参数结束时，该函数返回`QDBusArgument::UnknownType`。
+该函数仅在参数分组时才有意义。如果在编组时使用它，它总是返回`UnknownType`。
 
 ### `void QDBusArgument::endArray()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endArray`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭以`beginArray()`打开的D总线数组。该函数必须被调用次数与`beginArray()`相同次数。
 
 ### `void QDBusArgument::endArray() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endArray`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭 D-总线数组，允许提取数组之后的下一个元素。
 
 ### `void QDBusArgument::endMap()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endMap`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+闭合以`beginMap()`打开的D-总线映射。该函数必须被调用次数与`beginMap()`相同次数。
 
 ### `void QDBusArgument::endMap() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endMap`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭 D-Bus 映射，允许提取映射后的下一个元素。
 
 ### `void QDBusArgument::endMapEntry()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endMapEntry`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭以 `beginMapEntry()` 打开的 D-总线映射条目。该函数必须被调用次数与 `beginMapEntry()` 相同次数。
 
 ### `void QDBusArgument::endMapEntry() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endMapEntry`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭D-Bus地图条目，允许提取地图上的下一个元素。
 
 ### `void QDBusArgument::endStructure()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endStructure`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+闭合一个以`beginStructure()`开启的D-总线结构。该函数必须被调用次数与`beginStructure()`相同次数。
 
 ### `void QDBusArgument::endStructure() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endStructure`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+关闭D-总线结构，允许提取结构之后的下一个元素。
 
 ### `[noexcept] void QDBusArgument::swap(QDBusArgument &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusArgument::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QDBusArgument &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将这个论点与`other`交换。这个操作非常快，从不失败。
 
 ### `QDBusArgument &QDBusArgument::operator<<(uchar arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `uchar`。没有默认值，调用时必须提供。传入 `uchar` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`BYTE`的原始值`arg`附加到D-总线流中。
 
 ### `QDBusArgument &QDBusArgument::operator<<(bool arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`BOOLEAN`的原始值`arg`附加到D-总线流上。
 
 ### `QDBusArgument &QDBusArgument::operator<<(const QByteArray &arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+附加`arg`作为`ARRAY of BYTE`给出的D-Bus流的`QByteArray`。
+`QStringList`和`QByteArray`是`QDBusArgument`唯一直接支持的非原始类型，因为它们在Qt应用中被广泛使用。
+其他阵列通过Qt D-Bus中的复合类型支持。
 
 ### `QDBusArgument &QDBusArgument::operator<<(const QDBusVariant &arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `const QDBusVariant &`。没有默认值，调用时必须提供。传入 `const QDBusVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`VARIANT`的原始值 `arg` 附加到 D-Bus 流上。
+D-总线变体类型可以包含任何类型，包括其他变体。它类似于Qt `QVariant`类型。
 
 ### `QDBusArgument &QDBusArgument::operator<<(const QString &arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型`arg` `STRING`（Unicode字符字符串）的原始值附加到D-Bus流中。
 
 ### `QDBusArgument &QDBusArgument::operator<<(const QStringList &arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `const QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+附加`arg`给出的`QStringList`作为D-Bus流的`ARRAY of STRING`。
+`QStringList`和 `QByteArray` 是`QDBusArgument`唯一直接支持的两种非原始类型，因为它们在量子技术应用中被广泛使用。
+其他阵列通过Qt D-Bus中的复合类型支持。
 
 ### `QDBusArgument &QDBusArgument::operator<<(double arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `double`。没有默认值，调用时必须提供。传入 `double` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型`DOUBLE`（双精度浮点）的原始值`arg`附加到D-Bus流上。
 
 ### `QDBusArgument &QDBusArgument::operator<<(int arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`INT32`的原始值`arg`附加到D-总线流中。
 
 ### `QDBusArgument &QDBusArgument::operator<<(qlonglong arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `qlonglong`。没有默认值，调用时必须提供。传入 `qlonglong` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`INT64`的原始值`arg`附加到D-总线流上。
 
 ### `QDBusArgument &QDBusArgument::operator<<(qulonglong arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `qulonglong`。没有默认值，调用时必须提供。传入 `qulonglong` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`UINT64`的原始值 `arg` 附加到 D-总线流上。
 
 ### `QDBusArgument &QDBusArgument::operator<<(short arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `short`。没有默认值，调用时必须提供。传入 `short` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`INT16`的原始值`arg`附加到D-总线流上。
 
 ### `QDBusArgument &QDBusArgument::operator<<(uint arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `uint`。没有默认值，调用时必须提供。传入 `uint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型`UINT32`的原始值`arg`附加到D-Bus流中。
 
 ### `QDBusArgument &QDBusArgument::operator<<(ushort arg)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `arg`：类型为 `ushort`。没有默认值，调用时必须提供。传入 `ushort` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类型为`UINT16`的原始值`arg`附加到D-总线流上。
 
 ### `QDBusArgument &QDBusArgument::operator=(const QDBusArgument &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusArgument &`。
-- 参数 `other`：类型为 `const QDBusArgument &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把`other` `QDBusArgument`对象复制到这个里面。
+因此，从此两个对象都包含相同的状态。QDBusArguments是显式共享的，因此对任一副本的任何修改都会影响另一份。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(uchar &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `uchar &`。没有默认值，调用时必须提供。传入 `uchar &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`BYTE`的D-Bus原始参数并将其置于`arg`中。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(QByteArray &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `QByteArray &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-Bus流中提取字节数组并返回为`QByteArray`。
+`QStringList`和`QByteArray`是`QDBusArgument`唯一直接支持的两种非原始类型，因为它们在量子技术应用中被广泛使用。
+其他阵列通过Qt D-Bus中的复合类型支持。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(QDBusVariant &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `QDBusVariant &`。没有默认值，调用时必须提供。传入 `QDBusVariant &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从 D-总线流中提取一个类型为 `VARIANT` 的 D-总线原始参数。
+D-总线变体类型可以包含任何类型，包括其他变体。它类似于Qt `QVariant`类型。
+如果变体包含`QDBusArgument`不直接支持的类型，返回的`QDBusVariant`值将包含另一个`QDBusArgument`。你有责任进一步将其分解成另一种类型。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(QString &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`STRING`的D-Bus原始参数（Unicode字符字符串）。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(QStringList &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `QStringList &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-Bus流中提取字符串数组，并返回为`QStringList`。
+`QStringList`和`QByteArray`是`QDBusArgument`唯一直接支持的两种非原始类型，因为它们在Qt应用中被广泛使用。
+其他阵列通过Qt D-Bus中的复合类型支持。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(bool &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `bool &`。没有默认值，调用时必须提供。传入 `bool &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`BOOLEAN`的D-Bus原始参数。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(double &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `double &`。没有默认值，调用时必须提供。传入 `double &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`DOUBLE`的D-Bus原始参数（双精度浮点）。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(int &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `int &`。没有默认值，调用时必须提供。传入 `int &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`INT32`的D-总线原始参数。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(qlonglong &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `qlonglong &`。没有默认值，调用时必须提供。传入 `qlonglong &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`INT64`的D-Bus原始参数。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(qulonglong &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `qulonglong &`。没有默认值，调用时必须提供。传入 `qulonglong &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从 D-总线流中提取一个类型为 `UINT64` 的 D-Bus 原始参数。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(short &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `short &`。没有默认值，调用时必须提供。传入 `short &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`INT16`的D-总线原始参数。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(uint &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `uint &`。没有默认值，调用时必须提供。传入 `uint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从 D-总线流中提取一个类型为 `UINT32` 的 D-总线原始参数。
 
 ### `const QDBusArgument &QDBusArgument::operator>>(ushort &arg) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusArgument` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`const QDBusArgument &`。
-- 参数 `arg`：类型为 `ushort &`。没有默认值，调用时必须提供。传入 `ushort &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从D-总线流中提取一个类型为`UINT16`的D-总线原始参数。
 
 ### `template <typename T> QMetaType qDBusRegisterMetaType()`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QDBusArgument::qDBusRegisterMetaType` 用于计算、查询或取得与“q、D、Bus、注册、Meta、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename T> QMetaType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+如果尚未注册，则`T` Qt D-总线类型系统和 Qt 元类型系统注册。
+要注册一个类型，必须用`Q_DECLARE_METATYPE()`宏声明为元类型，然后像下面的示例那样注册：
+如果`T`不是Qt的容器类之一，`T`和`QDBusArgument`之间的`operator<<`和`operator>>`流算子必须已经声明。有关如何声明此类类型的更多信息，请参见Qt D-Bus类型系统页面。
+该函数返回该类型的Qt元类型id（与`qRegisterMetaType()`返回的值相同）。
+注意`T`：继承流式类型（包括容器`QList`、`QHash`或`QMap`）可以无需自定义`operator<<`和`operator>>`流式传输的功能，自Qt 5.7起被弃用，因为它忽略了除基类外的其他`T`。没有诊断功能。你应始终为所有类型提供这些操作符，而不是依赖Qt提供的流操作符来处理基类。
+注意：该功能是线程安全的。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> QMetaType`。
-- 参数：无。
+```cpp
+ #include <QDBusMetaType>
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+ qDBusRegisterMetaType<MyClass>();
+```
 
 ### `template <typename T> T qdbus_cast(const QDBusArgument &arg)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QDBusArgument::qdbus_cast` 用于计算、查询或取得与“qdbus、cast”相关的操作。调用时要先确认当前状态和 `arg` 的有效范围；返回类型是 `template <typename T> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+尝试将`arg`内容重新分组为类型`T`。例如：
+注意它等价于以下内容：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> T`。
-- 参数 `arg`：类型为 `const QDBusArgument &`。没有默认值，调用时必须提供。传入 `const QDBusArgument &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ MyType item = qdbus_cast<Type>(argument);
+```
 
 ## 6. 深入实践与常见坑
 

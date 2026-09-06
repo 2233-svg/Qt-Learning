@@ -62,48 +62,25 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 3 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QtTaskTree::QDefaultTaskAdapter<Task>::operator()(Task *task, QtTaskTree::QTaskInterface *interface) const`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 默认任务适配器通过 `operator` 把 QObject 任务接入任务树：任务必须有公开 `start()`，并发出 `done(DoneResult)` 或 `done(bool)`；适配器建立一次性连接后启动任务。
-
-**签名拆解：**
-
-- 返回值：`void QtTaskTree::QDefaultTaskAdapter<Task>::`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把 `task` 接入任务树：连接它的 `done(DoneResult)` 或 `done(bool)` 完成信号，使结果转交给 `interface`，然后调用 `task->start()`。仅当 `Task` 继承 `QObject` 并满足这两个接口约定时才能使用默认适配器。
 
 ### `void Task::start()`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 默认任务适配器通过 `start` 把 QObject 任务接入任务树：任务必须有公开 `start()`，并发出 `done(DoneResult)` 或 `done(bool)`；适配器建立一次性连接后启动任务。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 通常与完成、取消、错误和安全退出信号配合；启动成功不等于任务完成。
+这是默认适配器要求 `Task` 提供的启动入口。调用后应开始任务且尽快返回，不能用长时间阻塞代替异步执行。
 
 ### `void Task::done(QtTaskTree::DoneResult result)`
 
-**API 类别：** 配套与继承 API
+**作用与语义：**
 
-**中文解读：** 默认任务适配器通过 `done` 把 QObject 任务接入任务树：任务必须有公开 `start()`，并发出 `done(DoneResult)` 或 `done(bool)`；适配器建立一次性连接后启动任务。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `result`：类型为 `QtTaskTree::DoneResult`。没有默认值，调用时必须提供。传入 `QtTaskTree::DoneResult` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这是默认适配器要求 `Task` 在结束时发出的信号；`result` 表示成功、失败或取消等完成结果。每次启动应只发出一次，适配器会把它转交给 `QTaskInterface::reportDone()`。
 
 ## 6. 深入实践与常见坑
 

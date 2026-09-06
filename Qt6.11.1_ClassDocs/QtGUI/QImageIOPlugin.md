@@ -68,101 +68,65 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 7 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QImageIOPlugin::Capabilityflags QImageIOPlugin::Capabilities`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOPlugin` 暴露的类型声明 `Capabilityflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Capabilityflags QImageIOPlugin::Capabilities`。
-- 属性名：`QImageIOPlugin`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QImageIOPlugin`的能力。
+- `QImageIOPlugin::CanRead`：`0x1`;插件可以读取图像。
+- `QImageIOPlugin::CanWrite`：`0x2`;插件可以写入图片。
+- `QImageIOPlugin::CanReadIncremental`：`0x4`;插件可以逐步读取图像。
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `[explicit] QImageIOPlugin::QImageIOPlugin(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOPlugin` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用给定的`parent`构建一个图像插件。导出插件的 MOC 生成代码会自动调用该插件。
 
 ### `[virtual noexcept] QImageIOPlugin::~QImageIOPlugin()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOPlugin` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏图片格式插件。
+你从不需要明确调用它。Qt 会自动销毁插件，当它不再使用时。
 
 ### `[pure virtual] QImageIOPlugin::Capabilities QImageIOPlugin::capabilities(QIODevice *device, const QByteArray &format) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOPlugin::capabilities` 用于计算、查询或取得与“capabilities”相关的操作。调用时要先确认当前状态和 `device`、`format` 的有效范围；返回类型是 `QImageIOPlugin::Capabilities`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QImageIOPlugin::Capabilities`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `format`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回插件的能力，基于`device`中的数据和格式`format`。如果`device` `0`，应仅报告格式是否可读写。否则，应尝试判断给定格式（或插件支持的任何格式，如果`format`空）是否可以从`device`读取或写入。应在不改变`device`状态的情况下完成此操作（通常通过使用`QIODevice::peek()`）。
+例如，如果`QImageIOPlugin`支持BMP格式，`format`空或`"bmp"`，且设备中的数据以字符`"BM"`开头，该函数应返回`CanRead`。如果`format` `"bmp"`，`device`为`0`且处理器支持读写，该函数应返回`CanRead` |`CanWrite`。
+格式名称总是用小写字母表示。
 
 ### `[pure virtual] QImageIOHandler *QImageIOPlugin::create(QIODevice *device, const QByteArray &format = QByteArray()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QImageIOPlugin::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 `device`、`format` 的有效范围；返回类型是 `QImageIOHandler *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QImageIOHandler *`。
-- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
-- 参数 `format`：类型为 `const QByteArray &`。默认值为 `QByteArray()`。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建并返回一个`QImageIOHandler`子类，`device` 和 `format` 为集合。`format`必须来自插件元数据中`"Keys"`条目列出的值，否则为空。如果为空，`device` 中的数据必须被 `capabilities()` 方法识别（格式同样为空）。
+格式名称总是用小写字母表示。
 
 ### `flags Capabilities`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOPlugin` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QImageIOPlugin`的能力。
+- `QImageIOPlugin::CanRead`：`0x1`;插件可以读取图像。
+- `QImageIOPlugin::CanWrite`：`0x2`;插件可以写入图片。
+- `QImageIOPlugin::CanReadIncremental`：`0x4`;插件可以逐步读取图像。
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ### `enum Capability { CanRead, CanWrite, CanReadIncremental }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QImageIOPlugin` 暴露的类型声明 `Capability`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举描述了`QImageIOPlugin`的能力。
+- `QImageIOPlugin::CanRead`：`0x1`;插件可以读取图像。
+- `QImageIOPlugin::CanWrite`：`0x2`;插件可以写入图片。
+- `QImageIOPlugin::CanReadIncremental`：`0x4`;插件可以逐步读取图像。
+能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
 
 ## 6. 深入实践与常见坑
 

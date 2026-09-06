@@ -112,508 +112,310 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 36 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QQmlComponent::CompilationMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 暴露的类型声明 `Compilation、模式`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:CompilationMode`。
-- 属性名：`QQmlComponent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定`QQmlComponent`应立即加载组件还是异步加载。
+- `QQmlComponent::PreferSynchronous`：`0`;倾向于立即加载/编译组件，阻断线程。这并非总是可行;例如，远程 URL 总是异步加载。
+- `QQmlComponent::Asynchronous`：`1`;在后台线程中加载/编译组件。
 
 ### `enum QQmlComponent::Status`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 暴露的类型声明 `状态`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Status`。
-- 属性名：`QQmlComponent`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定`QQmlComponent`的加载状态。
+- `QQmlComponent::Null`：`0`;该`QQmlComponent`没有数据。调用`loadUrl()`或 `setData()` 以添加量子ML内容。
+- `QQmlComponent::Ready`：`1`;本 `QQmlComponent` 已准备好，`create()`可被召唤。
+- `QQmlComponent::Loading`：`2`;该`QQmlComponent`正在加载网络数据。
+- `QQmlComponent::Error`：`3`;发生错误。调用`errors()`获取`errors`列表。
 
 ### `[read-only] progress : qreal`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的状态/能力属性。通常通过 `progress()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+加载组件的进度，从0.0（未加载）到1.0（完成）。
 
-**签名拆解：**
-
-- 属性类型：`qreal`。
-- 属性名：`progress`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `progress()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] status : Status`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的状态/能力属性。通常通过 `status()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+该组件当前的 `status`。
 
-**签名拆解：**
-
-- 属性类型：`Status`。
-- 属性名：`status`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `status()` 读取当前值；它不会修改应用状态。
 
 ### `[read-only] url : const QUrl`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的状态/能力属性。通常通过 `url()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+组件 URL。 这是传递给构造函数、`loadUrl()` 或 `setData()` 方法的 URL。
 
-**签名拆解：**
-
-- 属性类型：`const QUrl`。
-- 属性名：`url`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `url()` 读取当前值；它不会修改应用状态。
 
 ### `QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个没有数据的 QQmlComponent，给它指定的`engine`和`parent`。用 `setData()` 设置数据。
 
 ### `QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的`fileName`创建一个QQmlComponent，并赋予它指定的`parent`和`engine`。
 
 ### `QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的`url`创建一个QQmlComponent，并赋予它指定的`parent`和`engine`。
+确保提供的URL完整且正确，特别是在从本地文件系统加载文件时使用`QUrl::fromLocalFile()`。
+相对路径将以`QQmlEngine::baseUrl()`解析，除非特别说明，否则这是当前的工作目录。
 
 ### `QQmlComponent::QQmlComponent(QQmlEngine *engine, const QString &fileName, QQmlComponent::CompilationMode mode, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fileName`：类型为 `const QString &`。没有默认值，调用时必须提供。文件名或路径。优先使用 Qt 的路径 API 拼接和规范化，不要手写平台分隔符。
-- 参数 `mode`：类型为 `QQmlComponent::CompilationMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的`fileName`创建一个QQmlComponent，并赋予其指定的`parent`和`engine`。如果`mode` `Asynchronous`，该组件将被异步加载和编译。
 
 ### `QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QQmlComponent::CompilationMode mode, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-- 参数 `mode`：类型为 `QQmlComponent::CompilationMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的`url`创建一个QQmlComponent，并赋予其指定的`parent`和 `engine`。如果`mode` `Asynchronous`，该组件将被异步加载和编译。
+确保提供的URL完整且正确，特别是在从本地文件系统加载文件时使用`QUrl::fromLocalFile()`。
+相对路径将以`QQmlEngine::baseUrl()`解析，除非特别说明，否则这是当前的工作目录。
 
 ### `[explicit, since 6.5] QQmlComponent::QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的 `uri` 创建 QQmlComponent，`typeName`并赋予其指定的`parent`和`engine`。如果可能，组件将同步加载。
 
 ### `[explicit, since 6.5] QQmlComponent::QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, QQmlComponent::CompilationMode mode, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `engine`：类型为 `QQmlEngine *`。没有默认值，调用时必须提供。传入 `QQmlEngine *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `uri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QQmlComponent::CompilationMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从给定的`uri`和`typeName`创建一个QQmlComponent，并赋予其指定的 `parent` 和`engine`。如果`mode` `Asynchronous`，该组件将被异步加载和编译。
 
 ### `[override virtual noexcept] QQmlComponent::~QQmlComponent()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁`QQmlComponent`。
 
 ### `[virtual] QObject *QQmlComponent::beginCreate(QQmlContext *context)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginCreate`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数 `context`：类型为 `QQmlContext *`。没有默认值，调用时必须提供。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定的`context`内，从该组件创建一个对象实例。如果创建失败，返回`nullptr`。
+注意：该方法提供了对组件实例创建的高级控制。一般来说，程序员应使用`QQmlComponent::create()`来创建对象实例。
+`QQmlComponent`构造实例时，分为三个步骤：
+- 创建对象层级，并赋予常数值。
+- 首次评估属性绑定。
+- 如适用，`QQmlParserStatus::componentComplete()` 在对象上被调用。
+QQmlComponent：：beginCreate() 与 `QQmlComponent::create()` 不同，它只执行第 1 步。`QQmlComponent::completeCreate()` 必须被调用才能完成第 2 和第 3 步。
+当使用附加属性向实例化组件传递信息时，这个断点有时非常有用，因为它允许在属性绑定生效前配置其初始值。
+返回对象实例的所有权转移给调用者。
+注意：绑定的分类为常值和实际绑定，是有意未具体说明的，且可能因Qt版本及你是否以及如何使用qmlcachegen而有所变化。你不应依赖任何特定绑定在bestartCreate()返回前后被评估。例如，像MyType.EnumValue这样的常数表达式在编译时可能被识别为此类，或被推迟执行为绑定。常量表达式如-（5）或“a”常量字符串“也是如此。
 
 ### `[virtual] void QQmlComponent::completeCreate()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::completeCreate` 用于执行与“complete、创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该方法提供了对组件实例创建的高级控制。一般来说，程序员应使用`QQmlComponent::create()`来创建组件。
+该函数完成了以 `QQmlComponent::beginCreate()` 开始的组件创建，之后必须调用。
 
 ### `[virtual] QObject *QQmlComponent::create(QQmlContext *context = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 `context` 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数 `context`：类型为 `QQmlContext *`。默认值为 `nullptr`。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定的`context`内，从该组件创建一个对象实例。如果创建失败，返回`nullptr`。
+如果`context`是`nullptr`（默认），它会在引擎的根上下文中创建实例。
+返回对象实例的所有权转移给调用者。
+如果从该组件创建的对象是视觉项，则必须有视觉父，可通过调用`QQuickItem::setParentItem()`设置。详情请参见Qt Quick中的概念 - 视觉父。
 
 ### `void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context = nullptr, QQmlContext *forContext = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::create` 用于执行与“创建”相关的操作。调用时要先确认当前状态和 `incubator`、`context`、`forContext` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `incubator`：类型为 `QQmlIncubator &`。没有默认值，调用时必须提供。传入 `QQmlIncubator &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `context`：类型为 `QQmlContext *`。默认值为 `nullptr`。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-- 参数 `forContext`：类型为 `QQmlContext *`。默认值为 `nullptr`。传入 `QQmlContext *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+利用提供的`incubator`从该组件创建对象实例。`context`指定创建该对象实例的上下文。
+如果`context`是`nullptr`（默认），它会在引擎的根上下文中创建实例。
+`forContext` 指定了该对象创建依赖的上下文。如果`forContext`是异步创建，且`QQmlIncubator::IncubationMode`是`QQmlIncubator::AsynchronousIfNested`，则该对象也会异步创建。如果`forContext`是`nullptr`（默认），则该`context`将用于此决策。
+创建的对象及其创建状态可以通过`incubator`获取。
 
 ### `QObject *QQmlComponent::createWithInitialProperties(const QVariantMap &initialProperties, QQmlContext *context = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::createWithInitialProperties` 用于计算、查询或取得与“创建、With、Initial、Properties”相关的操作。调用时要先确认当前状态和 `initialProperties`、`context` 的有效范围；返回类型是 `QObject *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QObject *`。
-- 参数 `initialProperties`：类型为 `const QVariantMap &`。没有默认值，调用时必须提供。传入 `const QVariantMap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `context`：类型为 `QQmlContext *`。默认值为 `nullptr`。上下文对象，用于限定回调连接的生命周期或解析/执行环境。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在指定`context`内创建该组件的对象实例，并用`initialProperties`初始化其顶层属性。
+如果无法设置任何`initialProperties`，会发出警告。如果有未设置的必需属性，创建对象失败并返回`nullptr`，此时`isError()`返回`true`。
+如果`context`是`nullptr`（默认），它会在引擎的根上下文中创建实例。
+返回对象实例的所有权转移给调用者。
 
 ### `QQmlContext *QQmlComponent::creationContext() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::creationContext` 用于计算、查询或取得与“creation、Context”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlContext *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlContext *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回组件创建的 `QQmlContext`。这仅适用于直接从 QML 创建的组件。
 
 ### `QQmlEngine *QQmlComponent::engine() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::engine` 用于计算、查询或取得与“engine”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlEngine *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQmlEngine *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该组件的`QQmlEngine`。
 
 ### `QList<QQmlError> QQmlComponent::errors() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::errors` 用于计算、查询或取得与“errors”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QQmlError>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QQmlError>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回上次编译或创建操作中发生的错误列表。如果没有设置`isError()`，则返回一个空列表。
 
 ### `[since 6.5] bool QQmlComponent::isBound() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isBound`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果组件是在指定`pragma ComponentBehavior: Bound`的QML文件中创建的，则返回true;否则返回false。
 
 ### `bool QQmlComponent::isError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`status()` 则返回为真 == `QQmlComponent::Error`。
 
 ### `bool QQmlComponent::isLoading() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isLoading`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`status()` 则返回为真 == `QQmlComponent::Loading`。
 
 ### `bool QQmlComponent::isNull() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isNull`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`status()` 则返回为真 == `QQmlComponent::Null`。
 
 ### `bool QQmlComponent::isReady() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isReady`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`status()` 则返回为真 == `QQmlComponent::Ready`。
 
 ### `[slot, since 6.5] void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName, QQmlComponent::CompilationMode mode = PreferSynchronous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `loadFromModule`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+在模块 `uri` 中加载 `typeName` 对应的 `QQmlComponent`。如果类型是通过 QML 文件实现的，则使用 `mode` 来加载它。由 C 支持的类型总是同步加载。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `uri`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `typeName`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。传入 `QAnyStringView` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `mode`：类型为 `QQmlComponent::CompilationMode`。默认值为 `PreferSynchronous`。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QQmlEngine engine;
+ QQmlComponent component(&engine);
+ component.loadFromModule("QtQuick", "Item");
+ // once the component is ready
+ std::unique_ptr<QObject> item(component.create());
+ Q_ASSERT(item->metaObject() == &QQuickItem::staticMetaObject);
+```
 
 ### `[slot] void QQmlComponent::loadUrl(const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `loadUrl`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+从提供的 `url` 加载 `QQmlComponent`。
+确保提供的 URL 是完整且正确的，特别是从本地文件系统加载文件时，请使用 `QUrl::fromLocalFile()`。
+相对路径将相对于 `QQmlEngine::baseUrl()` 解析，除非另有指定，该目录为当前工作目录。
+注意：此槽函数是重载的。要连接到此槽函数：
 
-**签名拆解：**
+// 使用 qOverload 连接：
+connect(sender, &SenderClass::signal,。
+qmlComponent, qOverload(&QQmlComponent::loadUrl));
 
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
+// 或使用 lambda 作为封装：
+connect(sender, &SenderClass::signal,。
+qmlComponent, [receiver = qmlComponent](const QUrl &url) { receiver->loadUrl(url); });
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+有关更多示例和方法，请参阅连接到重载槽函数。
 
 ### `[slot] void QQmlComponent::loadUrl(const QUrl &url, QQmlComponent::CompilationMode mode)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `loadUrl`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+从提供的 `url` 加载 `QQmlComponent`。如果 `mode` 是 `Asynchronous`，组件将异步加载和编译。
+确保提供的 URL 是完整且正确的，特别是从本地文件系统加载文件时，请使用 `QUrl::fromLocalFile()`。
+相对路径将相对于 `QQmlEngine::baseUrl()` 解析，除非另有指定，该目录为当前工作目录。
+注意：此槽函数是重载的。要连接到此槽函数：
 
-**签名拆解：**
+// 使用 qOverload 连接：
+connect(sender, &SenderClass::signal,。
+qmlComponent, qOverload(&QQmlComponent::loadUrl));
 
-- 返回值：`void`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-- 参数 `mode`：类型为 `QQmlComponent::CompilationMode`。没有默认值，调用时必须提供。模式枚举或位标志。它通常决定对象后续允许的操作和状态转换。
+// 或使用 lambda 作为封装：
+connect(sender, &SenderClass::signal,。
+qmlComponent, [receiver = qmlComponent](const QUrl &url, QQmlComponent::CompilationMode mode) { receiver->loadUrl(url, mode); });
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+有关更多示例和方法，请参阅连接到重载槽函数。
 
 ### `[signal] void QQmlComponent::progressChanged(qreal progress)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 发出的通知信号 `progressChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+加载组件的进度，从0.0（未加载）到1.0（完成）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `progress`：类型为 `qreal`。没有默认值，调用时必须提供。传入 `qreal` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `progress` 的变化，不要把它当作普通函数主动调用。
 
 ### `[slot] void QQmlComponent::setData(const QByteArray &data, const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setData`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`QQmlComponent`使用给定的QML的 `data`。如果提供了`url`，则用于设置组件名称并为该组件解析的项目提供基础路径。
+警告：新组件会对同一URL的现有组件进行影子。你不应传递现有组件的URL。
 
 ### `void QQmlComponent::setInitialProperties(QObject *object, const QVariantMap &properties)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setInitialProperties`。调用它会改变 `QQmlComponent` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `properties`：类型为 `const QVariantMap &`。没有默认值，调用时必须提供。传入 `const QVariantMap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置由`QQmlComponent`创建的`object`的顶层`properties`。
+该方法提供了对组件实例创建的高级控制。一般来说，程序员应使用`QQmlComponent::createWithInitialProperties`从组件创建对象实例。
+在`beginCreate`之后、`completeCreate`被调用之前使用此方法。如果不存在所提供的属性，会发出警告。
+该方法不允许直接设置初始嵌套属性。相反，可以通过创建价值类型，赋值其嵌套属性，然后将该值类型作为待构造对象的初始属性传递来实现。
+例如，为了设置 fond.bold，你可以创建一个`QFont`，将其粗体设置为加粗，然后将字体作为初始属性传递。
 
 ### `[signal] void QQmlComponent::statusChanged(QQmlComponent::Status status)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QQmlComponent` 发出的通知信号 `statusChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+该组件当前的 `status`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `status`：类型为 `QQmlComponent::Status`。没有默认值，调用时必须提供。传入 `QQmlComponent::Status` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `status` 的变化，不要把它当作普通函数主动调用。
 
 ### `qreal progress() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::progress` 用于计算、查询或取得与“progress”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qreal`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+加载组件的进度，从0.0（未加载）到1.0（完成）。
 
-**签名拆解：**
-
-- 返回值：`qreal`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `progress()` 读取当前值；它不会修改应用状态。
 
 ### `QQmlComponent::Status status() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::status` 用于计算、查询或取得与“状态”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQmlComponent::Status`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该组件当前的 `status`。
 
-**签名拆解：**
-
-- 返回值：`QQmlComponent::Status`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `status()` 读取当前值；它不会修改应用状态。
 
 ### `QUrl url() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QQmlComponent::url` 用于计算、查询或取得与“url”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QUrl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+组件 URL。 这是传递给构造函数、`loadUrl()` 或 `setData()` 方法的 URL。
 
-**签名拆解：**
-
-- 返回值：`QUrl`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `url()` 读取当前值；它不会修改应用状态。
 
 ## 6. 深入实践与常见坑
 

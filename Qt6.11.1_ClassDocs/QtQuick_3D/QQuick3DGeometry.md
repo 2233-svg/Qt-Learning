@@ -91,438 +91,251 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 32 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `void QQuick3DGeometry::addAttribute(QQuick3DGeometry::Attribute::Semantic semantic, int offset, QQuick3DGeometry::Attribute::ComponentType componentType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuick3DGeometry` 添加依赖、数据或子对象的 API `addAttribute`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+添加顶点属性描述。每个属性都有一个`semantic`，指定属性的用途及其组件数量，从起点到顶点再到顶点内属性位置的`offset`，以及指定属性类型和大小的`componentType`。
+语义可以是以下之一：
+- `PositionSemantic`：属性是一个位置。三个分量：x、y 和 z
+- `NormalSemantic`：属性是一个法向量。3个分量：x、y和z
+- `TexCoord0Semantic`：属性是一个纹理坐标。两个组件：你和 v
+- `TexCoord1Semantic`：属性是一个纹理坐标。两个组件：你和 v
+- `TangentSemantic`：属性是一个切向量。三个分量：x、y 和 z
+- `BinormalSemantic`：属性为双法一向量。三个分量：x、y 和 z
+- `JointSemantic`：属性是用于蒙皮的关节索引向量。4个分量：关节索引1-4
+- `WeightSemantic`：属性是用于蒙皮的权重矢量。4个组件：关节权重1-4
+- `ColorSemantic`：属性是一个顶点颜色矢量。4个分量：r、g、b 和 a
+- `TargetPositionSemantic`：属性是第一个变形目标的位置。三个组成部分：x、y 和 z
+- `TargetNormalSemantic`：属性是第一个目标的法向量。三个分量：x、y 和 z
+- `TargetTangentSemantic`：属性是第一个目标的切向量。3个分量：x、y和z
+- `TargetBinormalSemantic`：属性是第一个形态目标的双法向量。3个分量：x、y和z
+此外，`semantic`也可以是`IndexSemantic`。在这种情况下，属性不表示顶点缓冲区中的一个条目，而描述索引缓冲区中的索引数据。由于每个顶点总是只有一个索引，`offset`对索引缓冲区来说没有意义，应保持为零。
+组件类型可以是以下之一：
+- `U16Type`：索引组件类型为无符号的16位整数。仅支持`IndexSemantic`。
+- `U32Type`：属性（或索引组件）是一个无符号的32位整数。
+- `I32Type`：属性是一个有符号的32位整数。请注意，旧版OpenGL（如2.1或OpenGL ES 2.0）可能不支持该数据类型。
+- `F32Type`：属性为单精度浮点。
+注意：联合索引数据通常为`I32Type`。`F32Type`也被支持，以便支持不支持整数顶点输入属性的API，如OpenGL ES 2.0。
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `semantic`：类型为 `QQuick3DGeometry::Attribute::Semantic`。没有默认值，调用时必须提供。传入 `QQuick3DGeometry::Attribute::Semantic` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `componentType`：类型为 `QQuick3DGeometry::Attribute::ComponentType`。没有默认值，调用时必须提供。传入 `QQuick3DGeometry::Attribute::ComponentType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+注意：对于索引数据（`IndexSemantic`），只有U16Type和U32Type是合理的且支持的。
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+注意：TargetXXX语义将被弃用。`addTargetAttribute`可用于变形目标。这些语义仅支持向后兼容。如果与`addTargetAttribute`和`setTargetData`混合使用，结果无法隔离。
 
 ### `void QQuick3DGeometry::addAttribute(const QQuick3DGeometry::Attribute &attribute)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuick3DGeometry` 添加依赖、数据或子对象的 API `addAttribute`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribute`：类型为 `const QQuick3DGeometry::Attribute &`。没有默认值，调用时必须提供。传入 `const QQuick3DGeometry::Attribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+添加顶点属性描述。每个属性都有语义，指定属性的用途及其组件数量，从起点到顶点的偏移量，再到顶点内属性位置，以及一个 componentType，指定属性的数据类型和大小。
 
 ### `void QQuick3DGeometry::addSubset(int offset, int count, const QVector3D &boundsMin, const QVector3D &boundsMax, const QString &name = {})`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuick3DGeometry` 添加依赖、数据或子对象的 API `addSubset`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `boundsMin`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `boundsMax`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `name`：类型为 `const QString &`。默认值为 `{}`。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+向几何体添加新的子集。子集允许用不同材质渲染几何体的部分。材质在`model`中指定。
+如果几何体有索引缓冲区，那么`offset`和`count`是该子集中的原始偏移量和索引的计数。如果几何体只有顶点缓冲区，偏移量是顶点偏移量，计数是子集中的顶点数。
+边界`boundsMin`和`boundsMax`应该像几何边界一样包围子集。此外，子集可以有一个`name`。
 
 ### `[since 6.6] void QQuick3DGeometry::addTargetAttribute(quint32 targetId, QQuick3DGeometry::Attribute::Semantic semantic, int offset, int stride = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuick3DGeometry` 添加依赖、数据或子对象的 API `addTargetAttribute`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `targetId`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `semantic`：类型为 `QQuick3DGeometry::Attribute::Semantic`。没有默认值，调用时必须提供。传入 `QQuick3DGeometry::Attribute::Semantic` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `stride`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+增加了目标属性描述。每个属性都有其所属的`targetId`、`semantic`（指定属性的用途及其组件数量）、从起始到顶点再到顶点内属性位置的`offset`，以及元素间的字节大小`stride`。
+注意：targetId应从0增加且不跳过任何数字，所有目标的属性应相同。
+注意：语义与顶点属性相同，但目标属性不允许使用索引语义、JointSementic 和 WeightSemantic。
+注意：所有目标属性的componentType必须是F32Type。
+注意：如果步幅未被赋予或小于零，则该属性被视为紧密填充。
 
 ### `[since 6.6] void QQuick3DGeometry::addTargetAttribute(const QQuick3DGeometry::TargetAttribute &attribute)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QQuick3DGeometry` 添加依赖、数据或子对象的 API `addTargetAttribute`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `attribute`：类型为 `const QQuick3DGeometry::TargetAttribute &`。没有默认值，调用时必须提供。传入 `const QQuick3DGeometry::TargetAttribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+新增了变形目标属性描述。每个属性都有一个目标Id（属性所属）、一个语义（指定属性的用途及其组件数量）、从起点到顶点到顶点内属性位置的偏移量，以及一个步幅（元素之间的字节大小）。
 
 ### `QQuick3DGeometry::Attribute QQuick3DGeometry::attribute(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::attribute` 用于计算、查询或取得与“attribute”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QQuick3DGeometry::Attribute`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQuick3DGeometry::Attribute`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回属性定义编号`index`。
+属性定义编号从0到`attributeCount() - 1`。
 
 ### `int QQuick3DGeometry::attributeCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::attributeCount` 用于计算、查询或取得与“attribute、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何定义的属性数量。
 
 ### `QVector3D QQuick3DGeometry::boundsMax() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::boundsMax` 用于计算、查询或取得与“bounds、Max”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVector3D`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVector3D`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包围体的最大坐标。
 
 ### `QVector3D QQuick3DGeometry::boundsMin() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::boundsMin` 用于计算、查询或取得与“bounds、Min”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QVector3D`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVector3D`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包围体的最小坐标。
 
 ### `void QQuick3DGeometry::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将几何体重置到初始状态，清除之前设置的顶点和索引数据以及属性。
 
 ### `QByteArray QQuick3DGeometry::indexData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::indexData` 用于计算、查询或取得与“索引、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引缓冲区数据。
 
 ### `QQuick3DGeometry::PrimitiveType QQuick3DGeometry::primitiveType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::primitiveType` 用于计算、查询或取得与“primitive、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QQuick3DGeometry::PrimitiveType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQuick3DGeometry::PrimitiveType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染时使用的原始类型。默认是`Triangles`。
 
 ### `void QQuick3DGeometry::setBounds(const QVector3D &min, const QVector3D &max)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBounds`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `min`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `max`：类型为 `const QVector3D &`。没有默认值，调用时必须提供。传入 `const QVector3D &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将几何体的包围体积设置为由点`min`和`max`定义的立方体。这用于`picking`。
 
 ### `void QQuick3DGeometry::setIndexData(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIndexData`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将索引缓冲区设置为`data`。要使用索引绘图，添加带有`IndexSemantic`的属性。
 
 ### `void QQuick3DGeometry::setIndexData(int offset, const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIndexData`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更新索引缓冲区的一个子集。`offset` 指定偏移量（字节），`data` 表示大小和数据。
+该函数不会调整缓冲区大小。如果`offset + data.size()`大于缓冲区当前大小，超额数据将被忽略。
+注意：顶点、索引和形态目标数据的部分更新函数无法保证这些变更在内部如何实现。根据底层实现，即使是部分更改也可能导致整个图形资源更新。
 
 ### `void QQuick3DGeometry::setPrimitiveType(QQuick3DGeometry::PrimitiveType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrimitiveType`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `QQuick3DGeometry::PrimitiveType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将用于渲染的原始类型设置为`type`。
+- `Points`：原元是点。
+- `LineStrip`：图元是条状中的线。
+- `Lines`：原语是列表中的行。
+- `TriangleStrip`：这些原件是条状中的三角形。
+- `TriangleFan`：这些原语是风扇中的三角形。请注意，运行时可能不支持三角风扇，具体取决于底层图形 API。
+- `Triangles`：原语是列表中的三角形。
+初始值为`Triangles`。
+注意：请注意，三角风扇（TriangleFan）在运行时可能不支持，具体取决于底层的图形API。例如，对于Direct 3D，这种拓扑结构将完全无法使用。
+注意：点的点大小以及线条和线条的线宽由`material`控制。但请注意，运行时可能不支持非1的大小，具体取决于底层图形API。
 
 ### `void QQuick3DGeometry::setStride(int stride)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStride`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stride`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将顶点缓冲区的步幅设置为`stride`，单位为字节。这是缓冲区中两个连续顶点之间的距离。
+例如，对于使用`PositionSemantic`、`IndexSemantic`和`ColorSemantic`的几何体，紧密填充、交错的顶点缓冲区步幅为`28`（共七个浮点：三个用于位置，四个用于颜色，索引不包含在顶点缓冲区中）。
+注意：`QQuick3DGeometry`期望并仅适用于带有交错属性布局的顶点数据。
 
 ### `[since 6.6] void QQuick3DGeometry::setTargetData(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTargetData`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置形态目标缓冲区`data`。缓冲区应存储所有形态目标数据。
 
 ### `[since 6.6] void QQuick3DGeometry::setTargetData(int offset, const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTargetData`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更新目标缓冲区的子集。`offset` 指定以字节为单位的偏移量，`data` 表示大小和数据。
+该函数不会调整缓冲区大小。如果`offset + data.size()`大于缓冲区当前大小，超额数据将被忽略。
+注意：顶点、索引和形态目标数据的部分更新函数无法保证这些变更在内部如何实现。根据底层实现，即使是部分更改也可能导致整个图形资源更新。
 
 ### `void QQuick3DGeometry::setVertexData(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVertexData`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置顶点缓冲区`data`。缓冲区应存储数组中打包的所有顶点数据，如属性定义所述。注意，这不包括带有`IndexSemantic`的属性，这些属性属于索引缓冲区。
 
 ### `void QQuick3DGeometry::setVertexData(int offset, const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setVertexData`。调用它会改变 `QQuick3DGeometry` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `offset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+更新顶点缓冲区的一个子集。`offset` 指定以字节为单位的偏移量，`data` 表示大小和数据。
+该函数不会调整缓冲区大小。如果`offset + data.size()`大于缓冲区当前大小，超额数据将被忽略。
+注意：顶点、索引和变形目标数据的部分更新函数无法保证这些变更在内部如何实现。根据底层实现，即使是部分更改也可能导致整个图形资源更新。
 
 ### `int QQuick3DGeometry::stride() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::stride` 用于计算、查询或取得与“stride”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回顶点缓冲区的字节步幅。
 
 ### `QVector3D QQuick3DGeometry::subsetBoundsMax(int subset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::subsetBoundsMax` 用于计算、查询或取得与“subset、Bounds、Max”相关的操作。调用时要先确认当前状态和 `subset` 的有效范围；返回类型是 `QVector3D`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVector3D`。
-- 参数 `subset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`subset`的最大界限数。
 
 ### `QVector3D QQuick3DGeometry::subsetBoundsMin(int subset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::subsetBoundsMin` 用于计算、查询或取得与“subset、Bounds、Min”相关的操作。调用时要先确认当前状态和 `subset` 的有效范围；返回类型是 `QVector3D`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVector3D`。
-- 参数 `subset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`subset`的最小界限数。
 
 ### `int QQuick3DGeometry::subsetCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::subsetCount` 用于计算、查询或取得与“subset、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回子集的数量。
 
 ### `int QQuick3DGeometry::subsetCount(int subset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::subsetCount` 用于计算、查询或取得与“subset、数量统计”相关的操作。调用时要先确认当前状态和 `subset` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `subset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回子集的原始计数。
 
 ### `QString QQuick3DGeometry::subsetName(int subset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::subsetName` 用于计算、查询或取得与“subset、名称”相关的操作。调用时要先确认当前状态和 `subset` 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数 `subset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原`subset`名。
 
 ### `int QQuick3DGeometry::subsetOffset(int subset) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::subsetOffset` 用于计算、查询或取得与“subset、Offset”相关的操作。调用时要先确认当前状态和 `subset` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `subset`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`subset`偏移量到顶点或索引缓冲区。
 
 ### `[since 6.6] QQuick3DGeometry::TargetAttribute QQuick3DGeometry::targetAttribute(int index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::targetAttribute` 用于计算、查询或取得与“目标、Attribute”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QQuick3DGeometry::TargetAttribute`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QQuick3DGeometry::TargetAttribute`。
-- 参数 `index`：类型为 `int`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回变形目标属性定义编号`index`。
+属性定义编号从0到`attributeCount() - 1`。
 
 ### `[since 6.6] int QQuick3DGeometry::targetAttributeCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::targetAttributeCount` 用于计算、查询或取得与“目标、Attribute、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该几何体定义的变形目标属性数量。
 
 ### `[since 6.6] QByteArray QQuick3DGeometry::targetData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::targetData` 用于计算、查询或取得与“目标、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回目标缓冲区数据集，按`setTargetData`返回。
 
 ### `QByteArray QQuick3DGeometry::vertexData() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QQuick3DGeometry::vertexData` 用于计算、查询或取得与“vertex、数据访问”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由`setVertexData`返回顶点缓冲区数据集。
 
 ## 6. 深入实践与常见坑
 

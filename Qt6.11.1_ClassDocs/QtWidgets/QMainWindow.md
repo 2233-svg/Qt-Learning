@@ -158,927 +158,598 @@ int main(int argc, char *argv[])
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 69 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QMainWindow::DockOptionflags QMainWindow::DockOptions`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 暴露的类型声明 `Dock、Optionflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DockOptionflags QMainWindow::DockOptions`。
-- 属性名：`QMainWindow`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含指定`QMainWindow`对接行为的标志。
+- `QMainWindow::AnimatedDocks`：`0x01`;与`animated`属性相同。
+- `QMainWindow::AllowNestedDocks`：`0x02`;与`dockNestingEnabled`属性相同。
+- `QMainWindow::AllowTabbedDocks`：`0x04`;用户可以将一个 dock 小部件“叠加”在另一个小部件之上。两个小部件叠加，并出现一个标签栏，用于选择哪个小部件可见。
+- `QMainWindow::ForceTabbedDocks`：`0x08`;每个码头区域包含一组标签页码头组件。换句话说，码头组件不能在码头区域内相邻放置。如果设置了该选项，AllowNestedDocks 不会生效。
+- `QMainWindow::VerticalTabs`：`0x10`;主窗口两侧的两个垂直插页区域垂直显示其标签。如果未设置此选项，所有插坞区域的标签页会显示在底部。这意味着允许TabbedDocks。参见`setTabPosition()`。
+- `QMainWindow::GroupedDragging`：`0x20`;拖动dock标题栏时，所有与该标签绑定的标签页都会被拖动。这意味着AllowTabbedDocks。如果某些QDockWidget在允许区域有限制，则效果不佳。（该枚举值是在Qt 5.6中添加的。）
+这些选项仅控制码头小部件在`QMainWindow`中如何被丢弃。它们不会重新排列码头控件以符合指定选项。因此，应在任何码头组件添加到主窗口之前设置。例外是 AnimatedDocks 和 VerticalTabs 选项，这些选项可以随时设置。
+DockOptions 类型是 QFlags 的 typedef<DockOption>。它存储 DockOption 值的 OR 组合。
 
 ### `animated : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setAnimated(...)` 设置，之后用 `animated()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了操作 dock 控件和工具栏是否会被动画化。
+当停靠点小部件或工具栏被拖曳到主窗口上时，主窗口会调整其内容，指示如果停靠点小部件或工具栏被放下，将停靠在哪里。设置该属性后，`QMainWindow`会以平滑的动画移动其内容。清除该属性后，内容物会自动吸附到新位置。
+默认情况下，该属性是设置的。如果主窗口中存在的控件在调整大小或重新绘制时较慢，可能会清除该属性。
+设置此属性与使用 `setDockOptions()` 设置 `AnimatedDocks` 选项相同。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`animated`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `animated()` 读取当前值；它不会修改应用状态。
 
 ### `dockNestingEnabled : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setDockNestingEnabled(...)` 设置，之后用 `dockNestingEnabled()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定码头是否可以嵌套。
+如果该属性`false`，停靠区域只能包含一行（水平或垂直）的停靠组件。如果该属性`true`，则停靠小部件所占用的区域可以向任一方向分割，以容纳更多的停靠小部件。
+Dock嵌套仅在包含大量Dock小部件的应用中才是必要的。它让用户在组织主窗口时有更大的自由。然而，当将Dock小部件拖到主窗口上时，Dock嵌套会导致行为更复杂（且不那么直观），因为放置的Dock小部件可以有更多方式放置在Dock区域。
+设置该属性与使用 `setDockOptions()` 设置 `AllowNestedDocks` 选项相同。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`dockNestingEnabled`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dockNestingEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `dockOptions : DockOptions`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setDockOptions(...)` 设置，之后用 `dockOptions()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性具有`QMainWindow`的对接行为。
+默认值为`AnimatedDocks` |`AllowTabbedDocks`。
 
-**签名拆解：**
-
-- 属性类型：`DockOptions`。
-- 属性名：`dockOptions`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dockOptions()` 读取当前值；它不会修改应用状态。
 
 ### `documentMode : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setDocumentMode(...)` 设置，之后用 `documentMode()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性是否将标签页 DockWidgets 的标签栏设置为文档模式。
+默认是假的。
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`documentMode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `documentMode()` 读取当前值；它不会修改应用状态。
 
 ### `iconSize : QSize`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setIconSize(...)` 设置，之后用 `iconSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+主窗口中工具栏图标的大小。
+默认是GUI样式的工具栏图标大小。请注意，所用图标必须至少达到这个大小，因为图标只是缩小了。
 
-**签名拆解：**
-
-- 属性类型：`QSize`。
-- 属性名：`iconSize`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `iconSize()` 读取当前值；它不会修改应用状态。
 
 ### `tabShape : QTabWidget::TabShape`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setTabShape(...)` 设置，之后用 `TabShape()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性保留了用于标签式 Dock 控件的制表形状。
+默认是`QTabWidget::Rounded`。
 
-**签名拆解：**
-
-- 属性类型：`QTabWidget::TabShape`。
-- 属性名：`tabShape`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabShape()` 读取当前值；它不会修改应用状态。
 
 ### `toolButtonStyle : Qt::ToolButtonStyle`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setToolButtonStyle(...)` 设置，之后用 `ToolButtonStyle()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+工具栏按钮的样式。
+为了让工具按钮的样式符合系统设置，请将该属性设置为`Qt::ToolButtonFollowStyle`。在 Unix 上，用户的设置将被使用桌面环境。在其他平台上，`Qt::ToolButtonFollowStyle` 仅指图标。
+默认是`Qt::ToolButtonIconOnly`。
 
-**签名拆解：**
-
-- 属性类型：`Qt::ToolButtonStyle`。
-- 属性名：`toolButtonStyle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `toolButtonStyle()` 读取当前值；它不会修改应用状态。
 
 ### `unifiedTitleAndToolBarOnMac : bool`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的配置属性。初始化或状态切换时通过 `setUnifiedTitleAndToolBarOnMac(...)` 设置，之后用 `unifiedTitleAndToolBarOnMac()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性决定了窗口是否使用macOS统一的标题和工具栏外观。
+注意，Qt 5 的实现相比 Qt 4 存在若干限制：
+- 不支持在 Windows 中使用 OpenGL 内容。这包括 `QOpenGLWidget`。
+- 使用可停靠或可移动工具栏可能导致涂装错误，不建议使用
 
-**签名拆解：**
-
-- 属性类型：`bool`。
-- 属性名：`unifiedTitleAndToolBarOnMac`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `unifiedTitleAndToolBarOnMac()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QMainWindow::QMainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `flags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。标志位组合。可以用按位或组合，调用前确认哪些标志互斥、哪些标志需要同时出现。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个包含给定`parent`和指定控件`flags`的QMainWindow。
+QMainWindow 本身设置了`Qt::Window`标志，因此始终作为顶层控件创建。
 
 ### `[virtual noexcept] QMainWindow::~QMainWindow()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏主窗户。
 
 ### `void QMainWindow::addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `addDockWidget`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dockwidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`dockwidget`加到指定的`area`上。
 
 ### `void QMainWindow::addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget, Qt::Orientation orientation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `addDockWidget`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dockwidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`orientation`指定方向上向给定`area`加`dockwidget`。
 
 ### `void QMainWindow::addToolBar(Qt::ToolBarArea area, QToolBar *toolbar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `addToolBar`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `Qt::ToolBarArea`。没有默认值，调用时必须提供。传入 `Qt::ToolBarArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toolbar`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`toolbar`添加到主窗口的指定`area`中。`toolbar`放置在当前工具栏块的末尾（即行）。如果主窗口已经能`toolbar`，那么它只会将工具栏移动到`area`。
 
 ### `void QMainWindow::addToolBar(QToolBar *toolbar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `addToolBar`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `toolbar`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+相当于调用 addToolBar（`Qt::TopToolBarArea`， `toolbar`）。
 
 ### `QToolBar *QMainWindow::addToolBar(const QString &title)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `addToolBar`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`QToolBar *`。
-- 参数 `title`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个`QToolBar`对象，将其窗口标题设置为`title`，并将其插入顶部工具栏区域。
 
 ### `void QMainWindow::addToolBarBreak(Qt::ToolBarArea area = Qt::TopToolBarArea)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `addToolBarBreak`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `area`：类型为 `Qt::ToolBarArea`。默认值为 `Qt::TopToolBarArea`。传入 `Qt::ToolBarArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在所有其他存在的对象之后，给给定的`area`添加一个工具栏断开。
 
 ### `QWidget *QMainWindow::centralWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::centralWidget` 用于计算、查询或取得与“central、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主窗口的中央控件。如果中央控件尚未设置，该函数返回`nullptr`。
 
 ### `[override virtual protected] void QMainWindow::contextMenuEvent(QContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
+该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
+当控件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用处理器。
+默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
 
 ### `Qt::DockWidgetArea QMainWindow::corner(Qt::Corner corner) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::corner` 用于计算、查询或取得与“corner”相关的操作。调用时要先确认当前状态和 `corner` 的有效范围；返回类型是 `Qt::DockWidgetArea`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DockWidgetArea`。
-- 参数 `corner`：类型为 `Qt::Corner`。没有默认值，调用时必须提供。传入 `Qt::Corner` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回占据指定`corner`的停靠坞小部件区域。
 
 ### `[virtual] QMenu *QMainWindow::createPopupMenu()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::createPopupMenu` 用于计算、查询或取得与“创建、Popup、Menu”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMenu *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QMenu *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个弹出菜单，包含主窗口中工具栏和停靠点小部件的可勾选条目。如果没有工具栏和停靠小部件，该函数返回`nullptr`。
+默认情况下，当用户激活右键菜单时，通常通过右键点击工具栏或 Dock 小部件，主窗口调用此功能。
+如果你想创建自定义弹窗菜单，可以重新实现这个功能，并返回新创建的弹窗菜单。弹窗菜单的所有权会转移给调用者。
 
 ### `Qt::DockWidgetArea QMainWindow::dockWidgetArea(QDockWidget *dockwidget) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::dockWidgetArea` 用于计算、查询或取得与“dock、Widget、Area”相关的操作。调用时要先确认当前状态和 `dockwidget` 的有效范围；返回类型是 `Qt::DockWidgetArea`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::DockWidgetArea`。
-- 参数 `dockwidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`dockwidget`的`Qt::DockWidgetArea`。如果主窗口中没有添加`dockwidget`，该函数返回`Qt::NoDockWidgetArea`。
 
 ### `[override virtual protected] bool QMainWindow::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QWidget::event`（QEvent *事件）。
 
 ### `[signal] void QMainWindow::iconSizeChanged(const QSize &iconSize)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 发出的通知信号 `iconSizeChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iconSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当窗口中图标的大小发生变化时，会发出该信号。新的图标大小会在`iconSize`中传递。
+你可以将该信号连接到其他组件，以帮助保持应用外观的一致性。
 
 ### `void QMainWindow::insertToolBar(QToolBar *before, QToolBar *toolbar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `insertToolBar`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `before`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `toolbar`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`toolbar`插入`before`工具栏所在的区域，使其显示在其前方。例如，在正常的从左到右布局操作中，这意味着`toolbar`会出现在`before`指定的工具栏左侧的水平工具栏区域。
 
 ### `void QMainWindow::insertToolBarBreak(QToolBar *before)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QMainWindow` 添加依赖、数据或子对象的 API `insertToolBarBreak`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `before`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在`before`指定的工具栏前插入一个工具栏断开。
 
 ### `QMenuBar *QMainWindow::menuBar() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::menuBar` 用于计算、查询或取得与“menu、Bar”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMenuBar *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回主窗口的菜单栏。如果菜单栏不存在，这个函数会创建并返回一个空菜单栏。
+如果你想让 Mac 应用中的所有窗口共享一个菜单栏，不要用这个函数来创建它，因为这里创建的菜单栏会以该`QMainWindow`作为父。相反，你必须创建一个没有父的菜单栏，然后可以在所有 Mac 窗口之间共享。通过这种方式创建一个无父菜单栏：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QMenuBar *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QMenuBar *menuBar = new QMenuBar(nullptr);
+```
 
 ### `QWidget *QMainWindow::menuWidget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::menuWidget` 用于计算、查询或取得与“menu、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主窗口的菜单栏。如果菜单栏尚未构建，该函数返回空值。
 
 ### `void QMainWindow::removeDockWidget(QDockWidget *dockwidget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeDockWidget`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dockwidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除主窗口布局中的`dockwidget`并隐藏它。注意`dockwidget`没有被删除。
 
 ### `void QMainWindow::removeToolBar(QToolBar *toolbar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeToolBar`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `toolbar`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除主窗口布局中的`toolbar`并隐藏它。注意`toolbar`没有被删除。
 
 ### `void QMainWindow::removeToolBarBreak(QToolBar *before)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeToolBarBreak`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `before`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除之前插入在`before`指定工具栏前的工具栏断裂点。
 
 ### `void QMainWindow::resizeDocks(const QList<QDockWidget *> &docks, const QList<int> &sizes, Qt::Orientation orientation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::resizeDocks` 用于执行与“调整尺寸、Docks”相关的操作。调用时要先确认当前状态和 `docks`、`sizes`、`orientation` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+将列表中的码头控件调整为列表`docks` `sizes`中对应的像素大小（像素单位）。如果`orientation` `Qt::Horizontal`，则调整宽度，否则调整码头控件的高度。尺寸会被调整，以保证最大和最小尺寸得到尊重，且`QMainWindow`本身不会被调整大小。任何额外或缺失的空间会根据尺寸的相对权重分配到各个控件之间。
+如果蓝色和黄色小部件嵌套在同一层级，它们的大小会被调整，使得黄色小部件的大小是蓝色小部件的两倍。
+如果某些控件被分组在标签页中，则每个组应指定一个控件。列表中未包含的小部件可能会修改以遵守约束。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`void`。
-- 参数 `docks`：类型为 `const QList<QDockWidget *> &`。没有默认值，调用时必须提供。传入 `const QList<QDockWidget *> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sizes`：类型为 `const QList<int> &`。没有默认值，调用时必须提供。传入 `const QList<int> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     resizeDocks({blueWidget, yellowWidget}, {20 , 40}, Qt::Horizontal);
+```
 
 ### `bool QMainWindow::restoreDockWidget(QDockWidget *dockwidget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::restoreDockWidget` 用于计算、查询或取得与“恢复、Dock、Widget”相关的操作。调用时要先确认当前状态和 `dockwidget` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `dockwidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果状态在调用`restoreState()`后创建，则恢复`dockwidget`状态。如果状态恢复，返回`true`;否则返回`false`。
 
 ### `bool QMainWindow::restoreState(const QByteArray &state, int version = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::restoreState` 用于计算、查询或取得与“恢复、State”相关的操作。调用时要先确认当前状态和 `state`、`version` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+恢复该主窗口工具栏和 dockwidgets 的 `state`。还恢复角位设置。`version` 数值与 `state` 中存储的数值进行比较。如果不匹配，主窗口的状态保持不变，该函数返回 `false`;否则，状态恢复，该函数返回 `true`。
+要恢复使用`QSettings`保存的几何体，可以使用以下代码：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `state`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。状态值或状态对象；它描述调用时的阶段，不能把某个状态下有效的 API 用到其他阶段。
-- 参数 `version`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MainWindow::readSettings()
+ {
+     QSettings settings("MyCompany", "MyApp");
+     restoreGeometry(settings.value("myWidget/geometry").toByteArray());
+     restoreState(settings.value("myWidget/windowState").toByteArray());
+ }
+```
 
 ### `QByteArray QMainWindow::saveState(int version = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::saveState` 用于计算、查询或取得与“保存、State”相关的操作。调用时要先确认当前状态和 `version` 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+保存该主窗口工具栏和 dockwidgets 的当前状态。这包括可以用 `setCorner()` 设置的角落设置。`version` 编号作为数据的一部分存储。
+`objectName`物业用于标识每个`QToolBar`和`QDockWidget`。你应确保每个`QToolBar`和添加`QDockWidget`的物业都是独一无二的`QMainWindow`。
+要恢复保存状态，将返回值和`version`数传递给`restoreState()`。
+为了在窗口关闭时保存几何体，你可以实现类似这样的关闭事件：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QByteArray`。
-- 参数 `version`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MyMainWindow::closeEvent(QCloseEvent *event)
+ {
+     QSettings settings("MyCompany", "MyApp");
+     settings.setValue("geometry", saveGeometry());
+     settings.setValue("windowState", saveState());
+     QMainWindow::closeEvent(event);
+ }
+```
 
 ### `void QMainWindow::setCentralWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCentralWidget`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定`widget`设置为主窗口的中央控件。
+注意：`QMainWindow`会接管`widget`指针的所有权，并在适当时间删除。
 
 ### `void QMainWindow::setCorner(Qt::Corner corner, Qt::DockWidgetArea area)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCorner`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `corner`：类型为 `Qt::Corner`。没有默认值，调用时必须提供。传入 `Qt::Corner` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将给定的停靠坞小部件`area`占用指定的`corner`。
 
 ### `void QMainWindow::setMenuBar(QMenuBar *menuBar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMenuBar`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `menuBar`：类型为 `QMenuBar *`。没有默认值，调用时必须提供。传入 `QMenuBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将主窗口的菜单栏设置为`menuBar`。
+注意：`QMainWindow`会接管`menuBar`指针的所有权，并在适当时机删除。
 
 ### `void QMainWindow::setMenuWidget(QWidget *menuBar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMenuWidget`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `menuBar`：类型为 `QWidget *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将主窗口的菜单栏设置为`menuBar`。
+`QMainWindow`会接管`menuBar`指针，并在适当的时候删除它。
 
 ### `void QMainWindow::setStatusBar(QStatusBar *statusbar)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStatusBar`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `statusbar`：类型为 `QStatusBar *`。没有默认值，调用时必须提供。传入 `QStatusBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将主窗口的状态栏设置为`statusbar`。
+将状态栏设置为`nullptr`会将其从主窗口移除。注意`QMainWindow`会获得`statusbar`指针的所有权，并在适当时间删除它。
 
 ### `void QMainWindow::setTabPosition(Qt::DockWidgetAreas areas, QTabWidget::TabPosition tabPosition)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabPosition`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `areas`：类型为 `Qt::DockWidgetAreas`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetAreas` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `tabPosition`：类型为 `QTabWidget::TabPosition`。没有默认值，调用时必须提供。传入 `QTabWidget::TabPosition` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将指定底座小部件的标签位置`areas`设置为指定的`tabPosition`。默认情况下，所有底座区域底部都会显示标签页。
+注意：`VerticalTabs` 底座选项会覆盖该方法设置的标签位置。
 
 ### `void QMainWindow::splitDockWidget(QDockWidget *first, QDockWidget *second, Qt::Orientation orientation)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::splitDockWidget` 用于执行与“split、Dock、Widget”相关的操作。调用时要先确认当前状态和 `first`、`second`、`orientation` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `first`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `second`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`first`码头小部件覆盖的空间分成两部分，将`first`码头小部件移到第一部分，`second`码头小部件移到第二部分。
+`orientation`规定了空间的划分方式：`Qt::Horizontal`分割时将第二个码头小部件置于第一个组件的右侧;`Qt::Vertical`分割时，第二个码头小部件位于第一个下方。
+注意：如果`first`当前处于标签停靠区域，`second`将作为新标签添加，而非`first`的邻居。这是因为单个标签页只能包含一个扩展坞小部件。
+注意：`Qt::LayoutDirection`会影响分割区域两部分中码头组件的顺序。当启用右向左布局方向时，码头组件的位置将被反向。
 
 ### `QStatusBar *QMainWindow::statusBar() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::statusBar` 用于计算、查询或取得与“状态、Bar”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStatusBar *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStatusBar *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回主窗口的状态栏。如果状态栏不存在，该函数会创建并返回一个空状态栏。
 
 ### `QTabWidget::TabPosition QMainWindow::tabPosition(Qt::DockWidgetArea area) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::tabPosition` 用于计算、查询或取得与“tab、Position”相关的操作。调用时要先确认当前状态和 `area` 的有效范围；返回类型是 `QTabWidget::TabPosition`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QTabWidget::TabPosition`。
-- 参数 `area`：类型为 `Qt::DockWidgetArea`。没有默认值，调用时必须提供。传入 `Qt::DockWidgetArea` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`area`的制表位。
+注意：底座`VerticalTabs`选项会覆盖该功能返回的标签位置。
 
 ### `[signal] void QMainWindow::tabifiedDockWidgetActivated(QDockWidget *dockWidget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 发出的通知信号 `tabifiedDockWidgetActivated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `dockWidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当通过选择标签激活tabified的Dock小部件时，会发出该信号。激活后的Dock小部件会在`dockWidget`传递。
 
 ### `QList<QDockWidget *> QMainWindow::tabifiedDockWidgets(QDockWidget *dockwidget) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::tabifiedDockWidgets` 用于计算、查询或取得与“tabified、Dock、Widgets”相关的操作。调用时要先确认当前状态和 `dockwidget` 的有效范围；返回类型是 `QList<QDockWidget *>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QDockWidget *>`。
-- 参数 `dockwidget`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回与`dockwidget`一起被tabify的Dock小部件。
 
 ### `void QMainWindow::tabifyDockWidget(QDockWidget *first, QDockWidget *second)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::tabifyDockWidget` 用于执行与“tabify、Dock、Widget”相关的操作。调用时要先确认当前状态和 `first`、`second` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `first`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `second`：类型为 `QDockWidget *`。没有默认值，调用时必须提供。传入 `QDockWidget *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`second` Dock 小部件移到`first` Dock 小部件上，在主窗口创建一个带标签的 Dock 区域。
 
 ### `QWidget *QMainWindow::takeCentralWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMainWindow::takeCentralWidget` 用于计算、查询或取得与“取出、Central、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+移除主窗口中的中央小部件。
+被移除的小部件的所有权会转移给调用者。
 
 ### `Qt::ToolBarArea QMainWindow::toolBarArea(const QToolBar *toolbar) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toolBarArea`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`Qt::ToolBarArea`。
-- 参数 `toolbar`：类型为 `const QToolBar *`。没有默认值，调用时必须提供。传入 `const QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`toolbar`的`Qt::ToolBarArea`。如果主窗口中未添加`toolbar`，该函数返回`Qt::NoToolBarArea`。
 
 ### `bool QMainWindow::toolBarBreak(QToolBar *toolbar) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toolBarBreak`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `toolbar`：类型为 `QToolBar *`。没有默认值，调用时必须提供。传入 `QToolBar *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回是否在`toolbar`之前有工具栏中断。
 
 ### `[signal] void QMainWindow::toolButtonStyleChanged(Qt::ToolButtonStyle toolButtonStyle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 发出的通知信号 `toolButtonStyleChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `toolButtonStyle`：类型为 `Qt::ToolButtonStyle`。没有默认值，调用时必须提供。传入 `Qt::ToolButtonStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当窗口中工具按钮的样式发生变化时，会发出该信号。新样式会在`toolButtonStyle`中传递。
+你可以将该信号连接到其他组件，以帮助保持应用外观的一致性。
 
 ### `enum DockOption { AnimatedDocks, AllowNestedDocks, AllowTabbedDocks, ForceTabbedDocks, VerticalTabs, GroupedDragging }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 暴露的类型声明 `Dock、Option`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含指定`QMainWindow`对接行为的标志。
+- `QMainWindow::AnimatedDocks`：`0x01`;与`animated`属性相同。
+- `QMainWindow::AllowNestedDocks`：`0x02`;与`dockNestingEnabled`属性相同。
+- `QMainWindow::AllowTabbedDocks`：`0x04`;用户可以将一个 dock 小部件“叠加”在另一个小部件之上。两个小部件叠加，并出现一个标签栏，用于选择哪个小部件可见。
+- `QMainWindow::ForceTabbedDocks`：`0x08`;每个码头区域包含一组标签页码头组件。换句话说，码头组件不能在码头区域内相邻放置。如果设置了该选项，AllowNestedDocks 不会生效。
+- `QMainWindow::VerticalTabs`：`0x10`;主窗口两侧的两个垂直插页区域垂直显示其标签。如果未设置此选项，所有插坞区域的标签页会显示在底部。这意味着允许TabbedDocks。参见`setTabPosition()`。
+- `QMainWindow::GroupedDragging`：`0x20`;拖动dock标题栏时，所有与该标签绑定的标签页都会被拖动。这意味着AllowTabbedDocks。如果某些QDockWidget在允许区域有限制，则效果不佳。（该枚举值是在Qt 5.6中添加的。）
+这些选项仅控制码头小部件在`QMainWindow`中如何被丢弃。它们不会重新排列码头控件以符合指定选项。因此，应在任何码头组件添加到主窗口之前设置。例外是 AnimatedDocks 和 VerticalTabs 选项，这些选项可以随时设置。
+DockOptions 类型是 QFlags 的 typedef<DockOption>。它存储 DockOption 值的 OR 组合。
 
 ### `flags DockOptions`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMainWindow` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举包含指定`QMainWindow`对接行为的标志。
+- `QMainWindow::AnimatedDocks`：`0x01`;与`animated`属性相同。
+- `QMainWindow::AllowNestedDocks`：`0x02`;与`dockNestingEnabled`属性相同。
+- `QMainWindow::AllowTabbedDocks`：`0x04`;用户可以将一个 dock 小部件“叠加”在另一个小部件之上。两个小部件叠加，并出现一个标签栏，用于选择哪个小部件可见。
+- `QMainWindow::ForceTabbedDocks`：`0x08`;每个码头区域包含一组标签页码头组件。换句话说，码头组件不能在码头区域内相邻放置。如果设置了该选项，AllowNestedDocks 不会生效。
+- `QMainWindow::VerticalTabs`：`0x10`;主窗口两侧的两个垂直插页区域垂直显示其标签。如果未设置此选项，所有插坞区域的标签页会显示在底部。这意味着允许TabbedDocks。参见`setTabPosition()`。
+- `QMainWindow::GroupedDragging`：`0x20`;拖动dock标题栏时，所有与该标签绑定的标签页都会被拖动。这意味着AllowTabbedDocks。如果某些QDockWidget在允许区域有限制，则效果不佳。（该枚举值是在Qt 5.6中添加的。）
+这些选项仅控制码头小部件在`QMainWindow`中如何被丢弃。它们不会重新排列码头控件以符合指定选项。因此，应在任何码头组件添加到主窗口之前设置。例外是 AnimatedDocks 和 VerticalTabs 选项，这些选项可以随时设置。
+DockOptions 类型是 QFlags 的 typedef<DockOption>。它存储 DockOption 值的 OR 组合。
 
 ### `QMainWindow::DockOptions dockOptions() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMainWindow::dockOptions` 用于计算、查询或取得与“dock、Options”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QMainWindow::DockOptions`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性具有`QMainWindow`的对接行为。
+默认值为`AnimatedDocks` |`AllowTabbedDocks`。
 
-**签名拆解：**
-
-- 返回值：`QMainWindow::DockOptions`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `dockOptions()` 读取当前值；它不会修改应用状态。
 
 ### `bool documentMode() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMainWindow::documentMode` 用于计算、查询或取得与“document、模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性是否将标签页 DockWidgets 的标签栏设置为文档模式。
+默认是假的。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `documentMode()` 读取当前值；它不会修改应用状态。
 
 ### `QSize iconSize() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMainWindow::iconSize` 用于计算、查询或取得与“icon、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+主窗口中工具栏图标的大小。
+默认是GUI样式的工具栏图标大小。请注意，所用图标必须至少达到这个大小，因为图标只是缩小了。
 
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `iconSize()` 读取当前值；它不会修改应用状态。
 
 ### `bool isAnimated() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isAnimated`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定了操作 dock 控件和工具栏是否会被动画化。
+当停靠点小部件或工具栏被拖曳到主窗口上时，主窗口会调整其内容，指示如果停靠点小部件或工具栏被放下，将停靠在哪里。设置该属性后，`QMainWindow`会以平滑的动画移动其内容。清除该属性后，内容物会自动吸附到新位置。
+默认情况下，该属性是设置的。如果主窗口中存在的控件在调整大小或重新绘制时较慢，可能会清除该属性。
+设置此属性与使用 `setDockOptions()` 设置 `AnimatedDocks` 选项相同。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isAnimated()` 读取当前值；它不会修改应用状态。
 
 ### `bool isDockNestingEnabled() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDockNestingEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+该属性决定码头是否可以嵌套。
+如果该属性`false`，停靠区域只能包含一行（水平或垂直）的停靠组件。如果该属性`true`，则停靠小部件所占用的区域可以向任一方向分割，以容纳更多的停靠小部件。
+Dock嵌套仅在包含大量Dock小部件的应用中才是必要的。它让用户在组织主窗口时有更大的自由。然而，当将Dock小部件拖到主窗口上时，Dock嵌套会导致行为更复杂（且不那么直观），因为放置的Dock小部件可以有更多方式放置在Dock区域。
+设置该属性与使用 `setDockOptions()` 设置 `AllowNestedDocks` 选项相同。
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `isDockNestingEnabled()` 读取当前值；它不会修改应用状态。
 
 ### `void setDockOptions(QMainWindow::DockOptions options)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDockOptions`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性具有`QMainWindow`的对接行为。
+默认值为`AnimatedDocks` |`AllowTabbedDocks`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `options`：类型为 `QMainWindow::DockOptions`。没有默认值，调用时必须提供。传入 `QMainWindow::DockOptions` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDockOptions(...)` 修改 `dockOptions`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDocumentMode(bool enabled)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDocumentMode`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性是否将标签页 DockWidgets 的标签栏设置为文档模式。
+默认是假的。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDocumentMode(...)` 修改 `documentMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setIconSize(const QSize &iconSize)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setIconSize`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+主窗口中工具栏图标的大小。
+默认是GUI样式的工具栏图标大小。请注意，所用图标必须至少达到这个大小，因为图标只是缩小了。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `iconSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setIconSize(...)` 修改 `iconSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setTabShape(QTabWidget::TabShape tabShape)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTabShape`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+该属性保留了用于标签式 Dock 控件的制表形状。
+默认是`QTabWidget::Rounded`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tabShape`：类型为 `QTabWidget::TabShape`。没有默认值，调用时必须提供。传入 `QTabWidget::TabShape` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setTabShape(...)` 修改 `tabShape`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setToolButtonStyle(Qt::ToolButtonStyle toolButtonStyle)`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setToolButtonStyle`。调用它会改变 `QMainWindow` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+工具栏按钮的样式。
+为了让工具按钮的样式符合系统设置，请将该属性设置为`Qt::ToolButtonFollowStyle`。在 Unix 上，用户的设置将被使用桌面环境。在其他平台上，`Qt::ToolButtonFollowStyle` 仅指图标。
+默认是`Qt::ToolButtonIconOnly`。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `toolButtonStyle`：类型为 `Qt::ToolButtonStyle`。没有默认值，调用时必须提供。传入 `Qt::ToolButtonStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setToolButtonStyle(...)` 修改 `toolButtonStyle`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `QTabWidget::TabShape tabShape() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMainWindow::tabShape` 用于计算、查询或取得与“tab、Shape”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QTabWidget::TabShape`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性保留了用于标签式 Dock 控件的制表形状。
+默认是`QTabWidget::Rounded`。
 
-**签名拆解：**
-
-- 返回值：`QTabWidget::TabShape`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `tabShape()` 读取当前值；它不会修改应用状态。
 
 ### `Qt::ToolButtonStyle toolButtonStyle() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toolButtonStyle`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+工具栏按钮的样式。
+为了让工具按钮的样式符合系统设置，请将该属性设置为`Qt::ToolButtonFollowStyle`。在 Unix 上，用户的设置将被使用桌面环境。在其他平台上，`Qt::ToolButtonFollowStyle` 仅指图标。
+默认是`Qt::ToolButtonIconOnly`。
 
-**签名拆解：**
-
-- 返回值：`Qt::ToolButtonStyle`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `toolButtonStyle()` 读取当前值；它不会修改应用状态。
 
 ### `bool unifiedTitleAndToolBarOnMac() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QMainWindow::unifiedTitleAndToolBarOnMac` 用于计算、查询或取得与“unified、Title、And、Tool、Bar、On、Mac”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性决定了窗口是否使用macOS统一的标题和工具栏外观。
+注意，Qt 5 的实现相比 Qt 4 存在若干限制：
+- 不支持在 Windows 中使用 OpenGL 内容。这包括 `QOpenGLWidget`。
+- 使用可停靠或可移动工具栏可能导致涂装错误，不建议使用
 
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `unifiedTitleAndToolBarOnMac()` 读取当前值；它不会修改应用状态。
 
 ### `void setAnimated(bool enabled)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setAnimated`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性决定了操作 dock 控件和工具栏是否会被动画化。
+当停靠点小部件或工具栏被拖曳到主窗口上时，主窗口会调整其内容，指示如果停靠点小部件或工具栏被放下，将停靠在哪里。设置该属性后，`QMainWindow`会以平滑的动画移动其内容。清除该属性后，内容物会自动吸附到新位置。
+默认情况下，该属性是设置的。如果主窗口中存在的控件在调整大小或重新绘制时较慢，可能会清除该属性。
+设置此属性与使用 `setDockOptions()` 设置 `AnimatedDocks` 选项相同。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setAnimated(...)` 修改 `animated`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setDockNestingEnabled(bool enabled)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setDockNestingEnabled`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性决定码头是否可以嵌套。
+如果该属性`false`，停靠区域只能包含一行（水平或垂直）的停靠组件。如果该属性`true`，则停靠小部件所占用的区域可以向任一方向分割，以容纳更多的停靠小部件。
+Dock嵌套仅在包含大量Dock小部件的应用中才是必要的。它让用户在组织主窗口时有更大的自由。然而，当将Dock小部件拖到主窗口上时，Dock嵌套会导致行为更复杂（且不那么直观），因为放置的Dock小部件可以有更多方式放置在Dock区域。
+设置该属性与使用 `setDockOptions()` 设置 `AllowNestedDocks` 选项相同。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setDockNestingEnabled(...)` 修改 `dockNestingEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void setUnifiedTitleAndToolBarOnMac(bool set)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setUnifiedTitleAndToolBarOnMac`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性决定了窗口是否使用macOS统一的标题和工具栏外观。
+注意，Qt 5 的实现相比 Qt 4 存在若干限制：
+- 不支持在 Windows 中使用 OpenGL 内容。这包括 `QOpenGLWidget`。
+- 使用可停靠或可移动工具栏可能导致涂装错误，不建议使用
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `set`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setUnifiedTitleAndToolBarOnMac(...)` 修改 `unifiedTitleAndToolBarOnMac`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ## 6. 深入实践与常见坑
 

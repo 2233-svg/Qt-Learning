@@ -74,140 +74,97 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QGestureRecognizer::ResultFlagflags QGestureRecognizer::Result`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGestureRecognizer` 暴露的类型声明 `结果、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ResultFlagflags QGestureRecognizer::Result`。
-- 属性名：`QGestureRecognizer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了手势识别器状态机当前事件过滤步骤的结果。
+结果由一个状态值组成（包括 Ignore、MayBeGesture、TriggerGesture、FinishGesture、CancelGesture）和一个可选提示（ConsumeEventHint）。
+- `QGestureRecognizer::Ignore`：`0x0001`;事件不会改变识别器的状态。
+- `QGestureRecognizer::MayBeGesture`：`0x0002`;该事件改变了识别器的内部状态，但尚不清楚是否属于手势。识别器需要过滤更多事件来决定。处于MayBeGesture状态的手势识别器如果识别手势过久，可能会被自动重置。
+- `QGestureRecognizer::TriggerGesture`：`0x0004`;手势已触发，相应的`QGesture`物品将作为`QGestureEvent`的一部分传递给目标。
+- `QGestureRecognizer::FinishGesture`：`0x0008`;动作已成功完成，相应的`QGesture`物将作为`QGestureEvent`的一部分交付给目标。
+- `QGestureRecognizer::CancelGesture`：`0x0010`;该事件明确表明它不是手势。如果手势识别器之前处于手势触发状态，则该手势被取消，相应的`QGesture`对象将作为`QGestureEvent`的一部分交付给目标。
+- `QGestureRecognizer::ConsumeEventHint`：`0x0100`;该提示指定手势框架应当消耗过滤后的事件，而不是将其传递给接收方。
+结果类型是QFlag的typedef<ResultFlag>。它存储了ResultFlag值的OR组合。
 
 ### `QGestureRecognizer::QGestureRecognizer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGestureRecognizer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的手势识别对象。
 
 ### `[virtual noexcept] QGestureRecognizer::~QGestureRecognizer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGestureRecognizer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏手势识别器。
 
 ### `[virtual] QGesture *QGestureRecognizer::create(QObject *target)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGestureRecognizer::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 `target` 的有效范围；返回类型是 `QGesture *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGesture *`。
-- 参数 `target`：类型为 `QObject *`。没有默认值，调用时必须提供。目标对象、目标属性或目标资源。要确认它在操作期间仍然有效，并支持所需能力。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt 调用该函数，为给定`target`（`QWidget` 或 `QGraphicsObject`）创建一个新的`QGesture`对象。
+如有必要，重新实现该函数以创建自定义`QGesture`派生的手势对象。
+`QApplication`对创建的手势对象拥有所有权。
 
 ### `[pure virtual] QGestureRecognizer::Result QGestureRecognizer::recognize(QGesture *gesture, QObject *watched, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGestureRecognizer::recognize` 用于计算、查询或取得与“recognize”相关的操作。调用时要先确认当前状态和 `gesture`、`watched`、`event` 的有效范围；返回类型是 `QGestureRecognizer::Result`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGestureRecognizer::Result`。
-- 参数 `gesture`：类型为 `QGesture *`。没有默认值，调用时必须提供。传入 `QGesture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `watched`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+处理`watched`对象的给定`event`，根据需要更新`gesture`对象的状态，并返回当前识别步骤的合适结果。
+框架调用该函数，允许识别器过滤分配给其监控的`QWidget`或`QGraphicsObject`实例的输入事件。
+结果反映了该手势被识别的程度。`gesture`对象的状态根据结果而设定。
 
 ### `[static] Qt::GestureType QGestureRecognizer::registerRecognizer(QGestureRecognizer *recognizer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `registerRecognizer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`Qt::GestureType`。
-- 参数 `recognizer`：类型为 `QGestureRecognizer *`。没有默认值，调用时必须提供。传入 `QGestureRecognizer *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在手势框架中注册给定的`recognizer`，并返回手势ID。
+`QApplication` 拥有该`recognizer`，该函数返回与之关联的手势类型 ID。对于处理自定义`QGesture`对象（在`QGesture::gestureType()`函数中返回`Qt::CustomGesture`的手势识别器），返回值是一个生成的手势 ID，`Qt::CustomGesture` 标志已设置。
 
 ### `[virtual] void QGestureRecognizer::reset(QGesture *gesture)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `gesture`：类型为 `QGesture *`。没有默认值，调用时必须提供。传入 `QGesture *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Qt调用该函数以重置给定`gesture`。
+重新实现该函数以实现自定义`QGesture`对象的额外需求。如果你实现了一个自定义`QGesture`其属性在手势重置时需要特殊处理，这可能是必要的。
 
 ### `[static] void QGestureRecognizer::unregisterRecognizer(Qt::GestureType type)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `unregisterRecognizer`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `type`：类型为 `Qt::GestureType`。没有默认值，调用时必须提供。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+取消注册指定`type`的所有手势识别器。
 
 ### `flags Result`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGestureRecognizer` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了手势识别器状态机当前事件过滤步骤的结果。
+结果由一个状态值组成（包括 Ignore、MayBeGesture、TriggerGesture、FinishGesture、CancelGesture）和一个可选提示（ConsumeEventHint）。
+- `QGestureRecognizer::Ignore`：`0x0001`;事件不会改变识别器的状态。
+- `QGestureRecognizer::MayBeGesture`：`0x0002`;该事件改变了识别器的内部状态，但尚不清楚是否属于手势。识别器需要过滤更多事件来决定。处于MayBeGesture状态的手势识别器如果识别手势过久，可能会被自动重置。
+- `QGestureRecognizer::TriggerGesture`：`0x0004`;手势已触发，相应的`QGesture`物品将作为`QGestureEvent`的一部分传递给目标。
+- `QGestureRecognizer::FinishGesture`：`0x0008`;动作已成功完成，相应的`QGesture`物将作为`QGestureEvent`的一部分交付给目标。
+- `QGestureRecognizer::CancelGesture`：`0x0010`;该事件明确表明它不是手势。如果手势识别器之前处于手势触发状态，则该手势被取消，相应的`QGesture`对象将作为`QGestureEvent`的一部分交付给目标。
+- `QGestureRecognizer::ConsumeEventHint`：`0x0100`;该提示指定手势框架应当消耗过滤后的事件，而不是将其传递给接收方。
+结果类型是QFlag的typedef<ResultFlag>。它存储了ResultFlag值的OR组合。
 
 ### `enum ResultFlag { Ignore, MayBeGesture, TriggerGesture, FinishGesture, CancelGesture, ConsumeEventHint }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGestureRecognizer` 暴露的类型声明 `结果、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举描述了手势识别器状态机当前事件过滤步骤的结果。
+结果由一个状态值组成（包括 Ignore、MayBeGesture、TriggerGesture、FinishGesture、CancelGesture）和一个可选提示（ConsumeEventHint）。
+- `QGestureRecognizer::Ignore`：`0x0001`;事件不会改变识别器的状态。
+- `QGestureRecognizer::MayBeGesture`：`0x0002`;该事件改变了识别器的内部状态，但尚不清楚是否属于手势。识别器需要过滤更多事件来决定。处于MayBeGesture状态的手势识别器如果识别手势过久，可能会被自动重置。
+- `QGestureRecognizer::TriggerGesture`：`0x0004`;手势已触发，相应的`QGesture`物品将作为`QGestureEvent`的一部分传递给目标。
+- `QGestureRecognizer::FinishGesture`：`0x0008`;动作已成功完成，相应的`QGesture`物将作为`QGestureEvent`的一部分交付给目标。
+- `QGestureRecognizer::CancelGesture`：`0x0010`;该事件明确表明它不是手势。如果手势识别器之前处于手势触发状态，则该手势被取消，相应的`QGesture`对象将作为`QGestureEvent`的一部分交付给目标。
+- `QGestureRecognizer::ConsumeEventHint`：`0x0100`;该提示指定手势框架应当消耗过滤后的事件，而不是将其传递给接收方。
+结果类型是QFlag的typedef<ResultFlag>。它存储了ResultFlag值的OR组合。
 
 ## 6. 深入实践与常见坑
 

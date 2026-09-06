@@ -114,477 +114,306 @@ const QVariant value = model->data(index, Qt::DisplayRole);
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 35 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QItemSelectionModel::SelectionFlagflags QItemSelectionModel::SelectionFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 暴露的类型声明 `Selection、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:SelectionFlagflags QItemSelectionModel::SelectionFlags`。
-- 属性名：`QItemSelectionModel`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了选择模型将如何更新。
+- `QItemSelectionModel::NoUpdate`：`0x0000`;不进行选拔。
+- `QItemSelectionModel::Clear`：`0x0001`;全部选拔将被清除。
+- `QItemSelectionModel::Select`：`0x0002`;所有指定的索引都会被选中。
+- `QItemSelectionModel::Deselect`：`0x0004`;所有指定的索引将被取消选择。
+- `QItemSelectionModel::Toggle`：`0x0008`;所有指定的索引将根据其当前状态被选择或取消。
+- `QItemSelectionModel::Current`：`0x0010`;当前选队将进行更新。
+- `QItemSelectionModel::Rows`：`0x0020`;所有索引都将展开为跨行。
+- `QItemSelectionModel::Columns`：`0x0040`;所有索引将扩展为跨列。
+- `QItemSelectionModel::SelectCurrent`：`Select | Current`;为方便而提供选择和当前的组合。
+- `QItemSelectionModel::ToggleCurrent`：`Toggle | Current`;结合了切换和电流，便于使用。
+- `QItemSelectionModel::ClearAndSelect`：`Clear | Select`;为方便而提供，Clear和Select的组合。
+SelectionFlags 类型是 QFlags 的 typedef<SelectionFlag>。它存储 SelectionFlag 值的 OR 组合。
 
 ### `[read-only] selectedIndexes : QModelIndexList`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 的状态/能力属性。通常通过 `selectedIndexes()` 查询；它主要用于决定后续操作是否可执行，不能把查询结果当成永久事实，状态变化要结合对应的 `...Changed` 信号或文档说明。
+返回所有选中的模型项目索引列表。列表中无重复，且不排序。
+注意：用于属性 selectIndex 的 Getter 函数。
 
-**签名拆解：**
-
-- 属性类型：`QModelIndexList`。
-- 属性名：`selectedIndexes`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `selectedIndexes()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QItemSelectionModel::QItemSelectionModel(QAbstractItemModel *model = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `model`：类型为 `QAbstractItemModel *`。默认值为 `nullptr`。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个针对指定题目`model`的选择模型。
 
 ### `[explicit] QItemSelectionModel::QItemSelectionModel(QAbstractItemModel *model, QObject *parent)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-- 参数 `parent`：类型为 `QObject *`。没有默认值，调用时必须提供。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个选择模型，对指定项目`model` `parent`操作。
 
 ### `[virtual noexcept] QItemSelectionModel::~QItemSelectionModel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这破坏了选择模型。
 
 ### `[virtual slot] void QItemSelectionModel::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除选择模型。释放`selectionChanged()`和`currentChanged()`。
 
 ### `[virtual slot] void QItemSelectionModel::clearCurrentIndex()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::clearCurrentIndex` 用于执行与“清空、当前、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除当前索引。发出 `currentChanged()`。
 
 ### `[slot] void QItemSelectionModel::clearSelection()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `clearSelection`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除选择模型中的选择。发出`selectionChanged()`。
 
 ### `[invokable] bool QItemSelectionModel::columnIntersectsSelection(int column, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::columnIntersectsSelection` 用于计算、查询或取得与“列、Intersects、Selection”相关的操作。调用时要先确认当前状态和 `column`、`parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+退货`true`是否在`column`中选中了指定`parent`的物品。
+注意：自第5.15卷起，`parent`的默认参数是空模型索引。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `[signal] void QItemSelectionModel::currentChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 发出的通知信号 `currentChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每当当前项目发生变化时，该信号都会发出。`previous`模型项目索引被`current`索引取代，作为当前项目。
+注意，当项目模型重置时，该信号不会发出。
 
 ### `[signal] void QItemSelectionModel::currentColumnChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 发出的通知信号 `currentColumnChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`current`项发生变化且其列与当前`previous`项的列不同时，会发出该信号。
+注意，当项目模型重置时，该信号不会发出。
 
 ### `QModelIndex QItemSelectionModel::currentIndex() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::currentIndex` 用于计算、查询或取得与“当前、索引”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前项目的模型项索引，若无当前项则返回无效索引。
 
 ### `[signal] void QItemSelectionModel::currentRowChanged(const QModelIndex &current, const QModelIndex &previous)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 发出的通知信号 `currentRowChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `current`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-- 参数 `previous`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。模型索引。调用前确认索引有效、属于正确模型，并注意模型结构变化后它可能失效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`current`项发生变化且其行与当前`previous`项的行不同时，该信号就会发出。
+注意，当项目模型重置时，该信号不会发出。
 
 ### `[protected] void QItemSelectionModel::emitSelectionChanged(const QItemSelection &newSelection, const QItemSelection &oldSelection)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `emitSelectionChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `newSelection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `oldSelection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+比较两个选择`newSelection`和 `oldSelection`，并与取消选中和被选中的项目`selectionChanged()`。
 
 ### `bool QItemSelectionModel::hasSelection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasSelection`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果选择模型包含任何选中的项目，返回`true`，否则返回`false`。
 
 ### `[invokable] bool QItemSelectionModel::isColumnSelected(int column, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isColumnSelected`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果所有物品都被选中，`column`中所有物品并`parent`，退货`true`。
+注意，这个函数通常比调用同一列所有项的 `isSelected()` 更快，且不可选择的项会被忽略。
+注意：自Qt 5.15起，`parent`的默认参数是空模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] bool QItemSelectionModel::isRowSelected(int row, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isRowSelected`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果所有物品都被选中并`parent` `row`，退货`true`。
+注意，这个函数通常比对同一行中的所有项调用`isSelected()`更快，且不可选择项会被忽略。
+注意：自第5.15量子起，`parent`的默认参数是空模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[invokable] bool QItemSelectionModel::isSelected(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSelected`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果选择给定的模型项目`index`，返回`true`。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `QAbstractItemModel *QItemSelectionModel::model()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::model` 用于计算、查询或取得与“model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QAbstractItemModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QAbstractItemModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由选择模型操作的项目模型。
 
 ### `const QAbstractItemModel *QItemSelectionModel::model() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::model` 用于计算、查询或取得与“model”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QAbstractItemModel *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QAbstractItemModel *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由选择模型操作的项目模型。
 
 ### `[signal] void QItemSelectionModel::modelChanged(QAbstractItemModel *model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 发出的通知信号 `modelChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当`model`成功设置`setModel()`时，该信号会发出。
 
 ### `[virtual slot] void QItemSelectionModel::reset()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `reset`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除选择模型。不发出任何信号。
 
 ### `[invokable] bool QItemSelectionModel::rowIntersectsSelection(int row, const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::rowIntersectsSelection` 用于计算、查询或取得与“行、Intersects、Selection”相关的操作。调用时要先确认当前状态和 `row`、`parent` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果在`row`中选中了与给定`parent`的物品，返回时`true`。
+注意：自第5.15Q以来，`parent`的默认参数是空模型索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `[virtual slot] void QItemSelectionModel::select(const QItemSelection &selection, QItemSelectionModel::SelectionFlags command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::select` 用于执行与“select”相关的操作。调用时要先确认当前状态和 `selection`、`command` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+使用指定`command`选择`selection`物品，并发射`selectionChanged()`。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `selection`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `command`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+itemSelectionModel， qOverload（&QItemSelectionModel：：select））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+itemSelectionModel， [receiver = itemSelectionModel]（const QItemSelection &selection， QItemSelectionModel：：SelectionFlags command） { receiver->select（selection， command）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[virtual slot] void QItemSelectionModel::select(const QModelIndex &index, QItemSelectionModel::SelectionFlags command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::select` 用于执行与“select”相关的操作。调用时要先确认当前状态和 `index`、`command` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+使用指定`command`选择模型项`index`，并发射`selectionChanged()`。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `command`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+itemSelectionModel， qOverload（&QItemSelectionModel：：select））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+itemSelectionModel， [receiver = itemSelectionModel]（const QModelIndex &index， QItemSelectionModel：：SelectionFlags command） { receiver->select（index， command）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `[invokable] QModelIndexList QItemSelectionModel::selectedColumns(int row = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::selectedColumns` 用于计算、查询或取得与“selected、列”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数 `row`：类型为 `int`。默认值为 `0`。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`row`中所有行都被选中的列索引。
+注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
 
 ### `QModelIndexList QItemSelectionModel::selectedIndexes() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::selectedIndexes` 用于计算、查询或取得与“selected、Indexes”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回所有选中的模型项目索引列表。列表中无重复，且不排序。
+注意：用于属性 selectIndex 的 Getter 函数。
 
 ### `[invokable] QModelIndexList QItemSelectionModel::selectedRows(int column = 0) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::selectedRows` 用于计算、查询或取得与“selected、行”相关的操作。调用时要先确认当前状态和 `column` 的有效范围；返回类型是 `QModelIndexList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndexList`。
-- 参数 `column`：类型为 `int`。默认值为 `0`。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`column`中所有列被选中的行索引。
+注意：该函数可通过元对象系统和QML调用。参见 `Q_INVOKABLE`。
 
 ### `const QItemSelection QItemSelectionModel::selection() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QItemSelectionModel::selection` 用于计算、查询或取得与“selection”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const QItemSelection`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const QItemSelection`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储在选择模型中的选择范围。
 
 ### `[signal] void QItemSelectionModel::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 发出的通知信号 `selectionChanged`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+每当选择发生变化时，该信号都会发出。选择的变化表示为`deselected`项的选择和`selected`项的选题。
+注意当前索引的变化与选择无关。还要注意，当项目模型重置时，该信号不会发出。
+保持被选中但索引变化的项目不包含在`selected`和`deselected`中。因此，如果所选项目的索引发生变化，该信号可能同时`selected`和`deselected`均为空。
+注意：不允许在直接连接到该信号的槽内修改模型（例如调用setData()）。该信号可能在模型被修改过程中发出，例如在移除行或列时，或模型重置时。在此类时刻尝试进行额外更改可能导致行为不明确。特别是，嵌套修改可能会破坏内部状态，例如`QSortFilterProxyModel`维护的映射结构。
+注意：属性`selectedIndexes`的通知信号。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `deselected`：类型为 `const QItemSelection &`。没有默认值，调用时必须提供。传入 `const QItemSelection &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `selectedIndexes` 的变化，不要把它当作普通函数主动调用。
 
 ### `[virtual slot] void QItemSelectionModel::setCurrentIndex(const QModelIndex &index, QItemSelectionModel::SelectionFlags command)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCurrentIndex`。调用它会改变 `QItemSelectionModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `command`：类型为 `QItemSelectionModel::SelectionFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模型物品`index`为当前物品，并发射`currentChanged()`。当前物品用于键盘导航和焦点指示;它独立于任何选择的物品，尽管所选物品也可以是当前物品。
+根据指定的`command`，`index`也可以成为当前选择的一部分。
 
 ### `void QItemSelectionModel::setModel(QAbstractItemModel *model)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setModel`。调用它会改变 `QItemSelectionModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `model`：类型为 `QAbstractItemModel *`。没有默认值，调用时必须提供。数据模型对象。要确认模型生命周期、线程归属、索引有效期和变化通知协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模型设置为`model`。`modelChanged()`信号将被发射。
 
 ### `enum SelectionFlag { NoUpdate, Clear, Select, Deselect, Toggle, …, ClearAndSelect }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 暴露的类型声明 `Selection、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了选择模型将如何更新。
+- `QItemSelectionModel::NoUpdate`：`0x0000`;不进行选拔。
+- `QItemSelectionModel::Clear`：`0x0001`;全部选拔将被清除。
+- `QItemSelectionModel::Select`：`0x0002`;所有指定的索引都会被选中。
+- `QItemSelectionModel::Deselect`：`0x0004`;所有指定的索引将被取消选择。
+- `QItemSelectionModel::Toggle`：`0x0008`;所有指定的索引将根据其当前状态被选择或取消。
+- `QItemSelectionModel::Current`：`0x0010`;当前选队将进行更新。
+- `QItemSelectionModel::Rows`：`0x0020`;所有索引都将展开为跨行。
+- `QItemSelectionModel::Columns`：`0x0040`;所有索引将扩展为跨列。
+- `QItemSelectionModel::SelectCurrent`：`Select | Current`;为方便而提供选择和当前的组合。
+- `QItemSelectionModel::ToggleCurrent`：`Toggle | Current`;结合了切换和电流，便于使用。
+- `QItemSelectionModel::ClearAndSelect`：`Clear | Select`;为方便而提供，Clear和Select的组合。
+SelectionFlags 类型是 QFlags 的 typedef<SelectionFlag>。它存储 SelectionFlag 值的 OR 组合。
 
 ### `flags SelectionFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QItemSelectionModel` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了选择模型将如何更新。
+- `QItemSelectionModel::NoUpdate`：`0x0000`;不进行选拔。
+- `QItemSelectionModel::Clear`：`0x0001`;全部选拔将被清除。
+- `QItemSelectionModel::Select`：`0x0002`;所有指定的索引都会被选中。
+- `QItemSelectionModel::Deselect`：`0x0004`;所有指定的索引将被取消选择。
+- `QItemSelectionModel::Toggle`：`0x0008`;所有指定的索引将根据其当前状态被选择或取消。
+- `QItemSelectionModel::Current`：`0x0010`;当前选队将进行更新。
+- `QItemSelectionModel::Rows`：`0x0020`;所有索引都将展开为跨行。
+- `QItemSelectionModel::Columns`：`0x0040`;所有索引将扩展为跨列。
+- `QItemSelectionModel::SelectCurrent`：`Select | Current`;为方便而提供选择和当前的组合。
+- `QItemSelectionModel::ToggleCurrent`：`Toggle | Current`;结合了切换和电流，便于使用。
+- `QItemSelectionModel::ClearAndSelect`：`Clear | Select`;为方便而提供，Clear和Select的组合。
+SelectionFlags 类型是 QFlags 的 typedef<SelectionFlag>。它存储 SelectionFlag 值的 OR 组合。
 
 ### `QBindable<QAbstractItemModel *> bindableModel()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `bindableModel`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`QBindable<QAbstractItemModel *>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `model` 属性的 `QBindable<QAbstractItemModel *>` 包装，供 Qt 属性绑定系统跟踪选择模型所关联的数据模型。只想取得当前模型时调用 `model()`；只有需要建立或检查属性绑定时才使用该接口。
 
 ## 6. 深入实践与常见坑
 

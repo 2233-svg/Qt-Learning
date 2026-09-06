@@ -79,116 +79,72 @@ target_link_libraries(mytarget PRIVATE Qt6::Gui)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 8 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `regularExpression : QRegularExpression`
 
-**API 类别：** 属性说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionValidator` 的配置属性。初始化或状态切换时通过 `setRegularExpression(...)` 设置，之后用 `regularExpression()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+该属性包含用于验证的正则表达式。
+默认情况下，该属性包含一个空模式的正则表达式（因此与任意字符串匹配）。
 
-**签名拆解：**
-
-- 属性类型：`QRegularExpression`。
-- 属性名：`regularExpression`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `regularExpression()` 读取当前值；它不会修改应用状态。
 
 ### `[explicit] QRegularExpressionValidator::QRegularExpressionValidator(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionValidator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有`parent`对象的验证器，接受任意字符串（包括空字符串）为有效。
 
 ### `[explicit] QRegularExpressionValidator::QRegularExpressionValidator(const QRegularExpression &re, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionValidator` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个带有`parent`对象的验证器，接受所有与正则表达式`re`匹配的字符串。
 
 ### `[virtual noexcept] QRegularExpressionValidator::~QRegularExpressionValidator()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRegularExpressionValidator` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁验证器。
 
 ### `[override virtual] QValidator::State QRegularExpressionValidator::validate(QString &input, int &pos) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validate`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`QValidator::State`。
-- 参数 `input`：类型为 `QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-- 参数 `pos`：类型为 `int &`。没有默认值，调用时必须提供。位置或坐标值；要确认它属于局部坐标、场景坐标、视图坐标还是文件/流偏移。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QValidator::validate`（QString & input， int and pos） const.
+如果`input`被该验证子的正则表达式匹配，返回`Acceptable`，`Intermediate`是否部分匹配（即添加更多有效字符时可能为有效匹配），如果`input`未匹配，返回`Invalid`。
+如果`input`不匹配，`pos`参数设为`input`参数的长度;否则不修改。
+例如，如果正则表达式是 \w\d\d（字-字符，数字，数字），那么“A57”是`Acceptable`，“E5”是`Intermediate`，“9”是`Invalid`。
+如果`input`根据该验证者的规则无效，`Intermediate`如果稍作编辑能使输入可接受（例如用户在接受整数介于 10 到 99 的小部件中输入“4”），以及`Acceptable`输入是否有效，该虚拟函数会返回`Invalid`。
+该函数可以同时改变`input`和`pos`（光标位置）。
 
 ### `QRegularExpression regularExpression() const`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** `QRegularExpressionValidator::regularExpression` 用于计算、查询或取得与“regular、Expression”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRegularExpression`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+该属性包含用于验证的正则表达式。
+默认情况下，该属性包含一个空模式的正则表达式（因此与任意字符串匹配）。
 
-**签名拆解：**
-
-- 返回值：`QRegularExpression`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `regularExpression()` 读取当前值；它不会修改应用状态。
 
 ### `void setRegularExpression(const QRegularExpression &re)`
 
-**API 类别：** 公有槽函数
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `setRegularExpression`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+该属性包含用于验证的正则表达式。
+默认情况下，该属性包含一个空模式的正则表达式（因此与任意字符串匹配）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 调用 `setRegularExpression(...)` 修改 `regularExpression`；传入的新值会成为后续查询和相关界面行为所使用的值。
 
 ### `void regularExpressionChanged(const QRegularExpression &re)`
 
-**API 类别：** 信号
+**作用与语义：**
 
-**中文解读：** 这是状态变化通知 `regularExpressionChanged`。应用代码通常连接它而不是直接调用它；收到通知后读取当前值并更新依赖对象，不要假设通知一定只发一次或已经代表业务操作成功。
+该属性包含用于验证的正则表达式。
+默认情况下，该属性包含一个空模式的正则表达式（因此与任意字符串匹配）。
 
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `re`：类型为 `const QRegularExpression &`。没有默认值，调用时必须提供。传入 `const QRegularExpression &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+**如何使用：** 这是变化通知信号。用 `connect()` 监听 `regularExpression` 的变化，不要把它当作普通函数主动调用。
 
 ## 6. 深入实践与常见坑
 

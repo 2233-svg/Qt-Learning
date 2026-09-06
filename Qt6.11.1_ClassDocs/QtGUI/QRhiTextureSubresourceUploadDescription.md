@@ -75,218 +75,115 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[noexcept] QRhiTextureSubresourceUploadDescription::QRhiTextureSubresourceUploadDescription()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureSubresourceUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个空的子资源描述。
+注意：空的 QRhiTextureSubresourceUploadDescription 单独无用，不应提交给`QRhiTextureUploadEntry`。至少必须先设置图像或数据。
 
 ### `[explicit] QRhiTextureSubresourceUploadDescription::QRhiTextureSubresourceUploadDescription(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureSubresourceUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`data`指定的图像数据构建MIP级描述。这也适用于浮点和压缩格式。
 
 ### `[explicit] QRhiTextureSubresourceUploadDescription::QRhiTextureSubresourceUploadDescription(const QImage &image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureSubresourceUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `image`：类型为 `const QImage &`。没有默认值，调用时必须提供。传入 `const QImage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有`image`的MIP级描述。
+`image` 的 `size`必须与 mip 级别的大小相匹配。对于 level 0，那就是纹理大小。
+`image`的位深必须与纹理格式兼容。
+关于部分上传，请在之后打电话`setSourceSize()`、`setSourceTopLeft()`或`setDestinationTopLeft()`。
 
 ### `QRhiTextureSubresourceUploadDescription::QRhiTextureSubresourceUploadDescription(const void *data, quint32 size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiTextureSubresourceUploadDescription` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `data`：类型为 `const void *`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `size`：类型为 `quint32`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个由`data`和`size`指定的图像数据的MIP级描述。这也适用于浮点和压缩格式。
+`data`功能恢复后可以安全地销毁或更改。
 
 ### `QByteArray QRhiTextureSubresourceUploadDescription::data() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QRhiTextureSubresourceUploadDescription` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的原始像素数据。
 
 ### `quint32 QRhiTextureSubresourceUploadDescription::dataStride() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureSubresourceUploadDescription::dataStride` 用于计算、查询或取得与“数据访问、Stride”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的数据步幅。
 
 ### `QPoint QRhiTextureSubresourceUploadDescription::destinationTopLeft() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureSubresourceUploadDescription::destinationTopLeft` 用于计算、查询或取得与“destination、顶部、左侧”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的目标左上角位置。默认为（0， 0）。
 
 ### `QImage QRhiTextureSubresourceUploadDescription::image() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureSubresourceUploadDescription::image` 用于计算、查询或取得与“image”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QImage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QImage`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设定的`QImage`。
 
 ### `void QRhiTextureSubresourceUploadDescription::setData(const QByteArray &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QRhiTextureSubresourceUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `const QByteArray &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`data`。
+注意：`image()`和`data()`不能同时设置。
 
 ### `void QRhiTextureSubresourceUploadDescription::setDataStride(quint32 stride)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDataStride`。调用它会改变 `QRhiTextureSubresourceUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `stride`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数据`stride`设置为字节。默认情况下，这个数值为0，且并不总是相关。当提供原始的 `data()`，且步幅未通过 setDataStride() 指定时，所提供数据的步幅（行的音高，行长（字节单位）必须等于 `width * pixelSize`，其中 `pixelSize` 是每个像素所用的字节数，行之间不得有额外的填充。否则，如果行间有额外空格，则设置非零的 `stride`。所有这些仅适用于提供原始图像数据时，且在工作`QImage`时不必要，因为原始数据本身具有`stride`价值。
+注意：通过 setDataStride() 设置步进仅在报告为`supported`时`QRhi::ImageDataStride`才有效。
+注意：当给出`QImage`时，`QImage::bytesPerLine()`返回的步长会自动被考虑，因此无需手动设置数据步幅。
 
 ### `void QRhiTextureSubresourceUploadDescription::setDestinationTopLeft(const QPoint &p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDestinationTopLeft`。调用它会改变 `QRhiTextureSubresourceUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将目的地设置在左上角的位置`p`。
+注意：在从`QImage`获取图像数据最常见的情况下，当目标位置的源尺寸大于目标纹理子资源大小（即给定的MIP级别大小）时，Qt会对无效纹理上传大小进行夹持。在这种情况下，调试输出上还会印有`qWarning()`消息。这样做是为了避免在底层3D API崩溃时产生混淆，导致后续提交命令时GPU设备被移除。无论如何，开发者被鼓励始终启用Vulkan、D3D12或Metal验证/调试层来验证应用程序，因为这些层对API使用进行了更广泛的检查。
 
 ### `void QRhiTextureSubresourceUploadDescription::setImage(const QImage &image)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setImage`。调用它会改变 `QRhiTextureSubresourceUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `image`：类型为 `const QImage &`。没有默认值，调用时必须提供。传入 `const QImage &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置`image`。在纹理加载时，图像数据将被原样读取，不会进行格式转换。
+注意：`image()`和`data()`不能同时设置。
 
 ### `void QRhiTextureSubresourceUploadDescription::setSourceSize(const QSize &size)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSourceSize`。调用它会改变 `QRhiTextureSubresourceUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `size`：类型为 `const QSize &`。没有默认值，调用时必须提供。尺寸或长度，单位通常是像素、字节、元素数或时间，必须结合类型和类的上下文确认。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将源码设置成像素`size`。
+注意：根据格式和后端，设置`sourceSize()`或`sourceTopLeft()`可能会在内部触发`QImage`副本。
 
 ### `void QRhiTextureSubresourceUploadDescription::setSourceTopLeft(const QPoint &p)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSourceTopLeft`。调用它会改变 `QRhiTextureSubresourceUploadDescription` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `p`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将源头左上角的位置设为`p`。
+注意：设置`sourceSize()`或`sourceTopLeft()`可能会在内部触发`QImage`副本，具体取决于格式和后端。
 
 ### `QSize QRhiTextureSubresourceUploadDescription::sourceSize() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureSubresourceUploadDescription::sourceSize` 用于计算、查询或取得与“来源、尺寸或数量”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回以像素为单位的源尺寸。默认为默认构造的`QSize`，表示整个子资源。
 
 ### `QPoint QRhiTextureSubresourceUploadDescription::sourceTopLeft() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiTextureSubresourceUploadDescription::sourceTopLeft` 用于计算、查询或取得与“来源、顶部、左侧”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QPoint`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPoint`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的左上角源位置。默认为（0， 0）。
 
 ## 6. 深入实践与常见坑
 

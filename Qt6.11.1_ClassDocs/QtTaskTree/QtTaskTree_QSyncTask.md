@@ -60,22 +60,15 @@ target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 1 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] template <typename Handler, std::enable_if_t<!std::is_same_v<q20::remove_cvref_t<Handler>, QSyncTask>, bool> = true> QSyncTask::QSyncTask(Handler &&handler)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QtTaskTree::QSyncTask` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `handler`：类型为 `Handler &&`。没有默认值，调用时必须提供。传入 `Handler &&` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个元素，同步执行已经过的`handler`。`Handler`属于`std::function<DoneResult()>`类型。`handler`返回的`DoneResult`值在父组的工作流程策略解析中被考虑。可选地，也可以接受`std::function<void()>`的简化形式。此时假设返回值为`DoneResult::Success`。
+传递的`handler`从调用线程同步执行，避免处理程序体的长时间运行。否则，考虑使用`QThreadFunctionTask`。
+注意：QSyncTask元素在报告任务树进度时不计入任务，也不包含在`QTaskTree::taskCount()`或未`QTaskTree::progressMaximum()`中。
 
 ## 6. 深入实践与常见坑
 

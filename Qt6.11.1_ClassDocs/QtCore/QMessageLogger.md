@@ -103,494 +103,231 @@ qWarning() << "operation failed";
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 35 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QMessageLogger::CategoryFunction`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageLogger` 的配置属性。初始化或状态切换时通过 `setCategoryFunction(...)` 设置，之后用 `CategoryFunction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
+这是指向函数签名如下的指针的类型def：
+`Q_DECLARE_LOGGING_CATEGORY`宏生成带有该签名的函数声明，`Q_LOGGING_CATEGORY`生成其定义。
 
-**签名拆解：**
+**官方示例：**
 
-- 属性类型：`:CategoryFunction`。
-- 属性名：`QMessageLogger`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     const QLoggingCategory &category();
+```
 
 ### `[constexpr] QMessageLogger::QMessageLogger()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageLogger` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建默认的 QMessageLogger。请参见其他构造函数以指定上下文信息。
 
 ### `[constexpr] QMessageLogger::QMessageLogger(const char *file, int line, const char *function)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageLogger` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `file`：类型为 `const char *`。没有默认值，调用时必须提供。文件或设备对象。要确认打开状态、读写模式、当前位置和错误状态。
-- 参数 `line`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `function`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QMessageLogger，用于记录在`function`中 `line` `file`的日志消息。它等同于 QMessageLogger（文件、行、函数，“默认”）。
 
 ### `[constexpr] QMessageLogger::QMessageLogger(const char *file, int line, const char *function, const char *category)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageLogger` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `file`：类型为 `const char *`。没有默认值，调用时必须提供。文件或设备对象。要确认打开状态、读写模式、当前位置和错误状态。
-- 参数 `line`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `function`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `category`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QMessageLogger，用于记录`category`消息，用于`function`中`line`的`file`。
 
 ### `QDebug QMessageLogger::critical() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::critical` 用于计算、查询或取得与“critical”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流记录关键消息。
 
 ### `QDebug QMessageLogger::critical(QMessageLogger::CategoryFunction catFunc) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::critical` 用于计算、查询或取得与“critical”相关的操作。调用时要先确认当前状态和 `catFunc` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`catFunc`通过`QDebug`流返回的关键消息记录为类别。
 
 ### `QDebug QMessageLogger::critical(const QLoggingCategory &cat) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::critical` 用于计算、查询或取得与“critical”相关的操作。调用时要先确认当前状态和 `cat` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`QDebug`流将关键消息`cat`分类记录。
 
 ### `void QMessageLogger::critical(const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::critical` 用于执行与“critical”相关的操作。调用时要先确认当前状态和 `msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录格式`msg`指定的关键消息。可以使用`msg`指定的额外参数。
 
 ### `void QMessageLogger::critical(QMessageLogger::CategoryFunction catFunc, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::critical` 用于执行与“critical”相关的操作。调用时要先确认当前状态和 `catFunc`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录一个关键消息，格式为`msg`指定，以符合`catFunc`返回的上下文。可以使用`msg`指定的其他参数。
 
 ### `void QMessageLogger::critical(const QLoggingCategory &cat, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::critical` 用于执行与“critical”相关的操作。调用时要先确认当前状态和 `cat`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录上下文`cat`格式`msg`指定的关键消息。可以使用`msg`指定的其他参数。
 
 ### `QDebug QMessageLogger::debug() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::debug` 用于计算、查询或取得与“调试输出”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用 `QDebug` 流记录调试消息。
 
 ### `QDebug QMessageLogger::debug(QMessageLogger::CategoryFunction catFunc) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::debug` 用于计算、查询或取得与“调试输出”相关的操作。调用时要先确认当前状态和 `catFunc` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`catFunc`通过`QDebug`流返回的调试消息记录到类别中。
 
 ### `QDebug QMessageLogger::debug(const QLoggingCategory &cat) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::debug` 用于计算、查询或取得与“调试输出”相关的操作。调用时要先确认当前状态和 `cat` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流将调试消息记录到类别`cat`。
 
 ### `void QMessageLogger::debug(const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::debug` 用于执行与“调试输出”相关的操作。调用时要先确认当前状态和 `msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+日志一个格式`msg`指定的调试消息。可以使用`msg`指定的额外参数。
 
 ### `void QMessageLogger::debug(QMessageLogger::CategoryFunction catFunc, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::debug` 用于执行与“调试输出”相关的操作。调用时要先确认当前状态和 `catFunc`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+日志一个以格式`msg`指定的调试消息，以符合`catFunc`返回的上下文。还可以使用`msg`指定的其他参数。
 
 ### `void QMessageLogger::debug(const QLoggingCategory &cat, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::debug` 用于执行与“调试输出”相关的操作。调用时要先确认当前状态和 `cat`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+日志一个以上下文`cat`格式`msg`指定的调试消息。可以使用`msg`指定的其他参数。
 
 ### `[since 6.5] QDebug QMessageLogger::fatal() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::fatal` 用于计算、查询或取得与“fatal”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流记录致命消息。
 
 ### `[since 6.5] QDebug QMessageLogger::fatal(QMessageLogger::CategoryFunction catFunc) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::fatal` 用于计算、查询或取得与“fatal”相关的操作。调用时要先确认当前状态和 `catFunc` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`catFunc`通过`QDebug`流返回的致命消息记录到类别。
 
 ### `[since 6.5] QDebug QMessageLogger::fatal(const QLoggingCategory &cat) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::fatal` 用于计算、查询或取得与“fatal”相关的操作。调用时要先确认当前状态和 `cat` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流`cat`将致命消息记录到类别中。
 
 ### `[noexcept] void QMessageLogger::fatal(const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::fatal` 用于执行与“fatal”相关的操作。调用时要先确认当前状态和 `msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录格式`msg`指定的致命消息。可以使用`msg`指定的额外参数。
 
 ### `[noexcept, since 6.5] void QMessageLogger::fatal(QMessageLogger::CategoryFunction catFunc, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::fatal` 用于执行与“fatal”相关的操作。调用时要先确认当前状态和 `catFunc`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录一个致命消息，格式为`msg`指定，以符合`catFunc`返回的上下文。还可以使用`msg`指定的其他参数。
 
 ### `[noexcept, since 6.5] void QMessageLogger::fatal(const QLoggingCategory &cat, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::fatal` 用于执行与“fatal”相关的操作。调用时要先确认当前状态和 `cat`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录上下文`cat`格式`msg`指定的致命消息。可以使用`msg`指定的额外参数。
 
 ### `QDebug QMessageLogger::info() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::info` 用于计算、查询或取得与“info”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`QDebug`流记录信息消息。
 
 ### `QDebug QMessageLogger::info(QMessageLogger::CategoryFunction catFunc) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::info` 用于计算、查询或取得与“info”相关的操作。调用时要先确认当前状态和 `catFunc` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过`QDebug`流将`catFunc`返回的信息消息归类。
 
 ### `QDebug QMessageLogger::info(const QLoggingCategory &cat) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::info` 用于计算、查询或取得与“info”相关的操作。调用时要先确认当前状态和 `cat` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流`cat`将信息信息记录到类别中。
 
 ### `void QMessageLogger::info(const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::info` 用于执行与“info”相关的操作。调用时要先确认当前状态和 `msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+日志中以格式`msg`指定的信息信息。还可以使用`msg`指定的额外参数。
 
 ### `void QMessageLogger::info(QMessageLogger::CategoryFunction catFunc, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::info` 用于执行与“info”相关的操作。调用时要先确认当前状态和 `catFunc`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录一个以格式`msg`指定的信息消息，以符合`catFunc`返回的上下文。可以使用`msg`指定的额外参数。
 
 ### `void QMessageLogger::info(const QLoggingCategory &cat, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::info` 用于执行与“info”相关的操作。调用时要先确认当前状态和 `cat`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录上下文`cat`格式`msg`指定的信息消息。可以使用`msg`指定的额外参数。
 
 ### `QDebug QMessageLogger::warning() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::warning` 用于计算、查询或取得与“warning”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流记录警告信息。
 
 ### `QDebug QMessageLogger::warning(QMessageLogger::CategoryFunction catFunc) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::warning` 用于计算、查询或取得与“warning”相关的操作。调用时要先确认当前状态和 `catFunc` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将警告消息记录到`catFunc`使用`QDebug`流返回的类别。
 
 ### `QDebug QMessageLogger::warning(const QLoggingCategory &cat) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::warning` 用于计算、查询或取得与“warning”相关的操作。调用时要先确认当前状态和 `cat` 的有效范围；返回类型是 `QDebug`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+使用`QDebug`流将警告消息记录到类别`cat`。
 
 ### `void QMessageLogger::warning(const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::warning` 用于执行与“warning”相关的操作。调用时要先确认当前状态和 `msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录格式`msg`指定的警告消息。可以使用`msg`指定的额外参数。
 
 ### `void QMessageLogger::warning(QMessageLogger::CategoryFunction catFunc, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::warning` 用于执行与“warning”相关的操作。调用时要先确认当前状态和 `catFunc`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `catFunc`：类型为 `QMessageLogger::CategoryFunction`。没有默认值，调用时必须提供。传入 `QMessageLogger::CategoryFunction` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录一个带有格式`msg`的警告消息，以符合`catFunc`返回的上下文。还可以使用`msg`指定的额外参数。
 
 ### `void QMessageLogger::warning(const QLoggingCategory &cat, const char *msg, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QMessageLogger::warning` 用于执行与“warning”相关的操作。调用时要先确认当前状态和 `cat`、`msg`、`...` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cat`：类型为 `const QLoggingCategory &`。没有默认值，调用时必须提供。传入 `const QLoggingCategory &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msg`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录上下文`cat`格式`msg`指定的警告消息。可以使用`msg`指定的额外参数。
 
 ### `CategoryFunction`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QMessageLogger` 的 `类别、Function` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
+这是指向函数签名如下的指针的类型def：
+`Q_DECLARE_LOGGING_CATEGORY`宏生成带有该签名的函数声明，`Q_LOGGING_CATEGORY`生成其定义。
 
-**签名拆解：**
+**官方示例：**
 
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     const QLoggingCategory &category();
+```
 
 ## 6. 深入实践与常见坑
 

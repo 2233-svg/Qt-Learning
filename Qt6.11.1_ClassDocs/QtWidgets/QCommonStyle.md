@@ -81,289 +81,291 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 19 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QCommonStyle::QCommonStyle()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommonStyle` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QCommonStyle。
 
 ### `[virtual noexcept] QCommonStyle::~QCommonStyle()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommonStyle` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+毁了风格。
 
 ### `[override virtual] void QCommonStyle::drawComplexControl(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, QPainter *p, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommonStyle` 的核心操作 `drawComplexControl`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cc`：类型为 `QStyle::ComplexControl`。没有默认值，调用时必须提供。传入 `QStyle::ComplexControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOptionComplex *`。没有默认值，调用时必须提供。传入 `const QStyleOptionComplex *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `p`：类型为 `QPainter *`。没有默认值，调用时必须提供。传入 `QPainter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::drawComplexControl`（QStyle：：ComplexControl control， const QStyleOptionComplex *option， QPainter *painter， const QWidget *widget） const.
+使用提供的`painter`并按照`option`指定的样式选项绘制给定的`control`。
+`widget`论证是可选的，可以作为绘制控制的辅助工具。
+`option`参数是指向`QStyleOptionComplex`对象的指针，可以用`qstyleoption_cast()`函数将其转换为正确的子类。注意，指定`option`的`rect`成员必须处于逻辑坐标中。该函数的重现应使用`visualRect()`将逻辑坐标转换为屏幕坐标，然后再调用`drawPrimitive()`或`drawControl()`函数。
+下表列出了复杂的控制元素及其相关的样式选项子类。样式选项包含绘制控件所需的所有参数，包括保存绘制时使用的样式标志的`QStyleOption::state`。表格还描述了在将给定`option`铸造成相应子类时设置的标志。
+- `Complex Control`：`QStyleOptionComplex`子类;风格标志;备注
+- `CC_SpinBox`：`QStyleOptionSpinBox`;`State_Enabled`;如果启用自旋盒，则设置。
+- `State_HasFocus`：如果旋转盒有输入焦点，则设置为。
+- `CC_ComboBox`：`QStyleOptionComboBox`;`State_Enabled`;如果组合盒被启用，则设置为。
+- `State_HasFocus`：如果组合盒有输入焦点，则设置。
+- `CC_ScrollBar`：`QStyleOptionSlider`;`State_Enabled`;如果启用滚动条，则设置。
+- `State_HasFocus`：如果滚动条有输入焦点，则设置为。
+- `CC_Slider`：`QStyleOptionSlider`;`State_Enabled`;如果启用滑块，则设置。
+- `State_HasFocus`：如果滑块有输入焦点，则设置为。
+- `CC_Dial`：`QStyleOptionSlider`;`State_Enabled`;如果拨盘被启用，则设置为。
+- `State_HasFocus`：如果转盘有输入焦点，则设置。
+- `CC_ToolButton`：`QStyleOptionToolButton`;`State_Enabled`;如果工具按钮被启用，则设置为。
+- `State_HasFocus`：如果工具按钮有输入焦点，则设置为。
+- `State_DownArrow`：当工具键按下时设置（如按鼠标键或空格键）。
+- `State_On`：如果工具按钮是切换按钮且已开启，则设置为切换。
+- `State_AutoRaise`：如果工具按钮启用了自动抬起，则设置。
+- `State_Raised`：当按钮未按下、未开启且启用自动抬起时不包含鼠标时，则设置为。
+- `CC_TitleBar`：`QStyleOptionTitleBar`;`State_Enabled`;如果标题栏已启用，则设置。
 
 ### `[override virtual] void QCommonStyle::drawControl(QStyle::ControlElement element, const QStyleOption *opt, QPainter *p, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommonStyle` 的核心操作 `drawControl`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `element`：类型为 `QStyle::ControlElement`。没有默认值，调用时必须提供。传入 `QStyle::ControlElement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `p`：类型为 `QPainter *`。没有默认值，调用时必须提供。传入 `QPainter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::drawControl`（QStyle：：ControlElement element， const QStyleOption *option， QPainter *painter， const QWidget *widget） const.
+用`option`指定的样式选项，绘制给定`element`，`painter`。
+`widget`参数是可选的，可以作为绘制控制项的辅助工具。`option`参数是指向`QStyleOption`对象的指针，可以用`qstyleoption_cast()`函数将其转换为正确的子类。
+下表列出了控制元素及其相关的样式选项子类。样式选项包含绘制控件所需的所有参数，包括保存绘制时样式标志的 `QStyleOption::state`。表格还描述了在将指定选项投射到相应子类时设置的标志。
+注意，如果这里没有列出控制元素，那是因为它使用了纯`QStyleOption`对象。
+- `Control Element`：`QStyleOption`子类;风格标志;备注
+- `CE_MenuItem`，`CE_MenuBarItem`：`QStyleOptionMenuItem`;`State_Selected`;菜单项目前为选中项。
+- `State_Enabled`：该物品已启用。
+- `State_DownArrow`：表示应绘制向下滚动的箭头。
+- `State_UpArrow`：表示应绘制向上滚动箭头
+- `State_HasFocus`：如果菜单栏有输入焦点，则设置。
+- `CE_PushButton`、`CE_PushButtonBevel`、`CE_PushButtonLabel`：`QStyleOptionButton`;`State_Enabled`;启用按钮时设置。
+- `State_HasFocus`：如果按钮有输入焦点，则设置为。
+- `State_Raised`：设置为按钮未按下、未开启且未平放。
+- `State_On`：如果按钮是切换按钮且已开启，则设置。
+- `State_Sunken`：当按钮按下时设置（即按住鼠标或空格键）。
+- `CE_RadioButton`、`CE_RadioButtonLabel`、`CE_CheckBox`、`CE_CheckBoxLabel`：`QStyleOptionButton`;`State_Enabled`;如果按钮被启用，则设置为。
+- `State_HasFocus`：如果按钮有输入焦点，则设置为。
+- `State_On`：如果按钮被勾选，则设置。
+- `State_Off`：如果按钮未被勾选，则设置为。
+- `State_NoChange`：如果按钮处于NoChange状态，则设置。
+- `State_Sunken`：如果按钮按下（即鼠标或空格键被按下），则设置。
+- `CE_ProgressBarContents`、`CE_ProgressBarLabel`、`CE_ProgressBarGroove`：`QStyleOptionProgressBar`;`State_Enabled`;如果进度条被启用，则设置为。
+- `State_HasFocus`：如果进度条有输入焦点，则设置为。
+- `CE_Header`，`CE_HeaderSection`，`CE_HeaderLabel`：`QStyleOptionHeader`
+- `CE_TabBarTab`、`CE_TabBarTabShape`、`CE_TabBarTabLabel`：`QStyleOptionTab`;`State_Enabled`;如果标签栏被启用，则设置为。
+- `State_Selected`：标签栏是当前选择的标签栏。
+- `State_HasFocus`：如果标签栏标签页有输入焦点，则设置为。
+- `CE_ToolButtonLabel`：`QStyleOptionToolButton`;`State_Enabled`;如果工具按钮被启用，则设置为。
+- `State_HasFocus`：如果工具按钮有输入焦点，则设置为。
+- `State_Sunken`：当工具按钮按下时设置（即按鼠标或空格键）。
+- `State_On`：如果工具按钮是切换按钮并且已开启，则设置为切换。
+- `State_AutoRaise`：如果工具按钮启用了自动抬起，则设置为。
+- `State_MouseOver`：如果鼠标指针位于工具按钮上方，则设置。
+- `State_Raised`：当按钮未按下且未开启时设置。
+- `CE_ToolBoxTab`：`QStyleOptionToolBox`;`State_Selected`;标签是当前选择的标签。
+- `CE_HeaderSection`：`QStyleOptionHeader`；`State_Sunken`；表示该节处于压缩状态。
+- `State_UpArrow`：表示排序指示器应指向上方。
+- `State_DownArrow`：表示排序指示器应指向下方。
 
 ### `[override virtual] void QCommonStyle::drawPrimitive(QStyle::PrimitiveElement pe, const QStyleOption *opt, QPainter *p, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QCommonStyle` 的核心操作 `drawPrimitive`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pe`：类型为 `QStyle::PrimitiveElement`。没有默认值，调用时必须提供。传入 `QStyle::PrimitiveElement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `p`：类型为 `QPainter *`。没有默认值，调用时必须提供。传入 `QPainter *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::drawPrimitive`（QStyle：:P rimitiveElement element， const QStyleOption *option， QPainter *painter， const QWidget *widget） const.
+利用`option`指定样式选项，用提供的`painter`绘制给定的原元体`element`。
+`widget`参数是可选的，可能包含一个小部件，有助于绘制原元素。
+下表列出了原始元素及其相关的样式选项子类。样式选项包含绘制元素所需的所有参数，包括保存绘制时使用的样式标志的`QStyleOption::state`。表格还描述了在将给定选项转换为相应子类时设置的标志。
+注意，如果这里没有列出原始元素，那是因为它使用了普通`QStyleOption`对象。
+- `Primitive Element`：`QStyleOption`子类;风格标志;备注
+- `PE_FrameFocusRect`：`QStyleOptionFocusRect`;`State_FocusAtBorder`;焦点是在边框还是在小部件内部。
+- `PE_IndicatorCheckBox`：`QStyleOptionButton`;`State_NoChange`;表示“三州”复选框。
+- `State_On`：表示指示器已检查。
+- `PE_IndicatorRadioButton`：`QStyleOptionButton`;`State_On`;表示选择了单选按钮。
+- `State_NoChange`：表示“三态”控制器。
+- `State_Enabled`：表示控制器已启用。
+- `PE_IndicatorBranch`：`QStyleOption`;`State_Children`;表示应绘制扩展树以显示子项的控制。
+- `State_Item`：表示应绘制一个水平分支（用于显示子项）。
+- `State_Open`：表示树枝已扩展。
+- `State_Sibling`：表示应绘制一条垂直线（以显示兄弟项目）。
+- `PE_IndicatorHeaderArrow`：`QStyleOptionHeader`;`State_UpArrow`;表示箭头应向上拉;否则箭头应向下拉。
+- `PE_FrameGroupBox`、`PE_Frame`、`PE_FrameLineEdit`、`PE_FrameMenu`、`PE_FrameDockWidget`、`PE_FrameWindow`：`QStyleOptionFrame`;`State_Sunken`;表示框架应被沉没。
+- `PE_IndicatorToolBarHandle`：`QStyleOption`;`State_Horizontal`;表示窗户把手是水平的，而非垂直的。
+- `PE_IndicatorSpinPlus`，`PE_IndicatorSpinMinus`，`PE_IndicatorSpinUp`，`PE_IndicatorSpinDown`，`: `QStyleOptionSpinBox`; `State_Sunken';表示按钮已被按下。
+- `PE_PanelButtonCommand`：`QStyleOptionButton`;`State_Enabled`;按钮启用时设置。
+- `State_HasFocus`：按钮有输入焦点时设置。
+- `State_Raised`：设置按钮未按下、未开启且未平放。
+- `State_On`：设置按钮为切换按钮且开启。
+- `State_Sunken`：当按键按下时设置（即按住鼠标或空格键）。
 
 ### `[override virtual] QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &pixmap, const QStyleOption *opt) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::generatedIconPixmap` 用于计算、查询或取得与“generated、Icon、Pixmap”相关的操作。调用时要先确认当前状态和 `iconMode`、`pixmap`、`opt` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `iconMode`：类型为 `QIcon::Mode`。没有默认值，调用时必须提供。传入 `QIcon::Mode` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pixmap`：类型为 `const QPixmap &`。没有默认值，调用时必须提供。传入 `const QPixmap &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::generatedIconPixmap`（QIcon：：Mode iconMode， const QPixmap & pixmap， const QStyleOption *option） const.
+返回给定`pixmap`的副本，样式符合指定`iconMode`并考虑`option`指定的调色板。
+`option`参数可以传递额外信息，但必须包含调色板。
+注意并非所有像素映射都符合，此时返回的像素映射是普通的副本。
 
 ### `[override virtual] QStyle::SubControl QCommonStyle::hitTestComplexControl(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QPoint &pt, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::hitTestComplexControl` 用于计算、查询或取得与“hit、Test、Complex、Control”相关的操作。调用时要先确认当前状态和 `cc`、`opt`、`pt`、`widget` 的有效范围；返回类型是 `QStyle::SubControl`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QStyle::SubControl`。
-- 参数 `cc`：类型为 `QStyle::ComplexControl`。没有默认值，调用时必须提供。传入 `QStyle::ComplexControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOptionComplex *`。没有默认值，调用时必须提供。传入 `const QStyleOptionComplex *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `pt`：类型为 `const QPoint &`。没有默认值，调用时必须提供。传入 `const QPoint &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::hitTestComplexControl`（QStyle：：ComplexControl control， const QStyleOptionComplex *option， const QPoint &position， const QWidget *widget） const.
+返回给定复`control`中给定`position`的子控制（样式选项由`option`指定）。
+注意`position`以屏幕坐标表示。
+`option`参数是指向`QStyleOptionComplex`对象（或其子类之一）的指针。对象可以通过`qstyleoption_cast()`函数转换为相应类型。详情请参见 `drawComplexControl()`。`widget`参数是可选的，可以包含该函数的额外信息。
 
 ### `[override virtual] int QCommonStyle::layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::ControlType control2, Qt::Orientation orientation, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::layoutSpacing` 用于计算、查询或取得与“layout、Spacing”相关的操作。调用时要先确认当前状态和 `control1`、`control2`、`orientation`、`option`、`widget` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `control1`：类型为 `QSizePolicy::ControlType`。没有默认值，调用时必须提供。传入 `QSizePolicy::ControlType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `control2`：类型为 `QSizePolicy::ControlType`。没有默认值，调用时必须提供。传入 `QSizePolicy::ControlType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。默认值为 `nullptr`。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::layoutSpacing`（QSizePolicy：：ControlType control1， QSizePolicy：：ControlType control2， Qt：：Orientation orientation， const QStyleOption *option， const QWidget *widget） const.
+返回布局中应使用`control1`与`control2`之间的间距。`orientation` 指定控件是并排排列还是垂直堆叠。`option`参数可用于传递关于父控件的额外信息。`widget`参数为可选，若`option` `nullptr`也可用。
+该函数由布局系统调用。仅在`PM_LayoutHorizontalSpacing`或 `PM_LayoutVerticalSpacing`返回负值时使用。
 
 ### `[override virtual] int QCommonStyle::pixelMetric(QStyle::PixelMetric m, const QStyleOption *opt = nullptr, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::pixelMetric` 用于计算、查询或取得与“pixel、Metric”相关的操作。调用时要先确认当前状态和 `m`、`opt`、`widget` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `m`：类型为 `QStyle::PixelMetric`。没有默认值，调用时必须提供。传入 `QStyle::PixelMetric` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。默认值为 `nullptr`。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::pixelMetric`（QStyle：:P ixelMetric metric， const QStyleOption *option， const QWidget *widget） const.
+返回给定像素`metric`的值。
+指定的`option`和`widget`可用于计算度量。`option`可以通过`qstyleoption_cast()`函数转换为相应类型。注意，即使是可以使用`option`的PixelMetrics，也可能为零。请参见下表，了解相应的`option`铸造：
+- `Pixel Metric`：`QStyleOption` 子类
+- `PM_SliderControlThickness`：`QStyleOptionSlider`
+- `PM_SliderLength`：`QStyleOptionSlider`
+- `PM_SliderTickmarkOffset`：`QStyleOptionSlider`
+- `PM_SliderSpaceAvailable`：`QStyleOptionSlider`
+- `PM_ScrollBarExtent`：`QStyleOptionSlider`
+- `PM_TabBarTabOverlap`：`QStyleOptionTab`
+- `PM_TabBarTabHSpace`：`QStyleOptionTab`
+- `PM_TabBarTabVSpace`：`QStyleOptionTab`
+- `PM_TabBarBaseHeight`：`QStyleOptionTab`
+- `PM_TabBarBaseOverlap`：`QStyleOptionTab`
+有些像素度量是从小部件调用的，有些则仅由样式内部调用。如果控件未调用该度量，样式作者自行决定是否使用。对于某些样式，这可能不合适。
 
 ### `[override virtual] void QCommonStyle::polish(QApplication *app)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::polish` 用于执行与“polish”相关的操作。调用时要先确认当前状态和 `app` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `app`：类型为 `QApplication *`。没有默认值，调用时必须提供。传入 `QApplication *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::polish`（QApplication *应用）。
+初始化给定`widget`的外观。
+该函数会在每个小部件完全创建后、首次展示之前的某个时间点调用。
+请注意，默认实现不做任何操作。该函数中的合理操作可能是调用控件的 QWidget：：setBackgroundMode() 函数。不要使用该函数设置，例如设置几何体。重新实现该函数提供了一个后门，可以通过它改变控件的外观，但使用 Qt 的样式引擎，很少需要实现该函数;而是重新实现 `drawItemPixmap()`、`drawItemText()`、`drawPrimitive()` 等。
+`QWidget::inherits()`函数可能提供足够的信息，使得特定类别的自定义能够实现。但由于新的`QStyle`子类预计能与所有当前和未来的控件兼容，因此建议有限度地使用硬编码的自定义。
 
 ### `[override virtual] void QCommonStyle::polish(QPalette &pal)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::polish` 用于执行与“polish”相关的操作。调用时要先确认当前状态和 `pal` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `pal`：类型为 `QPalette &`。没有默认值，调用时必须提供。传入 `QPalette &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::polish`（QPalette 和调色板）。
+初始化给定`widget`的外观。
+该函数会在每个小部件完全创建后、首次展示之前的某个时间点调用。
+请注意，默认实现不做任何操作。该函数中合理的操作可能是调用控件的 QWidget：：setBackgroundMode() 函数。不要使用该函数设置，例如设置几何体。重新实现该函数提供了一个后门，可以通过它改变控件的外观，但使用 Qt 的样式引擎，很少需要实现该函数;而是重新实现 `drawItemPixmap()`、`drawItemText()`、`drawPrimitive()` 等。
+`QWidget::inherits()`函数可能提供足够的信息，使得特定类别的自定义能够实现。但由于新的`QStyle`子类预计能与所有当前和未来的控件合理兼容，建议有限度地使用硬编码自定义。
 
 ### `[override virtual] void QCommonStyle::polish(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::polish` 用于执行与“polish”相关的操作。调用时要先确认当前状态和 `widget` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::polish`（QWidget *控件）。
+初始化给定`widget`的外观。
+该函数会在每个小部件完全创建后、首次展示之前的某个时间点调用。
+请注意，默认实现不做任何操作。该函数中的合理操作可能是调用控件的 QWidget：：setBackgroundMode() 函数。不要使用该函数来设置例如几何体。重新实现该函数提供了一个后门，可以通过它改变控件的外观，但使用 Qt 的样式引擎，几乎不需要实现该函数;而是重新实现 `drawItemPixmap()`、`drawItemText()`、`drawPrimitive()` 等。
+`QWidget::inherits()`函数可能提供足够的信息，支持针对类别的定制。但由于新的`QStyle`子类预计能与所有当前和未来的控件兼容，建议有限度地使用硬编码自定义。
 
 ### `[override virtual] QSize QCommonStyle::sizeFromContents(QStyle::ContentsType contentsType, const QStyleOption *opt, const QSize &contentsSize, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::sizeFromContents` 用于计算、查询或取得与“尺寸或数量、转换进入、Contents”相关的操作。调用时要先确认当前状态和 `contentsType`、`opt`、`contentsSize`、`widget` 的有效范围；返回类型是 `QSize`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSize`。
-- 参数 `contentsType`：类型为 `QStyle::ContentsType`。没有默认值，调用时必须提供。传入 `QStyle::ContentsType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `contentsSize`：类型为 `const QSize &`。没有默认值，调用时必须提供。传入 `const QSize &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::sizeFromContents`（QStyle：：ContentsType type， const QStyleOption *option， const QSize &contentsSize， const QWidget *widget） const.
+返回由指定`option`和`type`描述的元素大小，基于提供的`contentsSize`。
+`option`参数是指向`QStyleOption`或其子类之一的指针。`option`可以通过`qstyleoption_cast()`函数转换为相应类型。`widget`是可选参数，可以包含用于计算大小的额外信息。
+请参见下表，了解合适的`option`铸件：
+- `Contents Type`：`QStyleOption`子类
+- `CT_CheckBox`：`QStyleOptionButton`
+- `CT_ComboBox`：`QStyleOptionComboBox`
+- `CT_GroupBox`：`QStyleOptionGroupBox`
+- `CT_HeaderSection`：`QStyleOptionHeader`
+- `CT_ItemViewItem`：`QStyleOptionViewItem`
+- `CT_LineEdit`：`QStyleOptionFrame`
+- `CT_MdiControls`：`QStyleOptionComplex`
+- `CT_Menu`：`QStyleOption`
+- `CT_MenuItem`：`QStyleOptionMenuItem`
+- `CT_MenuBar`：`QStyleOptionMenuItem`
+- `CT_MenuBarItem`：`QStyleOptionMenuItem`
+- `CT_ProgressBar`：`QStyleOptionProgressBar`
+- `CT_PushButton`：`QStyleOptionButton`
+- `CT_RadioButton`：`QStyleOptionButton`
+- `CT_ScrollBar`：`QStyleOptionSlider`
+- `CT_SizeGrip`：`QStyleOption`
+- `CT_Slider`：`QStyleOptionSlider`
+- `CT_SpinBox`：`QStyleOptionSpinBox`
+- `CT_Splitter`：`QStyleOption`
+- `CT_TabBarTab`：`QStyleOptionTab`
+- `CT_TabWidget`：`QStyleOptionTabWidgetFrame`
+- `CT_ToolButton`：`QStyleOptionToolButton`
 
 ### `[override virtual] QPixmap QCommonStyle::standardPixmap(QStyle::StandardPixmap sp, const QStyleOption *option = nullptr, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::standardPixmap` 用于计算、查询或取得与“standard、Pixmap”相关的操作。调用时要先确认当前状态和 `sp`、`option`、`widget` 的有效范围；返回类型是 `QPixmap`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QPixmap`。
-- 参数 `sp`：类型为 `QStyle::StandardPixmap`。没有默认值，调用时必须提供。传入 `QStyle::StandardPixmap` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `option`：类型为 `const QStyleOption *`。默认值为 `nullptr`。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::standardPixmap`（QStyle：：StandardPixmap standardPixmap， const QStyleOption *option， const QWidget *widget） const.
 
 ### `[override virtual] int QCommonStyle::styleHint(QStyle::StyleHint sh, const QStyleOption *opt = nullptr, const QWidget *widget = nullptr, QStyleHintReturn *hret = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::styleHint` 用于计算、查询或取得与“style、Hint”相关的操作。调用时要先确认当前状态和 `sh`、`opt`、`widget`、`hret` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `sh`：类型为 `QStyle::StyleHint`。没有默认值，调用时必须提供。传入 `QStyle::StyleHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。默认值为 `nullptr`。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-- 参数 `hret`：类型为 `QStyleHintReturn *`。默认值为 `nullptr`。传入 `QStyleHintReturn *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::styleHint`（QStyle：：StyleHint hint， const QStyleOption *option， const QWidget *widget， QStyleHintReturn *returnData） const.
+返回一个整数，代表指定样式`hint`，`widget`该样式由提供的样式`option`描述。
+`returnData`用于查询小部件需要比 styleHint() 返回的整数更详细的数据。详情请参见 `QStyleHintReturn` 类描述。
 
 ### `[override virtual] QRect QCommonStyle::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, QStyle::SubControl sc, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::subControlRect` 用于计算、查询或取得与“sub、Control、Rect”相关的操作。调用时要先确认当前状态和 `cc`、`opt`、`sc`、`widget` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `cc`：类型为 `QStyle::ComplexControl`。没有默认值，调用时必须提供。传入 `QStyle::ComplexControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOptionComplex *`。没有默认值，调用时必须提供。传入 `const QStyleOptionComplex *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `sc`：类型为 `QStyle::SubControl`。没有默认值，调用时必须提供。传入 `QStyle::SubControl` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplementation s： `QStyle::subControlRect`（QStyle：：ComplexControl control， const QStyleOptionComplex *option， QStyle：：SubControl subControl， const QWidget *widget） const.
+返回包含给定复`control`指定`subControl`的矩形（样式由`option`指定）。矩形定义为屏幕坐标。
+`option`参数是指向`QStyleOptionComplex`或其子类之一的指针，可以使用`qstyleoption_cast()`函数转换为相应类型。详情请参见 `drawComplexControl()`。`widget`是可选的，可以包含函数的额外信息。
 
 ### `[override virtual] QRect QCommonStyle::subElementRect(QStyle::SubElement sr, const QStyleOption *opt, const QWidget *widget = nullptr) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::subElementRect` 用于计算、查询或取得与“sub、Element、Rect”相关的操作。调用时要先确认当前状态和 `sr`、`opt`、`widget` 的有效范围；返回类型是 `QRect`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRect`。
-- 参数 `sr`：类型为 `QStyle::SubElement`。没有默认值，调用时必须提供。传入 `QStyle::SubElement` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `opt`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。传入 `const QStyleOption *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `widget`：类型为 `const QWidget *`。默认值为 `nullptr`。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QStyle::subElementRect`（QStyle：：SubElement element， const QStyleOption *option， const QWidget *widget） const.
+返回给定`element`的子区域，如所提供样式`option`所述。返回的矩形定义为屏幕坐标。
+`widget`参数是可选的，可用于辅助确定面积。`QStyleOption`对象可以用`qstyleoption_cast()`函数铸造为相应类型。下表了解了相应的`option`铸造：
+- `Sub Element`：`QStyleOption` 子类
+- `SE_PushButtonContents`：`QStyleOptionButton`
+- `SE_PushButtonFocusRect`：`QStyleOptionButton`
+- `SE_PushButtonBevel`：`QStyleOptionButton`
+- `SE_CheckBoxIndicator`：`QStyleOptionButton`
+- `SE_CheckBoxContents`：`QStyleOptionButton`
+- `SE_CheckBoxFocusRect`：`QStyleOptionButton`
+- `SE_RadioButtonIndicator`：`QStyleOptionButton`
+- `SE_RadioButtonContents`：`QStyleOptionButton`
+- `SE_RadioButtonFocusRect`：`QStyleOptionButton`
+- `SE_ComboBoxFocusRect`：`QStyleOptionComboBox`
+- `SE_ProgressBarGroove`：`QStyleOptionProgressBar`
+- `SE_ProgressBarContents`：`QStyleOptionProgressBar`
+- `SE_ProgressBarLabel`：`QStyleOptionProgressBar`
 
 ### `[override virtual] void QCommonStyle::unpolish(QApplication *application)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::unpolish` 用于执行与“unpolish”相关的操作。调用时要先确认当前状态和 `application` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `application`：类型为 `QApplication *`。没有默认值，调用时必须提供。传入 `QApplication *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::unpolish`（QApplication *应用）。
+取消初始化给定`widget`的外观。
+该函数是`polish()`的对应功能。每当样式动态变化时，每个抛光小部件都会调用它;前者必须先恢复其设置，新样式才能再次抛光。
+注意，unpolish() 只有在控件被销毁时才会被调用。这在某些情况下可能会引发问题，例如，如果你从界面中移除一个控件，缓存它，然后在样式改变后重新插入;Qt 的一些类会缓存他们的控件。
 
 ### `[override virtual] void QCommonStyle::unpolish(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QCommonStyle::unpolish` 用于执行与“unpolish”相关的操作。调用时要先确认当前状态和 `widget` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QStyle::unpolish`（QWidget *控件）。
+取消初始化给定`widget`的外观。
+该函数是`polish()`的对应功能。每当样式动态变化时，每个抛光小部件都会调用它;前者必须先恢复设置，新样式才能再次抛光。
+注意，unpolish() 只有在控件被销毁时才会被调用。这在某些情况下可能会引发问题，例如，如果你从界面中移除一个控件，缓存它，然后在样式改变后重新插入;Qt 的一些类会缓存他们的控件。
 
 ## 6. 深入实践与常见坑
 

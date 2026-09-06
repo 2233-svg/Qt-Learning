@@ -63,61 +63,32 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[static] QSSGCameraId QQuick3DExtensionHelpers::getCameraId(const QQuick3DObject &camera)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getCameraId`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGCameraId`。
-- 参数 `camera`：类型为 `const QQuick3DObject &`。没有默认值，调用时必须提供。传入 `const QQuick3DObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QSSGCameraId`，可用于检索引擎中对应的`camera`对象。
 
 ### `[static] QSSGNodeId QQuick3DExtensionHelpers::getNodeId(const QQuick3DObject &node)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getNodeId`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGNodeId`。
-- 参数 `node`：类型为 `const QQuick3DObject &`。没有默认值，调用时必须提供。传入 `const QQuick3DObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个可用于在引擎中检索对应`node`对象的`QSSGNodeId`。
 
 ### `[static] QSSGRenderGraphObject::Type QQuick3DExtensionHelpers::getNodeIdType(QSSGNodeId nodeId)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getNodeIdType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGRenderGraphObject::Type`。
-- 参数 `nodeId`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。传入 `QSSGNodeId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回给定`nodeId`节点的类型。
+该函数有助于确定`nodeId`的类型。
 
 ### `[static] QSSGResourceId QQuick3DExtensionHelpers::getResourceId(const QQuick3DObject &resource)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getResourceId`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QSSGResourceId`。
-- 参数 `resource`：类型为 `const QQuick3DObject &`。没有默认值，调用时必须提供。传入 `const QQuick3DObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QSSGResourceId`，可用于检索引擎中对应的`resource`对象。
 
 ## 6. 深入实践与常见坑
 

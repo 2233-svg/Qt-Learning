@@ -81,141 +81,79 @@ connect(reply, &QNetworkReply::finished, this, [reply] {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 10 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QNetworkCookieJar::QNetworkCookieJar(QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookieJar` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建一个 QNetworkCookieJar 对象，并将父对象设置为`parent`。
+饼干罐初始化为空。
 
 ### `[virtual noexcept] QNetworkCookieJar::~QNetworkCookieJar()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QNetworkCookieJar` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁该 cookie jar 对象，丢弃所有存储在其中的 cookie。`QNetworkCookieJar` 默认实现中 Cookie 不会保存到磁盘。
+如果你需要把 Cookie 保存到磁盘，你必须自己从 `QNetworkCookieJar` 导出并保存到 Cookie 到磁盘。
 
 ### `[protected] QList<QNetworkCookie> QNetworkCookieJar::allCookies() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookieJar::allCookies` 用于计算、查询或取得与“all、Cookies”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QList<QNetworkCookie>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkCookie>`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回存储在本 cookie jar 中的所有 Cookie。该函数适用于派生类，用于将 Cookie 保存到磁盘，以及实现 Cookie 到期和其他策略。
 
 ### `[virtual] QList<QNetworkCookie> QNetworkCookieJar::cookiesForUrl(const QUrl &url) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookieJar::cookiesForUrl` 用于计算、查询或取得与“cookies、For、Url”相关的操作。调用时要先确认当前状态和 `url` 的有效范围；返回类型是 `QList<QNetworkCookie>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QNetworkCookie>`。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+发送请求到`url`时返回需要添加的Cookie。该函数由默认`QNetworkAccessManager::createRequest()`调用，该函数返回的Cookie会添加到发送请求中。
+如果发现多个同名但路径不同的cookie，路径较长的返回先返回路径较短的cookie。换句话说，该函数返回的是按路径长度递减排序的cookie。
+默认的`QNetworkCookieJar`类只实现一个非常基础的安全策略（确保 cookie 的域名和路径与回复的匹配）。要用自己的算法增强安全策略，可以覆盖 cookiesForUrl()。
 
 ### `[virtual] bool QNetworkCookieJar::deleteCookie(const QNetworkCookie &cookie)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `deleteCookie`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `cookie`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。传入 `const QNetworkCookie &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从 Cookie jar 删除的 Cookie 发现与`cookie`具有相同标识符。
+如果 cookie 被删除，返回`true`，否则返回 false。
 
 ### `[virtual] bool QNetworkCookieJar::insertCookie(const QNetworkCookie &cookie)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QNetworkCookieJar` 添加依赖、数据或子对象的 API `insertCookie`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `cookie`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。传入 `const QNetworkCookie &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这给这个饼干罐里加了不少东西`cookie`。
+如果添加了`cookie`，返回`true`，否则为假。
+如果 cookie jar 中已有具有相同标识符的 cookie，则该标识符将被覆盖。
 
 ### `[protected] void QNetworkCookieJar::setAllCookies(const QList<QNetworkCookie> &cookieList)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setAllCookies`。调用它会改变 `QNetworkCookieJar` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `cookieList`：类型为 `const QList<QNetworkCookie> &`。没有默认值，调用时必须提供。传入 `const QList<QNetworkCookie> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该 cookie jar 所持有的 Cookie 内部列表设置为`cookieList`。该函数适用于派生类实现从永久存储加载 Cookie，或通过重新实现 `setCookiesFromUrl()` 来实现自身的 Cookie 接受策略。
 
 ### `[virtual] bool QNetworkCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setCookiesFromUrl`。调用它会改变 `QNetworkCookieJar` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `cookieList`：类型为 `const QList<QNetworkCookie> &`。没有默认值，调用时必须提供。传入 `const QList<QNetworkCookie> &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将列表中的cookies `cookieList`添加到这个cookiejar中。插入前，cookies会被规范化。
+如果设置了一个或多个 cookie 作为 `url`，返回 `true`，否则为假。
+如果饼干罐中已有饼干，`cookieList`中的饼干将被覆盖。
+默认的`QNetworkCookieJar`类只实现一个非常基础的安全策略（确保 cookie 的域名和路径与回复一致）。要用自己的算法增强安全策略，可以覆盖 setCookiesFromUrl()。
+此外，`QNetworkCookieJar`没有最大cookie罐大小。重新实现此功能，丢弃旧cookie，为新cookie腾出空间。
 
 ### `[virtual] bool QNetworkCookieJar::updateCookie(const QNetworkCookie &cookie)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QNetworkCookieJar::updateCookie` 用于计算、查询或取得与“更新、Cookie”相关的操作。调用时要先确认当前状态和 `cookie` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `cookie`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。传入 `const QNetworkCookie &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 cookie jar 中存在与 `cookie` 相同的标识符的 cookie，它会被更新。该函数使用 `insertCookie()`。
+如果`cookie`已更新，返回`true`;如果jar中没有符合`cookie`标识符的cookie，则返回false。
 
 ### `[virtual protected] bool QNetworkCookieJar::validateCookie(const QNetworkCookie &cookie, const QUrl &url) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `validateCookie`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `cookie`：类型为 `const QNetworkCookie &`。没有默认值，调用时必须提供。传入 `const QNetworkCookie &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `url`：类型为 `const QUrl &`。没有默认值，调用时必须提供。资源地址。要确认 scheme、编码、相对路径、重定向和是否包含敏感信息。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果域和路径有效，返回`true`，否则返回`cookie`，否则为假。`url`参数用于判断Cookie中指定的域是否被允许。
 
 ## 6. 深入实践与常见坑
 

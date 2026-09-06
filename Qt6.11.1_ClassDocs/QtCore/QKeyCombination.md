@@ -86,298 +86,133 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 21 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[constexpr noexcept] QKeyCombination::QKeyCombination(Qt::Key key = Qt::Key_unknown)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `key`：类型为 `Qt::Key`。默认值为 `Qt::Key_unknown`。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个表示密钥`key`且无修饰符的QKeyCombination对象。
 
 ### `[explicit constexpr noexcept] QKeyCombination::QKeyCombination(Qt::KeyboardModifiers modifiers, Qt::Key key = Qt::Key_unknown)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `Qt::Key`。默认值为 `Qt::Key_unknown`。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QKeyCombination对象，表示`key`与修饰符`modifiers`的组合。
 
 ### `[explicit constexpr noexcept] QKeyCombination::QKeyCombination(Qt::Modifiers modifiers, Qt::Key key = Qt::Key_unknown)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `modifiers`：类型为 `Qt::Modifiers`。没有默认值，调用时必须提供。传入 `Qt::Modifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `Qt::Key`。默认值为 `Qt::Key_unknown`。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QKeyCombination对象，表示`key`与修饰符`modifiers`的组合。
 
 ### `[static constexpr] QKeyCombination QKeyCombination::fromCombined(int combined)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromCombined`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `combined`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过从`combined`中提取密钥和修饰符来构造`QKeyCombination`对象，该必须是类型`Qt::Key`与类型`Qt::KeyboardModifiers`之间的位或结果。`toCombined()`可以用来生成`combined`的有效值。
 
 ### `[constexpr noexcept] Qt::Key QKeyCombination::key() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeyCombination::key` 用于计算、查询或取得与“key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::Key`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::Key`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由该`QKeyCombination`对象表示的密钥。
 
 ### `[constexpr noexcept] Qt::KeyboardModifiers QKeyCombination::keyboardModifiers() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QKeyCombination::keyboardModifiers` 用于计算、查询或取得与“keyboard、Modifiers”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::KeyboardModifiers`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::KeyboardModifiers`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回由该`QKeyCombination`对象表示的键盘修改器。
 
 ### `[constexpr noexcept] int QKeyCombination::toCombined() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toCombined`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个整数值，通过在`key()`和`keyboardModifiers()`的值之间应用逐位或值得到的。通过使用该`fromCombined()`可以从返回的整数值创建`QKeyCombination`对象。
 
 ### `[constexpr noexcept] size_t qHash(QKeyCombination key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QKeyCombination::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `QKeyCombination`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[constexpr noexcept] bool operator!=(const QKeyCombination &lhs, const QKeyCombination &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QKeyCombination &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QKeyCombination &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `lhs` 和 `rhs` 的键和修饰符组合不同，则返回 `true`，否则返回 `false`。
 
 ### `QDataStream &operator<<(QDataStream &out, QKeyCombination combination)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `out`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `combination`：类型为 `QKeyCombination`。没有默认值，调用时必须提供。传入 `QKeyCombination` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将组合 `combination` 写入流 `out`。返回 `out`。
 
 ### `QDebug operator<<(QDebug debug, QKeyCombination combination)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDebug`。
-- 参数 `debug`：类型为 `QDebug`。没有默认值，调用时必须提供。传入 `QDebug` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `combination`：类型为 `QKeyCombination`。没有默认值，调用时必须提供。传入 `QKeyCombination` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将组合 `combination` 写入调试对象 `debug` 以用于调试目的。
 
 ### `[constexpr noexcept] bool operator==(const QKeyCombination &lhs, const QKeyCombination &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QKeyCombination &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QKeyCombination &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`lhs`和`rhs`键和修饰符组合相同，返回`true`，否则`false`。
 
 ### `QDataStream &operator>>(QDataStream &in, QKeyCombination &combination)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDataStream &`。
-- 参数 `in`：类型为 `QDataStream &`。没有默认值，调用时必须提供。传入 `QDataStream &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `combination`：类型为 `QKeyCombination &`。没有默认值，调用时必须提供。传入 `QKeyCombination &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+读取流`in`的组合 `combination`。返回`in`。
 
 ### `[constexpr noexcept] QKeyCombination operator|(Qt::Key key, Qt::KeyboardModifier modifier)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `modifier`：类型为 `Qt::KeyboardModifier`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifier` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifier`的组合。
 
 ### `[constexpr noexcept] QKeyCombination operator|(Qt::Key key, Qt::KeyboardModifiers modifiers)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifier`的组合。
 
 ### `QKeyCombination operator|(Qt::Key key, Qt::Modifier modifier)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `modifier`：类型为 `Qt::Modifier`。没有默认值，调用时必须提供。传入 `Qt::Modifier` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifier`的组合。
 
 ### `QKeyCombination operator|(Qt::Key key, Qt::Modifiers modifiers)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `modifiers`：类型为 `Qt::Modifiers`。没有默认值，调用时必须提供。传入 `Qt::Modifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifier`的组合。
 
 ### `QKeyCombination operator|(Qt::KeyboardModifier modifier, Qt::Key key)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `modifier`：类型为 `Qt::KeyboardModifier`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifier` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifiers`的组合。
 
 ### `QKeyCombination operator|(Qt::KeyboardModifiers modifiers, Qt::Key key)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `modifiers`：类型为 `Qt::KeyboardModifiers`。没有默认值，调用时必须提供。传入 `Qt::KeyboardModifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifiers`的组合。
 
 ### `QKeyCombination operator|(Qt::Modifier modifier, Qt::Key key)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `modifier`：类型为 `Qt::Modifier`。没有默认值，调用时必须提供。传入 `Qt::Modifier` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifiers`的组合。
 
 ### `QKeyCombination operator|(Qt::Modifiers modifiers, Qt::Key key)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QKeyCombination` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QKeyCombination`。
-- 参数 `modifiers`：类型为 `Qt::Modifiers`。没有默认值，调用时必须提供。传入 `Qt::Modifiers` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `key`：类型为 `Qt::Key`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QKeyCombination`对象，表示`key`与修饰符`modifiers`的组合。
 
 ## 6. 深入实践与常见坑
 

@@ -87,378 +87,201 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 27 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGTextNode::RenderType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTextNode` 暴露的类型声明 `渲染、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RenderType`。
-- 属性名：`QSGTextNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型描述用于渲染文本的字形节点类型。
+- `QSGTextNode::QtRendering`：`0`;文本通过每个字形的可缩放距离场来渲染。
+- `QSGTextNode::NativeRendering`：`1`;文本采用平台特定技术进行渲染。
+- `QSGTextNode::CurveRendering`：`2`;文本通过直接运行在图形硬件上的曲线光栅器渲染。
+如果你喜欢文本在目标平台上看起来原生且不需要高级功能如文本转换，选择`NativeRendering`。将这些功能与 NativeRendering 渲染类型结合使用，会导致效果较差，有时甚至出现像素化。
+`Text.QtRendering`和`Text.CurveRendering`都是硬件加速技术。`QtRendering`速度更快，但占用更多内存，且在大尺寸时会出现渲染伪影。`CurveRendering`应作为替代方案，适用于`QtRendering`效果不佳或优先减少图形内存消耗的情况。
 
 ### `enum QSGTextNode::TextStyle`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTextNode` 暴露的类型声明 `文本、Style`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:TextStyle`。
-- 属性名：`QSGTextNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型描述了可用于文本渲染的样式。
+- `QSGTextNode::Normal`：`0`;文字绘制时不使用任何风格。
+- `QSGTextNode::Outline`：`1`;文本带有轮廓绘制。
+- `QSGTextNode::Raised`：`2`;文本被抬起绘制。
+- `QSGTextNode::Sunken`：`3`;文字呈凹槽绘制。
 
 ### `void QSGTextNode::addTextDocument(QPointF position, QTextDocument *document, int selectionStart = -1, int selectionCount = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSGTextNode` 添加依赖、数据或子对象的 API `addTextDocument`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `QPointF`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `document`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。传入 `QTextDocument *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `selectionStart`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `selectionCount`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`document`的内容添加到`position`的文本节点。如果`selectionStart` >= 0，则标记为`selectionCount`字符数选定区域中的第一个字符。选区以背景填充表示，`selectionColor()`中选中的文本在`selectionTextColor()`中渲染。
+该函数将其参数转发给虚拟函数`doAddTextDocument()`。
 
 ### `void QSGTextNode::addTextLayout(QPointF position, QTextLayout *layout, int selectionStart = -1, int selectionCount = -1, int lineStart = 0, int lineCount = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSGTextNode` 添加依赖、数据或子对象的 API `addTextLayout`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `QPointF`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `layout`：类型为 `QTextLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `selectionStart`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `selectionCount`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lineStart`：类型为 `int`。默认值为 `0`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lineCount`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`layout`的内容添加到`position`的文本节点。如果`selectionStart`为>= 0，则标记为`selectionCount`字符数选中的第一个字符。选区以背景填充表示，`selectionColor()`中选中的文本在`selectionTextColor()`中渲染。
+为了方便起见，可以使用`lineStart`和 `lineCount` 来选择从布局中包含的 `QTextLine` 对象范围。这在创建省略布局时非常有用。如果 `lineCount` <为 0，那么节点将包含从`lineStart`到布局末尾的线条。
+该函数将其参数转发到虚拟函数 `doAddTextLayout()`。
 
 ### `[pure virtual] void QSGTextNode::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+清除节点的内容，删除节点及表示已添加的布局和文档的其他数据。
 
 ### `[pure virtual] QColor QSGTextNode::color() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::color` 用于计算、查询或取得与“color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染文本时的主要颜色。
 
 ### `[pure virtual private] void QSGTextNode::doAddTextDocument(QPointF position, QTextDocument *document, int selectionStart, int selectionCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::doAddTextDocument` 用于执行与“do、添加、文本、Document”相关的操作。调用时要先确认当前状态和 `position`、`document`、`selectionStart`、`selectionCount` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `QPointF`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `document`：类型为 `QTextDocument *`。没有默认值，调用时必须提供。传入 `QTextDocument *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `selectionStart`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `selectionCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`addTextDocument()`调用的虚拟函数，将`document`的内容转换为场景图节点，并将其添加到当前节点`position`。
+如果`selectionStart` >= 0，则标记为选定区域中`selectionCount`字符数的第一个字符。选区以背景填充表示，`selectionColor()`中选中的文本在`selectionTextColor()`中渲染。
 
 ### `[pure virtual private] void QSGTextNode::doAddTextLayout(QPointF position, QTextLayout *layout, int selectionStart, int selectionCount, int lineStart, int lineCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::doAddTextLayout` 用于执行与“do、添加、文本、Layout”相关的操作。调用时要先确认当前状态和 `position`、`layout`、`selectionStart`、`selectionCount`、`lineStart`、`lineCount` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `position`：类型为 `QPointF`。没有默认值，调用时必须提供。位置或偏移量，通常从 0 开始；要结合单位、坐标系以及是否允许边界值判断。
-- 参数 `layout`：类型为 `QTextLayout *`。没有默认值，调用时必须提供。参与操作的布局对象。通常表示整个子布局的几何区域和所有权，不等于子布局里的某一个控件。
-- 参数 `selectionStart`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `selectionCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lineStart`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `lineCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`addTextLayout()`调用虚拟函数，将`layout`的内容转换为场景图节点，并将其添加到当前节点`position`。
+如果`selectionStart` >= 0，则标记`selectionCount`字符数选中的第一个字符。选区以背景填充表示，并以`selectionColor()`填充，选中的文本在`selectionTextColor()`中渲染。
+为了方便，可以使用`lineStart`和`lineCount`选择从布局中包含的`QTextLine`对象范围。这在创建省略布局时非常有用。如果`lineCount` < 0，则该节点将包含从`lineStart`到布局末尾的行。
 
 ### `[pure virtual] QSGTexture::Filtering QSGTextNode::filtering() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::filtering` 用于计算、查询或取得与“filtering”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTexture::Filtering`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTexture::Filtering`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于缩放显示文本图像时使用的采样模式。
 
 ### `[pure virtual] QColor QSGTextNode::linkColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::linkColor` 用于计算、查询或取得与“link、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回文本中超链接的颜色。
 
 ### `[pure virtual] QSGTextNode::RenderType QSGTextNode::renderType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTextNode` 的核心操作 `renderType`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QSGTextNode::RenderType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回用于渲染文本的字形节点类型。
 
 ### `[pure virtual] int QSGTextNode::renderTypeQuality() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGTextNode` 的核心操作 `renderTypeQuality`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回节点的渲染类型质量。详情请参见 `setRenderTypeQuality()`。
 
 ### `[pure virtual] QColor QSGTextNode::selectionColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::selectionColor` 用于计算、查询或取得与“selection、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当文本任一部分被标记为已选时，返回选区背景的颜色。
 
 ### `[pure virtual] QColor QSGTextNode::selectionTextColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::selectionTextColor` 用于计算、查询或取得与“selection、文本、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当文本任一部分被标记为被选中时，返回所选文本的颜色。
 
 ### `[pure virtual] void QSGTextNode::setColor(QColor color)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setColor`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `color`：类型为 `QColor`。没有默认值，调用时必须提供。传入 `QColor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将主色设置为渲染文本时的`color`。
+默认是黑色：`QColor(0, 0, 0)`。
 
 ### `[pure virtual] void QSGTextNode::setFiltering(QSGTexture::Filtering filtering)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFiltering`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filtering`：类型为 `QSGTexture::Filtering`。没有默认值，调用时必须提供。传入 `QSGTexture::Filtering` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置用于对显示文本中图像缩放时使用的采样模式`filtering`。对于平滑缩放的图像，请使用这里`QSGTexture::Linear`。
+默认是`QSGTexture::Nearest`。
 
 ### `[pure virtual] void QSGTextNode::setLinkColor(QColor linkColor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLinkColor`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `linkColor`：类型为 `QColor`。没有默认值，调用时必须提供。传入 `QColor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将文本中的超链接颜色或超链接设置为`linkColor`。
+默认是蓝色：`QColor(0, 0, 255)`。
 
 ### `[pure virtual] void QSGTextNode::setRenderType(QSGTextNode::RenderType renderType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderType`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `renderType`：类型为 `QSGTextNode::RenderType`。没有默认值，调用时必须提供。传入 `QSGTextNode::RenderType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将所用字形节点类型设置为`renderType`。
+默认是`QtRendering`。
 
 ### `[pure virtual] void QSGTextNode::setRenderTypeQuality(int renderTypeQuality)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRenderTypeQuality`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `renderTypeQuality`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果使用的`renderType()`支持，则设置该质量以在渲染文本时使用。支持时，可以用来用视觉细节换取执行速度或内存。
+当`renderTypeQuality`为<0时，使用默认质量。
+`renderTypeQuality`可以是任意整数，尽管如果设置极端值，可能会遇到底层图形硬件的限制。Qt 快速文本元素的预定义值如下：
+- `DefaultRenderTypeQuality`：-1（默认）
+- `LowRenderTypeQuality`：26
+- `NormalRenderTypeQuality`：52
+- `HighRenderTypeQuality`：104
+- `VeryHighRenderTypeQuality`：208
+目前该值仅由`QtRendering`渲染类型尊重。设置它会改变用于表示字形的距离场分辨率。将其设为高于正常值会增加内存消耗，但减少了非常大文本中的过滤伪影。
+默认值是-1。
 
 ### `[pure virtual] void QSGTextNode::setSelectionColor(QColor color)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionColor`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `color`：类型为 `QColor`。没有默认值，调用时必须提供。传入 `QColor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当文本任一部分被标记为选中时，将选区背景颜色设置为`color`。
+默认是深蓝色：`QColor(0, 0, 128)`。
 
 ### `[pure virtual] void QSGTextNode::setSelectionTextColor(QColor selectionTextColor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSelectionTextColor`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `selectionTextColor`：类型为 `QColor`。没有默认值，调用时必须提供。传入 `QColor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当文本任一部分被标记为已选中时，将选区文本的颜色设置为`selectionTextColor`。
+默认是白色：`QColor(255, 255, 255)`。
 
 ### `[pure virtual] void QSGTextNode::setStyleColor(QColor styleColor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setStyleColor`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `styleColor`：类型为 `QColor`。没有默认值，调用时必须提供。传入 `QColor` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置样式颜色，用于渲染文本时使用，转为`styleColor`。
+默认是黑色：`QColor(0, 0, 0)`。
 
 ### `[pure virtual] void QSGTextNode::setTextStyle(QSGTextNode::TextStyle textStyle)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTextStyle`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `textStyle`：类型为 `QSGTextNode::TextStyle`。没有默认值，调用时必须提供。传入 `QSGTextNode::TextStyle` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将渲染文本的样式设置为`textStyle`。默认是`Normal`。
 
 ### `[pure virtual] void QSGTextNode::setViewport(const QRectF &viewport)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setViewport`。调用它会改变 `QSGTextNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `viewport`：类型为 `const QRectF &`。没有默认值，调用时必须提供。传入 `const QRectF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将视口的边界矩阵（rect）设置为`viewport`。提供这些信息使 `QSGTextNode` 能够优化文本布局或文档中哪些部分包含在场景图中。
+默认为默认构造的`QRectF`。对于该视口，所有内容都包含在图中。
 
 ### `[pure virtual] QColor QSGTextNode::styleColor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::styleColor` 用于计算、查询或取得与“style、Color”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QColor`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QColor`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染文本时使用的样式颜色。
 
 ### `[pure virtual] QSGTextNode::TextStyle QSGTextNode::textStyle()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::textStyle` 用于计算、查询或取得与“文本、Style”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGTextNode::TextStyle`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGTextNode::TextStyle`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回渲染后的文本样式。
 
 ### `[pure virtual] QRectF QSGTextNode::viewport() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGTextNode::viewport` 用于计算、查询或取得与“viewport”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QSGTextNode`当前的视口设置。
 
 ## 6. 深入实践与常见坑
 

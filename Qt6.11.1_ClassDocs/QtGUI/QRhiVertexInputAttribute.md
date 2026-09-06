@@ -81,225 +81,135 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiVertexInputAttribute::Format`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputAttribute` 暴露的类型声明 `格式化`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
+指定元素数据的类型。
+- `QRhiVertexInputAttribute::Float4`：`0`;四分量浮点矢量
+- `QRhiVertexInputAttribute::Float3`：`1`;三分量浮子矢量
+- `QRhiVertexInputAttribute::Float2`：`2`;双分量浮子矢量
+- `QRhiVertexInputAttribute::Float`：`3`;浮游
+- `QRhiVertexInputAttribute::UNormByte4`：`4`;四分量归一化的无符号字节向量
+- `QRhiVertexInputAttribute::UNormByte2`：`5`;双分量归一化的无符号字节向量
+- `QRhiVertexInputAttribute::UNormByte`：`6`;归一化的无符号字节
+- `QRhiVertexInputAttribute::UInt4`：`7`;四分量无符号整数矢量
+- `QRhiVertexInputAttribute::UInt3`：`8`;三分量无符号整数向量
+- `QRhiVertexInputAttribute::UInt2`：`9`;两分量无符号整数矢量
+- `QRhiVertexInputAttribute::UInt`：`10`;无符号整数
+- `QRhiVertexInputAttribute::SInt4`：`11`;四分量带符号整数向量
+- `QRhiVertexInputAttribute::SInt3`：`12`;三分量带符号整数矢量
+- `QRhiVertexInputAttribute::SInt2`：`13`;两分量带符号整数矢量
+- `QRhiVertexInputAttribute::SInt`：`14`;带符号整数
+- `QRhiVertexInputAttribute::Half4`：`15`;四分量半精度（16位）浮点向量
+- `QRhiVertexInputAttribute::Half3`：`16`;三分量半精度（16位）浮点向量
+- `QRhiVertexInputAttribute::Half2`：`17`;两分量半精度（16位）浮点向量
+- `QRhiVertexInputAttribute::Half`：`18`;半精度（16位）浮点
+- `QRhiVertexInputAttribute::UShort4`：`19`;四分量无符号短（16位）整数矢量
+- `QRhiVertexInputAttribute::UShort3`：`20`;三分量无符号短（16位）整数矢量
+- `QRhiVertexInputAttribute::UShort2`：`21`;两分量无符号短（16位）整数向量
+- `QRhiVertexInputAttribute::UShort`：`22`;无符号短（16位）整数
+- `QRhiVertexInputAttribute::SShort4`：`23`;四分量带符号短（16位）整数矢量
+- `QRhiVertexInputAttribute::SShort3`：`24`;三分量带符号短（16位）整数矢量
+- `QRhiVertexInputAttribute::SShort2`：`25`;两分量带符号短（16位）整数矢量
+- `QRhiVertexInputAttribute::SShort`：`26`;带符号短（16位）整数
+注意：运行时通过`QRhi::Feature::HalfAttributes`功能标志表示对半精度浮点属性的支持。
 
-**签名拆解：**
 
-- 属性类型：`:Format`。
-- 属性名：`QRhiVertexInputAttribute`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+注意：Direct3D 11/12 支持16位输入属性，但不支持 Half3、UShort3 或 SShort3 类型。D3D 后端通过 Half3 为 Half4，UShort3 作为 UShort4，SShort3 作为 SShort4。为确保跨平台兼容性，16 位输入应填充为 8 字节。
 
 ### `[constexpr noexcept] QRhiVertexInputAttribute::QRhiVertexInputAttribute()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputAttribute` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建默认顶点输入属性描述。
 
 ### `QRhiVertexInputAttribute::QRhiVertexInputAttribute(int binding, int location, QRhiVertexInputAttribute::Format format, quint32 offset, int matrixSlice = -1)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputAttribute` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `binding`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `location`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `format`：类型为 `QRhiVertexInputAttribute::Format`。没有默认值，调用时必须提供。数据格式或显示格式。格式通常会影响解析、像素布局、精度、编码或兼容性。
-- 参数 `offset`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `matrixSlice`：类型为 `int`。默认值为 `-1`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个顶点输入属性描述，包含指定的`binding`号、`location`、`format`和`offset`。
+除非该属性对应矩阵的行或列（例如，一个4x4矩阵变成4个vec4，消耗4个连续顶点输入位置），否则`matrixSlice`应为-1，此时该属性应为该行或列的索引。`location - matrixSlice`必须始终等于展开矩阵第一行或第一列的 `location`。
 
 ### `int QRhiVertexInputAttribute::binding() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `binding`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回绑定点索引。
 
 ### `QRhiVertexInputAttribute::Format QRhiVertexInputAttribute::format() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `format`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
-
-**签名拆解：**
-
-- 返回值：`QRhiVertexInputAttribute::Format`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回顶点输入元素的格式。
 
 ### `int QRhiVertexInputAttribute::location() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputAttribute::location` 用于计算、查询或取得与“location”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回顶点输入元素的位置。
 
 ### `int QRhiVertexInputAttribute::matrixSlice() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputAttribute::matrixSlice` 用于计算、查询或取得与“matrix、Slice”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果输入元素对应矩阵的行或列，则返回矩阵片;如果不相关，则返回-1。
 
 ### `quint32 QRhiVertexInputAttribute::offset() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputAttribute::offset` 用于计算、查询或取得与“offset”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `quint32`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回输入元素的字节偏移量。
 
 ### `void QRhiVertexInputAttribute::setBinding(int b)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setBinding`。调用它会改变 `QRhiVertexInputAttribute` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `b`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将绑定点索引设置为`b`。默认情况下，索引设置为0。
 
 ### `void QRhiVertexInputAttribute::setFormat(QRhiVertexInputAttribute::Format f)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFormat`。调用它会改变 `QRhiVertexInputAttribute` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QRhiVertexInputAttribute::Format`。没有默认值，调用时必须提供。传入 `QRhiVertexInputAttribute::Format` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将顶点输入元素的格式设置为`f`。默认情况下，该格式设置为 Float4。
 
 ### `void QRhiVertexInputAttribute::setLocation(int loc)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setLocation`。调用它会改变 `QRhiVertexInputAttribute` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `loc`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将顶点输入元素的位置设为`loc`。默认情况下，这个位置设为0。
 
 ### `void QRhiVertexInputAttribute::setMatrixSlice(int slice)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setMatrixSlice`。调用它会改变 `QRhiVertexInputAttribute` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `slice`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置矩阵`slice`。默认情况下，这个值设置为-1，只有当该属性对应矩阵的行或列时（例如，一个4x4矩阵变成4个vec4，消耗4个连续顶点输入位置），此时应设置为>= 0，此时它是该行或列的索引。`location - matrixSlice`必须始终等于展开矩阵第一行或第一列的`location`。
 
 ### `void QRhiVertexInputAttribute::setOffset(quint32 ofs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setOffset`。调用它会改变 `QRhiVertexInputAttribute` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `ofs`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将输入元素的字节偏移设置为`ofs`。
 
 ### `[noexcept] size_t qHash(const QRhiVertexInputAttribute &key, size_t seed = 0)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QRhiVertexInputAttribute::qHash` 用于计算、查询或取得与“q、Hash”相关的操作。调用时要先确认当前状态和 `key`、`seed` 的有效范围；返回类型是 `size_t`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`size_t`。
-- 参数 `key`：类型为 `const QRhiVertexInputAttribute &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-- 参数 `seed`：类型为 `size_t`。默认值为 `0`。传入 `size_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`key`的哈希值，使用`seed`来做种。
 
 ### `[noexcept] bool operator!=(const QRhiVertexInputAttribute &a, const QRhiVertexInputAttribute &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputAttribute` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiVertexInputAttribute &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputAttribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiVertexInputAttribute &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputAttribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个 `QRhiVertexInputAttribute` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
 
 ### `[noexcept] bool operator==(const QRhiVertexInputAttribute &a, const QRhiVertexInputAttribute &b)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiVertexInputAttribute` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `a`：类型为 `const QRhiVertexInputAttribute &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputAttribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `b`：类型为 `const QRhiVertexInputAttribute &`。没有默认值，调用时必须提供。传入 `const QRhiVertexInputAttribute &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个`QRhiVertexInputAttribute`对象`a`和`b`的值相等，返回`true`。
 
 ## 6. 深入实践与常见坑
 

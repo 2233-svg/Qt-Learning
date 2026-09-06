@@ -75,254 +75,178 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 18 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOption::OptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 暴露的类型声明 `Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:OptionType`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个枚举由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格选项类型。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则你不需要担心这个。
+- `QStyleOption::SO_Button`：`2`;`QStyleOptionButton`
+- `QStyleOption::SO_ComboBox`：`0xf0004`;`QStyleOptionComboBox`
+- `QStyleOption::SO_Complex`：`0xf0000`;`QStyleOptionComplex`
+- `QStyleOption::SO_Default`：`0`;`QStyleOption`
+- `QStyleOption::SO_DockWidget`：`9`;`QStyleOptionDockWidget`
+- `QStyleOption::SO_FocusRect`：`1`;`QStyleOptionFocusRect`
+- `QStyleOption::SO_Frame`：`5`;`QStyleOptionFrame`
+- `QStyleOption::SO_GraphicsItem`：`15`;`QStyleOptionGraphicsItem`
+- `QStyleOption::SO_GroupBox`：`0xf0006`;`QStyleOptionGroupBox`
+- `QStyleOption::SO_Header`：`8`;`QStyleOptionHeader`
+- `QStyleOption::SO_MenuItem`：`4`;`QStyleOptionMenuItemV2`
+- `QStyleOption::SO_ProgressBar`：`6`;`QStyleOptionProgressBar`
+- `QStyleOption::SO_RubberBand`：`13`;`QStyleOptionRubberBand`
+- `QStyleOption::SO_SizeGrip`：`0xf0007`;`QStyleOptionSizeGrip`
+- `QStyleOption::SO_Slider`：`0xf0001`;`QStyleOptionSlider`
+- `QStyleOption::SO_SpinBox`：`0xf0002`;`QStyleOptionSpinBox`
+- `QStyleOption::SO_Tab`：`3`;`QStyleOptionTab`
+- `QStyleOption::SO_TabBarBase`：`12`;`QStyleOptionTabBarBase`
+- `QStyleOption::SO_TabWidgetFrame`：`11`;`QStyleOptionTabWidgetFrame`
+- `QStyleOption::SO_TitleBar`：`0xf0005`;`QStyleOptionTitleBar`
+- `QStyleOption::SO_ToolBar`：`14`;`QStyleOptionToolBar`
+- `QStyleOption::SO_ToolBox`：`7`;`QStyleOptionToolBox`
+- `QStyleOption::SO_ToolButton`：`0xf0003`;`QStyleOptionToolButton`
+- `QStyleOption::SO_ViewItem`：`10`;`QStyleOptionViewItem`（访谈中使用）
+以下数值用于自定义控制：
+- `QStyleOption::SO_CustomBase`：`0xf00`;保留给自定义QStyleOptions;所有自定义控制值必须高于此值
+- `QStyleOption::SO_ComplexCustomBase`：`0xf000000`;保留给自定义QStyleOptions;所有自定义复杂控制值必须高于此值
 
 ### `enum QStyleOption::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOption::Type`：`SO_Default`;提供样式选项（`SO_Default`为本类别）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必担心这些。
 
 ### `enum QStyleOption::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOption::Version`：`1`;1
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你使用`qstyleoption_cast()`，通常不需要检查。
 
 ### `QStyleOption::QStyleOption(int version = QStyleOption::Version, int type = SO_Default)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `version`：类型为 `int`。默认值为 `QStyleOption::Version`。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `int`。默认值为 `SO_Default`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个带有指定`version`和`type`的QStyleOption。
+该版本对QStyleOption没有特殊含义;子类可以用它来区分同一期权类型的不同版本。
+`state`成员变量初始化为`QStyle::State_None`。
 
 ### `QStyleOption::QStyleOption(const QStyleOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+复制了`other`。
 
 ### `[noexcept] QStyleOption::~QStyleOption()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+会破坏这个风格选项对象。
 
 ### `void QStyleOption::initFrom(const QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStyleOption::initFrom` 用于执行与“init、转换进入”相关的操作。调用时要先确认当前状态和 `widget` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `const QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据指定的 `widget` 初始化 `state`、`direction`、`rect`、`palette`、`fontMetrics` 和 `styleObject` 成员变量。
+这是一个方便函数;成员变量也可以手动初始化。
 
 ### `QStyleOption &QStyleOption::operator=(const QStyleOption &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QStyleOption &`。
-- 参数 `other`：类型为 `const QStyleOption &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把`other`分配到这个`QStyleOption`。
 
 ### `Qt::LayoutDirection QStyleOption::direction`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setDirection(...)` 设置，之后用 `direction()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:LayoutDirection QStyleOption::direction`。
-- 属性名：`Qt`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留了在控件中绘制文本时应使用的文本布局方向。
+默认情况下，布局方向是`Qt::LeftToRight`。
 
 ### `QFontMetrics QStyleOption::fontMetrics`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setFontMetrics(...)` 设置，之后用 `fontMetrics()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:fontMetrics`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存在控件中绘制文本时应使用字体度量。
+默认情况下，使用应用程序的默认字体。
 
 ### `QPalette QStyleOption::palette`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setPalette(...)` 设置，之后用 `palette()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:palette`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含绘制控件时应使用调色板。
+默认情况下，应用的默认调色板被使用。
 
 ### `QRect QStyleOption::rect`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setRect(...)` 设置，之后用 `rect()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:rect`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含应用于各种计算和涂装的区域。
+对于不同类型的元素，这可能有不同的含义。例如，对于`QStyle::CE_PushButton`元素，它代表整个按钮的矩形，而对于`QStyle::CE_PushButtonLabel`元素，它只是按钮标签的区域。
+默认值为空矩形，即宽度和高度均为0的矩形。
 
 ### `QStyle::State QStyleOption::state`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setState(...)` 设置，之后用 `state()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:State QStyleOption::state`。
-- 属性名：`QStyle`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留绘制控件时使用的样式标志。
+默认值是`QStyle::State_None`。
 
 ### `QObject *QStyleOption::styleObject`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setStyleObject(...)` 设置，之后用 `styleObject()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 成员类型：`QObject *`。
-- 成员名：`styleObject`；读取前确认所属对象或命名空间仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存被样式化的对象。
+内置样式支持以下类型：`QWidget`、`QGraphicsObject`和`QQuickItem`。
 
 ### `int QStyleOption::type`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setType(...)` 设置，之后用 `type()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:type`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含样式选项的期权类型。
+默认值是`SO_Default`。
 
 ### `int QStyleOption::version`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOption` 的配置属性。初始化或状态切换时通过 `setVersion(...)` 设置，之后用 `version()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:version`。
-- 属性名：`QStyleOption`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留样式选项的版本。
+这个值可以被子类用来实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`函数，通常不需要检查它。
+默认值是1。
 
 ### `template <typename T> T qstyleoption_cast(QStyleOption *option)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QStyleOption::qstyleoption_cast` 用于计算、查询或取得与“qstyleoption、cast”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `template <typename T> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`template <typename T> T`。
-- 参数 `option`：类型为 `QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+根据给定`option`类型返回T或T `nullptr`。
 
 ### `template <typename T> T qstyleoption_cast(const QStyleOption *option)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** `QStyleOption::qstyleoption_cast` 用于计算、查询或取得与“qstyleoption、cast”相关的操作。调用时要先确认当前状态和 `option` 的有效范围；返回类型是 `template <typename T> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+根据给定`option`的`type`和 `version`，返回 T 或 `nullptr`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> T`。
-- 参数 `option`：类型为 `const QStyleOption *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ void MyStyle::drawPrimitive(PrimitiveElement element,
+                             const QStyleOption *option,
+                             QPainter *painter,
+                             const QWidget *widget)
+ {
+     if (element == PE_FrameFocusRect) {
+         const QStyleOptionFocusRect *focusRectOption =
+                 qstyleoption_cast<const QStyleOptionFocusRect *>(option);
+         if (focusRectOption) {
+             // ...
+         }
+     }
+     // ...
+ }
+```
 
 ## 6. 深入实践与常见坑
 

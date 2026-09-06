@@ -68,157 +68,101 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QStyleOptionButton::ButtonFeatureflags QStyleOptionButton::ButtonFeatures`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 暴露的类型声明 `Button、Featureflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:ButtonFeatureflags QStyleOptionButton::ButtonFeatures`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了按钮可能具备的不同功能类型。
+- `QStyleOptionButton::None`：`0x00`;表示普通按钮。
+- `QStyleOptionButton::Flat`：`0x01`;表示扁平按钮。
+- `QStyleOptionButton::HasMenu`：`0x02`;表示该按钮带有下拉菜单。
+- `QStyleOptionButton::DefaultButton`：`0x04`;表示该按钮是默认按钮。
+- `QStyleOptionButton::AutoDefaultButton`：`0x08`;表示该按钮是自动默认按钮。
+- `QStyleOptionButton::CommandLinkButton`：`0x10`;表示该按钮是Windows Vista类型的命令链接。
+ButtonFeatures 类型是 QFlags 的 typedef<ButtonFeature>。它存储 ButtonFeature 值的 OR 组合。
 
 ### `enum QStyleOptionButton::StyleOptionType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 暴露的类型声明 `Style、Option、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionType`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionButton::Type`：`SO_Button`;提供的样式类型（本类`SO_Button`）。
+类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型。一般来说，除非你想自己创建`QStyleOption`子职业和风格，否则不必担心这个。
 
 ### `enum QStyleOptionButton::StyleOptionVersion`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 暴露的类型声明 `Style、Option、Version`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:StyleOptionVersion`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
+- `QStyleOptionButton::Version`：`1`;1
+该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
 
 ### `QStyleOptionButton::QStyleOptionButton()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个 QStyleOptionButton，将成员变量初始化为默认值。
 
 ### `QStyleOptionButton::QStyleOptionButton(const QStyleOptionButton &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QStyleOptionButton &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建`other`样式选项的副本。
 
 ### `QStyleOptionButton::ButtonFeatures QStyleOptionButton::features`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的配置属性。初始化或状态切换时通过 `setFeatures(...)` 设置，之后用 `features()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:ButtonFeatures QStyleOptionButton::features`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量包含描述该按钮特征的位元或。
 
 ### `QIcon QStyleOptionButton::icon`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的配置属性。初始化或状态切换时通过 `setIcon(...)` 设置，之后用 `icon()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:icon`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保留按钮图标。
+默认值为空图标，即既无像素图也无文件名的图标。
 
 ### `QSize QStyleOptionButton::iconSize`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的配置属性。初始化或状态切换时通过 `setIconSize(...)` 设置，之后用 `iconSize()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:iconSize`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个变量代表按钮图标的大小。
+默认值为`QSize`（-1， -1），即无效大小。
 
 ### `QString QStyleOptionButton::text`
 
-**API 类别：** Member Variable Documentation
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的配置属性。初始化或状态切换时通过 `setText(...)` 设置，之后用 `text()` 验证实际值；如果类提供变化信号，应让界面或业务逻辑连接信号，而不是反复轮询。
-
-**签名拆解：**
-
-- 属性类型：`:text`。
-- 属性名：`QStyleOptionButton`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该变量保存按钮的文本。
+默认值是空字符串。
 
 ### `enum ButtonFeature { None, Flat, HasMenu, DefaultButton, AutoDefaultButton, CommandLinkButton }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 暴露的类型声明 `Button、Feature`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了按钮可能具备的不同功能类型。
+- `QStyleOptionButton::None`：`0x00`;表示普通按钮。
+- `QStyleOptionButton::Flat`：`0x01`;表示扁平按钮。
+- `QStyleOptionButton::HasMenu`：`0x02`;表示该按钮带有下拉菜单。
+- `QStyleOptionButton::DefaultButton`：`0x04`;表示该按钮是默认按钮。
+- `QStyleOptionButton::AutoDefaultButton`：`0x08`;表示该按钮是自动默认按钮。
+- `QStyleOptionButton::CommandLinkButton`：`0x10`;表示该按钮是Windows Vista类型的命令链接。
+ButtonFeatures 类型是 QFlags 的 typedef<ButtonFeature>。它存储 ButtonFeature 值的 OR 组合。
 
 ### `flags ButtonFeatures`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStyleOptionButton` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+本枚举描述了按钮可能具备的不同功能类型。
+- `QStyleOptionButton::None`：`0x00`;表示普通按钮。
+- `QStyleOptionButton::Flat`：`0x01`;表示扁平按钮。
+- `QStyleOptionButton::HasMenu`：`0x02`;表示该按钮带有下拉菜单。
+- `QStyleOptionButton::DefaultButton`：`0x04`;表示该按钮是默认按钮。
+- `QStyleOptionButton::AutoDefaultButton`：`0x08`;表示该按钮是自动默认按钮。
+- `QStyleOptionButton::CommandLinkButton`：`0x10`;表示该按钮是Windows Vista类型的命令链接。
+ButtonFeatures 类型是 QFlags 的 typedef<ButtonFeature>。它存储 ButtonFeature 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

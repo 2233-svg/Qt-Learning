@@ -89,389 +89,246 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 29 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSGNode::DirtyStateBitflags QSGNode::DirtyState`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 暴露的类型声明 `Dirty、State、Bitflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:DirtyStateBitflags QSGNode::DirtyState`。
-- 属性名：`QSGNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSGNode::markDirty()`用来表示场景图的变化。
+- `QSGNode::DirtyMatrix`：`0x0100`;`QSGTransformNode`中的矩阵发生了变化。
+- `QSGNode::DirtyNodeAdded`：`0x0400`;新增了一个节点。
+- `QSGNode::DirtyNodeRemoved`：`0x0800`;一个节点被移除。
+- `QSGNode::DirtyGeometry`：`0x1000`;`QSGGeometryNode`的几何形状发生了变化。
+- `QSGNode::DirtyMaterial`：`0x2000`;`QSGGeometryNode`的材料发生了变化。
+- `QSGNode::DirtyOpacity`：`0x4000`;`QSGOpacityNode`的不透明度发生了变化。
+- `QSGNode::DirtySubtreeBlocked`：`0x0080`;子树已被封锁。
+DirtyState 类型是 QFlags 的 typedef<DirtyStateBit>。它存储 DirtyStateBit 值的 OR 组合。
 
 ### `enum QSGNode::Flagflags QSGNode::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 暴露的类型声明 `Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QSGNode::Flags`。
-- 属性名：`QSGNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGNode：：Flag enum 描述了 `QSGNode` 上的标志。
+- `QSGNode::OwnedByParent`：`0x0001`;该节点归其父节点所有，当父节点被删除时节点也会被删除。
+- `QSGNode::UsePreprocess`：`0x0002`;节点的虚拟`preprocess()`函数将在渲染开始前被调用。
+- `QSGNode::OwnsGeometry`：`0x00010000`;仅适用于`QSGGeometryNode`和 `QSGClipNode`。节点拥有`QSGGeometry`实例的所有权，当节点被销毁或几何体被分配时，节点会删除该实例。
+- `QSGNode::OwnsMaterial`：`0x00020000`;仅适用于`QSGGeometryNode`。节点拥有材料的所有权，当节点被销毁或材料被分配时，节点会删除该材料。
+- `QSGNode::OwnsOpaqueMaterial`：`0x00040000`;仅对`QSGGeometryNode`有效。节点拥有不透明材料的所有权，当节点被销毁或材料被分配时，该节点会删除该材料。
+- `QSGNode::InternalReserved`：`0x01000000`;保留用于内部使用。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `enum QSGNode::NodeType`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 暴露的类型声明 `Node、类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:NodeType`。
-- 属性名：`QSGNode`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+可以用来确定节点类型。
+- `QSGNode::BasicNodeType`：`0`;`QSGNode`类型
+- `QSGNode::GeometryNodeType`：`1`;`QSGGeometryNode`类型
+- `QSGNode::TransformNodeType`：`2`;`QSGTransformNode`类型
+- `QSGNode::ClipNodeType`：`3`;`QSGClipNode`类型
+- `QSGNode::OpacityNodeType`：`4`;`QSGOpacityNode`类型
+- `QSGNode::RenderNodeType`：`6`;`QSGRenderNode`类型
 
 ### `QSGNode::QSGNode()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个新节点。
 
 ### `[virtual noexcept] QSGNode::~QSGNode()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁节点。
+该节点中所有设置了`QSGNode::OwnedByParent`标志的子节点也会被删除。
 
 ### `void QSGNode::appendChildNode(QSGNode *node)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSGNode` 添加依赖、数据或子对象的 API `appendChildNode`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `node`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将 `node` 附加到该节点的子节点列表中。
+节点的排序很重要，因为几何节点会按照添加到场景图的顺序进行渲染。
 
 ### `QSGNode *QSGNode::childAtIndex(int i) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::childAtIndex` 用于计算、查询或取得与“child、按位置访问、索引”相关的操作。调用时要先确认当前状态和 `i` 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数 `i`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回索引`i`的子节点。
+子节点内部存储为链表，因此通过索引遍历子节点并不理想。
 
 ### `int QSGNode::childCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::childCount` 用于计算、查询或取得与“child、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回子节点的数量。
 
 ### `QSGNode *QSGNode::firstChild() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::firstChild` 用于计算、查询或取得与“首项、Child”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的第一个子节点。
+子节点存储在链表中。
 
 ### `QSGNode::Flags QSGNode::flags() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode::Flags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode::Flags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的标志集合。
 
 ### `void QSGNode::insertChildNodeAfter(QSGNode *node, QSGNode *after)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSGNode` 添加依赖、数据或子对象的 API `insertChildNodeAfter`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `node`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `after`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入 `node` 该节点子节点列表，位于 `after` 指定的节点之后。
+节点的排序很重要，因为几何节点会按照添加到场景图的顺序进行渲染。
 
 ### `void QSGNode::insertChildNodeBefore(QSGNode *node, QSGNode *before)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSGNode` 添加依赖、数据或子对象的 API `insertChildNodeBefore`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `node`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `before`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+插入`node`该节点的子节点列表，先于`before`指定的节点。
+节点的排序很重要，因为几何节点会按照添加到场景图的顺序进行渲染。
 
 ### `[virtual] bool QSGNode::isSubtreeBlocked() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isSubtreeBlocked`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点及其子树是否可供使用。
+被阻挡的子树不会更新其脏状态，也不会被渲染。
+例如，当累积不透明度为0时，`QSGOpacityNode`会返回阻塞的子树。
 
 ### `QSGNode *QSGNode::lastChild() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::lastChild` 用于计算、查询或取得与“末项、Child”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的最后一个子节点。
+子节点存储为链表。
 
 ### `void QSGNode::markDirty(QSGNode::DirtyState bits)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::markDirty` 用于执行与“mark、Dirty”相关的操作。调用时要先确认当前状态和 `bits` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `bits`：类型为 `QSGNode::DirtyState`。没有默认值，调用时必须提供。传入 `QSGNode::DirtyState` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通知所有连接的渲染器该节点有脏`bits`。
 
 ### `QSGNode *QSGNode::nextSibling() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::nextSibling` 用于计算、查询或取得与“移动到下一项、Sibling”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回父子节点列表中的节点。
+子节点存储为链表。
 
 ### `QSGNode *QSGNode::parent() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::parent` 用于计算、查询或取得与“父对象”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的父节点。
 
 ### `void QSGNode::prependChildNode(QSGNode *node)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::prependChildNode` 用于执行与“前置追加、Child、Node”相关的操作。调用时要先确认当前状态和 `node` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `node`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`node`该节点前加上子节点列表。
+节点的排序很重要，因为几何节点会按照添加到场景图的顺序进行渲染。
 
 ### `[virtual] void QSGNode::preprocess()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::preprocess` 用于执行与“preprocess”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+覆盖该函数，在节点渲染前进行处理。
+预处理需要通过设置 `QSGNode::UsePreprocess` 来显式启用。该标志必须在节点添加到场景图之前设置，并且每渲染一帧节点都会调用预处理()函数。
+警告：在节点正在进行预处理时，请注意删除节点。在节点自身的预处理调用中，可能会在性能略有下降的情况下删除单个节点。删除包含同样使用预处理节点的子树可能导致分段错误。这是出于性能考虑。
 
 ### `QSGNode *QSGNode::previousSibling() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::previousSibling` 用于计算、查询或取得与“previous、Sibling”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回父节点子节点列表中的前一个节点。
+子节点存储为链表。
 
 ### `void QSGNode::removeAllChildNodes()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeAllChildNodes`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该节点的子节点列表中移除所有子节点。
 
 ### `void QSGNode::removeChildNode(QSGNode *node)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeChildNode`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `node`：类型为 `QSGNode *`。没有默认值，调用时必须提供。传入 `QSGNode *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从该节点的子节点列表中移除`node`。
 
 ### `void QSGNode::setFlag(QSGNode::Flag f, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlag`。调用它会改变 `QSGNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QSGNode::Flag`。没有默认值，调用时必须提供。传入 `QSGNode::Flag` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该节点为真，则将该节点的标志设为`f` `enabled`;否则清除该标志。
 
 ### `void QSGNode::setFlags(QSGNode::Flags f, bool enabled = true)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFlags`。调用它会改变 `QSGNode` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `f`：类型为 `QSGNode::Flags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-- 参数 `enabled`：类型为 `bool`。默认值为 `true`。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该节点为真，则设置该节点`f`的标志`enabled`;否则清除所有标志。
 
 ### `QSGNode::NodeType QSGNode::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSGNode::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSGNode::NodeType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSGNode::NodeType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该节点的类型。节点类型必须是`QSGNode::NodeType`中预定义的类型之一，并且可以安全地将类型投射到对应的类。
 
 ### `flags DirtyState`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSGNode::markDirty()`用来表示场景图的变化。
+- `QSGNode::DirtyMatrix`：`0x0100`;`QSGTransformNode`中的矩阵发生了变化。
+- `QSGNode::DirtyNodeAdded`：`0x0400`;新增了一个节点。
+- `QSGNode::DirtyNodeRemoved`：`0x0800`;一个节点被移除。
+- `QSGNode::DirtyGeometry`：`0x1000`;`QSGGeometryNode`的几何形状发生了变化。
+- `QSGNode::DirtyMaterial`：`0x2000`;`QSGGeometryNode`的材料发生了变化。
+- `QSGNode::DirtyOpacity`：`0x4000`;`QSGOpacityNode`的不透明度发生了变化。
+- `QSGNode::DirtySubtreeBlocked`：`0x0080`;子树已被封锁。
+DirtyState 类型是 QFlags 的 typedef<DirtyStateBit>。它存储 DirtyStateBit 值的 OR 组合。
 
 ### `enum DirtyStateBit { DirtyMatrix, DirtyNodeAdded, DirtyNodeRemoved, DirtyGeometry, DirtyMaterial, …, DirtySubtreeBlocked }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 暴露的类型声明 `Dirty、State、Bit`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`QSGNode::markDirty()`用来表示场景图的变化。
+- `QSGNode::DirtyMatrix`：`0x0100`;`QSGTransformNode`中的矩阵发生了变化。
+- `QSGNode::DirtyNodeAdded`：`0x0400`;新增了一个节点。
+- `QSGNode::DirtyNodeRemoved`：`0x0800`;一个节点被移除。
+- `QSGNode::DirtyGeometry`：`0x1000`;`QSGGeometryNode`的几何形状发生了变化。
+- `QSGNode::DirtyMaterial`：`0x2000`;`QSGGeometryNode`的材料发生了变化。
+- `QSGNode::DirtyOpacity`：`0x4000`;`QSGOpacityNode`的不透明度发生了变化。
+- `QSGNode::DirtySubtreeBlocked`：`0x0080`;子树已被封锁。
+DirtyState 类型是 QFlags 的 typedef<DirtyStateBit>。它存储 DirtyStateBit 值的 OR 组合。
 
 ### `enum Flag { OwnedByParent, UsePreprocess, OwnsGeometry, OwnsMaterial, OwnsOpaqueMaterial, InternalReserved }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 暴露的类型声明 `Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGNode：：Flag enum 描述了 `QSGNode` 上的标志。
+- `QSGNode::OwnedByParent`：`0x0001`;该节点归其父节点所有，当父节点被删除时节点也会被删除。
+- `QSGNode::UsePreprocess`：`0x0002`;节点的虚拟`preprocess()`函数将在渲染开始前被调用。
+- `QSGNode::OwnsGeometry`：`0x00010000`;仅适用于`QSGGeometryNode`和 `QSGClipNode`。节点拥有`QSGGeometry`实例的所有权，当节点被销毁或几何体被分配时，节点会删除该实例。
+- `QSGNode::OwnsMaterial`：`0x00020000`;仅适用于`QSGGeometryNode`。节点拥有材料的所有权，当节点被销毁或材料被分配时，节点会删除该材料。
+- `QSGNode::OwnsOpaqueMaterial`：`0x00040000`;仅对`QSGGeometryNode`有效。节点拥有不透明材料的所有权，当节点被销毁或材料被分配时，该节点会删除该材料。
+- `QSGNode::InternalReserved`：`0x01000000`;保留用于内部使用。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QSGNode` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+QSGNode：：Flag enum 描述了 `QSGNode` 上的标志。
+- `QSGNode::OwnedByParent`：`0x0001`;该节点归其父节点所有，当父节点被删除时节点也会被删除。
+- `QSGNode::UsePreprocess`：`0x0002`;节点的虚拟`preprocess()`函数将在渲染开始前被调用。
+- `QSGNode::OwnsGeometry`：`0x00010000`;仅适用于`QSGGeometryNode`和 `QSGClipNode`。节点拥有`QSGGeometry`实例的所有权，当节点被销毁或几何体被分配时，节点会删除该实例。
+- `QSGNode::OwnsMaterial`：`0x00020000`;仅适用于`QSGGeometryNode`。节点拥有材料的所有权，当节点被销毁或材料被分配时，节点会删除该材料。
+- `QSGNode::OwnsOpaqueMaterial`：`0x00040000`;仅对`QSGGeometryNode`有效。节点拥有不透明材料的所有权，当节点被销毁或材料被分配时，该节点会删除该材料。
+- `QSGNode::InternalReserved`：`0x01000000`;保留用于内部使用。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

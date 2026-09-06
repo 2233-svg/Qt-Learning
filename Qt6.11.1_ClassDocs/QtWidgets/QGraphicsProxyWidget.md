@@ -107,546 +107,331 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 41 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[anonymous] enum`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsProxyWidget` 暴露的类型声明 `enum`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟 `type()` 函数返回的值。
+- `QGraphicsProxyWidget::Type`: `12`；一个图形代理控件
 
 ### `QGraphicsProxyWidget::QGraphicsProxyWidget(QGraphicsItem *parent = nullptr, Qt::WindowFlags wFlags = Qt::WindowFlags())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsProxyWidget` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QGraphicsItem *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `wFlags`：类型为 `Qt::WindowFlags`。默认值为 `Qt::WindowFlags()`。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个新的 QGraphicsProxy 控件。`parent` 和 `wFlags` 传递给 `QGraphicsItem` 的构造器。
 
 ### `[virtual noexcept] QGraphicsProxyWidget::~QGraphicsProxyWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsProxyWidget` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它会销毁代理小部件和任何嵌入的小部件。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::contextMenuEvent` 用于执行与“context、Menu、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneContextMenuEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::contextMenuEvent`（QGraphicsSceneContextMenuEvent *event）。
+该事件处理程序可以被重新实现为子类以处理上下文菜单事件。`event`参数包含待处理事件的详细信息。
+如果你忽略该事件（即调用`QEvent::ignore()`），`event`会传播到该事件下方的任何项目。如果没有项目接受该事件，场景会忽略它并传播到视图。
+收到上下文菜单事件后，通常会打开`QMenu`。示例：
+默认实现会忽略该事件。
 
 ### `QGraphicsProxyWidget *QGraphicsProxyWidget::createProxyForChildWidget(QWidget *child)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::createProxyForChildWidget` 用于计算、查询或取得与“创建、Proxy、For、Child、Widget”相关的操作。调用时要先确认当前状态和 `child` 的有效范围；返回类型是 `QGraphicsProxyWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsProxyWidget *`。
-- 参数 `child`：类型为 `QWidget *`。没有默认值，调用时必须提供。子对象或子节点；要确认它是否由父对象接管，以及调用后原指针是否仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该代理中包含的该控件的指定 `child`创建代理小部件。
+该函数使得非顶级控件能够获得代理。例如，你可以嵌入一个对话框，然后只转换其中一个控件。
+如果小部件已经嵌入，返回现有的代理小部件。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::dragEnterEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::dragEnterEvent` 用于执行与“drag、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dragEnterEvent`（QGraphicsSceneDragDropEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项目的拖入事件。拖入事件是在光标进入该物品区域时生成的。
+通过接受事件（即调用`QEvent::accept()`），物品将接受掉落事件，同时接收拖动移动和拖离事件。否则，事件将被忽略并传播到下面的物品。如果事件被接受，物品将接收拖动移动事件，然后控制权返回事件循环。
+dragEnterEvent 的一个常见实现会根据 `event` 中关联的 mime 数据接受或忽略`event`。示例：
+物品默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::dragLeaveEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::dragLeaveEvent` 用于执行与“drag、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dragLeaveEvent`（QGraphicsSceneDragDropEvent *event）。
+该事件处理程序（事件`event`）可以重新实现，以接收该物品的拖曳离开事件。拖曳离开事件是在光标离开物品区域时生成的。大多数情况下你不需要重新实现这个函数，但它对重置物品状态（例如高亮）非常有用。
+`event`打电话给`QEvent::ignore()`或`QEvent::accept()`没有任何影响。
+项目默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::dragMoveEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::dragMoveEvent` 用于执行与“drag、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dragMoveEvent`（QGraphicsSceneDragDropEvent *event）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该物品的拖动移动事件。拖动移动事件是在光标在物品区域内移动时生成的。大多数情况下你不需要重新实现这个函数;它用来表示只有物品的部分可以接受掉落。
+在`event`上调用`QEvent::ignore()`或`QEvent::accept()`，可以切换该物品是否接受该事件位置的掉落。默认情况下，`event`被接受，表示该物品允许在指定位置掉落。
+物品默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::dropEvent(QGraphicsSceneDragDropEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::dropEvent` 用于执行与“drop、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneDragDropEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::dropEvent`（QGraphicsSceneDragDropEvent *event）。
+该事件处理程序用于事件`event`，可以重新实现以接收该物品的掉落事件。只有当最后一次拖动移动事件被接受时，物品才能接收掉落事件。
+打电话给`QEvent::ignore()`或`QEvent::accept()` `event`没有效果。
+物品默认不会接收拖放事件;要启用此功能，请调用`setAcceptDrops(true)`。
+默认实现什么都不做。
 
 ### `[override virtual protected] bool QGraphicsProxyWidget::event(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::event` 用于计算、查询或取得与“event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::event`（QEvent *事件）。
 
 ### `[override virtual protected] bool QGraphicsProxyWidget::eventFilter(QObject *object, QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::eventFilter` 用于计算、查询或取得与“event、Filter”相关的操作。调用时要先确认当前状态和 `object`、`event` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `object`：类型为 `QObject *`。没有默认值，调用时必须提供。Qt 对象参数。要确认对象有效、线程归属、所有权和该 API 是否只处理直接子对象。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::focusInEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::focusInEvent` 用于执行与“focus、In、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::focusInEvent`（QFocusEvent *event）。
 
 ### `[override virtual protected] bool QGraphicsProxyWidget::focusNextPrevChild(bool next)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::focusNextPrevChild` 用于计算、查询或取得与“focus、移动到下一项、Prev、Child”相关的操作。调用时要先确认当前状态和 `next` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `next`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::focusNextPrevChild`（下一个布尔）。
+根据 Tab 和 Shift Tab 的需要，找到新的控件以赋予键盘焦点，若能找到新控件则返回 `true`;否则返回`false`。如果 `next` 为真，该函数向前搜索;如果 `next` 为假，则向后搜索。
+有时，你会想重新实现这个函数，为你的小部件及其子小部件提供特殊的焦点处理。例如，浏览器可能会重新实现它，将当前活跃链接向前或向后移动，只有在到达页面最后或第一个链接时调用基础实现。
+子控件在其父控件上调用 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过为对象重新实现该函数，你可以控制所有子控件的焦点遍历。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::focusOutEvent(QFocusEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::focusOutEvent` 用于执行与“focus、Out、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QFocusEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::focusOutEvent`（QFocusEvent *event）。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::grabMouseEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::grabMouseEvent` 用于执行与“抓取、Mouse、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::grabMouseEvent`（QEvent *事件）。
+`event`，这个事件处理程序可以在子类中重新实现，以接收 `QEvent::GrabMouse` 事件的通知。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::hideEvent(QHideEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::hideEvent` 用于执行与“隐藏、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QHideEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::hideEvent`（QHideEvent *event）。
+对于`Hide`事件，该事件处理程序是在小部件被隐藏后交付的，例如，在小部件之前显示时，已调用该小部件或其前祖之一的 setVisible（false）。
+你可以重新实现这个事件处理程序，检测你的小部件是否被隐藏。调用`QEvent::accept()`或`QEvent::ignore()`对`event`没有影响。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::hoverEnterEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::hoverEnterEvent` 用于执行与“hover、Enter、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::hoverEnterEvent`（QGraphicsSceneHoverEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的悬停进入事件。默认实现调用`update()`;否则不做任何操作。
+打电话给`QEvent::ignore()`或`QEvent::accept()`对`event`没有影响。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::hoverLeaveEvent` 用于执行与“hover、Leave、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::hoverLeaveEvent`（QGraphicsSceneHoverEvent *event）。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::hoverMoveEvent(QGraphicsSceneHoverEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::hoverMoveEvent` 用于执行与“hover、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneHoverEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::hoverMoveEvent`（QGraphicsSceneHoverEvent *event）。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::inputMethodEvent(QInputMethodEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::inputMethodEvent` 用于执行与“input、Method、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QInputMethodEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Reimplements： `QGraphicsItem::inputMethodEvent`（QInputMethodEvent *event）.
+该事件处理程序对于事件`event`，可以重新实现以接收该项的输入法事件。默认实现忽略该事件。
 
 ### `[override virtual protected] QVariant QGraphicsProxyWidget::inputMethodQuery(Qt::InputMethodQuery query) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::inputMethodQuery` 用于计算、查询或取得与“input、Method、查询”相关的操作。调用时要先确认当前状态和 `query` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `query`：类型为 `Qt::InputMethodQuery`。没有默认值，调用时必须提供。传入 `Qt::InputMethodQuery` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::inputMethodQuery`（Qt：：InputMethodQuery query） const.
+该方法仅对输入项相关。输入方法用它来查询项的一组属性，以支持复杂的输入法操作，如支持周围文本和重新转换。`query` 指定查询的属性。
 
 ### `[override virtual protected] QVariant QGraphicsProxyWidget::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::itemChange` 用于计算、查询或取得与“项目访问、Change”相关的操作。调用时要先确认当前状态和 `change`、`value` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `change`：类型为 `QGraphicsItem::GraphicsItemChange`。没有默认值，调用时必须提供。传入 `QGraphicsItem::GraphicsItemChange` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::itemChange`（QGraphicsItem：：GraphicsItemChange change， const QVariant & value）。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::keyPressEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::keyPressEvent` 用于执行与“key、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::keyPressEvent`（QKeyEvent *event）。
+该事件处理程序（针对事件`event`）可以重新实现以接收该项的按键事件。默认实现忽略该事件。如果你重新实现该处理程序，事件默认会被接受。
+注意，键事件只会针对设置`ItemIsFocusable`标志且具有键盘输入焦点的物品。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::keyReleaseEvent(QKeyEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::keyReleaseEvent` 用于执行与“key、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QKeyEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::keyReleaseEvent`（QKeyEvent *event）。
+该事件处理程序（针对事件`event`）可以重新实现以接收该项的密钥释放事件。默认实现忽略该事件。如果你重新实现该处理程序，该事件默认会被接受。
+注意，键事件只会针对设置`ItemIsFocusable`标志且带有键盘输入焦点的物品。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::mouseDoubleClickEvent` 用于执行与“mouse、Double、Click、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mouseDoubleClickEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的鼠标双击事件。
+双击物品时，该物品首先会触发鼠标按键事件，接着是释放事件（即点击），再是双击事件，最后是释放事件。
+打电话给`QEvent::ignore()`或`QEvent::accept()`打`event`没有效果。
+默认实现调用`mousePressEvent()`。如果你想在重新实现这个函数时保留基础实现，可以在你的重实现中调用 QGraphicsItem：：mouseDoubleClickEvent()。
+注意，如果物品既非`selectable`也非`movable`，则不会触发双击事件（此时忽略单次鼠标点击，导致双击停止生成）。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::mouseMoveEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::mouseMoveEvent` 用于执行与“mouse、移动、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mouseMoveEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序（事件`event`）可以重新实现，以接收该物品的鼠标移动事件。如果你收到该事件，可以确定该物品也收到了鼠标按键事件，并且该物品是当前的鼠标抓取器。
+`event`打电话给`QEvent::ignore()`或`QEvent::accept()`没有任何影响。
+默认实现处理基本的项目交互，比如选择和移动。如果你想在重现这个函数时保留基础实现，可以在你的重实现中调用 QGraphicsItem：：mouseMoveEvent()。
+请注意，`mousePressEvent()`决定接收鼠标事件的图形项目。详情请参见`mousePressEvent()`描述。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::mousePressEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::mousePressEvent` 用于执行与“mouse、Press、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mousePressEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该物品的鼠标按键事件。鼠标按键事件只传递给接受被按下鼠标按钮的物品。默认情况下，物品接受所有鼠标按键，但你可以通过调用`setAcceptedMouseButtons()`来更改。
+鼠标按键事件决定哪个物品应成为鼠标抓取器（参见`QGraphicsScene::mouseGrabberItem()`）。如果不重新实现此功能，按键事件将传播到该物品下方的最顶端任何物品，且不会有其他鼠标事件传递到该物品。
+如果你重新实现了这个功能，`event`默认会被接受（见`QEvent::accept()`），这个物品就是鼠标抓取器。这允许该物品接收未来的移动、释放和双击事件。如果你在`event`上调用`QEvent::ignore()`，这个物品将失去鼠标抓取功能，`event`会传播到最下面的任何物品。除非收到新的鼠标按键事件，否则不会再传递给该物品。
+默认实现处理基本的物品交互，比如选择和移动。如果你想在重现这个函数时保留基础实现，可以在重构中调用 QGraphicsItem：：mousePressEvent()。
+对于既非`movable`也非`selectable`的项目，事件为`QEvent::ignore()`d。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::mouseReleaseEvent` 用于执行与“mouse、释放、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneMouseEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::mouseReleaseEvent`（QGraphicsSceneMouseEvent *event）。
+该事件处理程序对于事件`event`，可以重新实现以接收该项的鼠标释放事件。
+打电话给`QEvent::ignore()`或`QEvent::accept()` `event`没有效果。
+默认实现处理基本的物品操作，比如选择和移动。如果你想在重现这个函数时保留基础实现，可以在重写中调用 QGraphicsItem：：mouseReleaseEvent()。
+请注意，`mousePressEvent()`决定接收鼠标事件的图形项目。详情请参见`mousePressEvent()`描述。
 
 ### `[protected slot] QGraphicsProxyWidget *QGraphicsProxyWidget::newProxyWidget(const QWidget *child)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::newProxyWidget` 用于计算、查询或取得与“new、Proxy、Widget”相关的操作。调用时要先确认当前状态和 `child` 的有效范围；返回类型是 `QGraphicsProxyWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QGraphicsProxyWidget *`。
-- 参数 `child`：类型为 `const QWidget *`。没有默认值，调用时必须提供。子对象或子节点；要确认它是否由父对象接管，以及调用后原指针是否仍有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+为该代理中包含的该控件的指定 `child`创建代理小部件。
+你不应该直接调用这个函数;应该用`QGraphicsProxyWidget::createProxyForChildWidget()`。
+这个函数是一个假的虚拟槽，你可以在子类中重新实现它，以控制新代理控件的创建方式。默认实现会返回一个用`QGraphicsProxyWidget()`构造函数创建的代理，该代理控件作为父节点。
 
 ### `[override virtual] void QGraphicsProxyWidget::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsProxyWidget` 的核心操作 `paint`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `painter`：类型为 `QPainter *`。没有默认值，调用时必须提供。绘制上下文。要确认它已经绑定有效绘制设备，并处于允许绘制的阶段。
-- 参数 `option`：类型为 `const QStyleOptionGraphicsItem *`。没有默认值，调用时必须提供。选项或绘制/行为配置对象；调用前确认其中的状态、矩形和样式信息已经初始化。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+由场景调用，把代理所嵌入的 `QWidget` 及其当前样式绘制到图形视图。`option` 提供选择、变换等状态；通常不直接调用，派生类额外绘制后应保持代理控件的几何和缓存一致。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::resizeEvent(QGraphicsSceneResizeEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::resizeEvent` 用于执行与“调整尺寸、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneResizeEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::resizeEvent`（QGraphicsSceneResizeEvent *event）。
+对于`GraphicsSceneResize`事件，该事件处理程序是在控件大小调整后交付的（即其局部大小发生变化）。`event`包含旧大小和新大小。
+该事件仅在控件本地调整大小时执行;调用控件或其前祖或视图的 `setTransform()` 不会影响控件的本地大小。
+你可以重新实现这个事件处理程序，检测你的小部件是否被调整了大小。调用`QEvent::accept()`或`QEvent::ignore()`对`event`没有影响。
 
 ### `[override virtual] void QGraphicsProxyWidget::setGeometry(const QRectF &rect)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setGeometry`。调用它会改变 `QGraphicsProxyWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `rect`：类型为 `const QRectF &`。没有默认值，调用时必须提供。矩形区域；要确认坐标系、是否包含右下边界以及空矩形的语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QGraphicsLayoutItem::setGeometry`（const QRectF & rect）。
+该虚拟函数将`QGraphicsLayoutItem`的几何体设置为 `rect`，即父坐标（例如，`rect` 的左上角等价于该物品在父坐标中的位置）。
+你必须在`QGraphicsLayoutItem`的子类中重新实现该函数以接收几何更新。布局在进行重排时会调用该函数。
+如果`rect`超出`minimumSize`和`maximumSize`的范围，则会调整到最接近的尺寸，使其在法律范围内。
 
 ### `void QGraphicsProxyWidget::setWidget(QWidget *widget)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setWidget`。调用它会改变 `QGraphicsProxyWidget` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `widget`：类型为 `QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`widget`嵌入到该代理控件中。嵌入控件必须仅存在于图形视图内部或外部。只要控件同时在UI的其他地方可见，你就无法嵌入它。
+`widget`必须是一个顶层控件，其父组件是`nullptr`。
+当小部件被嵌入时，其状态（例如可见、启用、几何、大小提示）会复制到代理小部件中。如果嵌入小部件被显式隐藏或禁用，嵌入完成后代理小部件将显式隐藏或禁用。类文档对共享状态有全面的概述。
+`QGraphicsProxyWidget` 的窗口标志决定了嵌入后小部件是否会被赋予窗口装饰。
+该函数返回后，`QGraphicsProxyWidget`会尽可能保持与`widget`状态同步。
+如果调用该函数时该代理已经嵌入了某个小部件，那么该小部件首先会自动去嵌入。传递`widget`参数的`nullptr`只能卸嵌入小部件，当前嵌入小部件的所有权会传递给调用者。所有嵌入的子小部件也会被嵌入，其代理小部件将被销毁。
+请注意，带有`Qt::WA_PaintOnScreen`控件属性集的小部件以及包裹外部应用或控制器的小部件不能被嵌入。例如`QOpenGLWidget`和QAxWidget。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::showEvent(QShowEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::showEvent` 用于执行与“显示、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QShowEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::showEvent`（QShowEvent *event）。
+对于`Show`事件，这个事件处理程序在小部件尚未显示之前交付，例如，在小部件之前被隐藏时，已调用了 setVisible（true） 来调用该小部件或其前祖。
+你可以重新实现这个事件处理程序，检测你的小部件何时显示。调用`QEvent::accept()`或`QEvent::ignore()`在`event`上没有效果。
 
 ### `[override virtual protected] QSizeF QGraphicsProxyWidget::sizeHint(Qt::SizeHint which, const QSizeF &constraint = QSizeF()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::sizeHint` 用于计算、查询或取得与“尺寸或数量、Hint”相关的操作。调用时要先确认当前状态和 `which`、`constraint` 的有效范围；返回类型是 `QSizeF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSizeF`。
-- 参数 `which`：类型为 `Qt::SizeHint`。没有默认值，调用时必须提供。传入 `Qt::SizeHint` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `constraint`：类型为 `const QSizeF &`。默认值为 `QSizeF()`。传入 `const QSizeF &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::sizeHint`（Qt：：SizeHint which， const QSizeF & constraint） const.
 
 ### `QRectF QGraphicsProxyWidget::subWidgetRect(const QWidget *widget) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::subWidgetRect` 用于计算、查询或取得与“sub、Widget、Rect”相关的操作。调用时要先确认当前状态和 `widget` 的有效范围；返回类型是 `QRectF`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRectF`。
-- 参数 `widget`：类型为 `const QWidget *`。没有默认值，调用时必须提供。参与操作的 QWidget。要确认它是否为空、是否已被其他布局/容器管理，以及函数是否只查找直接子项。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`widget`矩形，矩形必须是`widget()`的后代，或者`widget()`该代理项的本地坐标。
+如果没有嵌入小部件、`widget` `nullptr`，或者`widget`不是嵌入小部件的后代，该函数返回空`QRectF`。
 
 ### `[override virtual] int QGraphicsProxyWidget::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::type()` const.
 
 ### `[override virtual protected] void QGraphicsProxyWidget::ungrabMouseEvent(QEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::ungrabMouseEvent` 用于执行与“ungrab、Mouse、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsWidget::ungrabMouseEvent`（QEvent *事件）。
+`event`，这个事件处理程序可以重新实现到子类中，以接收`QEvent::UngrabMouse`事件的通知。
 
 ### `[override virtual protected] void QGraphicsProxyWidget::wheelEvent(QGraphicsSceneWheelEvent *event)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::wheelEvent` 用于执行与“wheel、Event”相关的操作。调用时要先确认当前状态和 `event` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `event`：类型为 `QGraphicsSceneWheelEvent *`。没有默认值，调用时必须提供。事件对象。通常只在事件处理函数执行期间有效，应读取类型和字段后决定 accept/ignore，不能长期保存指针。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QGraphicsItem::wheelEvent`（QGraphicsSceneWheelEvent *event）。
+对于事件`event`，这个事件处理程序可以重新实现，以接收该项的轮子事件。如果你重新实现这个函数，`event`将默认被接受。
+如果你忽略该事件（即调用`QEvent::ignore()`），它会传播到该事件下方的任何项目。如果没有项目接受该事件，场景会忽略它，并传播到视图（例如视图的垂直滚动条）。
+默认实现会忽略该事件。
 
 ### `QWidget *QGraphicsProxyWidget::widget() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QGraphicsProxyWidget::widget` 用于计算、查询或取得与“widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回指向嵌入控件的指针。
 
 ### `enum { Type }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QGraphicsProxyWidget` 暴露的类型声明 `enum`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟 `type()` 函数返回的值。
+- `QGraphicsProxyWidget::Type`: `12`；一个图形代理控件
 
 ## 6. 深入实践与常见坑
 

@@ -106,524 +106,357 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 38 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit constexpr noexcept] QDeadlineTimer::QDeadlineTimer(Qt::TimerType timerType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `timerType`：类型为 `Qt::TimerType`。没有默认值，调用时必须提供。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个过期的`QDeadlineTimer`对象。对于该对象，`remainingTime()`返回0。如果`timerType`未被设置，则该对象将使用`coarse`定时器类型。
+计时器类型 `timerType` 可以忽略，因为计时器已过期。同样，出于优化目的，该函数不会尝试获取当前时间，而是使用已知的过去值。因此，`deadline()` 可能返回意外值，该对象无法用于计算逾期时间。如果需要此功能，请使用 `QDeadlineTimer::current()`。
 
 ### `[constexpr noexcept] QDeadlineTimer::QDeadlineTimer(QDeadlineTimer::ForeverConstant, Qt::TimerType timerType = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `ForeverConstant`：类型为 `QDeadlineTimer::`。没有默认值，调用时必须提供。传入 `QDeadlineTimer::` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timerType`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个过期的`QDeadlineTimer`对象。对于该对象，`remainingTime()`返回0。如果`timerType`未被设置，则该对象将使用`coarse`定时器类型。
+计时器类型 `timerType` 可以忽略，因为计时器已过期。同样，出于优化目的，该函数不会尝试获取当前时间，而是使用已知的过去值。因此，`deadline()` 可能返回意外值，该对象无法用于计算逾期时间。如果需要此功能，请使用 `QDeadlineTimer::current()`。
 
 ### `[explicit noexcept] QDeadlineTimer::QDeadlineTimer(qint64 msecs, Qt::TimerType type = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`ForeverConstant`创建的QDeadlineTimer对象永远不会过期。对于此类对象，`remainingTime()`返回-1，`deadline()`返回最大值，`isForever()`返回true。
+计时器类型`timerType`可以忽略，因为计时器永远不会过期。
 
 ### `template <typename Rep, typename Period> QDeadlineTimer::QDeadlineTimer(std::chrono::duration<Rep, Period> remaining, Qt::TimerType type = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `remaining`：类型为 `std::chrono::duration<Rep, Period>`。没有默认值，调用时必须提供。传入 `std::chrono::duration<Rep, Period>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个QDeadlineTimer对象，其到期时间为该对象创建之初起计时`msecs`毫秒，如果msecs为正。如果`msecs`为零，该QDeadlineTimer将被标记为过期，导致`remainingTime()`返回零，`deadline()`返回一个不确定的过去时间点。如果`msecs`为负，计时器将被设定为永不失效，`remainingTime()`返回-1，`deadline()`返回最大值。
+QDeadlineTimer 对象将按照指定的计时器`type`构建。
+为了优化，如果`msecs`为零，该函数可以跳过当前时间，而使用已知的过去值。如果发生这种情况，`deadline()`可能会返回一个意外值，该对象无法用于计算逾期时间。如果需要该功能，使用`QDeadlineTimer::current()`并添加时间。
+注意：在第6.6个Qt之前，唯一导致计时器永不过期的数值是-1。
 
 ### `template <typename Clock, typename Duration = typename Clock::duration> QDeadlineTimer::QDeadlineTimer(std::chrono::time_point<Clock, Duration> deadline, Qt::TimerType type = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+构建一个剩余时间为`remaining`的QDeadlineTimer对象。如果`remaining`为零或负数，该QDeadlineTimer对象将被标记为过期;如果`remaining`等于`duration::max()`，则该对象将被设置为永不过期。
+QDeadlineTimer 对象将按照指定的计时器`type`构建。
+该构造器可与C 14用户定义的时间文字一起使用，例如：
+为了优化，如果`remaining`为零或负数，该函数可能会跳过当前时间，而使用已知的过去值。如果发生这种情况，`deadline()`可能会返回一个意外值，该对象无法用于计算逾期时间。如果需要该功能，使用`QDeadlineTimer::current()`并添加时间。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `deadline`：类型为 `std::chrono::time_point<Clock, Duration>`。没有默认值，调用时必须提供。传入 `std::chrono::time_point<Clock, Duration>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     using namespace std::chrono_literals;
+     QDeadlineTimer deadline(250ms);
+```
 
 ### `[static noexcept] QDeadlineTimer QDeadlineTimer::addNSecs(QDeadlineTimer dt, qint64 nsecs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `addNSecs`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数 `dt`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `nsecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QDeadlineTimer`对象，其截止时间比`dt`的截止时间延长`nsecs`纳秒。如果`dt`设置为永不过期，该函数返回的`QDeadlineTimer`也不会过期。
+注意：如果`dt`被创建为已过期，其截止日期不确定，增加一段时间可能会使其恢复正常，也可能不会。
 
 ### `[static noexcept] QDeadlineTimer QDeadlineTimer::current(Qt::TimerType timerType = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `current`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数 `timerType`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个已过期但保证包含当前时间的`QDeadlineTimer`。由该函数创建的对象可以利用`deadline()`函数参与计时器逾期时间的计算。
+`QDeadlineTimer`对象将按照指定的`timerType`构造。
 
 ### `[noexcept] qint64 QDeadlineTimer::deadline() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::deadline` 用于计算、查询或取得与“deadline”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回存储在`QDeadlineTimer`对象中截止时间的绝对时间点，以毫秒为单位，与`QElapsedTimer::msecsSinceReference()`相同。如果该`QDeadlineTimer`已过期，该值将回到过去。
+如果该`QDeadlineTimer`永不过期，该函数返回`std::numeric_limits<qint64>::max()`。
+该函数可用于计算计时器逾期的时间，方法为减去`QDeadlineTimer::current()`或`QElapsedTimer::msecsSinceReference()`，如下例所示：
+注意：创建为过期的计时器截止时间不确定，因此上述计算可能不适用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     qint64 realTimeLeft = deadline.deadline();
+     if (realTimeLeft != (std::numeric_limits<qint64>::max)()) {
+         realTimeLeft -= QDeadlineTimer::current().deadline();
+         // or:
+         //QElapsedTimer timer;
+         //timer.start();
+         //realTimeLeft -= timer.msecsSinceReference();
+     }
+```
 
 ### `[noexcept] qint64 QDeadlineTimer::deadlineNSecs() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::deadlineNSecs` 用于计算、查询或取得与“deadline、N、Secs”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回存储在`QDeadlineTimer`对象中截止时间的绝对时间点，以纳秒计算，与`QElapsedTimer::msecsSinceReference()`相同。如果该`QDeadlineTimer`已过期，该值将回到过去。
+如果返回类型中无法容纳该函数，或者该函数返回该函数`QDeadlineTimer` `std::numeric_limits<qint64>::max()`，或者截止时间内的纳秒数永远不会过期。
+该函数可用于通过减去`QDeadlineTimer::current()`来计算计时器逾期的时间，如下例所示：
+注意：创建为过期的计时器截止时间不确定，因此上述计算可能不适用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     qint64 realTimeLeft = deadline.deadlineNSecs();
+     if (realTimeLeft != std::numeric_limits<qint64>::max())
+         realTimeLeft -= QDeadlineTimer::current().deadlineNSecs();
+```
 
 ### `[noexcept] bool QDeadlineTimer::hasExpired() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasExpired`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QDeadlineTimer`对象已过期，返回真;如果剩余时间，则返回假。对于已过期的对象，`remainingTime()`返回零，`deadline()`返回过去的时间点。
+`QDeadlineTimer`用`ForeverConstant`创建的对象永远不会过期，这个函数对它们总是返回false。
 
 ### `[constexpr noexcept] bool QDeadlineTimer::isForever() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isForever`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该`QDeadlineTimer`对象永不失效，则返回真;否则返回假。对于永不失效的计时器，`remainingTime()`总是返回-1，`deadline()`返回最大值。
 
 ### `[noexcept] qint64 QDeadlineTimer::remainingTime() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::remainingTime` 用于计算、查询或取得与“剩余、时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回该`QDeadlineTimer`对象剩余时间（毫秒）。如果计时器已过期，该函数返回零，无法用该函数获得逾期时间（详见 `deadline()`）。如果计时器设置为永不过期，该函数返回 -1。
+该函数适用于需要毫秒超时的Qt API，如`QMutex`、`QWaitCondition`、`QSemaphore`或`QReadWriteLock`中的多重`QIODevice` `waitFor`函数或定时锁函数。例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     mutex.tryLock(deadline.remainingTime());
+```
 
 ### `[noexcept] std::chrono::nanoseconds QDeadlineTimer::remainingTimeAsDuration() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::remainingTimeAsDuration` 用于计算、查询或取得与“剩余、时间、As、持续时间”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `std::chrono::nanoseconds`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`std::chrono::nanoseconds`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回截止日前剩余时间。
 
 ### `[noexcept] qint64 QDeadlineTimer::remainingTimeNSecs() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::remainingTimeNSecs` 用于计算、查询或取得与“剩余、时间、N、Secs”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `qint64`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`qint64`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QDeadlineTimer`对象剩余时间，单位为纳秒。如果计时器已过期，该函数返回零，无法通过该函数获得逾期时间。如果定时器设置为永不过期，该函数返回-1。
 
 ### `[noexcept] void QDeadlineTimer::setDeadline(qint64 msecs, Qt::TimerType timerType = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDeadline`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timerType`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QDeadlineTimer`对象的截止时间设定为`msecs`绝对时间点，以自参考时钟起的毫秒计（与`QElapsedTimer::msecsSinceReference()`相同），定时器类型为`timerType`。如果该值是过去的，该`QDeadlineTimer`将被标记为过期。
+如果`msecs` `std::numeric_limits<qint64>::max()`或截止日期已超过未来可表示的时间点，该`QDeadlineTimer`将永远不会过期。
 
 ### `template <typename Clock, typename Duration = typename Clock::duration> void QDeadlineTimer::setDeadline(std::chrono::time_point<Clock, Duration> deadline, Qt::TimerType type = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setDeadline`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`template <typename Clock, typename Duration = typename Clock::duration> void`。
-- 参数 `deadline`：类型为 `std::chrono::time_point<Clock, Duration>`。没有默认值，调用时必须提供。传入 `std::chrono::time_point<Clock, Duration>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QDeadlineTimer`设置为`deadline`时间点标记的截止时间，将时钟源`Clock`转换为Qt内部时钟源（见`QElapsedTimer::clockType()`）。
+如果`deadline`是过去，这个`QDeadlineTimer`对象被设置为过期;如果`deadline`等于`Duration::max()`，则该对象被设置为永不过期。
+该`QDeadlineTimer`对象的定时器类型将设置为指定的`type`。
 
 ### `[noexcept] void QDeadlineTimer::setPreciseDeadline(qint64 secs, qint64 nsecs = 0, Qt::TimerType timerType = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreciseDeadline`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `secs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `nsecs`：类型为 `qint64`。默认值为 `0`。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timerType`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QDeadlineTimer`对象的截止时间设定为自参考时钟纪元起的`secs`秒和`nsecs`纳秒（与`QElapsedTimer::msecsSinceReference()`年相同），定时器类型为`timerType`。如果该值是过去的，该`QDeadlineTimer`将被标记为已过期。
+如果`secs`或`nsecs` `std::numeric_limits<qint64>::max()`，该`QDeadlineTimer`将设置为永不过期。如果`nsecs`超过10亿纳秒（1秒），则`secs`会相应调整。
 
 ### `[noexcept] void QDeadlineTimer::setPreciseRemainingTime(qint64 secs, qint64 nsecs = 0, Qt::TimerType timerType = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPreciseRemainingTime`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `secs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `nsecs`：类型为 `qint64`。默认值为 `0`。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timerType`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`secs`值为正，则将该`QDeadlineTimer`对象剩余时间设置为从现在起`secs`秒加`nsecs`纳秒。如果`secs`为负，该`QDeadlineTimer`将被设定为永不过期（此行为不适用于`nsecs`）。如果两个参数均为零，该`QDeadlineTimer`将被标记为过期。
+为了优化，如果`secs`和`nsecs`均为零，该函数可以跳过当前时间，而使用已知的过去值。如果发生这种情况，`deadline()`可能会返回意外值，该对象无法用于计算逾期时间。如果需要该功能，使用`QDeadlineTimer::current()`并添加时间。
+该`QDeadlineTimer`对象的定时器类型将设置为指定的`timerType`。
+注意：在第6.6题之前，唯一导致计时器永不过期的条件是`secs`为-1。
 
 ### `[noexcept] void QDeadlineTimer::setRemainingTime(qint64 msecs, Qt::TimerType timerType = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRemainingTime`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `timerType`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`msecs`值为正，则该`QDeadlineTimer`对象剩余时间为`msecs`毫秒。如果`msecs`为零，该`QDeadlineTimer`对象将被标记为过期，负值则设置为永不过期。
+为了优化，如果`msecs`为零，该函数可以跳过当前时间，而使用已知的过去值。如果发生这种情况，`deadline()`可能会返回一个意外值，该对象无法用于计算逾期时间。如果需要该功能，使用`QDeadlineTimer::current()`并添加时间。
+该`QDeadlineTimer`对象的计时器类型将设置为指定的`timerType`。
+注意：在第6.6个Qt之前，唯一导致计时器永不过期的数值是-1。
 
 ### `template <typename Rep, typename Period> void QDeadlineTimer::setRemainingTime(std::chrono::duration<Rep, Period> remaining, Qt::TimerType type = Qt::CoarseTimer)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRemainingTime`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将该`QDeadlineTimer`对象剩余时间设置为`remaining`。如果`remaining`为零或负数，该`QDeadlineTimer`对象将被标记为过期;如果`remaining`等于`duration::max()`，则该对象将被设定为永不过期。
+该`QDeadlineTimer`对象的定时器类型将设置为指定的`type`。
+该函数可与C 14用户定义的时间文字一起使用，例如：
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Rep, typename Period> void`。
-- 参数 `remaining`：类型为 `std::chrono::duration<Rep, Period>`。没有默认值，调用时必须提供。传入 `std::chrono::duration<Rep, Period>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `type`：类型为 `Qt::TimerType`。默认值为 `Qt::CoarseTimer`。类型、格式或策略枚举。要确认枚举值的适用范围和平台支持情况。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     using namespace std::chrono_literals;
+     deadline.setRemainingTime(250ms);
+```
 
 ### `void QDeadlineTimer::setTimerType(Qt::TimerType timerType)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTimerType`。调用它会改变 `QDeadlineTimer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `timerType`：类型为 `Qt::TimerType`。没有默认值，调用时必须提供。传入 `Qt::TimerType` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象的计时器类型改为`timerType`。
+每个可能的 `timerType` 值的行为依赖于操作系统。`Qt::PreciseTimer` 会使用 Qt 能找到的最精确定时器，分辨率为 1 毫秒或更高，而 `QDeadlineTimer` 则会尝试使用更粗的计时器来处理`Qt::CoarseTimer`和`Qt::VeryCoarseTimer`。
 
 ### `[noexcept] void QDeadlineTimer::swap(QDeadlineTimer &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QDeadlineTimer &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把这个截止时间和`other`交换。这个操作非常快，从不失败。
 
 ### `[noexcept] Qt::TimerType QDeadlineTimer::timerType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDeadlineTimer::timerType` 用于计算、查询或取得与“timer、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `Qt::TimerType`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::TimerType`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该对象的计时器类型是激活的。
 
 ### `QDeadlineTimer &QDeadlineTimer::operator+=(qint64 msecs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer &`。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QDeadlineTimer`对象延长`msecs`毫秒并返回自身。如果这个对象设置为永不过期，该函数则不做任何事。
+要添加大于1毫秒的精度时间，请使用`addNSecs()`。
 
 ### `QDeadlineTimer &QDeadlineTimer::operator-=(qint64 msecs)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer &`。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QDeadlineTimer`对象缩短`msecs`毫秒，并返回自身。如果该对象设置为永不过期，该函数不做任何事。
+要减去大于1毫秒的精度时间，使用`addNSecs()`。
 
 ### `template <typename Rep, typename Period> QDeadlineTimer &QDeadlineTimer::operator=(std::chrono::duration<Rep, Period> remaining)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Rep, typename Period> QDeadlineTimer &`。
-- 参数 `remaining`：类型为 `std::chrono::duration<Rep, Period>`。没有默认值，调用时必须提供。传入 `std::chrono::duration<Rep, Period>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+把这个截止时间定时器设定为`remaining`时间。
 
 ### `template <typename Clock, typename Duration = typename Clock::duration> QDeadlineTimer &QDeadlineTimer::operator=(std::chrono::time_point<Clock, Duration> deadline_)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename Clock, typename Duration = typename Clock::duration> QDeadlineTimer &`。
-- 参数 `deadline_`：类型为 `std::chrono::time_point<Clock, Duration>`。没有默认值，调用时必须提供。传入 `std::chrono::time_point<Clock, Duration>` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+给`deadline_`分配到这个截止时间。
 
 ### `[noexcept] bool operator!=(const QDeadlineTimer &lhs, const QDeadlineTimer &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果 `lhs` 的截止时间与 `rhs` 的截止时间不同，则返回 true，否则返回 false。用于创建两个截止日期的计时器类型被忽略。该函数等价于：
+注意：不支持比较具有不同定时器的`QDeadlineTimer`对象，可能导致不可预测的行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return lhs.deadlineNSecs() != rhs.deadlineNSecs();
+```
 
 ### `QDeadlineTimer operator+(QDeadlineTimer dt, qint64 msecs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数 `dt`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QDeadlineTimer`对象，其截止日期比`dt`中存储的截止日期晚`msecs`。如果`dt`设置为永不过期，该函数返回的`QDeadlineTimer`也不会过期。
+要添加大于1毫秒的精度时间，请使用`addNSecs()`。
 
 ### `QDeadlineTimer operator+(qint64 msecs, QDeadlineTimer dt)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `dt`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QDeadlineTimer`对象，其截止日期比`dt`中存储的截止日期晚`msecs`。如果`dt`设置为永不过期，该函数返回的`QDeadlineTimer`也不会过期。
+要添加大于1毫秒的精度时间，请使用`addNSecs()`。
 
 ### `QDeadlineTimer operator-(QDeadlineTimer dt, qint64 msecs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDeadlineTimer`。
-- 参数 `dt`：类型为 `QDeadlineTimer`。没有默认值，调用时必须提供。传入 `QDeadlineTimer` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `msecs`：类型为 `qint64`。没有默认值，调用时必须提供。传入 `qint64` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个`QDeadlineTimer`对象，其截止日期在`dt`存储的截止日期之前`msecs`。如果`dt`设置为永不过期，该函数返回的`QDeadlineTimer`也不会过期。
+要减去大于1毫秒的精度时间，使用`addNSecs()`。
 
 ### `[noexcept] bool operator<(const QDeadlineTimer &lhs, const QDeadlineTimer &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果 `lhs` 的截止日期早于 `rhs` 的截止日期，则返回 true，否则返回 false。用于创建两个截止日期的定时器类型被忽略。该函数等价于：
+注意：不支持比较具有不同定时器的`QDeadlineTimer`对象，可能导致不可预测的行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return lhs.deadlineNSecs() < rhs.deadlineNSecs();
+```
 
 ### `[noexcept] bool operator<=(const QDeadlineTimer &lhs, const QDeadlineTimer &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果`lhs`的截止时间早于或与`rhs`的截止时间相同，则返回为真;否则为假。用于创建两个截止日期的定时器类型被忽略。该函数等价于：
+注意：不支持比较具有不同定时器的`QDeadlineTimer`对象，可能导致不可预测的行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return lhs.deadlineNSecs() <= rhs.deadlineNSecs();
+```
 
 ### `[noexcept] bool operator==(const QDeadlineTimer &lhs, const QDeadlineTimer &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果`lhs`的截止日期和`rhs`的截止时间相同，则返回真;否则返回假。用于创建两个截止时间的定时器类型被忽略。该函数等价于：
+注意：不支持比较具有不同定时器的`QDeadlineTimer`对象，可能导致不可预测的行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return lhs.deadlineNSecs() == rhs.deadlineNSecs();
+```
 
 ### `[noexcept] bool operator>(const QDeadlineTimer &lhs, const QDeadlineTimer &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果`lhs`的截止日期晚于`rhs`的截止日期，则返回真，否则返回假。用于创建两个截止日期的定时器类型被忽略。该函数等价于：
+注意：不支持比较具有不同定时器的`QDeadlineTimer`对象，可能导致不可预测的行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return lhs.deadlineNSecs() > rhs.deadlineNSecs();
+```
 
 ### `[noexcept] bool operator>=(const QDeadlineTimer &lhs, const QDeadlineTimer &rhs)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
+如果`lhs`的截止日期晚于或与`rhs`的截止日期相同，则返回真;否则为假。用于创建两个截止日期的定时器类型被忽略。该函数等价于：
+注意：不支持比较具有不同定时器的`QDeadlineTimer`对象，可能导致不可预测的行为。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `lhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符左侧的值；要注意返回新值还是修改当前对象。
-- 参数 `rhs`：类型为 `const QDeadlineTimer &`。没有默认值，调用时必须提供。运算符右侧的另一个值；通常不会被当前 API 接管所有权。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+     return lhs.deadlineNSecs() >= rhs.deadlineNSecs();
+```
 
 ### `enum class ForeverConstant { Forever }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QDeadlineTimer::ForeverConstant::Forever`：`0`;创建`QDeadlineTimer`时用于表明截止日期不应过期
 
 ### `QDeadlineTimer()`
 
-**API 类别：** 公有函数
+**作用与语义：**
 
-**中文解读：** 这是 `QDeadlineTimer` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建一个QDeadlineTimer对象，`deadline`时间点有截止时间，从时钟源`Clock`转换为Qt的内部时钟源（见`QElapsedTimer::clockType()`）。
+如果`deadline`是过去的，这个QDeadlineTimer对象被设置为过期;如果`deadline`等于`Duration::max()`，则该对象被设置为永不过期。
+QDeadlineTimer 对象将按照指定的计时器`type`构建。
 
 ## 6. 深入实践与常见坑
 

@@ -79,126 +79,83 @@ if (instance.create()) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[virtual noexcept] QVulkanWindowRenderer::~QVulkanWindowRenderer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QVulkanWindowRenderer` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+虚拟毁灭者。
 
 ### `[virtual] void QVulkanWindowRenderer::initResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::initResources` 用于执行与“init、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当需要创建渲染器的图形资源时，调用了这个虚拟函数。
+根据`QVulkanWindow::PersistentResources`标志、设备丢失情况等，该功能在`QVulkanWindow`生命周期内可能被多次调用。但后续调用总是在调用`releaseResources()`之前。
+像 device()、graphicsQueue() 和 graphicsCommandPool() 这样的访问器只保证在该函数内及之后返回有效值，直到调用 `releaseResources()`。
+默认实现是空的。
 
 ### `[virtual] void QVulkanWindowRenderer::initSwapChainResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::initSwapChainResources` 用于执行与“init、Swap、Chain、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当可以执行与交换链、帧缓冲或渲染通行相关的初始化时，调用该虚拟函数。交换链及相关资源会被重置，然后在窗口调整大小事件时重新创建，因此对`initResources()`和`releaseResources()`的调用可以包含多次调用initSwapChainResources()以及中间`releaseSwapChainResources()`调用。
+像 `QVulkanWindow::swapChainImageSize()` 这样的访问器只保证在函数内及之后返回有效值，直到调用 `releaseSwapChainResources()`。
+这也是大小相关的计算（例如投影矩阵）应进行的地方，因为该函数在每次调整大小时都会被有效调用。
+默认实现是空的。
 
 ### `[virtual] void QVulkanWindowRenderer::logicalDeviceLost()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::logicalDeviceLost` 用于执行与“logical、Device、Lost”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当逻辑设备（VkDevice）丢失时调用该虚拟函数，意味着某些操作因`VK_ERROR_DEVICE_LOST`失败。
+默认实现是空的。
+通常不需要在此功能中执行特殊操作。`QVulkanWindow` 会自动释放所有资源（根据需要调用 `releaseSwapChainResources()` 和 `releaseResources()`），并尝试重新初始化，获取新的设备。当物理设备也丢失时，这种重新初始化尝试可能导致`physicalDeviceLost()`。
 
 ### `[virtual] void QVulkanWindowRenderer::physicalDeviceLost()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::physicalDeviceLost` 用于执行与“physical、Device、Lost”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当物理设备丢失时调用了这个虚拟函数，意味着逻辑设备的创建随`VK_ERROR_DEVICE_LOST`失败。
+默认实现是空的。
+通常不需要在这个函数中执行特殊操作`QVulkanWindow`因为在一定时间后会自动重新尝试初始化。
 
 ### `[virtual] void QVulkanWindowRenderer::preInitResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::preInitResources` 用于执行与“pre、Init、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这个虚拟函数是在图形初始化（即调用`initResources()`）即将开始之前调用的。
+通常不需要重新实现此功能。但在某些情况下，涉及基于物理设备和表面的决策。这些决策通常无法在`QVulkanWindow`可见之前完成，因为此时Vulkan表面不可检索。
+相反，应用程序可以重新实现该功能。这里`QVulkanWindow::physicalDevice()`和`QVulkanInstance::surfaceForWindow()`都可用，但尚未进行新的逻辑设备初始化。
+默认实现是空的。
 
 ### `[virtual] void QVulkanWindowRenderer::releaseResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::releaseResources` 用于执行与“释放、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当渲染器需要释放图形资源时，调用该虚拟函数。
+实现时必须准备调用该函数后，后续可能会有 `initResources()`。
+`QVulkanWindow`负责在调用该功能前后等待设备空闲。
+默认实现是空的。
 
 ### `[virtual] void QVulkanWindowRenderer::releaseSwapChainResources()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QVulkanWindowRenderer::releaseSwapChainResources` 用于执行与“释放、Swap、Chain、Resources”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当需要释放交换链、帧缓冲或渲染通行相关资源时，调用该虚拟函数。
+实现时必须准备，调用该函数后，可能会在后续时刻重新调用`initSwapChainResources()`。
+`QVulkanWindow`负责在调用该功能前后等待设备空闲。
+默认实现是空的。
+注意：这是`QVulkanWindow`开始释放所有图形资源前最后一个操作的地方。因此，拥有异步、可能多线程`startNextFrame()`实现前必须执行阻塞等待和调用`QVulkanWindow::frameReady()`，以防有待处理的帧提交。
 
 ### `[pure virtual] void QVulkanWindowRenderer::startNextFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `startNextFrame`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当下一帧的绘制调用被添加到命令缓冲区时，调用了这个虚拟函数。
+每次调用该函数后都必须调用`QVulkanWindow::frameReady()`。未按此操作将导致渲染循环停顿。调用也可以在从该函数返回后再进行。这意味着可以启动异步工作，只更新命令缓冲区并通知`QVulkanWindow`工作完成。
+当调用该函数时，所有 Vulkan 资源都已初始化并准备好。当前的帧缓冲区和主命令缓冲区可以通过 `QVulkanWindow::currentFramebuffer()` 和 `QVulkanWindow::currentCommandBuffer()` 检索。逻辑设备和活跃图形队列可通过 `QVulkanWindow::device()` 和 `QVulkanWindow::graphicsQueue()` 访问。实现可以从 `QVulkanWindow::graphicsCommandPool()` 返回的池中创建额外的命令缓冲区。为了方便，主机可见索引和设备本地内存类型索引通过 `QVulkanWindow::hostVisibleMemoryIndex()` 和 `QVulkanWindow::deviceLocalMemoryIndex()` 公开。所有这些访问器都可以安全地从任何线程调用。
 
 ## 6. 深入实践与常见坑
 

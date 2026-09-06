@@ -73,152 +73,79 @@ target_link_libraries(mytarget PRIVATE Qt6::DBus)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 11 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QDBusUnixFileDescriptor::QDBusUnixFileDescriptor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusUnixFileDescriptor` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个没有封装文件描述符的 QDBusUnixFileDescriptor。这等同于用无效文件描述符（如 -1）构造对象。
 
 ### `[explicit] QDBusUnixFileDescriptor::QDBusUnixFileDescriptor(int fileDescriptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusUnixFileDescriptor` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `fileDescriptor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过复制`fileDescriptor`参数构建QDBusUnixFileDescriptor对象。原始文件描述符不被触及，用户必须关闭。
+注意，`fileDescriptor()`返回的值与传递的`fileDescriptor`参数不同。
+如果`fileDescriptor`参数无效，`isValid()`返回假，`fileDescriptor()`返回-1。
 
 ### `QDBusUnixFileDescriptor::QDBusUnixFileDescriptor(const QDBusUnixFileDescriptor &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusUnixFileDescriptor` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `other`：类型为 `const QDBusUnixFileDescriptor &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过复制`other`构建QDBusUnixFileDescriptor对象。
 
 ### `[noexcept] QDBusUnixFileDescriptor::~QDBusUnixFileDescriptor()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusUnixFileDescriptor` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁该`QDBusUnixFileDescriptor`对象，并丢弃其包含的Unix文件描述符。
 
 ### `int QDBusUnixFileDescriptor::fileDescriptor() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusUnixFileDescriptor::fileDescriptor` 用于计算、查询或取得与“file、Descriptor”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QDBusUnixFileDescriptor`对象中包含的Unix文件描述符。无效文件描述符用值-1表示。
+注意，该函数返回的文件描述符由`QDBusUnixFileDescriptor`对象拥有，且不得存储超过该对象的生命周期。在该对象有效期间使用该描述符是可以的，但如果想长期存储，文件描述符应使用Unix `dup(2)`、`dup2(2)`或`dup3(2)`函数进行克隆。
 
 ### `[static] bool QDBusUnixFileDescriptor::isSupported()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isSupported`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果此平台支持 Unix 文件描述符，则返回 `true`。换句话说，如果这是 Unix 平台，则此函数返回 `true`。
+注意，即使此函数返回 `false`，`QDBusUnixFileDescriptor` 仍会继续操作。唯一的区别是 `QDBusUnixFileDescriptor` 对象将始终处于 `isValid()` == false 状态，`fileDescriptor()` 将始终返回 -1。该类不会消耗任何操作系统资源。
 
 ### `bool QDBusUnixFileDescriptor::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果该Unix文件描述符有效，返回`true`。有效的Unix文件描述符不是-1。
 
 ### `void QDBusUnixFileDescriptor::setFileDescriptor(int fileDescriptor)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFileDescriptor`。调用它会改变 `QDBusUnixFileDescriptor` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `fileDescriptor`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该`QDBusUnixFileDescriptor`对象所持有的文件描述符设置为`fileDescriptor`的副本。原始文件描述符不被触及，用户必须关闭。
+注意，`fileDescriptor()`返回的值与传递的`fileDescriptor`参数不同。
+如果`fileDescriptor`参数无效，`isValid()`返回假，`fileDescriptor()`返回-1。
 
 ### `[noexcept] void QDBusUnixFileDescriptor::swap(QDBusUnixFileDescriptor &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QDBusUnixFileDescriptor::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QDBusUnixFileDescriptor &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该文件描述符实例与`other`交换。该操作非常快且从未失败。
 
 ### `[noexcept] QDBusUnixFileDescriptor &QDBusUnixFileDescriptor::operator=(QDBusUnixFileDescriptor &&other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusUnixFileDescriptor` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusUnixFileDescriptor &`。
-- 参数 `other`：类型为 `QDBusUnixFileDescriptor &&`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+Move-Assign `other`到这个`QDBusUnixFileDescriptor`。
 
 ### `QDBusUnixFileDescriptor &QDBusUnixFileDescriptor::operator=(const QDBusUnixFileDescriptor &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QDBusUnixFileDescriptor` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QDBusUnixFileDescriptor &`。
-- 参数 `other`：类型为 `const QDBusUnixFileDescriptor &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`other` `QDBusUnixFileDescriptor`对象复制Unix文件描述符。如果当前对象包含文件描述符，则该描述符会被正确处理。
 
 ## 6. 深入实践与常见坑
 

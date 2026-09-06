@@ -80,216 +80,136 @@ target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 16 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QRhiBuffer::Type`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiBuffer` 暴露的类型声明 `类型`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Type`。
-- 属性名：`QRhiBuffer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定缓冲资源的存储类型。
+- `QRhiBuffer::Immutable`：`0`;表示数据在初始上传后预计不会再发生变化。底层，这些缓冲区资源通常被放置在设备本地（GPU）内存中（如适用的系统中）。上传新数据是可能的，但可能成本高昂。上传通常通过复制到一个独立的主机可见暂存缓冲区，从该缓冲区发送GPU缓冲区到仅限GPU缓冲区的缓存。
+- `QRhiBuffer::Static`：`1`;表示数据预计变化频率较低。通常放置在设备本地（GPU）内存中（如适用）。在后端使用主机可见的预留缓冲区进行上传时，保留此类临时缓冲区，不同于不可变系统，因此后续上传不会影响性能。应避免频繁更新，尤其是连续帧更新。
+- `QRhiBuffer::Dynamic`：`2`;表示数据预计会频繁变化。不建议用于大型缓冲区。通常由主机可见内存备份为两份备份，以便更改时不会阻碍图形流水线。双重缓冲对应用程序透明管理，API中不以任何形式暴露。这是推荐的类型，也是某些后端唯一可能的类型，用于`UniformBuffer`用途的缓冲区。
 
 ### `enum QRhiBuffer::UsageFlagflags QRhiBuffer::UsageFlags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiBuffer` 暴露的类型声明 `Usage、Flagflags`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:UsageFlagflags QRhiBuffer::UsageFlags`。
-- 属性名：`QRhiBuffer`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于指定缓冲区的使用方式。
+- `QRhiBuffer::VertexBuffer`: `1 << 0`；顶点缓冲区。这允许在`setVertexInput()`中使用`QRhiBuffer`。
+- `QRhiBuffer::IndexBuffer`: `1 << 1`；索引缓冲区。这允许在`setVertexInput()`中使用`QRhiBuffer`。
+- `QRhiBuffer::UniformBuffer`: `1 << 2`；统一缓冲区（也称为常量缓冲区）。这允许 `QRhiBuffer` 与 `UniformBuffer` 结合使用。当报告 `NonDynamicUniformBuffers` 不受支持时，此用法只能与 Dynamic 类型结合使用。
+- `QRhiBuffer::StorageBuffer`: `1 << 3`；存储缓冲区。这允许 `QRhiBuffer` 与 `BufferLoad`、`BufferStore` 或 `BufferLoadStore` 结合使用。此用法只能与 Immutable 或 Static 类型结合，并且仅在计算功能被报告为支持时可用。
+UsageFlags 类型是 QFlags<UsageFlag> 的 typedef。它存储 UsageFlag 值的 OR 组合。
 
 ### `[virtual] char *QRhiBuffer::beginFullDynamicBufferUpdateForCurrentFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是启动/建立资源的 API `beginFullDynamicBufferUpdateForCurrentFrame`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
-
-**签名拆解：**
-
-- 返回值：`char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个指向带有主机可见缓冲区数据的内存块的指针。
+这是中大型动态均匀缓冲区的捷径，这些缓冲区的全部内容（或至少当前帧中着色器读取的所有区域）在每帧中都会发生变化，基于`QRhiResourceUpdateBatch`的更新机制因大量数据复制而显得过于繁重。
+调用该函数后，必须先调用 endFullDynamicUniformBufferUpdateForCurrentFrame()，然后才能记录依赖该缓冲区的任何渲染或计算过程。
+警告：通过这种方法更新数据与基于`QRhiResourceUpdateBatch`的更新和回读不兼容。当尝试将两个更新模型合并为同一缓冲区时，可能会出现意外行为。同样，这种直接更新的数据可能不会被readBackBuffer操作看到，具体取决于后端。
+警告：通过此方法更新缓冲区数据时，必须在每个帧内进行更新，否则执行双重或三重缓冲资源的后端可能会出现意外行为。
+警告：这种方法无法进行部分更新，因为有些后端可能会选择在调用该函数时丢失缓冲区的先前内容。数据必须写入当前准备帧中所有被着色器读取的区域。
+警告：此函数只能在录制帧时调用，因此在`QRhi::beginFrame()`和`QRhi::endFrame()`之间。
+警告：该函数只能在动态缓冲区上调用。
 
 ### `[pure virtual] bool QRhiBuffer::create()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiBuffer::create` 用于计算、查询或取得与“创建”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建对应的本地图形资源。如果由于之前的 create() 存在资源且没有相应的`destroy()`，则 `destroy()` 会先隐式调用。
+成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终安全。
 
 ### `[virtual] void QRhiBuffer::endFullDynamicBufferUpdateForCurrentFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `endFullDynamicBufferUpdateForCurrentFrame`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当缓冲区数据的全部内容更新后，返回`beginFullDynamicBufferUpdateForCurrentFrame()`的内存块中，才会被调用。
 
 ### `[virtual] QRhiBuffer::NativeBuffer QRhiBuffer::nativeBuffer()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiBuffer::nativeBuffer` 用于计算、查询或取得与“native、Buffer”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiBuffer::NativeBuffer`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiBuffer::NativeBuffer`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该缓冲区的底层本地资源。如果后端不支持暴露底层本地资源，返回的值将为空。
+一个`QRhiBuffer`可能由多个本地缓冲对象支持，具体取决于所用`type()`和`QRhi`后端。在这种情况下，所有缓冲区都会返回到返回结构体中的对象数组中，slotCount 指定本地缓冲对象的数量。在录制帧时，`QRhi::currentFrameSlot()` 可以用来确定`QRhi`在记录帧内从该`QRhiBuffer`读取或写入操作的本地缓冲区。
+在某些情况下，`QRhiBuffer`根本没有原生缓冲对象支持。此时 slotCount 将设为 0，且不会返回有效的原生对象。这不是错误，当某个后端不为某些类型或用途的 QRhiBuffer 使用原生缓冲区时，这是完全合理的。
+注意：请注意，`QRhi`后端可能会采用各种缓冲区更新策略。与纹理不同，纹理上传图像数据总是意味着在命令缓冲区上记录缓冲区到图像（或类似）复制命令，缓冲区，尤其是动态缓冲区和`UniformBuffer`缓冲区，可以有多种不同的工作方式。例如，使用类型为`UniformBuffer`的`QRhiBuffer`，如果后端和图形API不使用或支持统一缓冲区，可能根本没有原生缓冲对象支持。数据写入缓冲区的方式和备份存储器的类型也存在差异。对于由主机可见内存支持的缓冲区，调用该函数可以保证所有返回的原生缓冲区都能执行待处理的主机写入。
 
 ### `[override virtual] QRhiResource::Type QRhiBuffer::resourceType() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiBuffer::resourceType` 用于计算、查询或取得与“resource、类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiResource::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiResource::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QRhiResource::resourceType()` const.
+返回资源类型。
+返回资源类型。
 
 ### `void QRhiBuffer::setSize(quint32 sz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSize`。调用它会改变 `QRhiBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `sz`：类型为 `quint32`。没有默认值，调用时必须提供。传入 `quint32` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+设置缓冲区的大小（字节单位）。大小通常在`QRhi::newBuffer()`中指定，因此该函数仅在需要更改大小时使用。与其他设置器一样，大小仅在调用`create()`时生效，对于已创建的缓冲区，这意味着释放之前的原生资源并在内部创建新的资源。
+后端可能会选择分配大于`sz`的缓冲区以满足对齐要求。这对应用程序是隐藏的，`size()`总是会报告`sz`中请求的大小。
 
 ### `void QRhiBuffer::setType(QRhiBuffer::Type t)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setType`。调用它会改变 `QRhiBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `t`：类型为 `QRhiBuffer::Type`。没有默认值，调用时必须提供。传入 `QRhiBuffer::Type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将缓冲区类型设置为`t`。
 
 ### `void QRhiBuffer::setUsage(QRhiBuffer::UsageFlags u)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setUsage`。调用它会改变 `QRhiBuffer` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `u`：类型为 `QRhiBuffer::UsageFlags`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将缓冲区的使用标志设置为`u`。
 
 ### `quint32 QRhiBuffer::size() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是尺寸/数量查询 API `size`，返回 `QRhiBuffer` 当前元素数、字节数、容量或可用空间。它是某一时刻的快照，不能替代并发同步或后续操作的边界检查。
-
-**签名拆解：**
-
-- 返回值：`quint32`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回缓冲区的大小（字节单位）。
+这始终是传递给`setSize()`或 `QRhi::newBuffer()` 的值。内部，如果底层图形 API 需要，原生缓冲区可能会更大。
 
 ### `QRhiBuffer::Type QRhiBuffer::type() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiBuffer::type` 用于计算、查询或取得与“类型”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiBuffer::Type`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiBuffer::Type`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回缓冲区类型。
 
 ### `QRhiBuffer::UsageFlags QRhiBuffer::usage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QRhiBuffer::usage` 用于计算、查询或取得与“usage”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QRhiBuffer::UsageFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QRhiBuffer::UsageFlags`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回缓冲区的使用标志。
 
 ### `struct NativeBuffer`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiBuffer` 的 `Native、Buffer` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+包含缓冲区底层原生资源的信息。
 
 ### `enum UsageFlag { VertexBuffer, IndexBuffer, UniformBuffer, StorageBuffer }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiBuffer` 暴露的类型声明 `Usage、Flag`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于指定缓冲区的使用方式。
+- `QRhiBuffer::VertexBuffer`: `1 << 0`；顶点缓冲区。这允许在`setVertexInput()`中使用`QRhiBuffer`。
+- `QRhiBuffer::IndexBuffer`: `1 << 1`；索引缓冲区。这允许在`setVertexInput()`中使用`QRhiBuffer`。
+- `QRhiBuffer::UniformBuffer`: `1 << 2`；统一缓冲区（也称为常量缓冲区）。这允许 `QRhiBuffer` 与 `UniformBuffer` 结合使用。当报告 `NonDynamicUniformBuffers` 不受支持时，此用法只能与 Dynamic 类型结合使用。
+- `QRhiBuffer::StorageBuffer`: `1 << 3`；存储缓冲区。这允许 `QRhiBuffer` 与 `BufferLoad`、`BufferStore` 或 `BufferLoadStore` 结合使用。此用法只能与 Immutable 或 Static 类型结合，并且仅在计算功能被报告为支持时可用。
+UsageFlags 类型是 QFlags<UsageFlag> 的 typedef。它存储 UsageFlag 值的 OR 组合。
 
 ### `flags UsageFlags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QRhiBuffer` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+标志值用于指定缓冲区的使用方式。
+- `QRhiBuffer::VertexBuffer`: `1 << 0`；顶点缓冲区。这允许在`setVertexInput()`中使用`QRhiBuffer`。
+- `QRhiBuffer::IndexBuffer`: `1 << 1`；索引缓冲区。这允许在`setVertexInput()`中使用`QRhiBuffer`。
+- `QRhiBuffer::UniformBuffer`: `1 << 2`；统一缓冲区（也称为常量缓冲区）。这允许 `QRhiBuffer` 与 `UniformBuffer` 结合使用。当报告 `NonDynamicUniformBuffers` 不受支持时，此用法只能与 Dynamic 类型结合使用。
+- `QRhiBuffer::StorageBuffer`: `1 << 3`；存储缓冲区。这允许 `QRhiBuffer` 与 `BufferLoad`、`BufferStore` 或 `BufferLoadStore` 结合使用。此用法只能与 Immutable 或 Static 类型结合，并且仅在计算功能被报告为支持时可用。
+UsageFlags 类型是 QFlags<UsageFlag> 的 typedef。它存储 UsageFlag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

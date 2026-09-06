@@ -80,206 +80,113 @@ target_link_libraries(mytarget PRIVATE Qt6::Help)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `[explicit] QHelpSearchEngine::QHelpSearchEngine(QHelpEngineCore *helpEngine, QObject *parent = nullptr)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `helpEngine`：类型为 `QHelpEngineCore *`。没有默认值，调用时必须提供。传入 `QHelpEngineCore *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+基于给定`parent`构建一个新的搜索引擎。搜索引擎利用给定的`helpEngine`访问需要索引的文档。`QHelpEngine`的 setupFinished() 信号会自动连接到 QHelpSearchEngine 的索引功能，因此信号发出后新的文档也会被索引。
 
 ### `[virtual noexcept] QHelpSearchEngine::~QHelpSearchEngine()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这会摧毁搜索引擎。
 
 ### `[slot] void QHelpSearchEngine::cancelIndexing()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `cancelIndexing`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这样可以停止索引过程。
 
 ### `[slot] void QHelpSearchEngine::cancelSearching()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `cancelSearching`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+这会停止搜索过程。
 
 ### `[signal] void QHelpSearchEngine::indexingFinished()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 发出的通知信号 `indexingFinished`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在索引过程完成时发出。
 
 ### `[signal] void QHelpSearchEngine::indexingStarted()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 发出的通知信号 `indexingStarted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号在索引过程启动时发出。
 
 ### `QHelpSearchQueryWidget *QHelpSearchEngine::queryWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 的核心操作 `queryWidget`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`QHelpSearchQueryWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个小部件作为输入小部件。根据你的搜索引擎配置，你会得到一个包含更多或更少子小部件的不同小部件。
 
 ### `[slot] void QHelpSearchEngine::reindexDocumentation()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `reindexDocumentation`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+强制搜索引擎重新索引所有文档文件。
 
 ### `QHelpSearchResultWidget *QHelpSearchEngine::resultWidget()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpSearchEngine::resultWidget` 用于计算、查询或取得与“结果、Widget”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QHelpSearchResultWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QHelpSearchResultWidget *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回一个小部件，可以保存并显示搜索结果。
 
 ### `[slot] void QHelpSearchEngine::search(const QString &searchInput)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `search`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
+使用给定的搜索词组`searchInput`开始搜索过程。
+该短语可能由多个词组成。默认情况下，搜索引擎返回包含所有指定词汇的文档列表。短语可以包含逻辑运算符 AND、OR 和 NOT 的任意组合。运算符必须全部大写，否则将被视为搜索短语的一部分。
+如果使用双引号来分组这些词，搜索引擎会搜索与该短语的完全匹配。
+有关文本查询语法的更多信息，请参见SQLite FTS5扩展。
+注意：该槽位已超载。连接该槽位：
 
-**签名拆解：**
 
-- 返回值：`void`。
-- 参数 `searchInput`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+使用 qOverload 连接：
+connect（sender， &SenderClass：：signal，。
+helpSearchEngine， qOverload（&QHelpSearchEngine：：search））;
 
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+或者用lambda作为包装器：
+connect（sender， &SenderClass：：signal，。
+helpSearchEngine， [receiver = helpSearchEngine]（const QString &searchInput） { receiver->search（searchInput）; }）;
+
+
+更多示例和方法，请参见连接超载槽位。
 
 ### `QString QHelpSearchEngine::searchInput() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpSearchEngine::searchInput` 用于计算、查询或取得与“search、Input”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回最后搜索的短语。
 
 ### `int QHelpSearchEngine::searchResultCount() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpSearchEngine::searchResultCount` 用于计算、查询或取得与“search、结果、数量统计”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回搜索引擎找到的结果数量。
 
 ### `QList<QHelpSearchResult> QHelpSearchEngine::searchResults(int start, int end) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QHelpSearchEngine::searchResults` 用于计算、查询或取得与“search、Results”相关的操作。调用时要先确认当前状态和 `start`、`end` 的有效范围；返回类型是 `QList<QHelpSearchResult>`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QList<QHelpSearchResult>`。
-- 参数 `start`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `end`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回从`start`指定的索引到`end`指定的索引范围内的搜索结果列表。
 
 ### `[signal] void QHelpSearchEngine::searchingFinished(int searchResultCount)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 发出的通知信号 `searchingFinished`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `searchResultCount`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当搜索过程完成时，该信号会发出。搜索结果计数存储在`searchResultCount`中。
 
 ### `[signal] void QHelpSearchEngine::searchingStarted()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QHelpSearchEngine` 发出的通知信号 `searchingStarted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+当搜索过程开始时，该信号会发出。
 
 ## 6. 深入实践与常见坑
 

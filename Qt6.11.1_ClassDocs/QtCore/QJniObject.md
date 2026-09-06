@@ -120,773 +120,600 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 54 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `QJniObject::QJniObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构造一个无效的 JNI 对象。
 
 ### `[explicit] QJniObject::QJniObject(const char *className)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+通过调用默认构造函数 `className` 构建一个新的 JNI 对象。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject myJavaString("java/lang/String");
+```
 
 ### `[explicit] QJniObject::QJniObject(jclass clazz)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+通过调用默认构造函数 `clazz` 来构造一个新的 JNI 对象。
+注意：QJniObject 会创建一个新的类引用`clazz`，并在该类被销毁时重新释放。在 QJniObject 之外创建的类的引用需要由调用者管理。
 
 ### `QJniObject::QJniObject(jobject object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `object`：类型为 `jobject`。没有默认值，调用时必须提供。传入 `jobject` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+围绕 Java 对象 `object` 构建一个新的 JNI 对象。
+注意：QJniObject 会保留对 Java 对象`object`的引用，并在销毁后释放。任何对 QJniObject `object` Java对象的引用都需要由调用者管理。在大多数情况下，除非你打算自己管理本地引用，否则绝不应用本地引用调用该函数。参见关于如何将本地引用转换为 QJniObject 的 `QJniObject::fromLocalRef()`。
 
 ### `[explicit, since 6.4] template <typename... Args> QJniObject::QJniObject(const char *className, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+通过调用`className`的构造函数（参数为`args`）来构造新的JNI对象。该构造器仅在所有`args`均为已知JNI类型时可用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ char* str = "Hello";
+ jstring myJStringArg = env->NewStringUTF(str);
+ QJniObject myNewJavaString("java/lang/String", myJStringArg);
+```
 
 ### `[explicit, since 6.4] template <typename... Args> QJniObject::QJniObject(jclass clazz, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+通过调用构造函数，参数为 `args`，构造`clazz`构造新的 JNI 对象。该构造器仅在所有 `args` 均为已知 JNI 类型时可用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass myClazz = env.findClass("org/qtproject/qt/TestClass");
+ QJniObject(myClazz, 3);
+```
 
 ### `[explicit] QJniObject::QJniObject(const char *className, const char *signature, ...)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+通过调用`className`的构造函数，并`signature`指定后续参数的类型，构造一个新的JNI对象。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ char* str = "Hello";
+ jstring myJStringArg = env->NewStringUTF(str);
+ QJniObject myNewJavaString("java/lang/String", "(Ljava/lang/String;)V", myJStringArg);
+```
 
 ### `[explicit] QJniObject::QJniObject(jclass clazz, const char *signature, ...)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+通过调用构造函数并指定后续参数的类型`signature`，从`clazz`构造新的JNI对象。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：构造函数，不返回对象值。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass myClazz = env.findClass("org/qtproject/qt/TestClass");
+ QJniObject(myClazz, "(I)V", 3);
+```
 
 ### `[noexcept] QJniObject::~QJniObject()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+销毁JNI对象并释放JNI对象所持有的所有引用。
 
 ### `[since 6.4] template <typename ReturnType = void, typename... Args> auto QJniObject::callMethod(const char *methodName, Args &&... args) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::callMethod` 用于计算、查询或取得与“call、Method”相关的操作。调用时要先确认当前状态和 `methodName`、`args` 的有效范围；返回类型是 `template <typename ReturnType = void, typename... Args> auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用`methodName`方法，参数为`args`，返回该值（除非`Ret` `void`）。如果`Ret`是jobject类型，则返回的值将是`QJniObject`。
+方法签名是在编译时从 `Ret` 和 `args` 类型推导出来的。`Ret` 可以是 `std::expected` 兼容的类型，返回一个值，也可以是被调用方法抛出的任何 Java 异常。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename ReturnType = void, typename... Args> auto`。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject myJavaString("org/qtproject/qt/TestClass");
+ jint size = myJavaString.callMethod<jint>("length");
+```
 
 ### `[since 6.4] template <typename ReturnType = void, typename... Args> auto QJniObject::callMethod(const char *methodName, const char *signature, Args &&... args) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::callMethod` 用于计算、查询或取得与“call、Method”相关的操作。调用时要先确认当前状态和 `methodName`、`signature`、`args` 的有效范围；返回类型是 `template <typename ReturnType = void, typename... Args> auto`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用对象的方法`methodName`，`signature`指定后续参数的类型，`args`返回值（除非`Ret`被`void`）。如果`Ret`是jobject类型，则返回的值将是`QJniObject`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename ReturnType = void, typename... Args> auto`。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject myJavaString("org/qtproject/qt/TestClass");
+ jint index = myJavaString.callMethod<jint>("indexOf", "(I)I", 0x0051);
+```
 
 ### `[since 6.4] template <typename Ret, typename... Args> QJniObject QJniObject::callObjectMethod(const char *methodName, Args &&... args) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::callObjectMethod` 用于计算、查询或取得与“call、Object、Method”相关的操作。调用时要先确认当前状态和 `methodName`、`args` 的有效范围；返回类型是 `template <typename Ret, typename... Args> QJniObject`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用 Java 对象方法`methodName`，参数`args`，返回返回的 Java 对象的新`QJniObject`。
+方法签名是在编译时从 `Ret` 和 `args` 类型推导出来的。`Ret`可以是`std::expected`兼容的类型，返回一个值，也可以是被调用方法抛出的任何 Java 异常。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Ret, typename... Args> QJniObject`。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject myJavaString = QJniObject::fromString("Hello, Java");
+ QJniObject myJavaString2 = myJavaString1.callObjectMethod<jstring>("toString");
+```
 
 ### `QJniObject QJniObject::callObjectMethod(const char *methodName, const char *signature, ...) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::callObjectMethod` 用于计算、查询或取得与“call、Object、Method”相关的操作。调用时要先确认当前状态和 `methodName`、`signature`、`...` 的有效范围；返回类型是 `QJniObject`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+调用 Java 对象的方法 `methodName`，`signature` 指定后续参数的类型。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject myJavaString = QJniObject::fromString("Hello, Java");
+ QJniObject mySubstring = myJavaString.callObjectMethod("substring",
+                                                        "(II)Ljava/lang/String;", 7, 11);
+```
 
 ### `[static, since 6.7] template < typename Klass, typename ReturnType = void, typename... Args > auto QJniObject::callStaticMethod(const char *methodName, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template < typename Klass, typename ReturnType = void, typename... Args > auto`。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用类`Klass`上的静态方法`methodName`，返回类型`Ret`的值（除非`Ret`是`void`）。如果`Ret`是jobject类型，则返回的值将是`QJniObject`。
+方法签名是在编译时从 `Ret` 和 `args` 类型推导出来的。`Klass` 需要是带有映射到 Java 类型的注册类型 C 类型。`Ret` 可以是`std::expected`兼容的类型，返回一个值，也可以是被调用方法抛出的任何 Java 异常。
 
 ### `[static, since 6.4] template <typename ReturnType = void, typename... Args> auto QJniObject::callStaticMethod(const char *className, const char *methodName, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用类 `className` 上的静态方法 `methodName`，参数为 `args`，返回类型 `Ret` 的值（除非 `Ret` `void`）。如果 `Ret` 是 jobject 类型，则返回的值将是 `QJniObject`。
+方法签名是在编译时从 `Ret` 和 `args` 类型推导出来的。`Ret`可以是`std::expected`兼容的类型，返回一个值，也可以是被调用方法抛出的任何 Java 异常。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename ReturnType = void, typename... Args> auto`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ jint value = QJniObject::callStaticMethod<jint>("MyClass", "staticMethod");
+```
 
 ### `[static, since 6.4] template <typename ReturnType = void, typename... Args> auto QJniObject::callStaticMethod(jclass clazz, const char *methodName, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用静态方法 `methodName` on `clazz`，返回类型 `Ret` 的值（除非 `Ret` `void`）。如果 `Ret` 是 jobject 类型，则返回的值将是 `QJniObject`。
+方法签名是在编译时从 `Ret` 和 `args`类型推导出来的。`Ret`可以是`std::expected`兼容的类型，返回一个值，也可以是被调用方法抛出的任何 Java 异常。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename ReturnType = void, typename... Args> auto`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass javaMathClass = env.findClass("java/lang/Math");
+ jdouble randNr = QJniObject::callStaticMethod<jdouble>(javaMathClass, "random");
+```
 
 ### `[static, since 6.4] template <typename ReturnType = void, typename... Args> auto QJniObject::callStaticMethod(jclass clazz, jmethodID methodId, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用类`clazz`中 `methodId` 识别的静态方法，并返回类型 `Ret`（除非 `Ret` `void`）。如果 `Ret` 是 jobject 类型，则返回的值将是 `QJniObject`。
+当`clazz`和`methodId`已经从之前的操作缓存出来时，这非常有用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename ReturnType = void, typename... Args> auto`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodId`：类型为 `jmethodID`。没有默认值，调用时必须提供。传入 `jmethodID` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass javaMathClass = env.findClass("java/lang/Math");
+ jmethodID methodId = env.findStaticMethod(javaMathClass, "max", "(II)I");
+ if (methodId != 0) {
+     jint a = 2;
+     jint b = 4;
+     jint max = QJniObject::callStaticMethod<jint>(javaMathClass, methodId, a, b);
+ }
+```
 
 ### `[static, since 6.4] template <typename Ret = void, typename... Args> auto QJniObject::callStaticMethod(const char *className, const char *methodName, const char *signature, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用静态方法，`methodName` 来自类 `className`，`signature` 指定后续参数的类型`args`。返回方法的结果（除非`Ret` `void`）。如果 `Ret` 是 jobject 类型，则返回的值将是 `QJniObject`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Ret = void, typename... Args> auto`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ jint a = 2;
+ jint b = 4;
+ jint max = QJniObject::callStaticMethod<jint>("java/lang/Math", "max", "(II)I", a, b);
+```
 
 ### `[static] template <typename Ret = void, typename... Args> auto QJniObject::callStaticMethod(jclass clazz, const char *methodName, const char *signature, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用静态方法`methodName` 从 `clazz` 中，`signature` 指定后续参数的类型。返回方法的结果（除非`Ret` `void`）。如果 `Ret` 是 jobject 类型，则返回的值将是 `QJniObject`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Ret = void, typename... Args> auto`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass javaMathClass = env.findClass("java/lang/Math");
+ jint a = 2;
+ jint b = 4;
+ jint max = QJniObject::callStaticMethod<jint>(javaMathClass, "max", "(II)I", a, b);
+```
 
 ### `[static, since 6.4] template <typename Ret, typename... Args> QJniObject QJniObject::callStaticObjectMethod(const char *className, const char *methodName, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticObjectMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用类`className`上的静态方法，`methodName`，传递参数`args`，并返回返回的 Java 对象的新 `QJniObject`。
+方法签名是在编译时从`Ret`和`args`类型推导出来的。`Ret`可以是`std::expected`兼容的类型，返回一个值，也可以是被调用方法抛出的任何Java异常。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Ret, typename... Args> QJniObject`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject string = QJniObject::callStaticObjectMethod<jstring>("CustomClass", "getClassName");
+```
 
 ### `[static, since 6.4] template <typename Ret, typename... Args> QJniObject QJniObject::callStaticObjectMethod(jclass clazz, const char *methodName, Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticObjectMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Ret, typename... Args> QJniObject`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用带有`methodName` `clazz`的静态方法，传递参数`args`，并返回返回的 Java 对象的新 `QJniObject`。
 
 ### `[static] QJniObject QJniObject::callStaticObjectMethod(jclass clazz, jmethodID methodId, ...)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticObjectMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用由`methodId`识别的静态方法，并`clazz`类中的任意后续参数。当`clazz`和`methodId`已经从之前操作缓存时非常有用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodId`：类型为 `jmethodID`。没有默认值，调用时必须提供。传入 `jmethodID` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniEnvironment env;
+ jclass clazz = env.findClass("java/lang/String");
+ jmethodID methodId = env.findStaticMethod(clazz, "valueOf", "(I)Ljava/lang/String;");
+ if (methodId != 0)
+     QJniObject str = QJniObject::callStaticObjectMethod(clazz, methodId, 10);
+```
 
 ### `[static] QJniObject QJniObject::callStaticObjectMethod(const char *className, const char *methodName, const char *signature, ...)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticObjectMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+调用静态方法`methodName`类`className`，`signature`指定后续参数的类型。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject thread = QJniObject::callStaticObjectMethod("java/lang/Thread", "currentThread",
+                                                        "()Ljava/lang/Thread;");
+ QJniObject string = QJniObject::callStaticObjectMethod("java/lang/String", "valueOf",
+                                                        "(I)Ljava/lang/String;", 10);
+```
 
 ### `[static] QJniObject QJniObject::callStaticObjectMethod(jclass clazz, const char *methodName, const char *signature, ...)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `callStaticObjectMethod`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QJniObject`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `methodName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `...`：类型为 `未标注`。没有默认值，调用时必须提供。传入 `对应类型` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+调用静态方法，`methodName` 来自类 `clazz`，`signature` 指定后续参数的类型。
 
 ### `[since 6.2] QByteArray QJniObject::className() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::className` 用于计算、查询或取得与“class、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QByteArray`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QByteArray`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QJniObject`所持有的类对象名称作为`QByteArray`。
 
 ### `[static, since 6.4] template <typename Class, typename... Args> auto QJniObject::construct(Args &&... args)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `construct`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+构造一个等价于 `Class` 的 Java 类实例，返回包含 JNI 对象的`QJniObject`。`args` 中的参数传递给 Java 构造器。
+该功能仅在所有`args`均为已知JNI类型时可用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Class, typename... Args> auto`。
-- 参数 `args`：类型为 `Args &&...`。没有默认值，调用时必须提供。传入 `Args &&...` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject javaString = QJniObject::construct<jstring>();
+```
 
 ### `[static] QJniObject QJniObject::fromLocalRef(jobject localRef)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromLocalRef`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从本地JNI引用`localRef`创建`QJniObject`。该函数会获得`localRef`的所有权，并在返回前释放它。
+注意：仅在本地 JNI 引用时调用该函数。例如，大多数原始 JNI 调用通过 JNI 环境返回 Java 对象的本地引用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `localRef`：类型为 `jobject`。没有默认值，调用时必须提供。传入 `jobject` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ jobject localRef = env->GetObjectArrayElement(array, index);
+ QJniObject element = QJniObject::fromLocalRef(localRef);
+```
 
 ### `[static] QJniObject QJniObject::fromString(const QString &string)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `fromString`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从`QString` `string`创建一个 Java 字符串，并返回包含该字符串的`QJniObject`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `string`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QString myQString = "QString";
+ QJniObject myJavaString = QJniObject::fromString(myQString);
+```
 
 ### `template <typename Type> auto QJniObject::getField(const char *fieldName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的核心操作 `getField`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+检索场`fieldName`的值。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Type> auto`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject volumeControl("org/qtproject/qt/TestClass");
+ jint fieldValue = volumeControl.getField<jint>("FIELD_NAME");
+```
 
 ### `template <typename T> QJniObject QJniObject::getObjectField(const char *fieldName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的核心操作 `getObjectField`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+从场`fieldName`中检索一个JNI对象。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> QJniObject`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject field = jniObject.getObjectField<jstring>("FIELD_NAME");
+```
 
 ### `QJniObject QJniObject::getObjectField(const char *fieldName, const char *signature) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的核心操作 `getObjectField`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
+从场中`fieldName`与`signature`检索一个JNI对象。
+注意：该函数可在不使用模板类型的情况下使用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject field = jniObject.getObjectField("FIELD_NAME", "Ljava/lang/String;");
+```
 
 ### `[static] template <typename Klass, typename T> auto QJniObject::getStaticField(const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Klass, typename T> auto`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从类`Klass`的静态字段`fieldName`中获取值。
+`Klass`需要是C类型，并且有注册类型映射到Java类型。
 
 ### `[static] template <typename Type> auto QJniObject::getStaticField(const char *className, const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Type> auto`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从类`className`的静态字段`fieldName`中获取该值。
 
 ### `[static] template <typename Type> auto QJniObject::getStaticField(jclass clazz, const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Type> auto`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从`clazz`的静态场`fieldName`中获取该值。
 
 ### `[static] template <typename T> QJniObject QJniObject::getStaticObjectField(const char *className, const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticObjectField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从类`className`上的字段`fieldName`中检索对象。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> QJniObject`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject jobj = QJniObject::getStaticObjectField<jstring>("class/with/Fields", "FIELD_NAME");
+```
 
 ### `[static] template <typename T> QJniObject QJniObject::getStaticObjectField(jclass clazz, const char *fieldName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticObjectField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从`clazz`场`fieldName`中取回该物体。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> QJniObject`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject jobj = QJniObject::getStaticObjectField<jstring>(clazz, "FIELD_NAME");
+```
 
 ### `[static] QJniObject QJniObject::getStaticObjectField(const char *className, const char *fieldName, const char *signature)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticObjectField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从场`fieldName`中获取带有类`className` `signature`的JNI对象。
+注意：该函数可在不使用模板类型的情况下使用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject jobj = QJniObject::getStaticObjectField("class/with/Fields", "FIELD_NAME",
+                                                    "Ljava/lang/String;");
+```
 
 ### `[static] QJniObject QJniObject::getStaticObjectField(jclass clazz, const char *fieldName, const char *signature)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `getStaticObjectField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+从场`fieldName`中检索JNI对象，`signature`来自类`clazz`。
+注意：该函数可在不使用模板类型的情况下使用。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QJniObject`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject jobj = QJniObject::getStaticObjectField(clazz, "FIELD_NAME", "Ljava/lang/String;");
+```
 
 ### `[static] bool QJniObject::isClassAvailable(const char *className)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `isClassAvailable`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+如果 Java 类 `className` 可用，则返回 true。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ if (QJniObject::isClassAvailable("java/lang/String")) {
+     // condition statement
+ }
+```
 
 ### `bool QJniObject::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+如果该实例包含有效的 Java 对象，则返回为真。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject qjniObject;                        // ==> isValid() == false
+ QJniObject qjniObject(0)                      // ==> isValid() == false
+ QJniObject qjniObject("could/not/find/Class") // ==> isValid() == false
+```
 
 ### `template <typename T> T QJniObject::object() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::object` 用于计算、查询或取得与“object”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `template <typename T> T`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+返回`QJniObject`所持有的对象，可以作为jobject或类型T。T可以是JNI对象类型之一。
+注意：返回的对象仍会被该`QJniObject`保持存活。为了让该对象在该`QJniObject`的生命周期之外保持存活，例如记录以备后用，最简单的方法是将其存储在另一个具有适当生命周期的`QJniObject`中。或者，你也可以创建一个新的全局引用并存储该对象，完成后注意将其释放。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename T> T`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject string = QJniObject::fromString("Hello, JNI");
+ jstring jstring = string.object<jstring>();
+```
 
 ### `[since 6.2] jclass QJniObject::objectClass() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::objectClass` 用于计算、查询或取得与“object、Class”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `jclass`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`jclass`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回`QJniObject`所持有的类对象作为`jclass`。
+注意：返回的对象仍会被该`QJniObject`保持存活。为了让该对象在该`QJniObject`的生命周期之外保持存活，例如记录以备后用，最简单的方法是将其存储在另一个具有适当寿命的`QJniObject`中。或者，你可以创建一个新的全局引用并存储该对象，完成后注意将其释放。
 
 ### `template <typename Ret = void, typename Type> auto QJniObject::setField(const char *fieldName, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setField`。调用它会改变 `QJniObject` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将`fieldName`的值设为`value`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Ret = void, typename Type> auto`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject obj;
+ obj.setField<jint>("AN_INT_FIELD", 10);
+ jstring myString = ...;
+ obj.setField<jstring>("A_STRING_FIELD", myString);
+```
 
 ### `template <typename Ret = void, typename Type> auto QJniObject::setField(const char *fieldName, const char *signature, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setField`。调用它会改变 `QJniObject` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+将`fieldName` 的值设为`value` `signature`。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`template <typename Ret = void, typename Type> auto`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject stringArray = ...;
+ QJniObject obj = ...;
+ obj.setObjectField<jobjectArray>("KEY_VALUES", "([Ljava/lang/String;)V",
+                            stringArray.object<jobjectArray>())
+```
 
 ### `[static] template < typename Klass, typename Ret = void, typename Type > auto QJniObject::setStaticField(const char *fieldName, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template < typename Klass, typename Ret = void, typename Type > auto`。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类`Klass`的静态场`fieldName`设为`value`。
+`Klass`需要是一个C类型，并且有一个注册型映射到Java类型。
 
 ### `[static] template <typename Ret = void, typename Type> auto QJniObject::setStaticField(const char *className, const char *fieldName, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Ret = void, typename Type> auto`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类的静态场`fieldName`设为`className`为`value`。
 
 ### `[static] template <typename Ret = void, typename Type> auto QJniObject::setStaticField(jclass clazz, const char *fieldName, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Ret = void, typename Type> auto`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将类`clazz`的静态场`fieldName`设置为`value`。
 
 ### `[static] template <typename Ret = void, typename Type> auto QJniObject::setStaticField(const char *className, const char *fieldName, const char *signature, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Ret = void, typename Type> auto`。
-- 参数 `className`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`signature`的设定器设置班级`className`的静态场`fieldName`为`value`。
 
 ### `[static] template <typename Ret = void, typename Type> auto QJniObject::setStaticField(jclass clazz, const char *fieldName, const char *signature, Type value)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `setStaticField`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`template <typename Ret = void, typename Type> auto`。
-- 参数 `clazz`：类型为 `jclass`。没有默认值，调用时必须提供。传入 `jclass` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `fieldName`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `signature`：类型为 `const char *`。没有默认值，调用时必须提供。传入 `const char *` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `value`：类型为 `Type`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用`signature`设置者设置`clazz`的静态场`fieldName`为`value`。
 
 ### `[noexcept, since 6.8] void QJniObject::swap(QJniObject &other)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QJniObject::swap` 用于执行与“swap”相关的操作。调用时要先确认当前状态和 `other` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `other`：类型为 `QJniObject &`。没有默认值，调用时必须提供。参与比较、合并或交换的另一个对象；要确认它与当前对象属于同一类型或兼容协议。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将该对象与`other`交换。此操作非常快速且从未失败。
 
 ### `QString QJniObject::toString() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是转换/映射 API `toString`。它通常在不同表示、坐标系、编码或 Qt 类型之间建立边界；转换前确认格式和所有权，转换后检查是否丢失精度、编码或上下文。
+返回一个带有 Java 对象字符串表示的 `QString`。调用 Java String 对象的函数是获取实际字符串数据的便捷方式。
 
-**签名拆解：**
+**官方示例：**
 
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+```cpp
+ QJniObject string = ...; //  "Hello Java"
+ QString qstring = string.toString(); // "Hello Java"
+```
 
 ### `template <typename T, std::enable_if_t<std::is_convertible_v<T, jobject>, bool> = true> QJniObject &QJniObject::operator=(T object)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`template <typename T, std::enable_if_t<std::is_convertible_v<T, jobject>, bool> = true> QJniObject &`。
-- 参数 `object`：类型为 `T`。没有默认值，调用时必须提供。传入 `T` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用 `object` 替换当前对象。旧的 Java 对象将被释放。
 
 ### `bool operator!=(const QJniObject &o1, const QJniObject &o2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `o1`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `o2`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果`o1`持有与`o2`不同的对象引用，则返回为真。
 
 ### `bool operator==(const QJniObject &o1, const QJniObject &o2)`
 
-**API 类别：** 相关非成员函数
+**作用与语义：**
 
-**中文解读：** 这是 `QJniObject` 的运算符重载，用于把对象按值类型语义进行比较、赋值、访问或转换。要确认它返回新对象还是修改当前对象，并注意隐式共享、空值和临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `o1`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `o2`：类型为 `const QJniObject &`。没有默认值，调用时必须提供。传入 `const QJniObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果两个对象 `o1` 和 `o2` 引用同一个 Java 对象，或者两者都是 NULL，则返回 true。其他情况下，返回 false。
 
 ## 6. 深入实践与常见坑
 

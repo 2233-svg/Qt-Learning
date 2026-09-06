@@ -79,201 +79,130 @@ target_link_libraries(mytarget PRIVATE Qt6::Core)
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 15 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QStringConverter::Flagflags QStringConverter::Flags`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QStringConverter` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:Flagflags QStringConverter::Flags`。
-- 属性名：`QStringConverter`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QStringConverter::Flag::Default`：`0`;适用默认转换规则。
+- `QStringConverter::Flag::ConvertInvalidToNull`：`0x2`;如果设置了该标志，每个无效输入字符作为空字符输出。如果未设置，若输出编码能表示该字符，则无效输入字符表示为`QChar::ReplacementCharacter`，否则表示为问号。
+- `QStringConverter::Flag::WriteBom`：`0x4`;从`QString`转换为输出编码时，如果输出编码支持，请将`QChar::ByteOrderMark`写为第一个字符。UTF-8、UTF-16 和 UTF-32 编码均为此类。
+- `QStringConverter::Flag::ConvertInitialBom`：`0x8`;从输入编码转换为`QString`时，`QStringDecoder`通常会跳过一个前`QChar::ByteOrderMark`。当该标志被设置时，字节顺序标记不会被跳过，而是转换为 utf-16，并插入在创建的 `QString` 开头。
+- `QStringConverter::Flag::Stateless`：`0x1`;忽略不同函数调用之间可能的转换状态，用于编码或解码字符串。如果遇到不完整的数据序列，这也会导致`QStringConverter`报错。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `[static] QStringList QStringConverter::availableCodecs()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `availableCodecs`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`QStringList`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回支持编解码器的名称列表。该函数返回的名称可以传递给`QStringEncoder`和`QStringDecoder`的构造器，以创建该编解码器的解码器或解码器。
+该函数可用于获取标准编解码器之外的额外编解码器列表。支持额外编解码器需要在 Qt 编译时支持 ICU 库。
+注意：编解码器的顺序是内部实现细节，不保证稳定。
 
 ### `[static noexcept] std::optional<QStringConverter::Encoding> QStringConverter::encodingForData(QByteArrayView data, char16_t expectedFirstCharacter = 0)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `encodingForData`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`std::optional<QStringConverter::Encoding>`。
-- 参数 `data`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-- 参数 `expectedFirstCharacter`：类型为 `char16_t`。默认值为 `0`。传入 `char16_t` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果能确定`data`的内容，返回编码。`expectedFirstCharacter`可以作为额外提示传递，帮助确定编码。
+如果编码不清晰，返回的可选选项为空。
 
 ### `[static] std::optional<QStringConverter::Encoding> QStringConverter::encodingForHtml(QByteArrayView data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `encodingForHtml`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`std::optional<QStringConverter::Encoding>`。
-- 参数 `data`：类型为 `QByteArrayView`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+尝试通过查看 HTML 元标签中的字节序标记或字元集指定符来确定 HTML 的编码`data`。如果可选为空，表示该编码不被 `QStringConverter` 支持。如果检测不到编码，方法返回 Utf8。
 
 ### `[static noexcept] std::optional<QStringConverter::Encoding> QStringConverter::encodingForName(QAnyStringView name)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `encodingForName`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`std::optional<QStringConverter::Encoding>`。
-- 参数 `name`：类型为 `QAnyStringView`。没有默认值，调用时必须提供。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果有相应的 `Encoding` 成员，`name`转换。
+如果`name`不是编码枚举中列出的编解码器名称，则返回`std::nullopt`。尽管如此，当Qt与ICU一起构建时，`QStringConverter`构造器可能会接受这样的名称，前提是ICU提供了带有该名称的转换器。
+注意：在 6.8 之前的 Qt 版本中，该函数只需一个 `const char *`，预计该功能将采用 UTF-8 编码。
 
 ### `[noexcept] bool QStringConverter::hasError() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `hasError`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果转换无法正确转换字符，则返回为true。例如，这可能因无效的UTF-8序列或因目标编码限制无法转换字符而触发。
 
 ### `[noexcept] bool QStringConverter::isValid() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isValid`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果这是一个可用于编码或解码文本的字符串转换器，则返回为真。
+默认构造字符串转换器或带有不支持名称的转换器不有效。
 
 ### `[noexcept] const char *QStringConverter::name() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringConverter::name` 用于计算、查询或取得与“名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `const char *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该`QStringConverter`可编码或解码的编码规范名称。如果转换器无效，返回 nullptr。返回名称为 UTF-8 编码。
 
 ### `[static noexcept] const char *QStringConverter::nameForEncoding(QStringConverter::Encoding e)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是静态工具 API `nameForEncoding`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
-
-**签名拆解：**
-
-- 返回值：`const char *`。
-- 参数 `e`：类型为 `QStringConverter::Encoding`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果 `e` 是无效值，则返回编码 `e` 或 `nullptr` 的典范名称。
+注意：在 6.10、6.9.1、6.8.4 或 6.5.9 之前的 Qt 版本中，使用无效参数调用该函数会导致行为未定义。自上述 Qt 版本以来，它返回的是 nullptr。
 
 ### `[noexcept] void QStringConverter::resetState()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QStringConverter::resetState` 用于执行与“重置、State”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重置转换器的内部状态，清除潜在的错误或部分转换。
 
 ### `(since 6.11) struct FinalizeResultChar`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringConverter` 的 `Finalize、结果、Char` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+保存在QStringDecoder或QStringEncoder上调用finalize()的结果。
+该类用于传递 finalize() 调用的结果或调用未成功的原因。
 
 ### `enum Encoding { Utf8, Utf16, Utf16BE, Utf16LE, Utf32, …, System }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringConverter` 暴露的类型声明 `Encoding`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QStringConverter::Utf8`：`0`;创建一个与 UTF-8 之间的转换器
+- `QStringConverter::Utf16`：`1`;创建一个与UTF-16之间的转换器。解码时，字节顺序会自动被前置字节顺序标记检测。如果不存在字节顺序或编码时，则假设系统字节顺序。
+- `QStringConverter::Utf16BE`：`3`;创建与大端UTF-16的转换器。
+- `QStringConverter::Utf16LE`：`2`;创建一个小端UTF-16的转换器。
+- `QStringConverter::Utf32`：`4`;创建一个UTF-32的转换器。解码时，字节顺序会自动通过前置字节顺序标记检测。如果不存在或编码时，系统字节顺序将被假定。
+- `QStringConverter::Utf32BE`：`6`;创建大端UTF-32的转换器。
+- `QStringConverter::Utf32LE`：`5`;创建一个小端UTF-32的转换器。
+- `QStringConverter::Latin1`：`7`;创建一个转换器，或从ISO-8859-1（拉丁语1）转换。
+- `QStringConverter::System`：`8`;创建一个转换器，转入或从操作系统本地的底层编码。对于基于 Unix 的系统，这总是假设为 UTF-8。在 Windows 上，这会与本地代码页进行转换和转换。
 
 ### `enum class FinalizeResultError { NoError, InvalidCharacters, NotEnoughSpace }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringConverter` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QStringConverter::FinalizeResultError::NoError`：`0`;无错误。
+- `QStringConverter::FinalizeResultError::InvalidCharacters`：`1`;编码器成功完成了最终化，但在最终化过程中或更早一段时间遇到了无效字符。
+- `QStringConverter::FinalizeResultError::NotEnoughSpace`：`2`;finalize() 未成功，你必须扩大缓冲区并再次调用 finalize()。
 
 ### `enum class Flag { Default, ConvertInvalidToNull, WriteBom, ConvertInitialBom, Stateless }`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringConverter` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 这是供该类其他 API 使用的枚举/标志类型；传值前要确认枚举值的语义和适用状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QStringConverter::Flag::Default`：`0`;适用默认转换规则。
+- `QStringConverter::Flag::ConvertInvalidToNull`：`0x2`;如果设置了该标志，每个无效输入字符作为空字符输出。如果未设置，若输出编码能表示该字符，则无效输入字符表示为`QChar::ReplacementCharacter`，否则表示为问号。
+- `QStringConverter::Flag::WriteBom`：`0x4`;从`QString`转换为输出编码时，如果输出编码支持，请将`QChar::ByteOrderMark`写为第一个字符。UTF-8、UTF-16 和 UTF-32 编码均为此类。
+- `QStringConverter::Flag::ConvertInitialBom`：`0x8`;从输入编码转换为`QString`时，`QStringDecoder`通常会跳过一个前`QChar::ByteOrderMark`。当该标志被设置时，字节顺序标记不会被跳过，而是转换为 utf-16，并插入在创建的 `QString` 开头。
+- `QStringConverter::Flag::Stateless`：`0x1`;忽略不同函数调用之间可能的转换状态，用于编码或解码字符串。如果遇到不完整的数据序列，这也会导致`QStringConverter`报错。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ### `flags Flags`
 
-**API 类别：** 公有类型
+**作用与语义：**
 
-**中文解读：** 这是 `QStringConverter` 的 `标志` 成员声明。它通常作为其他 API 的类型、常量或配置入口使用；先确认可用值和适用状态，再结合本类的创建、核心操作和清理流程使用。
-
-**签名拆解：**
-
-- 这是类型或成员声明，具体可用值和适用范围以该类的类型定义为准。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+- `QStringConverter::Flag::Default`：`0`;适用默认转换规则。
+- `QStringConverter::Flag::ConvertInvalidToNull`：`0x2`;如果设置了该标志，每个无效输入字符作为空字符输出。如果未设置，若输出编码能表示该字符，则无效输入字符表示为`QChar::ReplacementCharacter`，否则表示为问号。
+- `QStringConverter::Flag::WriteBom`：`0x4`;从`QString`转换为输出编码时，如果输出编码支持，请将`QChar::ByteOrderMark`写为第一个字符。UTF-8、UTF-16 和 UTF-32 编码均为此类。
+- `QStringConverter::Flag::ConvertInitialBom`：`0x8`;从输入编码转换为`QString`时，`QStringDecoder`通常会跳过一个前`QChar::ByteOrderMark`。当该标志被设置时，字节顺序标记不会被跳过，而是转换为 utf-16，并插入在创建的 `QString` 开头。
+- `QStringConverter::Flag::Stateless`：`0x1`;忽略不同函数调用之间可能的转换状态，用于编码或解码字符串。如果遇到不完整的数据序列，这也会导致`QStringConverter`报错。
+Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
 
 ## 6. 深入实践与常见坑
 

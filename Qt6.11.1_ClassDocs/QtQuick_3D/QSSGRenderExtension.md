@@ -67,129 +67,73 @@ QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 9 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum class QSSGRenderExtension::RenderMode`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderExtension` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RenderMode`。
-- 属性名：`QSSGRenderExtension`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定渲染扩展模式。
+- `QSSGRenderExtension::RenderMode::Standalone`：`0`;渲染代码在渲染准备阶段完整录制。这通常意味着前一个渲染扩展有输出箱。使用此模式时，帧准备阶段调用`prepareRender()`和`render()`函数。
+- `QSSGRenderExtension::RenderMode::Main`：`1`;渲染代码记录在主渲染通道中。在此模式下，`prepareRender()`在帧的准备阶段被调用，`render()`称为帧的渲染阶段。
 
 ### `enum class QSSGRenderExtension::RenderStage`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderExtension` 暴露的类型声明 `class`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:RenderStage`。
-- 属性名：`QSSGRenderExtension`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+指定分机调用的顺序。
+- `QSSGRenderExtension::RenderStage::PreColor`：`0`;渲染代码在主（颜色）通道之前录制并执行。
+- `QSSGRenderExtension::RenderStage::PostColor`：`1`;渲染代码在主（彩色）处理后被记录并执行。
+注意：渲染阶段仅在`RenderMode`设置为`Main`时才相关。
 
 ### `[protected] QSSGRenderExtension::QSSGRenderExtension(QSSGRenderGraphObject::Type inType, QSSGRenderGraphObject::FlagT inFlags)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderExtension` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `inType`：类型为 `QSSGRenderGraphObject::Type`。没有默认值，调用时必须提供。传入 `QSSGRenderGraphObject::Type` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `inFlags`：类型为 `QSSGRenderGraphObject::FlagT`。没有默认值，调用时必须提供。枚举或标志参数。先确认可用枚举值、互斥关系和默认值，必要时用按位或组合标志。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+构建器允许用户指定用户类型和扩展标志。
+注意：对于用户自定义扩展，类型必须是QSSGRenderGraphObject：：BaseType：：User和值在0到4095之间的组合。
+注意：QSSGRenderGraphObject：：BaseType：：扩展类型会自动添加到给定`inType`中。
+注意：如果扩展分配图形资源，`inFlags`必须包含 Flags：：HasGraphicsResources。
 
 ### `[pure virtual] QSSGRenderExtension::RenderMode QSSGRenderExtension::mode() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRenderExtension::mode` 用于计算、查询或取得与“模式”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSSGRenderExtension::RenderMode`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSSGRenderExtension::RenderMode`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回该扩展所使用的渲染模式。
 
 ### `[pure virtual] bool QSSGRenderExtension::prepareData(QSSGFrameData &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRenderExtension::prepareData` 用于计算、查询或取得与“prepare、数据访问”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `data`：类型为 `QSSGFrameData &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在收集场景`data`之后调用，但在当前帧中尚未完成任何渲染数据或渲染之前。
+返回脏状态。如果有脏数据需要渲染，返回`true`。
+注意：在准备和渲染阶段，引擎创建/收集的大部分数据是每帧的，应在下一帧开始时释放或假定发布。
 
 ### `[pure virtual] void QSSGRenderExtension::prepareRender(QSSGFrameData &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRenderExtension::prepareRender` 用于执行与“prepare、渲染”相关的操作。调用时要先确认当前状态和 `data` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `QSSGFrameData &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+准备渲染数据。构建并收集渲染所需的`data`。在此之前安排的任何渲染扩展都已处理完毕。此外;任何模式`RenderMode::Standalone`的渲染扩展如果成功，将已全部完成。
+注意：在准备和渲染阶段，引擎创建/收集的大部分数据是每帧的，应在下一帧开始时释放或假定发布。
 
 ### `[pure virtual] void QSSGRenderExtension::render(QSSGFrameData &data)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSSGRenderExtension` 的核心操作 `render`。先确认输入类型、当前状态和线程要求，再根据返回值/输出参数读取结果；对文件、网络、数据库和绘制 API 要同时处理失败或部分完成情况。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `data`：类型为 `QSSGFrameData &`。没有默认值，调用时必须提供。数据载荷或要读取的数据。要确认编码、所有权、大小和是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+记录渲染通道。根据扩展`mode`该函数将在帧的准备或渲染阶段调用。
+使用`data`获取渲染上下文，从中查询活动`QRhi`对象。
 
 ### `[pure virtual] void QSSGRenderExtension::resetForFrame()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRenderExtension::resetForFrame` 用于执行与“重置、For、Frame”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+每次新帧开始时调用。此时应清除前一帧的数据。
 
 ### `[pure virtual] QSSGRenderExtension::RenderStage QSSGRenderExtension::stage() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSSGRenderExtension::stage` 用于计算、查询或取得与“stage”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSSGRenderExtension::RenderStage`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSSGRenderExtension::RenderStage`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 该渲染扩展将被使用的阶段。
 
 ## 6. 深入实践与常见坑
 

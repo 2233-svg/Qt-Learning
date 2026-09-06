@@ -137,666 +137,367 @@ if (query.exec()) {
 
 ## 5. API 逐个说明
 
-这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
-
-本类共整理 49 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
 
 ### `enum QSqlTableModel::EditStrategy`
 
-**API 类别：** 成员类型说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 暴露的类型声明 `Edit、Strategy`。它通常作为其他 API 的参数或返回值使用；先确认每个枚举值/别名的语义、默认值和适用状态，再传给对应函数。
-
-**签名拆解：**
-
-- 属性类型：`:EditStrategy`。
-- 属性名：`QSqlTableModel`；读取和写入权限以签名前缀和对应访问函数为准。
-- 使用时：写入属性可能触发布局、重绘、绑定或状态通知；读取结果只代表当前状态。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该枚举类型描述了编辑数据库中值时应选择的策略。
+- `QSqlTableModel::OnFieldChange`：`0`;所有对模型的更改将立即应用到数据库中。
+- `QSqlTableModel::OnRowChange`：`1`;当用户选择不同的行时，行的更改将被应用。
+- `QSqlTableModel::OnManualSubmit`：`2`;所有变更都会缓存在模型中，直到调用`submitAll()`或`revertAll()`。
+注意：为防止只插入部分初始化的行，`OnFieldChange`会像新插入行的 `OnRowChange` 一样表现。
 
 ### `[explicit] QSqlTableModel::QSqlTableModel(QObject *parent = nullptr, const QSqlDatabase &db = QSqlDatabase())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
-
-**签名拆解：**
-
-- 返回值：构造函数，不返回对象值。
-- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-- 参数 `db`：类型为 `const QSqlDatabase &`。默认值为 `QSqlDatabase()`。传入 `const QSqlDatabase &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+创建空的 QSqlTableModel，并将父节点设置为 `parent`，数据库连接设置为 `db`。如果`db`无效，将使用默认数据库连接。
+默认的编辑策略是`OnRowChange`。
 
 ### `[virtual noexcept] QSqlTableModel::~QSqlTableModel()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
-
-**签名拆解：**
-
-- 返回值：析构函数，无返回值。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+摧毁该物体并释放所有分配的资源。
 
 ### `[signal] void QSqlTableModel::beforeDelete(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 发出的通知信号 `beforeDelete`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号由`deleteRowFromTable()`在`row`从当前活跃数据库表中删除前发出。
 
 ### `[signal] void QSqlTableModel::beforeInsert(QSqlRecord &record)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 发出的通知信号 `beforeInsert`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `record`：类型为 `QSqlRecord &`。没有默认值，调用时必须提供。传入 `QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号由`insertRowIntoTable()`在插入当前活跃数据库表的新行之前发出。即将插入的值存储在`record`中，插入前可以进行修改。
 
 ### `[signal] void QSqlTableModel::beforeUpdate(int row, QSqlRecord &record)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 发出的通知信号 `beforeUpdate`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `record`：类型为 `QSqlRecord &`。没有默认值，调用时必须提供。传入 `QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号由`updateRowInTable()`发出，随后`row`在当前活跃数据库表中更新，包含`record`的值。
+注意，只有标记为生成的值才会被更新。生成的标志可以用`QSqlRecord::setGenerated()`设置，并用 `QSqlRecord::isGenerated()` 检查。
 
 ### `[override virtual] void QSqlTableModel::clear()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是状态清理或重置 API `clear`。调用后原有数据、索引、缓存或绑定可能失效；使用前先确认它影响的是当前对象、子对象还是底层共享资源，之后重新检查状态。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QSqlQueryModel::clear()`。
+清除模型并释放任何获得的资源。
 
 ### `[override virtual] bool QSqlTableModel::clearItemData(const QModelIndex &index)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::clearItemData` 用于计算、查询或取得与“清空、项目访问、数据访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::clearItemData`（const QModelIndex & index）。
 
 ### `[override virtual] QVariant QSqlTableModel::data(const QModelIndex &index, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是数据访问 API `data`，用于取得 `QSqlTableModel` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回 `index` 在指定 `role` 下的数据。显示和编辑角色来自当前记录，其他角色按 `QSqlQueryModel`/`QAbstractItemModel` 规则处理；索引无效或角色不受支持时返回无效 `QVariant`。未提交的编辑会优先反映在返回值中。
 
 ### `QSqlDatabase QSqlTableModel::database() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::database` 用于计算、查询或取得与“database”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlDatabase`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlDatabase`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回模型的数据库连接。
 
 ### `[virtual protected] bool QSqlTableModel::deleteRowFromTable(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `deleteRowFromTable`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+从当前活跃的数据库表中删除给定的`row`。
+这是一种底层方法，直接运行在数据库上，不应直接调用。使用`removeRow()`或`removeRows()`删除数值。模型将根据其编辑策略决定何时修改数据库。
+如果该行被删除，返回`true`;否则返回`false`。
 
 ### `QSqlTableModel::EditStrategy QSqlTableModel::editStrategy() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::editStrategy` 用于计算、查询或取得与“edit、Strategy”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlTableModel::EditStrategy`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlTableModel::EditStrategy`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前的编辑策略。
 
 ### `int QSqlTableModel::fieldIndex(const QString &fieldName) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::fieldIndex` 用于计算、查询或取得与“field、索引”相关的操作。调用时要先确认当前状态和 `fieldName` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `fieldName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回场`fieldName`的索引，若模型中无对应字段则返回-1。
 
 ### `QString QSqlTableModel::filter() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::filter` 用于计算、查询或取得与“filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前设置的过滤器。
 
 ### `[override virtual] Qt::ItemFlags QSqlTableModel::flags(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::flags` 用于计算、查询或取得与“标志”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `Qt::ItemFlags`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`Qt::ItemFlags`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractTableModel::flags`（const QModelIndex & index） const.
 
 ### `[override virtual] QVariant QSqlTableModel::headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::headerData` 用于计算、查询或取得与“header、数据访问”相关的操作。调用时要先确认当前状态和 `section`、`orientation`、`role` 的有效范围；返回类型是 `QVariant`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QVariant`。
-- 参数 `section`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `orientation`：类型为 `Qt::Orientation`。没有默认值，调用时必须提供。传入 `Qt::Orientation` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::DisplayRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QSqlQueryModel::headerData`（int section， Qt：：Orientation orientation， int role） const.
 
 ### `[override virtual protected] QModelIndex QSqlTableModel::indexInQuery(const QModelIndex &item) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::indexInQuery` 用于计算、查询或取得与“索引、In、查询”相关的操作。调用时要先确认当前状态和 `item` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QModelIndex`。
-- 参数 `item`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。容器、布局或模型中的一个项目；要确认加入后所有权是否转移以及项目是否允许为空。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QSqlQueryModel::indexInQuery`（const QModelIndex &item） const.
+返回数据库结果集中给定`item`的索引。
+如果没有插入、删除或移动列或行，返回值与 `item` 相同。
+如果`item`超出边界或`item`未指向结果集中的某个值，则返回无效的模型索引。
+返回数据库结果集中对模型中给定`item`值的索引。
+如果没有插入、删除或移动任何列或行，返回值与 `item` 相同。
+如果`item`超出边界或`item`未指向结果集中的某个值，则返回无效的模型索引。
 
 ### `bool QSqlTableModel::insertRecord(int row, const QSqlRecord &record)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSqlTableModel` 添加依赖、数据或子对象的 API `insertRecord`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `record`：类型为 `const QSqlRecord &`。没有默认值，调用时必须提供。传入 `const QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`record`插入位置`row`。如果`row`为负，记录将附加到末尾。调用`insertRows()`和`setRecord()`内部。
+如果记录可以插入，返回`true`，否则返回假。
+变更会立即提交以便进行`OnFieldChange`和`OnRowChange`。失败不会在模型中留下新行。
 
 ### `[virtual protected] bool QSqlTableModel::insertRowIntoTable(const QSqlRecord &values)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSqlTableModel` 添加依赖、数据或子对象的 API `insertRowIntoTable`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `values`：类型为 `const QSqlRecord &`。没有默认值，调用时必须提供。传入 `const QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`values`值插入当前活跃的数据库表中。
+这是一种底层方法，直接运行在数据库上，不应直接调用。使用 `insertRow()` 和 `setData()` 插入数值。模型会根据其编辑策略决定何时修改数据库。
+如果可以插入这些值，返回`true`，否则为假。错误信息可以通过 `lastError()` 检索。
 
 ### `[override virtual] bool QSqlTableModel::insertRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是向 `QSqlTableModel` 添加依赖、数据或子对象的 API `insertRows`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::insertRows`（整数行，整数计数，cont QModelIndex 和parent）。
+在位置`row`插入`count`空行。注意，`parent`必然无效，因为该模型不支持父子关系。
+对于编辑策略`OnFieldChange`和`OnRowChange`，一次只能插入一行，且模型中不得包含其他缓存变更。
+每增加一行就会发出`primeInsert()`信号。如果你想用默认值初始化新行，可以连接到它。
+无论采用何种编辑策略，都不会提交行。
+如果参数超出边界或无法插入该行，返回`false`;否则返回`true`。
 
 ### `bool QSqlTableModel::isDirty(const QModelIndex &index) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDirty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果索引`index`的值是脏的，则返回`true`，否则为假。脏值是指模型中被修改但尚未写入数据库的值。
+如果`index`无效或指向不存在的行，则返回假。
 
 ### `bool QSqlTableModel::isDirty() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是查询 API `isDirty`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+如果模型包含未提交到数据库的修改值，返回 会`true`，否则为假。
 
 ### `[virtual protected] QString QSqlTableModel::orderByClause() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::orderByClause` 用于计算、查询或取得与“order、By、Clause”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回基于当前排序顺序的 SQL `ORDER BY` 子句。
 
 ### `QSqlIndex QSqlTableModel::primaryKey() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::primaryKey` 用于计算、查询或取得与“primary、Key”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlIndex`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前表的主键，如果表未设置或没有主键，则返回空`QSqlIndex`。
 
 ### `[protected] QSqlRecord QSqlTableModel::primaryValues(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::primaryValues` 用于计算、查询或取得与“primary、Values”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QSqlRecord`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlRecord`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回包含主键中字段的记录，该字段设置为`row`。如果没有定义主键，返回的记录将包含所有字段。
 
 ### `[signal] void QSqlTableModel::primeInsert(int row, QSqlRecord &record)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是 `QSqlTableModel` 发出的通知信号 `primeInsert`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `record`：类型为 `QSqlRecord &`。没有默认值，调用时必须提供。传入 `QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+该信号由`insertRows()`发出，当插入当前活跃数据库表的指定`row`时。`record`参数可以写入（因为它是引用），例如用默认值填充某些字段并设置字段生成的标志。处理该信号时，不要尝试通过`setData()`或`setRecord()`等其他方式编辑记录。
 
 ### `QSqlRecord QSqlTableModel::record() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::record` 用于计算、查询或取得与“record”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QSqlRecord`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlRecord`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+它返回一个空记录，仅包含字段名称。该函数可用于检索记录的字段名称。
 
 ### `QSqlRecord QSqlTableModel::record(int row) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::record` 用于计算、查询或取得与“record”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `QSqlRecord`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QSqlRecord`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在模型中返回`row`的记录。
+如果`row`是有效行的索引，记录将被填充该行的值。
+如果模型未初始化，将返回一个空记录。
 
 ### `[override virtual] bool QSqlTableModel::removeColumns(int column, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeColumns`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QSqlQueryModel::removeColumns`（整数列，整数计数，cont QModelIndex 和父）。
+从`parent`模型中移除`count`列，从索引`column`开始。
+如果列被成功移除，则返回;否则返回`false`。
 
 ### `[override virtual] bool QSqlTableModel::removeRows(int row, int count, const QModelIndex &parent = QModelIndex())`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是结束/释放/取消 API `removeRows`。它会改变对象状态或资源所有权，调用后不要继续使用已经失效的句柄、reply、索引或设备，并确认异步完成信号是否仍会到达。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `count`：类型为 `int`。没有默认值，调用时必须提供。传入 `int` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::removeRows`（整数行，整数计数，cont QModelIndex 和parent）。
+移除从`row`开始的`count`行。由于该模型不支持层级结构，`parent`必须是无效的模型索引。
+当编辑策略`OnManualSubmit`时，数据库中的行删除会被延迟，直到调用`submitAll()`。
+对于`OnFieldChange`和`OnRowChange`，一次只能删除一行，且只有在没有其他行有缓存更改的情况下。删除请求立即提交到数据库。模型会保留一行作为成功删除的行，直到`select()`刷新。
+删除失败后，该操作在模型中不会被恢复。应用程序可以重新提交或恢复。
+已插入但尚未成功提交的待移除范围内的行会立即从模型中移除。
+在数据库删除行之前，`beforeDelete()`信号会被发出。
+如果行<0或行计数> `rowCount()`，则不执行任何操作，返回假。返回 `true` 如果所有行都可以被移除;否则返回 `false`。详细的数据库错误信息可以通过`lastError()`检索。
 
 ### `[override virtual slot] void QSqlTableModel::revert()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::revert` 用于执行与“revert”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::revert()`。
+当用户取消当前行编辑时，项目代理调用了这个重新实现的槽位。
+如果模型的策略设置为`OnRowChange`或`OnFieldChange`，则会回退这些更改。对`OnManualSubmit`策略没有任何作用。
+用`revertAll()`回退`OnManualSubmit`策略的所有待处理变更，或用`revertRow()`回退特定行。
 
 ### `[slot] void QSqlTableModel::revertAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `revertAll`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原所有待处理的变更。
 
 ### `[virtual] void QSqlTableModel::revertRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::revertRow` 用于执行与“revert、行”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+还原指定`row`的所有更改。
 
 ### `[override virtual] int QSqlTableModel::rowCount(const QModelIndex &parent = QModelIndex()) const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`int`。
-- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `QModelIndex()`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QSqlQueryModel::rowCount`（const QModelIndex &parent）const.
 
 ### `[virtual slot] bool QSqlTableModel::select()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::select` 用于计算、查询或取得与“select”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用通过`setTable()`设置的表中的数据填充模型，使用指定的过滤器和排序条件，成功时返回`true`;否则返回`false`。
+注意：调用 select() 将恢复所有未提交的更改并删除已插入的列。
 
 ### `[virtual slot] bool QSqlTableModel::selectRow(int row)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::selectRow` 用于计算、查询或取得与“select、行”相关的操作。调用时要先确认当前状态和 `row` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+在模型中刷新时，`row`数据库表中的行值与主键值匹配。没有主键时，所有列值必须匹配。如果找不到匹配的行，模型将显示空行。
+成功时返回`true`;否则返回`false`。
 
 ### `[virtual protected] QString QSqlTableModel::selectStatement() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::selectStatement` 用于计算、查询或取得与“select、Statement”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回内部用于填充模型的 SQL `SELECT` 语句。该语句包含过滤器和 `ORDER BY` 子句。
 
 ### `[override virtual] bool QSqlTableModel::setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setData`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
-- 参数 `value`：类型为 `const QVariant &`。没有默认值，调用时必须提供。要读取或写入的值。要确认类型转换、默认值、所有权以及写入后是否触发通知。
-- 参数 `role`：类型为 `int`。默认值为 `Qt::EditRole`。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::setData`（const QModelIndex & index，const QVariant & value，int role）。
+将角色`role`的项目数据设置为`value` `index`。
+对于编辑策略`OnFieldChange`，只有当没有其他索引缓存变更时，索引才可以接收变更。变更会立即提交。然而，尚未插入数据库的行可以自由更改，且不会自动提交。提交的变更失败时不会被恢复。
+对于`OnRowChange`，只有当没有其他行有缓存变更时，索引才可以接收变更。变更不会自动提交。
+如果`value`等于当前值，返回`true`。但该值不会提交到数据库。
+返回`true`值是否可以设置或假，例如`index`超出边界。
+如果角色不`Qt::EditRole`，返回`false`。要设置除 EditRole 以外的角色数据，可以使用自定义代理模型或子类 `QSqlTableModel`。
 
 ### `[virtual] void QSqlTableModel::setEditStrategy(QSqlTableModel::EditStrategy strategy)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setEditStrategy`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `strategy`：类型为 `QSqlTableModel::EditStrategy`。没有默认值，调用时必须提供。传入 `QSqlTableModel::EditStrategy` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将数据库中编辑数值的策略设置为`strategy`。
+这样可以回退所有待处理的变更。
 
 ### `[virtual] void QSqlTableModel::setFilter(const QString &filter)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setFilter`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `filter`：类型为 `const QString &`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将电流滤波器设置为`filter`。
+过滤器是一个没有关键词`WHERE`的SQL `WHERE`子句（例如，`name='Josephine')`）。
+如果模型已经被数据库填充，模型会用新的筛选器重新选择该模型。否则，下次调用`select()`时会应用该筛选器。
 
 ### `[protected] void QSqlTableModel::setPrimaryKey(const QSqlIndex &key)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setPrimaryKey`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `key`：类型为 `const QSqlIndex &`。没有默认值，调用时必须提供。键、字段名或索引键；应确认编码、大小写规则和键不存在时的返回值。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+保护方法允许子类将主键设置为`key`。
+通常，每当你打电话`setTable()`时，主索引会自动设置。
 
 ### `bool QSqlTableModel::setRecord(int row, const QSqlRecord &values)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setRecord`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `values`：类型为 `const QSqlRecord &`。没有默认值，调用时必须提供。传入 `const QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+`values`应用于模型中的`row`。源场和目标场按场名映射，而非记录中的位置。
+请注意，`values`中生成的标志被保留，以确定提交到数据库时是否使用相应字段。默认情况下，该标志对`QSqlRecord`中的所有字段都设置为`true`。你必须将标志设置为`false`，`values`中的任意值都使用`setGenerated`（false），才能将更改保存回数据库。
+对于编辑策略`OnFieldChange`和`OnRowChange`，只有当没有其他行有缓存变更时，行才可以接收变更。变更会立即提交。提交的变更失败时不会被恢复。
+如果所有值都可以设置，则返回`true`;否则返回false。
 
 ### `[virtual] void QSqlTableModel::setSort(int column, Qt::SortOrder order)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setSort`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。没有默认值，调用时必须提供。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将`column`的排序顺序设置为`order`。这不会影响当前数据，要用新的排序顺序刷新数据，请调用`select()`。
 
 ### `[virtual] void QSqlTableModel::setTable(const QString &tableName)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是配置/写入操作 `setTable`。调用它会改变 `QSqlTableModel` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `tableName`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+将模型运行的数据库表设置为`tableName`。不从表中选择数据，而是获取其字段信息。
+要将表中的数据填充模型，请调用`select()`。
+错误信息可以通过`lastError()`检索。
 
 ### `[override virtual] void QSqlTableModel::sort(int column, Qt::SortOrder order)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::sort` 用于执行与“sort”相关的操作。调用时要先确认当前状态和 `column`、`order` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`void`。
-- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `order`：类型为 `Qt::SortOrder`。没有默认值，调用时必须提供。传入 `Qt::SortOrder` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重实现自：`QAbstractItemModel::sort`（整数列，Qt：：排序顺序）。
+按`column`排序和排序顺序`order`排序。这会立即选择数据，使用 `setSort()` 设置排序顺序，而不填充模型数据。
 
 ### `[override virtual slot] bool QSqlTableModel::submit()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::submit` 用于计算、查询或取得与“提交任务”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+重装：`QAbstractItemModel::submit()`。
+当用户停止编辑当前行时，项目代理调用了这个重新实现的槽位。
+如果模型的策略设置为`OnRowChange`或`OnFieldChange`，则提交当前编辑的行。对`OnManualSubmit`策略没有任何作用。
+使用`submitAll()`提交所有待处理的`OnManualSubmit`策略变更。
+成功时返回`true`;否则返回`false`。使用`lastError()`查询详细错误信息。
+不会自动重新填充模型。提交的行在成功后会从数据库中刷新。
 
 ### `[slot] bool QSqlTableModel::submitAll()`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** 这是可被信号连接或元对象调用的槽 `submitAll`。它适合作为一次动作或状态响应的入口；如果调用可能耗时，不要直接阻塞 GUI 事件循环，应把工作拆分或移动到 worker。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+提交所有待处理的变更，成功后`true`返回。错误时`false`返回，详细信息可通过`lastError()`获得。
+`OnManualSubmit`，成功后模型将重新填充。任何呈现该模型的视图将失去其选择。
+注意：在`OnManualSubmit`模式下，已提交的更改在 submitAll() 失败时不会从缓存中清除。这使得交易可以回滚并重新提交，而不会丢失数据。
 
 ### `QString QSqlTableModel::tableName() const`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::tableName` 用于计算、查询或取得与“table、名称”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`QString`。
-- 参数：无。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+返回当前选择的表名称。
 
 ### `[virtual protected] bool QSqlTableModel::updateRowInTable(int row, const QSqlRecord &values)`
 
-**API 类别：** 成员函数说明
+**作用与语义：**
 
-**中文解读：** `QSqlTableModel::updateRowInTable` 用于计算、查询或取得与“更新、行、In、Table”相关的操作。调用时要先确认当前状态和 `row`、`values` 的有效范围；返回类型是 `bool`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
-
-**签名拆解：**
-
-- 返回值：`bool`。
-- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
-- 参数 `values`：类型为 `const QSqlRecord &`。没有默认值，调用时必须提供。传入 `const QSqlRecord &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
-
-**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+用指定的`values`更新当前活跃数据库表中的指定`row`。如果成功返回`true`;否则返回`false`。
+这是一种底层方法，直接运行在数据库上，不应直接调用。使用`setData()`来更新数值。模型会根据其编辑策略决定何时修改数据库。
+注意，只有设置了生成标志的值才会被更新。生成标志可以用`QSqlRecord::setGenerated()`设置并用`QSqlRecord::isGenerated()`测试。
 
 ## 6. 深入实践与常见坑
 
