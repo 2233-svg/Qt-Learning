@@ -1,0 +1,335 @@
+# QUiLoader
+
+> Qt 6.11.1 · Qt UI Tools
+
+## 1. 先建立直觉
+
+**一句话定位：** `QUiLoader` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+
+**模块背景：** 这是 Qt UI Tools 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+
+### 这是什么
+
+`QUiLoader` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+
+**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+
+**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
+
+**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+
+**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
+
+## 2. 依赖与对象关系
+
+- 头文件：`#include <QUiLoader>`
+- 继承自：QObject
+- 直接派生类：未在类页中列出
+
+CMake 配置：
+
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS UiTools)
+target_link_libraries(mytarget PRIVATE Qt6::UiTools)
+```
+
+**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+
+### 工作机制
+
+这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+
+### 状态、生命周期和线程
+
+**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+
+**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+
+**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+
+## 3. 直接使用
+
+使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. API 速查
+
+下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+
+### 公有函数
+
+- `QUiLoader(QObject *parent = nullptr)`
+- `virtual ~QUiLoader() override`
+- `void addPluginPath(const QString &path)`
+- `QStringList availableLayouts() const`
+- `QStringList availableWidgets() const`
+- `void clearPluginPaths()`
+- `virtual QAction * createAction(QObject *parent = nullptr, const QString &name = QString())`
+- `virtual QActionGroup * createActionGroup(QObject *parent = nullptr, const QString &name = QString())`
+- `virtual QLayout * createLayout(const QString &className, QObject *parent = nullptr, const QString &name = QString())`
+- `virtual QWidget * createWidget(const QString &className, QWidget *parent = nullptr, const QString &name = QString())`
+- `QString errorString() const`
+- `bool isLanguageChangeEnabled() const`
+- `QWidget * load(QIODevice *device, QWidget *parentWidget = nullptr)`
+- `QStringList pluginPaths() const`
+- `void setLanguageChangeEnabled(bool enabled)`
+- `void setWorkingDirectory(const QDir &dir)`
+- `QDir workingDirectory() const`
+
+## 5. API 逐个说明
+
+这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
+
+本类共整理 17 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+
+### `[explicit] QUiLoader::QUiLoader(QObject *parent = nullptr)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是 `QUiLoader` 的构造函数。先确认参数代表的依赖、父对象或配置，再决定栈上创建、设置 parent，还是交给 Qt 工厂/容器管理；构造完成后才可以调用其他成员。
+
+**签名拆解：**
+
+- 返回值：构造函数，不返回对象值。
+- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[override virtual noexcept] QUiLoader::~QUiLoader()`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是 `QUiLoader` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
+
+**签名拆解：**
+
+- 返回值：析构函数，无返回值。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `void QUiLoader::addPluginPath(const QString &path)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是向 `QUiLoader` 添加依赖、数据或子对象的 API `addPluginPath`。注意对象所有权、重复添加和添加后的通知；如果对应有 remove/take 接口，要明确谁负责移除后的生命周期。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数 `path`：类型为 `const QString &`。没有默认值，调用时必须提供。路径字符串。要确认是相对路径还是绝对路径，以及它相对于哪个工作目录。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QStringList QUiLoader::availableLayouts() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::availableLayouts` 用于计算、查询或取得与“可用量、Layouts”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QStringList`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QStringList QUiLoader::availableWidgets() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::availableWidgets` 用于计算、查询或取得与“可用量、Widgets”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QStringList`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `void QUiLoader::clearPluginPaths()`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::clearPluginPaths` 用于执行与“清空、Plugin、Paths”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[virtual] QAction *QUiLoader::createAction(QObject *parent = nullptr, const QString &name = QString())`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::createAction` 用于计算、查询或取得与“创建、Action”相关的操作。调用时要先确认当前状态和 `parent`、`name` 的有效范围；返回类型是 `QAction *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QAction *`。
+- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+- 参数 `name`：类型为 `const QString &`。默认值为 `QString()`。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[virtual] QActionGroup *QUiLoader::createActionGroup(QObject *parent = nullptr, const QString &name = QString())`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::createActionGroup` 用于计算、查询或取得与“创建、Action、Group”相关的操作。调用时要先确认当前状态和 `parent`、`name` 的有效范围；返回类型是 `QActionGroup *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QActionGroup *`。
+- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+- 参数 `name`：类型为 `const QString &`。默认值为 `QString()`。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[virtual] QLayout *QUiLoader::createLayout(const QString &className, QObject *parent = nullptr, const QString &name = QString())`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::createLayout` 用于计算、查询或取得与“创建、Layout”相关的操作。调用时要先确认当前状态和 `className`、`parent`、`name` 的有效范围；返回类型是 `QLayout *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QLayout *`。
+- 参数 `className`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+- 参数 `parent`：类型为 `QObject *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+- 参数 `name`：类型为 `const QString &`。默认值为 `QString()`。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[virtual] QWidget *QUiLoader::createWidget(const QString &className, QWidget *parent = nullptr, const QString &name = QString())`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::createWidget` 用于计算、查询或取得与“创建、Widget”相关的操作。调用时要先确认当前状态和 `className`、`parent`、`name` 的有效范围；返回类型是 `QWidget *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QWidget *`。
+- 参数 `className`：类型为 `const QString &`。没有默认值，调用时必须提供。文本/字节参数。要确认编码、空值语义、是否发生拷贝以及调用结束后是否仍需保留数据。
+- 参数 `parent`：类型为 `QWidget *`。默认值为 `nullptr`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+- 参数 `name`：类型为 `const QString &`。默认值为 `QString()`。名称或键。通常是稳定的 API/配置标识，不应随意使用显示文本替代。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QString QUiLoader::errorString() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::errorString` 用于计算、查询或取得与“错误、字符串”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QString`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QString`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `bool QUiLoader::isLanguageChangeEnabled() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是查询 API `isLanguageChangeEnabled`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+
+**签名拆解：**
+
+- 返回值：`bool`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QWidget *QUiLoader::load(QIODevice *device, QWidget *parentWidget = nullptr)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是启动/建立资源的 API `load`。调用前准备依赖和参数，调用后检查返回值或状态信号；成功后通常需要配套的 stop/close/end/disconnect 或释放操作。
+
+**签名拆解：**
+
+- 返回值：`QWidget *`。
+- 参数 `device`：类型为 `QIODevice *`。没有默认值，调用时必须提供。QIODevice 或绘制设备。调用前要确认已经打开、支持所需模式，或处于合法绘制阶段。
+- 参数 `parentWidget`：类型为 `QWidget *`。默认值为 `nullptr`。父控件。它决定控件的对象树归属和默认显示上下文。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QStringList QUiLoader::pluginPaths() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::pluginPaths` 用于计算、查询或取得与“plugin、Paths”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QStringList`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QStringList`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `void QUiLoader::setLanguageChangeEnabled(bool enabled)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是配置/写入操作 `setLanguageChangeEnabled`。调用它会改变 `QUiLoader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数 `enabled`：类型为 `bool`。没有默认值，调用时必须提供。传入 `bool` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `void QUiLoader::setWorkingDirectory(const QDir &dir)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是配置/写入操作 `setWorkingDirectory`。调用它会改变 `QUiLoader` 的状态，必要时触发属性通知、重新布局、重新绘制或后续异步任务；调用顺序要遵守构造和状态前置条件。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数 `dir`：类型为 `const QDir &`。没有默认值，调用时必须提供。传入 `const QDir &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QDir QUiLoader::workingDirectory() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QUiLoader::workingDirectory` 用于计算、查询或取得与“working、Directory”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `QDir`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QDir`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+## 6. 深入实践与常见坑
+
+### 生命周期和资源边界
+
+先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+
+### 状态和错误边界
+
+QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+
+### 线程边界
+
+QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+
+### 最容易出现的错误
+
+不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
+
+### 版本和平台
+
+本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
+
+## 7. 使用边界
+
+`QUiLoader` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。

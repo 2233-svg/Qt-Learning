@@ -1,0 +1,2 @@
+marktext-win-x64-0.19.1/marktext.exe filter=lfs diff=lfs merge=lfs -text
+marktext-win-x64-0.19.1/resources/app.asar filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,146 @@
+# QQuick3DExtensionHelpers
+
+> Qt 6.11.1 · Qt Quick 3D
+
+## 1. 先建立直觉
+
+**一句话定位：** `QQuick3DExtensionHelpers` 是 Qt Quick 场景图渲染类型，负责节点、材质、纹理、几何或渲染状态。
+
+**模块背景：** Qt Quick 3D 在 Qt Quick 中加入 3D 场景、相机、材质、模型和渲染能力。
+
+### 这是什么
+
+`QQuick3DExtensionHelpers` 是 Qt Quick/QML 体系中的公开类型，连接 C++ 对象、QML 属性绑定和场景图渲染。
+
+**内部模型：** QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+
+**适用场景：** 需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。
+
+**典型调用链：** 注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
+
+**先记住的坑：** 不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
+
+## 2. 依赖与对象关系
+
+- 头文件：`#include <QQuick3DExtensionHelpers>`
+- 继承自：未在类页中列出
+- 直接派生类：未在类页中列出
+
+**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+
+### 工作机制
+
+QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+
+### 状态、生命周期和线程
+
+**生命周期：** 场景图节点和材质的有效期受窗口、组件和渲染阶段控制；纹理、材质和几何通常要在正确的 render context 中创建/释放。节点被删除或场景图失效后，底层 GPU 资源不能继续使用。
+
+**状态与结果：** 区分 GUI/同步阶段、渲染阶段、节点 dirty 状态、纹理状态和后端能力。改变节点属性通常要标记更新，不能在错误阶段直接修改资源；材质是否可用还受默认后端限制。
+
+**线程与事件循环：** QSG 类型经常运行在 render thread，不能从 GUI 线程或后台线程随意读写。通过 QQuickItem 的同步接口在规定阶段交换数据，避免跨线程共享 GPU 资源。
+
+## 3. 直接使用
+
+需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。 使用时通常按这个过程组织：注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
+
+```cpp
+#include <QQuick3DExtensionHelpers>
+
+// QSG 类型只能在 Qt Quick 规定的场景图阶段使用。
+// 先确认渲染后端、线程和对象生命周期，再创建或配置对象。
+```
+## 4. API 速查
+
+下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+
+### 静态公有成员
+
+- `QSSGCameraId getCameraId(const QQuick3DObject &camera)`
+- `QSSGNodeId getNodeId(const QQuick3DObject &node)`
+- `QSSGRenderGraphObject::Type getNodeIdType(QSSGNodeId nodeId)`
+- `QSSGResourceId getResourceId(const QQuick3DObject &resource)`
+
+## 5. API 逐个说明
+
+这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
+
+本类共整理 4 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+
+### `[static] QSSGCameraId QQuick3DExtensionHelpers::getCameraId(const QQuick3DObject &camera)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是静态工具 API `getCameraId`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+
+**签名拆解：**
+
+- 返回值：`QSSGCameraId`。
+- 参数 `camera`：类型为 `const QQuick3DObject &`。没有默认值，调用时必须提供。传入 `const QQuick3DObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[static] QSSGNodeId QQuick3DExtensionHelpers::getNodeId(const QQuick3DObject &node)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是静态工具 API `getNodeId`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+
+**签名拆解：**
+
+- 返回值：`QSSGNodeId`。
+- 参数 `node`：类型为 `const QQuick3DObject &`。没有默认值，调用时必须提供。传入 `const QQuick3DObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[static] QSSGRenderGraphObject::Type QQuick3DExtensionHelpers::getNodeIdType(QSSGNodeId nodeId)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是静态工具 API `getNodeIdType`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+
+**签名拆解：**
+
+- 返回值：`QSSGRenderGraphObject::Type`。
+- 参数 `nodeId`：类型为 `QSSGNodeId`。没有默认值，调用时必须提供。传入 `QSSGNodeId` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[static] QSSGResourceId QQuick3DExtensionHelpers::getResourceId(const QQuick3DObject &resource)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是静态工具 API `getResourceId`，不依赖某个实例的运行时状态。适合直接完成转换、查找、工厂创建或一次性操作；调用前仍要检查返回值和错误输出。
+
+**签名拆解：**
+
+- 返回值：`QSSGResourceId`。
+- 参数 `resource`：类型为 `const QQuick3DObject &`。没有默认值，调用时必须提供。传入 `const QQuick3DObject &` 类型的值；调用前确认它的有效范围、默认行为和生命周期。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+## 6. 深入实践与常见坑
+
+### 生命周期和资源边界
+
+场景图节点和材质的有效期受窗口、组件和渲染阶段控制；纹理、材质和几何通常要在正确的 render context 中创建/释放。节点被删除或场景图失效后，底层 GPU 资源不能继续使用。
+
+### 状态和错误边界
+
+区分 GUI/同步阶段、渲染阶段、节点 dirty 状态、纹理状态和后端能力。改变节点属性通常要标记更新，不能在错误阶段直接修改资源；材质是否可用还受默认后端限制。
+
+### 线程边界
+
+QSG 类型经常运行在 render thread，不能从 GUI 线程或后台线程随意读写。通过 QQuickItem 的同步接口在规定阶段交换数据，避免跨线程共享 GPU 资源。
+
+### 最容易出现的错误
+
+不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
+
+### 版本和平台
+
+本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
+
+## 7. 使用边界
+
+`QQuick3DExtensionHelpers` 所属机制类型：Qt Quick 场景图机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。

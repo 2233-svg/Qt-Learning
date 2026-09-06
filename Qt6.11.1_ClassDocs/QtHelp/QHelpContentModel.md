@@ -1,0 +1,273 @@
+# QHelpContentModel
+
+> Qt 6.11.1 · Qt Help
+
+## 1. 先建立直觉
+
+**一句话定位：** `QHelpContentModel` 是 模型/视图协议 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+
+**模块背景：** 这是 Qt Help 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+
+### 这是什么
+
+`QHelpContentModel` 是模型/视图体系中的数据模型类型，向视图提供索引、角色数据和结构变化通知。
+
+**内部模型：** 视图不应该直接操作底层容器；它通过 QModelIndex 和 data roles 查询模型。模型必须准确维护索引有效性以及插入、删除、移动时的通知顺序。
+
+**适用场景：** 需要把自定义数据接入 QListView、QTableView、QTreeView 或代理模型时使用。
+
+**典型调用链：** 准备数据源 -> 实现/配置模型 -> 连接 view -> 通过 data/flags/setData 读写 -> 发出 dataChanged 或 begin/end 结构通知。
+
+**先记住的坑：** 不要在 data() 中修改数据；不要返回过期索引；不要用全量 reset 代替精确结构通知，除非确实无法描述变化。
+
+## 2. 依赖与对象关系
+
+- 头文件：`#include <QHelpContentModel>`
+- 继承自：QAbstractItemModel
+- 直接派生类：未在类页中列出
+
+CMake 配置：
+
+```cmake
+find_package(Qt6 REQUIRED COMPONENTS Help)
+target_link_libraries(mytarget PRIVATE Qt6::Help)
+```
+
+**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+
+### 工作机制
+
+视图不应该直接操作底层容器；它通过 QModelIndex 和 data roles 查询模型。模型必须准确维护索引有效性以及插入、删除、移动时的通知顺序。
+
+### 状态、生命周期和线程
+
+**生命周期：** 模型应比视图活得足够久，视图销毁时不会自动替业务容器释放资源。模型变化必须使用对应的 begin/end 协议或精确通知，不能只改容器后期待视图自行发现。取到的 QModelIndex 只在模型允许的生命周期内有效。
+
+**状态与结果：** 区分当前索引、选择模型、编辑状态、数据角色和模型结构变化。`dataChanged` 表示已有项目的数据变化，行列插入/删除表示结构变化，`modelReset` 会让旧索引整体失效。
+
+**线程与事件循环：** 模型通常在 GUI 线程被视图访问。后台线程不要直接修改正在显示的模型；应在正确线程汇总数据，再通过通知协议更新，或使用线程安全的数据交换层。
+
+## 3. 直接使用
+
+需要把自定义数据接入 QListView、QTableView、QTreeView 或代理模型时使用。 使用时通常按这个过程组织：准备数据源 -> 实现/配置模型 -> 连接 view -> 通过 data/flags/setData 读写 -> 发出 dataChanged 或 begin/end 结构通知。
+
+```cpp
+// 视图通过 QModelIndex 和 role 查询模型。
+const QVariant value = model->data(index, Qt::DisplayRole);
+// 数据变化时由模型发出 dataChanged 或 begin/end 结构通知。
+```
+## 4. API 速查
+
+下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+
+### 公有函数
+
+- `virtual ~QHelpContentModel() override`
+- `QHelpContentItem * contentItemAt(const QModelIndex &index) const`
+- `void createContents(const QString &filter)`
+- `(since 6.8) void createContentsForCurrentFilter()`
+- `bool isCreatingContents() const`
+
+### 重实现的公有函数
+
+- `virtual int columnCount(const QModelIndex &parent = {}) const override`
+- `virtual QVariant data(const QModelIndex &index, int role) const override`
+- `virtual QModelIndex index(int row, int column, const QModelIndex &parent = {}) const override`
+- `virtual QModelIndex parent(const QModelIndex &index) const override`
+- `virtual int rowCount(const QModelIndex &parent = {}) const override`
+
+### 信号
+
+- `void contentsCreated()`
+- `void contentsCreationStarted()`
+
+## 5. API 逐个说明
+
+这里直接说明每个公开成员解决什么问题、参数代表什么、返回什么、会改变什么以及使用时容易出现什么问题。每一个公开签名都会有对应的中文解释。
+
+本类共整理 12 个公开成员条目；没有独立长描述的 API 也会根据签名、类型和所属机制给出使用说明。
+
+### `[override virtual noexcept] QHelpContentModel::~QHelpContentModel()`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是 `QHelpContentModel` 的析构函数。对象销毁时资源、子对象和连接会按 Qt 规则释放；异步对象要先停止任务或使用 deleteLater，避免回调访问已经不存在的实例。
+
+**签名拆解：**
+
+- 返回值：析构函数，无返回值。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[override virtual] int QHelpContentModel::columnCount(const QModelIndex &parent = {}) const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::columnCount` 用于计算、查询或取得与“列、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`int`。
+- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `{}`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `QHelpContentItem *QHelpContentModel::contentItemAt(const QModelIndex &index) const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::contentItemAt` 用于计算、查询或取得与“content、项目访问、按位置访问”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QHelpContentItem *`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QHelpContentItem *`。
+- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[signal] void QHelpContentModel::contentsCreated()`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是 `QHelpContentModel` 发出的通知信号 `contentsCreated`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[signal] void QHelpContentModel::contentsCreationStarted()`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是 `QHelpContentModel` 发出的通知信号 `contentsCreationStarted`。应用代码通常只连接它，不直接调用它；信号参数描述发生了什么，槽函数中读取相关状态并尽快返回。异步类的完成、错误和状态变化通常都从信号开始处理。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `void QHelpContentModel::createContents(const QString &filter)`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::createContents` 用于执行与“创建、Contents”相关的操作。调用时要先确认当前状态和 `filter` 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数 `filter`：类型为 `const QString &`。没有默认值，调用时必须提供。过滤条件、匹配器或过滤标志；要确认它作用于显示结果、输入数据还是事件传播。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[since 6.8] void QHelpContentModel::createContentsForCurrentFilter()`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::createContentsForCurrentFilter` 用于执行与“创建、Contents、For、当前、Filter”相关的操作。调用时要先确认当前状态和 无参数 的有效范围；返回类型是 `void`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`void`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[override virtual] QVariant QHelpContentModel::data(const QModelIndex &index, int role) const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是数据访问 API `data`，用于取得 `QHelpContentModel` 当前的元素、字段或底层存储。读取前确认索引/键有效；如果返回引用或指针，不要让它跨越对象修改、容器扩容或临时对象生命周期。
+
+**签名拆解：**
+
+- 返回值：`QVariant`。
+- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
+- 参数 `role`：类型为 `int`。没有默认值，调用时必须提供。数据角色，决定模型返回的是显示文本、编辑值、装饰、用户数据还是其他语义。
+
+**正确调用组合：** 通常与 role、QModelIndex 有关；数据变化后发 `dataChanged`，不要在 data() 中修改模型。
+
+### `[override virtual] QModelIndex QHelpContentModel::index(int row, int column, const QModelIndex &parent = {}) const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::index` 用于计算、查询或取得与“索引”相关的操作。调用时要先确认当前状态和 `row`、`column`、`parent` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QModelIndex`。
+- 参数 `row`：类型为 `int`。没有默认值，调用时必须提供。行号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
+- 参数 `column`：类型为 `int`。没有默认值，调用时必须提供。列号，通常从 0 开始；要确认它属于当前模型、表格或矩形范围。
+- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `{}`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `bool QHelpContentModel::isCreatingContents() const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** 这是查询 API `isCreatingContents`，用于判断当前状态或能力。它通常没有副作用，适合在执行主操作前做保护性判断，但不能替代真正操作的错误处理。
+
+**签名拆解：**
+
+- 返回值：`bool`。
+- 参数：无。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[override virtual] QModelIndex QHelpContentModel::parent(const QModelIndex &index) const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::parent` 用于计算、查询或取得与“父对象”相关的操作。调用时要先确认当前状态和 `index` 的有效范围；返回类型是 `QModelIndex`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`QModelIndex`。
+- 参数 `index`：类型为 `const QModelIndex &`。没有默认值，调用时必须提供。项目或数据索引。先确认索引基于 0 还是 1、是否允许越界/负数，以及调用后索引是否仍然有效。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+### `[override virtual] int QHelpContentModel::rowCount(const QModelIndex &parent = {}) const`
+
+**API 类别：** 成员函数说明
+
+**中文解读：** `QHelpContentModel::rowCount` 用于计算、查询或取得与“行、数量统计”相关的操作。调用时要先确认当前状态和 `parent` 的有效范围；返回类型是 `int`，应根据返回值、状态查询或错误信号判断结果，不能只根据函数调用没有崩溃就认为操作成功。
+
+**签名拆解：**
+
+- 返回值：`int`。
+- 参数 `parent`：类型为 `const QModelIndex &`。默认值为 `{}`。父对象。设置后通常由父对象负责销毁子对象；只有在对象确实应挂入这棵对象树时才传入。
+
+**正确调用组合：** 调用后检查返回值、状态查询和错误信息；如果该类通过信号或事件通知变化，还要处理异步完成和对象生命周期。
+
+## 6. 深入实践与常见坑
+
+### 生命周期和资源边界
+
+模型应比视图活得足够久，视图销毁时不会自动替业务容器释放资源。模型变化必须使用对应的 begin/end 协议或精确通知，不能只改容器后期待视图自行发现。取到的 QModelIndex 只在模型允许的生命周期内有效。
+
+### 状态和错误边界
+
+区分当前索引、选择模型、编辑状态、数据角色和模型结构变化。`dataChanged` 表示已有项目的数据变化，行列插入/删除表示结构变化，`modelReset` 会让旧索引整体失效。
+
+### 线程边界
+
+模型通常在 GUI 线程被视图访问。后台线程不要直接修改正在显示的模型；应在正确线程汇总数据，再通过通知协议更新，或使用线程安全的数据交换层。
+
+### 最容易出现的错误
+
+不要在 data() 中修改数据；不要返回过期索引；不要用全量 reset 代替精确结构通知，除非确实无法描述变化。
+
+### 版本和平台
+
+本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
+
+## 7. 使用边界
+
+`QHelpContentModel` 所属机制类型：模型/视图协议。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
