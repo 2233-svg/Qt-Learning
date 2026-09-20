@@ -1,184 +1,52 @@
 # QShaderVersion
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QShaderVersion`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QShaderVersion` 描述着色语言版本，以及它是否属于 GLSL ES。它通常作为 `QShaderKey` 的一部分，用来区分同一种 source 下的不同语言目标。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
-
-### 这是什么
-
-`QShaderVersion` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QShaderVersion>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 类型：值类型，可比较、可排序
+- 协作类：`QShaderKey`
 
-CMake 配置：
+版本号的解释取决于 shader source。对 GLSL 来说，`440` 表示 `#version 440`，`300 + GlslEs` 表示 `#version 300 es`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| 默认构造 | 创建默认版本对象 |
+| `QShaderVersion(v, flags)` | 指定版本号和标志 |
+| `setVersion()` / `version()` | 设置或读取版本数字 |
+| `setFlags()` / `flags()` | 设置或读取标志 |
+| `GlslEs` | 表示 GLSL ES 语言族 |
+| `operator<` / `operator==` / `operator!=` | 排序和比较 |
+
+## 4. 关键用法
+
+```cpp
+QShaderVersion desktop440(440);
+QShaderVersion es300(300, QShaderVersion::GlslEs);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+两者都可能用于 `QShader::GlslShader`，但它们不是同一种 shader。桌面 GLSL 和 GLSL ES 的语法、内置支持和平台目标不同。
 
-### 工作机制
+## 5. 使用场景
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+- 选择合适的 GLSL 输出版本。
+- 区分 OpenGL 桌面与 OpenGL ES shader。
+- 参与 `QShaderKey` 的排序、查找和序列化。
+- 构建工具生成多目标 shader 包。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- `version()` 返回整数，不带 `#version` 字符串里的 `es`，`es` 在 flags。
+- 对 SPIR-V、DXIL、MetalLib 等二进制目标，版本语义可能不像 GLSL 那样直观，通常按工具链生成的 key 使用即可。
+- 默认构造的版本对象不代表“当前平台最佳版本”，不要拿它做自动选择。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum Flag { GlslEs }`
-- `flags Flags`
-
-### 公有函数
-
-- `QShaderVersion()`
-- `QShaderVersion(int v, QShaderVersion::Flags f = Flags())`
-- `QShaderVersion::Flags flags() const`
-- `void setFlags(QShaderVersion::Flags f)`
-- `void setVersion(int v)`
-- `int version() const`
-
-### 相关非成员函数
-
-- `bool operator!=(const QShaderVersion &lhs, const QShaderVersion &rhs)`
-- `bool operator<(const QShaderVersion &lhs, const QShaderVersion &rhs)`
-- `bool operator==(const QShaderVersion &lhs, const QShaderVersion &rhs)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QShaderVersion::Flagflags QShaderVersion::Flags`
-
-**作用与语义：**
-
-描述可以设置的标志。
-- `QShaderVersion::GlslEs`：`0x01`;表示GLSL/ES与GlslShader结合使用
-Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
-
-### `QShaderVersion::QShaderVersion(int v, QShaderVersion::Flags f = Flags())`
-
-**作用与语义：**
-
-构建一个新的QShader版本，版本为`v`并标记`f`。
-
-### `QShaderVersion::Flags QShaderVersion::flags() const`
-
-**作用与语义：**
-
-还旗子。
-
-### `void QShaderVersion::setFlags(QShaderVersion::Flags f)`
-
-**作用与语义：**
-
-这让标志变得很有点像`f`。
-
-### `void QShaderVersion::setVersion(int v)`
-
-**作用与语义：**
-
-将着色语言版本设置为`v`。
-
-### `int QShaderVersion::version() const`
-
-**作用与语义：**
-
-退回了版本。
-
-### `[noexcept] bool operator!=(const QShaderVersion &lhs, const QShaderVersion &rhs)`
-
-**作用与语义：**
-
-如果两个 `QShaderVersion` 对象 `lhs` 和 `rhs` 中的值相等，则返回 `false`；否则返回 `true`。
-
-### `[noexcept] bool operator<(const QShaderVersion &lhs, const QShaderVersion &rhs)`
-
-**作用与语义：**
-
-如果 `lhs` 小于 `rhs`，则返回为真。
-在两`QShaderVersion` `lhs`和`rhs`之间建立排序顺序。
-
-### `[noexcept] bool operator==(const QShaderVersion &lhs, const QShaderVersion &rhs)`
-
-**作用与语义：**
-
-如果两个`QShaderVersion`对象`lhs`和`rhs`相等，则返回`true`。
-
-### `enum Flag { GlslEs }`
-
-**作用与语义：**
-
-描述可以设置的标志。
-- `QShaderVersion::GlslEs`：`0x01`;表示GLSL/ES与GlslShader结合使用
-Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
-
-### `flags Flags`
-
-**作用与语义：**
-
-描述可以设置的标志。
-- `QShaderVersion::GlslEs`：`0x01`;表示GLSL/ES与GlslShader结合使用
-Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
-
-### `QShaderVersion()`
-
-**作用与语义：**
-
-构建一个新的QShader版本，版本为`v`并标记`f`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QShaderVersion` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+本页覆盖：着色语言版本、GLSL ES 标志、`QShaderKey` 组合、版本比较、跨后端 shader 目标选择。

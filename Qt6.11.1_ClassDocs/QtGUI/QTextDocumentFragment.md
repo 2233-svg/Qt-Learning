@@ -1,193 +1,65 @@
 # QTextDocumentFragment
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QTextDocumentFragment`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QTextDocumentFragment` 是一段可插入文档的富文本片段。它可以从纯文本、HTML、Markdown 或 cursor 选区创建，再通过 `QTextCursor::insertFragment()` 插入另一份文档。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它比字符串更懂格式，比完整 `QTextDocument` 更轻。
 
-### 这是什么
-
-`QTextDocumentFragment` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QTextDocumentFragment>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 类型：值类型
+- 协作类：`QTextCursor`、`QTextDocument`
 
-CMake 配置：
+fragment 常用于剪贴板、拖放、模板插入、富文本转换。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| 默认构造 | 创建空片段 |
+| `QTextDocumentFragment(cursor)` | 从 cursor 选区创建片段 |
+| `fromPlainText()` | 从纯文本创建 |
+| `fromHtml()` | 从 HTML 创建 |
+| `fromMarkdown()` | 从 Markdown 创建 |
+| `isEmpty()` | 是否为空 |
+| `toPlainText()` | 导出纯文本 |
+| `toHtml()` | 导出 HTML |
+| `toMarkdown()` | 导出 Markdown |
+
+## 4. 关键用法
+
+复制选区到另一文档：
+
+```cpp
+QTextDocumentFragment frag(cursor);
+targetCursor.insertFragment(frag);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+插入 HTML 模板：
 
-### 工作机制
+```cpp
+auto frag = QTextDocumentFragment::fromHtml("<b>Warning</b>: check input");
+cursor.insertFragment(frag);
+```
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+- 富文本剪贴板和拖放。
+- 文档片段模板。
+- HTML/Markdown 到 QTextDocument 的局部导入。
+- 从选区提取富文本。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 6. 常见坑与经验
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- `toPlainText()` 会丢格式和图片信息。
+- HTML 中相对资源引用需要配合文档 base URL 或资源机制。
+- 从 cursor 创建时，cursor 没有选区通常得到空或当前位置相关片段，先检查 `hasSelection()`。
+- 片段插入会遵循目标 cursor 的位置和当前格式上下文。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 7. 知识点覆盖
 
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QTextDocumentFragment()`
-- `QTextDocumentFragment(const QTextCursor &cursor)`
-- `QTextDocumentFragment(const QTextDocument *document)`
-- `QTextDocumentFragment(const QTextDocumentFragment &other)`
-- `~QTextDocumentFragment()`
-- `bool isEmpty() const`
-- `QString toHtml() const`
-- `(since 6.4) QString toMarkdown(QTextDocument::MarkdownFeatures features = QTextDocument::MarkdownDialectGitHub) const`
-- `QString toPlainText() const`
-- `(since 6.4) QString toRawText() const`
-- `QTextDocumentFragment & operator=(const QTextDocumentFragment &other)`
-
-### 静态公有成员
-
-- `QTextDocumentFragment fromHtml(const QString &text, const QTextDocument *resourceProvider = nullptr)`
-- `(since 6.4) QTextDocumentFragment fromMarkdown(const QString &markdown, QTextDocument::MarkdownFeatures features = QTextDocument::MarkdownDialectGitHub)`
-- `QTextDocumentFragment fromPlainText(const QString &plainText)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QTextDocumentFragment::QTextDocumentFragment()`
-
-**作用与语义：**
-
-构造一个空的 QTextDocumentFragment。
-
-### `[explicit] QTextDocumentFragment::QTextDocumentFragment(const QTextCursor &cursor)`
-
-**作用与语义：**
-
-从`cursor`的选择创建QTextDocumentFragment。如果光标没有选择，则创建的片段为空。
-
-### `[explicit] QTextDocumentFragment::QTextDocumentFragment(const QTextDocument *document)`
-
-**作用与语义：**
-
-将给定`document`转换为 QTextDocumentFragment。注意，QTextDocumentFragment 仅存储文档内容，不存储文档标题等元信息。
-
-### `QTextDocumentFragment::QTextDocumentFragment(const QTextDocumentFragment &other)`
-
-**作用与语义：**
-
-复制构造器。创建`other`片段的副本。
-
-### `[noexcept] QTextDocumentFragment::~QTextDocumentFragment()`
-
-**作用与语义：**
-
-销毁了文件碎片。
-
-### `[static] QTextDocumentFragment QTextDocumentFragment::fromHtml(const QString &text, const QTextDocument *resourceProvider = nullptr)`
-
-**作用与语义：**
-
-返回基于给定`text`中任意 HTML 段的 `QTextDocumentFragment`。格式尽可能保持;例如，“<b>加粗</b>”将变成文档片段，文本“加粗”则采用加粗字符格式。
-如果提供的 HTML 包含对外部资源（如导入样式表）的引用，则它们会通过 `resourceProvider` 加载。
-
-### `[static, since 6.4] QTextDocumentFragment QTextDocumentFragment::fromMarkdown(const QString &markdown, QTextDocument::MarkdownFeatures features = QTextDocument::MarkdownDialectGitHub)`
-
-**作用与语义：**
-
-基于指定`features`的`markdown`文本返回`QTextDocumentFragment`。默认是GitHub方言。
-格式尽可能保持;例如，`**bold**`会变成包含“加粗”文本的文档片段，字符样式加粗。
-注意：不支持加载外部资源。
-
-### `[static] QTextDocumentFragment QTextDocumentFragment::fromPlainText(const QString &plainText)`
-
-**作用与语义：**
-
-返回包含给定`plainText`的文档片段。
-在插入此类片段到`QTextDocument`时，插入时使用的`QTextCursor`当前字符格式作为文本格式。
-
-### `bool QTextDocumentFragment::isEmpty() const`
-
-**作用与语义：**
-
-如果片段为空，返回`true`;否则返回`false`。
-
-### `QString QTextDocumentFragment::toHtml() const`
-
-**作用与语义：**
-
-返回文档片段的内容以HTML形式返回。
-
-### `[since 6.4] QString QTextDocumentFragment::toMarkdown(QTextDocument::MarkdownFeatures features = QTextDocument::MarkdownDialectGitHub) const`
-
-**作用与语义：**
-
-返回文档片段的内容为 Markdown，并带有指定的`features`。默认是 GitHub 方言。
-
-### `QString QTextDocumentFragment::toPlainText() const`
-
-**作用与语义：**
-
-该函数返回与`toRawText()`相同，但会用ASCII替代部分Unicode字符。特别是，无间断空格（U 00A0）被替换为普通空格（U 0020），段落分隔符（U 2029）和行分隔符（U 2028）被换行（U 000A）替代。如果你需要文档的精确内容，请使用`toRawText()`。
-
-### `[since 6.4] QString QTextDocumentFragment::toRawText() const`
-
-**作用与语义：**
-
-返回文档片段的文本为原始文本（即无格式信息）。
-
-### `QTextDocumentFragment &QTextDocumentFragment::operator=(const QTextDocumentFragment &other)`
-
-**作用与语义：**
-
-将`other`片段分配给该片段。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QTextDocumentFragment` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+本页覆盖：富文本片段、选区导出、HTML/Markdown/纯文本转换、模板插入、剪贴板基础。

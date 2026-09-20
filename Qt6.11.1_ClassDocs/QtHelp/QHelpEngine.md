@@ -1,137 +1,58 @@
 # QHelpEngine
-
-> Qt 6.11.1 · Qt Help
+> Qt 6.11.1 · Qt Help · 来自 `QHelpEngine`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 Qt Help 中围绕“帮助引擎”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
+`QHelpEngine` 是带现成模型和 widget 的帮助引擎。它继承 `QHelpEngineCore` 的后端能力，并提供目录树、索引列表和搜索引擎组件，适合快速搭一个 Qt Assistant 风格的内嵌帮助界面。
 
-**模块背景：** 这是 Qt Help 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+## 2. 类说明
 
-### 这是什么
+保留类说明：这些 API 来自 `QHelpEngine`，属于 Qt Help 模块，用于把帮助后端与内容/索引/搜索 UI 组件组合起来。
 
-`QHelpEngine` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+如果你只需要读取 qch 资源，用 `QHelpEngineCore` 更轻；如果需要 `contentWidget()`、`indexWidget()`、`searchEngine()`，用 `QHelpEngine`。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 3. API 速查
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QHelpEngine(collectionFile)` | 创建完整帮助引擎。 |
+| `contentModel()` | 返回帮助目录树模型。 |
+| `contentWidget()` | 返回目录树视图。 |
+| `indexModel()` | 返回索引关键词模型。 |
+| `indexWidget()` | 返回索引视图。 |
+| `searchEngine()` | 返回搜索引擎和搜索 UI 组件。 |
+| 继承的 `setupData()` | 初始化 collection 数据。 |
+| 继承的 `fileData()` | 读取 qthelp URL 内容。 |
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+```cpp
+auto *engine = new QHelpEngine("help.qhc", this);
+if (!engine->setupData())
+    qWarning() << engine->error();
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QHelpEngine>`
-- 继承自：QHelpEngineCore
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Help)
-target_link_libraries(mytarget PRIVATE Qt6::Help)
+connect(engine->contentWidget(), &QHelpContentWidget::linkActivated,
+        this, &HelpWindow::showHelpUrl);
+connect(engine->indexWidget(), &QHelpIndexWidget::documentsActivated,
+        this, &HelpWindow::showIndexResults);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 5. 使用场景
 
-### 工作机制
+| 场景 | 为什么适合 |
+| --- | --- |
+| 内嵌帮助中心 | 目录、索引、搜索组件都现成。 |
+| 桌面产品离线文档 | 注册 qch 后用 QTextBrowser/WebEngine 显示 HTML。 |
+| 插件化文档 | core 管注册，engine 提供统一 UI。 |
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 6. 常见坑与经验
 
-### 状态、生命周期和线程
+这些 widget/model 依赖 setup 后的数据。过早取出来连接 UI 可以，但真正显示前要确保 `setupData()` 成功。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+`QHelpEngine` 不负责 HTML 渲染器。目录或搜索结果给你 URL，你还需要用 `QTextBrowser`、`QWebEngineView` 或自定义查看器显示 `fileData()`。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QHelpEngine(const QString &collectionFile, QObject *parent = nullptr)`
-- `virtual ~QHelpEngine()`
-- `QHelpContentModel * contentModel() const`
-- `QHelpContentWidget * contentWidget()`
-- `QHelpIndexModel * indexModel() const`
-- `QHelpIndexWidget * indexWidget()`
-- `QHelpSearchEngine * searchEngine()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QHelpEngine::QHelpEngine(const QString &collectionFile, QObject *parent = nullptr)`
-
-**作用与语义：**
-
-利用给定的`parent`构建一个新的帮助引擎。帮助引擎利用`collectionFile`中存储的信息提供帮助。如果集合文件尚未存在，将会被创建。
-
-### `[virtual noexcept] QHelpEngine::~QHelpEngine()`
-
-**作用与语义：**
-
-摧毁了帮助引擎的对象。
-
-### `QHelpContentModel *QHelpEngine::contentModel() const`
-
-**作用与语义：**
-
-返回内容模型。
-
-### `QHelpContentWidget *QHelpEngine::contentWidget()`
-
-**作用与语义：**
-
-返回内容小部件。
-
-### `QHelpIndexModel *QHelpEngine::indexModel() const`
-
-**作用与语义：**
-
-返回索引模型。
-
-### `QHelpIndexWidget *QHelpEngine::indexWidget()`
-
-**作用与语义：**
-
-返回索引控件。
-
-### `QHelpSearchEngine *QHelpEngine::searchEngine()`
-
-**作用与语义：**
-
-返回默认搜索引擎。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QHelpEngine` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 完整帮助引擎和 core 的区别。
+- 内容树、索引、搜索组件组合。
+- qthelp URL 到 HTML 查看器的连接。

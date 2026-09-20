@@ -1,116 +1,77 @@
 # QAccessibleTextInsertEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleTextInsertEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleTextInsertEvent` 是 Qt 的值类型，围绕“Accessible文本Insert事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QAccessibleTextInsertEvent` 通知辅助技术：某段文本已经插入到文本对象中。它不仅说明插入位置和插入内容，还继承了光标位置能力，用于告诉读屏插入后插入点在哪里。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它适合自定义文本编辑器、终端输入区、富文本编辑器或代码编辑器。标准 Qt 文本控件通常已经处理这些事件，不需要应用重复发送。
 
-### 这是什么
-
-`QAccessibleTextInsertEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
-
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
-
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleTextInsertEvent>`
-- 继承自：QAccessibleTextCursorEvent
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QAccessibleTextCursorEvent`
+- 发送方式：构造后调用 `QAccessible::updateAccessibility(&event)`
 
-CMake 配置：
+构造函数默认认为光标移动到插入文本的末尾。如果你的编辑器因为自动补全、成对括号、格式化或输入法组合而将光标放在其他位置，应调用 `setCursorPosition()` 修正。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleTextInsertEvent(object, position, text)` | 为 QObject 构造文本插入事件。 |
+| `QAccessibleTextInsertEvent(iface, position, text)` | 为可访问接口构造文本插入事件。 |
+| `changePosition()` | 返回插入发生的起始偏移。 |
+| `textInserted()` | 返回本次插入的文本。 |
+| `cursorPosition()` / `setCursorPosition()` | 读取或设置插入后的光标位置。 |
+
+## 4. 关键用法
+
+```cpp
+void Editor::insertText(int position, const QString &text)
+{
+    document()->insert(position, text);
+
+    QAccessibleTextInsertEvent event(this, position, text);
+    event.setCursorPosition(position + text.size());
+    QAccessible::updateAccessibility(&event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+事件应在文本模型已经插入成功后发送。否则辅助技术收到事件后立即查询 `QAccessibleTextInterface::text()` 时，会读到旧内容，造成“事件说插入了，但接口查不到”的不一致。
 
-### 工作机制
+```cpp
+QAccessibleTextInsertEvent event(this, pos, u"()"_s);
+event.setCursorPosition(pos + 1); // 光标放在括号中间
+QAccessible::updateAccessibility(&event);
+```
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+对自动补全或成对插入，要显式设置光标位置，不能让默认“移动到插入末尾”的假设误导用户。
 
-### 状态、生命周期和线程
+## 5. 使用场景
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+| 场景 | 建议 |
+|---|---|
+| 普通键入、粘贴、输入法提交 | 发送插入事件，文本为实际进入文档的内容。 |
+| 自动补全插入多字符 | 插入完整文本，并设置最终光标位置。 |
+| 富文本插入对象占位符 | 文本应对应可访问文本模型中的逻辑表示。 |
+| 替换选区 | 可组合删除+插入事件，或使用文本更新事件表达替换。 |
+| 未改变文档的预编辑文本 | 不应当作已插入正文，需按控件策略处理。 |
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+- `changePosition()` 是插入前的逻辑文本偏移，不是插入后的光标位置。
+- `textInserted()` 应是最终写入文档的文本，不是用户按下的键名。
+- `QString::size()` 使用 UTF-16 code unit 数。若编辑器以 grapheme cluster 为边界，光标计算应使用编辑器自身合法偏移。
+- 不要在输入法预编辑阶段反复发送插入事件；等文本提交到文档后再通知。
+- 对密码字段要谨慎，平台和控件策略可能不应暴露插入的真实字符。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleTextInsertEvent(QAccessibleInterface *iface, int position, const QString &text)`
-- `QAccessibleTextInsertEvent(QObject *object, int position, const QString &text)`
-- `int changePosition() const`
-- `QString textInserted() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QAccessibleTextInsertEvent::QAccessibleTextInsertEvent(QAccessibleInterface *iface, int position, const QString &text)`
-
-**作用与语义：**
-
-为`iface`构建一个新的QAccessibleTextInsertEvent事件。`text`已在`position`插入。
-
-### `QAccessibleTextInsertEvent::QAccessibleTextInsertEvent(QObject *object, int position, const QString &text)`
-
-**作用与语义：**
-
-为`object`构建一个新的QAccessibleTextInsertEvent事件。`text`已在`position`处插入。默认情况下，光标已移动到选择的末尾。如果不是这样，需要手动用`QAccessibleTextCursorEvent::setCursorPosition()`设置该事件。
-
-### `int QAccessibleTextInsertEvent::changePosition() const`
-
-**作用与语义：**
-
-返回插入文本的位置。
-
-### `QString QAccessibleTextInsertEvent::textInserted() const`
-
-**作用与语义：**
-
-返回已插入的文本。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleTextInsertEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 文本插入事件、位置和最终光标
+- 输入法、粘贴、自动补全与成对字符
+- 逻辑文本模型和可访问文本接口一致性
+- UTF-16 长度与编辑器文本边界
+- 密码和敏感文本的暴露边界

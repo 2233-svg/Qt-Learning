@@ -1,143 +1,57 @@
 # QGraphicsSceneContextMenuEvent
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsSceneContextMenuEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsSceneContextMenuEvent` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsSceneContextMenuEvent` 是 Graphics View 中的上下文菜单事件。它可能来自鼠标右键、键盘菜单键或其他平台手势。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它让 item 能在正确位置弹出菜单，并知道用户为什么请求菜单。这对可访问性和键盘操作很重要。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsSceneContextMenuEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QGraphicsSceneContextMenuEvent` 继承自 `QGraphicsSceneEvent`。常在 `QGraphicsItem::contextMenuEvent()` 中处理。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+它提供 item、scene、screen 坐标，以及 `reason()`。显示 `QMenu` 时通常使用 `screenPos()`，因为菜单需要全局屏幕坐标。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `pos()` | 事件在 item 坐标中的位置。 |
+| `scenePos()` | 事件在场景坐标中的位置。 |
+| `screenPos()` | 事件在屏幕坐标中的位置，弹菜单常用。 |
+| `modifiers()` | 触发时的键盘修饰键。 |
+| `reason()` | 触发原因：鼠标、键盘或其他。 |
+| `Reason::Mouse` | 鼠标触发的上下文菜单。 |
+| `Reason::Keyboard` | 键盘触发的上下文菜单。 |
+| `Reason::Other` | 其他平台原因。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QGraphicsSceneContextMenuEvent>`
-- 继承自：QGraphicsSceneEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+void NodeItem::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    QMenu menu;
+    menu.addAction("Rename", [this] { rename(); });
+    menu.addAction("Delete", [this] { removeNode(); });
+    menu.exec(event->screenPos());
+    event->accept();
+}
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+键盘触发时可以不依赖鼠标点，而是用 item 中心或当前选择位置决定菜单语义。
 
-### 工作机制
+## 5. 使用场景
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+适合节点菜单、画布空白处菜单、端口操作、图形对象属性入口、场景内快捷命令。
 
-### 状态、生命周期和线程
+如果菜单是整个 view 的，不依赖 item，放在 `QGraphicsView` 或外层 widget 处理也可以。
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+## 6. 常见坑与经验
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+弹出 `QMenu::exec()` 要用屏幕坐标，不是 scene 坐标。
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+不要假设上下文菜单都来自鼠标。键盘用户也应该能打开同样菜单。
 
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum Reason { Mouse, Keyboard, Other }`
-
-### 公有函数
-
-- `virtual ~QGraphicsSceneContextMenuEvent()`
-- `Qt::KeyboardModifiers modifiers() const`
-- `QPointF pos() const`
-- `QGraphicsSceneContextMenuEvent::Reason reason() const`
-- `QPointF scenePos() const`
-- `QPoint screenPos() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QGraphicsSceneContextMenuEvent::Reason`
-
-**作用与语义：**
-
-这个枚举描述了发送上下文事件的原因。
-- `QGraphicsSceneContextMenuEvent::Mouse`：`0`;鼠标触发事件发送。在大多数平台上，这意味着点击了右键。
-- `QGraphicsSceneContextMenuEvent::Keyboard`：`1`;键盘触发了该事件。在Windows和macOS上，这意味着菜单按钮被按下。
-- `QGraphicsSceneContextMenuEvent::Other`：`2`;事件通过其他方式发送（即非鼠标或键盘）。
-
-### `[virtual noexcept] QGraphicsSceneContextMenuEvent::~QGraphicsSceneContextMenuEvent()`
-
-**作用与语义：**
-
-毁了整个活动。
-
-### `Qt::KeyboardModifiers QGraphicsSceneContextMenuEvent::modifiers() const`
-
-**作用与语义：**
-
-当请求使用上下文菜单时，返回正在使用的键盘修饰符。
-
-### `QPointF QGraphicsSceneContextMenuEvent::pos() const`
-
-**作用与语义：**
-
-返回请求上下文菜单时鼠标光标在项目坐标中的位置。
-
-### `QGraphicsSceneContextMenuEvent::Reason QGraphicsSceneContextMenuEvent::reason() const`
-
-**作用与语义：**
-
-返回上下文菜单事件的理由。
-
-### `QPointF QGraphicsSceneContextMenuEvent::scenePos() const`
-
-**作用与语义：**
-
-返回场景坐标中鼠标光标的位置，提示上下文菜单时的请求。
-
-### `QPoint QGraphicsSceneContextMenuEvent::screenPos() const`
-
-**作用与语义：**
-
-返回鼠标光标在屏幕坐标中的位置，提示上下文菜单时的位置。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsSceneContextMenuEvent` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+item 菜单和 scene 空白菜单要区分。命中 item 时处理 item 命令，空白区域处理粘贴、全选、视图设置等命令。

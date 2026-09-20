@@ -1,155 +1,90 @@
 # QAccessibleObject
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleObject`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QAccessibleObject` 是把一个普通 `QObject` 包装成 `QAccessibleInterface` 的便利基类。它已经处理了关联对象、有效性判断、默认屏幕几何和按位置查找子节点，因此自定义非 QWidget 对象的无障碍实现可以少写一层重复代码。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它提供的是“接口骨架”，不是完整语义。你仍需实现对象的 Role、State、Name、父子关系及需要的专用接口；对 QWidget，则多数情况下应从 `QAccessibleWidget` 派生或使用 Qt 现成映射。
 
-### 这是什么
-
-`QAccessibleObject` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleObject>`
-- 继承自：QAccessibleInterface
-- 直接派生类：QAccessibleWidget
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QAccessibleInterface`
+- 直接派生：`QAccessibleWidget`
+- 构造输入：需要提供无障碍语义的 `QObject *`。
 
-CMake 配置：
+它并不拥有传入的 QObject。底层对象销毁后，此接口应视为无效，不能再继续通过它读取属性、几何或子节点。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleObject(object)` | 建立对象关联。 |
+| `object()` | 返回被包装的 QObject。 |
+| `isValid()` | 检查关联对象是否仍有效。 |
+| `rect()` | 返回对象屏幕几何；不可见或无视觉几何时可能无效。 |
+| `childAt(x, y)` | 默认遍历可访问后代，返回命中屏幕坐标的对象。 |
+| `setText(type, text)` | 尝试写入可访问文本属性。 |
+
+`role()`、`state()`、`text()`、`parent()`、`childCount()`、`child()` 和 `indexOfChild()` 仍来自抽象基类，需要你的子类按对象真实语义实现。
+
+## 4. 关键用法
+
+```cpp
+class AccessibleStatusBadge final : public QAccessibleObject
+{
+public:
+    explicit AccessibleStatusBadge(StatusBadge *badge)
+        : QAccessibleObject(badge) {}
+
+    QAccessible::Role role() const override
+    {
+        return QAccessible::StaticText;
+    }
+
+    QAccessible::State state() const override
+    {
+        QAccessible::State result;
+        result.invisible = !badge()->isVisible();
+        return result;
+    }
+
+    QString text(QAccessible::Text type) const override
+    {
+        return type == QAccessible::Name ? badge()->statusText() : QString();
+    }
+
+    // 根据对象结构实现 parent/childCount/child/indexOfChild。
+};
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`rect()` 和 `childAt()` 使用全局屏幕坐标。若 `StatusBadge` 不是可视 QObject、位于视口内容中或绘制多个虚拟元素，通常需要重写几何和命中逻辑，不能只依赖默认实现。
 
-### 工作机制
+## 5. 使用场景
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+| 场景 | 选择 |
+|---|---|
+| 现成 Qt 控件 | 优先让 Qt 提供接口，不要自行包装。 |
+| 自定义 QWidget | 优先考虑 `QAccessibleWidget`，因为它理解 QWidget 几何和窗口关系。 |
+| 非 QWidget 的可视 QObject | 使用 `QAccessibleObject` 作为接口基类。 |
+| 单一画布上绘制许多逻辑元素 | 用它承载根节点，并为虚拟子项提供专用接口/几何。 |
+| 无视图、无用户交互的 QObject | 通常不应暴露到无障碍树。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- 构造时传入 QObject 并不会自动产生正确 Role、Name 或子节点；缺失这些信息仍会让对象不可用。
+- 默认 `childAt()` 会遍历子树。虚拟表格、图表或长列表应使用索引/空间数据结构重写，避免鼠标探索时退化。
+- `rect()` 对不可见对象不可靠；不要用无效几何表示“对象已删除”，应让 `isValid()` 和 State 明确表达。
+- `setText()` 对多数属性没有效果。真正可读的 Name/Description/Value 通常应由 `text()` 根据底层状态返回。
+- 接口由 Qt 可访问性缓存管理时，不要自己随意释放；底层对象销毁和接口失效必须保持同步。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleObject(QObject *object)`
-
-### 重实现的公有函数
-
-- `virtual QAccessibleInterface * childAt(int x, int y) const override`
-- `virtual bool isValid() const override`
-- `virtual QObject * object() const override`
-- `virtual QRect rect() const override`
-- `virtual void setText(QAccessible::Text t, const QString &text) override`
-
-### 保护函数
-
-- `virtual ~QAccessibleObject()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QAccessibleObject::QAccessibleObject(QObject *object)`
-
-**作用与语义：**
-
-为`object`创建一个QAccessibleObject。
-
-### `[virtual noexcept protected] QAccessibleObject::~QAccessibleObject()`
-
-**作用与语义：**
-
-摧毁了`QAccessibleObject`。
-只有当调用release()导致内部引用计数器降为零时，才会发生这种情况。
-
-### `[override virtual] QAccessibleInterface *QAccessibleObject::childAt(int x, int y) const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::childAt`（int x， int y） const.
-返回包含屏幕坐标（`x`、`y`）的子节点的子节点`QAccessibleInterface`。如果该位置没有子节点，该函数返回`nullptr`。返回的可访问对象必须是子节点，但不一定是直接子节点。
-该函数仅对可见物体可靠（隐形物体可能布局不正确）。
-所有视觉对象都能提供这些信息。
-继承`QAccessibleObject`对象默认实现。这将遍历所有子节点。如果控件管理其子节点（例如表），编写专用实现会更高效。
-
-### `[override virtual] bool QAccessibleObject::isValid() const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::isValid()` const.
-如果使用该接口实现所需的所有数据有效（例如所有指针都非空），返回`true`;否则返回`false`。
-
-### `[override virtual] QObject *QAccessibleObject::object() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::object()` const.
-返回指向该接口实现所提供信息的`QObject`的指针。
-
-### `[override virtual] QRect QAccessibleObject::rect() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::rect()` const.
-返回物体的几何形状。几何体以屏幕坐标表示。
-该功能仅对可见物体可靠（隐形物体可能布局不正确）。
-所有视觉对象都能提供这些信息。
-
-### `[override virtual] void QAccessibleObject::setText(QAccessible::Text t, const QString &text)`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::setText`（QAccessible：：Text t， const QString &text）。
-将对象`t`的文本属性设置为`text`。
-注意，大多数对象的文本属性是只读的，因此调用该函数可能没有影响。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleObject` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- `QObject` 到可访问接口的适配
+- `QAccessibleObject` 与 `QAccessibleWidget` 的选择
+- 默认几何/命中测试及虚拟子项性能
+- 接口有效性与底层对象生命周期
+- Role、State、Text、树导航的派生职责

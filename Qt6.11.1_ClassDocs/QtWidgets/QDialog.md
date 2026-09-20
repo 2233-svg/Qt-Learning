@@ -1,342 +1,276 @@
 # QDialog
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QDialog`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 模态或非模态对话框基类，负责临时交互、接受/拒绝结果和对话框生命周期。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QDialog`：模态或非模态对话框基类，负责临时交互、接受/拒绝结果和对话框生命周期。
+`QDialog` 是 Qt Widgets 中所有“临时决策窗口”的基类。它仍然是一个 `QWidget`，但和普通窗口的重点不同：普通窗口负责承载长期界面，对话框负责在某个时刻向用户索取一个决定，然后用 `Accepted`、`Rejected` 或自定义整数结果把这个决定交回调用方。
 
-**内部模型：** Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成界面。控件的可见区域、sizeHint、sizePolicy、字体和平台 style 共同影响最终几何；用户输入先进入 Qt 事件系统，再由控件的事件函数、信号或快捷键处理。
+理解 `QDialog` 时，不要只把它看成一个带按钮的小窗口。它真正管理的是三件事：如何限制用户和其他窗口交互，如何结束这次交互，以及结束时把什么结果通知出去。文件选择框、颜色选择框、消息框、向导页容器，本质上都建立在这个模型上。
 
-**适用场景：** 创建 QApplication 后创建控件，设置 parent 或把控件加入布局，连接用户操作信号，再显示顶层窗口。复合界面用布局嵌套；控件尺寸异常时同时检查 sizePolicy、minimum/maximum size、layout stretch、margins 和 spacing。
+### 适合使用的场景
 
-**典型调用链：** 构造或取得有效对象 -> 检查初始状态 -> 调用与本类职责对应的 API -> 验证返回值/通知 -> 处理无效值和资源边界。
+- 需要用户确认或取消的操作，例如保存前确认、删除前确认、设置提交前校验。
+- 需要短时间收集一组输入，例如登录、查找替换、导出选项、连接配置。
+- 需要附属于某个主窗口的临时工具窗口，例如首选项、属性编辑器、非模态搜索面板。
+- 需要统一处理“确定/取消/应用/关闭”语义，而不是让调用方猜测窗口为什么消失。
 
-**先记住的坑：** 不要用固定坐标拼接响应式界面；不要给已经加入布局的控件反复 `setGeometry()`；不要在 `paintEvent()` 中修改业务状态；不要忘记窗口关闭、对象销毁和应用退出是三个不同事件。
+### 不适合的场景
+
+- 长期停留的主工作区应使用 `QMainWindow`、普通 `QWidget` 页面或停靠窗口，而不是 `QDialog`。
+- 后台任务进度不应该靠 `exec()` 阻塞 GUI 线程；需要进度反馈时优先考虑异步任务加 `QProgressDialog` 或自定义非模态面板。
+- 对嵌套事件循环敏感的场景不要依赖 `exec()`；现代 Widgets 代码更适合 `open()` 加 `finished(int)`。
+
+### 最小示例
+
+```cpp
+auto dialog = new SettingsDialog(this);
+dialog->setAttribute(Qt::WA_DeleteOnClose);
+
+connect(dialog, &QDialog::finished, this, [this, dialog](int result) {
+    if (result == QDialog::Accepted)
+        applySettings(dialog->settings());
+});
+
+dialog->open();
+```
+
+这段写法的重点是：对话框异步打开，关闭时靠信号取结果，生命周期由 `WA_DeleteOnClose` 收尾。它比在业务代码中到处写 `if (dialog.exec() == QDialog::Accepted)` 更不容易制造重入问题。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QDialog>`
-- 继承自：QWidget
-- 直接派生类：QColorDialog、QErrorMessage、QFileDialog、QFontDialog、QInputDialog、QMessageBox、QProgressDialog,、QWizard
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QWidget`
+- 直接派生类：`QColorDialog`、`QErrorMessage`、`QFileDialog`、`QFontDialog`、`QInputDialog`、`QMessageBox`、`QProgressDialog`、`QWizard`
 
-CMake 配置：
+### 父窗口关系
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
+`QDialog` 通常给一个父窗口。这个 parent 不只是对象所有权，还影响窗口居中、任务栏归属和窗口模态范围。没有 parent 的对话框容易变成“漂浮的顶层窗口”，在多窗口应用里尤其容易跑到错误的屏幕或错误的窗口栈顺序里。
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+即使有 parent，`QDialog` 仍然是顶层窗口；它不会像普通子控件那样嵌入父控件的布局中。要把一块界面嵌入页面，应使用 `QWidget` 子类而不是对话框。
 
-### 工作机制
+### 模态关系
 
-Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成界面。控件的可见区域、sizeHint、sizePolicy、字体和平台 style 共同影响最终几何；用户输入先进入 Qt 事件系统，再由控件的事件函数、信号或快捷键处理。
+`QDialog` 有三种常见打开方式：
 
-### 状态、生命周期和线程
+- `show()`：按普通窗口显示；是否模态取决于 `modal` 或 `windowModality`。
+- `open()`：窗口模态、立即返回；结束后用 `finished(int)`、`accepted()`、`rejected()` 接收结果。
+- `exec()`：应用模态并启动局部事件循环；代码看起来同步，但会增加重入和生命周期风险。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+经验上，业务复杂、对象会被外部删除、涉及网络/线程/异步回调时，优先用 `open()`。简单的短命本地对话框可以用 `exec()`，但不要在 `exec()` 打开期间假设外部世界静止。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+### 结果模型
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+`QDialog` 的结果是一个整数。内置约定只有两个：`Accepted` 为 `1`，`Rejected` 为 `0`。如果需要更多结果，可以调用 `done(customCode)`，但调用方要清楚这些自定义码属于当前对话框协议，不是 Qt 通用枚举。
 
-## 3. 直接使用
+## 3. API 速查
 
-创建 QApplication 后创建控件，设置 parent 或把控件加入布局，连接用户操作信号，再显示顶层窗口。复合界面用布局嵌套；控件尺寸异常时同时检查 sizePolicy、minimum/maximum size、layout stretch、margins 和 spacing。 使用时通常按这个过程组织：构造或取得有效对象 -> 检查初始状态 -> 调用与本类职责对应的 API -> 验证返回值/通知 -> 处理无效值和资源边界。
-## 4. API 速查
+| API | 用途速查 |
+| --- | --- |
+| `enum DialogCode { Accepted, Rejected }` | 标准对话框结果：接受或拒绝。 |
+| `modal : bool` | 控制 `show()` 显示时是否应用模态；不影响 `exec()`。 |
+| `sizeGripEnabled : bool` | 是否在右下角显示可拖拽调整大小的握柄。 |
+| `QDialog(QWidget *parent, Qt::WindowFlags f)` | 创建一个顶层对话框，可指定父窗口和窗口标志。 |
+| `~QDialog()` | 销毁对话框及其子对象。 |
+| `accept()` | 以 `Accepted` 结束对话框，并发出相应信号。 |
+| `reject()` | 以 `Rejected` 结束对话框，并发出相应信号。 |
+| `done(int r)` | 以任意结果码结束对话框，是 `accept()` / `reject()` 的底层出口。 |
+| `exec()` | 模态显示并阻塞到结束，返回结果码。 |
+| `open()` | 窗口模态显示并立即返回，适合异步流程。 |
+| `result() const` | 读取最近一次完成时的结果码。 |
+| `setResult(int i)` | 设置结果码但不关闭窗口。 |
+| `setModal(bool modal)` | 设置 `show()` 的默认模态行为。 |
+| `isSizeGripEnabled() const` | 查询是否启用尺寸握柄。 |
+| `setSizeGripEnabled(bool)` | 启用或禁用右下角尺寸握柄。 |
+| `setVisible(bool visible)` | 显示或隐藏对话框；被重写以处理对话框状态。 |
+| `sizeHint() const` | 返回推荐尺寸，通常由布局和子控件决定。 |
+| `minimumSizeHint() const` | 返回推荐最小尺寸。 |
+| `accepted()` | 对话框以接受状态结束时发出。 |
+| `rejected()` | 对话框以拒绝状态结束时发出。 |
+| `finished(int result)` | 对话框完成时总是携带结果码发出。 |
+| `closeEvent(QCloseEvent *e)` | 处理窗口关闭请求，默认通常走拒绝语义。 |
+| `keyPressEvent(QKeyEvent *e)` | 处理按键；Escape 默认触发拒绝。 |
+| `contextMenuEvent(QContextMenuEvent *e)` | 默认上下文菜单策略下的右键菜单入口。 |
+| `eventFilter(QObject *o, QEvent *e)` | 对安装过的过滤对象拦截事件。 |
+| `resizeEvent(QResizeEvent *)` | 对话框尺寸变化后的通知入口。 |
+| `showEvent(QShowEvent *event)` | 对话框即将显示后的初始化入口。 |
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum DialogCode { Accepted, Rejected }`
-
-### 属性
-
-- `modal : bool`
-- `sizeGripEnabled : bool`
-
-### 公有函数
-
-- `QDialog(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
-- `virtual ~QDialog()`
-- `bool isSizeGripEnabled() const`
-- `int result() const`
-- `void setModal(bool modal)`
-- `void setResult(int i)`
-- `void setSizeGripEnabled(bool)`
-
-### 重实现的公有函数
-
-- `virtual QSize minimumSizeHint() const override`
-- `virtual void setVisible(bool visible) override`
-- `virtual QSize sizeHint() const override`
-
-### 公有槽函数
-
-- `virtual void accept()`
-- `virtual void done(int r)`
-- `virtual int exec()`
-- `virtual void open()`
-- `virtual void reject()`
-
-### 信号
-
-- `void accepted()`
-- `void finished(int result)`
-- `void rejected()`
-
-### 重实现的保护函数
-
-- `virtual void closeEvent(QCloseEvent *e) override`
-- `virtual void contextMenuEvent(QContextMenuEvent *e) override`
-- `virtual bool eventFilter(QObject *o, QEvent *e) override`
-- `virtual void keyPressEvent(QKeyEvent *e) override`
-- `virtual void resizeEvent(QResizeEvent *) override`
-- `virtual void showEvent(QShowEvent *event) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 4. API 逐项说明
 
 ### `enum QDialog::DialogCode`
 
-**作用与语义：**
+标准结果码只有 `Accepted` 和 `Rejected`。它们不是按钮本身，而是一次对话流程的结论：用户同意继续，或者用户取消、关闭、按 Escape、校验失败后主动中止。
 
-模态对话框返回的值。
-- `QDialog::Accepted`：`1`
-- `QDialog::Rejected`：`0`
+对于简单设置对话框，直接使用这两个值即可。对于“保存/不保存/取消”这类三态结果，通常更适合用 `QMessageBox::StandardButton`，或者在自定义对话框中通过 `done(customCode)` 建立明确协议。
 
 ### `modal : bool`
 
-**作用与语义：**
+这个属性决定 `show()` 是否以模态方式显示。设置为 `true` 大致等价于把 `windowModality` 设为 `Qt::ApplicationModal`；但 `exec()` 本来就会模态显示，所以它不受这个属性控制。
 
-该属性决定了 `show()` 应该以模态还是无模式形式弹出对话。
-默认情况下，该属性为`false`，`show()`会弹出无模式的对话框。将该属性设置为true等同于将`QWidget::windowModality`设置为`Qt::ApplicationModal`。
-`exec()` 忽略了该属性的值，总是以模态形式弹出对话。
-
-**如何使用：** 调用 `modal()` 读取当前值；它不会修改应用状态。
+容易混淆的一点是：`modal` 管的是用户能不能操作其他窗口，不是管调用代码会不会阻塞。`open()` 是模态但不阻塞，`exec()` 是模态且阻塞，`show()` 可以非模态也可以模态。
 
 ### `sizeGripEnabled : bool`
 
-**作用与语义：**
+启用后，对话框右下角显示 `QSizeGrip`，用户可以直接拖动改变大小。它适合内容可伸缩的对话框，例如高级搜索、日志查看、可调整列表；不适合尺寸固定的短确认框。
 
-该属性在尺寸握法是否启用时依然成立。
-启用该属性时，对话框右下角会放置一个`QSizeGrip`。默认情况下，握把尺寸是禁用的。
+如果启用了握柄但拖动效果很奇怪，通常要检查布局、`minimumSize`、`maximumSize`、子控件的 `sizePolicy`，而不是只盯着这个属性。
 
-**如何使用：** 调用 `sizeGripEnabled()` 读取当前值；它不会修改应用状态。
+### `QDialog(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
 
-### `[explicit] QDialog::QDialog(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
+构造对话框。`parent` 建议传入当前主窗口或发起操作的窗口，这样平台窗口管理器能正确处理居中、置顶关系和任务栏归属。`f` 可以定制标题栏按钮、窗口类型等，但不要随手堆窗口标志；过度定制会导致不同平台表现不一致。
 
-**作用与语义：**
+对话框一般在构造函数中创建子控件、布局和按钮盒，然后把按钮连接到 `accept()`、`reject()` 或自定义校验槽。
 
-构建与父`parent`的对话。
-对话框始终是顶层控件，但如果有父控件，其默认位置会置于父控件的顶部。它还会共享父控件的任务栏条目。
-小部件`f`的标志会传递给`QWidget`构造器。例如，如果你不想在对话框标题栏中放置“这是怎么回事”按钮，可以传递`Qt::WindowTitleHint` |`Qt::WindowSystemMenuHint` `f`。
+### `~QDialog()`
 
-### `[virtual noexcept] QDialog::~QDialog()`
+销毁对话框及子对象。带 parent 的子控件会跟着删除；使用 `WA_DeleteOnClose` 时，对话框可能在关闭流程中自动销毁。
 
-**作用与语义：**
+如果对话框会自动删除，不要在 `finished()` 之后继续解引用裸指针。需要安全引用时用 `QPointer<QDialog>`，或把需要的数据在销毁前复制出来。
 
-摧毁`QDialog`，删除所有子嗣。
+### `accept()`
 
-### `[virtual slot] void QDialog::accept()`
+把结果设为 `Accepted` 并结束对话框。常见连接是 `QDialogButtonBox::accepted` 到 `QDialog::accept`。
 
-**作用与语义：**
+如果点击“确定”前需要校验输入，不要直接把按钮连到 `accept()`；应连接到自定义槽，校验通过后再调用 `accept()`，校验失败则保持对话框打开并提示用户。
 
-隐藏模态对话框，并将结果代码设置为`Accepted`。
+### `reject()`
 
-### `[signal] void QDialog::accepted()`
+把结果设为 `Rejected` 并结束对话框。默认取消按钮、窗口关闭和 Escape 键通常都会走这个语义。
 
-**作用与语义：**
+`reject()` 表示“这次对话没有提交有效结果”，并不代表发生错误。调用方应把它当作正常用户路径处理。
 
-当对话被用户接受，或通过调用带有`QDialog::Accepted`参数的`accept()`或`done()`时，该信号就会发出。
-注意，当用`hide()`或`setVisible`（false）隐藏对话时，该信号不会发出。这包括在对话可见时删除对话。
+### `done(int r)`
 
-### `[override virtual protected] void QDialog::closeEvent(QCloseEvent *e)`
+用指定结果码结束对话框，并触发 `finished(r)`。当 `r` 等于 `Accepted` 或 `Rejected` 时，还会分别触发 `accepted()` 或 `rejected()`。
 
-**作用与语义：**
+它适合自定义结论，例如“应用但不关闭”“保存副本”“以后再说”等，不过这种用法要谨慎：结果码越多，对话框和调用方之间的隐式协议越重。公开给团队使用的对话框最好用命名枚举包装这些值。
 
-重实现自：`QWidget::closeEvent`（QCloseEvent *event）。
-当 Qt 收到来自窗口系统顶层控件的窗口关闭请求时，该事件处理程序会以该`event`调用。
-默认情况下，事件被接受，小部件关闭。你可以重新实现这个函数，改变小部件对窗口关闭请求的响应方式。例如，你可以通过调用所有事件的 `ignore()` 来阻止窗口关闭。
-主窗口应用程序通常会重新实现该函数，以检查用户的工作是否已被保存，并在关闭前请求许可。
+### `exec()`
 
-### `[override virtual protected] void QDialog::contextMenuEvent(QContextMenuEvent *e)`
+模态显示对话框，启动局部事件循环，直到对话框结束后返回结果码。它写起来很顺手：
 
-**作用与语义：**
+```cpp
+SettingsDialog dialog(this);
+if (dialog.exec() == QDialog::Accepted)
+    applySettings(dialog.settings());
+```
 
-重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
-当控件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用处理器。
-默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
+但 `exec()` 的代价是重入：局部事件循环运行期间，定时器、信号、窗口事件仍可能继续发生，外部对象也可能被删除或状态改变。对简单、短小、栈上创建的对话框问题不大；对复杂应用，优先考虑 `open()`。
 
-### `[virtual slot] void QDialog::done(int r)`
+### `open()`
 
-**作用与语义：**
+以窗口模态方式显示并立即返回。它不会启动额外事件循环，结束后通过 `finished(int)`、`accepted()`、`rejected()` 通知调用方。
 
-关闭对话框并将结果码设置为`r`。`finished()`信号会发出`r`;如果`r`是`QDialog::Accepted`或`QDialog::Rejected`，则分别会发出`accepted()`或`rejected()`信号。
-如果该对话显示为`exec()`，done() 也会使本地事件循环结束，`exec()`返回`r`。
-与`QWidget::close()`一样，如果设置了`Qt::WA_DeleteOnClose`标志，done() 会删除对话。如果对话框是应用程序的主控件，应用程序会终止。如果对话框是最后关闭的窗口，则发出`QGuiApplication::lastWindowClosed()`信号。
+这是更适合现代 Qt 应用的写法，尤其当对话框和业务逻辑之间存在异步操作、对象生命周期较复杂、或调用方本身处在信号处理过程中。
 
-### `[override virtual protected] bool QDialog::eventFilter(QObject *o, QEvent *e)`
+### `result() const`
 
-**作用与语义：**
+返回当前或最近一次结束时的结果码。典型用途是在 `exec()` 返回后读取，或在 `finished()` 里确认结果。
 
-重装：`QObject::eventFilter`（QObject *已观看，QEvent *事件）。
+若对话框设置了 `WA_DeleteOnClose`，关闭后对象可能已经销毁，不应再通过旧指针调用 `result()`。此时应该使用 `finished(int)` 信号参数，它就是最安全的结果来源。
 
-### `[virtual slot] int QDialog::exec()`
+### `setResult(int i)`
 
-**作用与语义：**
+只设置内部结果码，不关闭窗口，也不发出完成信号。它通常用于少数需要预设结果的高级场景。
 
-以模态对话框显示对话，阻塞直到用户关闭。函数返回`DialogCode`结果。
-如果对话框是应用模态的，用户在关闭对话框之前不能与同一应用中的任何其他窗互。如果对话框是窗口模态，则在对话框打开期间，只有与父窗口的交互被屏蔽。默认情况下，该对话框是应用模态的。
-注意：避免使用此函数;改用 `open()`。与 exec() 不同，`open()` 是异步的，不会旋转额外的事件循环。这防止了一系列危险的错误发生（例如，在对话打开时通过 exec()删除对话的父节点）。使用 `open()` 时，你可以连接到`QDialog`的`finished()`信号，以获得对话关闭时的通知。
+大多数代码不应该单独调用它。想结束对话框时用 `accept()`、`reject()` 或 `done(int)`，语义更完整。
 
-### `[signal] void QDialog::finished(int result)`
+### `setModal(bool modal)`
 
-**作用与语义：**
+设置 `show()` 后的模态行为。若你随后调用 `open()` 或 `exec()`，它们有自己的显示语义，不必再依赖这个属性。
 
-当对话框的`result`代码被设置时，该信号由用户或调用`done()`、`accept()`或`reject()`发出。
-注意，当用`hide()`或`setVisible`（false）隐藏对话时，这个信号不会发出。这包括在对话可见时删除。
+需要精细控制模态范围时，优先直接设置 `setWindowModality(Qt::WindowModal)` 或 `Qt::ApplicationModal`，可读性更好。
 
-### `[override virtual protected] void QDialog::keyPressEvent(QKeyEvent *e)`
+### `isSizeGripEnabled() const` / `setSizeGripEnabled(bool)`
 
-**作用与语义：**
+查询或设置右下角尺寸握柄。它只是提供用户交互入口；最终可调整范围仍然受最小/最大尺寸、布局和窗口管理器控制。
 
-重实现自：`QWidget::keyPressEvent`（QKeyEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的按键事件。
-一个小部件必须调用`setFocusPolicy()`先接受焦点，并且必须有焦点才能接收按键事件。
-如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
-默认实现会关闭弹出小部件，如果用户按下`QKeySequence::Cancel`的按键序列（通常是 Escape 键）。否则事件会被忽略，以便小部件的父节点能够解释。
-注意`QKeyEvent`以 isAccepted() == true 开头，所以你不需要调用 `QKeyEvent::accept()`——只要你对该键执行时不要调用基类实现即可。
+设计上，内容密集且有列表、表格、文本区的对话框适合开启；只有几个按钮的提示框开启握柄会显得多余。
 
-### `[override virtual] QSize QDialog::minimumSizeHint() const`
+### `setVisible(bool visible)`
 
-**作用与语义：**
+`QDialog` 重写了可见性切换，以便配合对话框结果和模态行为。直接 `hide()` 或 `setVisible(false)` 只是隐藏窗口，不等同于 `accept()`、`reject()` 或 `done()`，因此不会发出 `finished()`。
 
-重新实现属性的访问函数：`QWidget::minimumSizeHint`。
+这点非常重要：如果调用方等待 `finished(int)`，就不要用 `hide()` 当成关闭对话框的方式。
 
-### `[virtual slot] void QDialog::open()`
+### `sizeHint() const` / `minimumSizeHint() const`
 
-**作用与语义：**
+返回推荐尺寸和推荐最小尺寸。对话框的尺寸主要由布局、子控件的 `sizeHint`、按钮区、边距和平台 style 决定。
 
-以窗口模态对话框显示对话，立即返回。
+遇到对话框过小或内容被挤压，先检查布局是否完整、是否给主要内容设置了合理的伸缩因子，再考虑重写这些函数。
 
-### `[virtual slot] void QDialog::reject()`
+### `accepted()` / `rejected()` / `finished(int result)`
 
-**作用与语义：**
+这三个信号用于接收对话框结论。`finished(int)` 最通用，因为它携带结果码；`accepted()` 和 `rejected()` 更适合连接简单动作。
 
-隐藏模态对话框，并将结果代码设置为`Rejected`。
+注意：调用 `hide()`、`setVisible(false)` 或直接删除正在显示的对话框，不会自动发出这些“完成语义”的信号。想通知调用方，就用 `done()` 家族结束对话框。
 
-### `[signal] void QDialog::rejected()`
+### `closeEvent(QCloseEvent *e)`
 
-**作用与语义：**
+处理窗口系统发来的关闭请求。默认关闭对话框时通常相当于拒绝；如果对话框里有未保存内容，可以重写此函数，在确认后接受或忽略事件。
 
-当用户或通过调用`QDialog::Rejected`参数的`reject()`或`done()`拒绝对话时，该信号会发出。
-注意，当用`hide()`或`setVisible`（false）隐藏对话时，该信号不会发出。这包括在对话可见时删除对话。
+不要在 `closeEvent()` 中直接删除自己。若需要关闭即删除，设置 `Qt::WA_DeleteOnClose`，让 Qt 在合适的时机处理。
 
-### `[override virtual protected] void QDialog::resizeEvent(QResizeEvent *)`
+### `keyPressEvent(QKeyEvent *e)`
 
-**作用与语义：**
+处理键盘输入。`QDialog` 默认会把 Escape 作为取消路径，因此按 Escape 通常触发 `reject()`。
 
-重实现自：`QWidget::resizeEvent`（QResizeEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收通过 `event` 参数传递的控件调整大小事件。当调用 resizeEvent() 时，控件已经拥有新的几何体。旧的大小可以通过 `QResizeEvent::oldSize()` 访问。
-控件会被擦除，并在处理调整尺寸事件后立即接收绘图事件。不需要（也不应该）在这个处理程序中进行绘图。
+如果重写这个函数处理快捷键，未处理的按键应交回基类，否则 Escape、默认按钮、焦点控件的键盘行为可能失效。
 
-### `int QDialog::result() const`
+### `contextMenuEvent(QContextMenuEvent *e)`
 
-**作用与语义：**
+在默认上下文菜单策略下处理右键菜单。对话框本身很少需要全局右键菜单，但高级设置、属性编辑器、文本区域周边工具可以用它提供局部动作。
 
-通常返回模态对话框的结果代码，`Accepted`或`Rejected`。
-注意：当在`QMessageBox`实例中调用时，返回的值是`QMessageBox::StandardButton`枚举的一个值。
-如果对话是用`Qt::WA_DeleteOnClose`属性构建的，不要调用该函数。
+实际项目中，更多时候会把上下文菜单交给具体子控件处理，而不是让整个对话框截获。
 
-### `void QDialog::setResult(int i)`
+### `eventFilter(QObject *o, QEvent *e)`
 
-**作用与语义：**
+事件过滤器入口。可用于拦截子控件事件，例如按 Enter 时不要立即提交、某个编辑器失焦时触发校验、或在多个输入框之间统一处理快捷键。
 
-将模态对话框的结果代码设置为`i`。
-注意：我们建议您使用`QDialog::DialogCode`定义的某个数值。
+过滤器要克制使用。能通过信号、验证器、按钮状态表达的逻辑，不必塞进事件过滤器；否则对话框行为会变得难以追踪。
 
-### `[override virtual] void QDialog::setVisible(bool visible)`
+### `resizeEvent(QResizeEvent *)`
 
-**作用与语义：**
+尺寸变化后调用。适合更新依赖窗口尺寸的辅助状态，但不适合手工摆放已经由布局管理的子控件。
 
-重新实现了属性的访问函数：`QWidget::visible`。
+如果你在对话框中使用布局，绝大多数响应式调整应交给布局系统完成。
 
-### `[override virtual protected] void QDialog::showEvent(QShowEvent *event)`
+### `showEvent(QShowEvent *event)`
 
-**作用与语义：**
+显示时调用。适合做依赖最终窗口状态的轻量初始化，例如首次聚焦某个控件、延迟计算列宽、根据屏幕空间调整默认尺寸。
 
-重实现自：`QWidget::showEvent`（QShowEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收传递给 `event` 参数的控件显示事件。
-非自发的展示事件会在展示前立即发送到小部件。窗口的自发展示事件则在展示之后交付。
-注意：当窗口系统改变其映射状态时，小部件会接收自发显示和隐藏事件，例如用户最小化窗口时自发隐藏事件，窗口恢复时自发显示事件。收到自发隐藏事件后，小部件仍被视为`isVisible()`可见。
+不要把耗时加载放在这里阻塞显示；需要加载数据时，让对话框先出现，再异步填充内容。
 
-### `[override virtual] QSize QDialog::sizeHint() const`
+## 5. 深入实践与常见坑
 
-**作用与语义：**
+### `open()` 和 `exec()` 的取舍
 
-重新实现了属性的访问函数：`QWidget::sizeHint`。
+`exec()` 的优势是局部代码直线化，劣势是嵌套事件循环。嵌套事件循环不是“暂停世界”，它只是让当前函数等在那里，同时 GUI 仍然处理其他事件。复杂程序中，这会带来对象提前销毁、状态被外部改变、信号顺序难以推理等问题。
 
-### `bool isSizeGripEnabled() const`
+`open()` 的优势是事件流清晰。你把“用户结束对话框之后做什么”写在 `finished(int)` 里，调用栈不会被长时间挂住。对需要长期维护的桌面应用，这是更稳的默认选择。
 
-**作用与语义：**
+### 确定按钮不要绕过校验
 
-该属性在尺寸握法是否启用时依然成立。
-启用该属性时，对话框右下角会放置一个`QSizeGrip`。默认情况下，握把尺寸是禁用的。
+常见错误是直接写：
 
-**如何使用：** 调用 `isSizeGripEnabled()` 读取当前值；它不会修改应用状态。
+```cpp
+connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+```
 
-### `void setModal(bool modal)`
+如果对话框有必填项、路径检查、数值范围、权限检查，应改成连接到自己的提交函数。只有当数据真正可用时才调用 `accept()`。
 
-**作用与语义：**
+### 关闭、隐藏、删除是三件事
 
-该属性决定了 `show()` 应该以模态还是无模式形式弹出对话。
-默认情况下，该属性为`false`，`show()`会弹出无模式的对话框。将该属性设置为true等同于将`QWidget::windowModality`设置为`Qt::ApplicationModal`。
-`exec()` 忽略了该属性的值，总是以模态形式弹出对话。
+`accept()` / `reject()` / `done()` 是完成对话流程；`hide()` 只是不可见；析构是对象消失。调用方等待结果时，必须让对话框以完成语义退出，否则状态机会断掉。
 
-**如何使用：** 调用 `setModal(...)` 修改 `modal`；传入的新值会成为后续查询和相关界面行为所使用的值。
+### 数据读取时机
 
-### `void setSizeGripEnabled(bool)`
+用 `exec()` 时，通常在返回 `Accepted` 后从栈上对象读取数据。用 `open()` 且可能 `WA_DeleteOnClose` 时，应在 `finished()` 触发时立即读取，或在对话框发出自定义信号时把业务数据作为参数传出。
 
-**作用与语义：**
+### 默认按钮与 Escape
 
-该属性在尺寸握法是否启用时依然成立。
-启用该属性时，对话框右下角会放置一个`QSizeGrip`。默认情况下，握把尺寸是禁用的。
-
-**如何使用：** 调用 `setSizeGripEnabled(...)` 修改 `sizeGripEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要用固定坐标拼接响应式界面；不要给已经加入布局的控件反复 `setGeometry()`；不要在 `paintEvent()` 中修改业务状态；不要忘记窗口关闭、对象销毁和应用退出是三个不同事件。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDialog` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+`QDialogButtonBox` 能帮你建立平台一致的按钮顺序和角色。默认按钮负责 Enter 路径，Escape 通常走拒绝路径。不要随意吞掉按键事件，否则用户熟悉的键盘操作会失灵。

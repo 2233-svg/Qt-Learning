@@ -1,127 +1,60 @@
 # QDBusPendingCallWatcher
+> Qt 6.11.1 · Qt D-Bus · 来自 `QDBusPendingCallWatcher`
 
-> Qt 6.11.1 · Qt D-Bus
+## 作用定位
 
-## 1. 先建立直觉
+`QDBusPendingCallWatcher` 把 `QDBusPendingCall` 变成 QObject 世界里的完成通知。它继承 `QObject` 和 `QDBusPendingCall`：一边保留 pending 结果，一边在结果到达时发出 `finished()` 信号。
 
-**一句话定位：** `QDBusPendingCallWatcher` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+它是 GUI 或事件驱动程序里处理异步 D-Bus 调用最常用的桥。
 
-**模块背景：** 这是 Qt D-Bus 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QDBusPendingCallWatcher` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
-
-**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QDBusPendingCallWatcher>`
-- 继承自：QObject、QDBusPendingCall
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::DBus`
+- 继承：`QObject`、`QDBusPendingCall`
+- 生命周期：通常 `new` 出来并设置 parent，在 `finished()` 槽里 `deleteLater()`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS DBus)
-target_link_libraries(mytarget PRIVATE Qt6::DBus)
+| API | 说明 |
+| --- | --- |
+| `QDBusPendingCallWatcher(call, parent)` | 监听一条 pending call，并按 QObject parent 管理生命周期。 |
+| `~QDBusPendingCallWatcher()` | 销毁 watcher；不会让已经发出的远端调用自动回滚。 |
+| `finished(self)` | 调用完成时发出，`self` 通常就是 watcher 自己。 |
+| `isFinished()` | 查询结果是否已经到达并处理。 |
+| `waitForFinished()` | 阻塞当前线程直到完成；GUI 线程慎用。 |
+
+## 典型用法
+
+```cpp
+auto *watcher = new QDBusPendingCallWatcher(iface.asyncCall("ListNames"), this);
+connect(watcher, &QDBusPendingCallWatcher::finished,
+        this, [watcher] {
+    QDBusPendingReply<QStringList> reply = *watcher;
+    watcher->deleteLater();
+
+    if (!reply.isError())
+        qDebug() << reply.value();
+});
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+## 使用场景
 
-### 工作机制
+- 在 QObject/信号槽代码里等待 D-Bus 异步结果。
+- GUI 中避免同步 `call()` 阻塞界面。
+- 让异步调用结果跟随某个 context 对象自动断开。
 
-这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- `finished()` 发出后仍要先构造 `QDBusPendingReply<T...>` 并检查 `isError()`。
+- watcher 常见泄漏点是忘记在回调里 `deleteLater()`，或者没有设置 parent。
+- `waitForFinished()` 适合后台线程或测试，不适合主线程响应用户操作。
+- lambda 捕获 watcher 指针时，优先把 watcher 设为 parent 管理对象，降低提前销毁风险。
+- `finished(QDBusPendingCallWatcher *self)` 的参数让同一个槽可处理多个 watcher。
 
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+## 知识点覆盖
 
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-## 3. 直接使用
-
-使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDBusPendingCallWatcher(const QDBusPendingCall &call, QObject *parent = nullptr)`
-- `virtual ~QDBusPendingCallWatcher()`
-- `bool isFinished() const`
-- `void waitForFinished()`
-
-### 信号
-
-- `void finished(QDBusPendingCallWatcher *self = nullptr)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QDBusPendingCallWatcher::QDBusPendingCallWatcher(const QDBusPendingCall &call, QObject *parent = nullptr)`
-
-**作用与语义：**
-
-创建一个QDBusPendingCallWatcher对象，用于监控异步待处理通话`call`的回复，并将该对象的父节点设置为`parent`。
-
-### `[virtual noexcept] QDBusPendingCallWatcher::~QDBusPendingCallWatcher()`
-
-**作用与语义：**
-
-销毁该对象。如果该`QDBusPendingCallWatcher`对象是未完成的待处理调用的最后引用，则该调用将被取消。
-
-### `[signal] void QDBusPendingCallWatcher::finished(QDBusPendingCallWatcher *self = nullptr)`
-
-**作用与语义：**
-
-当待处理调用结束且其回复可用时，该信号会发出。`self`参数是指向对象本身的指针，方便槽函数访问属性并确定回复内容。
-
-### `bool QDBusPendingCallWatcher::isFinished() const`
-
-**作用与语义：**
-
-如果待处理的调用已完成且回复已收到，返回`true`。
-注意，这个函数只有在调用`waitForFinished()`或外部D-Bus事件发生时才会改变状态，而外部D-Bus事件通常只在返回事件循环执行时发生。
-
-### `void QDBusPendingCallWatcher::waitForFinished()`
-
-**作用与语义：**
-
-暂停调用线程的执行，直到收到并处理回复。该函数返回后，`isFinished()`应返回true，表示回复内容已准备好处理。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-### 状态和错误边界
-
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-### 线程边界
-
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-### 最容易出现的错误
-
-不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDBusPendingCallWatcher` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- pending call 到 QObject 信号的转换
+- `QDBusPendingReply` 解析 watcher
+- 事件循环与异步完成通知
+- QObject 生命周期和 `deleteLater()`

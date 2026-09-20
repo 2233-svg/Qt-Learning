@@ -1,115 +1,136 @@
 # QMouseEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QMouseEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QMouseEvent` 是 Qt 的值类型，围绕“鼠标事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QMouseEvent` 描述鼠标按下、释放、双击和移动。它继承自 `QSinglePointEvent`，所以大部分常用能力，如 `position()`、`globalPosition()`、`button()`、`buttons()`，其实来自单点输入事件模型。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+鼠标事件的关键不是“鼠标在哪里”这么简单，而是要同时回答四个问题：事件类型是什么、这次变化由哪个按钮触发、事件发生时哪些按钮正按着、这个坐标属于哪个坐标系。只要这四个问题分清楚，绝大多数鼠标交互都会稳定很多。
 
-### 这是什么
+## 2. 类说明
 
-`QMouseEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QMouseEvent` 继承自 `QSinglePointEvent`。通常由 Qt 在事件循环中创建并分发给 `QWidget::mousePressEvent()`、`mouseReleaseEvent()`、`mouseMoveEvent()`、`mouseDoubleClickEvent()`，也可以在 `QWindow` 或事件过滤器中处理。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只保留用来表明这些 API 来自 `QMouseEvent`：构造鼠标事件和读取鼠标事件标志属于鼠标事件本身；位置、按钮状态、设备来源则来自父类。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QMouseEvent(type, localPos, globalPos, button, buttons, modifiers, device)` | 构造鼠标事件，窗口/场景位置默认与局部位置一致。 |
+| `QMouseEvent(type, localPos, scenePos, globalPos, button, buttons, modifiers, device)` | 构造带局部、窗口/场景、全局三套坐标的鼠标事件。 |
+| `flags() const` | 读取鼠标事件的附加标志，用于识别合成、来源或特殊分发信息。 |
+| `position() const` | 来自父类，读取相对接收对象的局部坐标。 |
+| `globalPosition() const` | 来自父类，读取屏幕或虚拟桌面坐标。 |
+| `button() const` | 来自父类，读取触发本次事件的按钮。 |
+| `buttons() const` | 来自父类，读取事件发生时所有按下的按钮。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 按下、移动、释放是一条状态机
 
-- 头文件：`#include <QMouseEvent>`
-- 继承自：QSinglePointEvent
-- 直接派生类：未在类页中列出
+不要在每个事件里孤立处理鼠标。拖拽、框选、绘制都应该把 press 视为开始，move 视为更新，release 视为结束。
 
-CMake 配置：
+```cpp
+void Canvas::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() != Qt::LeftButton) {
+        event->ignore();
+        return;
+    }
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+    m_dragging = true;
+    m_anchor = event->position();
+    event->accept();
+}
+
+void Canvas::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!m_dragging || !event->buttons().testFlag(Qt::LeftButton)) {
+        event->ignore();
+        return;
+    }
+
+    updateSelection(m_anchor, event->position());
+    event->accept();
+}
+
+void Canvas::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (m_dragging && event->button() == Qt::LeftButton) {
+        m_dragging = false;
+        commitSelection();
+        event->accept();
+        return;
+    }
+
+    event->ignore();
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+移动事件看 `buttons()`，释放事件看 `button()`，这是最常用也最容易写错的规则。
 
-### 工作机制
+### 移动控件或窗口时使用全局坐标
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+如果你根据鼠标拖动移动接收控件本身，局部坐标会随着控件移动而改变，导致抖动。全局坐标不会受控件移动影响。
 
-### 状态、生命周期和线程
+```cpp
+void FloatingPanel::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        m_startGlobal = event->globalPosition();
+        m_startPos = pos();
+        event->accept();
+    }
+}
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+void FloatingPanel::mouseMoveEvent(QMouseEvent *event)
+{
+    if (event->buttons().testFlag(Qt::LeftButton)) {
+        move(m_startPos + (event->globalPosition() - m_startGlobal).toPoint());
+        event->accept();
+    }
+}
+```
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+### 双击不是“两次单击”的简单替代
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+`MouseButtonDblClick` 会作为独立事件出现。很多控件需要决定单击动作是否延迟，因为第二次点击可能升级为双击。
 
-## 3. 直接使用
+```cpp
+void ItemView::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        openIndexAt(event->position());
+        event->accept();
+        return;
+    }
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+    QWidget::mouseDoubleClickEvent(event);
+}
+```
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+如果单击立即执行不可逆动作，双击体验会很差。文件列表、时间轴、图形编辑器尤其要注意。
 
-### 公有函数
+## 5. 使用场景
 
-- `QMouseEvent(QEvent::Type type, const QPointF &localPos, const QPointF &globalPos, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, const QPointingDevice *device = QPointingDevice::primaryPointingDevice())`
-- `QMouseEvent(QEvent::Type type, const QPointF &localPos, const QPointF &scenePos, const QPointF &globalPos, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, const QPointingDevice *device = QPointingDevice::primaryPointingDevice())`
-- `Qt::MouseEventFlags flags() const`
+`QMouseEvent` 是自定义 Widgets 交互的主力：按钮之外的可点击区域、绘图画布、框选、拖动排序、节点编辑、图像查看器、标尺、时间轴、右键菜单触发等都依赖它。
 
-## 5. API 逐个说明
+它也常用于兼容触摸输入。Qt 可能把触摸转换成鼠标事件，让老控件可用；如果你的应用需要区分真实鼠标和触摸合成事件，应结合 `device()`、`deviceType()` 和 `flags()` 判断。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+在精细 UI 中，鼠标事件常和 `setMouseTracking(true)` 配合使用。默认情况下，没有按钮按下时控件通常收不到移动事件；开启 mouse tracking 后，悬停移动才会持续进入 `mouseMoveEvent()`。
 
-### `QMouseEvent::QMouseEvent(QEvent::Type type, const QPointF &localPos, const QPointF &globalPos, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, const QPointingDevice *device = QPointingDevice::primaryPointingDevice())`
+## 6. 常见坑与经验
 
-**作用与语义：**
+不要用整数坐标作为第一选择。Qt 6 鼠标位置是 `QPointF`，高 DPI、缩放和触控板环境下小数坐标很常见；过早 `toPoint()` 会丢精度。
 
-构建源自`device`的鼠标事件对象。
-`type`参数必须是`QEvent::MouseButtonPress`、`QEvent::MouseButtonRelease`、`QEvent::MouseButtonDblClick`或`QEvent::MouseMove`。
-`localPos`是鼠标光标相对于接收控件或项目的位置。光标在屏幕坐标中的位置由`globalPos`指定。窗口位置与`localPos`相同。引发事件的`button`以`Qt::MouseButton`枚举中的值给出。如果事件`type` `MouseMove`，该事件的相应按钮是`Qt::NoButton`。`buttons` 是事件发生时所有按钮的状态，`modifiers`所有键盘修饰键的状态。
+不要在处理后忘记 `accept()`，也不要无条件吞掉所有鼠标事件。自定义控件应处理自己负责的交互，其余交给基类，这样上下文菜单、选择、焦点和父级事件逻辑才不容易断。
 
-### `QMouseEvent::QMouseEvent(QEvent::Type type, const QPointF &localPos, const QPointF &scenePos, const QPointF &globalPos, Qt::MouseButton button, Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, const QPointingDevice *device = QPointingDevice::primaryPointingDevice())`
+不要用 `QCursor::pos()` 替代事件里的 `globalPosition()`。事件坐标代表事件发生时的位置，全局光标查询代表当前时刻的位置，两者在异步窗口系统和高频输入时可能不同。
 
-**作用与语义：**
+不要假设鼠标移动事件一定伴随按钮。未开启 mouse tracking 时通常只有按键拖动才持续收到移动；开启后无按钮移动也会进入。
 
-构建一个鼠标事件对象。
-`type`参数必须是`QEvent::MouseButtonPress`、`QEvent::MouseButtonRelease`、`QEvent::MouseButtonDblClick`或`QEvent::MouseMove`。
-点`localPos`、`scenePos`和`globalPos`分别指定鼠标光标相对于接收小部件或物品、窗口以及屏幕或桌面的位置。
-引发事件的`button`以`Qt::MouseButton`枚举中的数值给出。如果事件`type`为`MouseMove`，则该事件的相应按钮为`Qt::NoButton`。`buttons` 是事件发生时所有按钮的状态，`modifiers` 是所有键盘修饰符的状态。
+## 7. 知识点覆盖
 
-### `Qt::MouseEventFlags QMouseEvent::flags() const`
-
-**作用与语义：**
-
-返回鼠标事件标志。
-鼠标事件标志提供关于鼠标事件的额外信息。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QMouseEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QMouseEvent` 应覆盖鼠标事件类型、局部/场景/全局坐标、按钮变化与按钮状态、拖拽状态机、双击处理、mouse tracking、事件接受与传播、高 DPI 坐标、合成鼠标事件、输入设备判断以及与上下文菜单和拖放系统的边界。

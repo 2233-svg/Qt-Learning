@@ -1,132 +1,41 @@
 # QQmlEngineExtensionPlugin
+> Qt 6.11.1 · Qt QML · 来自 `QQmlEngineExtensionPlugin`
 
-> Qt 6.11.1 · Qt Qml
+## 作用定位
 
-## 1. 先建立直觉
+`QQmlEngineExtensionPlugin` 是面向“扩展 QML 引擎行为”的插件基类。它的重点不在手动注册一堆类型，而是在插件加载时通过 `initializeEngine()` 配置引擎；类型注册通常由 QML 模块生成机制处理。
 
-**一句话定位：** `QQmlEngineExtensionPlugin` 是 QML 属性绑定与场景图机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
-
-**模块背景：** 这是 Qt Qml 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QQmlEngineExtensionPlugin` 是 Qt Quick/QML 体系中的公开类型，连接 C++ 对象、QML 属性绑定和场景图渲染。
-
-**内部模型：** QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
-
-**适用场景：** 需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。
-
-**典型调用链：** 注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-**先记住的坑：** 不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QQmlEngineExtensionPlugin>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::Qml`
+- 继承：`QObject`
+- 构造：`QQmlEngineExtensionPlugin(QObject *parent = nullptr)`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Qml)
-target_link_libraries(mytarget PRIVATE Qt6::Qml)
-```
+| API | 说明 |
+| --- | --- |
+| `QQmlEngineExtensionPlugin(parent)` | 创建插件对象。 |
+| `initializeEngine(engine, uri)` | 插件被引擎加载时进行初始化。 |
+| `Q_IMPORT_QML_PLUGIN(PluginName)` | Qt 6.2 起静态导入 QML 插件的宏。 |
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+## 使用场景
 
-### 工作机制
+- QML 模块需要在 import 时给 engine 加 image provider、URL interceptor 或单例初始化。
+- 静态链接 QML 插件，需要用 `Q_IMPORT_QML_PLUGIN` 拉入插件。
+- 现代 QML 模块中把类型注册交给工具链，插件只做 engine 级初始化。
 
-QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- `initializeEngine()` 可能对不同 engine 多次调用，代码要可重复、可隔离。
+- 静态插件忘记 `Q_IMPORT_QML_PLUGIN` 时，链接进了二进制也未必会被 QML import 找到。
+- 不要在插件初始化里过早加载 QML 文件，容易造成递归 import 或路径尚未稳定。
+- 与 `QQmlExtensionPlugin` 相比，它更适合 Qt 6 模块化工程的 engine 扩展。
 
-**生命周期：** QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
+## 知识点覆盖
 
-**状态与结果：** 属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-**线程与事件循环：** 大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-## 3. 直接使用
-
-需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。 使用时通常按这个过程组织：注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-```cpp
-// C++ 侧暴露属性/信号后，在 QML 中建立绑定。
-// 变化时发出 notify signal，避免在绑定表达式中直接修改状态。
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QQmlEngineExtensionPlugin(QObject *parent = nullptr)`
-
-### 重实现的公有函数
-
-- `virtual void initializeEngine(QQmlEngine *engine, const char *uri) override`
-
-### 公开宏
-
-- `(since 6.2) Q_IMPORT_QML_PLUGIN(PluginName)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QQmlEngineExtensionPlugin::QQmlEngineExtensionPlugin(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构建一个带有给定`parent`的QML扩展插件。
-注意，该构造函数由`Q_PLUGIN_METADATA()`宏自动调用，因此无需显式调用。
-
-### `[override virtual] void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)`
-
-**作用与语义：**
-
-使用`engine`初始化`uri`扩展。例如，应用插件可能会将某些数据或对象暴露给QML，作为引擎根上下文的上下文属性。
-
-### `[since 6.2] Q_IMPORT_QML_PLUGIN(PluginName)`
-
-**作用与语义：**
-
-确保名为 `PluginName` 的插件扩展类（用于声明元数据的插件扩展类）在静态构建中被链接。对于使用 qt_add_qml_module 创建的模块，默认插件扩展类名称是从 QML 模块 URI 计算得出，将点替换为下划线，除非指定了 `CLASS_NAME` 参数。
-此宏在 Qt 6.2 中引入。
-
-**官方示例：**
-
-```cpp
- qt_add_qml_module(myplugin
-     # The plugin extension class name in this case is my_Company_QmlComponents.
-     URI my.Company.QmlComponents
-     ...
- )
-```
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
-
-### 状态和错误边界
-
-属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-### 线程边界
-
-大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-### 最容易出现的错误
-
-不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QQmlEngineExtensionPlugin` 所属机制类型：QML 属性绑定与场景图机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- QML engine 扩展插件
+- 静态 QML 插件导入
+- 模块初始化与类型注册分工
+- 多 engine 场景下的初始化约束

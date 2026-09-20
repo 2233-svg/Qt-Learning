@@ -1,201 +1,81 @@
 # QPdfOutputIntent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPdfOutputIntent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QPdfOutputIntent` 描述 PDF 文档的目标输出条件：这份 PDF 是按什么色彩配置文件、什么印刷/显示条件来准备的。它常和 `QPdfWriter` 配合，尤其在需要 PDF/X-4 这类面向印刷交换的格式时很重要。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是“把所有颜色自动转成正确颜色”的按钮。它更像 PDF 元数据里的承诺：我声明这份文档的颜色应按这个 ICC profile 和输出条件解释。应用程序仍然要保证写入 PDF 的颜色空间、图片和绘制内容与这个 profile 匹配。
 
-### 这是什么
-
-`QPdfOutputIntent` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPdfOutputIntent>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::Gui`
+- 类型性质：值类型，可复制、可移动、可交换
+- 主要协作类：`QPdfWriter`
+- 默认语义：sRGB IEC61966 v2.1 with black scaling
 
-CMake 配置：
+输出意图通常包含四部分：人可读的输出条件、机器可识别的条件标识符、注册表 URL、以及实际的 `QColorSpace` 输出 profile。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `QPdfOutputIntent()` | 创建默认输出意图，默认使用 sRGB v2 相关配置。 |
+| `outputCondition()` / `setOutputCondition()` | 读写人类可读的输出条件说明。 |
+| `outputConditionIdentifier()` / `setOutputConditionIdentifier()` | 读写输出条件的标识符；有注册表时应匹配注册条目。 |
+| `registryName()` / `setRegistryName()` | 读写特征化条件注册表 URL，默认通常指向 color.org。 |
+| `outputProfile()` / `setOutputProfile()` | 读写输出设备色彩配置文件，类型为 `QColorSpace`。 |
+| `swap()` | 快速交换两个输出意图。 |
+| 拷贝/移动构造与赋值 | 按值传递和保存输出意图配置。 |
+
+## 4. 关键用法
+
+### 为 PDF 写入器设置输出意图
+
+```cpp
+QPdfOutputIntent intent;
+intent.setOutputCondition("sRGB IEC61966 v2.1 with black scaling");
+intent.setOutputConditionIdentifier("sRGB_IEC61966-2-1_black_scaled");
+intent.setRegistryName(QUrl("http://www.color.org"));
+intent.setOutputProfile(QColorSpace::SRgb);
+
+writer.setOutputIntent(intent);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这类配置通常在创建 PDF 页面前完成。若目标是印刷工作流，应使用印厂或规范要求的 ICC profile，而不是随意声明 sRGB。
 
-### 工作机制
+### 区分说明文字与标识符
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+`outputCondition()` 面向人，例如“FOGRA39 coated paper”；`outputConditionIdentifier()` 面向规范和注册表，例如某个标准化 reference condition 名称。两者可以表达同一个意图，但用途不同。
 
-### 状态、生命周期和线程
+### PDF/X-4 场景
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+PDF/X-4 要求文档色彩声明和实际内容保持一致。调用 `setOutputProfile()` 只设置输出意图；你仍然要检查图片、渐变、绘制颜色、透明度以及外部资源是否符合目标色域和输出条件。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 5. 使用场景
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+- 生成 PDF/X-4 或面向印刷交换的 PDF。
+- 为企业报表、出版物、票据或广告素材声明目标色彩环境。
+- 将 `QPdfWriter` 输出接入印厂、预检工具或归档流程。
+- 在生成 PDF 时嵌入标准 sRGB 或特定印刷 ICC profile。
+- 为色彩敏感内容保留可验证的输出条件元数据。
 
-## 3. 直接使用
+## 6. 常见坑与经验
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+- **输出意图不等于色彩转换。** 它声明目标 profile，但不会自动修正你已经画进去的错误颜色。
+- **PDF/X 要求更严格。** 如果声明了某 profile，文档中的所有颜色规格也要匹配；这是应用层责任。
+- **标识符和注册表要成对考虑。** 设置了 `registryName()` 后，`outputConditionIdentifier()` 应能在对应注册表里找到意义。
+- **默认 sRGB 适合屏幕和通用 PDF。** 面向印刷时通常需要印厂给出的 CMYK/ICC 工作条件。
+- **`QColorSpace` 可能无效或不合适。** 设置 profile 前检查来源，避免把占位或错误 profile 写入正式文档。
+- **人可读条件不是唯一标识。** 说明文字可以本地化或描述性更强，但自动化流程更依赖 identifier。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 7. 知识点覆盖
 
-### 公有函数
-
-- `QPdfOutputIntent()`
-- `QPdfOutputIntent(const QPdfOutputIntent &other)`
-- `QPdfOutputIntent(QPdfOutputIntent &&other)`
-- `~QPdfOutputIntent()`
-- `QString outputCondition() const`
-- `QString outputConditionIdentifier() const`
-- `QColorSpace outputProfile() const`
-- `QUrl registryName() const`
-- `void setOutputCondition(const QString &condition)`
-- `void setOutputConditionIdentifier(const QString &identifier)`
-- `void setOutputProfile(const QColorSpace &profile)`
-- `void setRegistryName(const QUrl &name)`
-- `void swap(QPdfOutputIntent &other)`
-- `QPdfOutputIntent & operator=(QPdfOutputIntent &&other)`
-- `QPdfOutputIntent & operator=(const QPdfOutputIntent &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QPdfOutputIntent::QPdfOutputIntent()`
-
-**作用与语义：**
-
-构建新的PDF输出意图。
-
-### `QPdfOutputIntent::QPdfOutputIntent(const QPdfOutputIntent &other)`
-
-**作用与语义：**
-
-构建输出意图的副本`other`。
-
-### `[constexpr noexcept] QPdfOutputIntent::QPdfOutputIntent(QPdfOutputIntent &&other)`
-
-**作用与语义：**
-
-通过从 从`other`移动来构建 QPdfOutputIntent 对象。
-
-### `[noexcept] QPdfOutputIntent::~QPdfOutputIntent()`
-
-**作用与语义：**
-
-破坏了输出意图。
-
-### `QString QPdfOutputIntent::outputCondition() const`
-
-**作用与语义：**
-
-返回人类可读的输出条件。
-这是一条字符串，简明地以对人工操作员有意义的形式标识出具有特征性的打印条件。
-默认输出条件是`sRGB IEC61966 v2.1 with black scaling`。
-
-### `QString QPdfOutputIntent::outputConditionIdentifier() const`
-
-**作用与语义：**
-
-返回输出条件的标识符。
-如果提供了注册名，那么该标识符应与该注册表中某个条目的引用名称相匹配。
-默认标识符为`sRGB_IEC61966-2-1_black_scaled`。
-
-### `QColorSpace QPdfOutputIntent::outputProfile() const`
-
-**作用与语义：**
-
-返回输出设备配置文件。
-默认配置文件是国际色彩联盟提供的sRGB v2配置文件。
-
-### `QUrl QPdfOutputIntent::registryName() const`
-
-**作用与语义：**
-
-返回预期打印条件的特征注册表的URL。
-默认注册表是`http://www.color.org`。
-
-### `void QPdfOutputIntent::setOutputCondition(const QString &condition)`
-
-**作用与语义：**
-
-将人类可读输出条件设置为`condition`。
-
-### `void QPdfOutputIntent::setOutputConditionIdentifier(const QString &identifier)`
-
-**作用与语义：**
-
-将输出条件的标识符设置为`identifier`。
-如果提供了注册名，那么该标识符应与该注册表中某个条目的引用名称相匹配。
-
-### `void QPdfOutputIntent::setOutputProfile(const QColorSpace &profile)`
-
-**作用与语义：**
-
-将输出设备配置文件设置为`profile`。
-注意：PDF/X-4要求文档中的所有色彩规格必须匹配`profile`的相同色域。确保这一点由应用程序负责。
-
-### `void QPdfOutputIntent::setRegistryName(const QUrl &name)`
-
-**作用与语义：**
-
-将特征注册表的URL设置为`name`。
-
-### `[noexcept] void QPdfOutputIntent::swap(QPdfOutputIntent &other)`
-
-**作用与语义：**
-
-将输出意图与`other`交换。该操作非常快速且从未失败。
-
-### `[noexcept] QPdfOutputIntent &QPdfOutputIntent::operator=(QPdfOutputIntent &&other)`
-
-**作用与语义：**
-
-移动对该意图赋予输出意图`other`。
-
-### `QPdfOutputIntent &QPdfOutputIntent::operator=(const QPdfOutputIntent &other)`
-
-**作用与语义：**
-
-将输出意图分配`other`该意图。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPdfOutputIntent` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- PDF 输出意图、ICC profile 和色彩管理
+- PDF/X-4 对输出条件和文档颜色一致性的要求
+- `QColorSpace` 与 PDF 元数据的关系
+- `outputCondition`、`outputConditionIdentifier`、`registryName` 的分工
+- sRGB 默认配置与印刷 profile 的差异
+- `QPdfWriter` 生成色彩敏感 PDF 时的责任边界

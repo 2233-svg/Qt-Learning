@@ -1,186 +1,139 @@
 # QKeyEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QKeyEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QKeyEvent` 是 Qt 的值类型，围绕“键事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QKeyEvent` 描述键盘事件：按键按下、释放，以及快捷键覆盖判断。它看起来只是“哪个键被按了”，实际要同时处理三层信息：Qt 抽象键值、键盘布局产生的文本、平台原生扫描码。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+最容易误解的是 `key()` 和 `text()`。`key()` 适合判断方向键、功能键、快捷键这类“按的是哪个键”；`text()` 适合文本输入，因为它考虑键盘布局、修饰键、组合输入，可能产生一个或多个 Unicode 字符，也可能为空。
 
-### 这是什么
+## 2. 类说明
 
-`QKeyEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QKeyEvent` 继承自 `QInputEvent`。常规代码会在 `QWidget::keyPressEvent()`、`QWidget::keyReleaseEvent()`、`QWindow::keyPressEvent()`、`eventFilter()` 或 `QEvent::ShortcutOverride` 分支中接触它。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QKeyEvent`：按键码、自动重复、标准快捷键匹配、原生键盘数据都属于键盘事件本身，而不是某个具体控件的能力。控件只决定是否接受事件、是否继续交给基类处理。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QKeyEvent(type, key, modifiers, text, autorep, count)` | 构造普通键盘事件，常用于测试、自定义事件派发或输入模拟。 |
+| `QKeyEvent(type, key, modifiers, nativeScanCode, nativeVirtualKey, nativeModifiers, text, autorep, count, device)` | 构造带平台原生键盘数据的事件，快捷键系统更依赖这些字段。 |
+| `key() const` | 返回 Qt 抽象按键码，如 `Qt::Key_A`、`Qt::Key_Left`。 |
+| `text() const` | 返回该按键生成的 Unicode 文本，文本输入应优先看它。 |
+| `modifiers() const` | 返回事件中的键盘修饰符组合。 |
+| `keyCombination() const` | 把 `key()` 和 `modifiers()` 合成 `QKeyCombination`。 |
+| `matches(QKeySequence::StandardKey) const` | 判断是否匹配平台标准快捷键，如 Copy、Paste、Undo。 |
+| `isAutoRepeat() const` | 判断事件是否来自长按后的自动重复。 |
+| `count() const` | 返回事件涉及的按键/文本数量，压缩事件和组合输入时尤其要注意。 |
+| `nativeScanCode() const` | 返回平台扫描码，偏硬件位置。 |
+| `nativeVirtualKey() const` | 返回平台虚拟键或 keysym，偏操作系统键值。 |
+| `nativeModifiers() const` | 返回平台原生修饰符。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 命令控制看 `key()`，文本输入看 `text()`
 
-- 头文件：`#include <QKeyEvent>`
-- 继承自：QInputEvent
-- 直接派生类：未在类页中列出
+方向键、删除键、Esc、F1 这类控制按键应该用 `key()` 判断。
 
-CMake 配置：
+```cpp
+void Editor::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape) {
+        cancelCompletion();
+        event->accept();
+        return;
+    }
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+    if (!event->text().isEmpty() && !event->text().at(0).isControl()) {
+        insertPlainText(event->text());
+        event->accept();
+        return;
+    }
+
+    QWidget::keyPressEvent(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+不要用 `key()` 自己推导字符大小写。不同键盘布局、输入法、死键组合会让这种推导很快失效。
 
-### 工作机制
+### 标准快捷键用 `matches()`
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+跨平台快捷键不要硬编码 `Ctrl+C`。macOS 上复制通常显示为 Command+C，而 `matches()` 会按平台标准判断。
 
-### 状态、生命周期和线程
+```cpp
+void TextView::keyPressEvent(QKeyEvent *event)
+{
+    if (event->matches(QKeySequence::Copy)) {
+        copySelection();
+        event->accept();
+        return;
+    }
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+    QWidget::keyPressEvent(event);
+}
+```
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+如果你实现的是应用专属快捷键，可以用 `QShortcut` 或 `QAction`；如果你正在控件内部拦截标准编辑命令，`matches()` 更合适。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+### 自动重复要按交互类型决定是否接受
 
-## 3. 直接使用
+长按方向键连续移动光标是合理的；长按保存快捷键连续保存通常不是。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+```cpp
+void Player::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Space) {
+        if (!event->isAutoRepeat())
+            togglePaused();
+        event->accept();
+        return;
+    }
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+    QWidget::keyPressEvent(event);
+}
+```
 
-### 公有函数
+`isAutoRepeat()` 对压缩键盘事件可能不够精细，所以对高频输入场景，最好结合业务状态做二次防护。
 
-- `QKeyEvent(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers, const QString &text = QString(), bool autorep = false, quint16 count = 1)`
-- `QKeyEvent(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers, quint32 nativeScanCode, quint32 nativeVirtualKey, quint32 nativeModifiers, const QString &text = QString(), bool autorep = false, quint16 count = 1, const QInputDevice *device = QInputDevice::primaryKeyboard())`
-- `int count() const`
-- `bool isAutoRepeat() const`
-- `int key() const`
-- `(since 6.0) QKeyCombination keyCombination() const`
-- `bool matches(QKeySequence::StandardKey key) const`
-- `Qt::KeyboardModifiers modifiers() const`
-- `quint32 nativeModifiers() const`
-- `quint32 nativeScanCode() const`
-- `quint32 nativeVirtualKey() const`
-- `QString text() const`
+### `ShortcutOverride` 要明确接受
 
-## 5. API 逐个说明
+当事件类型是 `QEvent::ShortcutOverride` 时，控件有机会阻止全局快捷键。例如文本框在输入时可能要保留某些组合键给自己。只有调用 `accept()`，Qt 才会认为你覆盖了快捷键。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+```cpp
+bool SearchBox::event(QEvent *event)
+{
+    if (event->type() == QEvent::ShortcutOverride) {
+        auto *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->key() == Qt::Key_Escape) {
+            keyEvent->accept();
+            return true;
+        }
+    }
 
-### `QKeyEvent::QKeyEvent(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers, const QString &text = QString(), bool autorep = false, quint16 count = 1)`
+    return QLineEdit::event(event);
+}
+```
 
-**作用与语义：**
+## 5. 使用场景
 
-构造一个按键事件对象。
-`type`参数必须是`QEvent::KeyPress`、`QEvent::KeyRelease`或`QEvent::ShortcutOverride`。
-Int `key` 是事件循环应监听的`Qt::Key`代码。如果 `key` 为 0，则该事件不是已知密钥的结果;例如，可能是 compose 序列或键盘宏的结果。`modifiers` 存储键盘修饰符，给定的`text`是密钥生成的 Unicode 文本。如果 `autorep` 为真，则 `isAutoRepeat()` 为真。`count` 是事件涉及的密钥数量。
+`QKeyEvent` 是自定义控件键盘可用性的基础。列表、表格、画布、编辑器、游戏控制、终端模拟器都需要通过它处理方向键、确认取消、文本输入和模式切换。
 
-### `QKeyEvent::QKeyEvent(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers, quint32 nativeScanCode, quint32 nativeVirtualKey, quint32 nativeModifiers, const QString &text = QString(), bool autorep = false, quint16 count = 1, const QInputDevice *device = QInputDevice::primaryKeyboard())`
+它也用于快捷键体系的边界处理。普通命令建议交给 `QAction`、`QShortcut` 和菜单系统；但当某个控件需要在局部上下文里覆盖或解释快捷键时，就会直接处理 `QKeyEvent`。
 
-**作用与语义：**
+在输入法相关场景里，`QKeyEvent` 只是一部分。真正的预编辑文本、候选确认和复杂组合输入还会涉及 `QInputMethodEvent`。如果你在做文本编辑控件，不要只靠键盘事件实现输入法。
 
-构造一个按键事件对象。
-`type`参数必须是`QEvent::KeyPress`、`QEvent::KeyRelease`或`QEvent::ShortcutOverride`。
-整数`key`是事件循环应监听的`Qt::Key`代码。如果`key`为0，则该事件不是已知密钥的结果;例如，它可能是compose序列或键盘宏的结果。`modifiers`中存储键盘修饰符，给定`text`是密钥生成的Unicode文本。如果`autorep`为真，则`isAutoRepeat()`为真。`count`是事件涉及的密钥数量。
-除了常规的密钥事件数据外，还包含`nativeScanCode`、`nativeVirtualKey`和`nativeModifiers`。这些额外数据被快捷方式系统用来决定触发哪些快捷方式。
+## 6. 常见坑与经验
 
-### `int QKeyEvent::count() const`
+不要用 `key()` 处理普通文字输入。`Qt::Key_A` 不等于用户想输入 `a`，更不等于所有语言文字输入。
 
-**作用与语义：**
+不要忘记调用基类实现。控件默认的 Tab 焦点移动、文本编辑快捷键、助记符和平台行为都可能依赖基类处理。
 
-返回该事件涉及的密钥数量。如果`text()`不是空的，则仅为字符串长度。
+不要把 native 字段写进跨平台业务逻辑。`nativeScanCode()`、`nativeVirtualKey()`、`nativeModifiers()` 适合诊断、快捷键底层匹配或平台适配，不适合作为普通功能分支的主依据。
 
-### `bool QKeyEvent::isAutoRepeat() const`
+不要假设修饰键状态绝对可靠。某些平台和键盘组合可能出现边界情况；关键命令应以当前事件和应用状态共同判断。
 
-**作用与语义：**
+## 7. 知识点覆盖
 
-如果该事件来自自动重复键，返回`true`;如果来自初始按键，返回`false`。
-注意，如果事件是一个多键压缩事件，且部分由自动重复导致，该函数可能会不确定地返回真或假。
-
-### `int QKeyEvent::key() const`
-
-**作用与语义：**
-
-返回按下或释放的按键的代码。
-请参阅 `Qt::Key` 获取键盘代码列表。这些代码与底层窗口系统无关。请注意，该函数不会区分大小写字母，如需区分，请使用 `text()` 函数（返回按键生成的 Unicode 文本）。
-值为 0 或 `Qt::Key_unknown` 表示事件不是已知按键产生的；例如，它可能是组合序列、键盘宏或按键事件压缩导致的结果。
-
-### `[since 6.0] QKeyCombination QKeyEvent::keyCombination() const`
-
-**作用与语义：**
-
-返回一个包含该事件携带`key()`和`modifiers()`的 `QKeyCombination`对象。
-
-### `bool QKeyEvent::matches(QKeySequence::StandardKey key) const`
-
-**作用与语义：**
-
-如果按键事件符合给定标准`key`，返回`true`;否则返回`false`。
-
-### `Qt::KeyboardModifiers QKeyEvent::modifiers() const`
-
-**作用与语义：**
-
-返回事件发生后立即存在的键盘修饰标志。
-警告：此功能并非总是可信。用户可能会同时按下两个Shift键并松开其中一个来混淆它。
-
-### `quint32 QKeyEvent::nativeModifiers() const`
-
-**作用与语义：**
-
-返回按键事件的本地修饰符。如果按键事件不包含该数据，则返回 0。
-注意：即使密钥事件包含扩展信息，本地修饰符也可以为0。
-
-### `quint32 QKeyEvent::nativeScanCode() const`
-
-**作用与语义：**
-
-返回密钥事件的本地扫描码。如果密钥事件不包含该数据，返回为0。
-注意：本地扫描码可能为0，即使密钥事件包含扩展信息。
-
-### `quint32 QKeyEvent::nativeVirtualKey() const`
-
-**作用与语义：**
-
-返回本地虚拟键，或键事件的键符号。如果键事件不包含该数据，则返回0。
-注意：本地虚拟密钥可能为0，即使密钥事件包含扩展信息。
-
-### `QString QKeyEvent::text() const`
-
-**作用与语义：**
-
-返回该密钥生成的Unicode文本。
-文本不限于可打印的Unicode代码点范围，可能包含控制字符或其他Unicode类别字符，包括`QChar::Other_PrivateUse`。
-文本也可能为空，例如当按下Shift、Control、Alt和Meta等修饰键（取决于平台）时。`key()`函数始终返回有效值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QKeyEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QKeyEvent` 应覆盖 Qt 事件系统、键盘布局、Unicode 文本输入、快捷键覆盖、自动重复、标准快捷键、`QKeyCombination`、平台原生键盘码、输入法事件和控件默认键盘行为。真正写好键盘交互，重点不是记函数名，而是分清“按键控制”和“文本输入”这两条线。

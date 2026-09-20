@@ -1,245 +1,148 @@
 # QCheckBox
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QCheckBox`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QCheckBox` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QCheckBox` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QCheckBox` 是用于表达“可独立开关的选项”的按钮控件。它继承 `QAbstractButton`，因此拥有文本、快捷键、点击、checked 状态等通用按钮能力；同时它增加了 `Qt::CheckState`，可以表示未选中、部分选中、选中三种状态。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+二态复选框表达布尔选项：启用自动保存、记住密码、显示网格。三态复选框表达“混合/部分应用”的状态：树形选择里父节点的部分子项被选中，批量编辑时多个对象当前值不一致。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+### 适合使用的场景
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+- 用户可以独立开启或关闭某个选项。
+- 多个选项可以同时成立，不需要互斥。
+- 需要表示部分选中或混合状态。
+- 设置页、过滤面板、权限勾选、树形选择的节点状态。
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+### 不适合的场景
+
+- 多个选项只能选一个时，用 `QRadioButton` 或 `QButtonGroup`。
+- 执行一次命令时，用 `QPushButton`。
+- 工具栏里的紧凑切换按钮，可能用 checkable `QToolButton` 更合适。
+
+### 最小示例
+
+```cpp
+auto *checkBox = new QCheckBox(tr("&Enable notifications"), this);
+checkBox->setChecked(settings.notificationsEnabled());
+
+connect(checkBox, &QCheckBox::checkStateChanged, this, [this](Qt::CheckState state) {
+    settings.setNotificationsEnabled(state == Qt::Checked);
+});
+```
+
+Qt 6.7 起 `checkStateChanged(Qt::CheckState)` 直接给出三态状态，比只看 `toggled(bool)` 更完整。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QCheckBox>`
-- 继承自：QAbstractButton
-- 直接派生类：未在类页中列出
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QAbstractButton`
+- 直接派生类：类页未列出
 
-CMake 配置：
+`QCheckBox` 的大多数按钮行为来自 `QAbstractButton`。如果只需要二态，`isChecked()` / `setChecked()` 足够；如果启用三态，应使用 `checkState()` / `setCheckState()`，否则会丢失 `PartiallyChecked`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+| API | 用途速查 |
+| --- | --- |
+| `tristate : bool` | 是否允许第三种“部分选中”状态。 |
+| `QCheckBox(QWidget *parent)` | 创建无文本复选框。 |
+| `QCheckBox(const QString &text, QWidget *parent)` | 创建带文本复选框。 |
+| `~QCheckBox()` | 销毁复选框。 |
+| `checkState() const` | 返回 `Unchecked`、`PartiallyChecked` 或 `Checked`。 |
+| `setCheckState(Qt::CheckState state)` | 设置完整三态状态。 |
+| `isTristate() const` / `setTristate(bool)` | 读取或启用三态能力。 |
+| `checkStateChanged(Qt::CheckState state)` | Qt 6.7 起，状态变化时发出完整 check state。 |
+| `sizeHint() const` / `minimumSizeHint() const` | 返回复选框推荐尺寸。 |
+| `initStyleOption(QStyleOptionButton *option) const` | 为自定义绘制准备 style option。 |
+| `nextCheckState()` | 定义用户点击后状态如何推进。 |
+| `checkStateSet()` | 程序设置状态后的子类钩子。 |
+| `hitButton(const QPoint &pos) const` | 判断点击坐标是否命中复选框。 |
+| `event()` / `mouseMoveEvent()` / `paintEvent()` | 事件处理与绘制实现。 |
 
-### 工作机制
-
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
-
-### 状态、生命周期和线程
-
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `tristate : bool`
-
-### 公有函数
-
-- `QCheckBox(QWidget *parent = nullptr)`
-- `QCheckBox(const QString &text, QWidget *parent = nullptr)`
-- `virtual ~QCheckBox()`
-- `Qt::CheckState checkState() const`
-- `bool isTristate() const`
-- `void setCheckState(Qt::CheckState state)`
-- `void setTristate(bool y = true)`
-
-### 重实现的公有函数
-
-- `virtual QSize minimumSizeHint() const override`
-- `virtual QSize sizeHint() const override`
-
-### 信号
-
-- `(since 6.7) void checkStateChanged(Qt::CheckState state)`
-
-### 保护函数
-
-- `virtual void initStyleOption(QStyleOptionButton *option) const`
-
-### 重实现的保护函数
-
-- `virtual void checkStateSet() override`
-- `virtual bool event(QEvent *e) override`
-- `virtual bool hitButton(const QPoint &pos) const override`
-- `virtual void mouseMoveEvent(QMouseEvent *e) override`
-- `virtual void nextCheckState() override`
-- `virtual void paintEvent(QPaintEvent *) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 4. API 逐项说明
 
 ### `tristate : bool`
 
-**作用与语义：**
+启用后，复选框可以处于 `Qt::PartiallyChecked`。这不是“不确定是否选中”的模糊布尔值，而是一个明确 UI 语义：当前范围内有一部分被选中。
 
-该属性确定复选框是否为三态复选框。
-默认为假，即复选框只有两个状态。
+三态适合聚合状态，不适合普通 yes/no 设置。滥用三态会让用户不知道点击后会发生什么。
 
-**如何使用：** 调用 `tristate()` 读取当前值；它不会修改应用状态。
+### `QCheckBox(QWidget *parent = nullptr)` / `QCheckBox(const QString &text, QWidget *parent = nullptr)`
 
-### `[explicit] QCheckBox::QCheckBox(QWidget *parent = nullptr)`
+创建复选框。带文本构造函数最常用，文本可使用 `&` 设置助记符。
 
-**作用与语义：**
+无文本复选框通常只适合表格列、紧凑列表或旁边已经有清楚说明的场景；否则可访问性和可理解性都较弱。
 
-构建一个包含给定`parent`的复选框，但不含文本。
-`parent`传递给`QAbstractButton`构造器。
+### `~QCheckBox()`
 
-### `[explicit] QCheckBox::QCheckBox(const QString &text, QWidget *parent = nullptr)`
+销毁复选框。通常由父控件负责，不需要手动删除。
 
-**作用与语义：**
+状态要保存到设置或模型里，不能依赖控件对象长期存在。
 
-构造一个包含给定`parent`和 `text`的复选框。
-`parent`传递给`QAbstractButton`构造者。
+### `checkState() const`
 
-### `[virtual noexcept] QCheckBox::~QCheckBox()`
+返回完整状态：`Qt::Unchecked`、`Qt::PartiallyChecked`、`Qt::Checked`。
 
-**作用与语义：**
+只要启用了三态，就优先用这个函数而不是 `isChecked()`。`isChecked()` 只能表达布尔结果，容易把部分选中处理错。
 
-毁灭者。
+### `setCheckState(Qt::CheckState state)`
 
-### `Qt::CheckState QCheckBox::checkState() const`
+设置完整三态状态。传入 `PartiallyChecked` 时通常应先启用 `setTristate(true)`，让用户和 style 都能正确表达第三态。
 
-**作用与语义：**
+用于同步模型到界面时很常见，例如父节点根据子节点选择情况更新自己状态。
 
-返回复选框的检查状态。如果你不需要三态支持，也可以使用`QAbstractButton::isChecked()`，返回布尔值。
+### `isTristate() const` / `setTristate(bool y = true)`
 
-### `[signal, since 6.7] void QCheckBox::checkStateChanged(Qt::CheckState state)`
+读取或设置是否允许三态。启用后，用户点击时状态循环会包含部分选中；具体顺序由 `nextCheckState()` 控制。
 
-**作用与语义：**
+如果第三态只是程序显示的中间状态，而不希望用户循环到它，可以通过子类重写 `nextCheckState()` 实现更精确的行为。
 
-每当复选框状态发生变化，即用户勾选或取消勾选时，都会发出该信号。
-`state`包含了复选框的新`Qt::CheckState`。
+### `checkStateChanged(Qt::CheckState state)`
 
-### `[override virtual protected] void QCheckBox::checkStateSet()`
+Qt 6.7 起提供，状态变化时发出完整 `Qt::CheckState`。它比 `toggled(bool)` 更适合三态复选框。
 
-**作用与语义：**
+二态复选框也可以用它，代码会更一致；但如果你只关心布尔开关，`toggled(bool)` 仍然简单。
 
-重装：`QAbstractButton::checkStateSet()`。
-当使用 `setChecked()` 时调用该虚拟处理器，除非在 `nextCheckState()` 内部调用。它允许子类重置其中间按钮状态。
+### `sizeHint()` / `minimumSizeHint()`
 
-### `[override virtual protected] bool QCheckBox::event(QEvent *e)`
+返回包含指示框、文本、字体、style 间距的推荐尺寸。不同平台复选框大小和文本间距可能不同。
 
-**作用与语义：**
+布局里不要手动把复选框固定到某个像素高度；让 style 决定更像原生应用。
 
-重实现自：`QAbstractButton::event`（QEvent *e）。
+### `initStyleOption(QStyleOptionButton *option) const`
 
-### `[override virtual protected] bool QCheckBox::hitButton(const QPoint &pos) const`
+为自定义绘制填充当前复选框状态，包括 checked、三态、文本、图标、启用和焦点等信息。
 
-**作用与语义：**
+子类绘制时应优先使用它，避免漏掉 `PartiallyChecked` 或禁用状态的视觉。
 
-重装：`QAbstractButton::hitButton`（const QPoint & pos） const.
-如果`pos`在可点击的按钮矩形内，返回`true`;否则返回`false`。
-默认情况下，可点击区域是整个小部件。子类可能会重新实现此功能，以支持不同形状和大小的可点击区域。
+### `nextCheckState()` / `checkStateSet()`
 
-### `[virtual protected] void QCheckBox::initStyleOption(QStyleOptionButton *option) const`
+`nextCheckState()` 定义用户激活控件时状态如何变化；`checkStateSet()` 处理程序设置状态后的钩子。
 
-**作用与语义：**
+自定义三态循环、父子树选择规则、或“部分选中点击后直接全选”的行为，可以从这里入手。
 
-用该`QCheckBox`的值初始化`option`。该方法适用于需要`QStyleOptionButton`但不想自行填充所有信息的子类。
+### `hitButton()` / `event()` / `mouseMoveEvent()` / `paintEvent()`
 
-### `[override virtual] QSize QCheckBox::minimumSizeHint() const`
+这些是命中测试、事件和绘制相关的底层接口。普通使用不需要重写。
 
-**作用与语义：**
+如果重写，要保持文本区域也可点击，这是复选框的常见用户预期；只让小方框可点会降低可用性。
 
-重新实现属性的访问函数：`QWidget::minimumSizeHint`。
+## 5. 深入实践与常见坑
 
-### `[override virtual protected] void QCheckBox::mouseMoveEvent(QMouseEvent *e)`
+### 多选用复选框，单选用单选按钮
 
-**作用与语义：**
+一组复选框默认可以同时选中多个。若业务规则只能选一个，用 `QRadioButton` 或 `QButtonGroup`，不要在每个 `toggled()` 里手动取消其他复选框。
 
-重实现自：`QAbstractButton::mouseMoveEvent`（QMouseEvent *e）。
+### 三态要有真实语义
 
-### `[override virtual protected] void QCheckBox::nextCheckState()`
+`PartiallyChecked` 应表示“部分应用”或“混合值”。如果只是“未知”，更适合显示说明文字或禁用状态，而不是让用户猜第三态。
 
-**作用与语义：**
+### 保存配置时别丢状态
 
-重装：`QAbstractButton::nextCheckState()`。
-当按钮被点击时调用这个虚拟处理器。默认实现调用`setChecked`（！`isChecked()`），如果按钮`isCheckable()`。它允许子类实现中间按钮状态。
-
-### `[override virtual protected] void QCheckBox::paintEvent(QPaintEvent *)`
-
-**作用与语义：**
-
-重构：`QAbstractButton::paintEvent`（QPaintEvent *e）。
-
-### `void QCheckBox::setCheckState(Qt::CheckState state)`
-
-**作用与语义：**
-
-将复选框的检查状态设置为`state`。如果你不需要三态支持，也可以使用`QAbstractButton::setChecked()`，这需要布尔值。
-
-### `[override virtual] QSize QCheckBox::sizeHint() const`
-
-**作用与语义：**
-
-重新实现了属性的访问函数：`QWidget::sizeHint`。
-
-### `bool isTristate() const`
-
-**作用与语义：**
-
-该属性确定复选框是否为三态复选框。
-默认为假，即复选框只有两个状态。
-
-**如何使用：** 调用 `isTristate()` 读取当前值；它不会修改应用状态。
-
-### `void setTristate(bool y = true)`
-
-**作用与语义：**
-
-该属性确定复选框是否为三态复选框。
-默认为假，即复选框只有两个状态。
-
-**如何使用：** 调用 `setTristate(...)` 修改 `tristate`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QCheckBox` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+二态配置保存 bool 即可；三态配置要保存 `Qt::CheckState` 或自己的枚举。把部分选中压成 true/false 会丢信息。

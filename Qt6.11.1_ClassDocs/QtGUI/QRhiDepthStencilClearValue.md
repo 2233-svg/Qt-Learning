@@ -1,154 +1,70 @@
 # QRhiDepthStencilClearValue
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI Private · 来自 `QRhiDepthStencilClearValue`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiDepthStencilClearValue` 是 render pass 开始时用于清除 depth/stencil 附件的小值对象。它只保存两个值：深度清除值和模板清除值。默认是深度 `1.0f`、模板 `0`，对应传统深度测试里“远平面最大深度、模板清零”的常见设置。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不创建 depth buffer，也不决定是否启用 depth/stencil 测试；这些由 render target 附件和 `QRhiGraphicsPipeline` 状态决定。它只回答“beginPass 清除时写什么值”。
 
-### 这是什么
-
-`QRhiDepthStencilClearValue` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::GuiPrivate`
+- 类型性质：小型值类型，可比较、可哈希
+- 使用入口：`QRhiCommandBuffer::beginPass(...)`
+- 默认值：depth `1.0f`，stencil `0`
 
-CMake 配置：
+如果 render target 以 preserve depth/stencil 内容创建，清除值可能被忽略。清除值是否生效取决于 render target 的 load/preserve 语义。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `QRhiDepthStencilClearValue()` | 创建默认清除值：深度 1.0，模板 0。 |
+| `QRhiDepthStencilClearValue(float d, quint32 s)` | 指定深度和模板清除值。 |
+| `depthClearValue()` / `setDepthClearValue()` | 读取/设置深度清除值。 |
+| `stencilClearValue()` / `setStencilClearValue()` | 读取/设置模板清除值。 |
+| `operator==` / `operator!=` | 比较两个清除值。 |
+| `qHash()` | 让清除值可用于哈希容器或缓存键。 |
+
+## 4. 关键用法
+
+```cpp
+QRhiDepthStencilClearValue dsClear(1.0f, 0);
+cb->beginPass(rt, QColor(Qt::black), dsClear, updates);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这是最普通的清除方式：颜色清成黑色，深度清成最远，模板清成 0。
 
-### 工作机制
+### Reverse-Z 场景
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+QRhiDepthStencilClearValue dsClear(0.0f, 0);
+```
 
-### 状态、生命周期和线程
+如果你的深度比较和投影矩阵采用 reverse-Z，即越远越接近 0、越近越接近 1，清除深度通常要变成 `0.0f`，并且 pipeline 的 depth compare 也要配套改变。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 5. 使用场景
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- 每个 render pass 开始时清 depth/stencil。
+- 常规 3D 渲染：depth 清 1.0。
+- reverse-Z 渲染：depth 清 0.0。
+- stencil mask、轮廓、裁剪等算法开始前重置 stencil。
+- 作为 render pass 配置缓存键的一部分。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+- **清除值不启用测试。** Depth/stencil test 在 `QRhiGraphicsPipeline` 中设置。
+- **默认深度值不适合所有管线。** reverse-Z 或自定义深度范围要同步修改 clear value 和 compare op。
+- **stencil 是整数值。** 它不是颜色，也不是归一化浮点。
+- **preserve 内容时清除值可能无效。** render target 要求保留内容时，beginPass 的 clear value 会被忽略。
+- **深度范围受后端 clip space 影响。** 但 RHI 仍以 pass clear value 表达你要写入的深度值。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QRhiDepthStencilClearValue()`
-- `QRhiDepthStencilClearValue(float d, quint32 s)`
-- `float depthClearValue() const`
-- `void setDepthClearValue(float d)`
-- `void setStencilClearValue(quint32 s)`
-- `quint32 stencilClearValue() const`
-
-### 相关非成员函数
-
-- `size_t qHash(const QRhiDepthStencilClearValue &key, size_t seed = 0)`
-- `bool operator!=(const QRhiDepthStencilClearValue &a, const QRhiDepthStencilClearValue &b)`
-- `bool operator==(const QRhiDepthStencilClearValue &a, const QRhiDepthStencilClearValue &b)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[constexpr noexcept] QRhiDepthStencilClearValue::QRhiDepthStencilClearValue()`
-
-**作用与语义：**
-
-构建深度/模板清除值，深度清除值为1.0f，模板清除值为0。
-
-### `QRhiDepthStencilClearValue::QRhiDepthStencilClearValue(float d, quint32 s)`
-
-**作用与语义：**
-
-构建深度/模板清除值，使用深度清晰值`d`和模板清晰值`s`。
-
-### `float QRhiDepthStencilClearValue::depthClearValue() const`
-
-**作用与语义：**
-
-返回深度净值。大多数情况下，这会是1.0华氏度。
-
-### `void QRhiDepthStencilClearValue::setDepthClearValue(float d)`
-
-**作用与语义：**
-
-将深度清除值设为`d`。
-
-### `void QRhiDepthStencilClearValue::setStencilClearValue(quint32 s)`
-
-**作用与语义：**
-
-将模板清除值设置为`s`。
-
-### `quint32 QRhiDepthStencilClearValue::stencilClearValue() const`
-
-**作用与语义：**
-
-返回模板清除值。大多数情况下，这个值是0。
-
-### `[noexcept] size_t qHash(const QRhiDepthStencilClearValue &key, size_t seed = 0)`
-
-**作用与语义：**
-
-返回`key`的哈希值，使用`seed`来做种。
-
-### `[noexcept] bool operator!=(const QRhiDepthStencilClearValue &a, const QRhiDepthStencilClearValue &b)`
-
-**作用与语义：**
-
-如果两个 `QRhiDepthStencilClearValue` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
-
-### `[noexcept] bool operator==(const QRhiDepthStencilClearValue &a, const QRhiDepthStencilClearValue &b)`
-
-**作用与语义：**
-
-如果两个`QRhiDepthStencilClearValue`对象`a`和`b`的值相等，返回`true`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiDepthStencilClearValue` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- render pass 清除值和附件 load/preserve 语义
+- depth clear、stencil clear 与 pipeline test 的分离
+- 常规深度、reverse-Z 和 compare op 配套
+- 值类型比较、哈希和缓存用途

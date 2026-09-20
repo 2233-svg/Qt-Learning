@@ -1,126 +1,40 @@
 # QtTaskTree::ExecutionMode
+> Qt 6.11.1 · Qt TaskTree · 来自 `QtTaskTree::ExecutionMode`
 
-> Qt 6.11.1 · Qt TaskTree
+## 作用定位
 
-## 1. 先建立直觉
+`ExecutionMode` 是放在 `Group` 里的执行策略项，用来声明组内子任务按顺序跑还是并行跑。它是 recipe 的控制标记，不是独立任务。
 
-**一句话定位：** `QtTaskTree::ExecutionMode` 是并发执行或同步类型，负责任务、线程、future、promise 或共享资源的协调。
-
-**模块背景：** 这是 Qt TaskTree 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QtTaskTree::ExecutionMode` 是 并发与任务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
-
-**适用场景：** 先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <qtasktree.h>`
-- 继承自：QtTaskTree::GroupItem
-- 直接派生类：QtTaskTree::ParallelLimit
+- 基类：`GroupItem`
+- 派生：`ParallelLimit`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS TaskTree)
-target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
-```
+| API | 说明 |
+| --- | --- |
+| `sequential` | 组内任务按顺序执行，前一步完成后再启动下一步。 |
+| `parallel` | 组内可并行启动，适合彼此独立的异步任务。 |
+| `parallelIdealThreadCountLimit` | 并行数量按系统理想线程数限制。 |
+| `ParallelLimit(limit)` | 自定义并发上限。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 有依赖链时使用 `sequential`。
+- 多个网络请求、独立检查、并发 I/O 使用 `parallel`。
+- CPU 密集或资源受限任务使用 `ParallelLimit`。
 
-并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- 并行不等于线程安全；并行任务共享状态时必须自己同步。
+- 对同一个 QObject 的方法调用仍受线程归属影响，别把 QObject 当普通数据并发改。
+- `parallel` 适合异步 I/O；CPU 任务还要看底层任务是否真的在线程池执行。
 
-**生命周期：** 任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
+## 知识点覆盖
 
-**状态与结果：** 区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-**线程与事件循环：** GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-## 3. 直接使用
-
-先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 配套与继承 API
-
-- `extern const QtTaskTree::ExecutionMode QtTaskTree::sequential`
-- `extern const QtTaskTree::ExecutionMode QtTaskTree::parallel`
-- `extern const QtTaskTree::ExecutionMode QtTaskTree::parallelIdealThreadCountLimit`
-- `QtTaskTree::ParallelLimit::ParallelLimit(int limit)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `extern const QtTaskTree::ExecutionMode QtTaskTree::sequential`
-
-**作用与语义：**
-
-一个方便的全局群元素，描述顺序执行模式。
-这是组元素的默认执行模式。
-当一个组没有执行模式时，它会以顺序模式运行。一个组的所有直接子任务都以链条形式启动，这样一个任务结束后，下一个任务就会开始。这样你可以在上一个任务开始前，将结果作为输入传递给下一个任务。该模式保证只有在上一个任务结束后才会启动下一个任务。
-
-### `extern const QtTaskTree::ExecutionMode QtTaskTree::parallel`
-
-**作用与语义：**
-
-一个方便的全局群元素，描述并行执行模式。
-组中的所有直接子任务在组启动后启动，不等待前一个子任务完成。在此模式下，所有子任务同时运行。
-
-### `extern const QtTaskTree::ExecutionMode QtTaskTree::parallelIdealThreadCountLimit`
-
-**作用与语义：**
-
-一个方便的全局组元素，描述并行执行模式，同时运行的任务数量有限。该限制等于排除调用线程的理想线程数。
-这是通往以下的捷径：
-
-**官方示例：**
-
-```cpp
- ParallelLimit(qMax(QThread::idealThreadCount() - 1, 1))
-```
-
-### `QtTaskTree::ParallelLimit::ParallelLimit(int limit)`
-
-**作用与语义：**
-
-构造一个并行执行模式，`limit`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-### 状态和错误边界
-
-区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-### 线程边界
-
-GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-### 最容易出现的错误
-
-不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QtTaskTree::ExecutionMode` 所属机制类型：并发与任务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 顺序和并行执行策略
+- 并发上限
+- recipe 控制项
+- 任务依赖和资源限制

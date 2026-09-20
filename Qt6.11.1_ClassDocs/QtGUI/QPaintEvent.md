@@ -1,126 +1,93 @@
 # QPaintEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPaintEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPaintEvent` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QPaintEvent` 表示某个绘制设备的指定区域需要重新绘制。它携带的是“脏区域”，也就是 Qt 认为这次必须更新的矩形或区域。真正绘制由你在 `paintEvent()` 中用 `QPainter` 完成。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它的核心价值不是告诉你“现在可以画了”这么简单，而是告诉你“尽量只画这些区域”。对于大画布、表格、图像查看器、实时图表，正确利用 `rect()` / `region()` 可以显著减少重绘成本。
 
-### 这是什么
+## 2. 类说明
 
-`QPaintEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QPaintEvent` 继承自 `QEvent`。Widgets 中通常通过 `QWidget::paintEvent()` 接收；窗口或其他绘制设备也可能有自己的绘制流程。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QPaintEvent`：脏矩形和脏区域属于绘制事件本身；画笔、画刷、字体、变换和合成模式由 `QPainter` 管理。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QPaintEvent(paintRect)` | 构造一个矩形脏区域的绘制事件。 |
+| `QPaintEvent(paintRegion)` | 构造一个任意区域的绘制事件。 |
+| `rect() const` | 返回需要重绘区域的包围矩形，快速裁剪时常用。 |
+| `region() const` | 返回精确脏区域，适合复杂局部重绘。 |
+| `type()` | 来自 `QEvent`，绘制事件通常为 `QEvent::Paint`。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QPaintEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+### 在 `paintEvent()` 内创建 `QPainter`
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
+void MeterWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
+    painter.setClipRegion(event->region());
+
+    drawBackground(&painter, event->rect());
+    drawNeedle(&painter);
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+对 `QWidget` 来说，通常只应在 `paintEvent()` 内对该控件创建 `QPainter`。业务状态变化时调用 `update()`，让 Qt 稍后合并并派发绘制事件。
 
-### 公有函数
+### 用脏区域减少绘制量
 
-- `QPaintEvent(const QRect &paintRect)`
-- `QPaintEvent(const QRegion &paintRegion)`
-- `const QRect & rect() const`
-- `const QRegion & region() const`
+```cpp
+void TileCanvas::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
 
-## 5. API 逐个说明
+    for (const QRect &tileRect : visibleTiles(event->rect()))
+        paintTile(&painter, tileRect);
+}
+```
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+如果每次都绘制整个大画布，滚动和局部变化会变慢。`rect()` 是粗略但便宜的入口，`region()` 更精确但处理成本略高。
 
-### `[explicit] QPaintEvent::QPaintEvent(const QRect &paintRect)`
+### 用 `update(rect)` 触发局部重绘
 
-**作用与语义：**
+```cpp
+void Waveform::setCursorPosition(int x)
+{
+    const QRect oldRect = cursorRect(m_cursorX);
+    m_cursorX = x;
+    update(oldRect | cursorRect(m_cursorX));
+}
+```
 
-构建一个带有需要更新矩形的绘画事件对象。区域由`paintRect`指定。
+不要直接调用 `paintEvent()`。`update()` 会把多次请求合并，等事件循环合适时统一重绘；`repaint()` 会更急迫，通常只在极少数需要同步刷新的场景使用。
 
-### `[explicit] QPaintEvent::QPaintEvent(const QRegion &paintRegion)`
+## 5. 使用场景
 
-**作用与语义：**
+`QPaintEvent` 是所有自绘 Widgets 的基础：图表、仪表盘、流程图、图像编辑器、代码编辑器、波形、棋盘、地图、时间轴、CAD 视图等。
 
-构建一个带有需要更新区域的绘画事件对象。该区域由`paintRegion`指定。
+它也用于性能优化。复杂控件可以把静态背景缓存到 pixmap，把动态小区域通过 `update(rect)` 请求局部刷新，再在绘制事件里根据脏区域决定画什么。
 
-### `const QRect &QPaintEvent::rect() const`
+在高 DPI 环境下，`QPaintEvent` 的坐标仍是设备无关坐标；真正像素缓存和图像资源要结合 `devicePixelRatioF()` 管理。
 
-**作用与语义：**
+## 6. 常见坑与经验
 
-返回需要更新的矩形。
+不要在 `paintEvent()` 里修改会立即触发布局或重绘的业务状态。绘制应尽量是当前状态的纯呈现，否则容易产生更新循环。
 
-### `const QRegion &QPaintEvent::region() const`
+不要长期保存 `QPainter` 或 `QPaintEvent`。绘制上下文只在当前绘制阶段有效。
 
-**作用与语义：**
+不要忽略裁剪。即使你不手动设置 clip，Qt 也会做一定裁剪；但复杂控件自己根据 `rect()` / `region()` 少做工作，收益更明显。
 
-返回需要更新的区域。
+不要在后台线程直接绘制 QWidget。后台线程可以准备 `QImage` 数据，最终显示仍应回到 GUI 线程。
 
-## 6. 深入实践与常见坑
+不要把 `rect()` 当成唯一精确区域。它是 `region()` 的包围矩形，可能包含实际不需要更新的区域。
 
-### 生命周期和资源边界
+## 7. 知识点覆盖
 
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPaintEvent` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QPaintEvent` 应覆盖 QWidget 绘制生命周期、`QPainter` 使用时机、脏矩形、脏区域、`update()` 合并、局部重绘、裁剪、高 DPI、缓存策略、GUI 线程绘制和避免重绘递归。

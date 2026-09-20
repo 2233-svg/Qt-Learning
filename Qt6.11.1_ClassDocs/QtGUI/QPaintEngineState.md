@@ -1,237 +1,113 @@
 # QPaintEngineState
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPaintEngineState`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPaintEngineState` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QPaintEngineState` 是 `QPainter` 递交给 `QPaintEngine::updateState()` 的只读状态差分包。它告诉后端“这次只有笔、变换、裁剪或透明度等哪些部分变了”，并提供这些新值。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是应用层保存 painter 状态的对象。普通绘制代码使用 `QPainter::save()`/`restore()`；只有编写 paint engine 时才读取这个类，并且必须先看 `state()` 再读取对应 getter。
 
-### 这是什么
-
-`QPaintEngineState` 是 二维绘制状态机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPaintEngineState>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：由 Qt 在更新阶段提供的只读状态视图，不由应用主动构造或长期保存。
+- 关联：`QPaintEngine::updateState(const QPaintEngineState&)`、`QPaintEngine::DirtyFlags`、`QPainter`。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+| API | 用途速查 |
+| --- | --- |
+| `state()` | 取得本次真正变更的 `DirtyFlags`，所有读取的前提 |
+| `pen()` / `penNeedsResolving()` | 取得新画笔与对象边界相关的 resolving 信息 |
+| `brush()` / `brushOrigin()` / `brushNeedsResolving()` | 取得新画刷、原点与坐标 resolving 信息 |
+| `font()` | 取得新字体请求 |
+| `backgroundBrush()` / `backgroundMode()` | 取得背景画刷和背景模式 |
+| `transform()` | 取得当前绘制变换 |
+| `clipRegion()` / `clipPath()` | 取得本次裁剪数据 |
+| `clipOperation()` | 取得裁剪是替换、相交等何种操作 |
+| `isClipEnabled()` | 查询裁剪是否启用 |
+| `compositionMode()` | 取得图元和目标的合成模式 |
+| `opacity()` | 取得全局常量不透明度 |
+| `renderHints()` | 取得抗锯齿、平滑 pixmap 等渲染提示 |
+| `painter()` | 取得当前关联 painter，仅限更新期间观察 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 4. 关键用法
 
-### 工作机制
-
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 按 DirtyFlags 做增量同步
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
+void BackendEngine::updateState(const QPaintEngineState &s)
 {
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
+    const auto dirty = s.state();
+
+    if (dirty.testFlag(QPaintEngine::DirtyPen))
+        native.setPen(convertPen(s.pen()));
+
+    if (dirty.testFlag(QPaintEngine::DirtyBrush))
+        native.setBrush(convertBrush(s.brush()));
+
+    if (dirty.testFlag(QPaintEngine::DirtyTransform))
+        native.setTransform(convertTransform(s.transform()));
+
+    if (dirty.testFlag(QPaintEngine::DirtyHints))
+        native.setAntialiasing(
+            s.renderHints().testFlag(QPainter::Antialiasing));
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+忽略 `state()` 而每次都同步一切，会把大量小 draw 调用变成昂贵的后端状态提交。更严重的是，试图只看当前值而不看 dirty 位，可能会误把上次局部裁剪/合成策略当作本次新指令。
 
-### 公有函数
+### 正确更新裁剪栈
 
-- `QBrush backgroundBrush() const`
-- `Qt::BGMode backgroundMode() const`
-- `QBrush brush() const`
-- `bool brushNeedsResolving() const`
-- `QPointF brushOrigin() const`
-- `Qt::ClipOperation clipOperation() const`
-- `QPainterPath clipPath() const`
-- `QRegion clipRegion() const`
-- `QPainter::CompositionMode compositionMode() const`
-- `QFont font() const`
-- `bool isClipEnabled() const`
-- `qreal opacity() const`
-- `QPainter * painter() const`
-- `QPen pen() const`
-- `bool penNeedsResolving() const`
-- `QPainter::RenderHints renderHints() const`
-- `QPaintEngine::DirtyFlags state() const`
-- `QTransform transform() const`
+```cpp
+if (dirty.testFlag(QPaintEngine::DirtyClipEnabled)) {
+    native.setClippingEnabled(s.isClipEnabled());
+}
 
-## 5. API 逐个说明
+if (dirty.testFlag(QPaintEngine::DirtyClipPath)) {
+    native.applyClip(convertPath(s.clipPath()), s.clipOperation());
+}
+```
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+裁剪不只是一个矩形：可以是 region 或 path，且可被相交、替换等操作累积。后端需按 Qt 传入的 operation 维护自身剪裁状态；只保存“最后一个 clip path”会在嵌套 `save()`/`restore()` 与多重裁剪时渲染错误。
 
-### `QBrush QPaintEngineState::backgroundBrush() const`
+### 根据 object-bounding brush resolving 做选择
 
-**作用与语义：**
+```cpp
+if (dirty.testFlag(QPaintEngine::DirtyBrush)) {
+    const QBrush brush = s.brush();
+    if (s.brushNeedsResolving())
+        deferBrushResolutionUntilPrimitiveBounds(brush);
+    else
+        native.setBrush(convertBrush(brush));
+}
+```
 
-返回当前绘画引擎状态的背景画笔。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyBackground`标志的组合时使用。
+对象边界坐标系的渐变需要知道当前图元的 bounds 才能转换到后端坐标。`brushNeedsResolving()` / `penNeedsResolving()` 向 engine 提示这一点；忽略会让同一渐变在不同大小形状上显示错误。
 
-### `Qt::BGMode QPaintEngineState::backgroundMode() const`
+## 5. 状态与 dirty 位对照
 
-**作用与语义：**
+| 变化 | 应读取 |
+| --- | --- |
+| 画笔 | `pen()`，必要时 `penNeedsResolving()` |
+| 画刷/原点 | `brush()`、`brushOrigin()`、`brushNeedsResolving()` |
+| 字体 | `font()` |
+| 变换 | `transform()` |
+| 裁剪 | `clipRegion()` 或 `clipPath()`、`clipOperation()`、`isClipEnabled()` |
+| 合成/透明度 | `compositionMode()`、`opacity()` |
+| 渲染质量 | `renderHints()` |
+| 背景 | `backgroundBrush()`、`backgroundMode()` |
 
-返回当前绘画引擎状态的背景模式。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyBackgroundMode`标志的组合时使用。
+## 6. 常见坑与经验
 
-### `QBrush QPaintEngineState::brush() const`
+- **只在 `updateState()` 调用期间使用。** 不要把 `QPaintEngineState` 指针/引用保存到之后的 draw 调用。
+- **不要无条件同时读取 region 和 path。** 相应 dirty flag 指出哪个表达形式在本次有效；混用会产生重复或错误裁剪。
+- **opacity 和 alpha blend 是不同层次。** `opacity()` 是 painter 的常量全局 alpha，`compositionMode()` 决定合成规则，brush/pixmap 自身也可能有 alpha。
+- **render hints 是请求。** 后端若无法原生满足，需依能力、fallback 或文档策略处理；不能假装已经抗锯齿。
+- **`painter()` 不是后端控制器。** engine 应读取状态并写自己的后端，不应从回调中修改 painter 的公开状态。
 
-**作用与语义：**
+## 7. 知识点覆盖
 
-将画笔返回当前的油漆引擎状态。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyBrush`标志的组合时使用。
-
-### `bool QPaintEngineState::brushNeedsResolving() const`
-
-**作用与语义：**
-
-返回填充坐标是否被当前渲染操作定义为有界，并需解决（关于当前渲染的原件）。
-
-### `QPointF QPaintEngineState::brushOrigin() const`
-
-**作用与语义：**
-
-将画笔原点返回当前的油漆引擎状态。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyBrushOrigin`标志的组合时使用。
-
-### `Qt::ClipOperation QPaintEngineState::clipOperation() const`
-
-**作用与语义：**
-
-在当前的绘画引擎状态下返回剪辑操作。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyClipPath`或`QPaintEngine::DirtyClipRegion`标志的组合时使用。
-
-### `QPainterPath QPaintEngineState::clipPath() const`
-
-**作用与语义：**
-
-返回当前绘制引擎状态下的剪辑路径。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyClipPath`标志的组合时使用。
-
-### `QRegion QPaintEngineState::clipRegion() const`
-
-**作用与语义：**
-
-返回当前绘画引擎状态下的剪辑区域。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyClipRegion`标志的组合时使用。
-
-### `QPainter::CompositionMode QPaintEngineState::compositionMode() const`
-
-**作用与语义：**
-
-返回当前绘图引擎状态的合成模式。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyCompositionMode`标志的组合时使用。
-
-### `QFont QPaintEngineState::font() const`
-
-**作用与语义：**
-
-会返回当前的绘图引擎状态的字体。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyFont`标志的组合时使用。
-
-### `bool QPaintEngineState::isClipEnabled() const`
-
-**作用与语义：**
-
-在当前绘制引擎状态下，返回是否启用裁剪。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyClipEnabled`标志的组合时使用。
-
-### `qreal QPaintEngineState::opacity() const`
-
-**作用与语义：**
-
-返回当前涂装引擎状态下的不透明度。
-
-### `QPainter *QPaintEngineState::painter() const`
-
-**作用与语义：**
-
-返回一个指向正在更新喷漆引擎的画师的指针。
-
-### `QPen QPaintEngineState::pen() const`
-
-**作用与语义：**
-
-将笔返回当前的涂装引擎状态。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyPen`标志的组合时使用。
-
-### `bool QPaintEngineState::penNeedsResolving() const`
-
-**作用与语义：**
-
-返回笔画坐标是否已被当前渲染操作指定为有界，并需围绕当前渲染的原图进行解析。
-
-### `QPainter::RenderHints QPaintEngineState::renderHints() const`
-
-**作用与语义：**
-
-返回当前绘画引擎状态下的渲染提示。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyHints`标志的组合时使用。
-
-### `QPaintEngine::DirtyFlags QPaintEngineState::state() const`
-
-**作用与语义：**
-
-返回一组标志，标识在更新绘图引擎状态时需要更新的属性集合（即调用`QPaintEngine::updateState()`函数时）。
-
-### `QTransform QPaintEngineState::transform() const`
-
-**作用与语义：**
-
-返回当前涂装引擎状态的矩阵。
-该变量仅在`state()`返回包含`QPaintEngine::DirtyTransform`标志的组合时使用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPaintEngineState` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+绘制状态差分、DirtyFlags、增量状态提交、裁剪栈、对象边界渐变、合成与 opacity、渲染提示、paint engine 生命周期。

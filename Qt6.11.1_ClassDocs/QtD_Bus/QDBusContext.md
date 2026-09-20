@@ -1,157 +1,70 @@
 # QDBusContext
+> Qt 6.11.1 · Qt D-Bus · 来自 `QDBusContext`
 
-> Qt 6.11.1 · Qt D-Bus
+## 作用定位
 
-## 1. 先建立直觉
+`QDBusContext` 给服务端槽函数访问“本次 D-Bus 调用上下文”的能力。一个导出的对象继承它后，可以知道当前槽是否由 D-Bus 调用触发、原始 `QDBusMessage` 是什么、调用来自哪条连接，并能发送错误回复或声明延迟回复。
 
-**一句话定位：** 这是 Qt D-Bus 中围绕“DBusContext”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
+它只在服务端导出对象中有意义；普通客户端代理不需要继承它。
 
-**模块背景：** 这是 Qt D-Bus 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QDBusContext` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QDBusContext>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::DBus`
+- 继承：无公开 QObject 继承；通常与 QObject 业务类多继承
+- 典型形态：`class Service : public QObject, protected QDBusContext`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS DBus)
-target_link_libraries(mytarget PRIVATE Qt6::DBus)
+| API | 说明 |
+| --- | --- |
+| `calledFromDBus()` | 当前函数是否处于 D-Bus 调用处理过程中。 |
+| `connection()` | 当前调用所在连接。 |
+| `message()` | 当前调用的原始消息。 |
+| `setDelayedReply(bool)` | 声明当前调用稍后手动回复。 |
+| `isDelayedReply()` | 查询是否已设置延迟回复。 |
+| `sendErrorReply(name, msg)` | 发送自定义错误名的错误回复。 |
+| `sendErrorReply(type, msg)` | 按标准 `QDBusError::ErrorType` 发送错误回复。 |
+
+## 典型用法
+
+```cpp
+void Service::OpenFile(const QString &path)
+{
+    if (!QFileInfo(path).exists()) {
+        sendErrorReply(QDBusError::InvalidArgs, "File does not exist");
+        return;
+    }
+
+    setDelayedReply(true);
+    const QDBusMessage call = message();
+    startAsyncOpen(path, [call](bool ok) {
+        auto reply = ok ? call.createReply() :
+                          call.createErrorReply("org.example.OpenFailed", "Open failed");
+        QDBusConnection::sessionBus().send(reply);
+    });
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 服务端根据调用者或消息内容决定权限和错误。
+- 长任务需要延迟回复，避免槽函数同步阻塞。
+- 返回规范 D-Bus 错误，而不是抛异常或返回魔法值。
+- 调试服务端收到的原始 service/path/interface/member/signature。
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- `message()` 只在 `calledFromDBus()` 为 true 的上下文里有意义；普通本地调用不要依赖它。
+- `setDelayedReply(true)` 后必须自己发送正常或错误回复，否则调用者会等到超时。
+- `sendErrorReply()` 会结束本次调用的错误路径，之后不要再返回正常业务值。
+- 多继承时通常把 `QDBusContext` 设为 protected，避免把上下文 API 暴露成业务接口。
+- 延迟回复要保存原始 `QDBusMessage` 的副本，并确保发送回复时连接仍可用。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 知识点覆盖
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDBusContext()`
-- `~QDBusContext()`
-- `bool calledFromDBus() const`
-- `QDBusConnection connection() const`
-- `bool isDelayedReply() const`
-- `const QDBusMessage & message() const`
-- `void sendErrorReply(const QString &name, const QString &msg = QString()) const`
-- `void sendErrorReply(QDBusError::ErrorType type, const QString &msg = QString()) const`
-- `void setDelayedReply(bool enable) const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QDBusContext::QDBusContext()`
-
-**作用与语义：**
-
-构建一个空的 QDBusContext。
-
-### `[noexcept] QDBusContext::~QDBusContext()`
-
-**作用与语义：**
-
-一个空的毁灭者。
-
-### `bool QDBusContext::calledFromDBus() const`
-
-**作用与语义：**
-
-如果我们正在处理D-总线调用，返回 是`true`。如果该函数返回`true`，则该类的其他函数都可以使用。
-当该函数返回`false`时访问这些函数未定义，可能导致崩溃。
-
-### `QDBusConnection QDBusContext::connection() const`
-
-**作用与语义：**
-
-返回接收该调用的连接。
-
-### `bool QDBusContext::isDelayedReply() const`
-
-**作用与语义：**
-
-回报`true`这通电话是否会延迟回复。
-
-### `const QDBusMessage &QDBusContext::message() const`
-
-**作用与语义：**
-
-返回生成该通话的消息。
-
-### `void QDBusContext::sendErrorReply(const QString &name, const QString &msg = QString()) const`
-
-**作用与语义：**
-
-向调用者发送错误`name`作为回复。可选的`msg`参数是一段人类可读的文本，解释故障原因。
-如果发送错误，Qt D-总线将忽略被调用槽的返回值和任何输出参数。
-
-### `void QDBusContext::sendErrorReply(QDBusError::ErrorType type, const QString &msg = QString()) const`
-
-**作用与语义：**
-
-向调用者发送错误`type`作为回复。可选的`msg`参数是一段人类可读的解释失败的文本。
-如果发送错误，Qt D-总线将忽略被调用槽的返回值和任何输出参数。
-
-### `void QDBusContext::setDelayedReply(bool enable) const`
-
-**作用与语义：**
-
-设置该通话是否会有延迟回复。
-如果`enable`为假，Qt D-Bus 将在被调用槽函数返回后自动生成回复调用者（如有需要）。
-如果`enable`为真，Qt D-Bus 不会自动生成回复。它还会忽略槽函数的返回值和任何输出参数。相反，被调用对象负责存储收到的消息，并在之后发送回复或错误。
-未能发送回复会导致D-Bus自动生成超时错误。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDBusContext` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 服务端调用上下文
+- 原始消息访问
+- 错误回复与延迟回复
+- D-Bus 方法调用生命周期
+- QObject 导出对象中的多继承模式

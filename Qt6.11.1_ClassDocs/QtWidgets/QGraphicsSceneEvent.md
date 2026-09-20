@@ -1,109 +1,61 @@
 # QGraphicsSceneEvent
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsSceneEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsSceneEvent` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsSceneEvent` 是 Graphics View 场景事件的基类。鼠标、悬停、拖放、滚轮、上下文菜单、帮助、移动、调整大小等事件都从它派生。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它和普通 `QMouseEvent` 最大区别是坐标体系更多：item 坐标、scene 坐标、screen 坐标，以及事件来自哪个 `QWidget` viewport。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsSceneEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QGraphicsSceneEvent` 继承自 `QEvent`。它通常由 Qt 创建并传给 `QGraphicsItem` 的事件处理函数，例如 `mousePressEvent()`、`hoverMoveEvent()`、`contextMenuEvent()`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+事件对象生命周期只在处理期间有效，不应保存指针。需要持久状态时，把坐标或业务信息复制出来。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `widget()` | 返回产生该事件的 viewport widget，可能为空。 |
+| `QGraphicsSceneMouseEvent` | 鼠标按下、移动、释放、双击事件。 |
+| `QGraphicsSceneHoverEvent` | 鼠标悬停进入、移动、离开事件。 |
+| `QGraphicsSceneContextMenuEvent` | 上下文菜单事件。 |
+| `QGraphicsSceneDragDropEvent` | 拖放进入、移动、离开、释放事件。 |
+| `QGraphicsSceneWheelEvent` | 滚轮事件。 |
+| `QGraphicsSceneHelpEvent` | tooltip / What's This 帮助事件。 |
+| `QGraphicsSceneMoveEvent` | `QGraphicsWidget` 移动事件。 |
+| `QGraphicsSceneResizeEvent` | `QGraphicsWidget` 调整大小事件。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QGraphicsSceneEvent>`
-- 继承自：QEvent
-- 直接派生类：QGraphicsSceneContextMenuEvent、QGraphicsSceneDragDropEvent、QGraphicsSceneHelpEvent、QGraphicsSceneHoverEvent、QGraphicsSceneMouseEvent、QGraphicsSceneMoveEvent、QGraphicsSceneResizeEvent,、QGraphicsSceneWheelEvent
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+void NodeItem::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+{
+    const QPointF p = event->pos();       // item 坐标
+    const QPointF s = event->scenePos();  // scene 坐标
+    Q_UNUSED(p);
+    Q_UNUSED(s);
+}
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+如果要显示全局菜单：
 
-### 工作机制
+```cpp
+menu.exec(event->screenPos());
+```
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合自定义 `QGraphicsItem` / `QGraphicsWidget` 交互：拖拽节点、连接端口、悬停高亮、场景菜单、滚轮缩放、拖放素材。
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+普通 QWidget 事件不要用它；它只属于 Graphics View 事件分发。
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+坐标系一定要看函数名。`pos()` 通常是 item 坐标，`scenePos()` 是场景坐标，`screenPos()` 是屏幕坐标。
 
-## 3. 直接使用
+事件指针不要保存。保存 `QPointF`、按钮状态或自己的命令对象即可。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QGraphicsSceneEvent()`
-- `(since 6.2) quint64 timestamp() const`
-- `QWidget * widget() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QGraphicsSceneEvent::~QGraphicsSceneEvent()`
-
-**作用与语义：**
-
-毁了整个活动。
-
-### `[since 6.2] quint64 QGraphicsSceneEvent::timestamp() const`
-
-**作用与语义：**
-
-返回原始事件的时间戳，如果原始事件没有报告时间戳，则返回0。
-
-### `QWidget *QGraphicsSceneEvent::widget() const`
-
-**作用与语义：**
-
-返回事件起源的控件，或者如果事件来自其他应用程序，则返回`nullptr`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsSceneEvent` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+多个 view 观察同一个 scene 时，`widget()` 可以帮助你知道事件从哪个视图来。

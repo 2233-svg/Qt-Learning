@@ -1,144 +1,82 @@
 # QScrollPrepareEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QScrollPrepareEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QScrollPrepareEvent` 是 Qt 的值类型，围绕“滚动Prepare事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QScrollPrepareEvent` 是 `QScroller` 开始一次触控/惯性滚动前发出的协商事件。滚动器知道用户从哪里开始拖动，但不知道目标控件的内容坐标、内容边界和视口尺寸；控件必须在事件里把这些信息填回去。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+可以把它看成滚动协议的“初始化握手”：`QScrollPrepareEvent` 声明可滚动范围，后续 `QScrollEvent` 才持续报告新的内容位置和越界距离。
 
-### 这是什么
+## 2. 类说明
 
-`QScrollPrepareEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QScrollPrepareEvent` 继承自 `QEvent`，常与 `QScroller` 协作。自定义滚动控件通常在 `event()` 中处理 `QEvent::ScrollPrepare`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QScrollPrepareEvent`：滚动动画、手势识别和惯性参数由 `QScroller` 管理；内容位置和边界由控件自己的模型决定。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QScrollPrepareEvent(startPos)` | 构造滚动协商事件，传入触摸或鼠标起始位置。 |
+| `startPos() const` | 返回触发本次滚动的局部起始位置。 |
+| `setViewportSize(size)` | 设置可视区域大小。 |
+| `viewportSize() const` | 读取已设置的视口大小。 |
+| `setContentPos(pos)` | 设置滚动开始时内容当前位置。 |
+| `contentPos() const` | 读取已设置的内容当前位置。 |
+| `setContentPosRange(rect)` | 设置内容位置可移动的合法范围。 |
+| `contentPosRange() const` | 读取已设置的内容位置范围。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 为自定义画布声明滚动边界
 
-- 头文件：`#include <QScrollPrepareEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+```cpp
+bool CanvasView::event(QEvent *event)
+{
+    if (event->type() == QEvent::ScrollPrepare) {
+        auto *prepare = static_cast<QScrollPrepareEvent *>(event);
 
-CMake 配置：
+        const QSizeF viewport = size();
+        const QSizeF content = m_documentSize;
+        const QPointF current = m_contentOffset;
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+        prepare->setViewportSize(viewport);
+        prepare->setContentPos(current);
+        prepare->setContentPosRange(QRectF(
+            QPointF(0, 0),
+            QSizeF(qMax<qreal>(0, content.width() - viewport.width()),
+                   qMax<qreal>(0, content.height() - viewport.height()))));
+        prepare->accept();
+        return true;
+    }
+
+    return QWidget::event(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+坐标定义必须一致：`contentPos` 和 `contentPosRange` 都应使用同一内容坐标系，不能一个用滚动条值、一个用场景坐标。
 
-### 工作机制
+### 视口与内容大小变化后重新协商
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+控件 resize、缩放比例改变、文档内容加载完成时，下一次滚动前需要给出新的边界。不要把初始范围永久缓存为常量，否则滚动器会允许越界或无法滚到新内容。
 
-### 状态、生命周期和线程
+## 5. 使用场景
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+`QScrollPrepareEvent` 适合自定义触控画布、照片查看器、地图、时间轴、无限或大尺寸内容视图、没有使用 `QAbstractScrollArea` 的自定义滚动控件。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+普通 `QScrollArea`、`QListView`、`QTextEdit` 已有完整滚动实现，通常不需要直接处理它。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+不要只设置 viewport size 而忘记 content position range。没有边界，`QScroller` 无法正确限制或计算 overshoot。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+不要把 `startPos()` 当成内容位置。它是用户指针在控件里的起点，主要用于需要按起点决定滚动行为的场景。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+不要在 prepare 事件里真正移动内容。这里负责声明初始状态，实际位置变化由后续 `QScrollEvent` 处理。
 
-### 公有函数
+不要把视口宽高和内容宽高倒置。`viewportSize` 是看得见的区域，range 是内容位置可以变化的范围。
 
-- `QScrollPrepareEvent(const QPointF &startPos)`
-- `QPointF contentPos() const`
-- `QRectF contentPosRange() const`
-- `void setContentPos(const QPointF &pos)`
-- `void setContentPosRange(const QRectF &rect)`
-- `void setViewportSize(const QSizeF &size)`
-- `QPointF startPos() const`
-- `QSizeF viewportSize() const`
+## 7. 知识点覆盖
 
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QScrollPrepareEvent::QScrollPrepareEvent(const QPointF &startPos)`
-
-**作用与语义：**
-
-创建新的QScrollPrepareEvent，`startPos`是启动滚动的触摸或鼠标事件的位置。
-
-### `QPointF QScrollPrepareEvent::contentPos() const`
-
-**作用与语义：**
-
-返回由 `setContentPos` 设置的内容的当前位置。
-
-### `QRectF QScrollPrepareEvent::contentPosRange() const`
-
-**作用与语义：**
-
-返回内容的坐标范围，由`setContentPosRange()`设定。
-
-### `void QScrollPrepareEvent::setContentPos(const QPointF &pos)`
-
-**作用与语义：**
-
-将当前内容位置设置为`pos`。
-
-### `void QScrollPrepareEvent::setContentPosRange(const QRectF &rect)`
-
-**作用与语义：**
-
-将内容坐标范围设置为`rect`。
-
-### `void QScrollPrepareEvent::setViewportSize(const QSizeF &size)`
-
-**作用与语义：**
-
-将要滚动的区域大小设置为`size`。
-
-### `QPointF QScrollPrepareEvent::startPos() const`
-
-**作用与语义：**
-
-返回触发滚动的触摸或鼠标事件的位置。
-
-### `QSizeF QScrollPrepareEvent::viewportSize() const`
-
-**作用与语义：**
-
-返回将要滚动的区域大小，按`setViewportSize`设置。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QScrollPrepareEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QScrollPrepareEvent` 应覆盖 `QScroller`、滚动协商、内容坐标、视口大小、内容边界、触控拖动、惯性滚动、overshoot 和自定义滚动控件设计。

@@ -1,158 +1,94 @@
 # QPainter::PixmapFragment
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPainter::PixmapFragment`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPainter::PixmapFragment` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QPainter::PixmapFragment` 是给 `QPainter::drawPixmapFragments()` 用的小结构体：它描述“从一张 pixmap 的哪个源矩形切一块，放到目标坐标的哪里，按多少比例缩放、旋转，并以多少透明度绘制”。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它的典型用途不是画一张普通图片，而是批量画很多来自同一张图集的碎片：精灵动画、粒子、图标 atlas、地图瓦片、重复纹理片段。一次调用提交多个 fragment，通常比循环里反复 `drawPixmap()` 更利于绘制后端优化。
 
-### 这是什么
-
-`QPainter::PixmapFragment` 是 二维绘制状态机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPainter>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- 所属类：`QPainter`
+- 类型性质：公开数据结构，主要由字段组成
+- 使用入口：`QPainter::drawPixmapFragments(...)`
+- 源图像：所有 fragment 共用同一个 `QPixmap`
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`PixmapFragment` 的目标位置字段 `x` / `y` 表示目标矩形的中心点，不是左上角。目标矩形大小来自源矩形宽高再乘以 `scaleX` / `scaleY`，随后按 `rotation` 旋转。
 
-### 工作机制
+## 3. API 速查
 
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
+| API / 字段 | 作用 |
+| --- | --- |
+| `create(pos, sourceRect, scaleX, scaleY, rotation, opacity)` | 便利构造函数，把位置、源矩形、缩放、旋转和透明度一次填入结构体。 |
+| `x` / `y` | 目标片段中心点坐标。 |
+| `sourceLeft` / `sourceTop` | 源 pixmap 中要截取的矩形左上角。 |
+| `width` / `height` | 源矩形尺寸，同时也是未缩放目标尺寸的基础。 |
+| `scaleX` / `scaleY` | 目标绘制时的水平/垂直缩放比例。 |
+| `rotation` | 旋转角度，单位为度；缩放后围绕中心点旋转。 |
+| `opacity` | 单个片段透明度，`0.0` 完全透明，`1.0` 完全不透明。 |
+| `QPainter::OpaqueHint` | 告诉绘制系统这些片段是不透明的，可减少不必要的混合成本。 |
 
-### 状态、生命周期和线程
+## 4. 关键用法
 
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 从图集批量绘制精灵
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
+QVector<QPainter::PixmapFragment> fragments;
+fragments.reserve(items.size());
+
+for (const Sprite &sprite : items) {
+    fragments.push_back(QPainter::PixmapFragment::create(
+        sprite.center,
+        sprite.sourceRect,
+        sprite.scale,
+        sprite.scale,
+        sprite.angle,
+        sprite.opacity));
 }
+
+painter.drawPixmapFragments(fragments.constData(),
+                            fragments.size(),
+                            atlasPixmap);
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+所有片段来自同一张 `atlasPixmap`。如果你的素材分散在多张 pixmap 中，需要按 pixmap 分组后分别调用。
 
-### 静态公有成员
+### 目标坐标是中心点
 
-- `QPainter::PixmapFragment create(const QPointF &pos, const QRectF &sourceRect, qreal scaleX = 1, qreal scaleY = 1, qreal rotation = 0, qreal opacity = 1)`
+```cpp
+auto fragment = QPainter::PixmapFragment::create(
+    QPointF(100, 80),      // 目标中心
+    QRectF(32, 0, 16, 16), // 图集里的源块
+    2.0, 2.0);            // 画成 32 x 32
+```
 
-## 5. API 逐个说明
+这段代码最终把源块放到以 `(100, 80)` 为中心的位置，而不是从 `(100, 80)` 开始画。做碰撞框或鼠标命中时要把中心语义换算回来。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 5. 使用场景
 
-### `[static] QPainter::PixmapFragment PixmapFragment::create(const QPointF &pos, const QRectF &sourceRect, qreal scaleX = 1, qreal scaleY = 1, qreal rotation = 0, qreal opacity = 1)`
+- 2D 游戏或动画：大量角色、特效、子弹、粒子来自同一张图集。
+- 地图和棋盘：重复绘制许多小图片块。
+- 图标面板：一张 icon atlas 中切出不同状态。
+- 数据可视化：大量点标记共享一套纹理素材。
+- 自定义控件：对同一 pixmap 做大量缩放、旋转、透明度变化。
 
-**作用与语义：**
+## 6. 常见坑与经验
 
-这是一个便利函数，返回一个初始化为`pos`、`sourceRect`、`scaleX`、`scaleY`、`rotation` `opacity`参数的`QPainter::PixmapFragment`。
+- **坐标是中心点。** 这和 `drawPixmap(point, pixmap)` 的左上角语义不同，是最容易错的地方。
+- **源矩形在 pixmap 坐标中。** 高 DPI pixmap 可能带有 `devicePixelRatio`，切图前要确认源坐标和素材实际像素是否一致。
+- **透明度是逐片段的。** 它会和 painter 当前的 `opacity()`、合成模式一起作用，最终结果可能比单独看 fragment 更透明。
+- **`OpaqueHint` 只能在真的不透明时使用。** 如果源图或片段带 alpha，却声明不透明，可能得到错误混合结果。
+- **不要为每个片段切一张 pixmap。** 这样会抵消批绘制的意义；fragment 的设计就是共用源 pixmap。
+- **旋转和缩放会影响边界。** 如果目标区域需要裁剪或重绘脏区，不能只用未旋转矩形估算。
 
-### `qreal PixmapFragment::height`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-该变量表示源矩形的高度，用于计算目标矩形的高度。
-
-### `qreal PixmapFragment::opacity`
-
-**作用与语义：**
-
-该变量表示目标矩形的不透明度，其中0.0表示完全透明，1.0表示完全不透明。
-
-### `qreal PixmapFragment::rotation`
-
-**作用与语义：**
-
-该变量以度数表示目标矩形的旋转。目标矩形在缩放后旋转。
-
-### `qreal PixmapFragment::scaleX`
-
-**作用与语义：**
-
-该变量保持目标矩形的水平刻度。
-
-### `qreal PixmapFragment::scaleY`
-
-**作用与语义：**
-
-该变量保持目标矩形的垂直比例。
-
-### `qreal PixmapFragment::sourceLeft`
-
-**作用与语义：**
-
-该变量保持源矩形的左坐标。
-
-### `qreal PixmapFragment::sourceTop`
-
-**作用与语义：**
-
-该变量包含源矩形的最高坐标。
-
-### `qreal PixmapFragment::width`
-
-**作用与语义：**
-
-该变量保存源矩形的宽度，用于计算目标矩形的宽度。
-
-### `qreal PixmapFragment::x`
-
-**作用与语义：**
-
-该变量保持目标矩形中心点的 x 坐标。
-
-### `qreal PixmapFragment::y`
-
-**作用与语义：**
-
-该变量保持目标矩形中心点的y坐标。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPainter::PixmapFragment` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 图集、源矩形、目标中心点之间的坐标关系
+- 批量绘制与循环 `drawPixmap()` 的性能差异
+- 缩放、旋转、透明度、合成模式的叠加
+- 高 DPI pixmap 与源坐标的匹配
+- `QPainter::PixmapFragmentHints` 的优化边界
+- 粒子、精灵和图标 atlas 的实际组织方式

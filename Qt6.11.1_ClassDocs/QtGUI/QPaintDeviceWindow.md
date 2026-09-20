@@ -1,155 +1,100 @@
 # QPaintDeviceWindow
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPaintDeviceWindow`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPaintDeviceWindow` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QPaintDeviceWindow` 把 `QWindow` 变成可以由 `QPainter` 直接绘制的窗口表面。它是 `QRasterWindow` 与 `QOpenGLWindow` 的共同基类，适合不使用 QWidget 层级、但仍想拥有窗口生命周期、曝光事件和局部重绘调度的场景。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不等于 `QWidget`。没有 widget layout、样式系统或子控件树；你负责窗口内容与重绘模型。若只是做常规桌面 UI，优先用 Widgets 或 Qt Quick；若写一个独立绘图窗口/渲染视图，才考虑这一层。
 
-### 这是什么
-
-`QPaintDeviceWindow` 是 二维绘制状态机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPaintDeviceWindow>`
-- 继承自：QWindow、QPaintDevice
-- 直接派生类：QOpenGLWindow、QRasterWindow
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 继承：`QWindow` 和 `QPaintDevice`。
+- 直接派生：`QRasterWindow`、`QOpenGLWindow`。
+- 重绘入口：重载保护函数 `paintEvent(QPaintEvent *)`；请求重绘用 `update()`，绝不手动直接调用 `paintEvent()`。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+| API | 用途速查 |
+| --- | --- |
+| `update()` | 标记整个窗口脏，异步合并并安排绘制事件 |
+| `update(QRect)` | 标记一个逻辑矩形脏，适合小区域变化 |
+| `update(QRegion)` | 标记多个不连续区域脏 |
+| `paintEvent(QPaintEvent *)` | 重载并在收到窗口系统重绘事件时实际绘制 |
+| `QPaintEvent::region()` | 取得本次需要更新的脏区域 |
+| `QPaintEvent::rect()` | 取得脏区域的包围矩形 |
+| `QWindow::exposeEvent()` | 与窗口暴露/隐藏状态协作；不是普通每帧绘制回调 |
+| `QWindow::isExposed()` | 判断窗口是否当前可见于屏幕 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 4. 关键用法
 
-### 工作机制
-
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 用 update 调度绘制
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
+class PlotWindow : public QPaintDeviceWindow
 {
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
+protected:
+    void paintEvent(QPaintEvent *event) override
+    {
+        QPainter p(this);
+        p.setClipRegion(event->region());
+        drawPlot(p, event->region());
+    }
+
+public:
+    void setSeries(Series series)
+    {
+        m_series = std::move(series);
+        update(); // 合并到事件循环中的下一次绘制
+    }
+};
+```
+
+`update()` 不会立即执行绘制。Qt 会合并同一轮事件循环中的多个脏区域，再投递 `paintEvent()`；这正是避免拖动/数据变化时发生大量重复绘制的机制。
+
+### 只重绘受影响区域
+
+```cpp
+void PlotWindow::hoverPointChanged(QPointF oldPos, QPointF newPos)
+{
+    const QRegion dirty(markerRect(oldPos).toAlignedRect());
+    update(dirty | markerRect(newPos).toAlignedRect());
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+局部 update 只有在 `paintEvent()` 真正尊重脏区域时才有收益。使用 `event->region()` 设置 clip，或让绘制函数只遍历与该区域相交的项目；每次仍然整窗绘制会把局部更新变成徒有其表。
 
-### 公有函数
+### 正确处理未暴露窗口
 
-- `void update(const QRect &rect)`
-- `void update(const QRegion &region)`
+```cpp
+void PlotWindow::setLiveData(Data data)
+{
+    m_data = std::move(data);
+    update();
+}
+```
 
-### 公有槽函数
+即使窗口还未暴露，也可以更新业务状态并请求重绘。Qt 可能在窗口可见前/后发送 paint event，未暴露时也可能推迟真正绘制；不要将“只有 `isExposed()` 为真才更新模型”作为条件。
 
-- `void update()`
+## 5. 使用场景
 
-### 重实现的保护函数
+- `QRasterWindow` 基础上的轻量 2D 可视化、仪表盘、绘图工具。
+- `QOpenGLWindow` 中需要窗口系统事件、CPU/GL 混合绘制的独立窗口。
+- 没有 widget 层级、只需单一渲染表面的专用桌面窗口。
+- 使用 `QWindow` API 管理多屏、曝光和原生窗口属性的绘制应用。
 
-- `virtual void paintEvent(QPaintEvent *event) override`
+## 6. 常见坑与经验
 
-## 5. API 逐个说明
+- **不要直接调用 `paintEvent()`。** 它绕过脏区合并、窗口系统调度和设备准备；状态改变后调用 `update()`。
+- **不要在 paintEvent 中变更会触发下一次 update 的业务状态。** 这会形成无休止重绘循环。绘制应该读取模型，模型更新在事件/定时器回调中完成。
+- **绘制只在所属 GUI 线程。** 后台可准备 `QImage`、路径或数据，但将结果投递到窗口线程，再 `update()`。
+- **窗口暴露不等于尺寸稳定。** 同时处理 `resizeEvent()`、DPR/屏幕变化，丢弃与旧尺寸不匹配的缓存。
+- **局部区域是提示而非借口。** 当背景有透明、混合、阴影或相互依赖图层时，要把必要的扩展区域一并标脏。
+- **选择对的派生类。** 软件 2D 绘制用 `QRasterWindow`；OpenGL 上下文/帧机制用 `QOpenGLWindow`；它们会处理各自更具体的设备细节。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 7. 知识点覆盖
 
-### `[override virtual protected] void QPaintDeviceWindow::paintEvent(QPaintEvent *event)`
-
-**作用与语义：**
-
-重实现自：`QWindow::paintEvent`（QPaintEvent *ev）。
-处理 `event` 参数中传递的绘画事件。
-默认实现不做任何操作。重新实现这个函数以执行绘画。如有必要，脏区域可以从`event`中恢复。
-每当窗口某区域需要重新绘制时，例如最初显示窗口，或移动另一窗口导致部分窗口暴露时，窗口系统都会发送绘画事件（`ev`）。
-应用程序应根据绘制事件渲染到窗口，无论窗口的暴露状态如何。例如，可能会在窗口暴露前发送绘画事件，以准备向用户展示。
-
-### `[slot] void QPaintDeviceWindow::update()`
-
-**作用与语义：**
-
-把整扇窗户标记为脏，并安排重新粉刷。
-注意：在下一次绘制事件之前对该函数的后续调用将被忽略。
-注意：对于未暴露的窗口，更新会被推迟，直到窗口再次暴露。
-注意：该槽位已超载。连接该槽位：
-
-
-使用 qOverload 连接：
-connect（sender， &SenderClass：：signal，。
-paintDeviceWindow， qOverload<>（&QPaintDeviceWindow：：update））;
-
-或者用lambda作为包装器：
-connect（sender， &SenderClass：：signal，。
-paintDeviceWindow， [receiver = paintDeviceWindow]() { receiver->update(); }）;
-
-
-更多示例和方法，请参见连接超载槽位。
-
-### `void QPaintDeviceWindow::update(const QRect &rect)`
-
-**作用与语义：**
-
-标记窗户`rect`脏，并安排重新粉刷。
-注意：在下一次绘画事件之前调用该函数的后续调用将被忽略，但`rect`会添加到区域以进行更新。
-注意：对于未暴露的窗口，更新会被推迟，直到窗口再次暴露。
-
-### `void QPaintDeviceWindow::update(const QRegion &region)`
-
-**作用与语义：**
-
-标记窗户`region`脏，并安排重新粉刷。
-注意：在下一次绘制事件之前，后续调用该函数将被忽略，但`region`会添加到区域以进行更新。
-注意：对于未暴露的窗口，更新会被推迟，直到窗口再次暴露。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPaintDeviceWindow` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+QWindow 绘制、异步重绘、脏区域、局部裁剪、曝光事件、GUI 线程、缓存失效、窗口尺寸/DPR 变化、QRasterWindow、QOpenGLWindow。

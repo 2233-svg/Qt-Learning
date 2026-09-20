@@ -11,18 +11,16 @@
       "displayName": "Qt MinGW Debug",
       "description": "Qt 6.11.1 MinGW build for Visual Studio CMake support",
       "generator": "Ninja",
-      "binaryDir": "D:/QtMainWindowBuild/${presetName}",
+      "binaryDir": "$env{TEMP}/Qt-assisiant/${presetName}",
       "environment": {
-        "TEMP": "D:/QtMainWindowBuild/tmp",
-        "TMP": "D:/QtMainWindowBuild/tmp",
-        "PATH": "D:/QTforGui/qt/Tools/mingw1310_64/bin;D:/QTforGui/qt/6.11.1/mingw_64/bin;$penv{PATH}"
+        "PATH": "C:/Qt/Tools/mingw1310_64/bin;C:/Qt/6.11.1/mingw_64/bin;$penv{PATH}"
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_PREFIX_PATH": "D:/QTforGui/qt/6.11.1/mingw_64",
-        "CMAKE_C_COMPILER": "D:/QTforGui/qt/Tools/mingw1310_64/bin/gcc.exe",
-        "CMAKE_CXX_COMPILER": "D:/QTforGui/qt/Tools/mingw1310_64/bin/g++.exe",
-        "CMAKE_MAKE_PROGRAM": "D:/QTforGui/qt/Tools/Ninja/ninja.exe"
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.11.1/mingw_64",
+        "CMAKE_C_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/ninja/ninja-win/ninja.exe"
       }
     }
   ],

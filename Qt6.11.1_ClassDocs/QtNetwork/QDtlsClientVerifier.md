@@ -1,181 +1,20 @@
 # QDtlsClientVerifier
+> Qt 6.11.1 · Qt Network · 来自 `QDtlsClientVerifier`
 
-> Qt 6.11.1 · Qt Network
+## 作用定位
+`QDtlsClientVerifier` 帮 DTLS 服务端在分配会话资源前验证客户端 cookie，降低伪造源地址造成的资源耗尽。
 
-## 1. 先建立直觉
+## API 速查
+| API | 是做什么的 |
+|---|---|
+| `verifyClient()` | 验证或生成 DTLS cookie 挑战。|
+| `verifiedHello()` | 取得验证通过的 ClientHello 信息。|
 
-**一句话定位：** `QDtlsClientVerifier` 是 Qt Network 的“DtlsClientVerifier”类型，负责描述请求/地址/连接状态或承载异步网络数据。
+## 使用场景
+公网 DTLS 服务端接收未知客户端前的地址验证。
 
-**模块背景：** Qt Network 提供 TCP/UDP、HTTP、代理、DNS、SSL 和网络请求等异步网络能力。
+## 常见坑与经验
+- 它解决的是地址验证，不替代后续身份认证与访问授权。
 
-### 这是什么
-
-`QDtlsClientVerifier` 是 异步网络机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 网络请求通常由管理器创建并调度，返回一个代表本次操作的 reply。连接建立、DNS、发送、接收和错误都是事件驱动的阶段；响应头、状态码、body 和传输错误分别表达不同层次的信息。
-
-**适用场景：** 创建长期存在的 manager，构造带 URL 和请求头的 request，调用 get/post 等操作，连接 reply 的完成、数据、进度和错误信号，读取结果后清理 reply。敏感头部和 token 不要写入日志。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要把异步请求当同步函数；不要只检查 `error()` 而忽略 HTTP 状态码；不要在 readyRead 中假设一次就收到完整 body；不要在 GUI 线程用阻塞等待替代信号。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QDtlsClientVerifier>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Network)
-target_link_libraries(mytarget PRIVATE Qt6::Network)
-```
-
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-网络请求通常由管理器创建并调度，返回一个代表本次操作的 reply。连接建立、DNS、发送、接收和错误都是事件驱动的阶段；响应头、状态码、body 和传输错误分别表达不同层次的信息。
-
-### 状态、生命周期和线程
-
-**生命周期：** manager 必须在线程事件循环中存活到 reply 完成；reply 完成后读取结果并调用 `deleteLater()`，不能在信号触发前直接释放。请求对象是值类型，reply 才是带有异步状态和资源的对象。
-
-**状态与结果：** 请求成功发出不等于 HTTP 成功，HTTP 状态码成功也不等于业务 JSON 有效。至少分别处理网络错误、HTTP 状态码、响应头、响应体解析和业务字段校验。上传/下载还要处理进度、分段读取和取消。
-
-**线程与事件循环：** QNetworkAccessManager、QNetworkReply 和相关请求应在同一个有事件循环的线程使用。跨线程时把网络对象整体放到目标线程，通过信号传递结果，不要跨线程直接读写 reply。
-
-## 3. 直接使用
-
-创建长期存在的 manager，构造带 URL 和请求头的 request，调用 get/post 等操作，连接 reply 的完成、数据、进度和错误信号，读取结果后清理 reply。敏感头部和 token 不要写入日志。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `struct GeneratorParameters`
-
-### 公有函数
-
-- `QDtlsClientVerifier(QObject *parent = nullptr)`
-- `virtual ~QDtlsClientVerifier()`
-- `QDtlsClientVerifier::GeneratorParameters cookieGeneratorParameters() const`
-- `QDtlsError dtlsError() const`
-- `QString dtlsErrorString() const`
-- `bool setCookieGeneratorParameters(const QDtlsClientVerifier::GeneratorParameters &params)`
-- `QByteArray verifiedHello() const`
-- `bool verifyClient(QUdpSocket *socket, const QByteArray &dgram, const QHostAddress &address, quint16 port)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QDtlsClientVerifier::QDtlsClientVerifier(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个QDtlsClientVerifier对象，`parent`传递给`QObject`的构造函数。
-
-### `[virtual noexcept] QDtlsClientVerifier::~QDtlsClientVerifier()`
-
-**作用与语义：**
-
-摧毁`QDtlsClientVerifier`物体。
-
-### `QDtlsClientVerifier::GeneratorParameters QDtlsClientVerifier::cookieGeneratorParameters() const`
-
-**作用与语义：**
-
-返回当前用于生成 Cookie 的秘密和哈希算法。如果 Qt 配置支持默认哈希算法，则`QCryptographicHash::Sha256`，否则`QCryptographicHash::Sha1`。默认秘密来自后端专用的强密码学伪随机数生成器。
-
-### `QDtlsError QDtlsClientVerifier::dtlsError() const`
-
-**作用与语义：**
-
-返回上次发生的错误或`QDtlsError::NoError`。
-
-### `QString QDtlsClientVerifier::dtlsErrorString() const`
-
-**作用与语义：**
-
-返回最后一个错误的文本描述，或空字符串。
-
-### `bool QDtlsClientVerifier::setCookieGeneratorParameters(const QDtlsClientVerifier::GeneratorParameters &params)`
-
-**作用与语义：**
-
-从`params`设置秘密和密码学哈希算法。该`QDtlsClientVerifier`将利用这些方法生成Cookie。如果新秘密大小为零，该函数返回`false`，且不更改Cookie生成器参数。
-注意：秘密应为一组加密学上安全的字节序列。
-
-### `QByteArray QDtlsClientVerifier::verifiedHello() const`
-
-**作用与语义：**
-
-便利功能。返回最后一次成功验证的 ClientHello 消息，若未完成验证则返回空 `QByteArray`。
-
-### `bool QDtlsClientVerifier::verifyClient(QUdpSocket *socket, const QByteArray &dgram, const QHostAddress &address, quint16 port)`
-
-**作用与语义：**
-
-`socket`必须是有效的指针，`dgram`必须是非空数据报，`address`不能是空指针、广播或多播。`port` 是远程对等端的端口。如果`dgram`包含带有有效 cookie 的 ClientHello 消息，该函数返回 `true`。如果找不到匹配的 cookie，verifyClient() 将使用 `socket` 发送 HelloVerifyRequest 消息并返回 `false`。
-以下摘要展示了服务器应用程序如何检查错误：
-
-**官方示例：**
-
-```cpp
- if (!verifier.verifyClient(&socket, message, address, port)) {
-     switch (verifyClient.dtlsError()) {
-     case QDtlsError::NoError:
-         // Not verified yet, but no errors found and we have to wait for the next
-         // message from this client.
-         return;
-     case QDtlsError::TlsInitializationError:
-         // This error is fatal, nothing we can do about it.
-         // Probably, quit the server after reporting the error.
-         return;
-     case QDtlsError::UnderlyingSocketError:
-         // There is some problem in QUdpSocket, handle it (see QUdpSocket::error())
-         return;
-     case QDtlsError::InvalidInputParameters:
-     default:
-         Q_UNREACHABLE();
-     }
- }
-```
-
-### `struct GeneratorParameters`
-
-**作用与语义：**
-
-该类定义了DTLS饼干生成器的参数。
-此类对象提供了`QDtlsClientVerifier`生成DTLS Cookie的参数。它们包括密码学哈希算法和一个秘密。
-注意：空秘密被`QDtlsClientVerifier::setCookieGeneratorParameters()`视为无效。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-manager 必须在线程事件循环中存活到 reply 完成；reply 完成后读取结果并调用 `deleteLater()`，不能在信号触发前直接释放。请求对象是值类型，reply 才是带有异步状态和资源的对象。
-
-### 状态和错误边界
-
-请求成功发出不等于 HTTP 成功，HTTP 状态码成功也不等于业务 JSON 有效。至少分别处理网络错误、HTTP 状态码、响应头、响应体解析和业务字段校验。上传/下载还要处理进度、分段读取和取消。
-
-### 线程边界
-
-QNetworkAccessManager、QNetworkReply 和相关请求应在同一个有事件循环的线程使用。跨线程时把网络对象整体放到目标线程，通过信号传递结果，不要跨线程直接读写 reply。
-
-### 最容易出现的错误
-
-不要把异步请求当同步函数；不要只检查 `error()` 而忽略 HTTP 状态码；不要在 readyRead 中假设一次就收到完整 body；不要在 GUI 线程用阻塞等待替代信号。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDtlsClientVerifier` 所属机制类型：异步网络机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+## 知识点覆盖
+DTLS cookie、抗放大攻击、无状态验证、DoS 防护。

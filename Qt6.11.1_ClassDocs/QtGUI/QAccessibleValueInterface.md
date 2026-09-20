@@ -1,131 +1,75 @@
 # QAccessibleValueInterface
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleValueInterface`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是一个抽象接口或框架基类，重点是理解它定义的协议，并通过具体子类、工厂或回调来使用。
+`QAccessibleValueInterface` 描述一个对象的数值范围、当前值和最小步进。它让辅助技术不只知道“这是滑块”，还知道它现在是 40、范围是 0 到 100、合理的增减步长是 1。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它适用于滑块、滚动条、进度条、旋钮、缩放控件、评分控件等“有值”的控件。复选框的勾选状态、按钮的按下状态、文本编辑器的内容变化通常不属于这个接口。
 
-### 这是什么
-
-`QAccessibleValueInterface` 是 Qt GUI 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
-
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
-
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
-
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleValueInterface>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 来源类：可访问子接口；通过 `QAccessibleInterface::valueInterface()` 获取。
+- 协作事件：值改变后通常发送 `QAccessibleValueChangeEvent`。
 
-CMake 配置：
+所有返回值使用 `QVariant`，但同一个控件的类型应保持稳定。例如音量滑块始终返回 `int`，缩放比例始终返回 `double`，不要在数值和带单位字符串之间来回切换。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `currentValue()` | 返回当前值。 |
+| `setCurrentValue(value)` | 请求把控件设为指定值。 |
+| `minimumValue()` | 返回可接受的最小值。 |
+| `maximumValue()` | 返回可接受的最大值。 |
+| `minimumStepSize()` | 返回合理的最小变化步长。 |
+
+## 4. 关键用法
+
+```cpp
+QVariant AccessibleVolume::currentValue() const
+{
+    return volume()->value();
+}
+
+void AccessibleVolume::setCurrentValue(const QVariant &value)
+{
+    bool ok = false;
+    const int v = value.toInt(&ok);
+    if (!ok)
+        return;
+
+    volume()->setValue(qBound(0, v, 100));
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`setCurrentValue()` 应走真实控件的设置路径，让范围限制、重绘、信号和无障碍事件都保持一致。超出范围或类型无法转换时，应安全拒绝，而不是崩溃或产生未定义状态。
 
-### 工作机制
+## 5. 使用场景
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+| 场景 | 建议 |
+|---|---|
+| 滑块/旋钮 | 返回当前、最小、最大和步进；同时提供增减动作。 |
+| 进度条 | 当前值可读，`setCurrentValue()` 可为空操作；仍提供范围和步进。 |
+| 滚动条 | 当前滚动位置、范围和页步进要符合真实滚动模型。 |
+| 星级评分 | 可用整数或浮点表达评分，步进反映半星/整星。 |
+| 复选框/开关 | 用 State 和 ActionInterface，不用 ValueInterface。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- `minimumStepSize()` 不代表当前值，也不代表页面步长。它是辅助技术调整值时可采用的合理最小增量。
+- 只读控件也可以提供值接口；区别是 `setCurrentValue()` 不改变值。
+- 值变化后，`currentValue()` 必须立即返回新值，并发送 `QAccessibleValueChangeEvent`。
+- `QVariant` 的单位要通过控件文本、Name/Description 或平台约定补足；不要把显示字符串当机器可调数值。
+- 浮点值比较要考虑容差，避免因微小舍入误差反复发送值变化事件。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QAccessibleValueInterface()`
-- `virtual QVariant currentValue() const = 0`
-- `virtual QVariant maximumValue() const = 0`
-- `virtual QVariant minimumStepSize() const = 0`
-- `virtual QVariant minimumValue() const = 0`
-- `virtual void setCurrentValue(const QVariant &value) = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QAccessibleValueInterface::~QAccessibleValueInterface()`
-
-**作用与语义：**
-
-摧毁了`QAccessibleValueInterface`。
-
-### `[pure virtual] QVariant QAccessibleValueInterface::currentValue() const`
-
-**作用与语义：**
-
-返回控件当前值。通常是双重或整数。
-
-### `[pure virtual] QVariant QAccessibleValueInterface::maximumValue() const`
-
-**作用与语义：**
-
-返回该对象接受的最大值。
-
-### `[pure virtual] QVariant QAccessibleValueInterface::minimumStepSize() const`
-
-**作用与语义：**
-
-返回可访问值的最小步长。这是更改值时合理的最小增量。在程序性更改值时，它应始终是最小步长的整数倍。
-有些工具即使`setCurrentValue`没有执行任何动作，也会使用这个数值。例如，进度条是只读的，但应该返回其范围除以100。
-
-### `[pure virtual] QVariant QAccessibleValueInterface::minimumValue() const`
-
-**作用与语义：**
-
-返回该对象接受的最小值。
-
-### `[pure virtual] void QAccessibleValueInterface::setCurrentValue(const QVariant &value)`
-
-**作用与语义：**
-
-设置`value`。如果期望`value`超出允许值范围，该调用将被忽略。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleValueInterface` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 数值控件的当前值、范围和步进
+- `QVariant` 类型稳定性与单位表达
+- 可读值与可写值的区别
+- 值接口、动作接口和值变化事件协作
+- 范围校验、只读控件和高频通知控制

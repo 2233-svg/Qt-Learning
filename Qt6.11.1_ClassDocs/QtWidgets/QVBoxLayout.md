@@ -1,127 +1,93 @@
 # QVBoxLayout
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QVBoxLayout`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QVBoxLayout` 是从上到下排列控件和子布局的垂直布局。它继承 `QBoxLayout`，因此可以用 stretch 分配高度，用 margins/spacing 控制间距，用嵌套布局组织复杂页面。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QVBoxLayout` 是从上到下排列控件和子布局的垂直布局。它继承 `QBoxLayout`，因此可以用 stretch 分配高度，用 margins/spacing 控制间距，用嵌套布局组织复杂页面。
+`QVBoxLayout` 是方向固定为垂直的 `QBoxLayout`。它把控件和子布局从上到下堆叠，用父类的边距、间距、stretch 和 alignment 规则分配高度。
 
-**内部模型：** 它沿垂直方向分配高度，水平方向通常由控件的 sizePolicy 和 alignment 决定。想让编辑区填满窗口高度，给编辑区或包含它的子布局一个正的 stretch。
+它最适合表达“页面结构”：顶部标题、中间内容、底部按钮区；或者一组设置项从上到下排列。多数复杂 Widgets 页面都是 `QVBoxLayout` 外层再嵌套若干 `QHBoxLayout` 或 `QFormLayout`。
 
-**适用场景：** 设置页、表单纵向堆叠、主窗口内容区、上下分区和对话框内容使用。需要同一行放置多个控件时，在垂直布局中嵌套 `QHBoxLayout`。
+### 适合使用的场景
 
-**典型调用链：** 创建 `QVBoxLayout` -> 依次加入控件/水平子布局 -> 给会伸展的内容设置 stretch -> 设置 margins/spacing -> 窗口变化时由 Qt 自动调整高度。
+- 对话框内容从上到下组织：说明文本、输入区、按钮区。
+- 主窗口中央区域分成顶部工具区、中间编辑区、底部状态区。
+- 设置页、属性页、分组控件中的纵向堆叠。
+- 需要让某个主体控件吸收多余高度，例如文本编辑器、列表、表格。
 
-**先记住的坑：** stretch 只分配高度；只给顶层布局设置 stretch 不会自动让孙控件获得高度，通常要给直接的子布局设置 stretch；不要用固定高度模拟响应式页面。
+### 不适合的场景
+
+- 一行字段排列用 `QHBoxLayout`。
+- 标签和值成对排列用 `QFormLayout`。
+- 精确二维网格用 `QGridLayout`。
+- 只想覆盖同一区域显示不同页面时，用 `QStackedLayout` 或 `QStackedWidget`。
+
+### 最小示例
+
+```cpp
+auto *page = new QVBoxLayout(parent);
+page->addWidget(titleLabel, 0);
+page->addWidget(editor, 1);
+page->addLayout(buttonRow, 0);
+```
+
+这里 `editor` 获得正 stretch，所以窗口变高时它会优先扩展；标题和按钮行维持接近推荐高度。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QVBoxLayout>`
-- 继承自：QBoxLayout
-- 直接派生类：未在类页中列出
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QBoxLayout`
+- 直接派生类：类页未列出
 
-CMake 配置：
+`QVBoxLayout` 的排列方向固定为从上到下。其他操作几乎都来自 `QBoxLayout`：添加控件、添加子布局、插入空白、设置 stretch、设置 spacing、设置边距、动态取出项目。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+| API | 用途速查 |
+| --- | --- |
+| `QVBoxLayout()` | 创建未安装的垂直布局，之后应加入父布局或设置给控件。 |
+| `QVBoxLayout(QWidget *parent)` | 创建垂直布局并直接安装为 `parent` 的顶层布局。 |
+| `~QVBoxLayout()` | 销毁布局对象；控件对象的业务生命周期仍需单独考虑。 |
 
-### 工作机制
-
-它沿垂直方向分配高度，水平方向通常由控件的 sizePolicy 和 alignment 决定。想让编辑区填满窗口高度，给编辑区或包含它的子布局一个正的 stretch。
-
-### 状态、生命周期和线程
-
-**生命周期：** 顶层布局可以在构造时绑定到 QWidget，也可以通过 `setLayout()` 安装；嵌套布局加入父布局后所有权交给父布局。布局析构不会自动销毁普通 QWidget，动态移除项目时要分别处理控件、子布局和 spacer。
-
-**状态与结果：** 布局的项目索引会随着 add、insert、remove 和 takeAt 改变；索引既包括控件，也包括子布局、固定空白和 stretch。修改项目或尺寸参数后 Qt 会使布局失效并重新计算。
-
-**线程与事件循环：** 布局只应在 GUI 线程操作，因为它直接改变 QWidget 几何和可见界面。布局系统不负责业务线程同步，也不会把手动的跨线程控件访问变安全。
-
-## 3. 直接使用
-
-`QVBoxLayout` 的项目顺序就是从上到下的视觉顺序。一个常见页面会把标题、主体和按钮区放成三个项目，并只让主体吸收多余高度：
-
-```cpp
-auto *layout = new QVBoxLayout(parentWidget);
-layout->addWidget(titleLabel, 0);
-layout->addWidget(editor, 1);
-layout->addWidget(buttonBar, 0);
-```
-
-如果按钮栏本身是多个按钮横向排列，应把它做成 `QHBoxLayout` 后用 `addLayout(buttonBar, 0)` 加入垂直布局。`QVBoxLayout` 仍然遵守 `QBoxLayout` 的所有 stretch、alignment、spacing 和 margins 规则。
-
-```cpp
-auto *layout = new QVBoxLayout(parentWidget);
-layout->addWidget(titleLabel);
-layout->addWidget(editor, 1);
-layout->addWidget(buttonBar);
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QVBoxLayout()`
-- `QVBoxLayout(QWidget *parent)`
-- `virtual ~QVBoxLayout()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 4. API 逐项说明
 
 ### `QVBoxLayout::QVBoxLayout()`
 
-**作用与语义：**
+创建一个独立的垂直布局。它适合作为局部区块加入外层布局，例如一个右侧属性面板或一个 group box 内部内容。
 
-构建一个新的垂直方框。你必须将其添加到另一个布局中。
+```cpp
+auto *section = new QVBoxLayout;
+section->addWidget(header);
+section->addWidget(details, 1);
+outerLayout->addLayout(section, 1);
+```
 
-### `[explicit] QVBoxLayout::QVBoxLayout(QWidget *parent)`
+加入父布局后，父布局会管理它的所有权。
 
-**作用与语义：**
+### `QVBoxLayout::QVBoxLayout(QWidget *parent)`
 
-构建一个带有父`parent`的顶层垂直框。
-布局直接设置为`parent`的顶层布局。一个小部件只能有一个顶层布局。它由`QWidget::layout()`返回。
+创建并安装为 `parent` 的顶层布局。新建页面控件时常用这个构造函数。
 
-### `[virtual noexcept] QVBoxLayout::~QVBoxLayout()`
+如果父控件已经有布局，不要再次用这个构造函数给它装第二个顶层布局；应复用 `parent->layout()` 或重新设计容器层级。
 
-**作用与语义：**
+### `~QVBoxLayout()`
 
-破坏了这个盒子布局。
-布局中的控件没有被破坏。
+销毁布局对象。和其他布局一样，布局析构不是业务级“关闭页面”操作。动态页面切换时，应明确决定内部控件是保留、移动还是删除。
 
-## 6. 深入实践与常见坑
+## 5. 深入实践与常见坑
 
-### 生命周期和资源边界
+### 垂直方向的 stretch 控制高度
 
-顶层布局可以在构造时绑定到 QWidget，也可以通过 `setLayout()` 安装；嵌套布局加入父布局后所有权交给父布局。布局析构不会自动销毁普通 QWidget，动态移除项目时要分别处理控件、子布局和 spacer。
+在 `QVBoxLayout` 中，stretch 主要影响高度。让列表、表格、编辑器获得 `1`，让标题、说明、按钮区保持 `0`，通常能得到自然的页面结构。
 
-### 状态和错误边界
+### 外层控制大区块，内层控制行
 
-布局的项目索引会随着 add、insert、remove 和 takeAt 改变；索引既包括控件，也包括子布局、固定空白和 stretch。修改项目或尺寸参数后 Qt 会使布局失效并重新计算。
+不要把每一行的标签、输入框、按钮都直接塞进一个大 `QVBoxLayout`。更清晰的结构是：外层 `QVBoxLayout` 管页面上下关系，每一行用 `QHBoxLayout` 或 `QFormLayout` 管字段关系。
 
-### 线程边界
+### 固定高度是最后手段
 
-布局只应在 GUI 线程操作，因为它直接改变 QWidget 几何和可见界面。布局系统不负责业务线程同步，也不会把手动的跨线程控件访问变安全。
-
-### 最容易出现的错误
-
-stretch 只分配高度；只给顶层布局设置 stretch 不会自动让孙控件获得高度，通常要给直接的子布局设置 stretch；不要用固定高度模拟响应式页面。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QVBoxLayout` 所属机制类型：布局管理机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+很多“页面不够好看”的问题，其实应该通过 stretch、spacing、contents margins、size policy 解决。固定高度会在字体变化、翻译变长、高 DPI 环境下变脆。

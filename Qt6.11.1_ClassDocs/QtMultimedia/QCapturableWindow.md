@@ -1,209 +1,36 @@
 # QCapturableWindow
+> Qt 6.11.1 · Qt Multimedia · 来自 `QCapturableWindow`
 
-> Qt 6.11.1 · Qt Multimedia
+## 作用定位
 
-## 1. 先建立直觉
+`QCapturableWindow` 是可被 `QWindowCapture` 捕获的窗口描述对象。它包含窗口标识、标题/描述等信息，用来展示选择列表并把用户选择交给窗口捕获源。
 
-**一句话定位：** `QCapturableWindow` 是 Qt Multimedia 的“Capturable窗口”类型，参与媒体源、设备、格式、播放/采集状态或音视频数据处理。
-
-**模块背景：** Qt Multimedia 提供音频、视频、摄像头、媒体会话和设备访问能力。
-
-### 这是什么
-
-`QCapturableWindow` 是 多媒体设备与会话机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 多媒体类型通常把设备、媒体会话、格式、播放状态和异步错误分开。硬件能力、平台后端、权限和资源状态会影响结果；请求成功发起不等于设备已准备好。
-
-**适用场景：** 先检查平台能力和权限，再创建会话/设备，设置格式和源，连接状态与错误信号，执行开始/暂停/停止并在结束后清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要假设所有平台支持相同编解码器和格式；不要忽略权限和后端错误；不要在状态未准备好时连续调用控制 API；媒体对象销毁前先停止使用。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QCapturableWindow>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Multimedia)
-target_link_libraries(mytarget PRIVATE Qt6::Multimedia)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-多媒体类型通常把设备、媒体会话、格式、播放状态和异步错误分开。硬件能力、平台后端、权限和资源状态会影响结果；请求成功发起不等于设备已准备好。
-
-### 状态、生命周期和线程
-
-**生命周期：** 设备或媒体对象要在使用期间保持有效，开始前配置输入/输出和格式，停止后释放会话或解除设备占用。状态、媒体状态和错误信号共同决定下一步操作。
-
-**状态与结果：** 区分无媒体、加载中、已加载、播放中、暂停、停止、结束和错误。进度、时长、缓冲和设备可用性不是同一个状态，不能只用一个 bool 表示。
-
-**线程与事件循环：** 媒体对象通常依赖事件循环和平台线程边界；GUI 展示对象在 GUI 线程，后台处理要使用类明确支持的线程模型。
-
-## 3. 直接使用
-
-先检查平台能力和权限，再创建会话/设备，设置格式和源，连接状态与错误信号，执行开始/暂停/停止并在结束后清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `description : const QString`
-- `isValid : const bool`
-
-### 公有函数
-
-- `QCapturableWindow()`
-- `(since 6.10) QCapturableWindow(QWindow *window)`
-- `QCapturableWindow(const QCapturableWindow &other)`
-- `QCapturableWindow(QCapturableWindow &&other)`
-- `~QCapturableWindow()`
-- `QString description() const`
-- `bool isValid() const`
-- `void swap(QCapturableWindow &other)`
-- `QCapturableWindow & operator=(QCapturableWindow &&other)`
-- `QCapturableWindow & operator=(const QCapturableWindow &other)`
-
-### 相关非成员函数
-
-- `bool operator!=(const QCapturableWindow &lhs, const QCapturableWindow &rhs)`
-- `bool operator==(const QCapturableWindow &lhs, const QCapturableWindow &rhs)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[read-only] description : const QString`
-
-**作用与语义：**
-
-该物业保存了窗户的描述。
-在大多数情况下，它代表窗户标题。
-
-**如何使用：** 调用 `description()` 读取当前值；它不会修改应用状态。
-
-### `[read-only] isValid : const bool`
-
-**作用与语义：**
-
-该属性决定了关于窗口的信息是否有效。
-无效窗口信息指的是不存在的窗口，或者不指向任何窗口。
-
-**如何使用：** 调用 `isValid()` 读取当前值；它不会修改应用状态。
-
-### `QCapturableWindow::QCapturableWindow()`
-
-**作用与语义：**
-
-构造一个空可捕获窗口信息，但不指向任何窗口。
-
-### `[explicit invokable, since 6.10] QCapturableWindow::QCapturableWindow(QWindow *window)`
-
-**作用与语义：**
-
-构建一个映射到给定窗口的QCapturableWindow实例。
-QCapturableWindow的描述将与给定`QWindow`的标题相符。
-注意，如果指定的`QWindow`尚未呈现，构造函数可能会创建无效实例。因此，如果Qt应用程序未运行，则预期存在无效`QCapturableWindow`实例。通过查询`isValid`随时间追踪实例的有效性。
-如果输入为nullptr，该方法将返回一个永远不会有效的实例。
-如果给定一个非顶层窗口，该方法返回的实例永远不会有效。
-注意：该函数可通过元对象系统和QML调用。参见`Q_INVOKABLE`。
-
-### `QCapturableWindow::QCapturableWindow(const QCapturableWindow &other)`
-
-**作用与语义：**
-
-利用 QCapturableWindow 构建一个新的窗口信息`other`。
-
-### `[constexpr noexcept] QCapturableWindow::QCapturableWindow(QCapturableWindow &&other)`
-
-**作用与语义：**
-
-通过从`other`移动来构造一个QCapturableWindow。
-
-### `[noexcept] QCapturableWindow::~QCapturableWindow()`
-
-**作用与语义：**
-
-会破坏窗口信息。
-
-### `[noexcept] void QCapturableWindow::swap(QCapturableWindow &other)`
-
-**作用与语义：**
-
-将当前窗口信息与`other`交换。
-
-### `[noexcept] QCapturableWindow &QCapturableWindow::operator=(QCapturableWindow &&other)`
-
-**作用与语义：**
-
-这`other`进入了这个`QCapturableWindow`。
-
-### `QCapturableWindow &QCapturableWindow::operator=(const QCapturableWindow &other)`
-
-**作用与语义：**
-
-将`other`窗口信息分配给该`QCapturableWindow`。
-
-### `[noexcept] bool operator!=(const QCapturableWindow &lhs, const QCapturableWindow &rhs)`
-
-**作用与语义：**
-
-如果窗口信息 `lhs` 和 `rhs` 指向不同的窗口，返回 `true`，否则返回 `false`。
-
-### `[noexcept] bool operator==(const QCapturableWindow &lhs, const QCapturableWindow &rhs)`
-
-**作用与语义：**
-
-如果窗口信息`lhs`和`rhs`指向相同窗口，返回`true`，否则返回`false`。
-
-### `QString description() const`
-
-**作用与语义：**
-
-该物业保存了窗户的描述。
-在大多数情况下，它代表窗户标题。
-
-**如何使用：** 调用 `description()` 读取当前值；它不会修改应用状态。
-
-### `bool isValid() const`
-
-**作用与语义：**
-
-该属性决定了关于窗口的信息是否有效。
-无效窗口信息指的是不存在的窗口，或者不指向任何窗口。
-
-**如何使用：** 调用 `isValid()` 读取当前值；它不会修改应用状态。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-设备或媒体对象要在使用期间保持有效，开始前配置输入/输出和格式，停止后释放会话或解除设备占用。状态、媒体状态和错误信号共同决定下一步操作。
-
-### 状态和错误边界
-
-区分无媒体、加载中、已加载、播放中、暂停、停止、结束和错误。进度、时长、缓冲和设备可用性不是同一个状态，不能只用一个 bool 表示。
-
-### 线程边界
-
-媒体对象通常依赖事件循环和平台线程边界；GUI 展示对象在 GUI 线程，后台处理要使用类明确支持的线程模型。
-
-### 最容易出现的错误
-
-不要假设所有平台支持相同编解码器和格式；不要忽略权限和后端错误；不要在状态未准备好时连续调用控制 API；媒体对象销毁前先停止使用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QCapturableWindow` 所属机制类型：多媒体设备与会话机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- CMake：链接 `Qt6::Multimedia`
+- 继承：无公开 QObject 继承，值类型
+
+## API 速查
+
+| API | 说明 |
+| --- | --- |
+| `description()` | 可展示给用户的窗口说明。 |
+| `isValid()` | 是否代表一个有效可捕获窗口。 |
+| `operator==` / `operator!=` | 比较窗口描述是否相同。 |
+
+## 使用场景
+- 用 `QWindowCapture::capturableWindows()` 枚举窗口后展示 UI。
+- 保存用户当前选择并传给 `QWindowCapture::setWindow()`。
+- 捕获前检查窗口是否仍有效。
+
+## 常见坑与经验
+- 窗口列表是快照，用户选择后窗口可能已经关闭，start 前仍要处理失败。
+- description 面向展示，不适合作为稳定唯一 ID。
+- 不同平台对可捕获窗口的定义不同，系统窗口/受保护窗口可能不可见。
+
+## 知识点覆盖
+
+- 可捕获窗口描述
+- 窗口选择 UI
+- 窗口捕获有效性

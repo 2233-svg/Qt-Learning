@@ -1,110 +1,54 @@
 # QShortcutEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QShortcutEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QShortcutEvent` 是 Qt 的值类型，围绕“Shortcut事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QShortcutEvent` 是快捷键匹配后送到对象的事件。它告诉接收者哪个 `QKeySequence` 被触发，以及这次匹配是否有歧义。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+大多数时候你只连接 `QShortcut::activated()` 或 `QAction::triggered()`；只有自定义事件处理、快捷键管理器或调试冲突时，才直接关心这个事件。
 
-### 这是什么
+## 2. 类说明
 
-`QShortcutEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QShortcutEvent` 继承自 `QEvent`。它包含触发的 key sequence、相关 `QShortcut` 指针，以及 ambiguous 标志。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+ambiguous 表示同一个按键序列匹配多个快捷键。此时 Qt 不一定能明确知道用户想触发哪一个命令。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QShortcutEvent(QKeySequence, QShortcut *, bool ambiguous)` | 创建快捷键事件，Qt 6.5 起提供。 |
+| `key()` | 返回触发的按键序列。 |
+| `isAmbiguous()` | 返回这次匹配是否存在歧义。 |
+| `QShortcut::activated()` | 非歧义快捷键触发信号。 |
+| `QShortcut::activatedAmbiguously()` | 歧义快捷键触发信号。 |
+| `QEvent::Shortcut` | 快捷键事件类型。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QShortcutEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+bool ShortcutDebugger::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::Shortcut) {
+        auto *shortcutEvent = static_cast<QShortcutEvent *>(event);
+        qDebug() << shortcutEvent->key()
+                 << "ambiguous:" << shortcutEvent->isAmbiguous();
+    }
+    return QObject::eventFilter(obj, event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 5. 使用场景
 
-### 工作机制
+适合快捷键调试工具、命令系统、事件过滤器、自定义快捷键冲突提示、特殊输入路由。
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+普通命令触发不需要处理它，用 `QAction` 或 `QShortcut` 信号更清楚。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+不要保存事件指针。事件处理完就失效，需要记录就保存 key 或自己的命令 id。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+歧义不是错误崩溃，而是快捷键设计冲突。最好在设置页或启动检查中提前发现。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `(since 6.5) QShortcutEvent(const QKeySequence &key, const QShortcut *shortcut = nullptr, bool ambiguous = false)`
-- `bool isAmbiguous() const`
-- `const QKeySequence & key() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[since 6.5] QShortcutEvent::QShortcutEvent(const QKeySequence &key, const QShortcut *shortcut = nullptr, bool ambiguous = false)`
-
-**作用与语义：**
-
-为与`QShortcut` `shortcut`相关的`key`打印机构建一个快捷事件。
-`ambiguous` 指定同一密钥序列是否存在多个`QShortcut`。
-
-### `bool QShortcutEvent::isAmbiguous() const`
-
-**作用与语义：**
-
-如果触发事件的密钥序列不明确，返回`true`。
-
-### `const QKeySequence &QShortcutEvent::key() const`
-
-**作用与语义：**
-
-返回触发事件的密钥序列。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QShortcutEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+快捷键上下文会影响是否匹配。调试时同时检查 key sequence 和 `Qt::ShortcutContext`。

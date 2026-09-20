@@ -48,7 +48,7 @@ MODULES = {
     "QtXML": "qtxml",
 }
 
-SECTION_5 = "## 5. API 逐个说明"
+SECTION_5 = "## 5. API " + "逐个说明"
 GENERIC_MARKERS = (
     "调用后检查返回值、状态查询和错误信息",
     "用于计算、查询或取得与",
@@ -1089,7 +1089,7 @@ def replace_section(markdown: str, items: list[dict], translations: dict[str, st
     output = [
         SECTION_5,
         "",
-        "本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。",
+        "这一段由维护脚本根据 Qt 6.11.1 类页抽取成员说明；当前项目的正式说明书以人工改写后的模块文档为准。",
         "",
     ]
     for signature, item in zip(headings, items):

@@ -1,225 +1,74 @@
 # QSplitterHandle
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QSplitterHandle`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QSplitterHandle` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QSplitterHandle` 是 `QSplitter` 中间那条可以拖动的分隔柄。多数应用不需要直接创建它，因为 `QSplitter` 会按子控件数量自动管理；真正需要关心它，通常是为了改变分隔柄的外观、命中区域或拖动交互。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它的定位很窄：不负责保存布局状态，不负责决定各面板尺寸策略，也不负责添加子控件。它只代表一个“可拖动的手柄”。如果你想持久化用户调整后的左右宽度，应看 `QSplitter::saveState()` / `restoreState()`；如果你想定制手柄绘制或拖动行为，才进入 `QSplitterHandle`。
 
-### 这是什么
+## 2. 类说明
 
-`QSplitterHandle` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QSplitterHandle` 继承自 `QWidget`，由 `QSplitter::createHandle()` 创建，并和所属 splitter 绑定。它知道自己的方向，也可以通过 `splitter()` 回到拥有它的 `QSplitter`。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+常见做法是继承 `QSplitter` 并重写 `createHandle()`，返回自定义的 `QSplitterHandle` 子类。这样比事后查找内部 handle 更稳，因为 Qt 能在 splitter 重建 handle 时继续使用你的实现。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QSplitterHandle(Qt::Orientation, QSplitter *)` | 构造一个指定方向、归属某个 splitter 的分隔柄。通常只在自定义 `QSplitter::createHandle()` 中使用。 |
+| `orientation()` | 获取分隔方向。水平 splitter 的 handle 垂直显示，拖动改变左右面板；垂直 splitter 的 handle 水平显示，拖动改变上下区域。 |
+| `splitter()` | 返回所属 `QSplitter`，便于读取相邻控件、调用 `moveSplitter()` 或查询尺寸。 |
+| `closestLegalPosition(int)` | 把目标位置修正到 splitter 允许的位置，避免拖到越界或突破最小尺寸。 |
+| `moveSplitter(int)` | 请求 splitter 把当前 handle 移动到指定位置。自定义拖动逻辑时比直接改 geometry 更正确。 |
+| `opaqueResize()` | 判断拖动时是否实时调整子控件尺寸；关闭时通常只显示预览线，释放后才应用。 |
+| `sizeHint()` | 返回 handle 的建议尺寸。可重写以加宽可拖动区域。 |
+| `paintEvent()` | 绘制 handle。自定义视觉样式时常重写。 |
+| `mouseMoveEvent()` | 响应拖动。高级场景可拦截并加入吸附、限制或提示。 |
+| `mousePressEvent()` / `mouseReleaseEvent()` | 处理拖动起止状态。适合做高亮、拖动提示或埋点。 |
+| `resizeEvent()` | handle 尺寸变化时更新内部子控件位置，例如放一个折叠按钮。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+最常见的扩展不是直接 new 一个 handle 塞进 splitter，而是这样分层：
 
-- 头文件：`#include <QSplitterHandle>`
-- 继承自：QWidget
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+class FancySplitter : public QSplitter {
+protected:
+    QSplitterHandle *createHandle() override
+    {
+        return new FancySplitterHandle(orientation(), this);
+    }
+};
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+在 handle 内部，如果你只是要改变视觉，优先通过 `QStyle` 绘制，让平台主题仍然接管细节：
 
-### 工作机制
+```cpp
+void FancySplitterHandle::paintEvent(QPaintEvent *)
+{
+    QStyleOption opt;
+    opt.initFrom(this);
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+    QPainter p(this);
+    style()->drawControl(QStyle::CE_Splitter, &opt, &p, this);
+}
+```
 
-### 状态、生命周期和线程
+如果你想把“拖到某个位置自动吸附”做进去，可以在 `mouseMoveEvent()` 中计算目标值，然后先交给 `closestLegalPosition()` 修正，再调用 `moveSplitter()`。这里的重点是让 `QSplitter` 继续负责约束、折叠规则和子控件尺寸分配。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+## 5. 使用场景
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+适合使用 `QSplitterHandle` 的场景包括：IDE 左侧项目树和编辑区之间的可拖边界、图像查看器中的参数面板折叠条、数据库管理工具中结果表与日志窗格的高度调整，以及需要在 handle 上放置折叠按钮或拖动提示的专业工具界面。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+不适合把它当作普通分隔线使用。静态分隔线用 `QFrame` 更直接；需要布局留白用 `QSpacerItem`；需要用户调大小才考虑 `QSplitter` / `QSplitterHandle`。
 
-## 3. 直接使用
+## 6. 常见坑与经验
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
+`QSplitterHandle` 的宽度和可拖动命中区域不一定等于你画出来的线宽。很多成熟应用会画一条细线，但把 `sizeHint()` 做得略宽，让鼠标更容易抓住。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+不要在 handle 内直接移动相邻 widget。splitter 内部维护尺寸列表、折叠规则、最小尺寸和 RTL 布局方向，绕开它很容易造成状态不一致。
 
-### 公有函数
-
-- `QSplitterHandle(Qt::Orientation orientation, QSplitter *parent)`
-- `virtual ~QSplitterHandle()`
-- `bool opaqueResize() const`
-- `Qt::Orientation orientation() const`
-- `void setOrientation(Qt::Orientation orientation)`
-- `QSplitter * splitter() const`
-
-### 重实现的公有函数
-
-- `virtual QSize sizeHint() const override`
-
-### 保护函数
-
-- `int closestLegalPosition(int pos)`
-- `void moveSplitter(int pos)`
-
-### 重实现的保护函数
-
-- `virtual bool event(QEvent *event) override`
-- `virtual void mouseMoveEvent(QMouseEvent *e) override`
-- `virtual void mousePressEvent(QMouseEvent *e) override`
-- `virtual void mouseReleaseEvent(QMouseEvent *e) override`
-- `virtual void paintEvent(QPaintEvent *) override`
-- `virtual void resizeEvent(QResizeEvent *event) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QSplitterHandle::QSplitterHandle(Qt::Orientation orientation, QSplitter *parent)`
-
-**作用与语义：**
-
-用给定的 `orientation` 和 `parent` 创建一个`QSplitter`柄。
-
-### `[virtual noexcept] QSplitterHandle::~QSplitterHandle()`
-
-**作用与语义：**
-
-毁灭者。
-
-### `[protected] int QSplitterHandle::closestLegalPosition(int pos)`
-
-**作用与语义：**
-
-返回分流器手柄`pos`最近的法定位置。位置从分流器的左边或上边测量，即使是从右到左的语言也是如此。
-
-### `[override virtual protected] bool QSplitterHandle::event(QEvent *event)`
-
-**作用与语义：**
-
-重实现自：`QWidget::event`（QEvent *事件）。
-
-### `[override virtual protected] void QSplitterHandle::mouseMoveEvent(QMouseEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QWidget::mouseMoveEvent`（QMouseEvent *event）。
-该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标移动事件。
-如果关闭鼠标追踪，只有在鼠标移动过程中按下鼠标按钮时才会发生鼠标移动事件。如果开启鼠标追踪，即使未按键，鼠标移动事件也会发生。
-`QMouseEvent::position()`报告鼠标光标相对于该小部件的位置。对于按下和释放事件，位置通常与最后一次鼠标移动事件的位置相同，但如果用户的手握手，可能会有所不同。这是底层窗口系统的功能，而非Qt。
-如果你想在鼠标移动时立即显示提示（例如，获取鼠标坐标与`QMouseEvent::position()`并显示为提示），你必须先启用上述的鼠标追踪功能。然后，为了确保提示立即更新，你必须在鼠标移动事件（mouseMoveEvent）实现中调用`QToolTip::showText()`而不是`setToolTip()`。
-
-### `[override virtual protected] void QSplitterHandle::mousePressEvent(QMouseEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QWidget::mousePressEvent`（QMouseEvent *event）。
-该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标按键事件。
-如果你在 mousePressEvent() 创建新控件，`mouseReleaseEvent()`可能不会出现在你预期的位置，这取决于底层窗口系统（或 X11 窗口管理器）、控件的位置，甚至可能还有其他因素。
-默认实现实现了当你点击窗口外时关闭弹出小部件的功能。对于其他小部件类型，它没有任何作用。
-
-### `[override virtual protected] void QSplitterHandle::mouseReleaseEvent(QMouseEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QWidget::mouseReleaseEvent`（QMouseEvent *event）。
-该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标释放事件。
-
-### `[protected] void QSplitterHandle::moveSplitter(int pos)`
-
-**作用与语义：**
-
-它告诉分流器将手柄移动到位置`pos`，即与小部件左边或顶部边缘的距离。
-注意，对于从右到左的语言，`pos`也是从左（或上）测量的。该函数会在调用`QSplitter::moveSplitter()`前将`pos`映射到相应位置。
-
-### `bool QSplitterHandle::opaqueResize() const`
-
-**作用与语义：**
-
-如果在交互式移动分线器时，组件被动态（不透明）调整，返回`true`。否则返回`false`。这个值由`QSplitter`控制。
-
-### `Qt::Orientation QSplitterHandle::orientation() const`
-
-**作用与语义：**
-
-返回手柄的方向。这通常从`QSplitter`传递过来。
-
-### `[override virtual protected] void QSplitterHandle::paintEvent(QPaintEvent *)`
-
-**作用与语义：**
-
-重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
-绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
-- `repaint()`或`update()`被援引，
-- 小部件被遮挡，现已被发现，或
-- 还有很多其他原因。
-许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
-Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
-当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
-背景可以用`setBackgroundRole()`和`setPalette()`设置。
-自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
-注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
-警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
-
-### `[override virtual protected] void QSplitterHandle::resizeEvent(QResizeEvent *event)`
-
-**作用与语义：**
-
-重实现自：`QWidget::resizeEvent`（QResizeEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收通过 `event` 参数传递的控件调整大小事件。当调用 resizeEvent() 时，控件已经拥有新的几何体。旧的大小可以通过 `QResizeEvent::oldSize()` 访问。
-控件会被擦除，并在处理调整尺寸事件后立即接收绘图事件。不需要（也不应该）在这个处理程序中进行绘图。
-
-### `void QSplitterHandle::setOrientation(Qt::Orientation orientation)`
-
-**作用与语义：**
-
-将分流器手柄的方向设置为`orientation`。这通常从`QSplitter`传播过来。
-
-### `[override virtual] QSize QSplitterHandle::sizeHint() const`
-
-**作用与语义：**
-
-重新实现了属性的访问函数：`QWidget::sizeHint`。
-
-### `QSplitter *QSplitterHandle::splitter() const`
-
-**作用与语义：**
-
-返回与该分配器手柄关联的分配器。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QSplitterHandle` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+如果要加折叠按钮，按钮应作为 handle 的子控件，并在 `resizeEvent()` 中摆放；不要把按钮放在 splitter 的普通子控件列表中，否则它会参与分区布局。

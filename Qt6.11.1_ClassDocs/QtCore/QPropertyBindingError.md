@@ -1,174 +1,51 @@
 # QPropertyBindingError
+> Qt 6.11.1 · Qt Core · 来自 `QPropertyBindingError`
 
-> Qt 6.11.1 · Qt Core
+## 作用定位
+`QPropertyBindingError` 是属性绑定求值失败时携带的诊断值。它不负责建立绑定；它回答的是“这次绑定为什么没有得到可靠结果”。常见来源是属性依赖形成环，或绑定表达式本身在执行时失败。
 
-## 1. 先建立直觉
+它适合被上层代码记录、展示或转交，而不是拿来驱动正常业务流程。正常的绑定应当始终能重算出值；错误分支应促使你修正依赖图或表达式。
 
-**一句话定位：** `QPropertyBindingError` 是 Qt 属性绑定体系中的类型，负责保存属性值、建立依赖关系或监听变化。
+## API 速查
+| API | 是做什么的 |
+|---|---|
+| `QPropertyBindingError()` | 构造“无错误”状态。 |
+| `QPropertyBindingError(Type, QString)` | 以错误类别和可读说明构造诊断结果。 |
+| `type()` | 取得机器可判断的错误类别。 |
+| `description()` | 取得适合日志、调试面板的补充说明。 |
+| `NoError` | 绑定求值没有错误。 |
+| `BindingLoop` | 依赖链回到了自身，Qt 停止此次求值。 |
+| `EvaluationError` | 表达式执行失败，但并非依赖环；QML 绑定异常是典型来源。 |
+| `UnknownError` | 其他无法归入前两类的失败，优先查看说明文本。 |
+| 拷贝、移动、赋值 | 传递或保存诊断值；移动后的源对象回到默认状态。 |
 
-**模块背景：** Qt Core 提供对象模型、事件循环、容器、字符串、文件、线程、时间和元对象系统等基础能力。
+## 使用场景
 
-### 这是什么
-
-`QPropertyBindingError` 是 Qt 属性绑定机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** Qt 的属性系统把当前值、依赖关系和变化通知分开。`QProperty` 可以保存值并建立绑定，绑定会记录读取过的依赖；依赖变化时重新计算。`QPropertyNotifier` 和 `QPropertyChangeHandler` 则用对象生命周期控制通知回调。
-
-**适用场景：** 先定义属性及其默认值，再用绑定表达式连接依赖；用 notify/subscribe/onValueChanged 观察变化，保存返回的 handler 直到监听结束。需要一次性赋值时明确接受它会替换绑定。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要让绑定表达式产生副作用；不要立即销毁通知器；不要把绑定系统当线程同步工具；循环绑定、隐式转换和直接赋值都可能让结果与直觉不同。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QPropertyBindingError>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Core)
-target_link_libraries(mytarget PRIVATE Qt6::Core)
+### 排查循环绑定
+```cpp
+// 错误示意：width 的计算又读回了 width。
+QProperty<int> width([&] { return width.value() + 10; });
 ```
+绑定表达式应只读取真正的输入属性，例如 `contentWidth`、`padding`，不要读取它正在产出的同一个属性，也要警惕 A 读 B、B 又读 A 的间接环。
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-Qt 的属性系统把当前值、依赖关系和变化通知分开。`QProperty` 可以保存值并建立绑定，绑定会记录读取过的依赖；依赖变化时重新计算。`QPropertyNotifier` 和 `QPropertyChangeHandler` 则用对象生命周期控制通知回调。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绑定、通知器和 change handler 都必须活到你希望回调持续工作的时间。移动 handler 可以转移回调责任，销毁 handler 会解除监听；绑定表达式引用的对象必须比绑定更长寿。
-
-**状态与结果：** 区分没有绑定、绑定有效、绑定被直接赋值打破、值发生变化和回调已解除。直接写入绑定属性往往会覆盖绑定关系，读取属性时要确认当前值是否来自预期依赖。
-
-**线程与事件循环：** 属性绑定通常在创建它的线程计算，依赖对象的读写要遵守线程规则。不要让绑定表达式跨线程访问无锁共享状态，也不要在回调中修改会形成循环依赖的属性。
-
-## 3. 直接使用
-
-先定义属性及其默认值，再用绑定表达式连接依赖；用 notify/subscribe/onValueChanged 观察变化，保存返回的 handler 直到监听结束。需要一次性赋值时明确接受它会替换绑定。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 将错误写入诊断日志
+当某个框架或封装把绑定错误交给你时，先按 `type()` 分类，再输出 `description()`。前者适合统计和分支，后者适合定位现场；不要依赖说明文字做程序逻辑，因为文字并不是稳定协议。
 
 ```cpp
-QProperty<int> source{1};
-QProperty<int> result{[&source] { return source.value() * 2; }};
-auto notifier = result.onValueChanged([] {
-    // 依赖变化后执行轻量通知逻辑
-});
-source = 2; // result 会重新计算
+void reportBindingError(const QPropertyBindingError &error)
+{
+    if (error.type() == QPropertyBindingError::NoError)
+        return;
+    qWarning() << "property binding failed:" << error.type()
+               << error.description();
+}
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 常见坑与经验
+- `NoError` 是一个正常值，不要仅用“描述是否为空”判断成功。
+- `BindingLoop` 不一定只由一行表达式造成；检查整个属性依赖图以及通知回调里是否反写输入属性。
+- 绑定表达式应接近纯函数：读取依赖、计算、返回。写文件、发网络请求、修改其他属性都会让重算时机变得不可控。
+- `EvaluationError` 在混合 C++/QML 时尤其值得记录：它往往说明 QML 表达式抛出了异常或访问了无效对象。
 
-### 公有类型
-
-- `enum Type { NoError, BindingLoop, EvaluationError, UnknownError }`
-
-### 公有函数
-
-- `QPropertyBindingError()`
-- `QPropertyBindingError(QPropertyBindingError::Type type, const QString &description = QString())`
-- `QPropertyBindingError(const QPropertyBindingError &other)`
-- `QPropertyBindingError(QPropertyBindingError &&other)`
-- `~QPropertyBindingError()`
-- `QString description() const`
-- `QPropertyBindingError::Type type() const`
-- `QPropertyBindingError & operator=(QPropertyBindingError &&other)`
-- `QPropertyBindingError & operator=(const QPropertyBindingError &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QPropertyBindingError::Type`
-
-**作用与语义：**
-
-该枚举具体说明了发生了哪些错误。
-- `QPropertyBindingError::NoError`：`0`;在评估绑定过程中未发生错误。
-- `QPropertyBindingError::BindingLoop`：`1`;约束性评估被停止，因为属性依赖于其自身价值。
-- `QPropertyBindingError::EvaluationError`：`2`;绑定评估被停止的原因不是绑定环。例如，当QML引擎在评估绑定时发生异常时，会使用该值。
-- `QPropertyBindingError::UnknownError`：`3`;当其他两个值都不适用时使用的通用错误类型。调用`description()`可能提供详细信息。
-
-### `QPropertyBindingError::QPropertyBindingError()`
-
-**作用与语义：**
-
-默认构造为 QPropertyBindingError。hasError() 返回 false，类型返回 `NoError`，`description()` 返回空字符串。
-
-### `QPropertyBindingError::QPropertyBindingError(QPropertyBindingError::Type type, const QString &description = QString())`
-
-**作用与语义：**
-
-构造一个类型为`type`的QPropertyBindingError，描述为`description`。
-
-### `QPropertyBindingError::QPropertyBindingError(const QPropertyBindingError &other)`
-
-**作用与语义：**
-
-从 `other` 复制构造 QPropertyBindingError。
-
-### `QPropertyBindingError::QPropertyBindingError(QPropertyBindingError &&other)`
-
-**作用与语义：**
-
-Move-构造 QPropertyBindingError，从`other`。`other` 将保持默认状态。
-
-### `[noexcept] QPropertyBindingError::~QPropertyBindingError()`
-
-**作用与语义：**
-
-摧毁了`QPropertyBindingError`。
-
-### `QString QPropertyBindingError::description() const`
-
-**作用与语义：**
-
-如果`QPropertyBindingError`已被设置，会返回描述性错误信息。
-
-### `QPropertyBindingError::Type QPropertyBindingError::type() const`
-
-**作用与语义：**
-
-返回`QPropertyBindingError`类型。
-
-### `QPropertyBindingError &QPropertyBindingError::operator=(QPropertyBindingError &&other)`
-
-**作用与语义：**
-
-Move-assign `other`到这个`QPropertyBindingError`。`other`会保持默认状态。
-
-### `QPropertyBindingError &QPropertyBindingError::operator=(const QPropertyBindingError &other)`
-
-**作用与语义：**
-
-本`QPropertyBindingError` `other`副本。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绑定、通知器和 change handler 都必须活到你希望回调持续工作的时间。移动 handler 可以转移回调责任，销毁 handler 会解除监听；绑定表达式引用的对象必须比绑定更长寿。
-
-### 状态和错误边界
-
-区分没有绑定、绑定有效、绑定被直接赋值打破、值发生变化和回调已解除。直接写入绑定属性往往会覆盖绑定关系，读取属性时要确认当前值是否来自预期依赖。
-
-### 线程边界
-
-属性绑定通常在创建它的线程计算，依赖对象的读写要遵守线程规则。不要让绑定表达式跨线程访问无锁共享状态，也不要在回调中修改会形成循环依赖的属性。
-
-### 最容易出现的错误
-
-不要让绑定表达式产生副作用；不要立即销毁通知器；不要把绑定系统当线程同步工具；循环绑定、隐式转换和直接赋值都可能让结果与直觉不同。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPropertyBindingError` 所属机制类型：Qt 属性绑定机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+## 知识点覆盖
+属性绑定、依赖图、循环依赖、惰性/重新求值、QML 与 C++ 属性互操作、错误分类、日志诊断、纯函数式计算。

@@ -1,131 +1,34 @@
 # QtTaskTree::If
+> Qt 6.11.1 · Qt TaskTree · 来自 `QtTaskTree::If`
 
-> Qt 6.11.1 · Qt TaskTree
+## 作用定位
 
-## 1. 先建立直觉
+`If` 是 TaskTree 条件分支的起点。条件可以是一个 `ExecutableItem`，也可以是一个 handler。它通常与 `Then`、`ElseIf`、`Else` 拼成声明式条件结构。
 
-**一句话定位：** `QtTaskTree::If` 是并发执行或同步类型，负责任务、线程、future、promise 或共享资源的协调。
-
-**模块背景：** 这是 Qt TaskTree 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QtTaskTree::If` 是 并发与任务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
-
-**适用场景：** 先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <qconditional.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS TaskTree)
-target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
-```
+| API | 说明 |
+| --- | --- |
+| `If(const ExecutableItem &condition)` | 用任务结果作为条件。 |
+| `If(Handler &&handler)` | 用同步 handler 返回/报告的结果作为条件。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 先检查条件，再决定是否执行后续任务。
+- 用异步探测任务决定分支，例如网络可用性、文件是否存在。
+- 在 recipe 中替代嵌套回调式 if/else。
 
-并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
+## 常见坑与经验
+- 条件如果是异步任务，分支会等它完成，而不是构造 recipe 时立即判断。
+- handler 捕获变量时要考虑任务树运行时机。
+- 分支内部仍可以放组、并行和循环，不必把逻辑塞进条件函数里。
 
-### 状态、生命周期和线程
+## 知识点覆盖
 
-**生命周期：** 任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-**状态与结果：** 区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-**线程与事件循环：** GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-## 3. 直接使用
-
-先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `If(const QtTaskTree::ExecutableItem &condition)`
-- `If(Handler &&handler)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] If::If(const QtTaskTree::ExecutableItem &condition)`
-
-**作用与语义：**
-
-创建初始条件元素，并`condition`任务用于条件表达式。运行`QTaskTree`先执行传递的`condition`，完成后，要么执行`Then`分支（成功时），要么选择性地提供`Else`分支或`ElseIf`条件。
-传递的`condition`可以包含多个任务，包含在`Group`元素中，或者是它们的连取或析取，例如：
-
-**官方示例：**
-
-```cpp
- const Group subRecipe {
-     parallel,
-     parallelConditionTask1,
-     parallelConditionTask2
- };
-
- const Group recipe {
-     If (conditionTask1 && !conditionTask2) >> Then {
-         bodyTask1
-     } >> ElseIf (subRecipe) >> Then {
-         bodyTask2
-     } >> Else {
-         bodyTask3
-     }
- };
-```
-
-### `[explicit] template <typename Handler, std::enable_if_t<!std::is_base_of_v<ExecutableItem, std::decay_t<Handler>>, bool> = true> If::If(Handler &&handler)`
-
-**作用与语义：**
-
-一个辅助构造器，接受运行`QTaskTree`在评估初始条件时执行的同步`handler`。
-这是一条快捷方式：
-有关哪些处理器类型被接受，请参见`QSyncTask`。
-
-**官方示例：**
-
-```cpp
- If (QSyncTask(handler))
-```
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-### 状态和错误边界
-
-区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-### 线程边界
-
-GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-### 最容易出现的错误
-
-不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QtTaskTree::If` 所属机制类型：并发与任务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 声明式条件分支
+- 同步/异步条件
+- 条件结果驱动流程

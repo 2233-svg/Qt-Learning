@@ -1,168 +1,66 @@
 # QStylePainter
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QStylePainter`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QStylePainter` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QStylePainter` 是 `QPainter` 的便利子类，专门用于在 widget 的 `paintEvent()` 中调用当前 `QStyle` 绘制控件元素。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它不提供新的绘制规则，只是把 painter、widget、style 的组合使用变得更顺手。
 
-### 这是什么
+## 2. 类说明
 
-`QStylePainter` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QStylePainter` 继承自 `QPainter`。构造时绑定 widget 后，可以直接调用 `drawPrimitive()`、`drawControl()`、`drawComplexControl()`，内部会使用 widget 的 style。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+它适合自定义控件想“像系统控件一样画”的场景，尤其是控件主体交给 style，额外内容自己补画。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QStylePainter()` | 创建未开始绘制的 style painter。 |
+| `QStylePainter(QWidget *)` | 为指定 widget 开始绘制。 |
+| `QStylePainter(QPaintDevice *, QWidget *)` | 在指定 paint device 上按 widget style 绘制。 |
+| `begin(QWidget *)` | 开始为 widget 绘制。 |
+| `begin(QPaintDevice *, QWidget *)` | 开始在设备上按 widget style 绘制。 |
+| `drawPrimitive()` | 调用 style 绘制 primitive。 |
+| `drawControl()` | 调用 style 绘制 control。 |
+| `drawComplexControl()` | 调用 style 绘制 complex control。 |
+| `drawItemText()` | 按 style 规则绘制文本。 |
+| `drawItemPixmap()` | 按 style 规则绘制 pixmap。 |
+| `style()` | 返回正在使用的 style。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+void MyButton::paintEvent(QPaintEvent *)
+{
+    QStyleOptionButton opt;
+    opt.initFrom(this);
+    opt.text = text();
 
-- 头文件：`#include <QStylePainter>`
-- 继承自：QPainter
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+    QStylePainter painter(this);
+    painter.drawControl(QStyle::CE_PushButton, opt);
+}
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+额外绘制内容：
 
-### 工作机制
+```cpp
+painter.drawControl(QStyle::CE_PushButtonBevel, opt);
+painter.drawText(rect(), Qt::AlignCenter, label);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合自定义 widget、复合控件、需要保留平台外观的轻度重绘、教学/示例中简化 style 调用。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+如果完全自绘且不想依赖 style，普通 `QPainter` 就够；如果要完整控件外观一致，`QStylePainter` 很方便。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+仍然要正确初始化 `QStyleOption`。painter 再方便，也无法猜出控件状态。
 
-## 3. 直接使用
+不要在 paintEvent 外长期持有 painter。它和普通 `QPainter` 一样遵守绘制生命周期。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QStylePainter()`
-- `QStylePainter(QWidget *widget)`
-- `QStylePainter(QPaintDevice *pd, QWidget *widget)`
-- `bool begin(QWidget *widget)`
-- `bool begin(QPaintDevice *pd, QWidget *widget)`
-- `void drawComplexControl(QStyle::ComplexControl cc, const QStyleOptionComplex &option)`
-- `void drawControl(QStyle::ControlElement ce, const QStyleOption &option)`
-- `void drawItemPixmap(const QRect &rect, int flags, const QPixmap &pixmap)`
-- `void drawItemText(const QRect &rect, int flags, const QPalette &pal, bool enabled, const QString &text, QPalette::ColorRole textRole = QPalette::NoRole)`
-- `void drawPrimitive(QStyle::PrimitiveElement pe, const QStyleOption &option)`
-- `QStyle * style() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QStylePainter::QStylePainter()`
-
-**作用与语义：**
-
-构建一个QStylePainter。
-
-### `[explicit] QStylePainter::QStylePainter(QWidget *widget)`
-
-**作用与语义：**
-
-用小部件`widget`构建一个QStylePainter作为绘图设备。
-
-### `QStylePainter::QStylePainter(QPaintDevice *pd, QWidget *widget)`
-
-**作用与语义：**
-
-用`pd`作为绘图设备，并从`widget`中获取属性，构建一个QStylePainter。
-
-### `bool QStylePainter::begin(QWidget *widget)`
-
-**作用与语义：**
-
-在指定的`widget`开始绘画操作。如果画家准备好使用，返回`true`;否则返回`false`。
-取`QWidget`的构造函数会自动调用此程序。
-
-### `bool QStylePainter::begin(QPaintDevice *pd, QWidget *widget)`
-
-**作用与语义：**
-
-开始在喷漆设备`pd`上进行喷漆作业，就像它正在进行`widget`一样。
-该由构造函数自动调用，构造函数取`QPaintDevice`和`QWidget`。
-
-### `void QStylePainter::drawComplexControl(QStyle::ComplexControl cc, const QStyleOptionComplex &option)`
-
-**作用与语义：**
-
-使用小部件的样式来绘制`QStyleOptionComplex` `option`指定的复杂控制`cc`。
-
-### `void QStylePainter::drawControl(QStyle::ControlElement ce, const QStyleOption &option)`
-
-**作用与语义：**
-
-使用小部件的样式绘制`QStyleOption` `option`指定的控制元素`ce`。
-
-### `void QStylePainter::drawItemPixmap(const QRect &rect, int flags, const QPixmap &pixmap)`
-
-**作用与语义：**
-
-绘制`pixmap`为矩形`rect`。像素映射按`flags`对齐。
-
-### `void QStylePainter::drawItemText(const QRect &rect, int flags, const QPalette &pal, bool enabled, const QString &text, QPalette::ColorRole textRole = QPalette::NoRole)`
-
-**作用与语义：**
-
-以矩形`rect`绘制`text`，调色板`pal`。文本根据`flags`对齐和包裹。
-笔的颜色用`textRole`来指定。`enabled`布尔表示该物品是否被启用;在重新实现该布尔值时，应该会影响该物品的绘制方式。
-
-### `void QStylePainter::drawPrimitive(QStyle::PrimitiveElement pe, const QStyleOption &option)`
-
-**作用与语义：**
-
-使用小部件的样式绘制`QStyleOption` `option`指定的原始元素`pe`。
-
-### `QStyle *QStylePainter::style() const`
-
-**作用与语义：**
-
-归还`QStylePainter`当前使用的样式。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QStylePainter` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+自绘控件要同时考虑 sizeHint、focus、hover、disabled。画出来只是第一步。

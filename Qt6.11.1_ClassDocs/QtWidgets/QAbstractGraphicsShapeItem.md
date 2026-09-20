@@ -1,156 +1,61 @@
 # QAbstractGraphicsShapeItem
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QAbstractGraphicsShapeItem`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAbstractGraphicsShapeItem` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QAbstractGraphicsShapeItem` 是带画笔和画刷的图形 item 基类。矩形、椭圆、路径、多边形、简单文本这些“可用边线和填充来绘制”的 item 都从它继承。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它不是给你直接创建的常用图元，而是提供共同能力：`pen` 决定轮廓，`brush` 决定填充。真正的几何形状由具体子类决定。
 
-### 这是什么
+## 2. 类说明
 
-`QAbstractGraphicsShapeItem` 是 Qt Widgets 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
+`QAbstractGraphicsShapeItem` 继承自 `QGraphicsItem`。它把 `QPen`、`QBrush` 管理从具体 shape item 中抽出来，并实现了与不透明区域相关的通用行为。
 
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+自定义 shape item 时，如果你的对象也符合“一个形状 + 轮廓 + 填充”的模式，继承它比直接继承 `QGraphicsItem` 少写不少基础代码。
 
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
+## 3. API 速查
 
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
+| API | 用途速查 |
+| --- | --- |
+| `setPen(const QPen &)` / `pen()` | 设置或读取轮廓线。线宽会影响 `boundingRect()` 和命中区域。 |
+| `setBrush(const QBrush &)` / `brush()` | 设置或读取填充。无填充可用 `Qt::NoBrush`。 |
+| `isObscuredBy(const QGraphicsItem *)` | 判断当前图元是否被其他 item 遮挡。 |
+| `opaqueArea()` | 返回不透明区域，帮助视图优化绘制。 |
+| `QGraphicsRectItem` | 矩形具体实现。 |
+| `QGraphicsEllipseItem` | 椭圆/扇形具体实现。 |
+| `QGraphicsPathItem` | 任意 painter path 具体实现。 |
+| `QGraphicsPolygonItem` | 多边形具体实现。 |
+| `QGraphicsSimpleTextItem` | 简单文本具体实现。 |
 
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QAbstractGraphicsShapeItem>`
-- 继承自：QGraphicsItem
-- 直接派生类：QGraphicsEllipseItem、QGraphicsPathItem、QGraphicsPolygonItem、QGraphicsRectItem,、QGraphicsSimpleTextItem
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+auto *rect = scene->addRect(QRectF(0, 0, 120, 60));
+rect->setPen(QPen(Qt::darkBlue, 2));
+rect->setBrush(QColor("#d8ecff"));
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+自定义 shape item 时，仍然要实现几何和绘制：
 
-### 工作机制
+```cpp
+class ShapeItem : public QAbstractGraphicsShapeItem {
+public:
+    QRectF boundingRect() const override;
+    void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *) override;
+};
+```
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合需要统一轮廓/填充配置的图元：流程图节点、标注框、状态区域、装饰形状、可选中几何对象。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+如果 item 完全是图片、复杂控件或自定义 GPU 内容，这个基类的 pen/brush 模型可能不合适，直接继承 `QGraphicsItem` 或其他专用类更好。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+线宽会改变真实占用区域。自定义子类计算 `boundingRect()` 时要把 pen 宽度考虑进去，否则边线可能被裁剪。
 
-## 3. 直接使用
+`brush()` 是填充，不是背景。空心图形应显式用 `Qt::NoBrush`，不要靠透明颜色混过去。
 
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAbstractGraphicsShapeItem(QGraphicsItem *parent = nullptr)`
-- `virtual ~QAbstractGraphicsShapeItem()`
-- `QBrush brush() const`
-- `QPen pen() const`
-- `void setBrush(const QBrush &brush)`
-- `void setPen(const QPen &pen)`
-
-### 重实现的公有函数
-
-- `virtual bool isObscuredBy(const QGraphicsItem *item) const override`
-- `virtual QPainterPath opaqueArea() const override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QAbstractGraphicsShapeItem::QAbstractGraphicsShapeItem(QGraphicsItem *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个 QAbstractGraphicsShapeItem。`parent` 传递给 `QGraphicsItem` 的构造器。
-
-### `[virtual noexcept] QAbstractGraphicsShapeItem::~QAbstractGraphicsShapeItem()`
-
-**作用与语义：**
-
-毁掉一个`QAbstractGraphicsShapeItem`。
-
-### `QBrush QAbstractGraphicsShapeItem::brush() const`
-
-**作用与语义：**
-
-返回物品的画刷，或者如果没有画刷设置，则返回空画刷。
-
-### `[override virtual] bool QAbstractGraphicsShapeItem::isObscuredBy(const QGraphicsItem *item) const`
-
-**作用与语义：**
-
-重实现自：`QGraphicsItem::isObscuredBy`（const QGraphicsItem *item） const.
-如果该物品的边界矩形完全被不透明的`item`形状遮挡，返回`true`。
-基础实现将`item`的`opaqueArea()`映射到该项目的坐标系，然后检查该项目的`boundingRect()`是否完全包含在映射形状内。
-你可以重新实现这个函数，提供一个自定义算法来判断该项是否被`item`遮挡。
-
-### `[override virtual] QPainterPath QAbstractGraphicsShapeItem::opaqueArea() const`
-
-**作用与语义：**
-
-重实现自：`QGraphicsItem::opaqueArea()` const.
-该虚拟函数返回一个形状，表示该项不透明的区域。如果该区域用不透明的画笔或颜色填充（即不透明），则该区域是不透明的。
-该函数由`isObscuredBy()`使用，底层项目调用以确定是否被该项遮挡。
-默认实现返回空`QPainterPath`，表明该项完全透明且未遮挡其他项。
-
-### `QPen QAbstractGraphicsShapeItem::pen() const`
-
-**作用与语义：**
-
-返回该物品的笔。如果没有设置笔，该函数返回QPen()，一根默认的黑色实线笔，宽度为1。
-
-### `void QAbstractGraphicsShapeItem::setBrush(const QBrush &brush)`
-
-**作用与语义：**
-
-将物品的画刷设置为`brush`。
-物品的画刷用来填充物品。
-如果你用画刷和`QGradient`，梯度是相对于物品坐标系的。
-
-### `void QAbstractGraphicsShapeItem::setPen(const QPen &pen)`
-
-**作用与语义：**
-
-将该物品的笔设置为`pen`。
-笔用来绘制物品的轮廓。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAbstractGraphicsShapeItem` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+继承这个类不免除 `prepareGeometryChange()` 的规则。形状边界变化前仍然要通知场景。

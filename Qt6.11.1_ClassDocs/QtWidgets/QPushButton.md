@@ -1,356 +1,205 @@
 # QPushButton
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QPushButton`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPushButton` 是执行命令的矩形按钮，用户点击、按空格或触发快捷键时发出 clicked()。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QPushButton` 是执行命令的矩形按钮，用户点击、按空格或触发快捷键时发出 clicked()。
+`QPushButton` 是 Qt Widgets 中最标准的“执行命令”按钮。用户点击、按 Space、触发标签快捷键，或在对话框中按 Enter 命中默认按钮时，它会通过继承自 `QAbstractButton` 的信号发出操作意图。
 
-**内部模型：** 按钮的核心是“触发动作”，不是保存业务状态。按钮负责展示文本/图标、启用状态和可选的默认按钮行为；真正的业务逻辑应连接 clicked() 到窗口或 controller。
+它的核心不是保存状态，而是把一个明确动作暴露给用户：保存、打开、应用、确定、取消、浏览、重试。按钮可以带文本、图标、弹出菜单，也可以在对话框里扮演默认按钮。
 
-**适用场景：** 确定、取消、保存、打开、应用和帮助等离散命令使用 QPushButton；需要小图标工具按钮、连续按压或主要用于切换状态时应考虑 QToolButton/QCheckBox。
+### 适合使用的场景
 
-**典型调用链：** 创建按钮 -> 设置 text/icon/enabled -> 加入 layout 或 dialog -> connect(clicked) -> 在槽中执行业务动作并更新按钮状态。
+- 离散命令：保存、删除、连接、刷新、浏览文件。
+- 对话框动作：确定、取消、应用、帮助。
+- 带下拉菜单的命令入口，例如“新建”按钮附带多种新建类型。
+- 需要平台原生按钮外观、键盘焦点和默认按钮行为的 Widgets 界面。
 
-**先记住的坑：** 不要在 clicked 槽里做长时间阻塞任务；区分 clicked、pressed、released 和 toggled；对话框中的 default/autoDefault 会影响 Enter 行为。
+### 不适合的场景
+
+- 二态/三态选择用 `QCheckBox` 或 `QRadioButton` 更自然。
+- 工具栏里的小图标按钮通常用 `QToolButton`。
+- 列表项中的自定义交互不一定要放真实按钮，委托绘制或 action 可能更轻。
+- 长任务不要直接在 `clicked()` 槽里阻塞执行，应禁用按钮并把任务交给异步流程。
+
+### 最小示例
+
+```cpp
+auto *saveButton = new QPushButton(QIcon(":/icons/save.svg"), tr("&Save"), this);
+connect(saveButton, &QPushButton::clicked, this, [this] {
+    saveDocument();
+});
+```
+
+按钮文本中的 `&` 会创建键盘助记符。真正的业务逻辑放在槽里；按钮只负责表达“用户请求保存”。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QPushButton>`
-- 继承自：QAbstractButton
-- 直接派生类：QCommandLinkButton
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QAbstractButton`
+- 直接派生类：`QCommandLinkButton`
 
-CMake 配置：
+`QPushButton` 继承了按钮通用能力：`text`、`icon`、`checked`、`checkable`、`clicked()`、`pressed()`、`released()`、`toggled()` 等。本文只说明 `QPushButton` 自己新增或重写的部分；按钮通用状态应参考 `QAbstractButton`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+| API | 用途速查 |
+| --- | --- |
+| `autoDefault : bool` | 对话框中获得焦点时是否自动成为 Enter 默认按钮候选。 |
+| `default : bool` | 是否为对话框当前默认按钮，用户按 Enter 时触发。 |
+| `flat : bool` | 是否绘制为扁平按钮，常用于工具区或轻量命令。 |
+| `QPushButton(QWidget *parent)` | 创建空文本按钮。 |
+| `QPushButton(const QString &text, QWidget *parent)` | 创建文本按钮。 |
+| `QPushButton(const QIcon &icon, const QString &text, QWidget *parent)` | 创建带图标和文本的按钮。 |
+| `~QPushButton()` | 销毁按钮。 |
+| `autoDefault() const` / `setAutoDefault(bool)` | 读取或设置自动默认按钮行为。 |
+| `isDefault() const` / `setDefault(bool)` | 读取或设置默认按钮状态。 |
+| `isFlat() const` / `setFlat(bool)` | 读取或设置扁平外观。 |
+| `menu() const` / `setMenu(QMenu *menu)` | 读取或绑定弹出菜单，把按钮变成菜单按钮。 |
+| `showMenu()` | 主动弹出已绑定菜单。 |
+| `sizeHint() const` / `minimumSizeHint() const` | 返回按钮推荐尺寸和最小推荐尺寸。 |
+| `initStyleOption(QStyleOptionButton *option) const` | 给自定义绘制准备完整 style option。 |
+| `hitButton(const QPoint &pos) const` | 判断某点是否落在可点击区域。 |
+| `event(QEvent *e)` | 处理通用事件入口。 |
+| `focusInEvent(QFocusEvent *e)` / `focusOutEvent(QFocusEvent *e)` | 焦点变化，影响自动默认按钮显示和行为。 |
+| `keyPressEvent(QKeyEvent *e)` | 键盘触发按钮行为。 |
+| `mouseMoveEvent(QMouseEvent *e)` | 鼠标移动过程中的按钮状态处理。 |
+| `paintEvent(QPaintEvent *)` | 使用当前 style 绘制按钮。 |
 
-### 工作机制
-
-按钮的核心是“触发动作”，不是保存业务状态。按钮负责展示文本/图标、启用状态和可选的默认按钮行为；真正的业务逻辑应连接 clicked() 到窗口或 controller。
-
-### 状态、生命周期和线程
-
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-确定、取消、保存、打开、应用和帮助等离散命令使用 QPushButton；需要小图标工具按钮、连续按压或主要用于切换状态时应考虑 QToolButton/QCheckBox。 使用时通常按这个过程组织：创建按钮 -> 设置 text/icon/enabled -> 加入 layout 或 dialog -> connect(clicked) -> 在槽中执行业务动作并更新按钮状态。
-
-```cpp
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QWidget>
-
-QWidget panel;
-auto *button = new QPushButton(QObject::tr("Save"), &panel);
-auto *layout = new QVBoxLayout(&panel);
-layout->addWidget(button);
-QObject::connect(button, &QPushButton::clicked, &panel, [&panel] {
-    panel.setWindowTitle(QObject::tr("Saved"));
-});
-panel.show();
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `autoDefault : bool`
-- `default : bool`
-- `flat : bool`
-
-### 公有函数
-
-- `QPushButton(QWidget *parent = nullptr)`
-- `QPushButton(const QString &text, QWidget *parent = nullptr)`
-- `QPushButton(const QIcon &icon, const QString &text, QWidget *parent = nullptr)`
-- `virtual ~QPushButton()`
-- `bool autoDefault() const`
-- `bool isDefault() const`
-- `bool isFlat() const`
-- `QMenu * menu() const`
-- `void setAutoDefault(bool)`
-- `void setDefault(bool)`
-- `void setFlat(bool)`
-- `void setMenu(QMenu *menu)`
-
-### 重实现的公有函数
-
-- `virtual QSize minimumSizeHint() const override`
-- `virtual QSize sizeHint() const override`
-
-### 公有槽函数
-
-- `void showMenu()`
-
-### 保护函数
-
-- `virtual void initStyleOption(QStyleOptionButton *option) const`
-
-### 重实现的保护函数
-
-- `virtual bool event(QEvent *e) override`
-- `virtual void focusInEvent(QFocusEvent *e) override`
-- `virtual void focusOutEvent(QFocusEvent *e) override`
-- `virtual bool hitButton(const QPoint &pos) const override`
-- `virtual void keyPressEvent(QKeyEvent *e) override`
-- `virtual void mouseMoveEvent(QMouseEvent *e) override`
-- `virtual void paintEvent(QPaintEvent *) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 4. API 逐项说明
 
 ### `autoDefault : bool`
 
-**作用与语义：**
+自动默认按钮主要发生在 `QDialog` 中。按钮获得焦点时，可以临时成为 Enter 键触发的按钮。Qt 会根据平台 style 给这种按钮预留额外边框空间，所以开启后 `sizeHint()` 可能稍大。
 
-该属性决定了按钮是否为自动默认按钮。
-如果该属性设置为true，那么按钮就是自动默认按钮。
-在某些图形界面样式中，默认按钮会被绘制并额外加一帧，最多可达3像素或更多。Qt会自动在自动默认按钮周围保持该空间空闲，即自动默认按钮的尺寸提示可能稍大。
-该属性的默认为具有`QDialog`父的按钮为真;否则默认为假。
-有关`default`与自动违约如何相互作用，请参见`default`属性。
-
-**如何使用：** 调用 `autoDefault()` 读取当前值；它不会修改应用状态。
+对话框里的按钮默认通常启用 `autoDefault`，普通窗口里的按钮默认通常不启用。如果你的按钮行尺寸出现几像素跳动，检查 `autoDefault` 是一个很实用的方向。
 
 ### `default : bool`
 
-**作用与语义：**
+默认按钮是对话框中按 Enter 会触发的按钮。一个对话框通常只有一个当前默认按钮，常见是“确定”或“保存”。
 
-该属性决定了按键是否为默认按钮。
-默认和自动默认按钮决定用户在对话框中按下回车键时会发生什么。
-当该属性设置为true（即对话框默认按钮）的按钮，用户按下回车时会自动按下，但有一个例外：如果`autoDefault`按钮当前有对焦，则按`autoDefault`键。当对话框中有`autoDefault`按钮但没有默认按钮时，按回车会按下当前有对焦的`autoDefault`按钮，或者如果没有对焦按钮，则按下对焦链中的下一个`autoDefault`按钮。
-在对话框中，默认按钮一次只能有一个。该按钮随后会以额外的帧（取决于图形界面样式）显示。
-默认按键行为仅在对话框中提供。当按钮聚焦时，按空格键始终可从键盘上点击。
-如果当前默认按钮的默认属性在对话框可见时被设置为false，下一次对话框中的按钮被聚焦时，会自动分配新的默认属性。
-该属性的默认值为假。
-
-**如何使用：** 调用 `default()` 读取当前值；它不会修改应用状态。
+不要把危险操作设成默认按钮，尤其是删除、覆盖、发送这类不可逆动作。默认按钮应服务最安全、最常见、最符合用户预期的路径。
 
 ### `flat : bool`
 
-**作用与语义：**
+扁平按钮通常不绘制凸起边框，适合工具区、窄面板、辅助命令。它仍然是按钮，仍会接收点击和键盘操作。
 
-该属性是否会显示按钮边框是否被抬起。
-该属性的默认为 false。如果设置了该属性，大多数样式不会在按钮被按下时绘制背景。`setAutoFillBackground()` 可以用 `QPalette::Button` 画刷确保背景被填充。
+扁平不是禁用。禁用应使用 `setEnabled(false)`；扁平只是视觉弱化。
 
-**如何使用：** 调用 `flat()` 读取当前值；它不会修改应用状态。
+### `QPushButton(QWidget *parent = nullptr)`
 
-### `[explicit] QPushButton::QPushButton(QWidget *parent = nullptr)`
+创建没有文本和图标的按钮。通常随后调用继承自 `QAbstractButton` 的 `setText()`、`setIcon()` 配置。
 
-**作用与语义：**
+空按钮不利于可访问性，若只显示图标，应至少设置 tooltip、accessible name，或用更适合图标命令的 `QToolButton`。
 
-构建了一个没有文字和`parent`的按钮。
+### `QPushButton(const QString &text, QWidget *parent = nullptr)`
 
-### `[explicit] QPushButton::QPushButton(const QString &text, QWidget *parent = nullptr)`
+创建文本按钮。文本可以包含 `&` 助记符，例如 `tr("&Open")`。
 
-**作用与语义：**
+按钮文案应使用动词或明确命令，不要让用户猜“OK”到底会保存、上传还是删除。
 
-构建一个带有父`parent`和文本`text`的按钮。
+### `QPushButton(const QIcon &icon, const QString &text, QWidget *parent = nullptr)`
 
-### `QPushButton::QPushButton(const QIcon &icon, const QString &text, QWidget *parent = nullptr)`
+创建带图标和文本的按钮。图标应强化命令含义，而不是替代文本含义；跨平台桌面应用里，文本仍然是理解命令的主渠道。
 
-**作用与语义：**
+图标尺寸由 style 和按钮属性共同决定，通常不要为单个按钮硬编码 pixmap。
 
-制造一个带有`icon`和`text`和`parent`的按钮。
-注意，你也可以将`QPixmap`对象作为图标传递（这得益于 C 提供的隐式类型转换）。
+### `~QPushButton()`
 
-### `[virtual noexcept] QPushButton::~QPushButton()`
+销毁按钮对象。按钮如果在布局和父控件下，通常由父控件负责销毁。
 
-**作用与语义：**
+按钮被销毁会自动断开 QObject 信号连接，但业务任务不会因为按钮销毁自动取消；长任务要有自己的取消和生命周期管理。
 
-摧毁按钮。
+### `autoDefault()` / `setAutoDefault(bool)`
 
-### `[override virtual protected] bool QPushButton::event(QEvent *e)`
+读取或设置自动默认行为。若按钮在对话框中只是辅助动作，例如“浏览...”“高级...”，通常可以关闭 `autoDefault`，避免用户按 Enter 时触发意外动作。
 
-**作用与语义：**
+在按钮很多的对话框里，明确设置默认按钮和辅助按钮的 auto default 状态，能让键盘行为更可预测。
 
-重实现自：`QAbstractButton::event`（QEvent *e）。
+### `isDefault()` / `setDefault(bool)`
 
-### `[override virtual protected] void QPushButton::focusInEvent(QFocusEvent *e)`
+读取或设置当前默认按钮。常见写法是在确定按钮上调用 `setDefault(true)`。
 
-**作用与语义：**
+如果表单校验失败，不一定要取消默认按钮；更常见做法是保持默认按钮，但点击后显示错误并不关闭对话框。若操作当前不可用，应禁用按钮。
 
-重实现自：`QAbstractButton::focusInEvent`（QFocusEvent *e）。
+### `isFlat()` / `setFlat(bool)`
 
-### `[override virtual protected] void QPushButton::focusOutEvent(QFocusEvent *e)`
+读取或设置扁平外观。适用于视觉层级较低的命令，例如搜索框旁的清除按钮、标题栏内部的小命令。
 
-**作用与语义：**
+扁平按钮在某些 style 下按下反馈较弱，因此主要动作不建议设置为 flat。
 
-重实现自：`QAbstractButton::focusOutEvent`（QFocusEvent *e）。
+### `menu()` / `setMenu(QMenu *menu)`
 
-### `[override virtual protected] bool QPushButton::hitButton(const QPoint &pos) const`
+绑定菜单后，按钮成为菜单按钮，通常会显示下拉指示。菜单所有权不会自动转移给按钮，所以建议给菜单设置合适 parent，或由外部对象持有。
 
-**作用与语义：**
+菜单按钮适合“一个主入口，多种变体”的动作，例如“导出”下有 PDF、图片、CSV。若每个选项都同等重要，可以直接放多个按钮或使用菜单栏。
 
-重装：`QAbstractButton::hitButton`（const QPoint & pos） const.
-如果`pos`在可点击的按钮矩形内，返回`true`;否则返回`false`。
-默认情况下，可点击区域是整个小部件。子类可能会重新实现此功能，以支持不同形状和大小的可点击区域。
+### `showMenu()`
 
-### `[virtual protected] void QPushButton::initStyleOption(QStyleOptionButton *option) const`
+主动弹出已绑定菜单。没有菜单时不做事。它会等菜单关闭后返回，因此不要在 GUI 线程里把它和长阻塞逻辑混在一起。
 
-**作用与语义：**
+常见用途是把某个键盘快捷键或辅助按钮连接到主按钮菜单。
 
-用这个`QPushButton`的值初始化`option`。这种方法适用于需要 `QStyleOptionButton`但不想自己填满所有信息的子类。
+### `sizeHint()` / `minimumSizeHint()`
 
-### `[override virtual protected] void QPushButton::keyPressEvent(QKeyEvent *e)`
+返回推荐尺寸和最小推荐尺寸。文本、图标、字体、style、default/autoDefault 边框都会影响结果。
 
-**作用与语义：**
+布局中按钮大小异常时，先检查文本是否过长、是否开启默认按钮边框、是否有全局 style sheet 改了 padding。
 
-重实现自：`QAbstractButton::keyPressEvent`（QKeyEvent *e）。
+### `initStyleOption(QStyleOptionButton *option) const`
 
-### `QMenu *QPushButton::menu() const`
+给 `QStyleOptionButton` 填入当前按钮状态，供自定义绘制或子类扩展使用。使用它可以保持和平台 style 一致，不必手动拼所有状态位。
 
-**作用与语义：**
+自定义按钮外观时，优先用 style option 加 `QStyle::drawControl()`；完全手绘按钮很容易丢失焦点框、默认按钮、高 DPI 和禁用状态细节。
 
-如果没有设置弹出菜单，则返回按钮相关的弹出菜单或`nullptr`。
+### `hitButton(const QPoint &pos) const`
 
-### `[override virtual] QSize QPushButton::minimumSizeHint() const`
+判断坐标是否在按钮可点击区域。默认按钮通常整个矩形都可点。
 
-**作用与语义：**
+子类可以重写它实现非矩形点击区域，但这会影响可用性。视觉上可点击的区域和实际命中区域应保持一致。
 
-重新实现属性的访问函数：`QWidget::minimumSizeHint`。
+### `event()` / `focusInEvent()` / `focusOutEvent()`
 
-### `[override virtual protected] void QPushButton::mouseMoveEvent(QMouseEvent *e)`
+这些重写函数处理通用事件和焦点变化。焦点变化会影响自动默认按钮状态，也会影响 style 绘制出的焦点框。
 
-**作用与语义：**
+如果子类重写这些函数，未处理事件应交回基类，否则默认按钮、快捷键、可访问性状态可能出现细小但难查的问题。
 
-重实现自：`QAbstractButton::mouseMoveEvent`（QMouseEvent *e）。
+### `keyPressEvent(QKeyEvent *e)`
 
-### `[override virtual protected] void QPushButton::paintEvent(QPaintEvent *)`
+处理键盘触发。按钮获得焦点时，Space 通常触发按钮；在对话框中，Enter 可能触发默认按钮。
 
-**作用与语义：**
+不要在子类里随意吞掉 Space/Enter，除非你明确要改变按钮的键盘语义。
 
-重构：`QAbstractButton::paintEvent`（QPaintEvent *e）。
+### `mouseMoveEvent(QMouseEvent *e)`
 
-### `void QPushButton::setMenu(QMenu *menu)`
+处理鼠标移动导致的 hover、pressed 状态变化。普通应用代码很少重写。
 
-**作用与语义：**
+需要拖拽行为时要非常小心：按钮的“按下、移出、释放”状态机是用户熟悉的反馈，破坏它会让点击手感怪异。
 
-将弹出菜单`menu`与该按钮关联。这会将按钮变成菜单按钮，在某些风格中，按钮文本右侧会出现一个小三角形。
-菜单的所有权不会转移到按钮上。
-一个带有弹出菜单的按钮，采用Fusion小部件风格。
+### `paintEvent(QPaintEvent *)`
 
-### `[slot] void QPushButton::showMenu()`
+绘制按钮。默认实现通过当前平台 style 绘制文本、图标、边框、焦点框、默认按钮边框和菜单指示。
 
-**作用与语义：**
+自定义绘制时，尽量保留 `QStyleOptionButton` 和 `QStyle`，这样能继续尊重主题、高 DPI、禁用状态和系统视觉。
 
-显示（弹出）相关的弹出菜单。如果没有这样的菜单，这个功能就不会有任何作用。直到用户关闭弹出菜单后，这个功能才会返回。
+## 5. 深入实践与常见坑
 
-### `[override virtual] QSize QPushButton::sizeHint() const`
+### `clicked()` 才是最常用信号
 
-**作用与语义：**
+`pressed()` 表示按下瞬间，`released()` 表示释放，`clicked()` 表示完成一次点击语义。业务命令通常连 `clicked()`，避免用户按下后移出按钮再释放仍触发动作。
 
-重新实现了属性的访问函数：`QWidget::sizeHint`。
+### 默认按钮要谨慎
 
-### `bool autoDefault() const`
+Enter 触发默认按钮非常高效，也非常危险。确认类按钮适合默认；破坏性按钮应降低默认触发概率，必要时要求显式点击。
 
-**作用与语义：**
+### 菜单按钮不是组合框
 
-该属性决定了按钮是否为自动默认按钮。
-如果该属性设置为true，那么按钮就是自动默认按钮。
-在某些图形界面样式中，默认按钮会被绘制并额外加一帧，最多可达3像素或更多。Qt会自动在自动默认按钮周围保持该空间空闲，即自动默认按钮的尺寸提示可能稍大。
-该属性的默认为具有`QDialog`父的按钮为真;否则默认为假。
-有关`default`与自动违约如何相互作用，请参见`default`属性。
+按钮菜单表达“执行某个命令变体”；`QComboBox` 表达“选择一个值”。不要因为都能下拉就混用。
 
-**如何使用：** 调用 `autoDefault()` 读取当前值；它不会修改应用状态。
+### 长任务要反馈状态
 
-### `bool isDefault() const`
-
-**作用与语义：**
-
-该属性决定了按键是否为默认按钮。
-默认和自动默认按钮决定用户在对话框中按下回车键时会发生什么。
-当该属性设置为true（即对话框默认按钮）的按钮，用户按下回车时会自动按下，但有一个例外：如果`autoDefault`按钮当前有对焦，则按`autoDefault`键。当对话框中有`autoDefault`按钮但没有默认按钮时，按回车会按下当前有对焦的`autoDefault`按钮，或者如果没有对焦按钮，则按下对焦链中的下一个`autoDefault`按钮。
-在对话框中，默认按钮一次只能有一个。该按钮随后会以额外的帧（取决于图形界面样式）显示。
-默认按键行为仅在对话框中提供。当按钮聚焦时，按空格键始终可从键盘上点击。
-如果当前默认按钮的默认属性在对话框可见时被设置为false，下一次对话框中的按钮被聚焦时，会自动分配新的默认属性。
-该属性的默认值为假。
-
-**如何使用：** 调用 `isDefault()` 读取当前值；它不会修改应用状态。
-
-### `bool isFlat() const`
-
-**作用与语义：**
-
-该属性是否会显示按钮边框是否被抬起。
-该属性的默认为 false。如果设置了该属性，大多数样式不会在按钮被按下时绘制背景。`setAutoFillBackground()` 可以用 `QPalette::Button` 画刷确保背景被填充。
-
-**如何使用：** 调用 `isFlat()` 读取当前值；它不会修改应用状态。
-
-### `void setAutoDefault(bool)`
-
-**作用与语义：**
-
-该属性决定了按钮是否为自动默认按钮。
-如果该属性设置为true，那么按钮就是自动默认按钮。
-在某些图形界面样式中，默认按钮会被绘制并额外加一帧，最多可达3像素或更多。Qt会自动在自动默认按钮周围保持该空间空闲，即自动默认按钮的尺寸提示可能稍大。
-该属性的默认为具有`QDialog`父的按钮为真;否则默认为假。
-有关`default`与自动违约如何相互作用，请参见`default`属性。
-
-**如何使用：** 调用 `setAutoDefault(...)` 修改 `autoDefault`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setDefault(bool)`
-
-**作用与语义：**
-
-该属性决定了按键是否为默认按钮。
-默认和自动默认按钮决定用户在对话框中按下回车键时会发生什么。
-当该属性设置为true（即对话框默认按钮）的按钮，用户按下回车时会自动按下，但有一个例外：如果`autoDefault`按钮当前有对焦，则按`autoDefault`键。当对话框中有`autoDefault`按钮但没有默认按钮时，按回车会按下当前有对焦的`autoDefault`按钮，或者如果没有对焦按钮，则按下对焦链中的下一个`autoDefault`按钮。
-在对话框中，默认按钮一次只能有一个。该按钮随后会以额外的帧（取决于图形界面样式）显示。
-默认按键行为仅在对话框中提供。当按钮聚焦时，按空格键始终可从键盘上点击。
-如果当前默认按钮的默认属性在对话框可见时被设置为false，下一次对话框中的按钮被聚焦时，会自动分配新的默认属性。
-该属性的默认值为假。
-
-**如何使用：** 调用 `setDefault(...)` 修改 `default`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setFlat(bool)`
-
-**作用与语义：**
-
-该属性是否会显示按钮边框是否被抬起。
-该属性的默认为 false。如果设置了该属性，大多数样式不会在按钮被按下时绘制背景。`setAutoFillBackground()` 可以用 `QPalette::Button` 画刷确保背景被填充。
-
-**如何使用：** 调用 `setFlat(...)` 修改 `flat`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要在 clicked 槽里做长时间阻塞任务；区分 clicked、pressed、released 和 toggled；对话框中的 default/autoDefault 会影响 Enter 行为。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPushButton` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+点击后立即禁用按钮、显示忙碌状态或进度，并在任务结束后恢复。否则用户可能重复点击，制造重复请求。

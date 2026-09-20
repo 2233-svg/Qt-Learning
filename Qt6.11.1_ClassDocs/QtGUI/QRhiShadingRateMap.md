@@ -1,134 +1,67 @@
 # QRhiShadingRateMap
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI Private · 来自 `QRhiShadingRateMap`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiShadingRateMap` 描述基于图像/原生对象的可变速率着色映射。它让渲染目标的不同 tile 使用不同 shading rate，例如中心区域 1x1、边缘区域 2x2 或 4x4，从而减少像素着色成本。它常见于 VR/XR、foveated rendering 和性能敏感的后处理。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+这是高级 RHI 功能，不是所有后端都支持。使用前要检查 `QRhi::VariableRateShadingMap`，如果要用纹理作为 map，还要检查 `QRhi::VariableRateShadingMapWithTexture`。
 
-### 这是什么
-
-`QRhiShadingRateMap` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：QRhiResource
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::GuiPrivate`
+- 继承自：`QRhiResource`
+- 创建入口：`QRhi::newShadingRateMap()`
+- 使用入口：`QRhiSwapChain::setShadingRateMap()`
+- Qt 版本：相关 API 从 Qt 6.9 起出现
 
-CMake 配置：
+RHI 提供两条路径：用 `QRhiTexture` 作为 shading rate image，或导入后端原生 shading rate map。Metal 等平台可能走 native object 路径。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `NativeShadingRateMap` | 包装后端原生着色率映射对象，例如 Metal 的 rasterization rate map。 |
+| `createFrom(QRhiTexture *src)` | 用 R8UI 纹理创建 shading rate map。 |
+| `createFrom(NativeShadingRateMap src)` | 用原生对象创建 shading rate map。 |
+| `resourceType()` | 返回 `QRhiResource::ShadingRateMap`。 |
+
+## 4. 关键用法
+
+### 基于纹理的 VRS map
+
+```cpp
+if (rhi->isFeatureSupported(QRhi::VariableRateShadingMapWithTexture)) {
+    QRhiShadingRateMap *map = rhi->newShadingRateMap();
+    map->createFrom(rateTexture);
+    swapChain->setShadingRateMap(map);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`rateTexture` 必须是 `QRhiTexture::R8UI`。尺寸不是 render target 尺寸，而是 tile 网格尺寸：大致为 `ceil(targetSize / tileSize)`。
 
-### 工作机制
+## 5. 使用场景
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+- VR/XR foveated rendering。
+- 大屏或高分辨率下的外围区域降采样着色。
+- D3D12/Vulkan 的 image-based VRS。
+- Metal 原生 rasterization rate map 接入。
+- 在 swapchain 级别应用 per-tile shading rate。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- **先查功能。** `VariableRateShadingMap` 和 `VariableRateShadingMapWithTexture` 是两回事。
+- **纹理格式必须是 R8UI。** 普通 R8/RGBA8 纹理不等价。
+- **尺寸按 tile 网格算。** tile size 用 `QRhi::resourceLimit(QRhi::ShadingRateImageTileSize)` 查询。
+- **不是所有后端都支持纹理路径。** Metal 可能使用 native map，而不是 `QRhiTexture`。
+- **map 不拥有外部 native 对象语义要看后端。** 原生对象生命周期必须和使用期匹配。
+- **VRS 还需要 pipeline/command 配合。** per-draw shading rate 与 map-based shading rate 是相关但不同的控制面。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `(since 6.9) struct NativeShadingRateMap`
-
-### 公有函数
-
-- `virtual bool createFrom(QRhiShadingRateMap::NativeShadingRateMap src)`
-- `virtual bool createFrom(QRhiTexture *src)`
-
-### 重实现的公有函数
-
-- `virtual QRhiResource::Type resourceType() const override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual] bool QRhiShadingRateMap::createFrom(QRhiShadingRateMap::NativeShadingRateMap src)`
-
-**作用与语义：**
-
-设置着色率映射，使用原生的3D API着色率对象 `src`。
-成功时退货`true`，`false`不支持时退货。
-注意：这只有在`QRhi::VariableRateShadingMap`功能被报告为支持，而 QRhi：：VariableShadingRateMapWithTexture 功能不支持时才有效。目前 Metal 版本在 GPU 支持可变速率着色的情况下，这一点仍然适用。
-注意：在 Metal 中，`src` 的`object`字段预期包含 id<MTLRasterizationRateMap>。注意，Qt 除了将 MTLRasterizationRateMap 传递到 MTLRenderPassDescriptor 外，没有其他功能。如果需要特殊缩放，则由应用程序（或 XR 合成器）自行执行。
-
-### `[virtual] bool QRhiShadingRateMap::createFrom(QRhiTexture *src)`
-
-**作用与语义：**
-
-设置着色率映射，使纹理`src`作为包含每格着色率的图像。
-成功时`true`退货，`false`不支持时退货。
-`QRhiShadingRateMap`不承担`src`的所有权。
-注意：只有当`QRhi::VariableRateShadingMapWithTexture`功能被报告为支持时，此功能才可行。实际上，使用现代显卡时，Vulkan和Direct 3D 12可能会支持。例如，OpenGL或Metal平台永远不会支持此功能。
-注意：`src`必须有`QRhiTexture::R8UI`格式。
-注意：`src`图块宽度必须为`ceil(render_target_pixel_width / (float)tile_width)`，高度为`ceil(render_target_pixel_height / (float)tile_height)`。应用程序需始终确保纹理大小符合预期，使用上述公式。图块尺寸可以通过`QRhi::resourceLimit()`和`QRhi::ShadingRateImageTileSize`查询。
-纹理中的每个字节（texel）对应一个瓦片的着色率值。0表示1x1,10表示4x4。其他可能的值请参见 D3D12_SHADING_RATE。
-
-### `[override virtual] QRhiResource::Type QRhiShadingRateMap::resourceType() const`
-
-**作用与语义：**
-
-重装：`QRhiResource::resourceType()` const.
-返回资源类型。
-返回资源类型。
-
-### `(since 6.9) struct NativeShadingRateMap`
-
-**作用与语义：**
-
-它包裹了一个原生着色率贴图。
-一个例子是 MTLRasterizationRateMap 与 Metal 的结合。其他用于基于图像的 VR 的 3D API 不使用该结构，因为它们可以通过基于 `QRhiTexture` 的 QRhiShadingRate：：createFrom 来运行。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiShadingRateMap` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- Variable Rate Shading 与 tile-based shading rate image
+- texture-backed 和 native-backed shading rate map
+- R8UI map、tile size、swapchain 集成
+- VR/XR foveated rendering 的资源边界

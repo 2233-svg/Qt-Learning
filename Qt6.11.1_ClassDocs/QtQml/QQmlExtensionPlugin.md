@@ -1,118 +1,43 @@
 # QQmlExtensionPlugin
+> Qt 6.11.1 · Qt QML · 来自 `QQmlExtensionPlugin`
 
-> Qt 6.11.1 · Qt Qml
+## 作用定位
 
-## 1. 先建立直觉
+`QQmlExtensionPlugin` 是传统 QML 扩展插件基类。插件被 QML import 机制加载后，负责在 `registerTypes()` 中注册 C++ 类型，并可在 `initializeEngine()` 中对引擎做额外初始化。
 
-**一句话定位：** `QQmlExtensionPlugin` 是 QML 属性绑定与场景图机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+Qt 6 的现代 QML 模块更多依赖 CMake/qmltyperegistrar 自动生成注册代码，但理解这个类仍有助于维护旧插件和手写插件。
 
-**模块背景：** 这是 Qt Qml 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QQmlExtensionPlugin` 是 Qt Quick/QML 体系中的公开类型，连接 C++ 对象、QML 属性绑定和场景图渲染。
-
-**内部模型：** QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
-
-**适用场景：** 需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。
-
-**典型调用链：** 注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-**先记住的坑：** 不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QQmlExtensionPlugin>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::Qml`
+- 继承：`QObject`
+- 必须实现：`registerTypes(const char *uri)`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Qml)
-target_link_libraries(mytarget PRIVATE Qt6::Qml)
-```
+| API | 说明 |
+| --- | --- |
+| `registerTypes(uri)` | 注册该 import URI 下暴露的 QML 类型、单例、不可创建类型等。 |
+| `initializeEngine(engine, uri)` | 插件加载到某个 engine 后调用，可设置 image provider、context 或单例状态。 |
+| `unregisterTypes()` | Qt 6 起可用于撤销/清理类型注册场景。 |
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+## 使用场景
 
-### 工作机制
+- 维护手写 QML 插件。
+- import 某 URI 时动态注册 C++ 类型。
+- 插件加载时配置引擎资源，例如 image provider。
 
-QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- `uri` 必须和 qmldir/import 中的模块 URI 一致；不一致会导致类型找不到。
+- `registerTypes()` 做类型注册，不要依赖某个具体 engine 实例。
+- `initializeEngine()` 可以访问 engine，但可能被多个 engine 调用，避免保存单例式全局可变状态。
+- 现代 Qt 项目优先用 QML_ELEMENT、QML_SINGLETON 和 CMake QML module；手写插件只在确有需要时使用。
 
-**生命周期：** QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
+## 知识点覆盖
 
-**状态与结果：** 属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-**线程与事件循环：** 大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-## 3. 直接使用
-
-需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。 使用时通常按这个过程组织：注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-```cpp
-// C++ 侧暴露属性/信号后，在 QML 中建立绑定。
-// 变化时发出 notify signal，避免在绑定表达式中直接修改状态。
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `(since 6.0) virtual void unregisterTypes()`
-
-### 重实现的公有函数
-
-- `virtual void initializeEngine(QQmlEngine *engine, const char *uri) override`
-- `virtual void registerTypes(const char *uri) override = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[override virtual] void QQmlExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)`
-
-**作用与语义：**
-
-使用`engine`初始化`uri`扩展。例如，应用插件可能会将某些数据或对象暴露给QML，作为引擎根上下文的上下文属性。
-
-### `[override pure virtual] void QQmlExtensionPlugin::registerTypes(const char *uri)`
-
-**作用与语义：**
-
-在给定的`uri`中注册QML类型。子类应实现此功能，调用扩展插件提供的所有类型`qmlRegisterType()`。
-`uri`是QML引擎基于扩展插件库名称和路径生成的插件标识符。
-
-### `[virtual, since 6.0] void QQmlExtensionPlugin::unregisterTypes()`
-
-**作用与语义：**
-
-对于手动注册在`registerTypes`中取消注册的类型，可以覆盖此方法。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
-
-### 状态和错误边界
-
-属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-### 线程边界
-
-大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-### 最容易出现的错误
-
-不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QQmlExtensionPlugin` 所属机制类型：QML 属性绑定与场景图机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- QML import 插件机制
+- 类型注册与 engine 初始化分离
+- 旧式插件和现代 QML 模块的关系
+- URI/qmldir 一致性

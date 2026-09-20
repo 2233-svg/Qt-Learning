@@ -1,241 +1,99 @@
 # QPageRanges
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPageRanges`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QPageRanges` 是“用户想打印哪些页”的值对象。它不关心文档内容、页数统计、打印机能力，也不把页码转换成数组；它只负责保存若干个 **从 1 开始的页码区间**，并能在字符串、区间列表和二进制流之间转换。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+最常见的输入来自打印对话框或命令行：用户输入 `1-3,6-7`，程序用 `QPageRanges::fromString()` 转成对象，再交给 `QPrinter`、`QPagedPaintDevice` 或自己的分页导出逻辑。它的价值在于把“离散页”和“连续范围”统一起来，避免到处手写解析和合并逻辑。
 
-### 这是什么
-
-`QPageRanges` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPageRanges>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::Gui`
+- 类型性质：轻量值类型，可复制、可移动、可清空
+- 页码规则：页码从 `1` 开始；`0` 和负数不是有效页码
+- 空范围语义：`isEmpty()` 为 `true`，`firstPage()` / `lastPage()` 返回 `0`
 
-CMake 配置：
+`QPageRanges` 不验证“文档是否真的有这些页”。例如文档只有 5 页，范围里仍然可以保存 `1-10`。真正执行打印或导出时，调用方需要用文档页数再做一次裁剪。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+| API | 作用 |
+| --- | --- |
+| `QPageRanges()` | 创建空页码范围，适合先构造再逐步添加页码。 |
+| `addPage(int pageNumber)` | 添加单页，会与已有相邻区间合并；页码必须大于等于 `1`。 |
+| `addRange(int from, int to)` | 添加闭区间 `[from, to]`；常用于用户输入、打印选择和批量导出。 |
+| `clear()` | 清空全部页码选择。 |
+| `contains(int pageNumber)` | 判断某一页是否被选中，适合分页循环时过滤。 |
+| `firstPage()` | 返回所有范围中的第一页；空对象返回 `0`。 |
+| `lastPage()` | 返回所有范围中的最后一页；空对象返回 `0`。 |
+| `isEmpty()` | 判断是否没有任何页码范围。 |
+| `toRangeList()` | 返回 `Range { from, to }` 列表，便于自己循环处理连续段。 |
+| `toString()` | 转成紧凑字符串，例如 `1-3,6-7`，适合保存配置或显示摘要。 |
+| `fromString(const QString &ranges)` | 从字符串解析页码范围；解析失败返回空对象。 |
+| `operator<<` / `operator>>` | 通过 `QDataStream` 序列化，内部以范围字符串表达。 |
 
-### 工作机制
+## 4. 关键用法
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `struct Range`
-
-### 公有函数
-
-- `QPageRanges()`
-- `QPageRanges(const QPageRanges &other)`
-- `QPageRanges(QPageRanges &&other)`
-- `~QPageRanges()`
-- `void addPage(int pageNumber)`
-- `void addRange(int from, int to)`
-- `void clear()`
-- `bool contains(int pageNumber) const`
-- `int firstPage() const`
-- `bool isEmpty() const`
-- `int lastPage() const`
-- `QList<QPageRanges::Range> toRangeList() const`
-- `QString toString() const`
-- `QPageRanges & operator=(QPageRanges &&other)`
-- `QPageRanges & operator=(const QPageRanges &other)`
-
-### 静态公有成员
-
-- `QPageRanges fromString(const QString &ranges)`
-
-### 相关非成员函数
-
-- `QDataStream & operator<<(QDataStream &stream, const QPageRanges &pageRanges)`
-- `QDataStream & operator>>(QDataStream &stream, QPageRanges &pageRanges)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QPageRanges::QPageRanges()`
-
-**作用与语义：**
-
-构造一个空的 QPageRanges 对象。
-
-### `[noexcept] QPageRanges::QPageRanges(const QPageRanges &other)`
-
-**作用与语义：**
-
-通过复制`other`构建QPageRanges对象。
-
-### `[constexpr noexcept] QPageRanges::QPageRanges(QPageRanges &&other)`
-
-**作用与语义：**
-
-通过从 从`other`移动来构建 QPageRanges 对象。
-
-### `[noexcept] QPageRanges::~QPageRanges()`
-
-**作用与语义：**
-
-会破坏页码范围。
-
-### `void QPageRanges::addPage(int pageNumber)`
-
-**作用与语义：**
-
-在范围中添加单页`pageNumber`。
-注意：页码以1开头。尝试添加小于1的页码将被忽略并发出警告。
-
-### `void QPageRanges::addRange(int from, int to)`
-
-**作用与语义：**
-
-将`from`和`to`指定的范围加到这些范围上。
-注意：页码以1开头。尝试添加小于1的页码将被忽略并发出警告。
-
-### `void QPageRanges::clear()`
-
-**作用与语义：**
-
-移除所有页码范围。
-
-### `bool QPageRanges::contains(int pageNumber) const`
-
-**作用与语义：**
-
-如果范围包含页面`pageNumber`，返回`true`;否则返回`false`。
-
-### `int QPageRanges::firstPage() const`
-
-**作用与语义：**
-
-返回页面范围覆盖的第一页索引，若页面范围为空，则返回0。
-
-### `[static] QPageRanges QPageRanges::fromString(const QString &ranges)`
-
-**作用与语义：**
-
-构造并返回一个`QPageRanges`对象，填充字符串表示中的`ranges`。
-如果出现解析错误，返回一个空的`QPageRanges`对象。
-
-**官方示例：**
+### 从用户输入转成打印范围
 
 ```cpp
- QPrinter printer;
- QPageRanges ranges = QPageRanges::fromString("1-3,6-7");
- printer.setPageRanges(ranges);
+const QPageRanges ranges = QPageRanges::fromString("1-3,6-7");
+
+if (!ranges.isEmpty())
+    printer.setPageRanges(ranges);
 ```
 
-### `bool QPageRanges::isEmpty() const`
+`fromString()` 适合处理标准范围字符串，但不要把“空对象”简单等同于“用户没选”。输入为空、输入非法、或者用户确实选择了空范围，最终都可能得到空对象。界面层最好保留原始输入，用于提示“格式错误”。
 
-**作用与语义：**
+### 在分页循环中使用
 
-如果范围为空，返回`true`;否则返回`false`。
+```cpp
+for (int page = 1; page <= pageCount; ++page) {
+    if (!ranges.isEmpty() && !ranges.contains(page))
+        continue;
 
-### `int QPageRanges::lastPage() const`
+    renderPage(page);
+}
+```
 
-**作用与语义：**
+这里故意把空范围解释为“全部页”，这是很多打印界面的习惯；但 `QPageRanges` 本身不定义这个业务语义，是否“空代表全部”要由你的调用逻辑决定。
 
-返回页面范围覆盖的最后一页的索引，如果页面范围为空，则返回0。
+### 分段处理比逐页展开更高效
 
-### `QList<QPageRanges::Range> QPageRanges::toRangeList() const`
+```cpp
+for (const QPageRanges::Range &range : ranges.toRangeList()) {
+    for (int page = range.from; page <= range.to; ++page)
+        exportPage(page);
+}
+```
 
-**作用与语义：**
+当范围很大时，不要先生成一个包含所有页码的列表。`QPageRanges` 保存的是区间，直接按区间循环更贴近它的设计。
 
-返回包含区间值的列表。
+## 5. 使用场景
 
-### `QString QPageRanges::toString() const`
+- 打印对话框：保存用户选择的页码、范围和多段选择。
+- PDF 导出：只导出特定页，例如导出第 `1` 页和附录页。
+- 报表系统：把“预览页码”和“实际输出页码”分离。
+- 命令行工具：解析 `--pages 1-3,8,10-12` 这类参数。
+- 批处理任务：对大文档按页段拆分，而不是一次性展开成所有页。
 
-**作用与语义：**
+## 6. 常见坑与经验
 
-返回页面区间的字符串表示。
+- **页码是 1 基。** 这是打印领域习惯，不是 C++ 容器索引。把页面数组下标传进去会整体偏移一页。
+- **小于 1 的页码会被忽略并产生警告。** 如果输入来自用户，最好在界面层提前校验，不要依赖 Qt 的运行期警告。
+- **空范围没有统一业务含义。** 对 `QPageRanges` 来说空就是空；“空代表全部页”是打印界面或导出逻辑的约定。
+- **它不校验文档页数。** `contains(999)` 只回答范围中是否包含 999，不回答文档有没有第 999 页。
+- **解析失败会返回空对象。** 因此当你需要区分“输入为空”和“输入非法”时，应自行做格式提示。
+- **序列化格式适合 Qt 内部持久化。** 如果要写入公开配置文件，`toString()` 更直观，也更便于用户编辑。
 
-### `[noexcept] QPageRanges &QPageRanges::operator=(QPageRanges &&other)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-`other`进入这个`QPageRanges`物体。
-
-### `[noexcept] QPageRanges &QPageRanges::operator=(const QPageRanges &other)`
-
-**作用与语义：**
-
-将`other`分配到该`QPageRanges`对象。
-
-### `QDataStream &operator<<(QDataStream &stream, const QPageRanges &pageRanges)`
-
-**作用与语义：**
-
-将`pageRanges`写入`stream`，作为一个范围字符串。
-
-### `QDataStream &operator>>(QDataStream &stream, QPageRanges &pageRanges)`
-
-**作用与语义：**
-
-读取页面，从字符串到`stream`并存储在`pageRanges`。
-
-### `struct Range`
-
-**作用与语义：**
-
-QPageRanges：：Range 结构存储区间的 from 和 to。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPageRanges` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 1 基页码与 0 基索引的转换边界
+- 离散页和连续页段的统一表达
+- 字符串解析、配置持久化和 `QDataStream` 序列化
+- 与 `QPrinter`、`QPagedPaintDevice`、PDF 导出流程的配合
+- 空范围、非法输入、超出文档页数三种情况的区别
+- 分段循环与逐页展开之间的性能和语义差异

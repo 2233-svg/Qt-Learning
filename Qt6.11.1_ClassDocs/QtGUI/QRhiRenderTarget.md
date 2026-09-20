@@ -1,125 +1,73 @@
 # QRhiRenderTarget
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI Private · 来自 `QRhiRenderTarget`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiRenderTarget` 是“可以被 `QRhiCommandBuffer::beginPass()` 渲染到的目标”的共同基类。屏幕上的当前 swapchain back buffer 是 render target，离屏 texture render target 也是 render target。它统一暴露像素尺寸、sample count、device pixel ratio 和 render pass descriptor。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不直接说明颜色附件、深度附件怎么组成；这些由派生类 `QRhiSwapChainRenderTarget` 和 `QRhiTextureRenderTarget` 管理。对绘制代码来说，只要拿到 `QRhiRenderTarget*`，就可以开始 pass。
 
-### 这是什么
-
-`QRhiRenderTarget` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：QRhiResource
-- 直接派生类：QRhiSwapChainRenderTarget、QRhiTextureRenderTarget
+- CMake：`Qt6::GuiPrivate`
+- 继承自：`QRhiResource`
+- 派生类：`QRhiSwapChainRenderTarget`、`QRhiTextureRenderTarget`
+- 使用入口：`QRhiCommandBuffer::beginPass()`
 
-CMake 配置：
+`QRhiGraphicsPipeline` 需要与 render target 的 `renderPassDescriptor()` 兼容，sample count 也要匹配，否则 draw 可能失败或行为不一致。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `pixelSize()` | 返回实际像素尺寸；swapchain 是窗口后备缓冲尺寸，texture target 是附件尺寸。 |
+| `devicePixelRatio()` | 返回设备像素比；texture target 通常为 1，swapchain 反映窗口 DPR。 |
+| `sampleCount()` | 返回 MSAA sample count；无 MSAA 时为 1。 |
+| `renderPassDescriptor()` | 返回 pipeline 创建所需的 render pass descriptor。 |
+| `setRenderPassDescriptor()` | 设置关联 descriptor，通常由派生资源创建流程管理。 |
+
+## 4. 关键用法
+
+```cpp
+QRhiRenderTarget *rt = swapChain->currentFrameRenderTarget();
+QRhiRenderPassDescriptor *rp = rt->renderPassDescriptor();
+
+pipeline->setRenderPassDescriptor(rp);
+pipeline->setSampleCount(rt->sampleCount());
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+渲染前要让 pipeline 的 render pass descriptor 和 sample count 与目标一致。窗口移动到高 DPI 屏幕后，swapchain 的 pixel size 和 DPR 都可能变化。
 
-### 工作机制
+### viewport 通常使用 pixel size
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+const QSize sz = rt->pixelSize();
+cb->setViewport(QRhiViewport(0, 0, sz.width(), sz.height()));
+```
 
-### 状态、生命周期和线程
+UI 逻辑可能按逻辑像素工作，但 RHI viewport 面向 render target 的像素尺寸。DPR 转换要在上层明确处理。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 5. 使用场景
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- 对 swapchain 当前帧 back buffer 渲染。
+- 对离屏 texture render target 渲染。
+- 渲染组件接收外部 render target 后创建/复用 pipeline。
+- 统一处理屏幕目标和离屏目标的 viewport、sample count、render pass descriptor。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+- **DPR 不等于 pixel size。** swapchain target 的像素尺寸通常是窗口逻辑尺寸乘 DPR。
+- **render target 改变可能导致 pipeline 不兼容。** 检查 `renderPassDescriptor()->serializedFormat()`。
+- **sample count 必须一致。** pipeline、render target、附件 sample count 不一致会出问题。
+- **`pixelSize()` 可能触发 texture target 更新检查。** 附件 resize 后要理解底层重建时机。
+- **基类不暴露附件细节。** 需要颜色/深度 attachment 时看具体派生类。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual float devicePixelRatio() const = 0`
-- `virtual QSize pixelSize() const = 0`
-- `QRhiRenderPassDescriptor * renderPassDescriptor() const`
-- `virtual int sampleCount() const = 0`
-- `void setRenderPassDescriptor(QRhiRenderPassDescriptor *desc)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[pure virtual] float QRhiRenderTarget::devicePixelRatio() const`
-
-**作用与语义：**
-
-返回设备像素比。对于`QRhiTextureRenderTarget`，这总是1。对于从`QRhiSwapChain`检索到的目标，该值反映了目标`QWindow`的设备像素比。
-
-### `[pure virtual] QSize QRhiRenderTarget::pixelSize() const`
-
-**作用与语义：**
-
-返回像素大小。
-只有在成功调用 create() 后才有效。在此之前，结果是默认构造的`QSize`。
-`QRhiTextureRenderTarget` 返回的大小是创建时关联附件的大小，实际上是第一个颜色附件的大小，或者如果没有颜色附件，则是深度/模板缓冲区。如果关联的纹理或渲染缓冲区随后被调整大小并重建，那么 pixelSize() 会隐式调用 create()，以重建底层数据结构。这种隐式检查类似于 `QRhiCommandBuffer::beginPass()` 所做的，确保返回的大小始终是最新的。
-
-### `QRhiRenderPassDescriptor *QRhiRenderTarget::renderPassDescriptor() const`
-
-**作用与语义：**
-
-返回相关的 `QRhiRenderPassDescriptor`。
-
-### `[pure virtual] int QRhiRenderTarget::sampleCount() const`
-
-**作用与语义：**
-
-返回采样计数，如果多重采样抗锯齿对该渲染目标无关，则返回1。
-
-### `void QRhiRenderTarget::setRenderPassDescriptor(QRhiRenderPassDescriptor *desc)`
-
-**作用与语义：**
-
-设置`QRhiRenderPassDescriptor` `desc`用于该渲染目标。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiRenderTarget` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- swapchain render target 与 texture render target 的共同接口
+- pixel size、device pixel ratio、sample count
+- render pass descriptor 与 pipeline 兼容性
+- viewport 设置和高 DPI 渲染
+- RHI pass 开始前的目标信息检查

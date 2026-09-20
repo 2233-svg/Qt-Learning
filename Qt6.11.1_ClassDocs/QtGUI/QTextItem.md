@@ -1,165 +1,83 @@
 # QTextItem
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QTextItem`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QTextItem` 是 `QPainter` 在执行文字绘制时交给某些低层回调的一小段“已经布局好的文本”。它不是可自由构造的文本模型，也不是日常 UI 代码应保存的对象；它暴露这段文字、字体、宽度、基线度量与装饰标记，方便你在绘制引擎或代理逻辑中检查实际输出。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+通常你不会主动创建 `QTextItem`。它主要出现在重载 `QPaintEngine::drawTextItem()` 等绘制管线扩展点；普通程序请使用 `drawText()`、`QTextLayout` 或 `QStaticText`。
 
-### 这是什么
-
-`QTextItem` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QTextItem>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：绘制期间的只读视图，构造与生命周期由 Qt 绘制系统控制。
+- 没有公开构造、修改或持久化接口；不要跨越绘制回调保存引用或指针。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途速查 |
+| --- | --- |
+| `text()` | 读取当前待绘制的文本片段 |
+| `font()` | 读取该片段实际使用的 `QFont` 请求 |
+| `width()` | 读取该片段已经布局好的逻辑宽度 |
+| `ascent()` | 读取基线以上高度 |
+| `descent()` | 读取基线以下高度 |
+| `renderFlags()` | 查询文字方向与装饰线标志 |
+| `RenderFlag::RightToLeft` | 片段按右到左视觉方向绘制 |
+| `RenderFlag::Overline` | 片段带上划线 |
+| `RenderFlag::Underline` | 片段带下划线 |
+| `RenderFlag::StrikeOut` | 片段带删除线 |
+
+## 4. 关键用法
+
+### 在自定义绘制引擎中观察文本片段
+
+```cpp
+void MyPaintEngine::drawTextItem(const QPointF &pos,
+                                 const QTextItem &item)
+{
+    qDebug() << item.text()
+             << item.width()
+             << item.ascent()
+             << item.descent()
+             << item.renderFlags();
+
+    // 将 item 交给你的后端，或按后端协议转换。
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`pos` 通常与基线相关，而 `ascent()`、`descent()` 给出上下范围。若你把它误当作左上角坐标，会造成垂直偏移。
 
-### 工作机制
+### 正确处理方向和装饰
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+const auto flags = item.renderFlags();
+if (flags.testFlag(QTextItem::RightToLeft)) {
+    // 保持布局提供的视觉方向，不要仅靠 reverse(text())。
+}
+if (flags.testFlag(QTextItem::Underline)) {
+    // 由后端绘制与字体度量匹配的下划线。
+}
+```
 
-### 状态、生命周期和线程
+对 RTL 文本不能简单翻转 `item.text()`；双向算法、数字和中性字符的视觉顺序远比字符串反转复杂。后端应把 `RightToLeft` 当作渲染语义，而不是文本变换指令。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 5. 使用场景
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- 自定义 `QPaintEngine`、打印后端或录制型绘制后端。
+- 调试 Qt 文字绘制管线，检查每次下发的片段与装饰。
+- 在低层后端中把 Qt 的文本参数映射到第三方渲染 API。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+- **不是通用文本布局类。** 它没有换行、光标、选区或字形列表；复杂需求回到 `QTextLayout`。
+- **生命周期短。** 只在 Qt 传入它的当前回调内读取；不要存储其引用。
+- **`width()` 是布局宽度，不必等于像素墨迹边界。** 背景与裁剪仍需正确的字体/字形测量。
+- **`font()` 仍是字体请求。** 真正物理匹配和 glyph 回退可能由后端/设备决定。
+- **装饰线不是可忽略的装饰。** 忽略 `Underline`、`StrikeOut` 会让富文本和无障碍语义在自定义后端中丢失。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum RenderFlag { RightToLeft, Overline, Underline, StrikeOut }`
-- `flags RenderFlags`
-
-### 公有函数
-
-- `qreal ascent() const`
-- `qreal descent() const`
-- `QFont font() const`
-- `QTextItem::RenderFlags renderFlags() const`
-- `QString text() const`
-- `qreal width() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QTextItem::RenderFlagflags QTextItem::RenderFlags`
-
-**作用与语义：**
-
-- `QTextItem::RightToLeft`：`0x1`;从右向左渲染文本。
-- `QTextItem::Overline`：`0x10`;在文字上方画一条线。
-- `QTextItem::Underline`：`0x20`;在文字下方画一条线。
-- `QTextItem::StrikeOut`：`0x40`;在文本中画一条线。
-RenderFlags 类型是 QFlags 的 typedef<RenderFlag>。它存储 RenderFlag 值的 OR 组合。
-
-### `qreal QTextItem::ascent() const`
-
-**作用与语义：**
-
-对应于所绘制文本的 4 段的 `ascent`。
-
-### `qreal QTextItem::descent() const`
-
-**作用与语义：**
-
-对应于所绘制文本的段子`descent`。
-
-### `QFont QTextItem::font() const`
-
-**作用与语义：**
-
-返回应用于绘制文本的字体。
-
-### `QTextItem::RenderFlags QTextItem::renderFlags() const`
-
-**作用与语义：**
-
-返回所用的渲染标志。
-
-### `QString QTextItem::text() const`
-
-**作用与语义：**
-
-返回应绘制的文本。
-
-### `qreal QTextItem::width() const`
-
-**作用与语义：**
-
-指定要绘制文本的总宽度。
-
-### `enum RenderFlag { RightToLeft, Overline, Underline, StrikeOut }`
-
-**作用与语义：**
-
-- `QTextItem::RightToLeft`：`0x1`;从右向左渲染文本。
-- `QTextItem::Overline`：`0x10`;在文字上方画一条线。
-- `QTextItem::Underline`：`0x20`;在文字下方画一条线。
-- `QTextItem::StrikeOut`：`0x40`;在文本中画一条线。
-RenderFlags 类型是 QFlags 的 typedef<RenderFlag>。它存储 RenderFlag 值的 OR 组合。
-
-### `flags RenderFlags`
-
-**作用与语义：**
-
-- `QTextItem::RightToLeft`：`0x1`;从右向左渲染文本。
-- `QTextItem::Overline`：`0x10`;在文字上方画一条线。
-- `QTextItem::Underline`：`0x20`;在文字下方画一条线。
-- `QTextItem::StrikeOut`：`0x40`;在文本中画一条线。
-RenderFlags 类型是 QFlags 的 typedef<RenderFlag>。它存储 RenderFlag 值的 OR 组合。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QTextItem` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+QPainter 绘制管线、绘制回调生命周期、基线、RTL 语义、文本装饰、布局宽度与墨迹范围、低层渲染后端。

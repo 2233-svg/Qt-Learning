@@ -1,242 +1,86 @@
 # QIntValidator
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QIntValidator`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QIntValidator` 验证一个符合 locale 规则的有符号整数是否在指定闭区间内。它适合端口、页码、数量、优先级、年龄、帧号等文本输入。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它并不是简单的 `min <= toInt() <= max`。输入框要允许用户逐步编辑，因此某些当前越界的文本仍可能返回 `Intermediate`。例如范围 46 到 53，用户把 `"49"` 改成 `"51"` 时，短暂输入 `"59"` 需要保留为 Intermediate，否则编辑过程会被卡死。
 
-### 这是什么
+## 2. 类说明
 
-`QIntValidator` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QIntValidator` 继承自 `QValidator`，增加 `bottom` 和 `top` 两个范围属性。它使用自身 `locale()` 识别数字、符号与可能的分组分隔符。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+类说明只用于表明这些 API 来自 `QIntValidator`：范围判断由本类负责，最终业务语义，例如库存是否仍足够、端口是否被占用，仍需要提交时额外验证。
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QIntValidator(parent)` | 构造接受全部 `int` 范围的校验器。 |
+| `QIntValidator(minimum, maximum, parent)` | 构造指定闭区间校验器。 |
+| `bottom() const` / `top() const` | 查询最小值与最大值。 |
+| `setBottom(value)` / `setTop(value)` | 单独更新范围端点。 |
+| `setRange(bottom, top)` | 一次更新完整闭区间。 |
+| `validate(input, pos)` | 评估当前输入为 Invalid、Intermediate 或 Acceptable。 |
+| `fixup(input)` | 继承重实现，尝试规范化输入。 |
+| `bottomChanged()` / `topChanged()` | 范围端点变化时发出。 |
+| `setLocale()` | 来自父类，设置数字解析 locale。 |
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QIntValidator>`
-- 继承自：QValidator
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `bottom : int`
-- `top : int`
-
-### 公有函数
-
-- `QIntValidator(QObject *parent = nullptr)`
-- `QIntValidator(int minimum, int maximum, QObject *parent = nullptr)`
-- `virtual ~QIntValidator()`
-- `int bottom() const`
-- `void setBottom(int)`
-- `void setRange(int bottom, int top)`
-- `void setTop(int)`
-- `int top() const`
-
-### 重实现的公有函数
-
-- `virtual void fixup(QString &input) const override`
-- `virtual QValidator::State validate(QString &input, int &pos) const override`
-
-### 信号
-
-- `void bottomChanged(int bottom)`
-- `void topChanged(int top)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `bottom : int`
-
-**作用与语义：**
-
-该属性表示验证者最低可接受值。
-默认情况下，该属性的值是从可用最小的带符号整数（-2147483648）推导出来的。
-
-**如何使用：** 调用 `bottom()` 读取当前值；它不会修改应用状态。
-
-### `top : int`
-
-**作用与语义：**
-
-该属性具有验证者可接受的最高值。
-默认情况下，该属性的值是从可用的最高符号整数（2147483647）推导出来的。
-
-**如何使用：** 调用 `top()` 读取当前值；它不会修改应用状态。
-
-### `[explicit] QIntValidator::QIntValidator(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个包含接受所有整数的`parent`对象的验证器。
-
-### `QIntValidator::QIntValidator(int minimum, int maximum, QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个带有`parent`的验证子，接受从从从`minimum`到整数的整数`maximum`包含。
-
-### `[virtual noexcept] QIntValidator::~QIntValidator()`
-
-**作用与语义：**
-
-摧毁验证器。
-
-### `[override virtual] void QIntValidator::fixup(QString &input) const`
-
-**作用与语义：**
-
-重实现自：`QValidator::fixup`（QString & input）const.
-该函数尝试根据验证者的规则将`input`变为有效。它不一定生成有效字符串：调用该函数的人必须事后重新测试;默认值不做任何事。
-该函数的重现即使不产生有效字符串，也可能`input`变化。例如，ISBN验证器可能希望删除除数字和“-”以外的所有字符，即使结果仍不是有效的ISBN;姓氏验证器可能希望删除字符串起始和结尾的空白，即使该字符串不在接受的姓氏列表中。
-
-### `void QIntValidator::setRange(int bottom, int top)`
-
-**作用与语义：**
-
-设置验证者范围仅接受`bottom`到`top`含整数。
-
-### `[override virtual] QValidator::State QIntValidator::validate(QString &input, int &pos) const`
-
-**作用与语义：**
-
-重实现自：`QValidator::validate`（QString & input， int & pos） const.
-如果`input`在有效范围内是整数，返回`Acceptable`。如果`input`的数字最多等于该范围的顶部，或者是有效范围内整数的前缀，返回`Intermediate`。否则，返回`Invalid`。
-如果有效范围仅包含正整数（例如32到100），且`input`为负整数，则返回无效。（反之，如果范围为负整数（例如，-100到-32），且`input`为无前加号的正整数，则返回中间值，因为用户可能快要输入负号（尤其是右到左语言）。
-同样，如果有效范围在46到53之间，那么41到59将被评估为`Intermediate`，否则用户无法将值从49改为51。
-默认情况下，该验证者不使用 `pos` 参数。
-如果根据该验证者的规则`input`无效，`Intermediate`如果稍作编辑能使输入可接受（例如用户在接受10到99的整数控件中输入“4”），`Acceptable`输入有效，该虚拟函数会返回`Invalid`。
-该函数可以同时改变`input`和`pos`（光标位置）如有需要。
-
-**官方示例：**
+### 给输入框限制端口范围
 
 ```cpp
- int pos = 0;
-
- s = "abc";
- v.validate(s, pos);    // returns Invalid
-
- s = "5";
- v.validate(s, pos);    // returns Intermediate
-
- s = "50";
- v.validate(s, pos);    // returns Acceptable
+auto *portValidator = new QIntValidator(1, 65535, ui->portEdit);
+portValidator->setLocale(QLocale::c());
+ui->portEdit->setValidator(portValidator);
 ```
 
-### `int bottom() const`
+网络端口通常要求 ASCII 数字与固定格式，使用 `QLocale::c()` 能避免界面 locale 的分组符号或本地数字格式带来歧义。
 
-**作用与语义：**
+### 理解 Intermediate 是正常编辑状态
 
-该属性表示验证者最低可接受值。
-默认情况下，该属性的值是从可用最小的带符号整数（-2147483648）推导出来的。
+```cpp
+QIntValidator validator(10, 99);
+int pos = 0;
+QString text = "1";
 
-**如何使用：** 调用 `bottom()` 读取当前值；它不会修改应用状态。
+Q_ASSERT(validator.validate(text, pos) == QValidator::Intermediate);
+```
 
-### `void setBottom(int)`
+`"1"` 不是最终合法值，却是 `"10"` 到 `"19"` 的前缀。不要把这类文本立即清空或提示为错误。
 
-**作用与语义：**
+### 范围变化后 UI 要重新解释当前值
 
-该属性表示验证者最低可接受值。
-默认情况下，该属性的值是从可用最小的带符号整数（-2147483648）推导出来的。
+```cpp
+connect(spinRangeController, &RangeController::maximumChanged,
+        this, [validator](int max) {
+            validator->setTop(max);
+        });
+```
 
-**如何使用：** 调用 `setBottom(...)` 修改 `bottom`；传入的新值会成为后续查询和相关界面行为所使用的值。
+validator 发出 `changed()` / `topChanged()` 后，编辑控件可重新评估当前文本。业务层仍应决定如果已有值落在新范围外，是否自动修正、标红或阻止保存。
 
-### `void setTop(int)`
+## 5. 使用场景
 
-**作用与语义：**
+`QIntValidator` 适合端口、页码、数量、百分比整数、年龄、重试次数、帧号、优先级、RGB 8-bit 通道和整数型配置字段。
 
-该属性具有验证者可接受的最高值。
-默认情况下，该属性的值是从可用的最高符号整数（2147483647）推导出来的。
+需要带单位、进制前缀、千位分隔格式或超出 `int` 的数字时，往往应自定义 `QValidator`，或使用更贴近数据模型的 `QSpinBox` / `QAbstractSpinBox`。
 
-**如何使用：** 调用 `setTop(...)` 修改 `top`；传入的新值会成为后续查询和相关界面行为所使用的值。
+## 6. 常见坑与经验
 
-### `int top() const`
+不要把 validator 当作数值转换。提交时仍使用 `QLocale::toInt()` 并检查 `ok`，不要直接 `QString::toInt()` 假设格式一致。
 
-**作用与语义：**
+不要期待范围外输入必然是 Invalid。为保持可编辑性，部分越界值可能是 Intermediate。
 
-该属性具有验证者可接受的最高值。
-默认情况下，该属性的值是从可用的最高符号整数（2147483647）推导出来的。
+不要允许 locale 分组符后又用 `QString::toInt()` 解析。两套规则不同会造成“输入框显示合法但提交失败”。
 
-**如何使用：** 调用 `top()` 读取当前值；它不会修改应用状态。
+不要用 `QIntValidator` 校验无符号 64-bit、十六进制或固定长度编码；这些需求使用自定义规则更准确。
 
-### `void bottomChanged(int bottom)`
+不要反复新建 validator。输入规则不变时让控件长期持有同一个对象即可。
 
-**作用与语义：**
+## 7. 知识点覆盖
 
-该属性表示验证者最低可接受值。
-默认情况下，该属性的值是从可用最小的带符号整数（-2147483648）推导出来的。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `bottom` 的变化，不要把它当作普通函数主动调用。
-
-### `void topChanged(int top)`
-
-**作用与语义：**
-
-该属性具有验证者可接受的最高值。
-默认情况下，该属性的值是从可用的最高符号整数（2147483647）推导出来的。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `top` 的变化，不要把它当作普通函数主动调用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QIntValidator` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QIntValidator` 应覆盖整数闭区间、Intermediate、locale 数字解析、分组分隔符、`QLineEdit`、范围动态更新、提交时转换、QSpinBox 选择和领域数值校验。

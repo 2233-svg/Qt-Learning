@@ -1,301 +1,72 @@
 # QAmbientSound
-
-> Qt 6.11.1 · Qt Spatial Audio
+> Qt 6.11.1 · Qt Spatial Audio · 来自 `QAmbientSound`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAmbientSound` 是 Qt Multimedia 的“Ambient声音”类型，参与媒体源、设备、格式、播放/采集状态或音视频数据处理。
+`QAmbientSound` 是没有空间定位的声音层。它不会因为 listener 转头而跑到左边或右边，也不会因为距离变远而自动变小；它更像场景底噪、氛围铺底或背景循环。
 
-**模块背景：** 这是 Qt Spatial Audio 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+在 Spatial Audio 里，它和 `QSpatialSound` 搭配使用：ambient 负责“这个地方整体听起来像什么”，spatial sound 负责“某个具体物体在哪里发声”。
 
-### 这是什么
+## 2. 类说明
 
-`QAmbientSound` 是 多媒体设备与会话机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QAmbientSound`，属于 Qt Spatial Audio 模块，用于播放非定位的环境声音。
 
-**内部模型：** 多媒体类型通常把设备、媒体会话、格式、播放状态和异步错误分开。硬件能力、平台后端、权限和资源状态会影响结果；请求成功发起不等于设备已准备好。
+它仍然挂在 `QAudioEngine` 上，受引擎暂停、停止、主音量和输出设备影响。但它不需要设置位置、旋转、距离模型或遮挡。
 
-**适用场景：** 先检查平台能力和权限，再创建会话/设备，设置格式和源，连接状态与错误信号，执行开始/暂停/停止并在结束后清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QAmbientSound(QAudioEngine *engine)` | 在指定引擎中创建环境声。 |
+| `setSource(QUrl)` / `source()` | 设置音频资源 URL。 |
+| `play()` / `pause()` / `stop()` | 控制播放。 |
+| `setAutoPlay(bool)` / `autoPlay()` | source 设置后是否自动播放。 |
+| `setLoops(int)` / `loops()` | 设置循环次数，适合风声、雨声、机械底噪。 |
+| `setVolume(float)` / `volume()` | 设置环境声自身音量。 |
+| `engine() const` | 返回所属音频引擎。 |
+| `Loops` | 循环次数相关枚举。 |
+| `...Changed()` signals | 属性变化通知。 |
 
-**先记住的坑：** 不要假设所有平台支持相同编解码器和格式；不要忽略权限和后端错误；不要在状态未准备好时连续调用控制 API；媒体对象销毁前先停止使用。
+## 4. 典型流程
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QAmbientSound>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS SpatialAudio)
-target_link_libraries(mytarget PRIVATE Qt6::SpatialAudio)
+```cpp
+auto *rain = new QAmbientSound(engine);
+rain->setLoops(QAmbientSound::Infinite);
+rain->setVolume(0.35f);
+rain->setSource(QUrl("qrc:/audio/rain-bed.wav"));
+rain->play();
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+如果不同区域需要不同氛围，可以交叉淡入淡出两个 `QAmbientSound`，不要硬切：
 
-### 工作机制
+```cpp
+forest->setVolume(forestGain);
+cave->setVolume(caveGain);
+```
 
-多媒体类型通常把设备、媒体会话、格式、播放状态和异步错误分开。硬件能力、平台后端、权限和资源状态会影响结果；请求成功发起不等于设备已准备好。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+| 场景 | 为什么用 ambient |
+| --- | --- |
+| 雨声、风声、城市底噪 | 用户不需要定位到单个发声点。 |
+| 背景音乐或氛围 pad | 希望稳定覆盖整个声场。 |
+| 区域环境切换 | 进入森林、洞穴、工厂时换声音底色。 |
+| 与空间声源混合 | ambient 打底，`QSpatialSound` 提供具体事件。 |
 
-**生命周期：** 设备或媒体对象要在使用期间保持有效，开始前配置输入/输出和格式，停止后释放会话或解除设备占用。状态、媒体状态和错误信号共同决定下一步操作。
+## 6. 常见坑与经验
 
-**状态与结果：** 区分无媒体、加载中、已加载、播放中、暂停、停止、结束和错误。进度、时长、缓冲和设备可用性不是同一个状态，不能只用一个 bool 表示。
+环境声最容易越叠越吵。多个循环铺底同时播放时，即使每个 `volume` 不高，总能量也会堆起来。项目里最好给 ambient 分配清晰的混音层级。
 
-**线程与事件循环：** 媒体对象通常依赖事件循环和平台线程边界；GUI 展示对象在 GUI 线程，后台处理要使用类明确支持的线程模型。
+`QAmbientSound` 不做空间衰减。如果你想要“远处瀑布走近变大”，那应该用 `QSpatialSound`；如果你想要“整个关卡都被雨声包围”，才用 ambient。
 
-## 3. 直接使用
+循环素材要处理好首尾无缝，否则 `loops` 再正确也会每一轮听到咔哒或节奏断点。这个问题通常要在音频素材制作阶段解决，而不是靠 API 弥补。
 
-先检查平台能力和权限，再创建会话/设备，设置格式和源，连接状态与错误信号，执行开始/暂停/停止并在结束后清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+`autoPlay` 适合资源固定的场景，但动态换 source 时要小心：新素材一加载就播可能打断淡出流程。需要转场控制时，手动 `play()` 更稳。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 7. 知识点覆盖
 
-### 公有类型
-
-- `enum Loops { Infinite, Once }`
-
-### 属性
-
-- `autoPlay : bool`
-- `loops : int`
-- `source : QUrl`
-- `volume : float`
-
-### 公有函数
-
-- `QAmbientSound(QAudioEngine *engine)`
-- `bool autoPlay() const`
-- `QAudioEngine * engine() const`
-- `int loops() const`
-- `void setAutoPlay(bool autoPlay)`
-- `void setLoops(int loops)`
-- `void setSource(const QUrl &url)`
-- `void setVolume(float volume)`
-- `QUrl source() const`
-- `float volume() const`
-
-### 公有槽函数
-
-- `void pause()`
-- `void play()`
-- `void stop()`
-
-### 信号
-
-- `void autoPlayChanged()`
-- `void loopsChanged()`
-- `void sourceChanged()`
-- `void volumeChanged()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QAmbientSound::Loops`
-
-**作用与语义：**
-
-你可以用以下数值控制播放循环：
-- `QAmbientSound::Infinite`：`-1`;无限循环
-- `QAmbientSound::Once`：`1`;播放一次后停止播放
-
-### `autoPlay : bool`
-
-**作用与语义：**
-
-决定当指定音源时声音是否应该自动开始播放。
-默认值是`true`。
-
-**如何使用：** 调用 `autoPlay()` 读取当前值；它不会修改应用状态。
-
-### `loops : int`
-
-**作用与语义：**
-
-决定该声音播放多少次后玩家停止。设置为`QAmbientSound::Infinite`，可以无限循环播放当前声音。
-默认值是`1`。
-
-**如何使用：** 调用 `loops()` 读取当前值；它不会修改应用状态。
-
-### `source : QUrl`
-
-**作用与语义：**
-
-要播放的声音的源文件。
-
-**如何使用：** 调用 `source()` 读取当前值；它不会修改应用状态。
-
-### `volume : float`
-
-**作用与语义：**
-
-定义声音的音量。
-0到1之间的数值会削弱声音，而大于1的数值则提供额外的增益提升。
-
-**如何使用：** 调用 `volume()` 读取当前值；它不会修改应用状态。
-
-### `[explicit] QAmbientSound::QAmbientSound(QAudioEngine *engine)`
-
-**作用与语义：**
-
-为`engine`创造立体声源。
-注意：必须有有效电话联系`QAudioEngine`。
-
-### `QAudioEngine *QAmbientSound::engine() const`
-
-**作用与语义：**
-
-返回与此声音相关的引擎。
-
-### `[slot] void QAmbientSound::pause()`
-
-**作用与语义：**
-
-暂停声音播放。调用`play()`将继续播放。
-
-### `[slot] void QAmbientSound::play()`
-
-**作用与语义：**
-
-它开始播放声音。如果声音已经在播放，它就没用。
-
-### `[slot] void QAmbientSound::stop()`
-
-**作用与语义：**
-
-停止声音播放，并将当前位置和当前循环计数重置为0。调用`play()`会从声音文件开头开始播放。
-
-### `bool autoPlay() const`
-
-**作用与语义：**
-
-决定当指定音源时声音是否应该自动开始播放。
-默认值是`true`。
-
-**如何使用：** 调用 `autoPlay()` 读取当前值；它不会修改应用状态。
-
-### `int loops() const`
-
-**作用与语义：**
-
-决定该声音播放多少次后玩家停止。设置为`QAmbientSound::Infinite`，可以无限循环播放当前声音。
-默认值是`1`。
-
-**如何使用：** 调用 `loops()` 读取当前值；它不会修改应用状态。
-
-### `void setAutoPlay(bool autoPlay)`
-
-**作用与语义：**
-
-决定当指定音源时声音是否应该自动开始播放。
-默认值是`true`。
-
-**如何使用：** 调用 `setAutoPlay(...)` 修改 `autoPlay`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setLoops(int loops)`
-
-**作用与语义：**
-
-决定该声音播放多少次后玩家停止。设置为`QAmbientSound::Infinite`，可以无限循环播放当前声音。
-默认值是`1`。
-
-**如何使用：** 调用 `setLoops(...)` 修改 `loops`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setSource(const QUrl &url)`
-
-**作用与语义：**
-
-要播放的声音的源文件。
-
-**如何使用：** 调用 `setSource(...)` 修改 `source`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setVolume(float volume)`
-
-**作用与语义：**
-
-定义声音的音量。
-0到1之间的数值会削弱声音，而大于1的数值则提供额外的增益提升。
-
-**如何使用：** 调用 `setVolume(...)` 修改 `volume`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `QUrl source() const`
-
-**作用与语义：**
-
-要播放的声音的源文件。
-
-**如何使用：** 调用 `source()` 读取当前值；它不会修改应用状态。
-
-### `float volume() const`
-
-**作用与语义：**
-
-定义声音的音量。
-0到1之间的数值会削弱声音，而大于1的数值则提供额外的增益提升。
-
-**如何使用：** 调用 `volume()` 读取当前值；它不会修改应用状态。
-
-### `void autoPlayChanged()`
-
-**作用与语义：**
-
-决定当指定音源时声音是否应该自动开始播放。
-默认值是`true`。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `autoPlay` 的变化，不要把它当作普通函数主动调用。
-
-### `void loopsChanged()`
-
-**作用与语义：**
-
-决定该声音播放多少次后玩家停止。设置为`QAmbientSound::Infinite`，可以无限循环播放当前声音。
-默认值是`1`。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `loops` 的变化，不要把它当作普通函数主动调用。
-
-### `void sourceChanged()`
-
-**作用与语义：**
-
-要播放的声音的源文件。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `source` 的变化，不要把它当作普通函数主动调用。
-
-### `void volumeChanged()`
-
-**作用与语义：**
-
-定义声音的音量。
-0到1之间的数值会削弱声音，而大于1的数值则提供额外的增益提升。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `volume` 的变化，不要把它当作普通函数主动调用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-设备或媒体对象要在使用期间保持有效，开始前配置输入/输出和格式，停止后释放会话或解除设备占用。状态、媒体状态和错误信号共同决定下一步操作。
-
-### 状态和错误边界
-
-区分无媒体、加载中、已加载、播放中、暂停、停止、结束和错误。进度、时长、缓冲和设备可用性不是同一个状态，不能只用一个 bool 表示。
-
-### 线程边界
-
-媒体对象通常依赖事件循环和平台线程边界；GUI 展示对象在 GUI 线程，后台处理要使用类明确支持的线程模型。
-
-### 最容易出现的错误
-
-不要假设所有平台支持相同编解码器和格式；不要忽略权限和后端错误；不要在状态未准备好时连续调用控制 API；媒体对象销毁前先停止使用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAmbientSound` 所属机制类型：多媒体设备与会话机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 环境声和空间定位声源的职责分工。
+- 循环播放、自动播放、音量混合。
+- 引擎全局状态对 ambient sound 的影响。
+- 区域氛围切换和交叉淡入淡出设计。
+- 音频素材无缝循环与 API 控制边界。

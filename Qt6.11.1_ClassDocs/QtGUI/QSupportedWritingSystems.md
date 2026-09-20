@@ -1,130 +1,66 @@
 # QSupportedWritingSystems
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QSupportedWritingSystems`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QSupportedWritingSystems` 是一个紧凑的“字体声明支持哪些大类书写系统”的集合。它以 `QFontDatabase::WritingSystem` 为键保存布尔值，主要给字体数据库、字体引擎或插件实现者描述能力。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是字符串语言检测器，也不能证明具体字符可画。比如“支持简体中文”只是粗粒度元数据；罕见字、emoji 组合、变体选择符是否有效仍应检查具体字体和具体文本。
 
-### 这是什么
-
-`QSupportedWritingSystems` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QSupportedWritingSystems>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：轻量值类型；只保存 `WritingSystem -> bool` 状态。
+- 关联类型：枚举定义在 `QFontDatabase`；一般应用开发中更常查询 `QFontDatabase::writingSystems()` 或 `QRawFont::supportedWritingSystems()`。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途速查 |
+| --- | --- |
+| `QSupportedWritingSystems()` | 创建所有书写系统均未标记支持的集合 |
+| `setSupported(writingSystem, true)` | 标记支持某一书写系统 |
+| `setSupported(writingSystem, false)` | 清除某一书写系统的支持标记 |
+| `supported(writingSystem)` | 查询对应标记是否为真 |
+| 拷贝构造、赋值 | 复制这份能力集合 |
+| `QFontDatabase::WritingSystem` | 枚举 Latin、Arabic、SimplifiedChinese、Japanese 等书写系统 |
+
+## 4. 关键用法
+
+### 在字体插件中声明能力
+
+```cpp
+QSupportedWritingSystems systems;
+systems.setSupported(QFontDatabase::Latin);
+systems.setSupported(QFontDatabase::SimplifiedChinese);
+systems.setSupported(QFontDatabase::Japanese);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这是声明“该字体/后端面向这些书写系统”，适合插件或字体发现代码向 Qt 汇报元数据。它不装载字体，也不会改变 `QFont` 的回退策略。
 
-### 工作机制
+### 作为过滤信息而不是最终校验
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+if (systems.supported(QFontDatabase::Arabic))
+    showArabicPreviewOption();
+```
 
-### 状态、生命周期和线程
+这种筛选适合减少字体选择器中的噪声。但当用户输入真正的阿拉伯文字时，仍须靠正常字体匹配和塑形；要验证某个码点，使用 `QRawFont::supportsCharacter()`，要验证整段文字，使用 `QTextLayout`。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 5. 使用场景
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- `QFontDatabase` 相关插件、字体引擎或内部字体元数据实现。
+- 字体浏览器中按大类文字系统筛选和展示。
+- 为预览界面选择对应书写系统的示例文本。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+- **书写系统不等于语言。** Latin 可服务多种语言；中文、日文、韩文共享许多 CJK 字符，不能仅靠这个枚举决定本地化字体。
+- **支持标记不等于 glyph 覆盖。** 罕见字符、私用区、emoji 与组合序列需要更具体的验证。
+- **不要把它用于文本方向。** RTL/LTR 由 Unicode bidi 与 `QTextOption` 等布局规则决定，不由是否支持 Arabic 简化替代。
+- **这是能力描述，不是配置入口。** 不能用它给应用添加字体或指定 fallback；那些由 `QFontDatabase` 的注册与回退 API 完成。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QSupportedWritingSystems()`
-- `QSupportedWritingSystems(const QSupportedWritingSystems &other)`
-- `~QSupportedWritingSystems()`
-- `void setSupported(QFontDatabase::WritingSystem writingSystem, bool support = true)`
-- `bool supported(QFontDatabase::WritingSystem writingSystem) const`
-- `QSupportedWritingSystems & operator=(const QSupportedWritingSystems &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QSupportedWritingSystems::QSupportedWritingSystems()`
-
-**作用与语义：**
-
-构建一个新的对象来处理支持的书写系统。
-
-### `QSupportedWritingSystems::QSupportedWritingSystems(const QSupportedWritingSystems &other)`
-
-**作用与语义：**
-
-构建`other`写作系统对象的副本。
-
-### `[noexcept] QSupportedWritingSystems::~QSupportedWritingSystems()`
-
-**作用与语义：**
-
-销毁支持的写入系统对象。
-
-### `void QSupportedWritingSystems::setSupported(QFontDatabase::WritingSystem writingSystem, bool support = true)`
-
-**作用与语义：**
-
-根据`support`给出的值，设置或清除对指定`writingSystem`的支持。
-
-### `bool QSupportedWritingSystems::supported(QFontDatabase::WritingSystem writingSystem) const`
-
-**作用与语义：**
-
-如果支持`writingSystem`指定的写入系统，返回`true`;否则返回`false`。
-
-### `QSupportedWritingSystems &QSupportedWritingSystems::operator=(const QSupportedWritingSystems &other)`
-
-**作用与语义：**
-
-构建`other`写作系统对象的副本。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QSupportedWritingSystems` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+书写系统、字体元数据、粗粒度能力声明、语言与脚本差异、字符覆盖、复杂文本塑形、字体插件接口。

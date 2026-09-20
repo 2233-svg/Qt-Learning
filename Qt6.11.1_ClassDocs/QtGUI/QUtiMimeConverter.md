@@ -1,151 +1,48 @@
 # QUtiMimeConverter
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QUtiMimeConverter`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QUtiMimeConverter` 是 macOS/iOS 平台上 Uniform Type Identifier 和 MIME 类型之间的转换扩展点。它服务于剪贴板、拖放等平台数据交换。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+普通应用大多不需要碰它；只有平台集成或需要支持自定义 UTI 数据类型时才会用。
 
-### 这是什么
-
-`QUtiMimeConverter` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QUtiMimeConverter>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 类型：平台 MIME 转换接口
+- 适用平台：Apple 平台 UTI 体系
 
-CMake 配置：
+它负责把 Qt 的 `QMimeData` 与平台原生 UTI 数据互相转换。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+| API | 作用 |
+| --- | --- |
+| `utiForMime(mimeType)` | 给 MIME 类型返回平台 UTI |
+| `mimeForUti(uti)` | 给 UTI 返回 MIME 类型 |
+| `canConvertFromMime()` | 判断能否从 Qt MIME 转成 UTI |
+| `convertFromMime()` | 从 `QMimeData` 生成平台数据 |
+| `canConvertToMime()` | 判断能否从 UTI 转成 Qt MIME |
+| `convertToMime()` | 从平台数据生成 Qt MIME 数据 |
 
-### 工作机制
+## 4. 关键用法
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+自定义转换器的价值在“声明格式映射”和“实际转换字节”。例如把应用私有对象拖到 Finder 或从其他原生 App 接收自定义 UTI。
 
-### 状态、生命周期和线程
+## 5. 使用场景
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- macOS 剪贴板支持自定义 UTI。
+- 拖放和其他原生应用交换专有数据。
+- Qt 平台插件或集成层扩展。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+- MIME 与 UTI 并非一一对应，可能需要多个候选和优先级。
+- 转换数据要考虑安全性，不要信任外部 App 提供的字节。
+- 普通跨平台剪贴板优先用标准 MIME，如 `text/plain`、`text/uri-list`、`image/png`。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QUtiMimeConverter()`
-- `virtual ~QUtiMimeConverter()`
-- `bool canConvert(const QString &mime, const QString &uti) const`
-- `virtual QList<QByteArray> convertFromMime(const QString &mime, const QVariant &data, const QString &uti) const = 0`
-- `virtual QVariant convertToMime(const QString &mime, const QList<QByteArray> &data, const QString &uti) const = 0`
-- `virtual int count(const QMimeData *mimeData) const`
-- `virtual QString mimeForUti(const QString &uti) const = 0`
-- `virtual QString utiForMime(const QString &mime) const = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QUtiMimeConverter::QUtiMimeConverter()`
-
-**作用与语义：**
-
-构建一个新的转换对象并将其添加到全局可访问的可用转换器列表中。
-创建`QGuiApplication`后调用该构造器。
-
-### `[virtual noexcept] QUtiMimeConverter::~QUtiMimeConverter()`
-
-**作用与语义：**
-
-销毁一个转换对象，将其从全局可用转换器列表中移除。
-
-### `bool QUtiMimeConverter::canConvert(const QString &mime, const QString &uti) const`
-
-**作用与语义：**
-
-如果转换器能够在`mime`和`uti`之间（双向）转换，返回`true`;否则返回`false`。
-
-### `[pure virtual] QList<QByteArray> QUtiMimeConverter::convertFromMime(const QString &mime, const QVariant &data, const QString &uti) const`
-
-**作用与语义：**
-
-退货`data`从 MIME 类型 `mime` 转换为 Mac UTI `uti`。
-注意，Mac UTIs必须都是自终止的。返回值可能包含尾随数据。
-所有子类都必须重新实现这个纯虚拟函数。
-
-### `[pure virtual] QVariant QUtiMimeConverter::convertToMime(const QString &mime, const QList<QByteArray> &data, const QString &uti) const`
-
-**作用与语义：**
-
-退货`data`从Mac UTI `uti`转换为MIME类型`mime`。
-注意，Mac UTI必须都是自终止的。输入`data`可能包含尾随数据。
-所有子类都必须重新实现这个纯虚拟函数。
-
-### `[virtual] int QUtiMimeConverter::count(const QMimeData *mimeData) const`
-
-**作用与语义：**
-
-返回给定`mimeData`的物品数量。
-
-### `[pure virtual] QString QUtiMimeConverter::mimeForUti(const QString &uti) const`
-
-**作用与语义：**
-
-返回用于Mac UTI的MIME类型，`uti`，或者如果该转换器不支持从`uti`转换，则返回空字符串。
-所有子类都必须重新实现这个纯虚拟函数。
-
-### `[pure virtual] QString QUtiMimeConverter::utiForMime(const QString &mime) const`
-
-**作用与语义：**
-
-返回用于 MIME 类型 `mime` 的 Mac UTI，或者如果该转换器不支持从`mime`转换，则返回空字符串。
-所有子类都必须重新实现这个纯虚拟函数。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QUtiMimeConverter` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+UTI/MIME 映射、剪贴板、拖放、平台数据转换、自定义格式。

@@ -1,148 +1,102 @@
 # QPainterStateGuard
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPainterStateGuard`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPainterStateGuard` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QPainterStateGuard` 是 `QPainter::save()` / `restore()` 的 RAII 包装。构造时保存 painter 状态，析构时自动恢复，适合在绘制函数里有多个提前返回、复杂分支或异常边界的地方使用。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+手写 `save()` / `restore()` 没错，但一旦中间出现 `return`、`continue`、错误分支或多层 helper 函数，就很容易把 painter 留在错误状态。这个类的价值就是把“状态一定会还原”交给对象生命周期。
 
-### 这是什么
-
-`QPainterStateGuard` 是 二维绘制状态机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPainterStateGuard>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::Gui`
+- 类型性质：移动类型，不用于复制
+- 作用对象：一个已经存在的 `QPainter`
+- 管理内容：`QPainter` 的状态栈，不拥有 painter 本身
 
-CMake 配置：
+`QPainterStateGuard` 不负责开始或结束绘制，也不检查你的 painter 是否绑定了合法设备。它只管理状态保存/恢复计数：构造、`save()` 会增加计数，`restore()` 或析构会按计数恢复。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+| API | 作用 |
+| --- | --- |
+| `QPainterStateGuard(QPainter *painter, InitialState state = Save)` | 绑定 painter；默认立即调用一次 `save()`。 |
+| `~QPainterStateGuard()` | 析构时把内部保存过的状态全部恢复。 |
+| `save()` | 再调用一次 `QPainter::save()`，内部计数加一。 |
+| `restore()` | 恢复一层保存的状态，内部计数减一；调试构建下计数为零会断言。 |
+| `swap()` | 与另一个 guard 交换绑定状态和计数。 |
+| 移动构造 / 移动赋值 | 转移恢复责任，适合从 helper 返回 guard 或放入局部控制流。 |
 
-### 工作机制
+## 4. 关键用法
 
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 包住局部绘制状态
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
+void drawBadge(QPainter *p, const QRectF &rect)
 {
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
+    QPainterStateGuard guard(p);
+
+    p->setPen(Qt::NoPen);
+    p->setBrush(QColor("#2f80ed"));
+    p->drawRoundedRect(rect, 6, 6);
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+函数结束时，不管中间是否提前返回，pen、brush、transform、clip、opacity 等 painter 状态都会恢复到进入函数前。
 
-### 公有函数
+### 多层保存也能统一恢复
 
-- `QPainterStateGuard(QPainter *painter, QPainterStateGuard::InitialState state = InitialState::Save)`
-- `QPainterStateGuard(QPainterStateGuard &&other)`
-- `~QPainterStateGuard()`
-- `void restore()`
-- `void save()`
-- `void swap(QPainterStateGuard &other)`
-- `QPainterStateGuard & operator=(QPainterStateGuard &&other)`
+```cpp
+QPainterStateGuard guard(&p);
+p.translate(origin);
 
-## 5. API 逐个说明
+guard.save();
+p.setClipPath(mask);
+drawMaskedContent(&p);
+guard.restore(); // 只恢复 clip 那一层
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+drawUnmaskedContent(&p);
+```
 
-### `[explicit] QPainterStateGuard::QPainterStateGuard(QPainter *painter, QPainterStateGuard::InitialState state = InitialState::Save)`
+`QPainterStateGuard` 不是只能保存一次；它可以显式 `save()` 多层，并在析构时把未恢复的层全部补齐。
 
-**作用与语义：**
+### 不立即保存的场景
 
-构建一个 QPainterStateGuard，并在`state`被`InitialState::Save`时调用`painter` `save()`（默认为默认）。当 QPainterStateGuard 被销毁时，`restore()` 调用频率与恢复`QPainter`状态时`save()`调用次数相同。
+```cpp
+QPainterStateGuard guard(&p, QPainterStateGuard::InitialState::NoSave);
 
-### `[noexcept] QPainterStateGuard::QPainterStateGuard(QPainterStateGuard &&other)`
+if (needIsolation) {
+    guard.save();
+    p.setOpacity(0.5);
+}
+```
 
-**作用与语义：**
+当是否需要隔离状态取决于运行条件时，可以延迟调用 `save()`。但要注意：没有 save 就没有 restore，调试构建会帮你抓多余恢复。
 
-移动构建一个画家州卫队，从`other`。
+## 5. 使用场景
 
-### `[noexcept] QPainterStateGuard::~QPainterStateGuard()`
+- 自定义控件中拆分多个绘制 helper，每个 helper 独立改 painter 状态。
+- 绘制代码存在提前返回，例如数据为空、资源缺失、区域不可见。
+- 临时设置 transform、clip、opacity、composition mode，结束后必须恢复。
+- 在复杂路径绘制中局部改变 pen/brush/font，避免污染后续层。
+- 需要把 painter 状态管理写成“作用域语义”的团队代码规范。
 
-**作用与语义：**
+## 6. 常见坑与经验
 
-摧毁`QPainterStateGuard`实例，召唤`restore()`频率与恢复`QPainter`状态的频率相当`save()`。
+- **它不拥有 `QPainter`。** painter 必须比 guard 活得更久。
+- **它不负责 `begin()` / `end()`。** 如果 painter 还没激活，guard 也不能让它变成可绘制。
+- **不要和手写 restore 混乱交叉。** guard 内部有自己的计数；如果同时在外面随意调 `painter.restore()`，状态栈会变得难以推理。
+- **移动后原对象不再负责恢复。** 这符合移动语义，但调试时要确认恢复责任在哪个对象上。
+- **计数为零时调用 `restore()` 是错误。** 调试构建会断言，发布构建也不应依赖未定义的状态栈行为。
+- **它恢复的是 painter 状态，不是业务状态。** 你修改的数据模型、缓存、成员变量不会自动回滚。
 
-### `void QPainterStateGuard::restore()`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-当内部保存/恢复计数器大于零时，调用`QPainter::restore()`。
-注意：在调试构建中，如果计数器已经归零，该函数会断言。
-
-### `void QPainterStateGuard::save()`
-
-**作用与语义：**
-
-调用`QPainter::save()`，并使内部存档/恢复计数器增加一级。
-
-### `[noexcept] void QPainterStateGuard::swap(QPainterStateGuard &other)`
-
-**作用与语义：**
-
-与这位画家州卫队交换`other`。这个操作非常快，从未失败过。
-
-### `[noexcept] QPainterStateGuard &QPainterStateGuard::operator=(QPainterStateGuard &&other)`
-
-**作用与语义：**
-
-移动——分配`other`给这位画家州卫队。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPainterStateGuard` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- `QPainter` 状态栈与 RAII 的结合
+- 作用域式绘制状态隔离
+- 提前返回和异常边界下的状态恢复
+- 多层 `save()` / `restore()` 计数
+- painter 生命周期与状态生命周期的区别
+- 与手写 `QPainter::save()` / `restore()` 的取舍

@@ -1,138 +1,81 @@
 # QHelpEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QHelpEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QHelpEvent` 是 Qt 的值类型，围绕“帮助事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QHelpEvent` 是 Qt 帮助提示体系里的位置事件，主要用于工具提示 `ToolTip` 和“这是什么？”帮助 `WhatsThis`。它告诉接收对象：用户在某个局部坐标和全局坐标处请求帮助信息。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不保存提示文本，文本由控件根据坐标和当前上下文决定。比如同一个表格控件，不同单元格可以显示不同 tooltip；同一个画布，不同图元可以显示不同说明。
 
-### 这是什么
+## 2. 类说明
 
-`QHelpEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QHelpEvent` 继承自 `QEvent`。常见类型是 `QEvent::ToolTip` 和 `QEvent::WhatsThis`。Widgets 中通常在 `event()` 里拦截它，因为 `QWidget` 没有专门的 `helpEvent()` 虚函数。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QHelpEvent`：局部位置和全局位置属于帮助事件本身；实际显示可由 `QToolTip`、`QWhatsThis` 或自定义浮层完成。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QHelpEvent(type, pos, globalPos)` | 构造帮助事件，类型通常为 ToolTip 或 WhatsThis。 |
+| `pos() const` | 返回相对于接收控件的局部位置，用于命中单元格、图元或区域。 |
+| `globalPos() const` | 返回屏幕坐标，常作为 tooltip 或帮助浮层的弹出位置。 |
+| `x()` / `y()` | 读取局部坐标分量。 |
+| `globalX()` / `globalY()` | 读取全局坐标分量。 |
+| `type()` | 区分 ToolTip 与 WhatsThis。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 根据坐标显示不同工具提示
 
-- 头文件：`#include <QHelpEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+```cpp
+bool ChartView::event(QEvent *event)
+{
+    if (event->type() == QEvent::ToolTip) {
+        auto *help = static_cast<QHelpEvent *>(event);
+        const auto point = dataPointAt(help->pos());
 
-CMake 配置：
+        if (point) {
+            QToolTip::showText(help->globalPos(), formatPointTip(*point), this);
+        } else {
+            QToolTip::hideText();
+            event->ignore();
+        }
+        return true;
+    }
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+    return QWidget::event(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`pos()` 用来判断用户指向了什么，`globalPos()` 用来决定提示显示在哪里。
 
-### 工作机制
+### What's This 和 tooltip 是不同语义
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+`ToolTip` 通常是短提示，解释按钮或数据点；`WhatsThis` 更像上下文帮助，可以写得更详细。控件可以根据 `type()` 提供不同内容。
 
-### 状态、生命周期和线程
+```cpp
+if (event->type() == QEvent::WhatsThis)
+    QWhatsThis::showText(help->globalPos(), detailedHelpFor(help->pos()), this);
+```
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+## 5. 使用场景
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+`QHelpEvent` 适合表格单元格提示、图表数据点提示、工具栏按钮说明、复杂画布图元说明、属性面板字段解释和教学式帮助。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+它也适合让一个大控件内部拥有细粒度帮助。例如代码编辑器可以对错误波浪线、断点、折叠标记、行号区域显示完全不同的提示。
 
-## 3. 直接使用
+## 6. 常见坑与经验
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+不要把 tooltip 文本固定成控件级别的一个字符串。复杂控件应根据 `pos()` 做命中测试，返回真正相关的说明。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+不要只显示不隐藏。没有命中内容时调用 `QToolTip::hideText()` 并忽略事件，可以避免旧提示残留。
 
-### 公有函数
+不要在工具提示里做慢查询。tooltip 事件可能频繁出现，内容应缓存或快速计算。
 
-- `QHelpEvent(QEvent::Type type, const QPoint &pos, const QPoint &globalPos)`
-- `const QPoint & globalPos() const`
-- `int globalX() const`
-- `int globalY() const`
-- `const QPoint & pos() const`
-- `int x() const`
-- `int y() const`
+不要混淆局部和全局坐标。命中测试用局部坐标，显示位置通常用全局坐标。
 
-## 5. API 逐个说明
+## 7. 知识点覆盖
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QHelpEvent::QHelpEvent(QEvent::Type type, const QPoint &pos, const QPoint &globalPos)`
-
-**作用与语义：**
-
-构造一个帮助事件，`type`对应于`pos`指定的小部件相对位置和`globalPos`指定的全局位置。
-`type`必须是`QEvent::ToolTip`或是`QEvent::WhatsThis`。
-
-### `const QPoint &QHelpEvent::globalPos() const`
-
-**作用与语义：**
-
-当事件生成时返回鼠标光标位置。
-
-### `int QHelpEvent::globalX() const`
-
-**作用与语义：**
-
-和`globalPos()`一样。`x()`。
-
-### `int QHelpEvent::globalY() const`
-
-**作用与语义：**
-
-和`globalPos()`一样。`y()`。
-
-### `const QPoint &QHelpEvent::pos() const`
-
-**作用与语义：**
-
-返回事件生成时鼠标光标的位置，相对于事件被发送的控件。
-
-### `int QHelpEvent::x() const`
-
-**作用与语义：**
-
-和`pos()`.x()一样。
-
-### `int QHelpEvent::y() const`
-
-**作用与语义：**
-
-和`pos()`.y()一样。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QHelpEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QHelpEvent` 应覆盖 tooltip、What's This、局部/全局坐标、控件内部命中测试、动态提示、事件过滤器、帮助文本设计和性能缓存。

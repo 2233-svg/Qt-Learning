@@ -1,137 +1,60 @@
 # QStyleOptionComplex
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QStyleOptionComplex`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QStyleOptionComplex` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QStyleOptionComplex` 是复杂控件的 style option 基类。复杂控件由多个子控件组成，例如滚动条有箭头、滑槽、滑块；组合框有框体、箭头、编辑区域。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它在普通 `QStyleOption` 的基础上增加了“哪些子控件要画”和“当前活动的是哪个子控件”。
 
-### 这是什么
+## 2. 类说明
 
-`QStyleOptionComplex` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QStyleOptionComplex` 继承自 `QStyleOption`。派生类包括 `QStyleOptionSlider`、`QStyleOptionSpinBox`、`QStyleOptionComboBox` 等。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+`subControls` 表示参与绘制/布局的子控件集合，`activeSubControls` 表示鼠标悬停或正在操作的子控件集合。style 据此绘制 hover、pressed 等状态。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `subControls` | 要绘制或考虑的子控件集合。 |
+| `activeSubControls` | 当前活动/命中的子控件集合。 |
+| `QStyle::drawComplexControl()` | 使用 complex option 绘制复杂控件。 |
+| `QStyle::subControlRect()` | 查询复杂控件子控件区域。 |
+| `QStyle::hitTestComplexControl()` | 判断坐标命中哪个子控件。 |
+| `QStyleOptionSlider` | 滑块/滚动条 option。 |
+| `QStyleOptionSpinBox` | spin box option。 |
+| `QStyleOptionComboBox` | combo box option。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+QStyleOptionSlider opt;
+opt.initFrom(this);
+opt.subControls = QStyle::SC_SliderGroove | QStyle::SC_SliderHandle;
+opt.activeSubControls = hoveredHandle ? QStyle::SC_SliderHandle : QStyle::SC_None;
 
-- 头文件：`#include <QStyleOptionComplex>`
-- 继承自：QStyleOption
-- 直接派生类：QStyleOptionComboBox、QStyleOptionGroupBox、QStyleOptionSizeGrip、QStyleOptionSlider、QStyleOptionSpinBox、QStyleOptionTitleBar,、QStyleOptionToolButton
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+QStylePainter p(this);
+p.drawComplexControl(QStyle::CC_Slider, opt);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+命中测试：
 
-### 工作机制
+```cpp
+const auto sc = style()->hitTestComplexControl(QStyle::CC_Slider, &opt, pos, this);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合实现复杂自定义控件、style 绘制、需要按子区域处理 hover/press 的控件。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+普通单一区域控件用 `QStyleOption` 或具体 control option 即可。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+`subControls` 是“有哪些部分”，`activeSubControls` 是“当前哪部分活跃”。混淆后 hover/pressed 会错位。
 
-## 3. 直接使用
+绘制、命中、子区域计算应使用同一份 option，否则看到的区域和点击区域会不一致。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum StyleOptionType { Type }`
-- `enum StyleOptionVersion { Version }`
-
-### 公有函数
-
-- `QStyleOptionComplex(int version = QStyleOptionComplex::Version, int type = SO_Complex)`
-- `QStyleOptionComplex(const QStyleOptionComplex &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QStyleOptionComplex::StyleOptionType`
-
-**作用与语义：**
-
-该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
-- `QStyleOptionComplex::Type`：`SO_Complex`;提供样式类型（本类别`SO_Complex`）。
-类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必担心这些。
-
-### `enum QStyleOptionComplex::StyleOptionVersion`
-
-**作用与语义：**
-
-这个枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
-- `QStyleOptionComplex::Version`：`1`;1
-该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
-
-### `QStyleOptionComplex::QStyleOptionComplex(int version = QStyleOptionComplex::Version, int type = SO_Complex)`
-
-**作用与语义：**
-
-构造包含指定`type`和`version`的QStyleOptionComplex，将成员变量初始化为默认值。该构造器通常由子类调用。
-
-### `QStyleOptionComplex::QStyleOptionComplex(const QStyleOptionComplex &other)`
-
-**作用与语义：**
-
-构建`other`样式选项的副本。
-
-### `QStyle::SubControls QStyleOptionComplex::activeSubControls`
-
-**作用与语义：**
-
-该变量包含复控制中激活`sub-controls`的位或。
-默认值是`QStyle::SC_None`。
-
-### `QStyle::SubControls QStyleOptionComplex::subControls`
-
-**作用与语义：**
-
-该变量包含复数控制的拟绘制`sub-controls`的逐位或值。
-默认值是`QStyle::SC_All`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QStyleOptionComplex` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+复杂控件的状态很多。禁用、只读、RTL、倒置外观、键盘焦点都应进入 option。

@@ -1,130 +1,59 @@
 # QSqlRelationalDelegate
-
-> Qt 6.11.1 · Qt SQL
+> Qt 6.11.1 · Qt SQL · 来自 `QSqlRelationalDelegate`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QSqlRelationalDelegate` 是 Qt SQL 的“SqlRelational委托”类型，参与数据库连接、SQL 执行、事务或结果模型。
+`QSqlRelationalDelegate` 是给 `QSqlRelationalTableModel` 用的编辑委托。它在外键列上创建下拉编辑器，让用户选择关联表里的显示值，然后把对应外键值写回模型。
 
-**模块背景：** Qt SQL 提供数据库连接、查询、事务和 SQL 模型/视图集成。
+没有 delegate 时，关系列可能只显示可读文本，但编辑体验通常不好；加上它，外键编辑才像一个真正的下拉选择。
 
-### 这是什么
+## 2. 类说明
 
-`QSqlRelationalDelegate` 是 Qt SQL 连接、查询与事务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QSqlRelationalDelegate`，属于 Qt SQL 模块，用于在 item view 中编辑 relational table model 的外键列。
 
-**内部模型：** Qt SQL 把驱动、连接、查询游标和模型分成不同对象。连接决定驱动和数据库会话，`QSqlQuery` 代表语句及其结果游标，事务把多条语句的提交边界固定下来，SQL 模型再把查询结果接到视图。
+它继承 `QStyledItemDelegate`，主要重写 `createEditor()` 和 `setModelData()`。
 
-**适用场景：** 创建连接并检查 open，使用 prepare/bindValue 分离 SQL 结构和用户数据，执行后检查返回值和 lastError，遍历结果，必要时用 transaction/commit/rollback 包住一组操作。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QSqlRelationalDelegate(parent)` | 创建关系委托。 |
+| `createEditor(parent, option, index)` | 对关系列创建合适编辑器，通常是组合框。 |
+| `setModelData(editor, model, index)` | 把用户选择写回模型对应外键。 |
 
-**先记住的坑：** 不要拼接用户输入形成 SQL；不要把 exec 成功当作有数据；不要在连接仍被引用时 removeDatabase；不要忽略驱动是否可用、字段类型转换和事务失败回滚。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QSqlRelationalDelegate>`
-- 继承自：QStyledItemDelegate
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Sql)
-target_link_libraries(mytarget PRIVATE Qt6::Sql)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-Qt SQL 把驱动、连接、查询游标和模型分成不同对象。连接决定驱动和数据库会话，`QSqlQuery` 代表语句及其结果游标，事务把多条语句的提交边界固定下来，SQL 模型再把查询结果接到视图。
-
-### 状态、生命周期和线程
-
-**生命周期：** 连接由连接名识别，查询和模型引用连接。关闭或移除连接前必须销毁仍引用它的 query、model 和 database 句柄；不同线程不要共用连接。
-
-**状态与结果：** 区分连接是否打开、语句是否执行成功、游标是否定位在有效行、字段是否存在以及事务是否提交成功。`exec()` 成功不代表有结果行，`next()` 成功后才可以安全读取当前行。
-
-**线程与事件循环：** Qt SQL 连接有线程归属，每个线程应建立自己的连接并使用唯一连接名；不要把一个线程创建的 QSqlDatabase 或 QSqlQuery 传到另一个线程继续使用。
-
-## 3. 直接使用
-
-创建连接并检查 open，使用 prepare/bindValue 分离 SQL 结构和用户数据，执行后检查返回值和 lastError，遍历结果，必要时用 transaction/commit/rollback 包住一组操作。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
 ```cpp
-QSqlQuery query(database);
-query.prepare(QStringLiteral("SELECT name FROM users WHERE id = :id"));
-query.bindValue(QStringLiteral(":id"), id);
-if (query.exec()) {
-    while (query.next()) {
-        const QVariant value = query.value(0);
-    }
-}
+auto *model = new QSqlRelationalTableModel(this, db);
+model->setTable("employee");
+model->setRelation(2, QSqlRelation("city", "id", "name"));
+model->select();
+
+view->setModel(model);
+view->setItemDelegate(new QSqlRelationalDelegate(view));
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+委托依赖模型的 relation 信息；如果视图使用的不是 `QSqlRelationalTableModel`，它就没有足够信息创建关系编辑器。
 
-### 公有函数
+## 5. 使用场景
 
-- `QSqlRelationalDelegate(QObject *parent = nullptr)`
-- `virtual ~QSqlRelationalDelegate()`
+| 场景 | 用法 |
+| --- | --- |
+| 外键列下拉编辑 | 城市、部门、分类、状态等字段。 |
+| 简单管理后台 | 少写自定义 delegate 代码。 |
+| 保持 ID 存储和文本显示分离 | 用户看名称，数据库存 ID。 |
 
-### 重实现的公有函数
+## 6. 常见坑与经验
 
-- `virtual QWidget * createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override`
-- `virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override`
+显示值重复会让下拉框看起来有歧义。关系表最好让 displayColumn 对用户可区分，必要时改成视图/查询层提供组合显示。
 
-## 5. API 逐个说明
+delegate 只解决编辑器和写回，不解决数据完整性。外键约束、级联删除、引用表同步仍要靠数据库和业务逻辑。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+如果你给某列设置了自定义 delegate，它可能覆盖 relational delegate 的行为。复杂表格里要按列设置委托，避免互相踩。
 
-### `[explicit] QSqlRelationalDelegate::QSqlRelationalDelegate(QObject *parent = nullptr)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-构造一个带有给定`parent`的QSqlRelationalDelegate对象。
-
-### `[virtual noexcept] QSqlRelationalDelegate::~QSqlRelationalDelegate()`
-
-**作用与语义：**
-
-摧毁`QSqlRelationalDelegate`对象并释放所有分配的资源。
-
-### `[override virtual] QWidget *QSqlRelationalDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const`
-
-**作用与语义：**
-
-重构：`QStyledItemDelegate::createEditor`（QWidget *parent， const QStyleOptionViewItem &option， const QModelIndex &index） const.
-
-### `[override virtual] void QSqlRelationalDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const`
-
-**作用与语义：**
-
-重实现自：`QStyledItemDelegate::setModelData`（QWidget *editor， QAbstractItemModel *model， const QModelIndex &index） const.
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-连接由连接名识别，查询和模型引用连接。关闭或移除连接前必须销毁仍引用它的 query、model 和 database 句柄；不同线程不要共用连接。
-
-### 状态和错误边界
-
-区分连接是否打开、语句是否执行成功、游标是否定位在有效行、字段是否存在以及事务是否提交成功。`exec()` 成功不代表有结果行，`next()` 成功后才可以安全读取当前行。
-
-### 线程边界
-
-Qt SQL 连接有线程归属，每个线程应建立自己的连接并使用唯一连接名；不要把一个线程创建的 QSqlDatabase 或 QSqlQuery 传到另一个线程继续使用。
-
-### 最容易出现的错误
-
-不要拼接用户输入形成 SQL；不要把 exec 成功当作有数据；不要在连接仍被引用时 removeDatabase；不要忽略驱动是否可用、字段类型转换和事务失败回滚。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QSqlRelationalDelegate` 所属机制类型：Qt SQL 连接、查询与事务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- Qt item delegate 编辑流程。
+- 外键列的显示值和存储值。
+- `QSqlRelationalTableModel::relationModel()` 的编辑用途。
+- 下拉编辑器、重复显示值和数据完整性边界。

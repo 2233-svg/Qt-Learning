@@ -1,96 +1,85 @@
 # QEnterEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QEnterEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QEnterEvent` 是 Qt 的值类型，围绕“Enter事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QEnterEvent` 表示指针进入某个窗口、控件或图形项的区域。它不是“鼠标移动了一下”，而是“从外部进入到这个对象的命中范围内”。因此它常用于高亮、预热悬停状态、更新光标、显示轻量提示。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它继承自 `QSinglePointEvent`，所以可以读取 `position()`、`scenePosition()`、`globalPosition()`。进入事件发生的一瞬间，三套坐标能告诉你指针是从哪里进入的。
 
-### 这是什么
+## 2. 类说明
 
-`QEnterEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QEnterEvent` 继承自 `QSinglePointEvent`。在 Widgets 中通常对应 `QWidget::enterEvent()`；离开则通常由 `QEvent::Leave` 或 `leaveEvent()` 处理，而不是同一个类。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QEnterEvent`：它自身只有构造函数，坐标、设备、指针类型等能力来自父类单点输入事件。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QEnterEvent(localPos, scenePos, globalPos, device)` | 构造进入事件，指定局部、窗口/场景、全局三套坐标和来源设备。 |
+| `position() const` | 来自父类，进入点相对于接收对象的坐标。 |
+| `scenePosition() const` | 来自父类，进入点相对于窗口或场景的坐标。 |
+| `globalPosition() const` | 来自父类，进入点在屏幕或虚拟桌面上的坐标。 |
+| `pointingDevice() const` | 来自父类，查看产生进入事件的指针设备。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 做轻量 hover 状态初始化
 
-- 头文件：`#include <QEnterEvent>`
-- 继承自：QSinglePointEvent
-- 直接派生类：未在类页中列出
+进入事件适合切换“鼠标在我里面”的状态，但不要把持续跟踪逻辑全塞在 enter 里。
 
-CMake 配置：
+```cpp
+void ColorSwatch::enterEvent(QEnterEvent *event)
+{
+    m_hovered = true;
+    update();
+    QWidget::enterEvent(event);
+}
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+void ColorSwatch::leaveEvent(QEvent *event)
+{
+    m_hovered = false;
+    update();
+    QWidget::leaveEvent(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+进入和离开负责状态边界，`mouseMoveEvent()` 或 `QHoverEvent` 负责中间的连续移动。
 
-### 工作机制
+### 进入点可以用于边缘感知
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+如果控件需要根据进入方向做动画，`position()` 能提供第一帧位置。
 
-### 状态、生命周期和线程
+```cpp
+void SidePanel::enterEvent(QEnterEvent *event)
+{
+    m_enterFromLeft = event->position().x() < width() * 0.25;
+    startHoverAnimation(m_enterFromLeft);
+}
+```
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+这类逻辑适合增强反馈，但不要依赖它实现核心功能，因为键盘焦点进入不会产生同样的指针语义。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 5. 使用场景
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+`QEnterEvent` 常用于按钮外观预热、自定义控件高亮、图形项拾取反馈、光标切换、状态栏提示、延迟加载悬停资源。
 
-## 3. 直接使用
+它也适合减少不必要的 mouse tracking。很多控件只需要知道指针是否进入，而不需要每一帧移动；用 enter/leave 比持续处理鼠标移动更轻。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+在跨设备场景中，进入事件可能来自鼠标、触摸板或笔设备。需要区分设备时，可以从父类读取 `pointingDevice()` 或 `deviceType()`。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 6. 常见坑与经验
 
-### 公有函数
+不要把 `QEnterEvent` 当作连续移动事件。它只表示进入边界那一刻。
 
-- `QEnterEvent(const QPointF &localPos, const QPointF &scenePos, const QPointF &globalPos, const QPointingDevice *device = QPointingDevice::primaryPointingDevice())`
+不要忘记配套处理 leave。只设置 hover 状态不清除，控件会卡在高亮状态。
 
-## 5. API 逐个说明
+不要把进入事件和焦点事件混用。鼠标进入不等于控件获得键盘焦点；键盘导航进入焦点也不等于指针进入。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要为了普通高亮过度创建复杂动画。enter/leave 很高频地出现在控件之间切换时，反馈应快速、可中断。
 
-### `QEnterEvent::QEnterEvent(const QPointF &localPos, const QPointF &scenePos, const QPointF &globalPos, const QPointingDevice *device = QPointingDevice::primaryPointingDevice())`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-构造源自`device`的入场事件对象。
-点`localPos`、`scenePos`和`globalPos`分别指定鼠标光标相对于接收小部件或物品、窗口以及屏幕或桌面的位置。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QEnterEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QEnterEvent` 应覆盖进入/离开事件、hover 状态、mouse tracking 区别、局部/场景/全局坐标、指针设备来源、控件重绘策略、焦点与指针命中的区别。

@@ -1,113 +1,49 @@
 # QVulkanInfoVector
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QVulkanInfoVector`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QVulkanInfoVector` 是 Vulkan 动态函数解析机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QVulkanInfoVector` 是 Qt 为 Vulkan 查询结构数组提供的便利容器。Vulkan 很多查询先要拿数量，再分配数组，再填结构；这个类型让 Qt API 返回层、扩展等信息时更顺手。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
-
-### 这是什么
-
-`QVulkanInfoVector` 是 Vulkan 动态函数解析机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** Qt 不默认静态链接所有 Vulkan 函数，而是通过 `QVulkanInstance` 在运行时解析函数地址。实例级函数由 `QVulkanFunctions` 提供，设备级函数由与具体 `VkDevice` 关联的 `QVulkanDeviceFunctions` 提供。
-
-**适用场景：** 创建并初始化 `QVulkanInstance`，把它绑定到窗口或渲染环境，通过 `functions()` 取得 instance 级函数，通过 `deviceFunctions(device)` 取得 device 级函数，检查返回状态后再调用。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要直接构造 `QVulkanFunctions`/`QVulkanDeviceFunctions`；不要把 instance 级和 device 级函数混用；不要假设扩展函数自动存在；不要忽略平台和驱动能力。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QVulkanInfoVector>`
-- 继承自：QList
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 类型：模板容器风格辅助类型
+- 协作类：`QVulkanInstance`
 
-CMake 配置：
+它主要出现在支持层、扩展列表等 Vulkan 信息查询中。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+| API | 作用 |
+| --- | --- |
+| 容器访问 | 保存 Vulkan info 结构数组 |
+| `QVulkanInstance::supportedLayers()` | 返回可用 layer 信息 |
+| `QVulkanInstance::supportedExtensions()` | 返回可用 extension 信息 |
 
-### 工作机制
-
-Qt 不默认静态链接所有 Vulkan 函数，而是通过 `QVulkanInstance` 在运行时解析函数地址。实例级函数由 `QVulkanFunctions` 提供，设备级函数由与具体 `VkDevice` 关联的 `QVulkanDeviceFunctions` 提供。
-
-### 状态、生命周期和线程
-
-**生命周期：** 函数表依赖对应的 Vulkan instance/device 和有效的函数地址。不能直接构造某些函数表对象，也不能在 instance/device 销毁后继续调用；先完成初始化和设备选择，再取得正确层级的函数表。
-
-**状态与结果：** 要区分 Vulkan loader 不存在、instance 未创建、device 未创建、函数版本/扩展不可用和调用本身返回错误。函数是否可调用还受 Vulkan 头文件版本、运行时驱动和启用扩展影响。
-
-**线程与事件循环：** Vulkan 的线程规则由 Vulkan 对象和命令提交方式决定，Qt 的函数表只负责解析和转发，不替你同步设备访问。窗口/渲染对象还要遵守 Qt Quick 或 QWindow 的线程边界。
-
-## 3. 直接使用
-
-创建并初始化 `QVulkanInstance`，把它绑定到窗口或渲染环境，通过 `functions()` 取得 instance 级函数，通过 `deviceFunctions(device)` 取得 device 级函数，检查返回状态后再调用。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 关键用法
 
 ```cpp
-#include <QVulkanFunctions>
-#include <QVulkanInstance>
-
-QVulkanInstance instance;
-if (instance.create()) {
-    QVulkanFunctions *functions = instance.functions();
-    // 只有在 instance 初始化完成且函数可用时调用函数表
-}
+for (const auto &layer : QVulkanInstance::supportedLayers())
+    qDebug() << layer.layerName;
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+字段来自 Vulkan 原生结构，比如 layer name、extension name、spec version 等。
 
-### 公有函数
+## 5. 使用场景
 
-- `bool contains(const QByteArray &name) const`
-- `bool contains(const QByteArray &name, int minVersion) const`
+- 枚举 validation layer。
+- 检查 instance extension 是否可用。
+- 诊断用户机器 Vulkan 环境。
+- 创建 `QVulkanInstance` 前决定启用哪些 layer/extension。
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+- 查询结果代表当前 loader 和平台环境，不代表所有 GPU device 能力。
+- layer/extension 名称是字节字符串，比较时注意编码和精确名称。
+- 启用不存在的 layer 或 extension 会导致 instance 创建失败。
 
-### `bool QVulkanInfoVector::contains(const QByteArray &name) const`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-如果列表中包含具有给定`name`的层或扩展，则返回为真。
-
-### `bool QVulkanInfoVector::contains(const QByteArray &name, int minVersion) const`
-
-**作用与语义：**
-
-如果列表中包含具有给定`name`的层或扩展，且版本与`minVersion`相同或更新，则返回为真。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-函数表依赖对应的 Vulkan instance/device 和有效的函数地址。不能直接构造某些函数表对象，也不能在 instance/device 销毁后继续调用；先完成初始化和设备选择，再取得正确层级的函数表。
-
-### 状态和错误边界
-
-要区分 Vulkan loader 不存在、instance 未创建、device 未创建、函数版本/扩展不可用和调用本身返回错误。函数是否可调用还受 Vulkan 头文件版本、运行时驱动和启用扩展影响。
-
-### 线程边界
-
-Vulkan 的线程规则由 Vulkan 对象和命令提交方式决定，Qt 的函数表只负责解析和转发，不替你同步设备访问。窗口/渲染对象还要遵守 Qt Quick 或 QWindow 的线程边界。
-
-### 最容易出现的错误
-
-不要直接构造 `QVulkanFunctions`/`QVulkanDeviceFunctions`；不要把 instance 级和 device 级函数混用；不要假设扩展函数自动存在；不要忽略平台和驱动能力。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QVulkanInfoVector` 所属机制类型：Vulkan 动态函数解析机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+Vulkan layer、extension、loader 查询、创建前能力检查、信息结构数组。

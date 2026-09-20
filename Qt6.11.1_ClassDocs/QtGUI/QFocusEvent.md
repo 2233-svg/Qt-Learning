@@ -1,117 +1,88 @@
 # QFocusEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QFocusEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QFocusEvent` 是 Qt 的值类型，围绕“Focus事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QFocusEvent` 描述控件或窗口获得、失去键盘焦点。焦点决定键盘输入送到哪里，也决定 Tab 导航、快捷键覆盖、输入法光标、可访问性提示等行为。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它的重点不是坐标，而是“为什么焦点变了”。用户按 Tab、鼠标点击、弹窗关闭、窗口激活、代码调用 `setFocus()`，都会产生不同的 `Qt::FocusReason`。优秀的控件会根据原因选择不同反馈：键盘进入时显示清晰焦点框，鼠标点击时可能减少干扰。
 
-### 这是什么
+## 2. 类说明
 
-`QFocusEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QFocusEvent` 继承自 `QEvent`。Widgets 中常通过 `focusInEvent()` 和 `focusOutEvent()` 处理，也可以在通用 `event()` 或事件过滤器里检查 `QEvent::FocusIn` / `QEvent::FocusOut`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QFocusEvent`：是否获得/失去焦点和焦点变化原因属于焦点事件本身；具体控件如何显示焦点、是否接受键盘输入，由控件策略决定。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QFocusEvent(type, reason)` | 构造焦点事件，类型必须是 FocusIn 或 FocusOut。 |
+| `gotFocus() const` | 判断事件是否表示获得焦点。 |
+| `lostFocus() const` | 判断事件是否表示失去焦点。 |
+| `reason() const` | 返回焦点变化原因，如 Tab、Backtab、鼠标、弹窗、窗口激活、其他原因。 |
+| `type() const` | 来自 `QEvent`，可直接区分 FocusIn 与 FocusOut。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 根据焦点进入原因决定视觉反馈
 
-- 头文件：`#include <QFocusEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+键盘用户需要明显焦点框，鼠标用户有时不需要同样强的提示。
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+void ToolButton::focusInEvent(QFocusEvent *event)
+{
+    m_showStrongFocus = event->reason() == Qt::TabFocusReason
+        || event->reason() == Qt::BacktabFocusReason;
+    update();
+    QWidget::focusInEvent(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这不是“隐藏焦点”，而是根据输入方式调整反馈强度。可访问性要求高的界面仍应保证焦点可见。
 
-### 工作机制
+### 失去焦点时提交或取消编辑
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+编辑控件常在失焦时提交临时值，但要留意弹窗和菜单原因。
 
-### 状态、生命周期和线程
+```cpp
+void InlineEditor::focusOutEvent(QFocusEvent *event)
+{
+    if (event->reason() == Qt::PopupFocusReason) {
+        QWidget::focusOutEvent(event);
+        return;
+    }
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+    commitText();
+    QWidget::focusOutEvent(event);
+}
+```
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+如果用户只是打开补全弹窗或上下文菜单，不一定希望当前编辑立即结束。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+### 不要用焦点事件代替启用状态
 
-## 3. 直接使用
+焦点表示键盘输入目标，不表示控件是否可用、是否选中、鼠标是否悬停。状态之间要分开维护。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+## 5. 使用场景
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+`QFocusEvent` 用于自定义编辑器、表格单元格编辑、属性面板、按钮焦点框、游戏/快捷键面板、无鼠标操作支持、输入法位置更新和可访问性反馈。
 
-### 公有函数
+它也常用于恢复状态。比如搜索框打开时抢焦点，关闭后把焦点还给之前控件；这类逻辑要尊重焦点原因，避免用户正在键盘导航时突然跳焦点。
 
-- `QFocusEvent(QEvent::Type type, Qt::FocusReason reason = Qt::OtherFocusReason)`
-- `bool gotFocus() const`
-- `bool lostFocus() const`
-- `Qt::FocusReason reason() const`
+在复杂窗口里，焦点事件能帮助你区分“控件内部切换焦点”和“整个窗口失去激活”。前者可能只需提交编辑，后者可能要暂停输入模式或隐藏浮层。
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要在 `focusInEvent()` 里无条件再调用 `setFocus()`，容易制造焦点震荡。
 
-### `[explicit] QFocusEvent::QFocusEvent(QEvent::Type type, Qt::FocusReason reason = Qt::OtherFocusReason)`
+不要失焦就销毁相关对象，特别是菜单、补全框、弹窗可能临时改变焦点。先看 `reason()`，再决定提交、取消或等待。
 
-**作用与语义：**
+不要忘记基类实现。许多控件内部会在焦点事件中维护光标、选择、输入法和样式状态。
 
-构建一个焦点事件对象。
-`type`参数必须是`QEvent::FocusIn`或`QEvent::FocusOut`。`reason`描述焦点变化的原因。
+不要把鼠标进入和焦点进入混为一谈。鼠标悬停不会自动获得键盘焦点，除非控件或平台策略明确如此。
 
-### `bool QFocusEvent::gotFocus() const`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-如果 `type()` 是 `QEvent::FocusIn`，则返回 `true`；否则返回 false。
-
-### `bool QFocusEvent::lostFocus() const`
-
-**作用与语义：**
-
-如果 `type()` 是 `QEvent::FocusOut`，则返回 `true`；否则返回 false。
-
-### `Qt::FocusReason QFocusEvent::reason() const`
-
-**作用与语义：**
-
-回归了这个焦点事件的理由。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QFocusEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QFocusEvent` 应覆盖键盘焦点、焦点策略、Tab 顺序、焦点原因、焦点框绘制、失焦提交、弹窗焦点、输入法、可访问性、窗口激活与控件焦点的区别。

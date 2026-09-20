@@ -1,188 +1,91 @@
 # QBitmap
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QBitmap`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QBitmap` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QBitmap` 是 1-bit 深度的 `QPixmap`。每个像素只有两种状态，通常用于“有或没有”“遮挡或透明”“选中或未选中”这样的二值图形，而不是保存普通彩色图片。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它最常见的价值是掩码：自定义光标 mask、图像透明区域、旧式单色资源、区域化绘制。若把彩色图片强行转成 `QBitmap`，Qt 必须做二值化或抖动，细节与颜色信息都会丢失。
 
-### 这是什么
+## 2. 类说明
 
-`QBitmap` 是 二维绘制状态机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QBitmap` 继承自 `QPixmap`，所以可作为 GUI 侧的像素图资源使用，但其像素格式固定为单色。它是值类型，支持复制与交换。
 
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
+类说明只用于表明这些 API 来自 `QBitmap`：加载、转换、清空与变换由本类提供；一般图像读取、编辑和多像素格式处理应优先使用 `QImage`，最终显示再按需转为 `QPixmap`。
 
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QBitmap()` | 构造空位图。 |
+| `QBitmap(size)` / `QBitmap(width, height)` | 构造指定尺寸的未初始化单色位图。 |
+| `QBitmap(fileName, format)` | 从文件加载并转换为 1-bit 位图，彩色源会二值化。 |
+| `fromData(size, bits, monoFormat)` | 从原始 1-bit 数据构造位图。 |
+| `fromImage(image, flags)` | 将 `QImage` 转换为位图，可指定转换策略。 |
+| `fromPixmap(pixmap)` | 将 `QPixmap` 转换为位图，必要时进行抖动。 |
+| `clear()` | 将全部位设置为 `Qt::color0`。 |
+| `transformed(transform)` | 返回几何变换后的位图副本。 |
+| `swap(other)` | 高效交换两个位图。 |
+| `operator QVariant()` | 转换为 `QVariant`，便于属性或通用容器传递。 |
 
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QBitmap>`
-- 继承自：QPixmap
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 从 1-bit 原始数据构造掩码
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
-}
+static const uchar bits[] = {
+    0b11110000,
+    0b10010000,
+    0b10010000,
+    0b11110000
+};
+
+QBitmap mask = QBitmap::fromData(
+    QSize(8, 4), bits, QImage::Format_MonoLSB);
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+位序必须与 `QImage::Format_Mono` 或 `QImage::Format_MonoLSB` 匹配。XBM 风格数据通常使用 `Format_Mono`；传错位序会导致图形左右镜像或花屏。
 
-### 公有函数
+### 用作自定义光标 mask
 
-- `QBitmap()`
-- `QBitmap(const QSize &size)`
-- `QBitmap(const QString &fileName, const char *format = nullptr)`
-- `QBitmap(int width, int height)`
-- `void clear()`
-- `void swap(QBitmap &other)`
-- `QBitmap transformed(const QTransform &matrix) const`
-- `operator QVariant() const`
+```cpp
+QBitmap bitmap(":/cursor/shape.xbm");
+QBitmap mask(":/cursor/mask.xbm");
+QCursor cursor(bitmap, mask, 2, 2);
+```
 
-### 静态公有成员
+bitmap 决定前景位，mask 决定透明/不透明区域。单色光标的组合规则具有平台差异，因此除非需要复古或极简资源，彩色 `QPixmap` 光标通常更直观。
 
-- `QBitmap fromData(const QSize &size, const uchar *bits, QImage::Format monoFormat = QImage::Format_MonoLSB)`
-- `QBitmap fromImage(const QImage &image, Qt::ImageConversionFlags flags = Qt::AutoColor)`
-- `QBitmap fromImage(QImage &&image, Qt::ImageConversionFlags flags = Qt::AutoColor)`
-- `(since 6.0) QBitmap fromPixmap(const QPixmap &pixmap)`
+### 从图像生成二值遮罩
 
-## 5. API 逐个说明
+```cpp
+QImage source(":/icons/logo.png");
+QBitmap silhouette = QBitmap::fromImage(
+    source.convertToFormat(QImage::Format_Grayscale8),
+    Qt::ThresholdDither);
+```
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+显式控制灰度化和抖动，比把任意彩色图直接交给默认转换更可预测。
 
-### `QBitmap::QBitmap()`
+## 5. 使用场景
 
-**作用与语义：**
+`QBitmap` 适合自定义单色光标、透明遮罩、二值打印图形、像素风工具图标、legacy XBM 资源和只需命中/遮挡信息的辅助数据。
 
-构造一个空位图。
+它也适合与 `QRegion`、`QPixmap::setMask()` 等旧式图形 API 协作，但现代应用在需要 alpha 透明度时通常更倾向 `QImage` / `QPixmap` 的 alpha 通道。
 
-### `[explicit] QBitmap::QBitmap(const QSize &size)`
+## 6. 常见坑与经验
 
-**作用与语义：**
+不要把 `QBitmap` 当作一般图片容器。它只有 1-bit 深度，不能表达半透明、抗锯齿和完整颜色。
 
-构造一个带有给定`size`的位图。位图中的像素未初始化。
+不要假设新建 bitmap 已清零。指定尺寸构造后像素未初始化，需要先 `clear()` 或立即完整绘制。
 
-### `[explicit] QBitmap::QBitmap(const QString &fileName, const char *format = nullptr)`
+不要忽略转换成本。把大彩色图片反复转换成 bitmap 会产生抖动与 CPU 开销，应缓存结果。
 
-**作用与语义：**
+不要在后台线程随意操作 GUI 资源。需要大规模图像处理时，先在后台处理 `QImage`，回到 GUI 线程后再转换成 `QBitmap` / `QPixmap`。
 
-从指定`fileName`指定的文件构建位图。如果文件不存在或格式未知，位图将成为空位图。
-`fileName`和`format`参数传递给`QPixmap::load()`函数。如果文件格式每像素使用超过1位，生成的位图将被自动抖动。
+不要忘记高 DPI。作为光标或 UI mask 使用时，资源的 device pixel ratio 和目标显示比例仍需匹配。
 
-### `QBitmap::QBitmap(int width, int height)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-构造一个包含给定`width`和`height`的位图。内部像素未初始化。
-
-### `void QBitmap::clear()`
-
-**作用与语义：**
-
-清除位图，将其所有位设置为 `Qt::color0`。
-
-### `[static] QBitmap QBitmap::fromData(const QSize &size, const uchar *bits, QImage::Format monoFormat = QImage::Format_MonoLSB)`
-
-**作用与语义：**
-
-构造包含给定`size`的位图，并将内容设置为提供的`bits`。
-位图数据必须对齐字节，并按照`monoFormat`指定的位序提供。单声道格式必须是 `QImage::Format_Mono` 或 `QImage::Format_MonoLSB`。使用 `QImage::Format_Mono` 来指定 XBM 格式上的数据。
-
-### `[static] QBitmap QBitmap::fromImage(const QImage &image, Qt::ImageConversionFlags flags = Qt::AutoColor)`
-
-**作用与语义：**
-
-返回使用指定的图像转换`flags`转换为位图的给定`image`副本。
-
-### `[static] QBitmap QBitmap::fromImage(QImage &&image, Qt::ImageConversionFlags flags = Qt::AutoColor)`
-
-**作用与语义：**
-
-返回使用指定的图像转换`flags`转换为位图的给定`image`副本。
-
-### `[static, since 6.0] QBitmap QBitmap::fromPixmap(const QPixmap &pixmap)`
-
-**作用与语义：**
-
-返回已转换成位图的`pixmap`副本。
-如果像素图深度大于1，生成的位图将自动抖动。
-
-### `void QBitmap::swap(QBitmap &other)`
-
-**作用与语义：**
-
-将该位图与`other`交换。此操作非常快且从未失败。
-
-### `QBitmap QBitmap::transformed(const QTransform &matrix) const`
-
-**作用与语义：**
-
-返回一份根据给定的 `matrix` 转换的位图副本。
-
-### `QBitmap::operator QVariant() const`
-
-**作用与语义：**
-
-返回位图为`QVariant`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QBitmap` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QBitmap` 应覆盖 1-bit 像素、bitmap/mask、`QImage::Format_Mono`、位序、二值化、抖动、自定义光标、透明遮罩、`QPixmap` 区别、高 DPI 和 GUI 线程资源管理。

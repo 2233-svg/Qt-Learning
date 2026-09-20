@@ -1,799 +1,219 @@
 # QLabel
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QLabel`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QLabel` 是用于显示文本、富文本、图片或链接的轻量控件，通常不负责复杂交互。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QLabel` 是用于显示文本、富文本、图片或链接的轻量控件，通常不负责复杂交互。
+`QLabel` 是 Widgets 中最常用的展示控件：它可以显示普通文本、富文本、链接、图片、动画和 `QPicture`，也可以作为表单字段的标签，通过 buddy 机制把助记符焦点转给另一个控件。
 
-**内部模型：** QLabel 的内容由 text/pixmap/movie 等模式决定；尺寸提示和 wordWrap 会影响布局，文本格式还会影响安全性和显示结果。
+它不是“只能放几个字”的控件。`QLabel` 的复杂度主要来自内容模式：文本模式、pixmap 模式、movie 模式、picture 模式互相替换；设置新内容通常会清掉旧内容。理解这一点，才能避免“为什么图片没了”“为什么 buddy 失效”“为什么富文本变可交互”这些问题。
 
-**适用场景：** 表单标签、状态提示、图标、说明文字和简单链接使用；需要编辑文本应使用 QLineEdit/QTextEdit，需要按钮行为应使用按钮类。
+### 适合使用的场景
 
-**典型调用链：** 创建 -> setText/setPixmap -> 设置 wordWrap/alignment/openExternalLinks -> 放入 layout -> 按业务状态更新。
+- 表单字段标签、说明文字、状态文字、错误提示。
+- 显示小图标、预览缩略图、简单动画。
+- 显示少量富文本或链接。
+- 给输入控件设置带助记符的 buddy 标签。
 
-**先记住的坑：** 富文本来自外部输入时注意安全和性能；图片显示要考虑 devicePixelRatio；不要用大量 QLabel 替代真正的数据视图。
+### 不适合的场景
+
+- 多行可编辑文本用 `QTextEdit` 或 `QPlainTextEdit`。
+- 大型富文本文档用只读 `QTextEdit`，不要塞进 `QLabel`。
+- 大量列表/表格数据用模型视图，不要创建成千上万个 label。
+- 需要按钮行为时用按钮类，不要让 label 伪装成按钮。
+
+### 最小示例
+
+```cpp
+auto *nameEdit = new QLineEdit(this);
+auto *label = new QLabel(tr("&Name:"), this);
+label->setBuddy(nameEdit);
+label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+```
+
+用户按下标签助记符时，焦点会转到 `nameEdit`。这就是 `QLabel` 在表单里真正有价值的地方之一。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QLabel>`
-- 继承自：QFrame
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
-
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-QLabel 的内容由 text/pixmap/movie 等模式决定；尺寸提示和 wordWrap 会影响布局，文本格式还会影响安全性和显示结果。
-
-### 状态、生命周期和线程
-
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-表单标签、状态提示、图标、说明文字和简单链接使用；需要编辑文本应使用 QLineEdit/QTextEdit，需要按钮行为应使用按钮类。 使用时通常按这个过程组织：创建 -> setText/setPixmap -> 设置 wordWrap/alignment/openExternalLinks -> 放入 layout -> 按业务状态更新。
-
-```cpp
-auto *label = new QLabel(QStringLiteral("Ready"), parent);
-label->setWordWrap(true);
-label->setAlignment(Qt::AlignCenter);
-connect(worker, &Worker::statusChanged, label, &QLabel::setText);
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `alignment : Qt::Alignment`
-- `hasSelectedText : bool`
-- `indent : int`
-- `margin : int`
-- `openExternalLinks : bool`
-- `pixmap : QPixmap`
-- `scaledContents : bool`
-- `selectedText : QString`
-- `text : QString`
-- `textFormat : Qt::TextFormat`
-- `textInteractionFlags : Qt::TextInteractionFlags`
-- `wordWrap : bool`
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QFrame`
+- 直接派生类：类页未列出
 
-### 公有函数
-
-- `QLabel(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
-- `QLabel(const QString &text, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
-- `virtual ~QLabel()`
-- `Qt::Alignment alignment() const`
-- `QWidget * buddy() const`
-- `bool hasScaledContents() const`
-- `bool hasSelectedText() const`
-- `int indent() const`
-- `int margin() const`
-- `QMovie * movie() const`
-- `bool openExternalLinks() const`
-- `(since 6.0) QPicture picture() const`
-- `QPixmap pixmap() const`
-- `(since 6.1) QTextDocument::ResourceProvider resourceProvider() const`
-- `QString selectedText() const`
-- `int selectionStart() const`
-- `void setAlignment(Qt::Alignment)`
-- `void setBuddy(QWidget *buddy)`
-- `void setIndent(int)`
-- `void setMargin(int)`
-- `void setOpenExternalLinks(bool open)`
-- `(since 6.1) void setResourceProvider(const QTextDocument::ResourceProvider &provider)`
-- `void setScaledContents(bool)`
-- `void setSelection(int start, int length)`
-- `void setTextFormat(Qt::TextFormat)`
-- `void setTextInteractionFlags(Qt::TextInteractionFlags flags)`
-- `void setWordWrap(bool on)`
-- `QString text() const`
-- `Qt::TextFormat textFormat() const`
-- `Qt::TextInteractionFlags textInteractionFlags() const`
-- `bool wordWrap() const`
+### 内容模式
 
-### 重实现的公有函数
+`QLabel` 一次主要显示一种内容：`text`、`pixmap`、`movie`、`picture`。调用 `setText()` 会清除之前的图片/动画内容；调用 `setPixmap()` 也会清除文本内容。
 
-- `virtual int heightForWidth(int w) const override`
-- `virtual QSize minimumSizeHint() const override`
-- `virtual QSize sizeHint() const override`
+### 和 QFrame 的关系
 
-### 公有槽函数
+因为继承 `QFrame`，`QLabel` 可以有 frame shape、shadow、line width 等边框能力。`margin` 和 `indent` 又会影响内容在 frame 内部的位置。
 
-- `void clear()`
-- `void setMovie(QMovie *movie)`
-- `void setNum(int num)`
-- `void setNum(double num)`
-- `void setPicture(const QPicture &picture)`
-- `void setPixmap(const QPixmap &)`
-- `void setText(const QString &)`
+### 和输入控件的关系
 
-### 信号
+`setBuddy()` 让 label 成为另一个控件的说明标签。文本中的 `&` 定义助记符，触发后焦点交给 buddy。这对键盘操作和可访问性都很重要。
 
-- `void linkActivated(const QString &link)`
-- `void linkHovered(const QString &link)`
+## 3. API 速查
 
-### 重实现的保护函数
+| API | 用途速查 |
+| --- | --- |
+| `alignment : Qt::Alignment` | 控制内容在标签区域内的对齐方式。 |
+| `indent : int` | 文本缩进，受对齐方向和 frame width 影响。 |
+| `margin : int` | 内容和 frame 内边缘之间的空白。 |
+| `text : QString` | 标签文本，可为纯文本或富文本。 |
+| `textFormat : Qt::TextFormat` | 指定纯文本、富文本或自动识别。 |
+| `wordWrap : bool` | 是否自动换行。 |
+| `textInteractionFlags : Qt::TextInteractionFlags` | 控制文本是否可选、链接是否可点击等交互。 |
+| `openExternalLinks : bool` | 是否自动用 `QDesktopServices::openUrl()` 打开链接。 |
+| `hasSelectedText : bool` / `selectedText : QString` | 查询用户选中的文本。 |
+| `pixmap : QPixmap` | 当前显示的 pixmap 内容。 |
+| `scaledContents : bool` | 是否把 pixmap 缩放填满标签区域。 |
+| `QLabel(...)` | 创建空标签或文本标签。 |
+| `~QLabel()` | 销毁标签。 |
+| `setText()` / `text()` | 设置或读取文本内容。 |
+| `setPixmap()` / `pixmap()` | 设置或读取图片内容。 |
+| `setMovie()` / `movie()` | 设置或读取动画内容。 |
+| `setPicture()` / `picture()` | 设置或读取 `QPicture` 内容。 |
+| `setNum(int)` / `setNum(double)` | 把数字转换为文本显示。 |
+| `clear()` | 清除当前内容。 |
+| `setBuddy(QWidget *)` / `buddy() const` | 设置或读取助记符目标控件。 |
+| `setSelection(start, length)` / `selectionStart()` | 设置或读取文本选择。 |
+| `setResourceProvider()` / `resourceProvider()` | Qt 6.1 起，为富文本资源提供自定义加载器。 |
+| `heightForWidth(int)` | 自动换行文本按宽度计算高度。 |
+| `sizeHint()` / `minimumSizeHint()` | 返回推荐尺寸。 |
+| `linkActivated(QString)` / `linkHovered(QString)` | 链接激活或悬停时发出。 |
+| `paintEvent()` | 绘制文本、图片、动画帧或边框。 |
+| `event()` / `changeEvent()` | 处理通用事件与状态变化。 |
+| `contextMenuEvent()` | 文本可交互时的上下文菜单入口。 |
+| `focusInEvent()` / `focusOutEvent()` / `focusNextPrevChild()` | 文本可键盘选择或链接可访问时处理焦点。 |
+| `keyPressEvent()` / `mousePressEvent()` / `mouseMoveEvent()` / `mouseReleaseEvent()` | 文本选择、链接交互等输入事件。 |
 
-- `virtual void changeEvent(QEvent *ev) override`
-- `virtual void contextMenuEvent(QContextMenuEvent *ev) override`
-- `virtual bool event(QEvent *e) override`
-- `virtual void focusInEvent(QFocusEvent *ev) override`
-- `virtual bool focusNextPrevChild(bool next) override`
-- `virtual void focusOutEvent(QFocusEvent *ev) override`
-- `virtual void keyPressEvent(QKeyEvent *ev) override`
-- `virtual void mouseMoveEvent(QMouseEvent *ev) override`
-- `virtual void mousePressEvent(QMouseEvent *ev) override`
-- `virtual void mouseReleaseEvent(QMouseEvent *ev) override`
-- `virtual void paintEvent(QPaintEvent *) override`
+## 4. API 逐项说明
 
-## 5. API 逐个说明
+### `alignment`
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+控制内容在标签矩形中的位置，常见组合是 `Qt::AlignLeft | Qt::AlignVCenter`、`Qt::AlignRight | Qt::AlignVCenter`、`Qt::AlignCenter`。
 
-### `alignment : Qt::Alignment`
+它影响的是内容整体，不是富文本内部每个段落的排版。富文本内部排版应由 HTML/CSS 子集控制。
 
-**作用与语义：**
+### `indent` / `margin`
 
-该属性表示标签内容的对齐。
-默认情况下，标签内容为左对齐且垂直居中。
+`margin` 是内容和 frame 内边缘之间的四周空白；`indent` 是沿对齐方向的文本缩进。`indent` 默认 `-1`，表示 Qt 根据 frame width 和字体估算。
 
-**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
+普通表单标签通常不需要手动设置这两个值；需要边框提示或小型状态框时才常用。
 
-### `[read-only] hasSelectedText : bool`
+### `text` / `textFormat`
 
-**作用与语义：**
+`setText()` 设置文本，并清除旧的非文本内容。默认 `Qt::AutoText` 会自动判断是否按富文本解释。
 
-该属性决定是否存在任何文本被选中。
-hasSelectedText() 如果用户选择了部分或全部文本，则返回 `true`;否则返回 `false`。
-默认情况下，该属性为`false`。
-注意：标签上的 `textInteractionFlags` 集需要包含 TextSelectableByMouse 或 TextSelectableByKeyboard。
+如果文本来自用户、日志、文件名或网络内容，建议显式 `setTextFormat(Qt::PlainText)`，避免类似 `<b>...</b>` 的内容被当成富文本。需要显示富文本时，再明确使用 `Qt::RichText`。
 
-**如何使用：** 调用 `hasSelectedText()` 读取当前值；它不会修改应用状态。
+### `wordWrap`
 
-### `indent : int`
+开启后文本会按可用宽度换行，并通过 `heightForWidth()` 把“宽度影响高度”的关系告诉布局。
 
-**作用与语义：**
+说明文字和错误提示常开启；字段标签一般不开启，除非你愿意表单行高随窗口宽度变化。
 
-此属性保存标签的文本缩进（以像素为单位）。
-如果标签显示文本，当 `alignment()` 为 `Qt::AlignLeft` 时，缩进应用于左边缘；当 `alignment()` 为 `Qt::AlignRight` 时，缩进应用于右边缘；当 `alignment()` 为 `Qt::AlignTop` 时，缩进应用于上边缘；当 `alignment()` 为 `Qt::AlignBottom` 时，缩进应用于下边缘。
-如果缩进为负值，或者没有设置缩进，标签按以下方式计算有效缩进：如果 `frameWidth()` 为 0，则有效缩进为 0。如果 `frameWidth()` 大于 0，则有效缩进为该控件当前 `font()` 的“x”字符宽度的一半。
-默认情况下，缩进为 -1，这意味着有效缩进按上述方式计算。
+### `textInteractionFlags`
 
-**如何使用：** 调用 `indent()` 读取当前值；它不会修改应用状态。
+控制用户能否选择文本、点击链接、通过键盘访问链接。默认通常允许鼠标访问链接。
 
-### `margin : int`
+开启键盘链接访问或键盘文本选择时，label 可能获得焦点策略。界面上要能看出焦点在哪里，否则键盘用户会迷路。
 
-**作用与语义：**
+### `openExternalLinks`
 
-该属性表示边际宽度。
-边距是画面最内层像素与内容最外层像素之间的距离。
-默认保证金为0。
+为真时，点击链接会直接调用 `QDesktopServices::openUrl()`；为假时，发出 `linkActivated()`，由你决定怎么处理。
 
-**如何使用：** 调用 `margin()` 读取当前值；它不会修改应用状态。
+外部内容里的链接不要随便自动打开。需要审计、拦截、记录或只允许内部协议时，应关闭自动打开并连接 `linkActivated()`。
 
-### `openExternalLinks : bool`
+### `hasSelectedText` / `selectedText` / `setSelection()` / `selectionStart()`
 
-**作用与语义：**
+这些 API 只有在交互标志允许文本选择时才有实际意义。`setSelection(start, length)` 可以程序化选择一段文本。
 
-规定`QLabel`是否应使用`QDesktopServices::openUrl()`自动开启链路，而不是发出`linkActivated()`信号。
-注意：标签上的 `textInteractionFlags` 集需要包含 LinksAccessibleByMouse 或 LinksAccessibleByKeyboard。
-默认值为假。
+如果只是显示状态文字，不要开启文本选择；如果是错误详情、路径、ID 等用户可能要复制的文本，开启选择会很贴心。
 
-**如何使用：** 调用 `openExternalLinks()` 读取当前值；它不会修改应用状态。
+### `pixmap` / `setPixmap()`
 
-### `pixmap : QPixmap`
+显示 `QPixmap`。设置 pixmap 会清除文本、movie 等其他内容，并禁用 buddy 快捷语义。
 
-**作用与语义：**
+高 DPI 下要注意 pixmap 的 device pixel ratio。不要把大图原样塞进 label 再依赖 `scaledContents` 粗暴缩放；预先按目标尺寸准备更清晰。
 
-该属性包含标签的像素映射。
-设置像素映射会清除之前的所有内容。如果有好友快捷方式，则禁用。
+### `scaledContents`
 
-**如何使用：** 调用 `pixmap()` 读取当前值；它不会修改应用状态。
+开启后，pixmap 会缩放填满标签可用区域。它简单但可能拉伸变形，因为不保证保持宽高比。
 
-### `scaledContents : bool`
+展示头像、缩略图时，通常更推荐自己按比例缩放 pixmap，再设置给 label。
 
-**作用与语义：**
+### `setMovie()` / `movie()`
 
-该属性决定标签是否会按内容放大填满所有可用空间。
-启用后标签显示像素图，它会放大像素图以填满可用空间。
-该属性的默认值为假。
+显示 `QMovie` 动画，例如 GIF。label 不拥有 movie 的全部业务生命周期，通常应给 movie 合适 parent。
 
-**如何使用：** 调用 `scaledContents()` 读取当前值；它不会修改应用状态。
+动画会带来持续重绘，列表里大量动画 label 会影响性能。
 
-### `[read-only] selectedText : QString`
+### `setPicture()` / `picture()`
 
-**作用与语义：**
+显示 `QPicture` 记录的绘图命令。这个 API 使用频率不高，更多出现在需要重放 Qt 绘制指令的场景。
 
-该属性包含所选文本。
-如果没有被选中的文本，该属性的值是空字符串。
-默认情况下，该属性包含空字符串。
-注意：标签上的 `textInteractionFlags` 集需要包含 TextSelectableByMouse 或 TextSelectableByKeyboard。
+Qt 6.0 起提供 `picture()` 读取。
 
-**如何使用：** 调用 `selectedText()` 读取当前值；它不会修改应用状态。
+### `setNum(int)` / `setNum(double)`
 
-### `text : QString`
+把数字转换成文本显示。它是便利槽函数，适合直接连接数值变化信号。
 
-**作用与语义：**
+需要本地化格式、小数位控制、单位拼接时，自己格式化字符串再 `setText()` 更明确。
 
-该属性包含标签的文本。
-如果没有设置文本，则返回一个空字符串。设置文本会清除之前的所有内容。
-文本将根据文本格式设置被解释为纯文本或富文本;参见 `setTextFormat()`。默认设置为`Qt::AutoText`;即`QLabel`会尝试自动检测文本集的格式。关于富文本的定义，请参见支持 HTML 子集。
-如果设置了伙伴，伙伴助记键会根据新文本更新。
-请注意，`QLabel` 非常适合显示小型富文本文档，比如通过标签调色板和字体属性获得文档专属设置（字体、文本颜色、链接颜色）的小文档。对于大型文档，请使用只读模式的 `QTextEdit`。`QTextEdit` 也可以在需要时提供滚动条。
-注意：如果`text`包含富文本，此功能可启用鼠标追踪。
+### `clear()`
 
-**如何使用：** 调用 `text()` 读取当前值；它不会修改应用状态。
+清除当前内容。无论当前是文本、图片还是其他内容，都会回到空标签状态。
 
-### `textFormat : Qt::TextFormat`
+清空后 size hint 可能变化，布局会重新计算。
 
-**作用与语义：**
+### `setBuddy(QWidget *buddy)` / `buddy() const`
 
-该属性表示标签的文本格式。
-请参阅`Qt::TextFormat`枚举，了解可能选项的说明。
-默认格式是`Qt::AutoText`。
+设置标签助记符目标。文本中的 `&` 定义快捷键，触发时焦点移动到 buddy。
 
-**如何使用：** 调用 `textFormat()` 读取当前值；它不会修改应用状态。
+表单里使用 `QFormLayout::addRow(QString, QWidget*)` 会自动创建 label 并设置 buddy；手写布局时要自己调用。
 
-### `textInteractionFlags : Qt::TextInteractionFlags`
+### `setResourceProvider()` / `resourceProvider()`
 
-**作用与语义：**
+Qt 6.1 起，可为富文本资源提供自定义加载方式，例如控制 `<img>` 资源如何解析。
 
-规定标签在显示文本时应如何与用户输入交互。
-如果旗标包含`Qt::LinksAccessibleByKeyboard`焦点策略也会自动设置为`Qt::StrongFocus`。如果设置`Qt::TextSelectableByKeyboard`，焦点策略也设置为`Qt::ClickFocus`。
-默认值是`Qt::LinksAccessibleByMouse`。
+这适合受控的富文本展示；不要把它变成任意文件或网络资源加载入口，安全边界要清楚。
 
-**如何使用：** 调用 `textInteractionFlags()` 读取当前值；它不会修改应用状态。
+### `heightForWidth()` / `sizeHint()` / `minimumSizeHint()`
 
-### `wordWrap : bool`
+这些函数向布局报告标签希望占用的大小。文本换行、图片尺寸、frame、margin、indent 都会影响结果。
 
-**作用与语义：**
+如果 label 把布局撑得很宽，检查长文本是否未换行；如果高度频繁变化，检查 word wrap 和富文本内容。
 
-此属性保存标签的自动换行策略。
-如果此属性为 `true`，则标签文本在必要时按照断词处换行；否则完全不换行。
-默认情况下，自动换行被禁用。
+### `linkActivated()` / `linkHovered()`
 
-**如何使用：** 调用 `wordWrap()` 读取当前值；它不会修改应用状态。
+当用户激活或悬停链接时发出。只有文本格式和交互标志允许链接时才有意义。
 
-### `[explicit] QLabel::QLabel(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
+内部帮助链接、设置跳转、文档链接通常连接 `linkActivated()` 自己处理，比直接开启外部链接更可控。
 
-**作用与语义：**
+### 事件与绘制函数
 
-构造一个空标签。
-`parent`和控件标志`f`，参数传递给`QFrame`构造器。
+`paintEvent()` 绘制当前内容；鼠标和键盘事件处理文本选择、链接激活、焦点移动；`contextMenuEvent()` 可在可选文本上提供复制等菜单。
 
-### `[explicit] QLabel::QLabel(const QString &text, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags())`
+普通使用不需要重写这些函数。自定义 label 交互时，要先确认是不是应该改用按钮、文本编辑器或自定义 widget。
 
-**作用与语义：**
+## 5. 深入实践与常见坑
 
-构建一个标签来显示文本，`text`。
-`parent`和控件标志`f`，参数传递给`QFrame`构造器。
+### AutoText 方便也危险
 
-### `[virtual noexcept] QLabel::~QLabel()`
+`Qt::AutoText` 会把看起来像富文本的字符串按富文本渲染。显示外部输入时显式使用 `Qt::PlainText`，这是最省心的防线。
 
-**作用与语义：**
+### Label 可以是表单可访问性的关键
 
-毁掉了这个标签。
+`setBuddy()` 让标签和字段建立关系。没有 buddy 的表单标签只是旁边一段文字；有 buddy 的标签能参与键盘导航。
 
-### `QWidget *QLabel::buddy() const`
+### 图片缩放要考虑比例和高 DPI
 
-**作用与语义：**
+`scaledContents` 只是填满区域。需要专业观感时，自己按 `KeepAspectRatio` 缩放，并准备高 DPI pixmap。
 
-返回该标签的伙伴，或者如果当前没有伙伴设置，则返回nullptr。
+### QLabel 不是富文本浏览器
 
-### `[override virtual protected] void QLabel::changeEvent(QEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QFrame::changeEvent`（QEvent *ev）。
-
-### `[slot] void QLabel::clear()`
-
-**作用与语义：**
-
-清除标签内容。
-
-### `[override virtual protected] void QLabel::contextMenuEvent(QContextMenuEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
-当控件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用处理器。
-默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
-
-### `[override virtual protected] bool QLabel::event(QEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QFrame::event`（QEvent *e）。
-
-### `[override virtual protected] void QLabel::focusInEvent(QFocusEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::focusInEvent`（QFocusEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点接收）。事件通过`event`参数传递。
-小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
-默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
-
-### `[override virtual protected] bool QLabel::focusNextPrevChild(bool next)`
-
-**作用与语义：**
-
-重构：`QWidget::focusNextPrevChild`（下一个布尔）。
-根据 Tab 和 Shift Tab 找到一个新的控件来给键盘焦点，如果能找到新控件，则返回 `true`，找不到则返回 false。
-如果`next`为真，该函数向前搜索;如果`next`为假，则向后搜索。
-有时，你会想重新实现这个函数。例如，浏览器可能会重新实现它，将“当前活跃链接”向前或向后移动，只有当它到达“页面”的最后或第一个链接时才调用 focusNextPrevChild()。
-子控件调用其父控件的 focusNextPrevChild()，但只有包含子控件的窗口决定将焦点重定向到哪里。通过重新实现该函数，你就能控制所有子控件的焦点遍历。
-
-### `[override virtual protected] void QLabel::focusOutEvent(QFocusEvent *ev)`
-
-**作用与语义：**
-
-重现：`QWidget::focusOutEvent`（QFocusEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收控件的键盘焦点事件（焦点丢失）。事件通过`event`参数传递。
-小部件通常必须`setFocusPolicy()`到非`Qt::NoFocus`的对象才能接收焦点事件。（注意，应用程序员可以调用任何小部件`setFocus()`，即使是那些通常不接受焦点的小部件。）。
-默认实现会更新小部件（除非是没有指定`focusPolicy()`的窗口）。
-
-### `[override virtual] int QLabel::heightForWidth(int w) const`
-
-**作用与语义：**
-
-重实现自：`QWidget::heightForWidth`（内性 w） const.
-返回该小部件的首选高度，基于宽度`w`。
-如果该控件有布局，默认实现返回该布局的首选高度。如果没有布局，默认实现返回 -1，表示首选高度不依赖于宽度。
-
-### `[override virtual protected] void QLabel::keyPressEvent(QKeyEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::keyPressEvent`（QKeyEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的按键事件。
-一个小部件必须调用`setFocusPolicy()`先接受焦点，并且必须有焦点才能接收按键事件。
-如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
-默认实现会关闭弹出小部件，如果用户按下`QKeySequence::Cancel`的按键序列（通常是 Escape 键）。否则事件会被忽略，以便小部件的父节点能够解释。
-注意`QKeyEvent`以 isAccepted() == true 开头，所以你不需要调用 `QKeyEvent::accept()`——只要你对该键执行时不要调用基类实现即可。
-
-### `[signal] void QLabel::linkActivated(const QString &link)`
-
-**作用与语义：**
-
-当用户点击链接时，该信号会发出。锚点所引用的URL会以`link`传递。
-
-### `[signal] void QLabel::linkHovered(const QString &link)`
-
-**作用与语义：**
-
-当用户将鼠标悬停在链接上时，该信号会发出。锚点所引用的URL会以`link`传递。
-
-### `[override virtual] QSize QLabel::minimumSizeHint() const`
-
-**作用与语义：**
-
-重新实现属性的访问函数：`QWidget::minimumSizeHint`。
-
-### `[override virtual protected] void QLabel::mouseMoveEvent(QMouseEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::mouseMoveEvent`（QMouseEvent *event）。
-该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标移动事件。
-如果关闭鼠标追踪，只有在鼠标移动过程中按下鼠标按钮时才会发生鼠标移动事件。如果开启鼠标追踪，即使未按键，鼠标移动事件也会发生。
-`QMouseEvent::position()`报告鼠标光标相对于该小部件的位置。对于按下和释放事件，位置通常与最后一次鼠标移动事件的位置相同，但如果用户的手握手，可能会有所不同。这是底层窗口系统的功能，而非Qt。
-如果你想在鼠标移动时立即显示提示（例如，获取鼠标坐标与`QMouseEvent::position()`并显示为提示），你必须先启用上述的鼠标追踪功能。然后，为了确保提示立即更新，你必须在鼠标移动事件（mouseMoveEvent）实现中调用`QToolTip::showText()`而不是`setToolTip()`。
-
-### `[override virtual protected] void QLabel::mousePressEvent(QMouseEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::mousePressEvent`（QMouseEvent *event）。
-该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标按键事件。
-如果你在 mousePressEvent() 创建新控件，`mouseReleaseEvent()`可能不会出现在你预期的位置，这取决于底层窗口系统（或 X11 窗口管理器）、控件的位置，甚至可能还有其他因素。
-默认实现实现了当你点击窗口外时关闭弹出小部件的功能。对于其他小部件类型，它没有任何作用。
-
-### `[override virtual protected] void QLabel::mouseReleaseEvent(QMouseEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::mouseReleaseEvent`（QMouseEvent *event）。
-该事件处理程序用于事件`event`，可以重新实现为子类，以接收该小部件的鼠标释放事件。
-
-### `QMovie *QLabel::movie() const`
-
-**作用与语义：**
-
-返回标签的电影指针，如果没有设置电影则返回nullptr。
-
-### `[override virtual protected] void QLabel::paintEvent(QPaintEvent *)`
-
-**作用与语义：**
-
-重实现自：`QFrame::paintEvent`（QPaintEvent *）。
-
-### `[since 6.0] QPicture QLabel::picture() const`
-
-**作用与语义：**
-
-还给标签上的照片。
-
-### `[since 6.1] QTextDocument::ResourceProvider QLabel::resourceProvider() const`
-
-**作用与语义：**
-
-返回该标签的富文本资源提供者。
-
-### `int QLabel::selectionStart() const`
-
-**作用与语义：**
-
-selectionStart() 返回标签中第一个被选中字符的索引，若未选择文本则返回 -1。
-注意：标签上的 `textInteractionFlags` 集需要包含 TextSelectableByMouse 或 TextSelectableByKeyboard。
-
-### `void QLabel::setBuddy(QWidget *buddy)`
-
-**作用与语义：**
-
-让这个标签的伙伴变成`buddy`。
-当用户按下该标签指示的快捷键时，键盘焦点会转移到标签的伙伴小部件上。
-伙伴机制仅适用于包含一个字符前缀为“&”的文本的QLabel。该字符被设置为快捷键。详情请参见`QKeySequence::mnemonic()`文档（如需显示实际的&符号，请使用“&&”）。
-在对话框中，你可以创建两个数据输入小部件和每个小部件的标签，并设置几何布局，使每个标签都位于其数据输入小部件（它的“伙伴”）左侧，例如：
-使用上述代码，用户按Alt N时焦点跳转到Name字段，按下Alt P时跳转到Phone字段。
-要撤销之前设置的伙伴，调用该函数，`buddy`设置为 nullptr。
-
-**官方示例：**
-
-```cpp
- QLineEdit *nameEdit  = new QLineEdit(this);
- QLabel    *nameLabel = new QLabel("&Name:", this);
- nameLabel->setBuddy(nameEdit);
- QLineEdit *phoneEdit  = new QLineEdit(this);
- QLabel    *phoneLabel = new QLabel("&Phone:", this);
- phoneLabel->setBuddy(phoneEdit);
- // (layout setup not shown)
-```
-
-### `[slot] void QLabel::setMovie(QMovie *movie)`
-
-**作用与语义：**
-
-将标签内容设置为`movie`。之前的内容会被清除。标签不会拥有电影的所有权。
-如果有好友快捷方式，则是禁用的。
-
-### `[slot] void QLabel::setNum(int num)`
-
-**作用与语义：**
-
-将标签内容设置为纯文本，包含整数 `num` 的文本表示。之前的所有内容被清除。如果整数的字符串表示与标签当前内容相同，则无效。
-如果有好友快捷方式，则是禁用的。
-注意：该槽位已超载。连接该槽位：
-
-
-使用 qOverload 连接：
-connect（sender， &SenderClass：：signal，。
-label， qOverload（&QLabel：：setNum））;
-
-或者用lambda作为包装器：
-connect（sender， &SenderClass：：signal，。
-label， [receiver = label]（int num） { receiver->setNum（num）; }）;
-
-
-更多示例和方法，请参见连接超载槽位。
-
-### `[slot] void QLabel::setNum(double num)`
-
-**作用与语义：**
-
-将标签内容设置为包含双重 `num` 文本表示的纯文本。之前的所有内容都被清除。如果双重的字符串表示与当前标签内容相同，则无效。
-如果有好友快捷方式，则是禁用的。
-注意：该槽位已超载。连接该槽位：
-
-
-使用 qOverload 连接：
-connect（sender， &SenderClass：：signal，。
-label， qOverload（&QLabel：：setNum））;
-
-或者用lambda作为包装器：
-connect（sender， &SenderClass：：signal，。
-label， [receiver = label]（double num） { receiver->setNum（num）; }）;
-
-
-更多示例和方法，请参见连接超载槽位。
-
-### `[slot] void QLabel::setPicture(const QPicture &picture)`
-
-**作用与语义：**
-
-将标签内容设置为`picture`。之前的内容会被清除。
-如果有好友快捷方式，则是禁用的。
-
-### `[since 6.1] void QLabel::setResourceProvider(const QTextDocument::ResourceProvider &provider)`
-
-**作用与语义：**
-
-设置该标签富文本资源的资源`provider`。
-注意：唱片公司不对`provider`拥有所有权。
-
-### `void QLabel::setSelection(int start, int length)`
-
-**作用与语义：**
-
-从位置`start`和`length`字符中选择文本。
-注意：标签上的`textInteractionFlags`集需要包含TextSelectableByMouse或TextSelectableByKeyboard之一。
-
-### `[override virtual] QSize QLabel::sizeHint() const`
-
-**作用与语义：**
-
-重实现自：`QFrame::sizeHint()` const.
-重新实现了属性的访问函数：`QWidget::sizeHint`。
-
-### `Qt::Alignment alignment() const`
-
-**作用与语义：**
-
-该属性表示标签内容的对齐。
-默认情况下，标签内容为左对齐且垂直居中。
-
-**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
-
-### `bool hasScaledContents() const`
-
-**作用与语义：**
-
-该属性决定标签是否会按内容放大填满所有可用空间。
-启用后标签显示像素图，它会放大像素图以填满可用空间。
-该属性的默认值为假。
-
-**如何使用：** 调用 `hasScaledContents()` 读取当前值；它不会修改应用状态。
-
-### `bool hasSelectedText() const`
-
-**作用与语义：**
-
-该属性决定是否存在任何文本被选中。
-hasSelectedText() 如果用户选择了部分或全部文本，则返回 `true`;否则返回 `false`。
-默认情况下，该属性为`false`。
-注意：标签上的 `textInteractionFlags` 集需要包含 TextSelectableByMouse 或 TextSelectableByKeyboard。
-
-**如何使用：** 调用 `hasSelectedText()` 读取当前值；它不会修改应用状态。
-
-### `int indent() const`
-
-**作用与语义：**
-
-此属性保存标签的文本缩进（以像素为单位）。
-如果标签显示文本，当 `alignment()` 为 `Qt::AlignLeft` 时，缩进应用于左边缘；当 `alignment()` 为 `Qt::AlignRight` 时，缩进应用于右边缘；当 `alignment()` 为 `Qt::AlignTop` 时，缩进应用于上边缘；当 `alignment()` 为 `Qt::AlignBottom` 时，缩进应用于下边缘。
-如果缩进为负值，或者没有设置缩进，标签按以下方式计算有效缩进：如果 `frameWidth()` 为 0，则有效缩进为 0。如果 `frameWidth()` 大于 0，则有效缩进为该控件当前 `font()` 的“x”字符宽度的一半。
-默认情况下，缩进为 -1，这意味着有效缩进按上述方式计算。
-
-**如何使用：** 调用 `indent()` 读取当前值；它不会修改应用状态。
-
-### `int margin() const`
-
-**作用与语义：**
-
-该属性表示边际宽度。
-边距是画面最内层像素与内容最外层像素之间的距离。
-默认保证金为0。
-
-**如何使用：** 调用 `margin()` 读取当前值；它不会修改应用状态。
-
-### `bool openExternalLinks() const`
-
-**作用与语义：**
-
-规定`QLabel`是否应使用`QDesktopServices::openUrl()`自动开启链路，而不是发出`linkActivated()`信号。
-注意：标签上的 `textInteractionFlags` 集需要包含 LinksAccessibleByMouse 或 LinksAccessibleByKeyboard。
-默认值为假。
-
-**如何使用：** 调用 `openExternalLinks()` 读取当前值；它不会修改应用状态。
-
-### `QPixmap pixmap() const`
-
-**作用与语义：**
-
-该属性包含标签的像素映射。
-设置像素映射会清除之前的所有内容。如果有好友快捷方式，则禁用。
-
-**如何使用：** 调用 `pixmap()` 读取当前值；它不会修改应用状态。
-
-### `QString selectedText() const`
-
-**作用与语义：**
-
-该属性包含所选文本。
-如果没有被选中的文本，该属性的值是空字符串。
-默认情况下，该属性包含空字符串。
-注意：标签上的 `textInteractionFlags` 集需要包含 TextSelectableByMouse 或 TextSelectableByKeyboard。
-
-**如何使用：** 调用 `selectedText()` 读取当前值；它不会修改应用状态。
-
-### `void setAlignment(Qt::Alignment)`
-
-**作用与语义：**
-
-该属性表示标签内容的对齐。
-默认情况下，标签内容为左对齐且垂直居中。
-
-**如何使用：** 调用 `setAlignment(...)` 修改 `alignment`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setIndent(int)`
-
-**作用与语义：**
-
-此属性保存标签的文本缩进（以像素为单位）。
-如果标签显示文本，当 `alignment()` 为 `Qt::AlignLeft` 时，缩进应用于左边缘；当 `alignment()` 为 `Qt::AlignRight` 时，缩进应用于右边缘；当 `alignment()` 为 `Qt::AlignTop` 时，缩进应用于上边缘；当 `alignment()` 为 `Qt::AlignBottom` 时，缩进应用于下边缘。
-如果缩进为负值，或者没有设置缩进，标签按以下方式计算有效缩进：如果 `frameWidth()` 为 0，则有效缩进为 0。如果 `frameWidth()` 大于 0，则有效缩进为该控件当前 `font()` 的“x”字符宽度的一半。
-默认情况下，缩进为 -1，这意味着有效缩进按上述方式计算。
-
-**如何使用：** 调用 `setIndent(...)` 修改 `indent`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setMargin(int)`
-
-**作用与语义：**
-
-该属性表示边际宽度。
-边距是画面最内层像素与内容最外层像素之间的距离。
-默认保证金为0。
-
-**如何使用：** 调用 `setMargin(...)` 修改 `margin`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setOpenExternalLinks(bool open)`
-
-**作用与语义：**
-
-规定`QLabel`是否应使用`QDesktopServices::openUrl()`自动开启链路，而不是发出`linkActivated()`信号。
-注意：标签上的 `textInteractionFlags` 集需要包含 LinksAccessibleByMouse 或 LinksAccessibleByKeyboard。
-默认值为假。
-
-**如何使用：** 调用 `setOpenExternalLinks(...)` 修改 `openExternalLinks`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setScaledContents(bool)`
-
-**作用与语义：**
-
-该属性决定标签是否会按内容放大填满所有可用空间。
-启用后标签显示像素图，它会放大像素图以填满可用空间。
-该属性的默认值为假。
-
-**如何使用：** 调用 `setScaledContents(...)` 修改 `scaledContents`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setTextFormat(Qt::TextFormat)`
-
-**作用与语义：**
-
-该属性表示标签的文本格式。
-请参阅`Qt::TextFormat`枚举，了解可能选项的说明。
-默认格式是`Qt::AutoText`。
-
-**如何使用：** 调用 `setTextFormat(...)` 修改 `textFormat`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setTextInteractionFlags(Qt::TextInteractionFlags flags)`
-
-**作用与语义：**
-
-规定标签在显示文本时应如何与用户输入交互。
-如果旗标包含`Qt::LinksAccessibleByKeyboard`焦点策略也会自动设置为`Qt::StrongFocus`。如果设置`Qt::TextSelectableByKeyboard`，焦点策略也设置为`Qt::ClickFocus`。
-默认值是`Qt::LinksAccessibleByMouse`。
-
-**如何使用：** 调用 `setTextInteractionFlags(...)` 修改 `textInteractionFlags`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setWordWrap(bool on)`
-
-**作用与语义：**
-
-此属性保存标签的自动换行策略。
-如果此属性为 `true`，则标签文本在必要时按照断词处换行；否则完全不换行。
-默认情况下，自动换行被禁用。
-
-**如何使用：** 调用 `setWordWrap(...)` 修改 `wordWrap`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `QString text() const`
-
-**作用与语义：**
-
-该属性包含标签的文本。
-如果没有设置文本，则返回一个空字符串。设置文本会清除之前的所有内容。
-文本将根据文本格式设置被解释为纯文本或富文本;参见 `setTextFormat()`。默认设置为`Qt::AutoText`;即`QLabel`会尝试自动检测文本集的格式。关于富文本的定义，请参见支持 HTML 子集。
-如果设置了伙伴，伙伴助记键会根据新文本更新。
-请注意，`QLabel` 非常适合显示小型富文本文档，比如通过标签调色板和字体属性获得文档专属设置（字体、文本颜色、链接颜色）的小文档。对于大型文档，请使用只读模式的 `QTextEdit`。`QTextEdit` 也可以在需要时提供滚动条。
-注意：如果`text`包含富文本，此功能可启用鼠标追踪。
-
-**如何使用：** 调用 `text()` 读取当前值；它不会修改应用状态。
-
-### `Qt::TextFormat textFormat() const`
-
-**作用与语义：**
-
-该属性表示标签的文本格式。
-请参阅`Qt::TextFormat`枚举，了解可能选项的说明。
-默认格式是`Qt::AutoText`。
-
-**如何使用：** 调用 `textFormat()` 读取当前值；它不会修改应用状态。
-
-### `Qt::TextInteractionFlags textInteractionFlags() const`
-
-**作用与语义：**
-
-规定标签在显示文本时应如何与用户输入交互。
-如果旗标包含`Qt::LinksAccessibleByKeyboard`焦点策略也会自动设置为`Qt::StrongFocus`。如果设置`Qt::TextSelectableByKeyboard`，焦点策略也设置为`Qt::ClickFocus`。
-默认值是`Qt::LinksAccessibleByMouse`。
-
-**如何使用：** 调用 `textInteractionFlags()` 读取当前值；它不会修改应用状态。
-
-### `bool wordWrap() const`
-
-**作用与语义：**
-
-此属性保存标签的自动换行策略。
-如果此属性为 `true`，则标签文本在必要时按照断词处换行；否则完全不换行。
-默认情况下，自动换行被禁用。
-
-**如何使用：** 调用 `wordWrap()` 读取当前值；它不会修改应用状态。
-
-### `void setPixmap(const QPixmap &)`
-
-**作用与语义：**
-
-该属性包含标签的像素映射。
-设置像素映射会清除之前的所有内容。如果有好友快捷方式，则禁用。
-
-**如何使用：** 调用 `setPixmap(...)` 修改 `pixmap`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setText(const QString &)`
-
-**作用与语义：**
-
-该属性包含标签的文本。
-如果没有设置文本，则返回一个空字符串。设置文本会清除之前的所有内容。
-文本将根据文本格式设置被解释为纯文本或富文本;参见 `setTextFormat()`。默认设置为`Qt::AutoText`;即`QLabel`会尝试自动检测文本集的格式。关于富文本的定义，请参见支持 HTML 子集。
-如果设置了伙伴，伙伴助记键会根据新文本更新。
-请注意，`QLabel` 非常适合显示小型富文本文档，比如通过标签调色板和字体属性获得文档专属设置（字体、文本颜色、链接颜色）的小文档。对于大型文档，请使用只读模式的 `QTextEdit`。`QTextEdit` 也可以在需要时提供滚动条。
-注意：如果`text`包含富文本，此功能可启用鼠标追踪。
-
-**如何使用：** 调用 `setText(...)` 修改 `text`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-富文本来自外部输入时注意安全和性能；图片显示要考虑 devicePixelRatio；不要用大量 QLabel 替代真正的数据视图。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QLabel` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+小段富文本可以，长文档、滚动、复杂交互、选择复制体验都应该交给只读 `QTextEdit` 或专门视图。

@@ -1,140 +1,19 @@
 # QXmlStreamAttributes
-
-> Qt 6.11.1 · Qt Core
-
-## 1. 先建立直觉
-
-**一句话定位：** `QXmlStreamAttributes` 是结构化文档类型，负责 JSON/XML 节点、值、解析状态或流式读写。
-
-**模块背景：** Qt Core 提供对象模型、事件循环、容器、字符串、文件、线程、时间和元对象系统等基础能力。
-
-### 这是什么
-
-`QXmlStreamAttributes` 是 结构化文本解析机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文本和层级。文档容器负责解析和序列化，具体字段/节点访问由 object、array、value 或 DOM/流式读取对象完成。
-
-**适用场景：** 接收字节数据后显式指定编码和解析选项，检查错误对象，再按类型访问节点，校验业务字段，最后序列化或转换成领域对象。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要只检查 parse 成功；不要假设字段一定存在且类型固定；不要把用户输入直接当作可信结构；大文件不要无条件 readAll 和构造整棵树。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QXmlStreamAttributes>`
-- 继承自：QList
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Core)
-target_link_libraries(mytarget PRIVATE Qt6::Core)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文本和层级。文档容器负责解析和序列化，具体字段/节点访问由 object、array、value 或 DOM/流式读取对象完成。
-
-### 状态、生命周期和线程
-
-**生命周期：** 解析结果通常是值对象，可在作用域内传递；流式解析器则依赖输入设备和读取顺序。解析错误、结构合法和业务字段合法是三个不同层次，必须分别检查。
-
-**状态与结果：** 先判断文档是否为空、根节点类型和解析错误，再访问字段；字段缺失、类型不匹配、空值和默认值要分开处理。序列化时要明确紧凑/格式化输出和编码。
-
-**线程与事件循环：** 值形式的解析结果可以复制后跨线程处理；共享设备、流对象和可变 DOM 不应无保护地跨线程使用。大文档要评估一次性树结构的内存成本，必要时用流式 API。
-
-## 3. 直接使用
-
-接收字节数据后显式指定编码和解析选项，检查错误对象，再按类型访问节点，校验业务字段，最后序列化或转换成领域对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QXmlStreamAttributes()`
-- `void append(const QString &namespaceUri, const QString &name, const QString &value)`
-- `void append(const QString &qualifiedName, const QString &value)`
-- `bool hasAttribute(QAnyStringView qualifiedName) const`
-- `bool hasAttribute(QAnyStringView namespaceUri, QAnyStringView name) const`
-- `QStringView value(QAnyStringView namespaceUri, QAnyStringView name) const`
-- `QStringView value(QAnyStringView qualifiedName) const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QXmlStreamAttributes::QXmlStreamAttributes()`
-
-**作用与语义：**
-
-QXmlStreamAttributes 的构造器。
-
-### `void QXmlStreamAttributes::append(const QString &namespaceUri, const QString &name, const QString &value)`
-
-**作用与语义：**
-
-在命名空间中附加一个带有`name`的新属性，`namespaceUri`和值`value`。`namespaceUri`可以是空的。
-
-### `void QXmlStreamAttributes::append(const QString &qualifiedName, const QString &value)`
-
-**作用与语义：**
-
-附加一个带有限定名称`qualifiedName`和值`value`的新属性。
-
-### `bool QXmlStreamAttributes::hasAttribute(QAnyStringView qualifiedName) const`
-
-**作用与语义：**
-
-如果该`QXmlStreamAttributes`的属性限定名称为`qualifiedName`，则返回`true`;否则返回`false`。
-请注意，这并非命名空间感知。例如，如果该 `QXmlStreamAttributes` 包含一个词汇名为“xlink：href”的属性，这并不能说明 XLink 命名空间中名为 `href` 的属性存在，因为 `xlink` 前缀可以绑定到任何命名空间。使用以命名空间 URI 和本地名称为参数的超载，以实现命名空间感知代码。
-
-### `bool QXmlStreamAttributes::hasAttribute(QAnyStringView namespaceUri, QAnyStringView name) const`
-
-**作用与语义：**
-
-如果该`QXmlStreamAttributes`的命名空间URI和名称对应于`namespaceUri`和`name`，则返回`true`;否则返回`false`。
-
-### `[noexcept] QStringView QXmlStreamAttributes::value(QAnyStringView namespaceUri, QAnyStringView name) const`
-
-**作用与语义：**
-
-返回用`namespaceUri`描述的命名空间中属性`name`值，若未定义属性则返回空字符串引用。`namespaceUri`可以是空的。
-注意：在 6.6 之前的 Qt 版本中，该函数被实现为仅接受 `QString` 和 `QLatin1StringView` 组合的超载集。
-
-### `[noexcept] QStringView QXmlStreamAttributes::value(QAnyStringView qualifiedName) const`
-
-**作用与语义：**
-
-返回带有限定名称`qualifiedName`的属性值，如果该属性未定义，则返回空字符串引用。限定名称是XML数据中属性的原始名称。它由命名空间前缀、冒号和属性的本地名称组成。由于命名空间前缀不是唯一的（同一个前缀可以指向不同的命名空间，不同的前缀也可能指向同一命名空间），你不应使用限定名称，而应使用已解析的namespaceUri和该属性的本地名称。
-注意：在 6.6 之前的 Qt 版本中，该函数被实现为仅接受 `QString` 和 `QLatin1StringView` 的重载集。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-解析结果通常是值对象，可在作用域内传递；流式解析器则依赖输入设备和读取顺序。解析错误、结构合法和业务字段合法是三个不同层次，必须分别检查。
-
-### 状态和错误边界
-
-先判断文档是否为空、根节点类型和解析错误，再访问字段；字段缺失、类型不匹配、空值和默认值要分开处理。序列化时要明确紧凑/格式化输出和编码。
-
-### 线程边界
-
-值形式的解析结果可以复制后跨线程处理；共享设备、流对象和可变 DOM 不应无保护地跨线程使用。大文档要评估一次性树结构的内存成本，必要时用流式 API。
-
-### 最容易出现的错误
-
-不要只检查 parse 成功；不要假设字段一定存在且类型固定；不要把用户输入直接当作可信结构；大文件不要无条件 readAll 和构造整棵树。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QXmlStreamAttributes` 所属机制类型：结构化文本解析机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+> Qt 6.11.1 · Qt Core · 来自 `QXmlStreamAttributes`
+## 作用定位
+`QXmlStreamAttributes` 是当前 XML 元素属性列表的轻量容器，提供按名称查询和遍历。
+## API 速查
+| API | 是做什么的 |
+|---|---|
+| `value()` | 按命名空间/名称取得属性值。 |
+| `hasAttribute()` | 判断属性是否存在。 |
+| `append()` | 构造写入属性列表时添加项。 |
+| 迭代接口 | 遍历所有属性。 |
+## 使用场景
+读取 `<item id="42" enabled="true">` 时检查必需属性并转换。
+## 常见坑与经验
+- 缺失属性和空字符串属性不同。
+- 解析时记录行列号，错误信息更有用。
+- 名称空间场景使用带 URI 的查询重载。
+## 知识点覆盖
+属性集合、必填校验、命名空间、流式 XML、错误报告。

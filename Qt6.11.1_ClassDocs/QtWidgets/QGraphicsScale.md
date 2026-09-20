@@ -1,287 +1,62 @@
 # QGraphicsScale
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsScale`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsScale` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsScale` 是一个可放进 item 变换链的缩放对象。它把 x/y/z 缩放和缩放原点做成属性，方便用动画框架平滑驱动。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+简单缩放一个 item 可以直接 `item->setScale()`；当你需要分别动画 x/y、指定三维原点、和旋转等变换组合时，`QGraphicsScale` 更合适。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsScale` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QGraphicsScale` 继承自 `QGraphicsTransform`。它通过 `applyTo()` 把缩放累积到矩阵中。`origin` 是缩放中心，`xScale`、`yScale`、`zScale` 分别控制三个方向。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+在 2D Graphics View 中最常用的是 x/y 缩放；z 轴更多用于和 3D 风格变换链配合。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QGraphicsScale(QObject *)` | 创建缩放变换对象。 |
+| `setOrigin(const QVector3D &)` / `origin()` | 设置或读取缩放中心。 |
+| `setXScale(qreal)` / `xScale()` | 设置或读取 x 方向缩放。 |
+| `setYScale(qreal)` / `yScale()` | 设置或读取 y 方向缩放。 |
+| `setZScale(qreal)` / `zScale()` | 设置或读取 z 方向缩放。 |
+| `applyTo(QMatrix4x4 *)` | 把缩放应用到矩阵。 |
+| `originChanged()` | 缩放中心变化时发出。 |
+| `xScaleChanged/yScaleChanged/zScaleChanged` | 对应缩放值变化时发出。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+auto *scale = new QGraphicsScale(item);
+scale->setOrigin(QVector3D(50, 25, 0));
+item->setTransformations({ scale });
 
-- 头文件：`#include <QGraphicsScale>`
-- 继承自：QGraphicsTransform
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+auto *anim = new QPropertyAnimation(scale, "xScale", item);
+anim->setStartValue(1.0);
+anim->setEndValue(1.25);
+anim->start(QAbstractAnimation::DeleteWhenStopped);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+同时动画 x/y：
 
-### 工作机制
+```cpp
+scale->setXScale(factor);
+scale->setYScale(factor);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合选中放大、节点 hover 动画、图片预览缩放、图形对象弹入弹出、编辑器里的非等比缩放控制。
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+如果只是固定设置一个统一比例，`QGraphicsItem::setScale()` 更少代码。
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+缩放原点决定视觉感受。按钮从中心放大和从左上角放大，用户感觉完全不同。
 
-## 3. 直接使用
+负缩放会镜像 item，可能导致文字、箭头和命中区域看起来反直觉。除非确实要镜像，否则避免不小心传入负值。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `origin : QVector3D`
-- `xScale : qreal`
-- `yScale : qreal`
-- `zScale : qreal`
-
-### 公有函数
-
-- `QGraphicsScale(QObject *parent = nullptr)`
-- `virtual ~QGraphicsScale()`
-- `QVector3D origin() const`
-- `void setOrigin(const QVector3D &point)`
-- `void setXScale(qreal)`
-- `void setYScale(qreal)`
-- `void setZScale(qreal)`
-- `qreal xScale() const`
-- `qreal yScale() const`
-- `qreal zScale() const`
-
-### 重实现的公有函数
-
-- `virtual void applyTo(QMatrix4x4 *matrix) const override`
-
-### 信号
-
-- `void originChanged()`
-- `void scaleChanged()`
-- `void xScaleChanged()`
-- `void yScaleChanged()`
-- `void zScaleChanged()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `origin : QVector3D`
-
-**作用与语义：**
-
-此属性保存 3D 空间中缩放的原点。
-所有缩放都将相对于该点进行（即当物体缩放时，该点相对于父元素保持固定）。
-
-**如何使用：** 调用 `origin()` 读取当前值；它不会修改应用状态。
-
-### `xScale : qreal`
-
-**作用与语义：**
-
-该属性表示水平尺度因子。
-比例因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠到一个点。如果你给出负值，项目会围绕其原点水平镜像。
-
-**如何使用：** 调用 `xScale()` 读取当前值；它不会修改应用状态。
-
-### `yScale : qreal`
-
-**作用与语义：**
-
-该属性表示垂直比例因子。
-尺度因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠为单点。如果给出负值，项目会绕其原点垂直翻转。
-
-**如何使用：** 调用 `yScale()` 读取当前值；它不会修改应用状态。
-
-### `zScale : qreal`
-
-**作用与语义：**
-
-此属性保存深度缩放因子。
-缩放因子可以是任意实数；默认值为 1.0。如果将因子设置为 0.0，项目将收缩为单个点。如果提供负值，项目将围绕其原点翻转。
-
-**如何使用：** 调用 `zScale()` 读取当前值；它不会修改应用状态。
-
-### `QGraphicsScale::QGraphicsScale(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个空的QGraphicsScale对象，其给定`parent`。
-
-### `[virtual noexcept] QGraphicsScale::~QGraphicsScale()`
-
-**作用与语义：**
-
-破坏了画面的规模。
-
-### `[override virtual] void QGraphicsScale::applyTo(QMatrix4x4 *matrix) const`
-
-**作用与语义：**
-
-重实现自：`QGraphicsTransform::applyTo`（QMatrix4x4 *matrix） const.
-这种纯虚拟方法必须在派生类中重新实现。
-它将这种转变应用于`matrix`。
-
-### `[signal] void QGraphicsScale::originChanged()`
-
-**作用与语义：**
-
-此属性保存 3D 空间中缩放的原点。
-所有缩放都将相对于该点进行（即当物体缩放时，该点相对于父元素保持固定）。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `origin` 的变化，不要把它当作普通函数主动调用。
-
-### `[signal] void QGraphicsScale::scaleChanged()`
-
-**作用与语义：**
-
-每当物体的`xScale`、`yScale`或`zScale`发生变化时，该信号就会发出。
-
-### `[signal] void QGraphicsScale::xScaleChanged()`
-
-**作用与语义：**
-
-该属性表示水平尺度因子。
-比例因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠到一个点。如果你给出负值，项目会围绕其原点水平镜像。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `xScale` 的变化，不要把它当作普通函数主动调用。
-
-### `[signal] void QGraphicsScale::yScaleChanged()`
-
-**作用与语义：**
-
-该属性表示垂直比例因子。
-尺度因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠为单点。如果给出负值，项目会绕其原点垂直翻转。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `yScale` 的变化，不要把它当作普通函数主动调用。
-
-### `[signal] void QGraphicsScale::zScaleChanged()`
-
-**作用与语义：**
-
-此属性保存深度缩放因子。
-缩放因子可以是任意实数；默认值为 1.0。如果将因子设置为 0.0，项目将收缩为单个点。如果提供负值，项目将围绕其原点翻转。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `zScale` 的变化，不要把它当作普通函数主动调用。
-
-### `QVector3D origin() const`
-
-**作用与语义：**
-
-此属性保存 3D 空间中缩放的原点。
-所有缩放都将相对于该点进行（即当物体缩放时，该点相对于父元素保持固定）。
-
-**如何使用：** 调用 `origin()` 读取当前值；它不会修改应用状态。
-
-### `void setOrigin(const QVector3D &point)`
-
-**作用与语义：**
-
-此属性保存 3D 空间中缩放的原点。
-所有缩放都将相对于该点进行（即当物体缩放时，该点相对于父元素保持固定）。
-
-**如何使用：** 调用 `setOrigin(...)` 修改 `origin`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setXScale(qreal)`
-
-**作用与语义：**
-
-该属性表示水平尺度因子。
-比例因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠到一个点。如果你给出负值，项目会围绕其原点水平镜像。
-
-**如何使用：** 调用 `setXScale(...)` 修改 `xScale`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setYScale(qreal)`
-
-**作用与语义：**
-
-该属性表示垂直比例因子。
-尺度因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠为单点。如果给出负值，项目会绕其原点垂直翻转。
-
-**如何使用：** 调用 `setYScale(...)` 修改 `yScale`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setZScale(qreal)`
-
-**作用与语义：**
-
-此属性保存深度缩放因子。
-缩放因子可以是任意实数；默认值为 1.0。如果将因子设置为 0.0，项目将收缩为单个点。如果提供负值，项目将围绕其原点翻转。
-
-**如何使用：** 调用 `setZScale(...)` 修改 `zScale`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `qreal xScale() const`
-
-**作用与语义：**
-
-该属性表示水平尺度因子。
-比例因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠到一个点。如果你给出负值，项目会围绕其原点水平镜像。
-
-**如何使用：** 调用 `xScale()` 读取当前值；它不会修改应用状态。
-
-### `qreal yScale() const`
-
-**作用与语义：**
-
-该属性表示垂直比例因子。
-尺度因子可以是任意实数;默认值是1.0。如果你将因子设为0.0，项目会折叠为单点。如果给出负值，项目会绕其原点垂直翻转。
-
-**如何使用：** 调用 `yScale()` 读取当前值；它不会修改应用状态。
-
-### `qreal zScale() const`
-
-**作用与语义：**
-
-此属性保存深度缩放因子。
-缩放因子可以是任意实数；默认值为 1.0。如果将因子设置为 0.0，项目将收缩为单个点。如果提供负值，项目将围绕其原点翻转。
-
-**如何使用：** 调用 `zScale()` 读取当前值；它不会修改应用状态。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsScale` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+和 item 自身 scale 混用时，最终比例是组合结果。调试动画时先把一层归零或固定，定位会容易很多。

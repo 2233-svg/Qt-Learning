@@ -1,250 +1,64 @@
 # QGraphicsRotation
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsRotation`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsRotation` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsRotation` 是可放入 item 变换链的旋转对象。它把旋转角度、旋转轴和旋转原点做成属性，适合动画和组合变换。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+普通 2D 旋转可以直接 `QGraphicsItem::setRotation()`；如果要绕指定点旋转、做翻牌效果、和缩放组成一串可动画变换，就用 `QGraphicsRotation`。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsRotation` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QGraphicsRotation` 继承自 `QGraphicsTransform`。`angle` 表示角度，`axis` 表示旋转轴，`origin` 表示旋转中心。它通过 `applyTo()` 把旋转累积到矩阵。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+虽然 Graphics View 主要是 2D，但这个类使用 `QVector3D`，因此可以表达绕 X/Y/Z 轴的旋转。绕 Z 轴最接近普通平面旋转。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QGraphicsRotation(QObject *)` | 创建旋转变换对象。 |
+| `setAngle(qreal)` / `angle()` | 设置或读取旋转角度。 |
+| `setAxis(QVector3D)` / `axis()` | 设置或读取旋转轴。 |
+| `setAxis(Qt::Axis)` | 用 `Qt::XAxis/YAxis/ZAxis` 快速设置轴。 |
+| `setOrigin(QVector3D)` / `origin()` | 设置或读取旋转中心。 |
+| `applyTo(QMatrix4x4 *)` | 把旋转应用到矩阵。 |
+| `angleChanged()` | 角度变化时发出。 |
+| `axisChanged()` | 旋转轴变化时发出。 |
+| `originChanged()` | 原点变化时发出。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+auto *rotation = new QGraphicsRotation(item);
+rotation->setAxis(Qt::ZAxis);
+rotation->setOrigin(QVector3D(50, 50, 0));
+item->setTransformations({ rotation });
 
-- 头文件：`#include <QGraphicsRotation>`
-- 继承自：QGraphicsTransform
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+auto *anim = new QPropertyAnimation(rotation, "angle", item);
+anim->setStartValue(0);
+anim->setEndValue(360);
+anim->setDuration(800);
+anim->start(QAbstractAnimation::DeleteWhenStopped);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+翻牌式效果可以绕 Y 轴：
 
-### 工作机制
+```cpp
+rotation->setAxis(Qt::YAxis);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合旋转动画、图标转动、翻牌/展开效果、节点方向指示、仪表指针、和缩放/平移组合的高级 item 变换。
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+如果只是静态旋转 15 度，item 自带 `setRotation()` 更简单。这个类的优势在可动画、可组合、可指定轴。
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+原点不对时，旋转会像“绕奇怪的点甩出去”。先确认 item 局部坐标和 `origin` 是否匹配。
 
-## 3. 直接使用
+绕 X/Y 轴旋转会产生 3D 风格投影效果，但 Graphics View 仍是 2D 场景。不要把它当完整 3D 引擎。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `angle : qreal`
-- `axis : QVector3D`
-- `origin : QVector3D`
-
-### 公有函数
-
-- `QGraphicsRotation(QObject *parent = nullptr)`
-- `virtual ~QGraphicsRotation()`
-- `qreal angle() const`
-- `QVector3D axis() const`
-- `QVector3D origin() const`
-- `void setAngle(qreal)`
-- `void setAxis(const QVector3D &axis)`
-- `void setAxis(Qt::Axis axis)`
-- `void setOrigin(const QVector3D &point)`
-
-### 重实现的公有函数
-
-- `virtual void applyTo(QMatrix4x4 *matrix) const override`
-
-### 信号
-
-- `void angleChanged()`
-- `void axisChanged()`
-- `void originChanged()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `angle : qreal`
-
-**作用与语义：**
-
-该属性表示顺时针旋转的角度，单位为度数。
-角度可以是任意实数;默认值是0.0。180的值将顺时针旋转180度。如果给出负数，物品将逆时针旋转。通常旋转角度会在范围内（-360,360），但你也可以提供超出范围的数值（例如，370度角度与10度结果相同）。将角度设置为NaN则不会产生旋转。
-
-**如何使用：** 调用 `angle()` 读取当前值；它不会修改应用状态。
-
-### `axis : QVector3D`
-
-**作用与语义：**
-
-该属性存在一个旋转轴，由三维空间中的矢量指定。
-这可以是三维空间中的任何轴。默认轴是 （0， 0， 1），与 Z 轴对齐。如果你提供另一个轴，`QGraphicsRotation` 会提供绕该轴旋转的变换。例如，如果你想绕 X 轴旋转一个物体，可以将 （1， 0， 0） 作为轴。
-
-**如何使用：** 调用 `axis()` 读取当前值；它不会修改应用状态。
-
-### `origin : QVector3D`
-
-**作用与语义：**
-
-此属性保存 3D 空间中旋转的原点。
-所有旋转都将相对于该点进行（即当物体旋转时，该点相对于父元素保持固定）。
-
-**如何使用：** 调用 `origin()` 读取当前值；它不会修改应用状态。
-
-### `QGraphicsRotation::QGraphicsRotation(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个新的QGraphicsRotation，包含给定的`parent`。
-
-### `[virtual noexcept] QGraphicsRotation::~QGraphicsRotation()`
-
-**作用与语义：**
-
-破坏了图形旋转。
-
-### `[signal] void QGraphicsRotation::angleChanged()`
-
-**作用与语义：**
-
-该属性表示顺时针旋转的角度，单位为度数。
-角度可以是任意实数;默认值是0.0。180的值将顺时针旋转180度。如果给出负数，物品将逆时针旋转。通常旋转角度会在范围内（-360,360），但你也可以提供超出范围的数值（例如，370度角度与10度结果相同）。将角度设置为NaN则不会产生旋转。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `angle` 的变化，不要把它当作普通函数主动调用。
-
-### `[override virtual] void QGraphicsRotation::applyTo(QMatrix4x4 *matrix) const`
-
-**作用与语义：**
-
-重实现自：`QGraphicsTransform::applyTo`（QMatrix4x4 *matrix） const.
-这种纯虚拟方法必须在派生类中重新实现。
-它将这种转变应用于`matrix`。
-
-### `[signal] void QGraphicsRotation::axisChanged()`
-
-**作用与语义：**
-
-该属性存在一个旋转轴，由三维空间中的矢量指定。
-这可以是三维空间中的任何轴。默认轴是 （0， 0， 1），与 Z 轴对齐。如果你提供另一个轴，`QGraphicsRotation` 会提供绕该轴旋转的变换。例如，如果你想绕 X 轴旋转一个物体，可以将 （1， 0， 0） 作为轴。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `axis` 的变化，不要把它当作普通函数主动调用。
-
-### `[signal] void QGraphicsRotation::originChanged()`
-
-**作用与语义：**
-
-此属性保存 3D 空间中旋转的原点。
-所有旋转都将相对于该点进行（即当物体旋转时，该点相对于父元素保持固定）。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `origin` 的变化，不要把它当作普通函数主动调用。
-
-### `void QGraphicsRotation::setAxis(Qt::Axis axis)`
-
-**作用与语义：**
-
-该属性存在一个旋转轴，由三维空间中的矢量指定。
-这可以是三维空间中的任何轴。默认轴是 （0， 0， 1），与 Z 轴对齐。如果你提供另一个轴，`QGraphicsRotation` 会提供绕该轴旋转的变换。例如，如果你想绕 X 轴旋转一个物体，可以将 （1， 0， 0） 作为轴。
-
-**如何使用：** 调用 `setAxis(...)` 修改 `axis`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `qreal angle() const`
-
-**作用与语义：**
-
-该属性表示顺时针旋转的角度，单位为度数。
-角度可以是任意实数;默认值是0.0。180的值将顺时针旋转180度。如果给出负数，物品将逆时针旋转。通常旋转角度会在范围内（-360,360），但你也可以提供超出范围的数值（例如，370度角度与10度结果相同）。将角度设置为NaN则不会产生旋转。
-
-**如何使用：** 调用 `angle()` 读取当前值；它不会修改应用状态。
-
-### `QVector3D axis() const`
-
-**作用与语义：**
-
-该属性存在一个旋转轴，由三维空间中的矢量指定。
-这可以是三维空间中的任何轴。默认轴是 （0， 0， 1），与 Z 轴对齐。如果你提供另一个轴，`QGraphicsRotation` 会提供绕该轴旋转的变换。例如，如果你想绕 X 轴旋转一个物体，可以将 （1， 0， 0） 作为轴。
-
-**如何使用：** 调用 `axis()` 读取当前值；它不会修改应用状态。
-
-### `QVector3D origin() const`
-
-**作用与语义：**
-
-此属性保存 3D 空间中旋转的原点。
-所有旋转都将相对于该点进行（即当物体旋转时，该点相对于父元素保持固定）。
-
-**如何使用：** 调用 `origin()` 读取当前值；它不会修改应用状态。
-
-### `void setAngle(qreal)`
-
-**作用与语义：**
-
-该属性表示顺时针旋转的角度，单位为度数。
-角度可以是任意实数;默认值是0.0。180的值将顺时针旋转180度。如果给出负数，物品将逆时针旋转。通常旋转角度会在范围内（-360,360），但你也可以提供超出范围的数值（例如，370度角度与10度结果相同）。将角度设置为NaN则不会产生旋转。
-
-**如何使用：** 调用 `setAngle(...)` 修改 `angle`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setAxis(const QVector3D &axis)`
-
-**作用与语义：**
-
-该属性存在一个旋转轴，由三维空间中的矢量指定。
-这可以是三维空间中的任何轴。默认轴是 （0， 0， 1），与 Z 轴对齐。如果你提供另一个轴，`QGraphicsRotation` 会提供绕该轴旋转的变换。例如，如果你想绕 X 轴旋转一个物体，可以将 （1， 0， 0） 作为轴。
-
-**如何使用：** 调用 `setAxis(...)` 修改 `axis`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setOrigin(const QVector3D &point)`
-
-**作用与语义：**
-
-此属性保存 3D 空间中旋转的原点。
-所有旋转都将相对于该点进行（即当物体旋转时，该点相对于父元素保持固定）。
-
-**如何使用：** 调用 `setOrigin(...)` 修改 `origin`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsRotation` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+多个 transform 的顺序会改变结果。缩放后旋转和旋转后缩放在非等比情况下差别很明显。

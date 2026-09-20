@@ -1,155 +1,108 @@
 # QImageIOPlugin
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QImageIOPlugin`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QImageIOPlugin` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QImageIOPlugin` 是“让 Qt 发现一种图像格式”的工厂插件。它不直接解码图片；它先判断自己的格式能否读、写或增量读当前输入，再创建对应的 `QImageIOHandler` 去完成实际工作。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+应用开发者通常不直接调用它。只要把格式插件随程序正确部署，`QImageReader` 与 `QImageWriter` 会通过 Qt 插件系统发现它。只有新增私有图片格式或维护 imageformats 插件时，才继承此类。
 
-### 这是什么
-
-`QImageIOPlugin` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
-
-**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QImageIOPlugin>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(plugin PRIVATE Qt6::Gui)`
+- 继承：`QObject` 与 `QImageIOHandlerFactoryInterface`。
+- 插件入口：使用 `Q_PLUGIN_METADATA` 声明 IID 和 JSON 元数据；实际 handler 由 `create()` 返回。
+- Qt 加载插件后会在格式检测与读写阶段调用 `capabilities()`；它必须快速、可靠，且不破坏输入流状态。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途速查 |
+| --- | --- |
+| `QImageIOPlugin(parent)` | 创建 QObject 插件基类并交给 Qt 管理 |
+| `capabilities(device, format)` | 报告当前输入和格式请求下可读、可写、是否增量读 |
+| `create(device, format)` | 创建并配置一个新的 `QImageIOHandler` |
+| `Capability::CanRead` | 插件能读取当前设备/格式 |
+| `Capability::CanWrite` | 插件能写入所请求格式 |
+| `Capability::CanReadIncremental` | 插件可在流持续到达时增量读取 |
+| `Capabilities` | 多个 capability 的 `QFlags` 组合 |
+
+## 4. 关键用法
+
+### 插件骨架
+
+```cpp
+class AcmeImagePlugin final : public QImageIOPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QImageIOHandlerFactoryInterface"
+                      FILE "acme.json")
+
+public:
+    Capabilities capabilities(QIODevice *device,
+                              const QByteArray &format) const override;
+    QImageIOHandler *create(QIODevice *device,
+                            const QByteArray &format) const override;
+};
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+`capabilities()` 决定 Qt 是否应该把这个 plugin 纳入候选；`create()` 只在 Qt 已选择该插件后负责分配 handler。不要在 plugin 层做完整解码，也不要返回多个 handler 共享的可变单例。
 
-### 工作机制
+### 正确区分读写能力
 
-这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+```cpp
+QImageIOPlugin::Capabilities AcmeImagePlugin::capabilities(
+    QIODevice *device, const QByteArray &format) const
+{
+    if (format.compare("acme", Qt::CaseInsensitive) == 0)
+        return CanRead | CanWrite;
 
-### 状态、生命周期和线程
+    if (device && device->peek(8) == "ACMEIMG\0")
+        return CanRead;
 
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+    return {};
+}
 
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+QImageIOHandler *AcmeImagePlugin::create(
+    QIODevice *device, const QByteArray &format) const
+{
+    auto *handler = new AcmeHandler;
+    handler->setDevice(device);
+    handler->setFormat(format.isEmpty() ? "acme" : format);
+    return handler;
+}
+```
 
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+格式字符串是显式意图；没有格式字符串时，才用 `peek()` 对内容做快速签名检查。对于写入，device 通常没有数据可探测，必须依据 `format` 作出 `CanWrite` 判断。
 
-## 3. 直接使用
+### 维护插件元数据与部署
 
-使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+```json
+{
+  "Keys": [ "acme", "acm" ],
+  "MimeTypes": [ "image/x-acme" ]
+}
+```
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+键决定文件扩展名或显式 format 如何找到插件。编译成功却读不到图片，最常见原因不是 handler，而是插件 JSON、IID、部署目录或动态库依赖不正确。
 
-### 公有类型
+## 5. 使用场景
 
-- `flags Capabilities`
-- `enum Capability { CanRead, CanWrite, CanReadIncremental }`
+- 增加企业私有的归档图片格式。
+- 为专业图像格式实现 Qt 的读写与缩略图支持。
+- 将硬件/网络的增量图像流接入 `QImageReader` 生态。
+- 为 `QImageWriter` 提供特定压缩、子类型或元数据能力。
 
-### 公有函数
+## 6. 常见坑与经验
 
-- `QImageIOPlugin(QObject *parent = nullptr)`
-- `virtual ~QImageIOPlugin()`
-- `virtual QImageIOPlugin::Capabilities capabilities(QIODevice *device, const QByteArray &format) const = 0`
-- `virtual QImageIOHandler * create(QIODevice *device, const QByteArray &format = QByteArray()) const = 0`
+- **`capabilities()` 不能消费输入。** 与 handler 的 `canRead()` 一样，必须用 `peek()` 或恢复 device 位置。
+- **不要对所有 device 宣称 `CanRead`。** 这会抢占其他插件，造成格式误判或错误的 reader 选择。
+- **`CanWrite` 必须依赖明确格式。** 输出流没有 header 可识别；format 为空时不应随意猜测。
+- **每次 `create()` 返回独立 handler。** handler 绑定 device、帧位置、选项和错误状态，不能被多个 reader 并发共享。
+- **QObject 线程规则仍然适用。** Qt 管理 plugin 对象，但 handler 的并发访问与内部全局状态仍由实现负责。
+- **部署是功能的一部分。** 把库放入正确的 Qt `imageformats` 插件路径，并确认依赖库也能被加载；用 `QImageReader::supportedImageFormats()` 做发布版验证。
 
-## 5. API 逐个说明
+## 7. 知识点覆盖
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QImageIOPlugin::Capabilityflags QImageIOPlugin::Capabilities`
-
-**作用与语义：**
-
-这个枚举描述了`QImageIOPlugin`的能力。
-- `QImageIOPlugin::CanRead`：`0x1`;插件可以读取图像。
-- `QImageIOPlugin::CanWrite`：`0x2`;插件可以写入图片。
-- `QImageIOPlugin::CanReadIncremental`：`0x4`;插件可以逐步读取图像。
-能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
-
-### `[explicit] QImageIOPlugin::QImageIOPlugin(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-用给定的`parent`构建一个图像插件。导出插件的 MOC 生成代码会自动调用该插件。
-
-### `[virtual noexcept] QImageIOPlugin::~QImageIOPlugin()`
-
-**作用与语义：**
-
-会破坏图片格式插件。
-你从不需要明确调用它。Qt 会自动销毁插件，当它不再使用时。
-
-### `[pure virtual] QImageIOPlugin::Capabilities QImageIOPlugin::capabilities(QIODevice *device, const QByteArray &format) const`
-
-**作用与语义：**
-
-返回插件的能力，基于`device`中的数据和格式`format`。如果`device` `0`，应仅报告格式是否可读写。否则，应尝试判断给定格式（或插件支持的任何格式，如果`format`空）是否可以从`device`读取或写入。应在不改变`device`状态的情况下完成此操作（通常通过使用`QIODevice::peek()`）。
-例如，如果`QImageIOPlugin`支持BMP格式，`format`空或`"bmp"`，且设备中的数据以字符`"BM"`开头，该函数应返回`CanRead`。如果`format` `"bmp"`，`device`为`0`且处理器支持读写，该函数应返回`CanRead` |`CanWrite`。
-格式名称总是用小写字母表示。
-
-### `[pure virtual] QImageIOHandler *QImageIOPlugin::create(QIODevice *device, const QByteArray &format = QByteArray()) const`
-
-**作用与语义：**
-
-创建并返回一个`QImageIOHandler`子类，`device` 和 `format` 为集合。`format`必须来自插件元数据中`"Keys"`条目列出的值，否则为空。如果为空，`device` 中的数据必须被 `capabilities()` 方法识别（格式同样为空）。
-格式名称总是用小写字母表示。
-
-### `flags Capabilities`
-
-**作用与语义：**
-
-这个枚举描述了`QImageIOPlugin`的能力。
-- `QImageIOPlugin::CanRead`：`0x1`;插件可以读取图像。
-- `QImageIOPlugin::CanWrite`：`0x2`;插件可以写入图片。
-- `QImageIOPlugin::CanReadIncremental`：`0x4`;插件可以逐步读取图像。
-能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
-
-### `enum Capability { CanRead, CanWrite, CanReadIncremental }`
-
-**作用与语义：**
-
-这个枚举描述了`QImageIOPlugin`的能力。
-- `QImageIOPlugin::CanRead`：`0x1`;插件可以读取图像。
-- `QImageIOPlugin::CanWrite`：`0x2`;插件可以写入图片。
-- `QImageIOPlugin::CanReadIncremental`：`0x4`;插件可以逐步读取图像。
-能力类型是QFlag的typedef<Capability>。它存储能力值的或组合。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-### 状态和错误边界
-
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-### 线程边界
-
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-### 最容易出现的错误
-
-不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QImageIOPlugin` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+Qt 插件发现、工厂模式、QObject 生命周期、格式嗅探、读写能力协商、增量解码、JSON 元数据、动态库部署、handler 隔离、插件诊断。

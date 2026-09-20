@@ -1,178 +1,79 @@
 # QPagedPaintDevice
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPagedPaintDevice`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QPagedPaintDevice` 是“按页绘制”的 `QPaintDevice` 抽象基类。`QPdfWriter` 和 `QPrinter` 都建立在它之上：你用 `QPainter` 画当前页，调用 `newPage()` 后开始下一页。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它解决的是分页输出的共同问题：页面大小、方向、页边距、页面范围和 PDF 版本。和屏幕绘制不同，分页设备的几何指标会随页面设置变化，设置时机不对会导致内容落在错误位置。
 
-### 这是什么
-
-`QPagedPaintDevice` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPagedPaintDevice>`
-- 继承自：QPaintDevice
-- 直接派生类：QPdfWriter、QPrinter
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QPaintDevice`
+- 派生：`QPdfWriter`、`QPrinter`
+- 典型使用：报表、导出 PDF、打印文档、批量标签输出。
 
-CMake 配置：
+页面布局通常应在 `QPainter::begin()` 前设置；若要在文档中途改变下一页布局，应先设置布局，再立即 `newPage()`，中间不要绘制。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `newPage()` | 结束当前页并开始新页；纯虚，由具体设备实现。 |
+| `pageLayout()` | 返回当前 `QPageLayout`，用于查询纸张、方向、边距、可绘区域。 |
+| `setPageLayout(layout)` | 一次性设置页面大小、方向、边距等。 |
+| `setPageSize(size)` | 设置纸张大小。 |
+| `setPageOrientation(orientation)` | 设置横向或纵向。 |
+| `setPageMargins(margins, units)` | 设置页边距。 |
+| `pageRanges()` / `setPageRanges()` | Qt 6 起设置或查询页码范围。 |
+| `PdfVersion_1_4` | 生成 PDF 1.4。 |
+| `PdfVersion_A1b` | 生成 PDF/A-1b，偏长期归档。 |
+| `PdfVersion_1_6` | 生成 PDF 1.6。 |
+| `PdfVersion_X4` | Qt 6.8 起，生成 PDF/X-4。 |
+
+## 4. 关键用法
+
+```cpp
+QPdfWriter writer("report.pdf");
+writer.setPageSize(QPageSize(QPageSize::A4));
+writer.setPageMargins(QMarginsF(15, 15, 15, 15),
+                      QPageLayout::Millimeter);
+
+QPainter painter(&writer);
+drawFirstPage(&painter, writer.pageLayout());
+
+writer.newPage();
+drawSecondPage(&painter, writer.pageLayout());
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`newPage()` 不是保存文件，也不是刷新屏幕，而是分页设备进入下一页。调用失败时应停止后续绘制或提示输出失败。
 
-### 工作机制
+## 5. 页面设置时机
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+| 时机 | 结果 |
+|---|---|
+| `QPainter::begin()` 前设置页面 | 最稳妥，第一页按设置绘制。 |
+| 已开始绘制当前页后改页面布局 | 当前页的度量可能已经使用旧值，不推荐。 |
+| 设置布局后马上 `newPage()` | 新设置应用到下一页。 |
+| `setPageLayout()` 和 `newPage()` 之间继续绘制 | 容易用错页面指标，应避免。 |
 
-### 状态、生命周期和线程
+`pageLayout()` 返回的是布局值对象；不能修改返回对象后期待设备跟着改变。要通过 `setPageLayout()` 或单项 setter 写回设备。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 6. 常见坑与经验
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- `paintRect()` 是考虑边距后的可绘区域，`fullRect()` 是整张纸。排版正文通常用 `paintRect()`。
+- PDF 版本影响兼容性、归档和印刷工作流；不是越新越好。
+- `setPageRanges()` 表示设备相关的页码范围，具体解释还取决于打印/输出流程。
+- 打印机有物理不可打印边距，设置过小可能被拒绝或被设备夹紧。
+- 分页输出没有屏幕的自动布局魔法，应用要自己决定何时换页、重复页眉页脚和重置坐标。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 7. 知识点覆盖
 
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum PdfVersion { PdfVersion_1_4, PdfVersion_A1b, PdfVersion_1_6, PdfVersion_X4 }`
-
-### 公有函数
-
-- `virtual ~QPagedPaintDevice()`
-- `virtual bool newPage() = 0`
-- `QPageLayout pageLayout() const`
-- `(since 6.0) QPageRanges pageRanges() const`
-- `virtual bool setPageLayout(const QPageLayout &newPageLayout)`
-- `virtual bool setPageMargins(const QMarginsF &margins, QPageLayout::Unit units = QPageLayout::Millimeter)`
-- `virtual bool setPageOrientation(QPageLayout::Orientation orientation)`
-- `(since 6.0) virtual void setPageRanges(const QPageRanges &ranges)`
-- `virtual bool setPageSize(const QPageSize &pageSize)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QPagedPaintDevice::PdfVersion`
-
-**作用与语义：**
-
-PdfVersion 枚举描述了由`QPrinter`或`QPdfWriter`生成的PDF文件版本。
-- `QPagedPaintDevice::PdfVersion_1_4`：`0`;生成一份兼容PDF 1.4的文档。
-- `QPagedPaintDevice::PdfVersion_A1b`：`1`;生成一份PDF/A-1b兼容的文档。
-- `QPagedPaintDevice::PdfVersion_1_6`：`2`;生成一个兼容PDF 1.6的文档。该值是在Qt 5.12中添加的。
-- `QPagedPaintDevice::PdfVersion_X4 (since Qt 6.8)`：`3`;生成一份兼容PDF/X-4的文档。
-
-### `[virtual noexcept] QPagedPaintDevice::~QPagedPaintDevice()`
-
-**作用与语义：**
-
-摧毁了该物体。
-
-### `[pure virtual] bool QPagedPaintDevice::newPage()`
-
-**作用与语义：**
-
-开始新一页。成功后返回`true`。
-
-### `QPageLayout QPagedPaintDevice::pageLayout() const`
-
-**作用与语义：**
-
-返回当前页面布局。使用此方法访问当前的`QPageSize`、`QPageLayout::Orientation`、`QMarginsF`、fullRect()和paintRect()。
-注意你不能对返回的物体使用设定器，必须调用单个`QPagedPaintDevice`设置器或使用`setPageLayout()`。
-
-### `[since 6.0] QPageRanges QPagedPaintDevice::pageRanges() const`
-
-**作用与语义：**
-
-返回与该设备相关的页面范围。
-
-### `[virtual] bool QPagedPaintDevice::setPageLayout(const QPageLayout &newPageLayout)`
-
-**作用与语义：**
-
-将页面布局设置为`newPageLayout`。
-你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页面布局到新页面之前立即调用它。在调用 setPageLayout() 和 `newPage()` 之间，不应调用任何绘画方法，因为可能使用错误的绘画指标。
-如果页面布局成功设置为`newPageLayout`，则返回为真。
-
-### `[virtual] bool QPagedPaintDevice::setPageMargins(const QMarginsF &margins, QPageLayout::Unit units = QPageLayout::Millimeter)`
-
-**作用与语义：**
-
-将页面设置`margins`给定`units`定义。
-你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页边距前立即调用它。你不应在调用 setPageMargins() 和 `newPage()` 之间调用任何绘画方法，因为可能使用错误的绘画指标。
-要查看当前页页边缘，请使用`pageLayout()`。`margins()`。
-如果页边距被成功设置为`margins`，则返回为真。
-
-### `[virtual] bool QPagedPaintDevice::setPageOrientation(QPageLayout::Orientation orientation)`
-
-**作用与语义：**
-
-让页面`orientation`。
-页面方向用于定义获取页面正交时页面大小的方向。
-你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页面新方向之前立即调用它。在调用 setPageOrientation() 和 `newPage()` 之间，不应调用任何绘画方法，因为可能使用错误的绘画指标。
-要获得当前`QPageLayout::Orientation`请使用`pageLayout()`.orientation()。
-如果页面方向成功设置为`orientation`，则返回为真。
-
-### `[virtual, since 6.0] void QPagedPaintDevice::setPageRanges(const QPageRanges &ranges)`
-
-**作用与语义：**
-
-将该设备的页面范围设置为`ranges`。
-
-### `[virtual] bool QPagedPaintDevice::setPageSize(const QPageSize &pageSize)`
-
-**作用与语义：**
-
-将页面大小设置为`pageSize`。
-要获取当前`QPageSize`请使用 `pageLayout()`.pageSize()。
-你应该在调用 `QPainter::begin()` 之前调用它，或者在调用 `newPage()` 应用新页面大小之前立即调用它。在调用 setPageSize() 和 `newPage()` 之间，不应调用任何绘画方法，因为可能使用错误的绘画指标。
-如果页面大小被成功设置为`pageSize`，则返回为真。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPagedPaintDevice` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 分页 `QPaintDevice` 与 `QPainter` 的协作
+- 页面大小、方向、边距和可绘区域
+- `newPage()` 的调用时机和错误处理
+- PDF 版本、归档/印刷兼容性
+- `QPdfWriter`、`QPrinter` 与页面布局值对象

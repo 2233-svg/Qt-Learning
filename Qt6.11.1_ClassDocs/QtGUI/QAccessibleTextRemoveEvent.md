@@ -1,116 +1,70 @@
 # QAccessibleTextRemoveEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleTextRemoveEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleTextRemoveEvent` 是 Qt 的值类型，围绕“Accessible文本Remove事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QAccessibleTextRemoveEvent` 通知辅助技术：某段文本已经从文本对象中删除。它携带删除发生的位置、被删除的文本，以及删除后光标所在位置。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+这个事件有一个实现细节很容易被忽略：删除完成后，文本模型里已经找不到被删掉的内容了，所以事件里的 `textRemoved()` 必须在删除前或删除过程中保存下来，不能事后再从文档中取。
 
-### 这是什么
-
-`QAccessibleTextRemoveEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
-
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
-
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleTextRemoveEvent>`
-- 继承自：QAccessibleTextCursorEvent
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QAccessibleTextCursorEvent`
+- 发送方式：构造后调用 `QAccessible::updateAccessibility(&event)`
 
-CMake 配置：
+默认光标位置为删除起点 `position`。若编辑器删除后把光标放在其他位置，应调用 `setCursorPosition()` 调整。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleTextRemoveEvent(object, position, text)` | 为 QObject 构造删除事件。 |
+| `QAccessibleTextRemoveEvent(iface, position, text)` | 为可访问接口构造删除事件。 |
+| `changePosition()` | 返回删除发生的起始偏移。 |
+| `textRemoved()` | 返回本次删除的文本。 |
+| `cursorPosition()` / `setCursorPosition()` | 读取或设置删除后的光标位置。 |
+
+## 4. 关键用法
+
+```cpp
+void Editor::deleteRange(int start, int end)
+{
+    const QString removed = document()->text(start, end);
+    document()->remove(start, end - start);
+
+    QAccessibleTextRemoveEvent event(this, start, removed);
+    event.setCursorPosition(start);
+    QAccessible::updateAccessibility(&event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+事件要在文档状态已经改变后发送，但被删除文本要在删除前保存。否则辅助技术收到事件后无法得知到底删掉了哪些字符。
 
-### 工作机制
+## 5. 使用场景
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+| 场景 | 建议 |
+|---|---|
+| Backspace / Delete 删除字符 | 发送删除事件，文本为实际删除内容。 |
+| 删除选区 | `position` 为选区起点，`textRemoved()` 为整段选中文本。 |
+| 剪切文本 | 发送删除事件；剪贴板变化是另一个语义。 |
+| 替换文本 | 可用删除+插入，或用 `QAccessibleTextUpdateEvent` 表达一次替换。 |
+| 清空文档 | 范围很大时仍应提供被删内容或选择更合适的重置/更新策略。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+- `changePosition()` 是删除前文本中的起始偏移；删除后同一位置通常对应后续文本。
+- 不要把删除键名当作 `textRemoved()`；应传入真实被移除文本。
+- 删除合成字符、表情或复杂脚本文本时，范围应落在合法文本边界上。
+- 密码字段或敏感内容不应无条件暴露真实删除文本。
+- 如果删除导致选区变化，也要考虑发送文本选区事件或确保文本接口查询到最新选区。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleTextRemoveEvent(QAccessibleInterface *iface, int position, const QString &text)`
-- `QAccessibleTextRemoveEvent(QObject *object, int position, const QString &text)`
-- `int changePosition() const`
-- `QString textRemoved() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QAccessibleTextRemoveEvent::QAccessibleTextRemoveEvent(QAccessibleInterface *iface, int position, const QString &text)`
-
-**作用与语义：**
-
-为`iface`构建一个新的QAccessibleTextRemoveEvent事件。`text`在`position`时已被移除。默认情况下，光标已移动到`position`。如果不是这样，需要手动用`QAccessibleTextCursorEvent::setCursorPosition()`设置该事件。
-
-### `QAccessibleTextRemoveEvent::QAccessibleTextRemoveEvent(QObject *object, int position, const QString &text)`
-
-**作用与语义：**
-
-为`object`构建一个新的QAccessibleTextRemoveEvent事件。`text`在`position`时已被移除。默认情况下，光标已移动到`position`。如果不是这样，需要用`QAccessibleTextCursorEvent::setCursorPosition()`手动设置该事件。
-
-### `int QAccessibleTextRemoveEvent::changePosition() const`
-
-**作用与语义：**
-
-返回文本被删除的位置。
-
-### `QString QAccessibleTextRemoveEvent::textRemoved() const`
-
-**作用与语义：**
-
-返回已被删除的文本。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleTextRemoveEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 文本删除事件的位置、内容和最终光标
+- 删除前保存被删文本的必要性
+- 删除、剪切、替换与选区的事件选择
+- Unicode 文本边界和敏感文本保护
+- 与 `QAccessibleTextInterface` 状态查询的一致性

@@ -1,115 +1,57 @@
 # QTest::QTouchEventWidgetSequence
-
-> Qt 6.11.1 · Qt Test
+> Qt 6.11.1 · Qt Test · 来自 `QTest::QTouchEventWidgetSequence`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 Qt Test 中围绕“Touch事件WidgetSequence”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
+`QTouchEventWidgetSequence` 是面向 `QWidget` 的触摸事件序列。它继承自 `QTouchEventSequence`，但把目标从 `QWindow *` 换成更适合传统 Widgets 测试的 `QWidget *`。
 
-**模块背景：** Qt Test 提供单元测试、数据驱动测试、基准测试和 GUI 测试支持。
+## 2. 类说明
 
-### 这是什么
+保留类说明：这些 API 来自 `QTest::QTouchEventWidgetSequence`，属于 Qt Test 模块，用于在 QWidget 测试中模拟触摸 press/move/release。
 
-`QTest::QTouchEventWidgetSequence` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+如果你的被测对象是 QWidget 或其子类，用这个类比窗口级序列更直接；如果是 QWindow/Quick 场景，则使用基类窗口版本。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 3. API 速查
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+| API | 用来做什么 |
+| --- | --- |
+| `press(touchId, pt, widget)` | 在 widget 坐标中添加触点按下。 |
+| `move(touchId, pt, widget)` | 在 widget 坐标中添加触点移动。 |
+| `release(touchId, pt, widget)` | 在 widget 坐标中添加触点释放。 |
+| 继承的 `stationary(touchId)` | 保持触点不动。 |
+| 继承的 `commit(processEvents)` | 提交当前触摸事件序列。 |
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QTouchEventWidgetSequence>`
-- 继承自：QTest::QTouchEventSequence
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Test)
-target_link_libraries(mytarget PRIVATE Qt6::Test)
+```cpp
+QTest::touchEvent(widget, device)
+    .press(0, QPoint(30, 30), widget)
+    .move(0, QPoint(90, 30), widget)
+    .release(0, QPoint(90, 30), widget)
+    .commit();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+坐标按 widget 本地坐标理解，不是全局屏幕坐标。
 
-### 工作机制
+## 5. 使用场景
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+| 场景 | 用法 |
+| --- | --- |
+| 自定义 QWidget 触摸交互 | 测试滑动、拖拽、长按的状态变化。 |
+| 触控版桌面控件 | 验证鼠标和触摸路径是否都可用。 |
+| 多点 widget 手势 | 配合 `stationary()` 和多个 touchId。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+widget 必须能接收触摸事件，通常需要相关属性或平台支持。测试事件发出去了，不代表控件一定订阅了触摸输入。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+不要把 QWidget 坐标和窗口坐标混用。控件嵌套较深时，传给序列的位置应对应目标 widget 的本地坐标。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+如果控件内部把触摸转换成鼠标事件，也要明确测试的是触摸路径还是兼容鼠标路径，避免同一个行为被重复触发。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QTest::QTouchEventWidgetSequence & move(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
-- `QTest::QTouchEventWidgetSequence & press(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
-- `QTest::QTouchEventWidgetSequence & release(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QTest::QTouchEventWidgetSequence &QTouchEventWidgetSequence::move(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
-
-**作用与语义：**
-
-为该序列中位置`pt`的触点`touchId`添加移动事件，并返回该`QTouchEventWidgetSequence`的引用。
-`pt`位置相对于`widget`被解释为相对于。如果`widget`是空指针，那么`pt`相对于实例化该`QTouchEventWidgetSequence`时所提供的控件。
-模拟用户移动`touchId`识别的手指。
-
-### `QTest::QTouchEventWidgetSequence &QTouchEventWidgetSequence::press(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
-
-**作用与语义：**
-
-在该序列中添加`pt`位置的触点`touchId`的按压事件，并返回该`QTouchEventWidgetSequence`的引用。
-位置`pt`相对于`widget`解释为相对于。如果`widget`是空指针，那么`pt`相对于实例化该`QTouchEventWidgetSequence`时所提供的控件。
-模拟用户用`touchId`识别的手指按下触摸屏或触摸板。
-
-### `QTest::QTouchEventWidgetSequence &QTouchEventWidgetSequence::release(int touchId, const QPoint &pt, QWidget *widget = nullptr)`
-
-**作用与语义：**
-
-在该序列中添加`pt`位置触点`touchId`的释放事件，并返回该`QTouchEventWidgetSequence`的引用。
-位置`pt`相对于`widget`被解释为相对于。如果`widget`是空指针，那么`pt`被解释为相对于实例化该`QTouchEventWidgetSequence`时所提供的控件。
-模拟用户抬起`touchId`识别的手指。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QTest::QTouchEventWidgetSequence` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- QWidget 触摸测试入口。
+- widget 本地坐标和触点生命周期。
+- 与 `QTouchEventSequence` 的继承关系。
+- 触摸订阅、事件转换和平台差异。

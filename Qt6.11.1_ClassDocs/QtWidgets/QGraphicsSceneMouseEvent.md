@@ -1,195 +1,64 @@
 # QGraphicsSceneMouseEvent
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsSceneMouseEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsSceneMouseEvent` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsSceneMouseEvent` 是 Graphics View 中传给 item 的鼠标事件。它描述鼠标在 item、scene、screen 三套坐标中的位置，以及按钮、修饰键、按下起点和上一次位置。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+自定义 `QGraphicsItem` 的点击、拖动、框选、端口连线，基本都离不开它。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsSceneMouseEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QGraphicsSceneMouseEvent` 继承自 `QGraphicsSceneEvent`。它通常进入 `mousePressEvent()`、`mouseMoveEvent()`、`mouseReleaseEvent()`、`mouseDoubleClickEvent()`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+它提供多组位置：`pos()` 是当前 item 坐标，`scenePos()` 是当前场景坐标，`lastPos()` 是上一次 item 坐标，`buttonDownPos()` 是某个按钮按下时的位置。拖动逻辑应按场景需求选择坐标系。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `pos()` / `scenePos()` / `screenPos()` | 当前鼠标位置的 item、scene、screen 坐标。 |
+| `lastPos()` / `lastScenePos()` / `lastScreenPos()` | 上一次鼠标位置。 |
+| `buttonDownPos(button)` | 指定按钮按下时的 item 坐标。 |
+| `buttonDownScenePos(button)` | 指定按钮按下时的 scene 坐标。 |
+| `button()` | 触发当前事件的按钮。 |
+| `buttons()` | 当前按下的所有按钮。 |
+| `modifiers()` | 当前键盘修饰键。 |
+| `source()` | 事件来源。 |
+| `flags()` | 鼠标事件标志。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+拖动 item：
 
-- 头文件：`#include <QGraphicsSceneMouseEvent>`
-- 继承自：QGraphicsSceneEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+void NodeItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    const QPointF delta = event->scenePos() - event->lastScenePos();
+    moveBy(delta.x(), delta.y());
+    event->accept();
+}
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+判断是否从按下点拖出一定距离：
 
-### 工作机制
+```cpp
+const QPointF start = event->buttonDownScenePos(Qt::LeftButton);
+if (QLineF(start, event->scenePos()).length() > 6)
+    beginDrag();
+```
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合节点拖动、控制点编辑、连线创建、场景选择、图形对象点击、画布工具实现。
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+如果是在 `QGraphicsView` 子类里处理视图平移/缩放，普通 `QMouseEvent` 也可能更直接；如果是 item 级交互，用 scene mouse event。
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+拖动 item 时优先用 scene delta，避免 item 自身旋转/缩放后局部 delta 变得难理解。
 
-## 3. 直接使用
+`button()` 和 `buttons()` 不一样。移动事件中 `button()` 可能不是你想要的当前按下集合，判断拖动状态应看 `buttons()`。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QGraphicsSceneMouseEvent()`
-- `Qt::MouseButton button() const`
-- `QPointF buttonDownPos(Qt::MouseButton button) const`
-- `QPointF buttonDownScenePos(Qt::MouseButton button) const`
-- `QPoint buttonDownScreenPos(Qt::MouseButton button) const`
-- `Qt::MouseButtons buttons() const`
-- `Qt::MouseEventFlags flags() const`
-- `QPointF lastPos() const`
-- `QPointF lastScenePos() const`
-- `QPoint lastScreenPos() const`
-- `Qt::KeyboardModifiers modifiers() const`
-- `QPointF pos() const`
-- `QPointF scenePos() const`
-- `QPoint screenPos() const`
-- `Qt::MouseEventSource source() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QGraphicsSceneMouseEvent::~QGraphicsSceneMouseEvent()`
-
-**作用与语义：**
-
-毁了整个活动。
-
-### `Qt::MouseButton QGraphicsSceneMouseEvent::button() const`
-
-**作用与语义：**
-
-返回导致事件的鼠标按键（如果有的话）。
-
-### `QPointF QGraphicsSceneMouseEvent::buttonDownPos(Qt::MouseButton button) const`
-
-**作用与语义：**
-
-返回点击指定`button`的物品坐标中的鼠标光标位置。
-
-### `QPointF QGraphicsSceneMouseEvent::buttonDownScenePos(Qt::MouseButton button) const`
-
-**作用与语义：**
-
-返回场景坐标中点击指定`button`的鼠标光标位置。
-
-### `QPoint QGraphicsSceneMouseEvent::buttonDownScreenPos(Qt::MouseButton button) const`
-
-**作用与语义：**
-
-返回点击指定`button`的屏幕坐标中的鼠标光标位置。
-
-### `Qt::MouseButtons QGraphicsSceneMouseEvent::buttons() const`
-
-**作用与语义：**
-
-返回事件发送时按下的鼠标组合。
-
-### `Qt::MouseEventFlags QGraphicsSceneMouseEvent::flags() const`
-
-**作用与语义：**
-
-返回鼠标事件标志。
-鼠标事件标志提供关于鼠标事件的额外信息。
-
-### `QPointF QGraphicsSceneMouseEvent::lastPos() const`
-
-**作用与语义：**
-
-返回物品坐标中最后记录的鼠标光标位置。
-
-### `QPointF QGraphicsSceneMouseEvent::lastScenePos() const`
-
-**作用与语义：**
-
-返回场景坐标中最后记录的鼠标光标位置。最后记录的位置是创建该事件的视图接收到的上一个鼠标事件的位置。
-
-### `QPoint QGraphicsSceneMouseEvent::lastScreenPos() const`
-
-**作用与语义：**
-
-返回屏幕上坐标中最后记录的鼠标光标位置。最后记录的位置是创建该事件的视图接收到的上一个鼠标事件的位置。
-
-### `Qt::KeyboardModifiers QGraphicsSceneMouseEvent::modifiers() const`
-
-**作用与语义：**
-
-返回事件发送时正在使用的键盘修饰键。
-
-### `QPointF QGraphicsSceneMouseEvent::pos() const`
-
-**作用与语义：**
-
-返回鼠标光标在物品坐标中的位置。
-
-### `QPointF QGraphicsSceneMouseEvent::scenePos() const`
-
-**作用与语义：**
-
-返回场景坐标中的鼠标光标位置。
-
-### `QPoint QGraphicsSceneMouseEvent::screenPos() const`
-
-**作用与语义：**
-
-返回鼠标光标位置的屏幕坐标。
-
-### `Qt::MouseEventSource QGraphicsSceneMouseEvent::source() const`
-
-**作用与语义：**
-
-返回关于鼠标事件源的信息。
-鼠标事件源可以用来区分真实的鼠标事件和人工鼠标事件。后者是操作系统或 Qt 本身从触摸事件合成出来的事件。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsSceneMouseEvent` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+双击通常也伴随按下/释放事件。不要让单击逻辑和双击逻辑互相打架。

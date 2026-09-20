@@ -1,151 +1,21 @@
 # QEventLoopLocker
+> Qt 6.11.1 · Qt Core · 来自 `QEventLoopLocker`
 
-> Qt 6.11.1 · Qt Core
+## 作用定位
+`QEventLoopLocker` 在作用域内阻止应用或线程事件循环因为“最后一个锁消失”而自动退出，适合短时间保持异步工作存活。
 
-## 1. 先建立直觉
+## API 速查
+| API | 是做什么的 |
+|---|---|
+| 构造函数 `QEventLoopLocker` | 锁住应用、线程或指定事件循环。|
+| 析构函数 | 自动释放锁。|
 
-**一句话定位：** 这是 Qt Core 中围绕“事件LoopLocker”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
+## 使用场景
+应用收到关闭请求后，尚有必须完成的异步保存或上传任务，需要在受控时间内保持事件循环。
 
-**模块背景：** Qt Core 提供对象模型、事件循环、容器、字符串、文件、线程、时间和元对象系统等基础能力。
+## 常见坑与经验
+- 它不会自行停止任务或提供超时；必须有明确完成、失败和取消路径。
+- 长期持有会让应用无法退出，应把锁的作用域限制在实际工作期。
 
-### 这是什么
-
-`QEventLoopLocker` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QEventLoopLocker>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Core)
-target_link_libraries(mytarget PRIVATE Qt6::Core)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QEventLoopLocker()`
-- `QEventLoopLocker(QEventLoop *loop)`
-- `QEventLoopLocker(QThread *thread)`
-- `(since 6.7) QEventLoopLocker(QEventLoopLocker &&other)`
-- `~QEventLoopLocker()`
-- `(since 6.7) void swap(QEventLoopLocker &other)`
-- `(since 6.7) QEventLoopLocker & operator=(QEventLoopLocker &&other)`
-
-### 相关非成员函数
-
-- `(since 6.7) void swap(QEventLoopLocker &lhs, QEventLoopLocker &rhs)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[noexcept] QEventLoopLocker::QEventLoopLocker()`
-
-**作用与语义：**
-
-创建一个在`QCoreApplication`上运行的事件存储器。
-当应用程序不再有 QEventLoopLocker 运行时，只要`QCoreApplication::isQuitLockEnabled()` `true`，应用程序就会尝试退出。
-注意，尝试退出不一定会导致应用程序退出，比如有打开的窗口，或者`QEvent::Quit`事件被忽略。
-
-### `[explicit noexcept] QEventLoopLocker::QEventLoopLocker(QEventLoop *loop)`
-
-**作用与语义：**
-
-在`loop`上创建一个活动柜。
-当没有更多QEventLoopLockers运行时，这个`QEventLoop`会停止。
-
-### `[explicit noexcept] QEventLoopLocker::QEventLoopLocker(QThread *thread)`
-
-**作用与语义：**
-
-在`thread`上创建一个活动柜。
-当没有更多QEventLoopLockers运行时，这个`QThread`就会停止。
-
-### `[noexcept, since 6.7] QEventLoopLocker::QEventLoopLocker(QEventLoopLocker &&other)`
-
-**作用与语义：**
-
-从`other`移动构建事件循环柜。`other`将拥有一个无操作的拆除器，防止`QEventLoop`/`QThread`/`QCoreApplication`退出的责任转移给新对象。
-
-### `[noexcept] QEventLoopLocker::~QEventLoopLocker()`
-
-**作用与语义：**
-
-销毁该事件循环锁柜对象。
-
-### `[noexcept, since 6.7] void QEventLoopLocker::swap(QEventLoopLocker &other)`
-
-**作用与语义：**
-
-将该`QEventLoopLocker`的对象和状态与`other`交换。该操作非常快且从未失败。
-
-### `[noexcept, since 6.7] QEventLoopLocker &QEventLoopLocker::operator=(QEventLoopLocker &&other)`
-
-**作用与语义：**
-
-Move将该事件循环柜从`other`分配。`other`将拥有一个无操作的解构器，而防止`QEventLoop`/`QThread`/`QCoreApplication`退出的责任则转移给该对象。
-
-### `[noexcept, since 6.7] void swap(QEventLoopLocker &lhs, QEventLoopLocker &rhs)`
-
-**作用与语义：**
-
-将对象和`lhs`状态与`rhs`交换。该操作非常快且从未失败。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QEventLoopLocker` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+## 知识点覆盖
+RAII、应用退出、异步收尾、事件循环、超时与取消。

@@ -1,19 +1,19 @@
 #include "MainWindow.h"
 
+#include <algorithm>
+
 #include <QAction>
-#include <QApplication>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 #include <QDesktopServices>
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QFontDatabase>
-#include <QHeaderView>
 #include <QKeySequence>
 #include <QLabel>
 #include <QLineEdit>
-#include <QMap>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -35,41 +35,107 @@
 
 namespace {
 
-const QString fallbackDocumentDirectory = QStringLiteral("D:/工作目录/Qt6.11.1_ClassDocs");
-
 QString firstLine(const QString &markdown)
 {
     const int lineEnd = markdown.indexOf('\n');
     return (lineEnd < 0 ? markdown : markdown.left(lineEnd)).trimmed();
 }
 
-QString moduleDirectoryName(const QString &module)
+QString markTextExecutablePath()
 {
-    static const QHash<QString, QString> names{
-        {QStringLiteral("Qt Charts"), QStringLiteral("QtCharts")},
-        {QStringLiteral("Qt Concurrent"), QStringLiteral("QtConcurrent")},
-        {QStringLiteral("Qt Core"), QStringLiteral("QtCore")},
-        {QStringLiteral("Qt D-Bus"), QStringLiteral("QtD_Bus")},
-        {QStringLiteral("Qt GUI"), QStringLiteral("QtGUI")},
-        {QStringLiteral("Qt Help"), QStringLiteral("QtHelp")},
-        {QStringLiteral("Qt Multimedia"), QStringLiteral("QtMultimedia")},
-        {QStringLiteral("Qt Network"), QStringLiteral("QtNetwork")},
-        {QStringLiteral("Qt Print Support"), QStringLiteral("QtPrint_Support")},
-        {QStringLiteral("Qt Qml"), QStringLiteral("QtQml")},
-        {QStringLiteral("Qt Quick"), QStringLiteral("QtQuick")},
-        {QStringLiteral("Qt Quick 3D"), QStringLiteral("QtQuick_3D")},
-        {QStringLiteral("Qt Quick Controls"), QStringLiteral("QtQuick_Controls")},
-        {QStringLiteral("Qt SQL"), QStringLiteral("QtSQL")},
-        {QStringLiteral("Qt SVG"), QStringLiteral("QtSVG")},
-        {QStringLiteral("Qt Shader Tools"), QStringLiteral("QtShader_Tools")},
-        {QStringLiteral("Qt Spatial Audio"), QStringLiteral("QtSpatial_Audio")},
-        {QStringLiteral("Qt TaskTree"), QStringLiteral("QtTaskTree")},
-        {QStringLiteral("Qt Test"), QStringLiteral("QtTest")},
-        {QStringLiteral("Qt UI Tools"), QStringLiteral("QtUI_Tools")},
-        {QStringLiteral("Qt Widgets"), QStringLiteral("QtWidgets")},
-        {QStringLiteral("Qt XML"), QStringLiteral("QtXML")}
+    const QString relativePath = QStringLiteral("marktext-win-x64-0.19.1/marktext.exe");
+    const QString sourceDirectory = QString::fromUtf8(QT_ASSISTANT_SOURCE_DIRECTORY);
+    const QStringList candidateDirectories{
+        QCoreApplication::applicationDirPath(),
+        sourceDirectory
     };
-    return names.value(module, module);
+
+    for (const QString &directory : candidateDirectories) {
+        const QString executablePath = QDir(directory).filePath(relativePath);
+        if (QFileInfo(executablePath).isFile())
+            return executablePath;
+    }
+    return {};
+}
+
+bool isIgnoredPathPart(const QString &part)
+{
+    static const QSet<QString> ignoredDirectories{
+        QStringLiteral("build"),
+        QStringLiteral("dist"),
+        QStringLiteral("out"),
+        QStringLiteral(".git"),
+        QStringLiteral(".vs"),
+        QStringLiteral("__pycache__"),
+        QStringLiteral("node_modules"),
+        QStringLiteral("tools"),
+        QStringLiteral("_viewer"),
+        QStringLiteral("Qt-assisiant-viewer")
+    };
+    return part.startsWith(QLatin1Char('.')) || ignoredDirectories.contains(part);
+}
+
+QString normalizedDirectory(const QString &directory)
+{
+    return QDir::cleanPath(QFileInfo(directory).absoluteFilePath());
+}
+
+bool directoryHasMarkdownDocuments(const QString &directory)
+{
+    if (!QDir(directory).exists())
+        return false;
+
+    QDirIterator iterator(directory, {QStringLiteral("*.md")}, QDir::Files,
+                          QDirIterator::Subdirectories);
+    while (iterator.hasNext()) {
+        const QString path = iterator.next();
+        const QString relativePath = QDir(directory).relativeFilePath(path);
+        const QStringList parts = QDir::fromNativeSeparators(relativePath)
+                                      .split(QLatin1Char('/'), Qt::SkipEmptyParts);
+        bool ignored = false;
+        for (const QString &part : parts) {
+            ignored = ignored || isIgnoredPathPart(part);
+        }
+        if (ignored)
+            continue;
+        return true;
+    }
+    return false;
+}
+
+QString perInstallSettingsKey()
+{
+    const QByteArray appDir = normalizedDirectory(QCoreApplication::applicationDirPath()).toUtf8();
+    return QStringLiteral("documentDirectory/%1")
+        .arg(QString::fromLatin1(QCryptographicHash::hash(appDir, QCryptographicHash::Md5).toHex()));
+}
+
+QString runtimeDefaultDocumentDirectory()
+{
+    const QString applicationDirectory = normalizedDirectory(QCoreApplication::applicationDirPath());
+    const QString bundledDirectory = normalizedDirectory(
+        QDir(applicationDirectory).filePath(QStringLiteral("Qt6.11.1_ClassDocs")));
+    const QString sourceBundledDirectory = normalizedDirectory(QString::fromUtf8(QT_BUNDLED_DOCUMENT_DIRECTORY));
+
+    QStringList candidates;
+    if (QFileInfo(applicationDirectory).fileName().compare(QStringLiteral("Qt-assisiant-viewer"),
+                                                           Qt::CaseInsensitive) == 0) {
+        QDir parent(applicationDirectory);
+        if (parent.cdUp()) {
+            candidates.append(parent.absolutePath());
+            if (parent.cdUp())
+                candidates.append(parent.absolutePath());
+        }
+    }
+
+    candidates.append(bundledDirectory);
+    candidates.append(sourceBundledDirectory);
+
+    for (const QString &candidate : candidates) {
+        if (directoryHasMarkdownDocuments(candidate))
+            return normalizedDirectory(candidate);
+    }
+    return {};
 }
 
 } // namespace
@@ -84,13 +150,14 @@ MainWindow::MainWindow(QWidget *parent)
     setupUi();
 
     QSettings settings;
-    const QString bundledDirectory = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("Qt6.11.1_ClassDocs"));
-    QString directory = settings.value(QStringLiteral("documentDirectory")).toString();
+    const QString defaultDirectory = runtimeDefaultDocumentDirectory();
+    const QString configuredDirectory = settings.value(perInstallSettingsKey()).toString();
+    QString directory = QDir(configuredDirectory).exists() ? configuredDirectory : defaultDirectory;
     if (directory.isEmpty() || !QDir(directory).exists()) {
-        if (QDir(bundledDirectory).exists())
-            directory = bundledDirectory;
-        else
-            directory = fallbackDocumentDirectory;
+        documentTitle_->setText(QStringLiteral("未找到文档目录"));
+        documentPath_->setText(QStringLiteral("请使用“选择目录”指定 Markdown 文档文件夹"));
+        statusBar()->showMessage(QStringLiteral("未找到可用的 Qt 文档目录"));
+        return;
     }
     setDocumentDirectory(directory);
 }
@@ -269,7 +336,7 @@ void MainWindow::setDocumentDirectory(const QString &directory)
 
     documentDirectory_ = absoluteDirectory;
     QSettings settings;
-    settings.setValue(QStringLiteral("documentDirectory"), documentDirectory_);
+    settings.setValue(perInstallSettingsKey(), documentDirectory_);
     buildDocumentIndex();
     history_.clear();
     historyIndex_ = -1;
@@ -283,45 +350,43 @@ void MainWindow::buildDocumentIndex()
     documents_.clear();
     documentIndexes_.clear();
 
-    auto addDocument = [this](const QString &path, const QString &fallbackModule, bool isClass) {
+    auto addDocument = [this](const QString &path, const QString &relativePath) {
         const QString markdown = readUtf8File(path);
         if (markdown.isEmpty())
             return;
 
         DocumentEntry entry;
         entry.path = cleanPath(path);
+        entry.relativePath = QDir::fromNativeSeparators(relativePath);
         entry.title = markdownTitle(markdown, QFileInfo(path).baseName());
+        const QString relativeDirectory = QFileInfo(entry.relativePath).path();
+        const QString fallbackModule = relativeDirectory == QStringLiteral(".")
+            ? QStringLiteral("根目录")
+            : relativeDirectory;
         entry.module = markdownModule(markdown, fallbackModule);
         entry.markdown = markdown;
-        entry.searchText = entry.title + QLatin1Char(' ') + entry.module + QLatin1Char(' ') + markdown;
-        entry.isClass = isClass;
-        documentIndexes_.insert(entry.path, documents_.size());
+        entry.searchText = entry.title + QLatin1Char(' ') + entry.module + QLatin1Char(' ')
+            + entry.relativePath + QLatin1Char(' ') + markdown;
+        entry.isClass = entry.relativePath.startsWith(QStringLiteral("QtClass/"));
         documents_.append(std::move(entry));
     };
 
-    const QString overviewPath = QDir(documentDirectory_).filePath(QStringLiteral("README.md"));
-    if (QFileInfo::exists(overviewPath))
-        addDocument(overviewPath, QStringLiteral("文档总览"), false);
-
-    const QDir root(documentDirectory_);
-    const QFileInfoList moduleDirectories = root.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    for (const QFileInfo &moduleDirectory : moduleDirectories) {
-        const QString moduleIndexPath = QDir(moduleDirectory.absoluteFilePath()).filePath(QStringLiteral("index.md"));
-        QString moduleName = moduleDirectory.fileName();
-        if (QFileInfo::exists(moduleIndexPath)) {
-            const QString indexMarkdown = readUtf8File(moduleIndexPath);
-            moduleName = markdownModule(indexMarkdown, moduleName);
-            addDocument(moduleIndexPath, moduleName, false);
-        }
-
-        const QDir moduleDir(moduleDirectory.absoluteFilePath());
-        const QFileInfoList classFiles = moduleDir.entryInfoList({QStringLiteral("*.md")}, QDir::Files, QDir::Name);
-        for (const QFileInfo &classFile : classFiles) {
-            if (classFile.fileName().compare(QStringLiteral("index.md"), Qt::CaseInsensitive) == 0)
-                continue;
-            addDocument(classFile.absoluteFilePath(), moduleName, true);
-        }
+    QDirIterator iterator(documentDirectory_, {QStringLiteral("*.md")}, QDir::Files,
+                          QDirIterator::Subdirectories);
+    const QDir documentRoot(documentDirectory_);
+    while (iterator.hasNext()) {
+        const QString path = iterator.next();
+        const QString relativePath = QDir::fromNativeSeparators(documentRoot.relativeFilePath(path));
+        if (isIgnoredDocumentPath(relativePath))
+            continue;
+        addDocument(path, relativePath);
     }
+
+    std::sort(documents_.begin(), documents_.end(), [](const DocumentEntry &left, const DocumentEntry &right) {
+        return QString::localeAwareCompare(left.relativePath, right.relativePath) < 0;
+    });
+    for (int index = 0; index < documents_.size(); ++index)
+        documentIndexes_.insert(documents_.at(index).path, index);
 }
 
 void MainWindow::buildNavigation(const QString &filter)
@@ -331,76 +396,47 @@ void MainWindow::buildNavigation(const QString &filter)
     treeItems_.clear();
 
     const QString query = filter.trimmed();
-    QMap<QString, QList<int>> moduleDocuments;
-    int overviewIndex = -1;
-    for (int index = 0; index < documents_.size(); ++index) {
-        const DocumentEntry &entry = documents_.at(index);
-        if (entry.module == QStringLiteral("文档总览"))
-            overviewIndex = index;
-        else
-            moduleDocuments[entry.module].append(index);
-    }
+    QHash<QString, QTreeWidgetItem *> folderItems;
 
-    if (overviewIndex >= 0) {
-        const DocumentEntry &overview = documents_.at(overviewIndex);
-        if (query.isEmpty() || overview.searchText.contains(query, Qt::CaseInsensitive)) {
-            auto *overviewItem = new QTreeWidgetItem(navigationTree_);
-            overviewItem->setText(0, QStringLiteral("文档总览"));
-            overviewItem->setData(0, Qt::UserRole, overview.path);
-            overviewItem->setToolTip(0, overview.path);
-            treeItems_.insert(overview.path, overviewItem);
-        }
-    }
-
-    int visibleDocuments = 0;
-    for (auto moduleIt = moduleDocuments.cbegin(); moduleIt != moduleDocuments.cend(); ++moduleIt) {
-        const QString moduleName = moduleIt.key();
-        const QList<int> &indexes = moduleIt.value();
-        int moduleIndex = -1;
-        for (int index : indexes) {
-            if (!documents_.at(index).isClass) {
-                moduleIndex = index;
-                break;
-            }
-        }
-
-        bool moduleMatches = query.isEmpty() || moduleName.contains(query, Qt::CaseInsensitive);
-        bool anyClassMatches = false;
-        for (int index : indexes)
-            anyClassMatches = anyClassMatches || !documents_.at(index).isClass || documents_.at(index).searchText.contains(query, Qt::CaseInsensitive);
-        if (!moduleMatches && !anyClassMatches)
+    for (const DocumentEntry &entry : documents_) {
+        const bool matches = query.isEmpty()
+            || entry.searchText.contains(query, Qt::CaseInsensitive)
+            || entry.relativePath.contains(query, Qt::CaseInsensitive);
+        if (!matches)
             continue;
 
-        auto *moduleItem = new QTreeWidgetItem(navigationTree_);
-        moduleItem->setText(0, moduleName);
-        if (moduleIndex >= 0) {
-            const DocumentEntry &entry = documents_.at(moduleIndex);
-            moduleItem->setData(0, Qt::UserRole, entry.path);
-            moduleItem->setToolTip(0, entry.path);
-            treeItems_.insert(entry.path, moduleItem);
+        QStringList pathParts = entry.relativePath.split(QLatin1Char('/'), Qt::SkipEmptyParts);
+        if (pathParts.isEmpty())
+            continue;
+        const QString fileName = pathParts.takeLast();
+
+        QTreeWidgetItem *parentItem = nullptr;
+        QString folderPath;
+        for (const QString &part : pathParts) {
+            folderPath = folderPath.isEmpty() ? part : folderPath + QLatin1Char('/') + part;
+            if (!folderItems.contains(folderPath)) {
+                auto *folderItem = parentItem
+                    ? new QTreeWidgetItem(parentItem)
+                    : new QTreeWidgetItem(navigationTree_);
+                folderItem->setText(0, part);
+                folderItem->setToolTip(0, QDir(documentDirectory_).filePath(folderPath));
+                folderItems.insert(folderPath, folderItem);
+            }
+            parentItem = folderItems.value(folderPath);
         }
 
-        bool hasVisibleChild = false;
-        for (int index : indexes) {
-            const DocumentEntry &entry = documents_.at(index);
-            if (!entry.isClass || (!query.isEmpty() && !moduleMatches && !entry.searchText.contains(query, Qt::CaseInsensitive)))
-                continue;
-            auto *classItem = new QTreeWidgetItem(moduleItem);
-            classItem->setText(0, entry.title);
-            classItem->setData(0, Qt::UserRole, entry.path);
-            classItem->setToolTip(0, entry.path);
-            treeItems_.insert(entry.path, classItem);
-            hasVisibleChild = true;
-            ++visibleDocuments;
-        }
-        if (query.isEmpty()) {
-            visibleDocuments += indexes.size();
-            moduleItem->setExpanded(false);
-        } else {
-            moduleItem->setExpanded(true);
-        }
-        if (!hasVisibleChild && moduleIndex < 0)
-            delete moduleItem;
+        auto *documentItem = parentItem
+            ? new QTreeWidgetItem(parentItem)
+            : new QTreeWidgetItem(navigationTree_);
+        documentItem->setText(0, entry.title.isEmpty() ? fileName : entry.title);
+        documentItem->setData(0, Qt::UserRole, entry.path);
+        documentItem->setToolTip(0, entry.path);
+        treeItems_.insert(entry.path, documentItem);
+    }
+
+    if (!query.isEmpty()) {
+        for (QTreeWidgetItem *folderItem : folderItems)
+            folderItem->setExpanded(true);
     }
 
     navigationTree_->setUpdatesEnabled(true);
@@ -438,7 +474,9 @@ void MainWindow::loadCurrentDocument()
 
     const DocumentEntry &entry = documents_.at(index);
     documentTitle_->setText(entry.title);
-    documentPath_->setText(QStringLiteral("%1  ·  %2").arg(entry.module, entry.path));
+    documentPath_->setText(QStringLiteral("%1  ·  %2").arg(entry.module, entry.relativePath));
+    documentBrowser_->document()->setBaseUrl(
+        QUrl::fromLocalFile(QFileInfo(entry.path).absolutePath() + QDir::separator()));
     documentBrowser_->setMarkdown(entry.markdown);
     documentBrowser_->verticalScrollBar()->setValue(0);
     setWindowTitle(QStringLiteral("%1 - Qt 文档中心").arg(entry.title));
@@ -468,19 +506,19 @@ void MainWindow::activateTreeItem(QTreeWidgetItem *item, int column)
 
     openDocument(path);
 
-    const QString markTextPath = QStringLiteral("D:/markdown/marktext-win-x64-0.19.1/marktext.exe");
-    if (!QFileInfo::exists(markTextPath)) {
+    const QString markTextPath = markTextExecutablePath();
+    if (markTextPath.isEmpty()) {
         QMessageBox::warning(this, QStringLiteral("找不到 MarkText"),
-                             QStringLiteral("未找到 MarkText：\n%1").arg(markTextPath));
+                             QStringLiteral("未找到 marktext-win-x64-0.19.1/marktext.exe。\n"
+                                            "请将 MarkText 文件夹放在程序目录旁。"));
         return;
     }
 
-    const QString workingDirectory = QFileInfo(markTextPath).absolutePath();
-    if (QProcess::startDetached(markTextPath, {path}, workingDirectory)) {
+    if (QProcess::startDetached(markTextPath, {path}, QFileInfo(markTextPath).absolutePath())) {
         statusBar()->showMessage(QStringLiteral("已使用 MarkText 打开：%1").arg(QFileInfo(path).fileName()));
     } else {
         QMessageBox::warning(this, QStringLiteral("打开失败"),
-                             QStringLiteral("无法启动 MarkText 打开文档：\n%1").arg(path));
+                             QStringLiteral("无法启动 MarkText：\n%1").arg(markTextPath));
     }
 }
 
@@ -534,6 +572,8 @@ void MainWindow::goHome()
     const QString homePath = QDir(documentDirectory_).filePath(QStringLiteral("README.md"));
     if (documentIndex(homePath) >= 0)
         openDocument(homePath);
+    else if (!documents_.isEmpty())
+        openDocument(documents_.first().path);
 }
 
 void MainWindow::chooseDocumentDirectory()
@@ -579,18 +619,14 @@ void MainWindow::updateHistoryActions()
 void MainWindow::updateSearchSummary(const QString &filter)
 {
     if (filter.isEmpty()) {
-        searchSummary_->setText(QStringLiteral("%1 个类文档 · %2 个模块").arg([this] {
-            int count = 0;
-            for (const DocumentEntry &entry : documents_)
-                count += entry.isClass;
-            return count;
-        }()).arg([this] {
-            QSet<QString> modules;
-            for (const DocumentEntry &entry : documents_)
-                if (entry.isClass)
-                    modules.insert(entry.module);
-            return modules.size();
-        }()));
+        QSet<QString> folders;
+        for (const DocumentEntry &entry : documents_) {
+            const QString folder = QFileInfo(entry.relativePath).path();
+            folders.insert(folder == QStringLiteral(".") ? QStringLiteral("根目录") : folder);
+        }
+        searchSummary_->setText(QStringLiteral("%1 个 Markdown 文档 · %2 个目录")
+                                    .arg(documents_.size())
+                                    .arg(folders.size()));
         return;
     }
 
@@ -640,6 +676,11 @@ QString MainWindow::markdownModule(const QString &markdown, const QString &fallb
             if (parts.size() >= 2)
                 return parts.last().trimmed();
         }
+        if (trimmed.startsWith(QLatin1Char('>')) && trimmed.contains(QStringLiteral("所属模块"))) {
+            const int separator = trimmed.indexOf(QLatin1Char(':'));
+            if (separator >= 0)
+                return trimmed.mid(separator + 1).trimmed();
+        }
     }
     const QString title = firstLine(markdown);
     if (title.endsWith(QStringLiteral("类索引")))
@@ -650,6 +691,17 @@ QString MainWindow::markdownModule(const QString &markdown, const QString &fallb
 QString MainWindow::cleanPath(const QString &path)
 {
     return QDir::cleanPath(QFileInfo(path).absoluteFilePath());
+}
+
+bool MainWindow::isIgnoredDocumentPath(const QString &relativePath)
+{
+    const QStringList parts = QDir::fromNativeSeparators(relativePath)
+                                  .split(QLatin1Char('/'), Qt::SkipEmptyParts);
+    for (const QString &part : parts) {
+        if (isIgnoredPathPart(part))
+            return true;
+    }
+    return false;
 }
 
 bool MainWindow::isWithinDocumentDirectory(const QString &path) const

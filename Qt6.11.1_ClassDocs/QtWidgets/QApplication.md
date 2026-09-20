@@ -1,55 +1,31 @@
 # QApplication
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QApplication`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QApplication` 是 Qt Widgets 应用程序的全局入口，管理桌面平台资源、控件风格、输入事件和主事件循环。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+**一句话定位：** `QApplication` 是所有 Qt Widgets 程序的应用级入口，负责初始化 GUI 平台、Widgets 样式系统、全局输入状态、窗口集合和主事件循环。
 
 ### 这是什么
 
-`QApplication` 是 Qt Widgets 应用程序的全局入口，管理桌面平台资源、控件风格、输入事件和主事件循环。
+`QApplication` 继承自 `QGuiApplication`，但它不是“多一个名字”的入口类。它额外初始化了 QWidget 体系需要的内容：`QStyle`、Widgets 调色板/字体传播、焦点控件、弹出控件、顶层控件集合、控件样式表、拖拽阈值、双击间隔等桌面交互参数。
 
-**内部模型：** 它不是某个窗口的父类，而是整个 Widgets 进程的应用对象。所有 QWidget 都应在 QApplication 创建后使用，并且通常在主线程中创建。
+只要程序里出现 `QWidget`、`QMainWindow`、`QDialog`、`QPushButton`、`QTableView` 这类 Widgets 对象，入口就应该是 `QApplication`，而不是 `QGuiApplication`。
 
-**适用场景：** 任何使用 QWidget、QMainWindow、QDialog 或标准桌面控件的程序都应先创建 QApplication。
+### 适合使用的场景
 
-**典型调用链：** 构造 QApplication -> 创建主窗口/控件 -> show() -> app.exec() -> 退出时由栈对象清理。
+- 传统桌面应用：主窗口、菜单栏、工具栏、对话框、表格、树、表单。
+- 需要 `QStyle`、应用级样式表、Widgets 调色板和字体策略。
+- 需要查询当前焦点控件、活动窗口、活动模态窗口、弹出窗口。
+- 需要统一处理拖拽启动距离、双击间隔、滚轮行数等桌面交互习惯。
 
-**先记住的坑：** 不要在 QApplication 前创建 QWidget；不要在 GUI 线程执行耗时循环；高 DPI、平台风格和命令行参数应在构造或显示窗口前配置。
+### 不适合的场景
 
-## 2. 依赖与对象关系
+- 纯控制台或服务：用 `QCoreApplication`。
+- 纯 Qt Quick/QML 且不创建 QWidget：通常用 `QGuiApplication`。
+- 想用它保存业务状态：应用对象应只做应用级环境和事件循环，业务状态放在自己的 model/service/controller 中。
 
-- 头文件：`#include <QApplication>`
-- 继承自：QGuiApplication
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
-
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-它不是某个窗口的父类，而是整个 Widgets 进程的应用对象。所有 QWidget 都应在 QApplication 创建后使用，并且通常在主线程中创建。
-
-### 状态、生命周期和线程
-
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-任何使用 QWidget、QMainWindow、QDialog 或标准桌面控件的程序都应先创建 QApplication。 使用时通常按这个过程组织：构造 QApplication -> 创建主窗口/控件 -> show() -> app.exec() -> 退出时由栈对象清理。
+### 最小示例
 
 ```cpp
 #include <QApplication>
@@ -58,690 +34,323 @@ target_link_libraries(mytarget PRIVATE Qt6::Widgets)
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
     QMainWindow window;
-    window.resize(800, 600);
+    window.resize(960, 640);
     window.show();
-    return app.exec();
+
+    return QApplication::exec();
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+**先记住的坑：** 所有 QWidget 都必须在 `QApplication` 创建之后使用；GUI 操作应在 GUI 线程；应用级样式表会影响整个 Widgets 树，方便但也容易造成性能和样式排查困难；不要在 GUI 线程里执行长循环或同步等待。
 
-### 属性
+## 2. 依赖与对象关系
 
-- `autoSipEnabled : bool`
-- `cursorFlashTime : int`
-- `doubleClickInterval : int`
-- `keyboardInputInterval : int`
-- `startDragDistance : int`
-- `startDragTime : int`
-- `styleSheet : QString`
-- `wheelScrollLines : int`
+- 头文件：`#include <QApplication>`
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QGuiApplication`
+- 常用全局宏：`qApp`
 
-### 公有函数
+### 生命周期
 
-- `QApplication(int &argc, char **argv)`
-- `virtual ~QApplication()`
-- `bool autoSipEnabled() const`
-- `QString styleSheet() const`
+`QApplication` 通常是 `main()` 中最早创建、最后销毁的栈对象。它析构后 QWidget、样式对象、剪贴板、输入法和窗口系统资源都不应继续使用。顶层窗口可以放在栈上，也可以由对象树或智能指针管理；普通子控件通常交给 parent 销毁。
 
-### 重实现的公有函数
+### 事件循环
 
-- `virtual bool notify(QObject *receiver, QEvent *e) override`
+`exec()` 启动主事件循环，鼠标、键盘、绘制、定时器、网络回调、queued signal 都靠事件循环推进。长耗时任务应放到工作线程或异步 API，完成后通过信号回到 GUI 线程更新控件。
 
-### 公有槽函数
+### 与 QGuiApplication 的区别
 
-- `void aboutQt()`
-- `void closeAllWindows()`
-- `void setAutoSipEnabled(const bool enabled)`
-- `void setStyleSheet(const QString &sheet)`
+`QGuiApplication` 只管理 GUI 基础能力；`QApplication` 还管理 Widgets 层的样式、控件集合、焦点控件和桌面交互参数。用 Widgets 时不要为了“更轻量”选择 `QGuiApplication`，否则创建 QWidget 会失败或行为不完整。
 
-### 信号
+## 3. API 速查
 
-- `void focusChanged(QWidget *old, QWidget *now)`
+| API | 用途速查 |
+|---|---|
+| `autoSipEnabled : bool` | 控制输入控件获得焦点时是否自动显示软件输入面板。 |
+| `cursorFlashTime : int` | 文本插入光标闪烁周期，遵循或覆盖系统设置。 |
+| `doubleClickInterval : int` | 区分双击与两次单击的最大时间间隔。 |
+| `keyboardInputInterval : int` | 区分连续按键输入的时间阈值。 |
+| `startDragDistance : int` | 鼠标按下后移动多少像素才认为开始拖拽。 |
+| `startDragTime : int` | 鼠标按住多久后可认为开始拖拽。 |
+| `styleSheet : QString` | 应用级 Qt Style Sheet，影响整个 Widgets 树。 |
+| `wheelScrollLines : int` | 单次滚轮滚动建议滚动的文本行数。 |
+| `QApplication(int &argc, char **argv)` | 初始化 Widgets 应用对象和 GUI 平台。 |
+| `~QApplication()` | 释放 Widgets 和 GUI 平台资源。 |
+| `notify()` / `event()` | 全局事件分发和应用对象事件处理钩子。 |
+| `aboutQt()` | 显示 Qt 内置关于对话框。 |
+| `closeAllWindows()` | 尝试关闭所有顶层窗口。 |
+| `focusChanged()` | 当前焦点 QWidget 改变时发出。 |
+| `activeWindow()` / `focusWidget()` | 查询当前活动窗口或焦点控件。 |
+| `activeModalWidget()` / `activePopupWidget()` | 查询当前模态控件或弹出控件。 |
+| `allWidgets()` / `topLevelWidgets()` | 枚举当前应用中的 QWidget。 |
+| `alert()` / `beep()` | 请求平台吸引用户注意或播放提示音。 |
+| `font()` / `setFont()` | 读取或设置 Widgets 默认字体，可按类名限定。 |
+| `palette()` / `setPalette()` | 读取或设置 Widgets 默认调色板，可按类名限定。 |
+| `style()` / `setStyle()` | 读取或更换当前 `QStyle`。 |
+| `setStyleSheet()` | 设置全局样式表，适合少量统一规则，不适合替代完整样式系统。 |
+| `widgetAt()` / `topLevelAt()` | 按全局坐标查找命中的控件或顶层控件。 |
+| `isEffectEnabled()` / `setEffectEnabled()` | 查询或设置 UI 动效开关。 |
+| `navigationMode()` / `setNavigationMode()` | 查询或设置键盘/方向键导航模式。 |
+| `qApp` | 当前 `QApplication` 的便捷宏。 |
 
-### 静态公有成员
-
-- `QWidget * activeModalWidget()`
-- `QWidget * activePopupWidget()`
-- `QWidget * activeWindow()`
-- `void alert(QWidget *widget, int msec = 0)`
-- `QWidgetList allWidgets()`
-- `void beep()`
-- `int cursorFlashTime()`
-- `int doubleClickInterval()`
-- `int exec()`
-- `QWidget * focusWidget()`
-- `QFont font()`
-- `QFont font(const QWidget *widget)`
-- `QFont font(const char *className)`
-- `bool isEffectEnabled(Qt::UIEffect effect)`
-- `int keyboardInputInterval()`
-- `Qt::NavigationMode navigationMode()`
-- `QPalette palette(const QWidget *widget)`
-- `QPalette palette(const char *className)`
-- `void setCursorFlashTime(int)`
-- `void setDoubleClickInterval(int)`
-- `void setEffectEnabled(Qt::UIEffect effect, bool enable = true)`
-- `void setFont(const QFont &font, const char *className = nullptr)`
-- `void setKeyboardInputInterval(int)`
-- `void setNavigationMode(Qt::NavigationMode mode)`
-- `void setPalette(const QPalette &palette, const char *className = nullptr)`
-- `void setStartDragDistance(int l)`
-- `void setStartDragTime(int ms)`
-- `void setStyle(QStyle *style)`
-- `QStyle * setStyle(const QString &style)`
-- `void setWheelScrollLines(int)`
-- `int startDragDistance()`
-- `int startDragTime()`
-- `QStyle * style()`
-- `QWidget * topLevelAt(const QPoint &point)`
-- `QWidget * topLevelAt(int x, int y)`
-- `QWidgetList topLevelWidgets()`
-- `int wheelScrollLines()`
-- `QWidget * widgetAt(const QPoint &point)`
-- `QWidget * widgetAt(int x, int y)`
-
-### 重实现的保护函数
-
-- `virtual bool event(QEvent *e) override`
-
-### 公开宏
-
-- `qApp`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 4. 重点 API 说明
 
 ### `autoSipEnabled : bool`
 
-**作用与语义：**
-
-切换自动SIP（软件输入面板）可视化。
-将该属性设置为`true`，以便在输入接受键盘输入的小部件时自动显示SIP。该属性仅影响设置WA_InputMethodEnabled属性的小部件，通常用于在键数极少或没有键的设备上启动虚拟键盘。
-该特性仅对使用软件输入面板的平台产生影响。
-默认是平台相关。
-
-**如何使用：** 调用 `autoSipEnabled()` 读取当前值；它不会修改应用状态。
+控制软件输入面板是否在输入控件获得焦点时自动出现。它主要影响触屏、移动设备或没有实体键盘的平台，并且只对启用了输入法属性的控件有意义。桌面平台上它可能没有可见效果；不要把它当作强制弹出软键盘的跨平台保证。
 
 ### `cursorFlashTime : int`
 
-**作用与语义：**
-
-该特性将文本光标的闪烁时间以毫秒计定。
-闪光时间是显示、反转和恢复插入图显示所需的时间。通常文本光标显示时间为光标闪光时间的一半，然后隐藏同样时间，但时间可能有所不同。
-X11 的默认值是 1000 毫秒。在 Windows 上，使用控制面板值，设置该属性会设置所有应用程序的光标闪烁时间。
-我们建议小部件不要缓存该值，因为如果用户更改全局桌面设置，该值随时可能发生变化。
-注意：该属性可能为负值，例如禁用光标闪烁。
-
-**如何使用：** 调用 `cursorFlashTime()` 读取当前值；它不会修改应用状态。
+设置文本插入光标闪烁时间，单位毫秒。文本编辑控件会用它决定光标显示/隐藏节奏。系统可能提供默认值；Windows 上设置它可能影响系统级行为。控件不应长期缓存这个值，因为用户可以在系统设置里修改。
 
 ### `doubleClickInterval : int`
 
-**作用与语义：**
-
-该特性具有以毫秒为单位的时间限制，将双击点击与连续两次鼠标点击区分开来。
-X11 的默认值是 400 毫秒。在 Windows 和 Mac OS 上，使用操作系统的值。
-
-**如何使用：** 调用 `doubleClickInterval()` 读取当前值；它不会修改应用状态。
+设置两次鼠标点击被识别为双击的最大间隔。自定义鼠标交互、图形编辑器、文件列表重命名逻辑会参考它。不要硬编码 250ms/400ms 之类常量，遵循平台习惯能让应用更自然。
 
 ### `keyboardInputInterval : int`
 
-**作用与语义：**
-
-该特性具有以毫秒为单位的时间限制，用以区分按键与连续两次按键。
-X11 的默认值是 400 毫秒。在 Windows 和 Mac OS 上，使用操作系统的值。
-
-**如何使用：** 调用 `keyboardInputInterval()` 读取当前值；它不会修改应用状态。
+设置连续按键输入的时间阈值。它用于区分单独按键和一组连续输入，对自定义键盘导航、快捷键序列判断有参考价值。普通控件通常不需要直接改它。
 
 ### `startDragDistance : int`
 
-**作用与语义：**
-
-该属性表示拖拽操作启动所需的最小距离。
-如果你在应用中支持拖放，并且想在用户按住按钮移动光标一定距离后启动拖放操作，你应该用该属性的值作为所需的最小距离。
-例如，如果点击的鼠标位置存储在`startPos`，当前位置（例如鼠标移动事件中）是`currentPos`，你可以通过以下代码判断是否应该开始拖动：
-Qt在内部使用该值，例如`QFileDialog`。
-默认值（如果平台没有提供不同的默认值）是10像素。
-
-**如何使用：** 调用 `startDragDistance()` 读取当前值；它不会修改应用状态。
-
-**官方示例：**
-
-```cpp
- if ((startPos - currentPos).manhattanLength() >=
-         QApplication::startDragDistance())
-     startTheDrag();
-```
+设置拖拽开始所需的最小移动距离。实现自定义拖放时，先记录鼠标按下位置，再用当前位置的曼哈顿距离和此值比较。它能避免用户轻微手抖就触发拖拽。
 
 ### `startDragTime : int`
 
-**作用与语义：**
-
-该特性表示按住鼠标按键的时间（毫秒）才会开始拖放操作。
-如果你的应用程序支持拖放，并且想在用户按住鼠标按键一定时间后启动拖放操作，你应该用该属性的值作为延迟。
-Qt也在内部使用这种延迟，例如在`QTextEdit`和`QLineEdit`中，用于启动拖拽。
-默认值是500毫秒。
-
-**如何使用：** 调用 `startDragTime()` 读取当前值；它不会修改应用状态。
+设置拖拽开始前的最短按住时间。它常与 `startDragDistance()` 一起使用：距离足够且按住时间满足时才启动拖放。不同平台习惯不同，优先使用系统值。
 
 ### `styleSheet : QString`
 
-**作用与语义：**
-
-该属性包含应用样式表。
-默认情况下，除非用户在运行应用时在命令行中指定`-stylesheet`选项，否则该属性会返回空字符串。
-
-**如何使用：** 调用 `styleSheet()` 读取当前值；它不会修改应用状态。
+应用级样式表，语法是 Qt Style Sheets。适合统一小范围视觉规则，比如按钮颜色、输入框边框。它会影响整个 Widgets 树，复杂规则可能让样式排查和绘制性能变差；大型应用更适合用局部样式表、自定义 `QStyle` 或设计系统封装。
 
 ### `wheelScrollLines : int`
 
-**作用与语义：**
-
-该属性包含旋转鼠标滚轮时，用于滚动控件的行数。
-如果该值超过了控件可见的行数，控件应将滚动操作解释为单页向上或向下。如果控件是物品视图类，那么滚动一行的结果取决于控件滚动模式的设置。滚动一行可以表示滚动一个项目或滚动一个像素。
-默认情况下，该属性的值为3。
-
-**如何使用：** 调用 `wheelScrollLines()` 读取当前值；它不会修改应用状态。
+单次滚轮事件建议滚动的文本行数。文本编辑器、列表和自定义滚动控件可参考它。触控板像素滚动和高精度滚轮可能不完全按“行”表达，处理滚动事件时还要看事件提供的 pixel delta。
 
 ### `QApplication::QApplication(int &argc, char **argv)`
 
-**作用与语义：**
-
-初始化窗口系统并使用 `argc` 命令行参数在 `argv` 中构建应用程序对象。
-警告：`argc` 和 `argv` 所引用的数据在 QApplication 对象的整个生命周期内必须保持有效。此外，`argc` 必须大于零，且 `argv` 必须包含至少一个有效的字符串。
-全局 `qApp` 指针指向此应用程序对象。只应创建一个应用程序对象。
-此应用程序对象必须在任何绘图设备（包括小部件、像素图、位图等）之前构建。
-注意：`argc` 和 `argv` 可能会在 Qt 删除其识别的命令行参数时发生变化。
-所有 Qt 程序自动支持以下命令行选项：
-- -style= style，设置应用程序的 GUI 样式。可用值取决于您的系统配置。如果您使用了额外样式编译 Qt 或将额外样式作为插件，这些将可通过 `-style` 命令行选项使用。您还可以通过设置 `QT_STYLE_OVERRIDE` 环境变量为所有 Qt 应用程序设置样式。
-- -style style，与上述相同。
-- -stylesheet= stylesheet，设置应用程序的样式表。值必须是包含样式表的文件路径。
-注意：样式表文件中的相对 URL 是相对于样式表文件的路径的。
-- -stylesheet stylesheet，与上述相同。
-- -widgetcount，在结束时打印调试信息，显示未销毁的小部件数量以及同时存在的小部件最多数量。
-- -reverse，将应用程序的布局方向设置为 `Qt::RightToLeft`。
-- -qmljsdebugger=，使用指定端口激活 QML/JS 调试器。值的格式必须为 port:1234[,block]，其中 block 可选，如果指定，应用程序将等待调试器连接。
+创建 Widgets 应用对象，初始化 GUI 平台、Widgets 样式系统并解析 Qt 命令行参数。它必须早于任何 QWidget 创建。`argc`/`argv` 数据必须在应用对象生命周期内有效，Qt 可能移除自己识别的参数。
 
 ### `[virtual noexcept] QApplication::~QApplication()`
 
-**作用与语义：**
+释放应用级 Widgets/GUI 资源。通常由 `main()` 中的栈对象自然析构。不要在析构后访问任何 QWidget、样式对象或应用级 GUI 服务。
 
-清理该应用程序分配的窗口系统资源。将全局变量 `qApp` 设置为 `nullptr`。
+### `bool QApplication::autoSipEnabled() const`
 
-### `[static slot] void QApplication::aboutQt()`
+读取自动软件输入面板策略。它只是查询当前应用设置，不会主动显示或隐藏键盘。需要实际控制输入面板时，还要结合输入法相关 API 和平台能力。
 
-**作用与语义：**
+### `QString QApplication::styleSheet() const`
 
-显示一个关于Qt的简单消息框。该消息包含应用程序使用的Qt版本号。
-这对于应用的帮助菜单中出现非常有用，如菜单示例所示。
-这个功能是`QMessageBox::aboutQt()`的便利时段。
-
-### `[static] QWidget *QApplication::activeModalWidget()`
-
-**作用与语义：**
-
-返回激活的模态小部件。
-模态小部件是一种特殊的顶层小部件，是`QDialog`的一个子类，指定构造函数的模态参数为真。必须关闭模态小部件，用户才能继续程序的其他部分。
-模态小部件组织成栈。该函数返回栈顶端的活跃模态小部件。
-
-### `[static] QWidget *QApplication::activePopupWidget()`
-
-**作用与语义：**
-
-返回激活的弹窗小部件。
-弹出小部件是一个特殊的顶层小部件，用于设置`Qt::WType_Popup`小部件标志，例如`QMenu`小部件。当应用程序打开弹出小部件时，所有事件都会发送到弹出小部件。普通小部件和模态小部件在弹出小部件关闭前无法访问。
-当弹出小部件出现时，只有其他弹出小部件可以被打开。弹出小部件被组织成堆栈。该函数返回栈顶的激活弹出小部件。
-
-### `[static] QWidget *QApplication::activeWindow()`
-
-**作用与语义：**
-
-返回包含键盘输入焦点的应用顶层窗口;如果没有应用程序窗口，则返回`nullptr`。即使没有`focusWidget()`，例如该窗口中没有控件接受键事件，也可能存在 activeWindow()。
-
-### `[static] void QApplication::alert(QWidget *widget, int msec = 0)`
-
-**作用与语义：**
-
-如果窗口不是激活窗口，会显示`widget`警报。警报显示时间为`msec`毫秒。如果`msec`为零（默认值），则警报会无限期显示，直到窗口再次激活。
-目前，这个函数在 Qt for Embedded Linux 上没有任何作用。
-在macOS上，这更多是在应用层面起作用，会导致应用图标在底座上跳动。
-在Windows上，这会导致窗口的任务栏条目闪烁一段时间。如果`msec`为零，闪烁会停止，任务栏条目会变成不同的颜色（目前是橙色）。
-在 X11 上，这会导致窗口被标记为“需要注意”，窗口必须不能被隐藏（即不能调用 hide()，但必须以某种方式可见，才能实现。
-
-### `[static] QWidgetList QApplication::allWidgets()`
-
-**作用与语义：**
-
-返回应用程序中所有控件的列表。
-如果没有控件，列表为空（`QList::isEmpty()`）。
-注意：部分小部件可能被隐藏。
-
-**官方示例：**
-
-```cpp
- void updateAllWidgets()
- {
-     const QWidgetList allWidgets = QApplication::allWidgets();
-     for (QWidget *widget : allWidgets)
-         widget->update();
- }
-```
-
-### `[static] void QApplication::beep()`
-
-**作用与语义：**
-
-按铃，使用默认音量和声音。该功能在 Qt for Embedded Linux 中没有。
-
-### `[static slot] void QApplication::closeAllWindows()`
-
-**作用与语义：**
-
-关闭所有顶层窗口。
-该功能对于拥有多个顶层窗口的应用程序尤其有用。
-窗口以随机顺序关闭，直到某个窗口不接受关闭事件。当最后一个窗口成功关闭时，应用程序退出，除非`quitOnLastWindowClosed`设置为false。如从菜单触发应用终止，请使用`QCoreApplication::quit()`代替此功能。
-
-### `[override virtual protected] bool QApplication::event(QEvent *e)`
-
-**作用与语义：**
-
-重装：`QGuiApplication::event`（QEvent *e）。
-
-### `[static] int QApplication::exec()`
-
-**作用与语义：**
-
-进入主事件循环，等待调用`exit()`，然后返回设定为`exit()`的值（如果通过`quit()`调用`exit()`则为0）。
-启动事件处理需要调用该函数。主事件循环接收来自窗口系统的事件，并将其分发给应用控件。
-通常，调用exec()之前不能进行任何用户交互。作为特殊情况，像`QMessageBox`这样的模态小部件可以在调用exec()之前使用，因为模态小部件调用exec()来启动本地事件循环。
-为了让你的应用程序执行空闲处理，即在没有待处理事件时执行特殊函数，可以使用超时为0ns的`QChronoTimer`。更高级的空闲处理方案可以通过`processEvents()`实现。
-我们建议你将清理代码连接到`aboutToQuit()`信号，而不是放在应用程序的`main()`函数中。这是因为在某些平台上，QApplication：：exec() 调用可能不会返回。例如，在 Windows 平台上，当用户登出时，系统会在 Qt 关闭所有顶层窗口后终止进程。因此，应用程序无法保证在 QApplication：：exec() 调用后，`main()`函数结束时有时间退出事件循环并执行代码。
-
-### `[signal] void QApplication::focusChanged(QWidget *old, QWidget *now)`
-
-**作用与语义：**
-
-当键盘焦点从`old`变成`now`时，即用户按下Tab键、点击小部件或更改活动窗口时，会发出该信号。`old`和`now`都可以`nullptr`。
-信号是在两个小部件都通过`QFocusEvent`收到变更通知后发出的。
-
-### `[static] QWidget *QApplication::focusWidget()`
-
-**作用与语义：**
-
-返回带有键盘输入焦点的应用程序控件;如果该应用程序中没有控件，则返回`nullptr`。
-
-### `[static] QFont QApplication::font()`
-
-**作用与语义：**
-
-返回默认的应用字体。
-
-### `[static] QFont QApplication::font(const QWidget *widget)`
-
-**作用与语义：**
-
-返回该`widget`的默认字体。如果默认字体未为`widget`类注册，则返回其最近注册超类的默认字体。
-
-### `[static] QFont QApplication::font(const char *className)`
-
-**作用与语义：**
-
-返回给定`className`小部件的字体。
-
-### `[static] bool QApplication::isEffectEnabled(Qt::UIEffect effect)`
-
-**作用与语义：**
-
-如果启用了`effect`，则返回`true`；否则返回`false`。
-默认情况下，Qt将尝试使用桌面设置。要防止这种情况，请调用setDesktopSettingsAware(false)。
-注意：在色深低于16位的屏幕上，所有效果都被禁用。
-
-### `[static] Qt::NavigationMode QApplication::navigationMode()`
-
-**作用与语义：**
-
-返回Qt使用的焦点导航类型。
-此功能仅在 Qt for Embedded Linux 中提供。
+返回应用级样式表文本。适合调试当前全局样式规则或在动态追加规则前读取原值。不要用它反推出所有控件最终视觉效果，因为 `QStyle`、控件属性、局部样式表和平台主题都会参与最终绘制。
 
 ### `[override virtual] bool QApplication::notify(QObject *receiver, QEvent *e)`
 
-**作用与语义：**
+全局事件分发入口，把事件送到目标对象。只有框架层、监控层或需要统一异常边界时才重写。重写时通常要调用基类；吞掉未知事件会导致快捷键、焦点、输入法或绘制异常。
 
-重实现自：`QGuiApplication::notify`（QObject *对象，QEvent *事件）。
+### `[slot] void QApplication::aboutQt()`
+
+显示 Qt 内置关于对话框。适合菜单里的“About Qt”。商业产品通常还会提供自己的关于对话框，两者用途不同。
+
+### `[slot] void QApplication::closeAllWindows()`
+
+尝试关闭所有顶层窗口。每个窗口仍会收到关闭事件，窗口可以拒绝关闭。适合“退出应用”前的统一关闭流程，但真正是否退出要看窗口关闭结果和 `quitOnLastWindowClosed` 策略。
+
+### `[slot] void QApplication::setAutoSipEnabled(const bool enabled)`
+
+设置自动软件输入面板策略。触屏设备或嵌入式界面更常用；桌面平台可能忽略。它不会改变控件是否接受输入法，控件仍需要相关属性支持。
+
+### `[slot] void QApplication::setStyleSheet(const QString &sheet)`
+
+设置应用级样式表。适合启动时统一加载少量样式，也可用于主题切换。注意它会触发大量控件重新 polish/repaint，运行中频繁整表替换会影响性能。
+
+### `[signal] void QApplication::focusChanged(QWidget *old, QWidget *now)`
+
+当前焦点控件变化时发出。表单校验、状态栏提示、输入法上下文、快捷键上下文可连接它。`old` 或 `now` 都可能为空；不要假定焦点变化一定来自鼠标或键盘。
+
+### `[static] QWidget *QApplication::activeModalWidget()`
+
+返回当前活动的模态 QWidget。适合定位对话框层级、诊断为什么其他窗口无法输入。没有模态控件时返回 `nullptr`。
+
+### `[static] QWidget *QApplication::activePopupWidget()`
+
+返回当前活动的弹出控件，例如菜单、下拉框弹层。自定义输入处理或调试焦点/鼠标捕获时有用。普通业务代码不应绕过弹出控件直接操作底层窗口。
+
+### `[static] QWidget *QApplication::activeWindow()`
+
+返回当前活动顶层窗口。适合把新对话框挂到当前窗口、同步全局动作状态。没有活动窗口时返回 `nullptr`。
+
+### `[static] void QApplication::alert(QWidget *widget, int msec = 0)`
+
+请求平台让某个窗口吸引用户注意，例如任务栏闪烁、Dock 弹跳。适合后台任务完成、需要用户确认但窗口不在前台时使用。不同平台表现不同，`msec` 也不一定被严格遵守。
+
+### `[static] QWidgetList QApplication::allWidgets()`
+
+返回应用中所有 QWidget 的列表。调试泄漏、自动化测试、诊断对象树时有用。不要在生产逻辑里频繁遍历所有控件来驱动业务状态。
+
+### `[static] void QApplication::beep()`
+
+请求平台播放默认提示音。适合轻量错误提示或无法显示对话框时提醒用户。是否有声音、声音类型和音量由系统决定。
+
+### `[static] int QApplication::cursorFlashTime()`
+
+返回文本光标闪烁时间。自定义文本编辑控件可用它保持与系统一致。返回值可能表示禁用闪烁，处理时不要只假设正数。
+
+### `[static] int QApplication::doubleClickInterval()`
+
+返回双击时间阈值。自定义鼠标双击识别应使用它，而不是固定常量。
+
+### `[static] int QApplication::exec()`
+
+进入 Widgets 主事件循环。通常在显示主窗口后调用，并把返回值作为进程退出码。不要在进入事件循环前启动依赖 GUI 事件的异步流程却不显示或不保持对象生命周期。
+
+### `[static] QWidget *QApplication::focusWidget()`
+
+返回当前拥有键盘焦点的 QWidget。表单工具、快捷键路由、状态提示可用它。没有焦点控件时返回 `nullptr`。
+
+### `[static] QFont QApplication::font()`
+
+返回应用默认字体。适合初始化自定义绘制控件。应用字体、平台字体和控件局部字体存在层级关系，最终字体要看控件自己的 `font()`。
+
+### `[static] QFont QApplication::font(const QWidget *widget)`
+
+返回指定控件实际应使用的字体。它会考虑控件类、父子继承和应用默认值。自定义绘制某个控件内部元素时比全局 `font()` 更准确。
+
+### `[static] QFont QApplication::font(const char *className)`
+
+返回某类控件的默认字体。适合为自定义控件模拟某个内置控件的字体策略。类名必须与 Qt 样式/字体数据库可识别的类名匹配。
+
+### `[static] bool QApplication::isEffectEnabled(Qt::UIEffect effect)`
+
+查询某类 UI 动效是否启用，例如菜单淡入、工具提示动画。尊重它可以让应用跟随用户的无障碍或性能偏好。
+
+### `[static] int QApplication::keyboardInputInterval()`
+
+返回键盘输入间隔阈值。自定义按键序列或重复输入逻辑可参考它。
+
+### `[static] Qt::NavigationMode QApplication::navigationMode()`
+
+返回当前导航模式。某些嵌入式、电视或键盘导航界面会依赖它决定焦点移动方式。桌面应用通常较少直接修改。
 
 ### `[static] QPalette QApplication::palette(const QWidget *widget)`
 
-**作用与语义：**
-
-如果传递`widget`，则返回该控件类的默认调色板。这可能是应用调色板，也可能不是。大多数情况下，某些类型的控件没有专门的调色板，但一个显著的例外是Windows下弹出菜单，如果用户在显示设置中为菜单定义了特殊背景色。
+返回指定控件适用的调色板。自绘控件应优先用控件自身 palette 或此接口，而不是直接硬编码颜色。
 
 ### `[static] QPalette QApplication::palette(const char *className)`
 
-**作用与语义：**
+返回指定控件类名的默认调色板。用于按类模拟内置控件色彩。类名不匹配时可能退回应用默认调色板。
 
-返回给定`className`小部件的调色板。
+### `[static] void QApplication::setCursorFlashTime(int)`
+
+设置文本光标闪烁时间。除非应用有明确的编辑体验要求，否则最好尊重系统设置。过小会造成视觉干扰，负值可能表示禁用闪烁。
+
+### `[static] void QApplication::setDoubleClickInterval(int)`
+
+设置双击识别间隔。通常不建议应用私自覆盖用户系统偏好；更常见是自定义控件读取这个值。
 
 ### `[static] void QApplication::setEffectEnabled(Qt::UIEffect effect, bool enable = true)`
 
-**作用与语义：**
-
-如果`enable`为真，`effect`启用UI效果，否则该效果不会被使用。
-注意：在色深低于16位的屏幕上，所有特效均被禁用。
+启用或禁用指定 UI 动效。可用于低性能设备、远程桌面或无障碍场景。关闭动效不应影响功能本身。
 
 ### `[static] void QApplication::setFont(const QFont &font, const char *className = nullptr)`
 
-**作用与语义：**
+设置应用默认字体，或指定类名控件的默认字体。适合品牌字体、嵌入式固定字体方案。运行中修改可能导致大量控件重新布局；局部字体优先级可能覆盖它。
 
-将默认应用字体更改为`font`。如果`className`通过，该更改仅适用于继承`className`的类（如`QObject::inherits()`报告）。
-应用程序启动时，默认字体取决于窗口系统。它可能因窗口系统版本和区域不同而变化。该功能允许您覆盖默认字体;但覆盖可能是个坏主意，因为例如，某些区域需要超大字体来支持其特殊字符。
-警告：请勿将此功能与 Qt 样式表一起使用。应用程序的字体可以通过“font”样式表属性进行自定义。要为所有 QPushButtons 设置加粗字体，请将应用 `styleSheet()` 设置为“`QPushButton` { font： bold }”。
+### `[static] void QApplication::setKeyboardInputInterval(int)`
+
+设置键盘输入间隔阈值。普通桌面应用很少需要改，除非实现特殊输入设备或 kiosk 场景。
 
 ### `[static] void QApplication::setNavigationMode(Qt::NavigationMode mode)`
 
-**作用与语义：**
-
-设定Qt应该用来`mode`的焦点导航方式。
-此功能仅在 Qt for Embedded Linux 中提供。
+设置导航模式。适用于方向键、焦点框、无鼠标设备主导的界面。常规鼠标键盘桌面应用通常使用平台默认。
 
 ### `[static] void QApplication::setPalette(const QPalette &palette, const char *className = nullptr)`
 
-**作用与语义：**
+设置应用默认调色板，或按类名设置某类控件调色板。适合统一色彩基线，但它不是完整主题引擎；样式表、平台样式和控件自绘仍可能覆盖颜色。
 
-将应用调色板改为`palette`。
-如果通过`className`，变更仅适用于继承`className`的控件（如`QObject::inherits()`报告）。如果`className`保持为0，则该更改影响所有控件，从而覆盖之前设置的类别特定调色板。
-调色板可根据当前的图形界面样式在`QStyle::polish()`进行更改。
-警告：请勿将此功能与 Qt 样式表结合使用。使用样式表时，控件的调色板可以通过“color”、“background-color”、“selection-color”、“selection-background-color”和“alternate-background-color”来自定义。
-注意：有些样式并非所有绘图都使用调色板，例如，如果它们使用了原生主题引擎。这适用于Windows Vista和macOS样式。
+### `[static] void QApplication::setStartDragDistance(int l)`
+
+设置拖拽启动距离。自定义拖放体验非常特殊时才改；普通应用应读取系统值，保持平台一致。
+
+### `[static] void QApplication::setStartDragTime(int ms)`
+
+设置拖拽启动时间。改动会影响应用内拖拽手感；设置过短会误触，过长会显得迟钝。
 
 ### `[static] void QApplication::setStyle(QStyle *style)`
 
-**作用与语义：**
-
-将应用程序的图形界面样式设置为`style`。样式对象的所有权转移给`QApplication`，因此`QApplication`在应用结束或设置新样式且旧样式仍为应用对象父样式时删除样式对象。
-用例：
-切换应用样式时，调色板会被设置回初始颜色，或者系统默认。这是必要的，因为某些样式必须调整调色板以完全符合样式指南。
-在调色板尚未设置之前设置样式，即在创建`QApplication`之前，应用程序会为调色板使用`QStyle::standardPalette()`。
-警告：Qt 样式表目前不支持 custom `QStyle` 子类。我们计划在未来的某个版本中解决这个问题。
-
-**官方示例：**
-
-```cpp
- QApplication::setStyle(QStyleFactory::create("Fusion"));
-```
+安装一个 `QStyle` 对象作为应用样式。适合自定义控件绘制策略或统一平台外观。传入样式对象后生命周期由 QApplication 管理；不要再手动删除。
 
 ### `[static] QStyle *QApplication::setStyle(const QString &style)`
 
-**作用与语义：**
+按样式名称创建并安装样式，例如平台可用的 `Fusion`。返回安装后的样式，失败可能返回 `nullptr`。部署时要确认目标平台有对应样式插件。
 
-请求`QStyleFactory`的`QStyle`对象进行`style`。
-字符串必须是`QStyleFactory::keys()`之一，通常是“windows”、“windowsvista”、“fusion”或“macos”之一。样式名称不区分大小写。
-如果传递未知`style`，返回`nullptr`，否则返回的`QStyle`对象将设置为应用程序的GUI样式。
-警告：为了确保应用程序的样式正确设置，最好在`QApplication`构造函数之前调用该函数。
+### `[static] void QApplication::setWheelScrollLines(int)`
+
+设置滚轮每次滚动建议行数。自定义滚动控件可读取这个值。触控板高精度滚动不一定用行数表达。
+
+### `[static] int QApplication::startDragDistance()`
+
+返回拖拽启动距离。自定义拖放最常用它判断是否从点击转为拖拽。
+
+### `[static] int QApplication::startDragTime()`
+
+返回拖拽启动时间。与距离阈值配合使用，可减少误触发。
 
 ### `[static] QStyle *QApplication::style()`
 
-**作用与语义：**
-
-返回应用的样式对象。
+返回当前应用样式对象。自定义绘制、查询像素指标、获取标准图标时常用。返回对象由 QApplication 管理，不要删除。
 
 ### `[static] QWidget *QApplication::topLevelAt(const QPoint &point)`
 
-**作用与语义：**
-
-返回给定`point`的顶层控件;如果没有此类控件，返回`nullptr`。
+返回全局坐标下的顶层 QWidget。适合调试窗口命中、实现应用内拾取工具。只返回当前应用的窗口。
 
 ### `[static] QWidget *QApplication::topLevelAt(int x, int y)`
 
-**作用与语义：**
-
-返回点（`x`， `y`）的顶层小部件;如果没有该小部件，则返回0。
+坐标拆成 `x`、`y` 的重载，语义与 `topLevelAt(QPoint)` 相同。避免在调用点临时构造 `QPoint` 时可读性更高。
 
 ### `[static] QWidgetList QApplication::topLevelWidgets()`
 
-**作用与语义：**
+返回所有顶层 QWidget。用于统一保存窗口状态、关闭窗口、查找主窗口。隐藏窗口也可能在列表中。
 
-返回应用程序中顶层控件（窗口）的列表。
-注意：一些顶层小部件可能被隐藏，例如如果当前没有提示，则会显示提示。
+### `[static] int QApplication::wheelScrollLines()`
 
-**官方示例：**
-
-```cpp
- void showAllHiddenTopLevelWidgets()
- {
-     const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
-     for (QWidget *widget : topLevelWidgets) {
-         if (widget->isHidden())
-             widget->show();
-     }
- }
-```
+返回滚轮建议滚动行数。文本、列表、表格控件可用它保持系统一致性。
 
 ### `[static] QWidget *QApplication::widgetAt(const QPoint &point)`
 
-**作用与语义：**
-
-返回全局屏幕位置`point`的控件，或者如果那里没有Qt控件，则返回`nullptr`。
-这个功能可能很慢。
+返回全局坐标下最具体的 QWidget。适合调试命中测试、上下文帮助、自定义检查工具。透明区域、原生子窗口和平台窗口可能影响结果。
 
 ### `[static] QWidget *QApplication::widgetAt(int x, int y)`
 
-**作用与语义：**
+坐标拆成 `x`、`y` 的重载，语义与 `widgetAt(QPoint)` 相同。
 
-返回全局屏幕位置（`x`、`y`），如果没有Qt小部件则返回`nullptr`。
+### `[override virtual protected] bool QApplication::event(QEvent *e)`
+
+处理发给应用对象自身的事件。派生 QApplication 捕获应用级事件时才重写。不处理的事件应交给基类。
 
 ### `qApp`
 
-**作用与语义：**
+当前应用对象的全局便捷宏，在 Widgets 程序中通常可视为 `QApplication *`。它方便但会隐藏依赖；库代码和可测试代码更适合显式传入需要的对象。
 
-指代唯一应用对象的全局指针。它等价于`QCoreApplication::instance()`，但被映射为`QApplication`指针，因此仅在唯一应用对象是`QApplication`时才有效。
+## 5. 深入实践与常见坑
 
-### `bool autoSipEnabled() const`
+### QApplication 必须比 QWidget 更早
 
-**作用与语义：**
+`QWidget` 依赖 QApplication 初始化的样式、字体、平台窗口资源和事件系统。不要在全局静态对象里创建 QWidget，也不要在 `main()` 创建 QApplication 前创建任何控件。
 
-切换自动SIP（软件输入面板）可视化。
-将该属性设置为`true`，以便在输入接受键盘输入的小部件时自动显示SIP。该属性仅影响设置WA_InputMethodEnabled属性的小部件，通常用于在键数极少或没有键的设备上启动虚拟键盘。
-该特性仅对使用软件输入面板的平台产生影响。
-默认是平台相关。
+### 样式、调色板、样式表不是同一层
 
-**如何使用：** 调用 `autoSipEnabled()` 读取当前值；它不会修改应用状态。
+`QStyle` 决定控件如何绘制和计算尺寸；`QPalette` 提供颜色角色；Style Sheet 会覆盖部分样式行为。三者混用时，最终效果不容易从单一 API 推断。大型项目最好约定一套统一策略。
 
-### `QString styleSheet() const`
+### 全局样式表慎用
 
-**作用与语义：**
+`setStyleSheet()` 很方便，但全局选择器会影响所有子控件。复杂选择器可能让控件 polish、重绘和排查变慢。更稳的做法是给特定控件或局部容器设置样式表。
 
-该属性包含应用样式表。
-默认情况下，除非用户在运行应用时在命令行中指定`-stylesheet`选项，否则该属性会返回空字符串。
+### 焦点和模态
 
-**如何使用：** 调用 `styleSheet()` 读取当前值；它不会修改应用状态。
+`focusWidget()`、`activeWindow()`、`activeModalWidget()` 回答的是不同问题：键盘输入目标、活动顶层窗口、阻塞其他窗口的模态控件。处理快捷键和对话框时要区分这三者。
 
-### `void setAutoSipEnabled(const bool enabled)`
+### 遵守平台交互参数
 
-**作用与语义：**
-
-切换自动SIP（软件输入面板）可视化。
-将该属性设置为`true`，以便在输入接受键盘输入的小部件时自动显示SIP。该属性仅影响设置WA_InputMethodEnabled属性的小部件，通常用于在键数极少或没有键的设备上启动虚拟键盘。
-该特性仅对使用软件输入面板的平台产生影响。
-默认是平台相关。
-
-**如何使用：** 调用 `setAutoSipEnabled(...)` 修改 `autoSipEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setStyleSheet(const QString &sheet)`
-
-**作用与语义：**
-
-该属性包含应用样式表。
-默认情况下，除非用户在运行应用时在命令行中指定`-stylesheet`选项，否则该属性会返回空字符串。
-
-**如何使用：** 调用 `setStyleSheet(...)` 修改 `styleSheet`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `int cursorFlashTime()`
-
-**作用与语义：**
-
-该特性将文本光标的闪烁时间以毫秒计定。
-闪光时间是显示、反转和恢复插入图显示所需的时间。通常文本光标显示时间为光标闪光时间的一半，然后隐藏同样时间，但时间可能有所不同。
-X11 的默认值是 1000 毫秒。在 Windows 上，使用控制面板值，设置该属性会设置所有应用程序的光标闪烁时间。
-我们建议小部件不要缓存该值，因为如果用户更改全局桌面设置，该值随时可能发生变化。
-注意：该属性可能为负值，例如禁用光标闪烁。
-
-**如何使用：** 调用 `cursorFlashTime()` 读取当前值；它不会修改应用状态。
-
-### `int doubleClickInterval()`
-
-**作用与语义：**
-
-该特性具有以毫秒为单位的时间限制，将双击点击与连续两次鼠标点击区分开来。
-X11 的默认值是 400 毫秒。在 Windows 和 Mac OS 上，使用操作系统的值。
-
-**如何使用：** 调用 `doubleClickInterval()` 读取当前值；它不会修改应用状态。
-
-### `int keyboardInputInterval()`
-
-**作用与语义：**
-
-该特性具有以毫秒为单位的时间限制，用以区分按键与连续两次按键。
-X11 的默认值是 400 毫秒。在 Windows 和 Mac OS 上，使用操作系统的值。
-
-**如何使用：** 调用 `keyboardInputInterval()` 读取当前值；它不会修改应用状态。
-
-### `void setCursorFlashTime(int)`
-
-**作用与语义：**
-
-该特性将文本光标的闪烁时间以毫秒计定。
-闪光时间是显示、反转和恢复插入图显示所需的时间。通常文本光标显示时间为光标闪光时间的一半，然后隐藏同样时间，但时间可能有所不同。
-X11 的默认值是 1000 毫秒。在 Windows 上，使用控制面板值，设置该属性会设置所有应用程序的光标闪烁时间。
-我们建议小部件不要缓存该值，因为如果用户更改全局桌面设置，该值随时可能发生变化。
-注意：该属性可能为负值，例如禁用光标闪烁。
-
-**如何使用：** 调用 `setCursorFlashTime(...)` 修改 `cursorFlashTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setDoubleClickInterval(int)`
-
-**作用与语义：**
-
-该特性具有以毫秒为单位的时间限制，将双击点击与连续两次鼠标点击区分开来。
-X11 的默认值是 400 毫秒。在 Windows 和 Mac OS 上，使用操作系统的值。
-
-**如何使用：** 调用 `setDoubleClickInterval(...)` 修改 `doubleClickInterval`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setKeyboardInputInterval(int)`
-
-**作用与语义：**
-
-该特性具有以毫秒为单位的时间限制，用以区分按键与连续两次按键。
-X11 的默认值是 400 毫秒。在 Windows 和 Mac OS 上，使用操作系统的值。
-
-**如何使用：** 调用 `setKeyboardInputInterval(...)` 修改 `keyboardInputInterval`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setStartDragDistance(int l)`
-
-**作用与语义：**
-
-该属性表示拖拽操作启动所需的最小距离。
-如果你在应用中支持拖放，并且想在用户按住按钮移动光标一定距离后启动拖放操作，你应该用该属性的值作为所需的最小距离。
-例如，如果点击的鼠标位置存储在`startPos`，当前位置（例如鼠标移动事件中）是`currentPos`，你可以通过以下代码判断是否应该开始拖动：
-Qt在内部使用该值，例如`QFileDialog`。
-默认值（如果平台没有提供不同的默认值）是10像素。
-
-**如何使用：** 调用 `setStartDragDistance(...)` 修改 `startDragDistance`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-**官方示例：**
-
-```cpp
- if ((startPos - currentPos).manhattanLength() >=
-         QApplication::startDragDistance())
-     startTheDrag();
-```
-
-### `void setStartDragTime(int ms)`
-
-**作用与语义：**
-
-该特性表示按住鼠标按键的时间（毫秒）才会开始拖放操作。
-如果你的应用程序支持拖放，并且想在用户按住鼠标按键一定时间后启动拖放操作，你应该用该属性的值作为延迟。
-Qt也在内部使用这种延迟，例如在`QTextEdit`和`QLineEdit`中，用于启动拖拽。
-默认值是500毫秒。
-
-**如何使用：** 调用 `setStartDragTime(...)` 修改 `startDragTime`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setWheelScrollLines(int)`
-
-**作用与语义：**
-
-该属性包含旋转鼠标滚轮时，用于滚动控件的行数。
-如果该值超过了控件可见的行数，控件应将滚动操作解释为单页向上或向下。如果控件是物品视图类，那么滚动一行的结果取决于控件滚动模式的设置。滚动一行可以表示滚动一个项目或滚动一个像素。
-默认情况下，该属性的值为3。
-
-**如何使用：** 调用 `setWheelScrollLines(...)` 修改 `wheelScrollLines`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `int startDragDistance()`
-
-**作用与语义：**
-
-该属性表示拖拽操作启动所需的最小距离。
-如果你在应用中支持拖放，并且想在用户按住按钮移动光标一定距离后启动拖放操作，你应该用该属性的值作为所需的最小距离。
-例如，如果点击的鼠标位置存储在`startPos`，当前位置（例如鼠标移动事件中）是`currentPos`，你可以通过以下代码判断是否应该开始拖动：
-Qt在内部使用该值，例如`QFileDialog`。
-默认值（如果平台没有提供不同的默认值）是10像素。
-
-**如何使用：** 调用 `startDragDistance()` 读取当前值；它不会修改应用状态。
-
-**官方示例：**
-
-```cpp
- if ((startPos - currentPos).manhattanLength() >=
-         QApplication::startDragDistance())
-     startTheDrag();
-```
-
-### `int startDragTime()`
-
-**作用与语义：**
-
-该特性表示按住鼠标按键的时间（毫秒）才会开始拖放操作。
-如果你的应用程序支持拖放，并且想在用户按住鼠标按键一定时间后启动拖放操作，你应该用该属性的值作为延迟。
-Qt也在内部使用这种延迟，例如在`QTextEdit`和`QLineEdit`中，用于启动拖拽。
-默认值是500毫秒。
-
-**如何使用：** 调用 `startDragTime()` 读取当前值；它不会修改应用状态。
-
-### `int wheelScrollLines()`
-
-**作用与语义：**
-
-该属性包含旋转鼠标滚轮时，用于滚动控件的行数。
-如果该值超过了控件可见的行数，控件应将滚动操作解释为单页向上或向下。如果控件是物品视图类，那么滚动一行的结果取决于控件滚动模式的设置。滚动一行可以表示滚动一个项目或滚动一个像素。
-默认情况下，该属性的值为3。
-
-**如何使用：** 调用 `wheelScrollLines()` 读取当前值；它不会修改应用状态。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要在 QApplication 前创建 QWidget；不要在 GUI 线程执行耗时循环；高 DPI、平台风格和命令行参数应在构造或显示窗口前配置。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QApplication` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+拖拽距离、双击间隔、滚轮行数、光标闪烁都来自用户习惯和系统设置。自定义控件优先读取 QApplication 的值，而不是写死。

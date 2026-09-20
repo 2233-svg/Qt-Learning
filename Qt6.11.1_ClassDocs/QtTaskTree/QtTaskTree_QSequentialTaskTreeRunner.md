@@ -1,144 +1,40 @@
 # QtTaskTree::QSequentialTaskTreeRunner
+> Qt 6.11.1 · Qt TaskTree · 来自 `QtTaskTree::QSequentialTaskTreeRunner`
 
-> Qt 6.11.1 · Qt TaskTree
+## 作用定位
 
-## 1. 先建立直觉
+`QSequentialTaskTreeRunner` 按顺序运行多个任务树。它适合把多个 recipe 当作队列处理：前一个完成后再启动下一个。
 
-**一句话定位：** `QtTaskTree::QSequentialTaskTreeRunner` 是并发执行或同步类型，负责任务、线程、future、promise 或共享资源的协调。
-
-**模块背景：** 这是 Qt TaskTree 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QtTaskTree::QSequentialTaskTreeRunner` 是 并发与任务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
-
-**适用场景：** 先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <qtasktreerunner.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- 继承：`QObject`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS TaskTree)
-target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
-```
+| API | 说明 |
+| --- | --- |
+| `start()` / 添加 recipe 的接口 | 把任务树加入顺序运行流程。 |
+| `cancel()` | 取消当前和/或后续流程。 |
+| `isRunning()` | 是否仍在处理队列。 |
+| `done()` | 整体完成通知。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+| 场景 | 说明 |
+| --- | --- |
+| 批量项目处理 | 一个项目完成后再处理下一个。 |
+| 串行迁移流程 | 每步都是独立 recipe，但必须按顺序。 |
+| 避免资源竞争 | 共享设备/文件/服务一次只允许一个流程。 |
 
-并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- 某个任务失败后是否继续后续队列，要看 runner 策略和你的完成处理。
+- 队列很长时要提供取消和进度反馈。
+- 如果各任务彼此独立且耗时，可能 `QParallelTaskTreeRunner` 更合适。
 
-**生命周期：** 任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
+## 知识点覆盖
 
-**状态与结果：** 区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-**线程与事件循环：** GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-## 3. 直接使用
-
-先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QSequentialTaskTreeRunner()`
-- `~QSequentialTaskTreeRunner()`
-- `void cancel()`
-- `void cancelCurrent()`
-- `void enqueue(const QtTaskTree::Group &recipe, SetupHandler &&setupHandler = {}, DoneHandler &&doneHandler = {}, QtTaskTree::CallDone callDone = QtTaskTree::CallDoneFlag::Always)`
-- `bool isRunning() const`
-- `void reset()`
-- `void resetCurrent()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QSequentialTaskTreeRunner::QSequentialTaskTreeRunner()`
-
-**作用与语义：**
-
-构建顺序任务树运行器。
-
-### `[noexcept] QSequentialTaskTreeRunner::~QSequentialTaskTreeRunner()`
-
-**作用与语义：**
-
-销毁顺序任务树运行器。可能正在运行的任务树被删除，队列中的任务被移除。调用不处理任务树的处理程序。
-
-### `void QSequentialTaskTreeRunner::cancel()`
-
-**作用与语义：**
-
-取消正在运行的任务树。调用带有`DoneWith::Cancel`的任务树已完成的处理程序。所有队列中的任务被移除。
-
-### `void QSequentialTaskTreeRunner::cancelCurrent()`
-
-**作用与语义：**
-
-取消正在运行的任务树。调用任务树已完成的处理程序，`DoneWith::Cancel`。如果存在任何已排队的配方，则启动该已排队的配方。
-
-### `template <typename SetupHandler = QtTaskTree::TreeSetupHandler, typename DoneHandler = QtTaskTree::TreeDoneHandler> void QSequentialTaskTreeRunner::enqueue(const QtTaskTree::Group &recipe, SetupHandler &&setupHandler = {}, DoneHandler &&doneHandler = {}, QtTaskTree::CallDone callDone = QtTaskTree::CallDoneFlag::Always)`
-
-**作用与语义：**
-
-调度`recipe`执行。如果没有任务树在执行，运行者同步启动新任务树，否则`recipe`将被排队。当前执行的任务树结束后，运行者启动一个新任务树，使用已去队列的配方。调用 `setupHandler` 当新任务树即将启动时。调用 `doneHandler`任务树完成时。`doneHandler`根据传递的`callDone`调用。
-
-### `bool QSequentialTaskTreeRunner::isRunning() const`
-
-**作用与语义：**
-
-返回顺序任务树运行器当前是否正在执行任务树。
-
-### `void QSequentialTaskTreeRunner::reset()`
-
-**作用与语义：**
-
-重置正在运行的任务树。调用未完成的任务树处理程序。所有队列任务被移除。
-
-### `void QSequentialTaskTreeRunner::resetCurrent()`
-
-**作用与语义：**
-
-重置正在运行的任务树。没有任务树完成的处理程序被调用。如果有任何已排队的配方，则启动该已排队的配方。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-### 状态和错误边界
-
-区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-### 线程边界
-
-GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-### 最容易出现的错误
-
-不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QtTaskTree::QSequentialTaskTreeRunner` 所属机制类型：并发与任务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 多任务树串行队列
+- 批处理
+- 失败后继续/中断策略

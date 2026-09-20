@@ -1,153 +1,89 @@
 # QLinearGradient
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QLinearGradient`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QLinearGradient` 沿一条从 start 到 final stop 的直线插值颜色。渐变线垂直方向上的点拥有相同插值进度，因此它适合顶部到底部、左到右、斜向扫光和条形色带。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+start 和 final stop 不是“填充矩形的两个角”这一固定概念，而是渐变参数轴的两个端点。填充区域可以比它大得多，超出端点后的颜色由 `QGradient::spread()` 决定。
 
-### 这是什么
+## 2. 类说明
 
-`QLinearGradient` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QLinearGradient` 继承自 `QGradient`。颜色 stop、spread、coordinate mode 来自父类；本类只定义渐变轴的 start 和 final stop。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+类说明只用于表明这些 API 来自 `QLinearGradient`：要设置颜色调用 `setColorAt()` / `setStops()`，要设置相对坐标行为调用 `setCoordinateMode()`，要将渐变用于绘制则把它作为 `QBrush` 或传给 `QPainter`。
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QLinearGradient()` | 构造默认从 `(0,0)` 到 `(1,1)` 的线性渐变。 |
+| `QLinearGradient(start, finalStop)` | 用两个浮点点构造渐变轴。 |
+| `QLinearGradient(x1, y1, x2, y2)` | 用四个坐标构造渐变轴。 |
+| `start() const` | 返回渐变轴起点。 |
+| `setStart(point)` / `setStart(x, y)` | 设置渐变轴起点。 |
+| `finalStop() const` | 返回渐变轴终点。 |
+| `setFinalStop(point)` / `setFinalStop(x, y)` | 设置渐变轴终点。 |
+| `setColorAt()` / `setStops()` | 来自父类，定义颜色节点。 |
+| `setCoordinateMode()` | 来自父类，定义坐标相对于对象还是逻辑空间。 |
+| `setSpread()` | 来自父类，定义超出端点范围时的填充。 |
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 用 ObjectMode 做自适应垂直背景
 
-- 头文件：`#include <QLinearGradient>`
-- 继承自：QGradient
-- 直接派生类：未在类页中列出
+```cpp
+QLinearGradient gradient(0, 0, 0, 1);
+gradient.setCoordinateMode(QGradient::ObjectMode);
+gradient.setColorAt(0.0, QColor("#ffffff"));
+gradient.setColorAt(1.0, QColor("#e5edf8"));
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+painter.fillRect(rect(), gradient);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+在 ObjectMode 中，`0` 到 `1` 是对象边界比例。控件无论多高，渐变都会从顶部完整过渡到底部。
 
-### 工作机制
+### 用 LogicalMode 绑定到场景坐标
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+QLinearGradient horizon(0, 0, 1200, 0);
+horizon.setCoordinateMode(QGradient::LogicalMode);
+```
 
-### 状态、生命周期和线程
+逻辑坐标模式适合多个图元共享同一条世界坐标色带，例如地图高度着色、时间轴背景或大画布光照。此时它不应随着每个 item 的边界重置。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 把渐变轴与形状方向对齐
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+```cpp
+QLineF axis(startPoint, endPoint);
+QLinearGradient gradient(axis.p1(), axis.p2());
+gradient.setColorAt(0, leftColor);
+gradient.setColorAt(1, rightColor);
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+painter.fillPath(shape, gradient);
+```
 
-## 3. 直接使用
+渐变轴未必与形状 bounding rect 对齐。对于箭头、连接线、斜切按钮等图形，跟随真实方向会更自然。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 5. 使用场景
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+`QLinearGradient` 适合面板背景、进度条、按钮填充、柱状图色带、反射高光、阴影淡出、地图标尺、时间轴和沿路径方向的视觉引导。
 
-### 公有函数
+它也常作为遮罩使用，例如从完全透明到不透明的 alpha 渐变，以实现图片淡入、滚动边缘淡出或文字截断提示。
 
-- `QLinearGradient()`
-- `QLinearGradient(const QPointF &start, const QPointF &finalStop)`
-- `QLinearGradient(qreal x1, qreal y1, qreal x2, qreal y2)`
-- `QPointF finalStop() const`
-- `void setFinalStop(const QPointF &stop)`
-- `void setFinalStop(qreal x, qreal y)`
-- `void setStart(const QPointF &start)`
-- `void setStart(qreal x, qreal y)`
-- `QPointF start() const`
+## 6. 常见坑与经验
 
-## 5. API 逐个说明
+不要默认 `(0,0)` 到 `(1,1)` 会覆盖整个控件。只有 ObjectMode / StretchToDeviceMode 下才是比例坐标；默认 LogicalMode 里它只是逻辑空间的一小段。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要让 start 和 final stop 完全重合。没有长度的渐变轴没有清晰插值方向，结果依赖实现且没有实用意义。
 
-### `QLinearGradient::QLinearGradient()`
+不要在动态动画里每帧反复新建 `QBrush`、渐变和 stop 列表。可更新已有 gradient 或缓存不变部分。
 
-**作用与语义：**
+不要用 linear gradient 模拟径向高光。几何不匹配会让视觉显得平；需要中心扩散时应使用 `QRadialGradient`。
 
-构造一个默认线性梯度，插值面积介于（0， 0）和（1， 1）之间。
+不要忽略 spread。填充范围超过渐变轴时，默认 PadSpread 会把边缘颜色延长，很多“颜色为什么铺满后半段”的问题都源于此。
 
-### `QLinearGradient::QLinearGradient(const QPointF &start, const QPointF &finalStop)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-构造给定`start`点与`finalStop`之间插值面积的线性梯度。
-注意：期望参数值以像素为单位。
-
-### `QLinearGradient::QLinearGradient(qreal x1, qreal y1, qreal x2, qreal y2)`
-
-**作用与语义：**
-
-构造一个线性梯度，插值面积介于（`x1`， `y1`）和（`x2`， `y2`之间）。
-注意：期望参数值以像素为单位。
-
-### `QPointF QLinearGradient::finalStop() const`
-
-**作用与语义：**
-
-返回该线性梯度的逻辑坐标最终停止点。
-
-### `void QLinearGradient::setFinalStop(const QPointF &stop)`
-
-**作用与语义：**
-
-将该线性梯度的逻辑坐标最终停止点设为`stop`。
-
-### `void QLinearGradient::setFinalStop(qreal x, qreal y)`
-
-**作用与语义：**
-
-将该线性梯度的最终停止点设为逻辑坐标中的`x`，`y`。
-
-### `void QLinearGradient::setStart(const QPointF &start)`
-
-**作用与语义：**
-
-将该线性梯度在逻辑坐标中的起点设为`start`。
-
-### `void QLinearGradient::setStart(qreal x, qreal y)`
-
-**作用与语义：**
-
-将该线性梯度的逻辑坐标起点设为`x`，`y`。
-
-### `QPointF QLinearGradient::start() const`
-
-**作用与语义：**
-
-返回该线性梯度的起点，映射逻辑坐标。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QLinearGradient` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QLinearGradient` 应覆盖渐变轴、start/final stop、ObjectMode、LogicalMode、方向性填充、超出范围扩展、alpha 渐变、场景共享坐标和高频绘制缓存。

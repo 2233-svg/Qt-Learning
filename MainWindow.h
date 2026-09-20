@@ -38,6 +38,7 @@ private:
     {
         QString title;
         QString module;
+        QString relativePath;
         QString path;
         QString markdown;
         QString searchText;
@@ -58,6 +59,7 @@ private:
     static QString markdownTitle(const QString &markdown, const QString &fallback);
     static QString markdownModule(const QString &markdown, const QString &fallback);
     static QString cleanPath(const QString &path);
+    static bool isIgnoredDocumentPath(const QString &relativePath);
     bool isWithinDocumentDirectory(const QString &path) const;
     int documentIndex(const QString &path) const;
 

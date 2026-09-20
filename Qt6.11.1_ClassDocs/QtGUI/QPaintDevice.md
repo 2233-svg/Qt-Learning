@@ -1,260 +1,115 @@
 # QPaintDevice
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPaintDevice`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPaintDevice` 是 Qt GUI 绘制体系中的类型，负责画笔、画刷、字体、图像、绘制设备或绘制状态。
+`QPaintDevice` 表示“可以被 `QPainter` 当作目标的表面”。`QImage` 是内存表面，`QPixmap` 是显示资源，`QWidget`/`QPaintDeviceWindow` 是窗口表面，`QPdfWriter` 是分页文档表面；它们共享宽高、DPI、DPR、色深和 paint engine 这套底层协议。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+应用代码通常只把已有对象传给 `QPainter`，不直接继承 `QPaintDevice`。只有实现新的输出设备或绘制后端时，才需要重载 `paintEngine()` 与 `metric()`，此时设备度量的准确性直接决定文字大小、坐标、缩放和高 DPI 结果。
 
-### 这是什么
-
-`QPaintDevice` 是 二维绘制状态机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPaintDevice>`
-- 继承自：未在类页中列出
-- 直接派生类：QImage、QOpenGLPaintDevice、QPagedPaintDevice、QPaintDeviceWindow、QPicture、QPixmap、QSvgGenerator,、QWidget
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：抽象基类；其构造函数和 `metric()` 位于保护区。
+- 关键纯虚函数：`paintEngine()` 返回用于该设备的 `QPaintEngine`。
+- 常见派生：`QImage`、`QPixmap`、`QPicture`、`QPagedPaintDevice`、`QPaintDeviceWindow`、`QWidget`。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+| API | 用途速查 |
+| --- | --- |
+| `width()` / `height()` | 查询设备默认坐标系中的宽高，窗口/图像通常为像素 |
+| `widthMM()` / `heightMM()` | 查询物理尺寸估计，屏幕上可能不可靠 |
+| `logicalDpiX/Y()` | 查询绘制与字体布局采用的逻辑 DPI |
+| `physicalDpiX/Y()` | 查询设备声称的物理 DPI，适合参考而非精密尺量 |
+| `devicePixelRatio()` / `devicePixelRatioF()` | 查询逻辑像素到物理像素的倍率 |
+| `depth()` | 查询每像素位深 |
+| `colorCount()` | 查询可用颜色数量，过大时可能返回 `INT_MAX` |
+| `paintingActive()` | 判断是否有 `QPainter` 正在该设备上工作 |
+| `paintEngine()` | 子类必须返回匹配的绘制引擎 |
+| `metric(PaintDeviceMetric)` | 子类实现所有公共度量查询的底层入口 |
+| `PaintDeviceMetric` | 定义宽高、毫米、色深、DPI、DPR 等查询项 |
+| `encodeMetricF()` | Qt 6.8 起，为子类编码浮点 device metric 值 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 4. 度量概念速查
 
-### 工作机制
+| 度量 | 应如何理解 |
+| --- | --- |
+| 逻辑大小 | `width()/height()` 所在坐标系，`QPainter` 通常以它为基础 |
+| 物理像素 | 高 DPI 下可能是逻辑大小乘 DPR，例如 200 px 对应 100 logical px、DPR 2 |
+| 逻辑 DPI | 字体 point size、布局和绘制引擎应使用的分辨率 |
+| 物理 DPI | 显示器/打印机的硬件信息，显示器报告值可能不精确 |
+| 毫米大小 | 从硬件报告推算，不能用于需要真实世界精度的屏幕测量 |
 
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
+## 5. 关键用法
 
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+### 在通用绘制函数中查询目标设备
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
+void drawLegend(QPainter &painter)
 {
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
+    const QPaintDevice *device = painter.device();
+    const qreal dpr = device ? device->devicePixelRatioF() : 1.0;
+    const int dpi = device ? device->logicalDpiX() : 96;
+
+    Q_UNUSED(dpr);
+    Q_UNUSED(dpi);
+    // 使用 painter 的逻辑坐标绘制，不自行再乘 DPR。
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum PaintDeviceMetric { PdmWidth, PdmHeight, PdmWidthMM, PdmHeightMM, PdmNumColors, …, PdmDevicePixelRatioF_EncodedB }`
-
-### 公有函数
-
-- `virtual ~QPaintDevice()`
-- `int colorCount() const`
-- `int depth() const`
-- `qreal devicePixelRatio() const`
-- `qreal devicePixelRatioF() const`
-- `int height() const`
-- `int heightMM() const`
-- `int logicalDpiX() const`
-- `int logicalDpiY() const`
-- `virtual QPaintEngine * paintEngine() const = 0`
-- `bool paintingActive() const`
-- `int physicalDpiX() const`
-- `int physicalDpiY() const`
-- `int width() const`
-- `int widthMM() const`
-
-### 静态公有成员
-
-- `(since 6.8) int encodeMetricF(QPaintDevice::PaintDeviceMetric metric, double value)`
-
-### 保护函数
-
-- `QPaintDevice()`
-- `virtual int metric(QPaintDevice::PaintDeviceMetric metric) const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QPaintDevice::PaintDeviceMetric`
-
-**作用与语义：**
-
-描述了油漆设备的各种指标。
-- `QPaintDevice::PdmWidth`：`1`;涂装装置在默认坐标系单位中的宽度（例如像素数为`QPixmap`和`QWidget`）。另见`width()`。
-- `QPaintDevice::PdmHeight`：`2`;涂装装置在默认坐标系单位中的高度（例如像素数为`QPixmap`和`QWidget`）。另见`height()`。
-- `QPaintDevice::PdmWidthMM`：`3`;涂料装置的宽度（毫米）。参见`widthMM()`。
-- `QPaintDevice::PdmHeightMM`：`4`;涂料装置的高度（毫米）。另见`heightMM()`。
-- `QPaintDevice::PdmNumColors`：`5`;涂装装置可用的不同颜色数量。另见`colorCount()`。
-- `QPaintDevice::PdmDepth`：`6`;绘画装置的位深（位面数）。参见`depth()`。
-- `QPaintDevice::PdmDpiX`：`7`;设备的水平分辨率，单位为每英寸点数。参见`logicalDpiX()`。
-- `QPaintDevice::PdmDpiY`：`8`;设备的垂直分辨率，单位为每英寸点数。参见`logicalDpiY()`。
-- `QPaintDevice::PdmPhysicalDpiX`：`9`;设备的水平分辨率（每英寸点数）。参见`physicalDpiX()`。
-- `QPaintDevice::PdmPhysicalDpiY`：`10`;设备的垂直分辨率，单位为每英寸点数。参见`physicalDpiY()`。
-- `QPaintDevice::PdmDevicePixelRatio`：`11`;设备像素比。常见值为1用于正常DPI显示器，2用于高DPI“视网膜”显示器。
-- `QPaintDevice::PdmDevicePixelRatioScaled`：`12`;设备的缩放后设备像素比。这与PdmDevicePixelRatio相同，但值被常数因子放大，以支持分数缩放因子的绘画设备。所使用的恒定缩放因子为devicePixelRatioFScale()。该枚举值在Qt 5.6中引入。
-- `QPaintDevice::PdmDevicePixelRatioF_EncodedA (since Qt 6.8)`：`13`;该枚举项与对应的 `B` 项一起用于设备的像素比，作为编码`double`浮点值。支持分数 DPR 值的`QPaintDevice`子类应在覆盖 `metric()` 函数时实现对这两个枚举项的支持。返回值预期为 `encodeMetricF()` 函数的结果。
-- `QPaintDevice::PdmDevicePixelRatioF_EncodedB (since Qt 6.8)`：`14`;参见PdmDevicePixelRatioF_EncodedA。
-
-### `[noexcept protected] QPaintDevice::QPaintDevice()`
-
-**作用与语义：**
-
-构造一个绘图装置。该构造器只能从QPaintDevice的子类调用。
-
-### `[virtual noexcept] QPaintDevice::~QPaintDevice()`
-
-**作用与语义：**
-
-会摧毁绘画装置并释放窗户系统资源。
-
-### `int QPaintDevice::colorCount() const`
-
-**作用与语义：**
-
-返回绘画设备可用的颜色数量。如果可用颜色数量过多，无法用整数数据类型表示，则返回INT_MAX。
-
-### `int QPaintDevice::depth() const`
-
-**作用与语义：**
-
-返回绘图设备的位深（位面数）。
-
-### `qreal QPaintDevice::devicePixelRatio() const`
-
-**作用与语义：**
-
-返回设备各单元的像素比例。
-常见的数值是1用于正常DPI显示器，2用于高DPI“视网膜”显示器。
-
-### `qreal QPaintDevice::devicePixelRatioF() const`
-
-**作用与语义：**
-
-返回设备的像素比，作为浮点数。
-
-### `[static, since 6.8] int QPaintDevice::encodeMetricF(QPaintDevice::PaintDeviceMetric metric, double value)`
-
-**作用与语义：**
-
-返回`value`为度量`metric`编码。实现`metric()`的子类应使用该函数进行编码。
-- `as`：当查询度量指定编码浮点数值时，为整数返回值。
-
-### `int QPaintDevice::height() const`
-
-**作用与语义：**
-
-返回涂装设备的高度，使用默认坐标系单位（例如`QPixmap`和`QWidget`的像素数）。
-
-### `int QPaintDevice::heightMM() const`
-
-**作用与语义：**
-
-返回绘图设备的高度（毫米单位）。由于平台限制，可能无法使用此功能来确定屏幕上小部件的实际物理大小。
-
-### `int QPaintDevice::logicalDpiX() const`
-
-**作用与语义：**
-
-返回设备的水平分辨率（每英寸点数），用于计算字体大小。对于X11，通常与`widthMM()`计算相同。
-注意，如果逻辑DpiX()不等于`physicalDpiX()`，则相应的`QPaintEngine`必须处理分辨率映射。
-
-### `int QPaintDevice::logicalDpiY() const`
-
-**作用与语义：**
-
-返回设备的垂直分辨率（每英寸点数），用于计算字体大小。对于X11，这通常与`heightMM()`计算的相同。
-注意，如果逻辑DpiY()不等于`physicalDpiY()`，则相应的`QPaintEngine`必须处理分辨率映射。
-
-### `[virtual protected] int QPaintDevice::metric(QPaintDevice::PaintDeviceMetric metric) const`
-
-**作用与语义：**
-
-返回给定绘画设备`metric`的度规信息。
-
-### `[pure virtual] QPaintEngine *QPaintDevice::paintEngine() const`
-
-**作用与语义：**
-
-返回一个指向用于在设备上绘画的绘画引擎的指针。
-
-### `bool QPaintDevice::paintingActive() const`
-
-**作用与语义：**
-
-如果设备正在被涂装，即有人已调用`QPainter::begin()`但尚未为该设备调用`QPainter::end()`，则返回`true`;否则返回`false`。
-
-### `int QPaintDevice::physicalDpiX() const`
-
-**作用与语义：**
-
-返回设备的水平分辨率，单位为每英寸点数。例如，在打印时，该分辨率指的是物理打印机的分辨率。而逻辑DPI则指实际绘图引擎使用的分辨率。
-注意，如果物理DpiX()不等于`logicalDpiX()`，对应的`QPaintEngine`必须处理分辨率映射。
-
-### `int QPaintDevice::physicalDpiY() const`
-
-**作用与语义：**
-
-返回设备的水平分辨率，单位为每英寸点数。例如，在打印时，该分辨率指的是物理打印机的分辨率。而逻辑DPI则指实际绘图引擎使用的分辨率。
-注意，如果物理DpiY()不等于`logicalDpiY()`，对应的`QPaintEngine`必须处理分辨率映射。
-
-### `int QPaintDevice::width() const`
-
-**作用与语义：**
-
-返回涂装设备的宽度，以默认坐标系单位（例如`QPixmap`和像素`QWidget`）。
-
-### `int QPaintDevice::widthMM() const`
-
-**作用与语义：**
-
-返回绘图设备的宽度（毫米）。由于平台限制，可能无法用该函数确定屏幕上小部件的实际物理大小。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPaintDevice` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+大多数 `QPainter` API 已将目标 device 的 DPR 映射进坐标系。知道 DPR 通常是为了创建与目标匹配的离屏缓存或请求图标，不是让每个 `drawRect()` 坐标再乘一次。
+
+### 实现自定义 device 时正确提供 DPR
+
+```cpp
+int MyDevice::metric(PaintDeviceMetric metric) const
+{
+    switch (metric) {
+    case PdmWidth:  return logicalSize.width();
+    case PdmHeight: return logicalSize.height();
+    case PdmDevicePixelRatioF_EncodedA:
+        return encodeMetricF(metric, dpr);
+    case PdmDevicePixelRatioF_EncodedB:
+        return encodeMetricF(metric, dpr);
+    default:
+        return 0;
+    }
+}
+```
+
+Qt 6.8 的编码 metric 用于精确传递分数 DPR。自定义设备若只填旧的整数 DPR metric，会在 1.25、1.5 等缩放下产生尺寸或像素缓存误差；实现时应遵循 Qt 对 A/B 编码 metric 的约定。
+
+### 判断绘制会话冲突
+
+```cpp
+if (image.paintingActive()) {
+    qWarning() << "image already has an active painter";
+    return;
+}
+QPainter p(&image);
+```
+
+这适合调试所有权错误，不应取代架构保证。一个设备通常不能安全地被多个 `QPainter` 同时绘制；绘制会话必须清晰开始、结束，尤其是 QPixmap 和窗口设备。
+
+## 6. 使用场景
+
+- 写通用绘制代码时依据目标设备选择缓存、DPI 或导出策略。
+- 实现新的 `QPaintDevice` 或测试用的虚拟绘制目标。
+- 区分离屏图像、屏幕和打印设备上的字体/尺寸差异。
+- 调试双 painter、错误 DPR 或不匹配的 paint engine。
+
+## 7. 常见坑与经验
+
+- **不建议为业务 UI 继承它。** 自绘窗口优先 `QWidget`、`QRasterWindow` 或 `QPaintDeviceWindow`；离屏渲染用 `QImage`。
+- **logical 与 physical DPI 不可混用。** 文字与 Qt 坐标通常跟随 logical DPI；打印尺寸或校准才参考 physical DPI。
+- **DPR 不等于 DPI。** DPR 表示逻辑/物理像素倍率，DPI 是每英寸点数，二者解决不同问题。
+- **屏幕毫米数据不可靠。** 硬件报告、远程桌面、缩放设置都可能使 `widthMM()` 偏差很大。
+- **`paintEngine()` 生命周期要稳定。** `QPainter` 活动期间不能更换或释放对应 engine。
+- **不要通过 `metric()` 猜格式。** 色深和颜色数不足以说明内存像素布局；对图像直接查询 `QImage::format()`。
+
+## 8. 知识点覆盖
+
+绘制目标抽象、逻辑坐标、DPR、高 DPI、逻辑/物理 DPI、打印与屏幕差异、绘制会话、paint engine、设备度量、扩展自定义输出设备。

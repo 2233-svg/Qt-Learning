@@ -1,225 +1,93 @@
 # QRadialGradient
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QRadialGradient`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRadialGradient` 从焦点向外扩散到一个圆或两个圆之间。它适合聚光、球体高光、热力图、发光边缘、镜头暗角和柔和阴影。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+简单径向渐变由 center、radius、focal point 组成：颜色沿从 focal point 出发、朝外围圆扩张的方向插值。扩展径向渐变还允许 center 与 focal 各自带半径，用来描述两个圆之间的过渡，适合更复杂的环形或偏心光学效果。
 
-### 这是什么
+## 2. 类说明
 
-`QRadialGradient` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QRadialGradient` 继承自 `QGradient`。stop、spread、coordinate mode 来自父类；本类定义中心、焦点和半径几何。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+类说明只用于表明这些 API 来自 `QRadialGradient`：颜色与坐标模式仍在父类设置，绘制时通过 `QBrush` / `QPainter` 应用。
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QRadialGradient()` | 构造默认中心/焦点为 `(0,0)`、半径为 1 的渐变。 |
+| `QRadialGradient(center, radius)` | 构造简单径向渐变，焦点默认在中心。 |
+| `QRadialGradient(center, radius, focalPoint)` | 构造带偏移焦点的简单径向渐变。 |
+| `QRadialGradient(center, centerRadius, focalPoint, focalRadius)` | 构造扩展径向渐变，定义两个圆之间的过渡。 |
+| `center()` / `setCenter()` | 查询或设置外围圆中心。 |
+| `radius()` / `setRadius()` | 查询或设置简单径向渐变的外围半径，等价于 center radius。 |
+| `centerRadius()` / `setCenterRadius()` | 查询或设置中心圆半径。 |
+| `focalPoint()` / `setFocalPoint()` | 查询或设置颜色扩散起点。 |
+| `focalRadius()` / `setFocalRadius()` | 查询或设置焦点圆半径。 |
+| `setColorAt()` / `setStops()` | 来自父类，定义由内向外的颜色节点。 |
+| `setCoordinateMode()` / `setSpread()` | 来自父类，定义坐标模式和越界填充。 |
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 居中柔和高光
 
-- 头文件：`#include <QRadialGradient>`
-- 继承自：QGradient
-- 直接派生类：未在类页中列出
+```cpp
+QRadialGradient glow(QPointF(width() / 2.0, height() / 2.0),
+                      qMax(width(), height()) / 2.0);
+glow.setColorAt(0.0, QColor(255, 255, 255, 180));
+glow.setColorAt(0.65, QColor(96, 165, 250, 80));
+glow.setColorAt(1.0, QColor(37, 99, 235, 0));
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+painter.fillRect(rect(), glow);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+中心 stop 不一定必须完全不透明；把 alpha 也做渐变能自然地叠加在已有背景上。
 
-### 工作机制
+### 用焦点制造偏心光源
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+QRadialGradient light(
+    QPointF(width() * 0.5, height() * 0.5),
+    width() * 0.7,
+    QPointF(width() * 0.35, height() * 0.28));
+```
 
-### 状态、生命周期和线程
+center 决定外圈边界，focal point 决定颜色最集中处。让 focal 向左上偏移，就能模拟从左上方照来的光，而不是把整个亮区固定在正中心。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 焦点超出半径会被约束
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+简单径向渐变里，若 focal point 在外围圆之外，Qt 会把它调整到圆边界附近。不要依赖这种隐式修正来实现特殊效果；需要精确几何时，先在业务代码中约束焦点或选择扩展径向渐变。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+### ObjectMode 下用归一化几何
 
-## 3. 直接使用
+```cpp
+QRadialGradient gradient(QPointF(0.5, 0.5), 0.7, QPointF(0.35, 0.3));
+gradient.setCoordinateMode(QGradient::ObjectMode);
+```
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+这样同一高光配置能覆盖不同尺寸对象。非正方形对象会把圆形按对象坐标映射成椭圆形视觉效果，这有时正是预期，有时则需要基于实际尺寸重新计算。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 5. 使用场景
 
-### 公有函数
+`QRadialGradient` 适合高光球体、圆形按钮、地图热点、热力图、光晕、暗角、进度环背景、仪表盘中心光效、图片遮罩和粒子效果。
 
-- `QRadialGradient()`
-- `QRadialGradient(const QPointF &center, qreal radius)`
-- `QRadialGradient(const QPointF &center, qreal radius, const QPointF &focalPoint)`
-- `QRadialGradient(qreal cx, qreal cy, qreal radius)`
-- `QRadialGradient(const QPointF &center, qreal centerRadius, const QPointF &focalPoint, qreal focalRadius)`
-- `QRadialGradient(qreal cx, qreal cy, qreal radius, qreal fx, qreal fy)`
-- `QRadialGradient(qreal cx, qreal cy, qreal centerRadius, qreal fx, qreal fy, qreal focalRadius)`
-- `QPointF center() const`
-- `qreal centerRadius() const`
-- `QPointF focalPoint() const`
-- `qreal focalRadius() const`
-- `qreal radius() const`
-- `void setCenter(const QPointF &center)`
-- `void setCenter(qreal x, qreal y)`
-- `void setCenterRadius(qreal radius)`
-- `void setFocalPoint(const QPointF &focalPoint)`
-- `void setFocalPoint(qreal x, qreal y)`
-- `void setFocalRadius(qreal radius)`
-- `void setRadius(qreal radius)`
+扩展径向渐变在专业绘图和特效里更有价值：它可以表现两个偏移圆之间的色带，而不仅是中心到边缘的单圆扩散。
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要把 focal point 当作外圆中心。它只是插值的焦点，外围几何仍由 center/radius 控制。
 
-### `QRadialGradient::QRadialGradient()`
+不要忘记 radius 与对象尺寸关系。LogicalMode 下固定半径在控件 resize 后不会自动增长；需要自适应时使用 ObjectMode 或在 resize 时重算。
 
-**作用与语义：**
+不要在高频鼠标移动中重建巨大径向渐变并全窗口重绘。对于跟随光标的高光，限制脏区域或缓存背景。
 
-构造一个以中心和焦点为（0， 0）为中心的简单径向梯度，半径为1。
+不要用 radial gradient 实现精确物理光照。它是 2D 色带工具，能产生视觉暗示，但不包含真实光照模型。
 
-### `QRadialGradient::QRadialGradient(const QPointF &center, qreal radius)`
+不要忽略 alpha 混合底色。相同 radial gradient 叠在不同背景上，视觉结果会不同。
 
-**作用与语义：**
+## 7. 知识点覆盖
 
-构造一个简单的径向梯度，`center`、`radius`和圆心的焦点。
-
-### `QRadialGradient::QRadialGradient(const QPointF &center, qreal radius, const QPointF &focalPoint)`
-
-**作用与语义：**
-
-构造一个简单的径向梯度，给定`center`、`radius`和`focalPoint`。
-注意：如果给定焦点位于`center`点和`radius`定义的圆之外，则会重新调整，使其位于圆与`center`至`focalPoint`线相交的点。
-
-### `QRadialGradient::QRadialGradient(qreal cx, qreal cy, qreal radius)`
-
-**作用与语义：**
-
-构造一个简单的径向梯度，中心为（`cx`， `cy`），`radius`指定。焦点位于圆心。
-
-### `QRadialGradient::QRadialGradient(const QPointF &center, qreal centerRadius, const QPointF &focalPoint, qreal focalRadius)`
-
-**作用与语义：**
-
-构造一个扩展的径向梯度，包含给定的`center`、`centerRadius`、`focalPoint`和`focalRadius`。
-
-### `QRadialGradient::QRadialGradient(qreal cx, qreal cy, qreal radius, qreal fx, qreal fy)`
-
-**作用与语义：**
-
-构造一个简单的径向梯度，中心为给定中心（`cx`，`cy`）、`radius`和焦点（`fx`，`fy`）。
-注意：如果给定的焦点位于中心（`cx`、`cy`）与`radius`所定义的圆之外，则会重新调整到从中心到焦点的直线与圆的交点。
-
-### `QRadialGradient::QRadialGradient(qreal cx, qreal cy, qreal centerRadius, qreal fx, qreal fy, qreal focalRadius)`
-
-**作用与语义：**
-
-构造一个扩展径向梯度，中心半径为给定中心（`cx`，`cy`）、中心半径、`centerRadius`、焦点（`fx`，`fy`）和焦半径`focalRadius`。
-
-### `QPointF QRadialGradient::center() const`
-
-**作用与语义：**
-
-返回该径向梯度的中心，映射逻辑坐标。
-
-### `qreal QRadialGradient::centerRadius() const`
-
-**作用与语义：**
-
-返回该径向梯度的中心半径，映射逻辑坐标。
-
-### `QPointF QRadialGradient::focalPoint() const`
-
-**作用与语义：**
-
-返回该径向梯度的焦点，映射逻辑坐标。
-
-### `qreal QRadialGradient::focalRadius() const`
-
-**作用与语义：**
-
-返回该径向梯度的焦半径，映射逻辑坐标。
-
-### `qreal QRadialGradient::radius() const`
-
-**作用与语义：**
-
-返回该径向梯度在逻辑坐标中的半径。
-相当于`centerRadius()`。
-
-### `void QRadialGradient::setCenter(const QPointF &center)`
-
-**作用与语义：**
-
-将该径向梯度的中心在逻辑坐标中设为`center`。
-
-### `void QRadialGradient::setCenter(qreal x, qreal y)`
-
-**作用与语义：**
-
-将该径向梯度的中心在逻辑坐标中设置为（`x`， `y`）。
-
-### `void QRadialGradient::setCenterRadius(qreal radius)`
-
-**作用与语义：**
-
-将该径向梯度的中心半径在逻辑坐标中设为`radius`。
-
-### `void QRadialGradient::setFocalPoint(const QPointF &focalPoint)`
-
-**作用与语义：**
-
-将该径向梯度的焦点设为逻辑坐标的 `focalPoint`。
-
-### `void QRadialGradient::setFocalPoint(qreal x, qreal y)`
-
-**作用与语义：**
-
-将该径向梯度的焦点设为逻辑坐标中的 （`x`， `y`）。
-
-### `void QRadialGradient::setFocalRadius(qreal radius)`
-
-**作用与语义：**
-
-将该径向梯度的焦半径在逻辑坐标中设为`radius`。
-
-### `void QRadialGradient::setRadius(qreal radius)`
-
-**作用与语义：**
-
-将该径向梯度在逻辑坐标下的半径设为`radius`。
-相当于`setCenterRadius()`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRadialGradient` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QRadialGradient` 应覆盖中心、焦点、半径、扩展径向渐变、偏心高光、ObjectMode、透明 stop、边界约束、椭圆映射、光晕与热力图绘制。

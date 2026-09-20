@@ -1,117 +1,98 @@
 # QInputEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QInputEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QInputEvent` 是 Qt 的值类型，围绕“输入事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QInputEvent` 是所有 GUI 输入事件的共同基类之一。它不负责描述“按下了哪个键”“鼠标在哪个坐标”“触点有几个”，这些细节交给 `QKeyEvent`、`QMouseEvent`、`QTouchEvent` 等子类；它保存的是输入事件都会关心的公共上下文：事件来自哪个输入设备、发生时有哪些键盘修饰键、窗口系统给出的时间戳。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+把它理解成输入事件的“来源标签”会更准确：当同一个手势可能来自鼠标、触摸板、触摸屏、手写笔或由系统合成出来的事件时，`QInputEvent` 让你先判断事件的来源，再决定是否把它当作鼠标、触控、笔输入或快捷操作处理。
 
-### 这是什么
+## 2. 类说明
 
-`QInputEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QInputEvent` 继承自 `QEvent`，常见派生类包括 `QKeyEvent`、`QPointerEvent` 和 `QContextMenuEvent`。业务代码通常不会直接创建或处理裸的 `QInputEvent`，而是在重写 `QWidget`、`QWindow` 的输入事件函数，或在 `event()` / `eventFilter()` 中拿到一个更具体的事件对象后，通过基类 API 读取公共信息。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+使用它时要记住三件事：
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+- 事件对象通常只在当前事件处理调用期间有效，不要长期保存事件指针。
+- `modifiers()` 表示事件发生时的修饰键状态，不等同于你处理到事件这一刻键盘的最新状态。
+- `device()` 在 Qt 6 里比旧式 `source()` 更有价值，尤其适合区分真实鼠标事件和触摸合成鼠标事件。
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+## 3. API 速查
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+| API | 用途速查 |
+| --- | --- |
+| `device() const` | 取得产生该事件的输入设备对象，可进一步判断名称、类型、能力和 seat。 |
+| `deviceType() const` | 快速取得设备类型，例如鼠标、触摸屏、触摸板、键盘等。 |
+| `modifiers() const` | 读取事件发生时的 `Shift`、`Ctrl`、`Alt`、`Meta` 等键盘修饰符组合。 |
+| `timestamp() const` | 读取窗口系统给事件标记的时间戳，常用于节流、双击/长按逻辑或事件排序。 |
 
-## 2. 依赖与对象关系
+## 4. 关键用法
 
-- 头文件：`#include <QInputEvent>`
-- 继承自：QEvent
-- 直接派生类：QContextMenuEvent、QKeyEvent,、QPointerEvent
+### 判断事件是不是由触摸合成
 
-CMake 配置：
+Qt 6 更推荐从设备角度理解输入来源。比如某些平台会把触摸屏点击合成为鼠标事件，让老代码也能工作；但绘图板、地图、手势编辑器这类程序往往需要区分真实鼠标和触摸输入。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+void MyWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->deviceType() == QInputDevice::DeviceType::TouchScreen) {
+        event->ignore();
+        return;
+    }
+
+    beginMouseSelection(event->position());
+    event->accept();
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这里不要只看事件类型是 `QEvent::MouseButtonPress`。事件类型说明 Qt 分发了鼠标事件，`deviceType()` 才更接近“它最初来自哪里”。
 
-### 工作机制
+### 读取修饰键要以事件为准
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+`modifiers()` 是事件快照。处理快捷拖拽、框选、复制拖动时，应以事件里的修饰键判断，而不是临时调用全局键盘状态。
 
-### 状态、生命周期和线程
+```cpp
+void Canvas::mouseMoveEvent(QMouseEvent *event)
+{
+    const bool additive = event->modifiers().testFlag(Qt::ShiftModifier);
+    updateRubberBand(event->position(), additive);
+}
+```
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+这样做能避免事件队列延迟带来的问题：用户可能已经松开 `Shift`，但当前这次移动事件发生时它仍然是按下的。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+### 时间戳适合做输入节流
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+`timestamp()` 通常来自窗口系统，单位一般是毫秒，但起点不是 Unix 时间。它适合计算两个事件之间的相对间隔，不适合显示成真实日期。
 
-## 3. 直接使用
+```cpp
+bool StrokeFilter::shouldSample(const QInputEvent *event)
+{
+    if (event->timestamp() - m_lastSampleTime < 8)
+        return false;
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+    m_lastSampleTime = event->timestamp();
+    return true;
+}
+```
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 5. 使用场景
 
-### 公有函数
+`QInputEvent` 最常见于“跨输入类型的公共判断”。例如绘图软件里，鼠标、触控笔和触摸输入都可能进入同一套工具逻辑，此时可以把设备类型、修饰键、时间戳先抽出来，作为统一的上下文。
 
-- `(since 6.0) const QInputDevice * device() const`
-- `QInputDevice::DeviceType deviceType() const`
-- `Qt::KeyboardModifiers modifiers() const`
-- `quint64 timestamp() const`
+它也适合事件过滤器。过滤器经常先拿到 `QEvent *`，通过 `event->type()` 判断是否是输入事件，再转为具体子类。公共字段越早判断，分支越清楚。
 
-## 5. API 逐个说明
+另一个高频场景是兼容平台差异。不同窗口系统对触摸板、触摸屏、鼠标合成事件的行为并不完全一致，直接依赖“鼠标事件就是鼠标硬件”容易出错；基于 `device()` 和 `deviceType()` 做策略会稳得多。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 6. 常见坑与经验
 
-### `[since 6.0] const QInputDevice *QInputEvent::device() const`
+不要缓存 `device()` 返回值并假设它永远代表同一个物理设备的完整生命周期。通常可以在事件处理期间读取它的属性；如果要长期记录设备，保存设备类型、名称、系统 ID 等更明确的数据会更安全。
 
-**作用与语义：**
+不要把 `timestamp()` 当作墙上时钟。它的价值是比较相邻事件的时间差，例如“上一次输入到这一次输入间隔多久”。
 
-返回生成原始事件的源设备。
-对于合成事件，例如由触摸事件生成的鼠标事件，`device()`会继续返回触摸屏设备，从而判断它并非来自实际鼠标。因此，`mouseEvent.source()->type() != QInputDevice::DeviceType::Mouse` 是 Qt 5 表达式`mouseEvent.source() == Qt::MouseEventSynthesizedByQt`的一个可能替代。
+不要在基类层面吞掉所有输入事件。`QInputEvent` 只告诉你公共上下文，真正的按钮、坐标、按键文本、触点状态都在派生类里；如果判断不充分就 `accept()`，很容易让控件默认行为失效。
 
-### `QInputDevice::DeviceType QInputEvent::deviceType() const`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-返回产生事件的设备类型。
-
-### `Qt::KeyboardModifiers QInputEvent::modifiers() const`
-
-**作用与语义：**
-
-返回事件发生前立即存在的键盘修饰符标志。
-
-### `quint64 QInputEvent::timestamp() const`
-
-**作用与语义：**
-
-返回窗口系统对该事件的时间戳。通常时间以毫秒为单位，从某个任意时间点（如系统启动时间）开始。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QInputEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QInputEvent` 时，重点覆盖 Qt 事件系统、输入设备抽象、键盘修饰符、事件时间戳、事件接受与忽略、合成输入事件、事件过滤器和平台输入差异。掌握它之后，再看 `QKeyEvent`、`QPointerEvent`、`QMouseEvent`、`QTouchEvent` 会更容易形成一套统一的输入处理模型。

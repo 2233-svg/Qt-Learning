@@ -1,182 +1,55 @@
 # QStyleOptionFrame
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QStyleOptionFrame`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QStyleOptionFrame` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QStyleOptionFrame` 是边框类控件的绘制参数包。`QFrame`、输入框外框、面板边界等都需要告诉 style：边框形状、阴影、线宽和内容区域。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它解决的是“这个框应该按当前平台怎样画”，而不是管理控件内容。
 
-### 这是什么
+## 2. 类说明
 
-`QStyleOptionFrame` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QStyleOptionFrame` 继承自 `QStyleOption`。它包含 `lineWidth`、`midLineWidth`、`frameShape`、`features` 等字段。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+style 使用它绘制 `PE_Frame`、`PE_FrameLineEdit`、`PE_FrameGroupBox` 等 primitive 或 control 的边框部分。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `lineWidth` | 主边框宽度。 |
+| `midLineWidth` | 中线宽度，常用于 raised/sunken 效果。 |
+| `frameShape` | frame 形状，如 box、panel、styled panel。 |
+| `features` | frame 特性标志。 |
+| `QFrame::frameShape()` | 常作为 frameShape 来源。 |
+| `QFrame::lineWidth()` | 常作为 lineWidth 来源。 |
+| `QStyle::PE_Frame` | 通用 frame primitive。 |
+| `QStyle::PE_FrameLineEdit` | line edit 边框。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+QStyleOptionFrame opt;
+opt.initFrom(this);
+opt.lineWidth = lineWidth();
+opt.midLineWidth = midLineWidth();
+opt.frameShape = frameShape();
 
-- 头文件：`#include <QStyleOptionFrame>`
-- 继承自：QStyleOption
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+QPainter p(this);
+style()->drawPrimitive(QStyle::PE_Frame, &opt, &p, this);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+## 5. 使用场景
 
-### 工作机制
+适合自定义 frame、输入区域边框、面板边界、style 实现、需要平台一致边框的控件。
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+普通 `QFrame` 使用者不需要直接创建它，控件内部会处理。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+边框宽度会影响内容区域。绘制和布局都要考虑 frame width，否则文字可能贴边或被压住。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+不同 style 对 frameShape 的解释可能不同。不要指望所有平台画出完全一样的凹凸感。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum FrameFeature { None, Flat, Rounded }`
-- `flags FrameFeatures`
-- `enum StyleOptionType { Type }`
-- `enum StyleOptionVersion { Version }`
-
-### 公有函数
-
-- `QStyleOptionFrame()`
-- `QStyleOptionFrame(const QStyleOptionFrame &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QStyleOptionFrame::FrameFeatureflags QStyleOptionFrame::FrameFeatures`
-
-**作用与语义：**
-
-这个枚举描述了框架可以具备的不同类型的特征。
-- `QStyleOptionFrame::None`：`0x00`;表示正常帧。
-- `QStyleOptionFrame::Flat`：`0x01`;表示平面框架。
-- `QStyleOptionFrame::Rounded`：`0x02`;表示圆弧形框架。
-FrameFeatures 类型是 QFlags 的 typedef<FrameFeature>。它存储 FrameFeature 值的 OR 组合。
-
-### `enum QStyleOptionFrame::StyleOptionType`
-
-**作用与语义：**
-
-该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
-- `QStyleOptionFrame::Type`：`SO_Frame`;提供样式选项（本类别`SO_Frame`）。
-类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必太担心。
-
-### `enum QStyleOptionFrame::StyleOptionVersion`
-
-**作用与语义：**
-
-该枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
-- `QStyleOptionFrame::Version`：`1`;3
-该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
-
-### `QStyleOptionFrame::QStyleOptionFrame()`
-
-**作用与语义：**
-
-构建一个QStyleOptionFrame，将成员变量初始化为默认值。
-
-### `QStyleOptionFrame::QStyleOptionFrame(const QStyleOptionFrame &other)`
-
-**作用与语义：**
-
-构建`other`样式选项的副本。
-
-### `QStyleOptionFrame::FrameFeatures QStyleOptionFrame::features`
-
-**作用与语义：**
-
-该变量包含描述该帧特征的逐位或。
-
-### `QFrame::Shape QStyleOptionFrame::frameShape`
-
-**作用与语义：**
-
-该属性表示框架形状值。
-
-### `int QStyleOptionFrame::lineWidth`
-
-**作用与语义：**
-
-该变量保持绘制框架的线宽。
-默认值是0。
-
-### `int QStyleOptionFrame::midLineWidth`
-
-**作用与语义：**
-
-该变量保持绘制帧的中线宽度。
-这通常用于绘制凹陷或凸起的画框。
-默认值是0。
-
-### `enum FrameFeature { None, Flat, Rounded }`
-
-**作用与语义：**
-
-这个枚举描述了框架可以具备的不同类型的特征。
-- `QStyleOptionFrame::None`：`0x00`;表示正常帧。
-- `QStyleOptionFrame::Flat`：`0x01`;表示平面框架。
-- `QStyleOptionFrame::Rounded`：`0x02`;表示圆弧形框架。
-FrameFeatures 类型是 QFlags 的 typedef<FrameFeature>。它存储 FrameFeature 值的 OR 组合。
-
-### `flags FrameFeatures`
-
-**作用与语义：**
-
-这个枚举描述了框架可以具备的不同类型的特征。
-- `QStyleOptionFrame::None`：`0x00`;表示正常帧。
-- `QStyleOptionFrame::Flat`：`0x01`;表示平面框架。
-- `QStyleOptionFrame::Rounded`：`0x02`;表示圆弧形框架。
-FrameFeatures 类型是 QFlags 的 typedef<FrameFeature>。它存储 FrameFeature 值的 OR 组合。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QStyleOptionFrame` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+只想画一条分隔线时，`QFrame` 的 HLine/VLine 通常比自定义绘制更简单。

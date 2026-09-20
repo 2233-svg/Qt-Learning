@@ -1,144 +1,86 @@
 # QAccessibleEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleEvent` 是 Qt 的值类型，围绕“Accessible事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QAccessibleEvent` 是向平台辅助技术报告“某个可访问对象发生了什么变化”的事件基类。它不是投递给 `QObject::event()` 的普通 Qt 输入事件，而是由应用构造后传给 `QAccessible::updateAccessibility()` 的语义通知。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+当值、焦点、名称、选择、可见性或对象结构发生变化时，辅助技术依靠这类事件刷新自己的缓存并向用户反馈。事件类型越具体，读屏和平台就越有机会给出正确体验。
 
-### 这是什么
-
-`QAccessibleEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
-
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
-
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleEvent>`
-- 继承自：未在类页中列出
-- 直接派生类：QAccessibleAnnouncementEvent、QAccessibleStateChangeEvent、QAccessibleTableModelChangeEvent、QAccessibleTextCursorEvent,、QAccessibleValueChangeEvent
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 来源类：无障碍事件基类。
+- 常用子类：`QAccessibleValueChangeEvent`、`QAccessibleStateChangeEvent`、文本插入/删除/光标事件、表模型变化事件和公告事件。
 
-CMake 配置：
+优先使用描述性子类。仅在没有专用事件可表达时，才直接构造 `QAccessibleEvent` 并指定 `QAccessible::Event`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleEvent(object, type)` | 以 QObject 为来源构造事件，通常开销更低。 |
+| `QAccessibleEvent(iface, type)` | 以现成可访问接口为来源构造事件。 |
+| `type()` | 读取事件类型。 |
+| `object()` | 读取来源 QObject，可能为空。 |
+| `accessibleInterface()` | 读取关联接口。 |
+| `child()` / `setChild(index)` | 指定发生变化的子对象索引。 |
+| `QAccessible::updateAccessibility(event)` | 将事件通知无障碍系统。 |
+
+## 4. 关键用法
+
+```cpp
+void CustomList::setCurrentRow(int row)
+{
+    if (m_currentRow == row)
+        return;
+
+    m_currentRow = row;
+    update();
+
+    QAccessibleEvent event(this, QAccessible::Selection);
+    event.setChild(row);
+    QAccessible::updateAccessibility(&event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`child` 是可访问树中的子索引，不是模型绝对行号或屏幕位置。若项目视图的可访问子树与模型行不一一对应，直接设置模型行会误导辅助技术；应让事件语义与 `child(index)` / `indexOfChild()` 的实现保持一致。
 
-### 工作机制
+```cpp
+QAccessibleStateChangeEvent event(checkBox, QAccessible::State());
+event.changedState().checked = true;
+QAccessible::updateAccessibility(&event);
+```
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+状态、数值和文本变化应使用对应子类，因为它们携带更精确的增量数据。只发送笼统 `ObjectShow` 或 `ValueChanged` 会丢失选择范围、插入文本或 state flag 等关键上下文。
 
-### 状态、生命周期和线程
+## 5. 事件选择参考
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+| 实际变化 | 优先事件 |
+|---|---|
+| 滑块、进度、数值编辑器的值 | `QAccessibleValueChangeEvent`。 |
+| 勾选、启用、展开、焦点等状态 | `QAccessibleStateChangeEvent` 或 `Focus`。 |
+| 文本插入、删除、替换 | 对应文本事件。 |
+| 文本光标或选区移动 | `QAccessibleTextCursorEvent` 或选择事件。 |
+| 表格/树模型行列改变 | `QAccessibleTableModelChangeEvent`。 |
+| 需要临时朗读的异步反馈 | `QAccessibleAnnouncementEvent`。 |
+| 对象出现、隐藏、名称改变 | 对应的 `QAccessible::Event`。 |
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+- 事件对象可以是栈对象；`updateAccessibility()` 返回后不要保存其指针。
+- 不要在每次 `paintEvent()` 中发送事件。绘制不是语义变化，频繁事件会淹没读屏输出。
+- 事件要在真实状态改变后发送，使辅助技术查询接口时读到的是新值。
+- 来源对象必须在事件处理期间有效；对象删除前不应再发送指向它的事件。
+- `QAccessible::isActive()` 可用于跳过昂贵事件数据的组装，但不要以它为由省略 UI 本身的状态更新。
+- 无障碍树一般绑定 GUI 对象，跨线程状态更新应回到 GUI 线程再修改对象并发送事件。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleEvent(QAccessibleInterface *interface, QAccessible::Event type)`
-- `QAccessibleEvent(QObject *object, QAccessible::Event type)`
-- `virtual ~QAccessibleEvent()`
-- `virtual QAccessibleInterface * accessibleInterface() const`
-- `int child() const`
-- `QObject * object() const`
-- `void setChild(int child)`
-- `QAccessible::Event type() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QAccessibleEvent::QAccessibleEvent(QAccessibleInterface *interface, QAccessible::Event type)`
-
-**作用与语义：**
-
-构建一个QAccessibleEvent来通知`interface`发生了变化。事件`type`描述了发生了哪些变化。如果你已经有`QAccessibleInterface`或没有`QObject`，可以使用这个函数;否则可以考虑使用`QObject`参数，这样可能更省钱。
-
-### `QAccessibleEvent::QAccessibleEvent(QObject *object, QAccessible::Event type)`
-
-**作用与语义：**
-
-构建一个QAccessibleEvent来通知`object`发生了变化。该事件`type`描述了发生了哪些变化。
-
-### `[virtual noexcept] QAccessibleEvent::~QAccessibleEvent()`
-
-**作用与语义：**
-
-毁了整个活动。
-
-### `[virtual] QAccessibleInterface *QAccessibleEvent::accessibleInterface() const`
-
-**作用与语义：**
-
-返回与事件相关的`QAccessibleInterface`。
-
-### `int QAccessibleEvent::child() const`
-
-**作用与语义：**
-
-返回子索引。
-
-### `QObject *QAccessibleEvent::object() const`
-
-**作用与语义：**
-
-返回事件对象。
-
-### `void QAccessibleEvent::setChild(int child)`
-
-**作用与语义：**
-
-将子索引设置为`child`。
-
-### `QAccessible::Event QAccessibleEvent::type() const`
-
-**作用与语义：**
-
-返回事件类型。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 无障碍事件与普通 Qt 事件的区别
+- 对象、接口与子节点定位
+- 事件精确性和平台缓存同步
+- 状态、值、文本、表格与公告子事件
+- 事件频率、生命周期和 GUI 线程

@@ -1,239 +1,91 @@
 # QFontVariableAxis
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QFontVariableAxis`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+可变字体把“常规、半粗、粗体、窄体、斜体”等多个实例收进同一个字体文件，并以连续数值的轴来描述变化。`QFontVariableAxis` 是其中一根轴的**说明卡**：它有四字符 tag、可读名称、最小值、默认值和最大值。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不会改变字体。真正选择 `wght=550` 或 `wdth=85` 的操作在 `QFont::setVariableAxis()`；`QFontVariableAxis` 的价值是让程序知道某个匹配字体有哪些可用控制项，以及滑块可以安全取到哪里。
 
-### 这是什么
-
-`QFontVariableAxis` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QFontVariableAxis>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：值类型，通常由 `QFontInfo::variableAxes()` 获得。
+- tag 类型为 `QFont::Tag`，表示恰好四个 Latin-1 字符；标准 tag 常见为 `wght`、`wdth`、`ital`、`opsz`。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途速查 |
+| --- | --- |
+| `tag()` / `setTag()` | 读取或设置四字符轴标识 |
+| `name()` / `setName()` | 读取或设置人类可读的轴名称 |
+| `minimumValue()` / `setMinimumValue()` | 读取或设置描述中的最小值 |
+| `defaultValue()` / `setDefaultValue()` | 读取或设置字体未指定该轴时的默认值 |
+| `maximumValue()` / `setMaximumValue()` | 读取或设置描述中的最大值 |
+| 拷贝、赋值、`swap()` | 复制或交换轴描述；不影响任何 `QFont` |
+| `QFontInfo::variableAxes()` | 查询已匹配字体实际公开的轴列表 |
+| `QFont::setVariableAxis(tag, value)` | 依据轴描述把一个值应用到字体请求 |
+
+## 4. 关键用法
+
+### 根据字体能力动态生成控制项
+
+```cpp
+QFontInfo info(currentFont);
+for (const QFontVariableAxis &axis : info.variableAxes()) {
+    qDebug() << axis.tag()
+             << axis.name()
+             << axis.minimumValue()
+             << axis.defaultValue()
+             << axis.maximumValue();
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+不要假定所有可变字体都有 `wght`。有的只提供光学尺寸，有的有厂商自定义轴；界面应根据查询结果生成，而非硬编码一套滑块。
 
-### 工作机制
+### 将滑块值安全地应用到 QFont
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+const QFontVariableAxis weightAxis = findAxis("wght");
+const float value = std::clamp<float>(sliderValue,
+                                      weightAxis.minimumValue(),
+                                      weightAxis.maximumValue());
 
-### 状态、生命周期和线程
+QFont font = baseFont;
+font.setVariableAxis(weightAxis.tag(), value);
+label->setFont(font);
+```
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+`setVariableAxis()` 是请求，不承诺系统一定能提供该效果。应用后若需确认实际匹配字体，重新通过 `QFontInfo` 检查。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+### 标准 tag 的语义不是统一的值域
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+```cpp
+font.setVariableAxis("wght", 550.0f); // 常见是 100..900，但必须查询
+font.setVariableAxis("wdth", 87.5f);  // 常见以百分比表达，但仍必须查询
+font.setVariableAxis("ital", 1.0f);   // 常见为 0..1，不应凭猜测使用
+```
 
-## 3. 直接使用
+tag 的语义有行业约定，不代表所有字体都采用同一范围、同一插值方式或同一视觉结果。范围永远以该字体返回的轴描述为准。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 5. 使用场景
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+- 排版工具、海报工具、字体预览器中的粗细、宽度和光学尺寸调节。
+- 代码或设计系统中介于“Regular”和“Bold”之间的连续字重。
+- 自适应字号时，让 `opsz` 随视觉尺寸变化的高级排版。
+- 诊断某台机器的字体后端是否暴露了可变轴能力。
 
-### 属性
+## 6. 常见坑与经验
 
-- `defaultValue : const qreal`
-- `maximumValue : const qreal`
-- `minimumValue : const qreal`
-- `name : const QString`
-- `tag : const QByteArray`
+- **描述对象不会修改字体。** `setMinimumValue()`、`setName()` 等只改当前 `QFontVariableAxis` 值对象，通常仅适合保存或测试自定义描述。
+- **不要把 tag 当任意字符串。** 它严格是四字符标识；Qt 的 `QFont::Tag` 设计就是为了避免 `"weight"` 这类拼写在运行时悄悄失效。
+- **不要把范围写死。** 即便标准 `wght` 通常接近 100 到 900，实际字体范围仍可能不同。
+- **变量轴与 `setWeight()` 的优先级要设计清楚。** 若显式设置了 `wght`，它比离散 `QFont::Weight` 更适合表达连续值；不要让两个控件互相覆盖却不更新 UI。
+- **平台支持会影响结果。** 字体后端、已安装的字体版本和 Windows 可选 GDI 后端都可能限制可变轴支持。
+- **轴名称不是稳定标识。** `name()` 可本地化、缺失或由字体提供；持久化时用 tag，展示时用 name。
 
-### 公有函数
+## 7. 知识点覆盖
 
-- `QFontVariableAxis(const QFontVariableAxis &axis)`
-- `~QFontVariableAxis()`
-- `qreal defaultValue() const`
-- `qreal maximumValue() const`
-- `qreal minimumValue() const`
-- `QString name() const`
-- `void setDefaultValue(qreal defaultValue)`
-- `void setMaximumValue(qreal maximumValue)`
-- `void setMinimumValue(qreal minimumValue)`
-- `void setName(const QString &name)`
-- `void setTag(QFont::Tag tag)`
-- `QFont::Tag tag() const`
-- `QFontVariableAxis & operator=(const QFontVariableAxis &axis)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[read-only] defaultValue : const qreal`
-
-**作用与语义：**
-
-该属性表示轴的默认值。
-如果`QFont`查询中没有提供该轴的值，这就是该轴的值。
-
-**如何使用：** 调用 `defaultValue()` 读取当前值；它不会修改应用状态。
-
-### `[read-only] maximumValue : const qreal`
-
-**作用与语义：**
-
-该属性表示轴的最大值。
-不支持将轴设置为高于此值的值。
-
-**如何使用：** 调用 `maximumValue()` 读取当前值；它不会修改应用状态。
-
-### `[read-only] minimumValue : const qreal`
-
-**作用与语义：**
-
-该属性表示轴的最小值。
-
-**如何使用：** 调用 `minimumValue()` 读取当前值；它不会修改应用状态。
-
-### `[read-only] name : const QString`
-
-**作用与语义：**
-
-如果字体提供，该属性即为轴的名称。
-
-**如何使用：** 调用 `name()` 读取当前值；它不会修改应用状态。
-
-### `[read-only] tag : const QByteArray`
-
-**作用与语义：**
-
-该属性表示轴的标签。
-这是一个四个字符的序列，用于标识轴。某些标签具有标准化含义，如“wght”（权重）和“wdth”（宽度），但任意四个拉丁字母的序列都是有效的标签。按照惯例，非标准/自定义的轴都用全大写标签表示。
-
-**如何使用：** 调用 `tag()` 读取当前值；它不会修改应用状态。
-
-### `QFontVariableAxis::QFontVariableAxis(const QFontVariableAxis &axis)`
-
-**作用与语义：**
-
-创建一个QFontVariableAxis对象，它是给定`axis`的复制品。
-
-### `[noexcept] QFontVariableAxis::~QFontVariableAxis()`
-
-**作用与语义：**
-
-摧毁了这个`QFontVariableAxis`物体。
-
-### `qreal QFontVariableAxis::defaultValue() const`
-
-**作用与语义：**
-
-返回轴的默认值。如果`QFont`查询中没有提供该轴的默认值，这就是该轴的默认值。
-注意：属性defaultValue使用Getter函数。
-
-### `qreal QFontVariableAxis::maximumValue() const`
-
-**作用与语义：**
-
-返回轴的最大值。不支持将轴设置为大于此值。
-注意：属性最大值的获取函数。
-
-### `qreal QFontVariableAxis::minimumValue() const`
-
-**作用与语义：**
-
-返回轴的最小值。不支持将轴设置为低于此值的值。
-注意：属性最小值的获取函数。
-
-### `QString QFontVariableAxis::name() const`
-
-**作用与语义：**
-
-如果字体提供，返回轴的名称。
-注意：物业名称的获取函数。
-
-### `void QFontVariableAxis::setDefaultValue(qreal defaultValue)`
-
-**作用与语义：**
-
-将该`QFontVariableAxis`的默认值设置为`defaultValue`。
-注意：通常不需要调用这个函数，因为它不会影响字体本身，只影响这个特定的表示。
-
-### `void QFontVariableAxis::setMaximumValue(qreal maximumValue)`
-
-**作用与语义：**
-
-将该`QFontVariableAxis`的最大值设为`maximumValue`。
-注意：通常不需要调用这个函数，因为它不会影响字体本身，只影响这个特定的表示。
-
-### `void QFontVariableAxis::setMinimumValue(qreal minimumValue)`
-
-**作用与语义：**
-
-将该`QFontVariableAxis`的最小值设为`minimumValue`。
-注意：通常不需要调用这个函数，因为它不会影响字体本身，只影响这个特定的表示。
-
-### `void QFontVariableAxis::setName(const QString &name)`
-
-**作用与语义：**
-
-将该`QFontVariableAxis`命名为`name`。
-注意：通常不需要调用这个函数，因为它不会影响字体本身，只影响这个特定的表示。
-
-### `void QFontVariableAxis::setTag(QFont::Tag tag)`
-
-**作用与语义：**
-
-将`QFontVariableAxis`标签设置为`tag`。
-注意：通常不需要调用这个函数，因为它不会影响字体本身，只影响这个特定的表示。
-
-### `QFont::Tag QFontVariableAxis::tag() const`
-
-**作用与语义：**
-
-返回轴的标签。这是一个四个字符的序列，用于标识轴。某些标签有标准化含义，如“wght”（权重）和“wdth”（宽度），但任意四个拉丁字母-1字符的序列都是有效的标签。按照惯例，非标准/自定义轴以全大写标签表示。
-
-### `QFontVariableAxis &QFontVariableAxis::operator=(const QFontVariableAxis &axis)`
-
-**作用与语义：**
-
-将给定的`axis`分配到该`QFontVariableAxis`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QFontVariableAxis` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+OpenType 可变字体、四字符 tag、标准与自定义轴、字体能力发现、范围校验、连续字重、设备/平台差异、字体请求与实际匹配。

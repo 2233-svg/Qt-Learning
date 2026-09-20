@@ -1,150 +1,36 @@
 # QtTaskTree::When
+> Qt 6.11.1 · Qt TaskTree · 来自 `QtTaskTree::When`
 
-> Qt 6.11.1 · Qt TaskTree
+## 作用定位
 
-## 1. 先建立直觉
+`When` 用来把“某个 barrier 或任务信号发生”转换成 TaskTree 的触发节点，再通过 `>> Do{...}` 指定触发后的动作。它常用于等待外部条件满足后继续流程。
 
-**一句话定位：** `QtTaskTree::When` 是并发执行或同步类型，负责任务、线程、future、promise 或共享资源的协调。
-
-**模块背景：** 这是 Qt TaskTree 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QtTaskTree::When` 是 并发与任务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
-
-**适用场景：** 先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <qbarriertask.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS TaskTree)
-target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
-```
+| API | 说明 |
+| --- | --- |
+| `When(kicker, policy)` | 用 barrier kicker 创建触发节点，并指定工作流策略。 |
+| `When(customTask, signal, policy)` | 监听自定义任务的某个信号作为触发来源。 |
+| `operator>>(When, Do)` | 把触发条件和执行体组合成 `Group`。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 等多个外部事件累计到阈值后启动子流程。
+- 某个 QObject 信号出现后运行一段任务。
+- 用 barrier 把分散的异步完成点汇聚回 TaskTree。
 
-并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
+## 常见坑与经验
+- `When` 只定义触发，不定义动作；动作在 `Do` 中。
+- 被监听对象的生命周期必须覆盖等待过程。
+- 触发策略要和错误处理一致：遇到失败是停、继续还是取消，需要明确。
 
-### 状态、生命周期和线程
+## 知识点覆盖
 
-**生命周期：** 任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-**状态与结果：** 区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-**线程与事件循环：** GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-## 3. 直接使用
-
-先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `When(const QtTaskTree::BarrierKickerGetter &kicker, QtTaskTree::WorkflowPolicy policy = WorkflowPolicy::StopOnError)`
-- `When(const QtTaskTree::QCustomTask<Task, Adapter, Deleter> &customTask, Signal signal, QtTaskTree::WorkflowPolicy policy = QtTaskTree::WorkflowPolicy::StopOnError)`
-
-### 相关非成员函数
-
-- `QtTaskTree::Group operator>>(const QtTaskTree::When &whenItem, const QtTaskTree::Do &doItem)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] When::When(const QtTaskTree::BarrierKickerGetter &kicker, QtTaskTree::WorkflowPolicy policy = WorkflowPolicy::StopOnError)`
-
-**作用与语义：**
-
-产生延迟元件，使返回`kicker`与`Do`体并联运行的回`ExecutableItem`。`Do`体被延迟，直到传递给`kicker`的`QStoredBarrier`提前运行。`kicker`和`Do`体返回的`ExecutableItem`将通过`policy`并行运行。
-例如，如果你想延迟后续任务的执行直到`QProcess`开始，配方可以是：
-当上述配方执行时，`QTaskTree`会与`Do`体并行运行`QProcessTask`。`Do`体最初处于暂停状态——当传给踢球者的障碍物前进后，该程序会继续。这会在`QProcess`开始时立即发生。此后，`QProcess`与`Do`体并行运行。
-
-**官方示例：**
-
-```cpp
- const auto kicker = [](const QStoredBarrier &barrier) {
-     const auto onSetup = [barrier](QProcess &process) {
-         QObject::connect(&process, &QProcess::started, barrier.activeStorage(), &QBarrier::advance);
-         ... // Setup process program, arguments, environment, etc...
-     };
-     return QProcessTask(onSetup);
- };
-
- const Group recipe {
-     When (kicker) >> Do {
-         delayedTask1,
-         ...
-     }
- };
-```
-
-### `[explicit] template < typename Task, typename Adapter, typename Deleter, typename Signal > When::When(const QtTaskTree::QCustomTask<Task, Adapter, Deleter> &customTask, Signal signal, QtTaskTree::WorkflowPolicy policy = QtTaskTree::WorkflowPolicy::StopOnError)`
-
-**作用与语义：**
-
-创建一个延迟元件，将`customTask`及其`Task`的`signal`与`Do`体并联运行。在`Task` `signal`发出前，`Do`体会被延迟运行。`customTask`和`Do`体将通过`policy`并行运行。
-另一个 When 构造函数的代码可以简化为：
-注意：通过`customTask`的`Task`类型需要从`QObject`中推导出来。
-
-**官方示例：**
-
-```cpp
- const auto onSetup = [barrier](QProcess &process) {
-     ... // Setup process program, arguments, environment, etc...
- };
-
- const Group recipe {
-     When (QProcessTask(onSetup), &QProcess::started) >> Do {
-         delayedTask1,
-         ...
-     }
- };
-```
-
-### `QtTaskTree::Group operator>>(const QtTaskTree::When &whenItem, const QtTaskTree::Do &doItem)`
-
-**作用与语义：**
-
-将`whenItem`与`doItem`身体结合，返回一个`Group`，准备用于任务树配方。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-### 状态和错误边界
-
-区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-### 线程边界
-
-GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-### 最容易出现的错误
-
-不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QtTaskTree::When` 所属机制类型：并发与任务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- barrier/信号触发任务
+- `When >> Do` DSL
+- 外部事件汇聚
+- workflow policy

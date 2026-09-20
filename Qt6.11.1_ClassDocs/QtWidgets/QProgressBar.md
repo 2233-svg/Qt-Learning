@@ -1,513 +1,121 @@
 # QProgressBar
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QProgressBar`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QProgressBar` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QProgressBar` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QProgressBar` 是进度显示控件。它把一个整数范围里的当前值画成横向或纵向进度条，并可按格式显示百分比、当前值、总步数等文本。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+它只负责“显示进度”，不负责运行任务、取消任务或调度线程。后台工作应通过信号把进度发回 GUI 线程，再调用 `setValue()` 更新。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+### 适合使用的场景
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+- 文件处理、下载、导入、构建等确定总量的任务。
+- 状态栏、对话框或面板中的进度反馈。
+- 需要显示忙碌状态：把 minimum 和 maximum 都设为 0。
+- 需要自定义进度文本格式。
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+### 不适合的场景
+
+- 需要取消按钮和自动延迟显示时，用 `QProgressDialog`。
+- 不知道总进度但只想显示“正在工作”，可用 busy progress 或动画指示。
+- 不要在后台线程直接操作进度条。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QProgressBar>`
-- 继承自：QWidget
-- 直接派生类：未在类页中列出
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QWidget`
+- 直接派生类：类页未列出
 
-CMake 配置：
+进度条通常被其他容器持有，例如状态栏、工具面板、对话框。它没有自己的任务模型；你需要自己决定最大值、当前值和完成时机。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
+## 3. API 速查
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+| API | 用途速查 |
+| --- | --- |
+| `enum Direction` | 垂直进度条文本方向。 |
+| `minimum : int` / `maximum : int` | 进度范围；二者同为 0 时常表示忙碌模式。 |
+| `value : int` | 当前进度值。 |
+| `format : QString` | 文本格式，支持 `%p`、`%v`、`%m`。 |
+| `text : QString` | 当前根据 format 生成的显示文本。 |
+| `textVisible : bool` | 是否显示文本，style 可忽略。 |
+| `alignment : Qt::Alignment` | 文本对齐。 |
+| `orientation : Qt::Orientation` | 水平或垂直进度条。 |
+| `textDirection : Direction` | 垂直进度条文本旋转方向。 |
+| `invertedAppearance : bool` | 进度增长方向是否反转。 |
+| `setRange(min, max)` | 一次设置范围。 |
+| `setValue(int)` | 更新当前进度。 |
+| `reset()` | 重置为无进度状态。 |
+| `resetFormat()` | 恢复默认文本格式。 |
+| `valueChanged(int)` | 当前值变化时发出。 |
+| `sizeHint()` / `minimumSizeHint()` | 推荐尺寸。 |
+| `initStyleOption(QStyleOptionProgressBar *)` | 为绘制准备 style option。 |
+| `paintEvent()` / `event()` | 绘制和通用事件处理。 |
 
-### 工作机制
+## 4. API 逐项说明
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+### `Direction` / `textDirection`
 
-### 状态、生命周期和线程
+只影响垂直进度条的文本读取方向：从上到下或从下到上。水平进度条不受影响。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+并非所有平台 style 都绘制垂直进度条文本，因此不要把关键进度信息只放在垂直条文字里。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+### `minimum` / `maximum` / `setRange()`
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+范围决定百分比计算。默认通常是 0 到 100。`setRange(0, 0)` 常用于忙碌模式，表示任务正在运行但总量未知。
 
-## 3. 直接使用
+如果当前值超出新范围，进度条可能重置。更新范围时最好先确定任务总量，再开始发进度。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
+### `value` / `setValue()` / `valueChanged(int)`
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+`setValue()` 更新当前进度，值必须在范围内才有意义。变化时发出 `valueChanged(int)`。
 
-### 公有类型
+进度更新不要过于频繁。高频任务可以按时间或百分比节流，否则 GUI 线程会被刷新拖慢。
 
-- `enum Direction { TopToBottom, BottomToTop }`
+### `format` / `text` / `resetFormat()`
 
-### 属性
+`format` 控制文本，`%p` 是百分比，`%v` 是当前值，`%m` 是最大值。默认通常是 `%p%`。`text()` 返回实际生成的文本。
 
-- `alignment : Qt::Alignment`
-- `format : QString`
-- `invertedAppearance : bool`
-- `maximum : int`
-- `minimum : int`
-- `orientation : Qt::Orientation`
-- `text : QString`
-- `textDirection : Direction`
-- `textVisible : bool`
-- `value : int`
+示例：`setFormat("%v / %m files")`。恢复默认用 `resetFormat()`。
 
-### 公有函数
+### `textVisible` / `alignment`
 
-- `QProgressBar(QWidget *parent = nullptr)`
-- `virtual ~QProgressBar()`
-- `Qt::Alignment alignment() const`
-- `QString format() const`
-- `bool invertedAppearance() const`
-- `bool isTextVisible() const`
-- `int maximum() const`
-- `int minimum() const`
-- `Qt::Orientation orientation() const`
-- `void resetFormat()`
-- `void setAlignment(Qt::Alignment alignment)`
-- `void setFormat(const QString &format)`
-- `void setInvertedAppearance(bool invert)`
-- `void setTextDirection(QProgressBar::Direction textDirection)`
-- `void setTextVisible(bool visible)`
-- `virtual QString text() const`
-- `QProgressBar::Direction textDirection() const`
-- `int value() const`
+`textVisible` 控制是否请求绘制文字，但 style 可以忽略。`alignment` 控制文字对齐。
 
-### 重实现的公有函数
+如果文本很重要，建议旁边放独立 `QLabel`，不要完全依赖进度条内部文本。
 
-- `virtual QSize minimumSizeHint() const override`
-- `virtual QSize sizeHint() const override`
+### `orientation` / `invertedAppearance`
 
-### 公有槽函数
+`orientation` 控制水平或垂直；`invertedAppearance` 让进度从相反方向增长，例如右到左。
 
-- `void reset()`
-- `void setMaximum(int maximum)`
-- `void setMinimum(int minimum)`
-- `void setOrientation(Qt::Orientation)`
-- `void setRange(int minimum, int maximum)`
-- `void setValue(int value)`
+右到左语言环境、特殊仪表布局可能需要反转，但普通进度条遵循平台默认即可。
 
-### 信号
+### `reset()`
 
-- `void valueChanged(int value)`
+重置进度条，显示为尚未开始或无进度状态。它不取消任务，只改变控件状态。
 
-### 保护函数
+任务失败、取消或准备复用进度条时可以调用。
 
-- `virtual void initStyleOption(QStyleOptionProgressBar *option) const`
+### `sizeHint()` / `initStyleOption()` / `paintEvent()`
 
-### 重实现的保护函数
+这些服务布局和绘制。自定义绘制时应使用 `QStyleOptionProgressBar`，保留平台主题、文本、方向和忙碌状态。
 
-- `virtual bool event(QEvent *e) override`
-- `virtual void paintEvent(QPaintEvent *) override`
+普通应用不需要重写绘制；改 format 和 style sheet 已能覆盖多数需求。
 
-## 5. API 逐个说明
+## 5. 深入实践与常见坑
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+### 忙碌模式不是 0%
 
-### `enum QProgressBar::Direction`
+`setRange(0, 0)` 通常显示忙碌动画，表示不知道总量。它不是“进度为零”。
 
-**作用与语义：**
+### 后台线程只发信号
 
-指定垂直进度条的`text`读取方向。
-- `QProgressBar::TopToBottom`：`0`;文本顺时针旋转90度。
-- `QProgressBar::BottomToTop`：`1`;文本逆时针旋转90度。
-请注意，是否绘制文本取决于样式。目前 CleanLooks 和 Plastique 负责绘制文本。Mac、Windows 和 WindowsVista 样式则不支持。
+进度条是 QWidget，只能在 GUI 线程更新。worker 线程发 `progressChanged(int)`，连接到主线程里的 `setValue()`。
 
-### `alignment : Qt::Alignment`
+### 文本格式不要承载全部信息
 
-**作用与语义：**
-
-该属性表示进度条的对齐。
-
-**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
-
-### `format : QString`
-
-**作用与语义：**
-
-该属性包含用于生成当前文本的字符串。
-%p - 被完成百分比取代。%v - 被当前值替换。%m - 被总步骤数替代。
-默认值为“%p%”。
-
-**如何使用：** 调用 `format()` 读取当前值；它不会修改应用状态。
-
-### `invertedAppearance : bool`
-
-**作用与语义：**
-
-该属性是否存在进度条的进度反转。
-如果该属性`true`，进度条会向相反方向增长（例如从右向左）。默认情况下，进度条不会反转。
-
-**如何使用：** 调用 `invertedAppearance()` 读取当前值；它不会修改应用状态。
-
-### `maximum : int`
-
-**作用与语义：**
-
-该属性表示进度条的最大值。
-设置该属性时，必要时调整`minimum`以确保范围有效。如果当前值超出新范围，进度条会随`reset()`重置。
-
-**如何使用：** 调用 `maximum()` 读取当前值；它不会修改应用状态。
-
-### `minimum : int`
-
-**作用与语义：**
-
-该属性表示进度条的最小值。
-设置该属性时，如有必要会调整`maximum`以确保范围有效。如果当前值超出新范围，进度条将随`reset()`重置。
-
-**如何使用：** 调用 `minimum()` 读取当前值；它不会修改应用状态。
-
-### `orientation : Qt::Orientation`
-
-**作用与语义：**
-
-此属性保存进度条的方向。
-方向必须为 `Qt::Horizontal`（默认值）或 `Qt::Vertical`。
-
-**如何使用：** 调用 `orientation()` 读取当前值；它不会修改应用状态。
-
-### `[read-only] text : QString`
-
-**作用与语义：**
-
-此属性保存与进度条显示的描述性文本。
-返回的文本与显示在进度条中心（或某些样式中显示在左侧）的文本相同。
-文本中显示的进度可能小于最小值，表示进度条处于“重置”状态，还未设置任何进度。
-在默认实现中，文本包含表示当前进度的百分比值，或者为空，因为进度条处于重置状态。
-
-**如何使用：** 调用 `text()` 读取当前值；它不会修改应用状态。
-
-### `textDirection : Direction`
-
-**作用与语义：**
-
-该属性表示垂直进度条`text`的读取方向。
-该属性不影响水平进度条。默认情况下，阅读方向为`QProgressBar::TopToBottom`。
-
-**如何使用：** 调用 `textDirection()` 读取当前值；它不会修改应用状态。
-
-### `textVisible : bool`
-
-**作用与语义：**
-
-该属性决定当前完成百分比是否应显示。
-样式可以忽略该属性（例如，QMacStyle从不绘制文本）。
-
-**如何使用：** 调用 `textVisible()` 读取当前值；它不会修改应用状态。
-
-### `value : int`
-
-**作用与语义：**
-
-该属性表示进度条当前值。
-尝试将当前值调整到超出最小-最大范围的值，对当前值没有影响。
-
-**如何使用：** 调用 `value()` 读取当前值；它不会修改应用状态。
-
-### `[explicit] QProgressBar::QProgressBar(QWidget *parent = nullptr)`
-
-**作用与语义：**
-
-用给定的`parent`构建进度条。
-默认情况下，最小步长值设为0，最大步长设为100。
-
-### `[virtual noexcept] QProgressBar::~QProgressBar()`
-
-**作用与语义：**
-
-毁灭者。
-
-### `[override virtual protected] bool QProgressBar::event(QEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QWidget::event`（QEvent *事件）。
-
-### `[virtual protected] void QProgressBar::initStyleOption(QStyleOptionProgressBar *option) const`
-
-**作用与语义：**
-
-用`QProgressBar`的值初始化`option`。这种方法适用于子类需要`QStyleOptionProgressBar`但不想自己填满所有信息时。
-
-### `[override virtual] QSize QProgressBar::minimumSizeHint() const`
-
-**作用与语义：**
-
-重新实现属性的访问函数：`QWidget::minimumSizeHint`。
-
-### `[override virtual protected] void QProgressBar::paintEvent(QPaintEvent *)`
-
-**作用与语义：**
-
-重实现自：`QWidget::paintEvent`（QPaintEvent *event）。
-该事件处理程序可以在子类中重新实现，以接收 `event` 传递的绘画事件。
-绘图事件是请求重新绘制一个小部件的全部或部分。它可能由以下原因之一发生：
-- `repaint()`或`update()`被援引，
-- 小部件被遮挡，现已被发现，或
-- 还有很多其他原因。
-许多控件可以在被要求时重新绘制整个表面，但一些慢速控件需要通过仅绘制请求的区域来优化：`QPaintEvent::region()`。这种速度优化不会改变结果，因为在事件处理过程中绘制会被裁剪到该区域。例如，`QListView`和`QTableView`就是这样做的。
-Qt 还试图通过将多个绘画事件合并为一个来加快绘画速度。当 `update()` 被多次调用或窗口系统发送多个绘画事件时，Qt 会将这些事件合并为一个区域更大的事件（参见 `QRegion::united()`）。`repaint()` 函数不支持这种优化，因此我们建议尽可能使用 `update()`。
-当绘制事件发生时，更新区域通常已经被擦除，所以你是在小部件的背景上作画。
-背景可以用`setBackgroundRole()`和`setPalette()`设置。
-自 Qt 4.0 起，`QWidget` 会自动双缓冲绘制，因此无需在 paintEvent() 中编写双缓冲代码以避免闪烁。
-注意：通常，你应避免在paintEvent()中调用`update()`或`repaint()`。例如，在paintEvent()中调用`update()`或`repaint()`会导致行为未定义;孩子可能会或不会获得绘画事件。
-警告：如果你使用没有 Qt backingstore 的自定义绘图引擎，`Qt::WA_PaintOnScreen`必须设置。否则，`QWidget::paintEngine()` 永远不会被调用;Backingstore 将被使用。
-
-### `[slot] void QProgressBar::reset()`
-
-**作用与语义：**
-
-重置进度条。进度条会“倒带”，显示没有进度。
-
-### `[slot] void QProgressBar::setRange(int minimum, int maximum)`
-
-**作用与语义：**
-
-将进度条的最小值和最大值分别设置为`minimum`和`maximum`。
-如果`maximum`小于`minimum`，`minimum`就成为唯一的法律价值。
-如果当前值超出新范围，进度条会随`reset()`重置。
-通过使用 setRange（0， 0） 可以将`QProgressBar`设置为未确定状态。
-
-### `[override virtual] QSize QProgressBar::sizeHint() const`
-
-**作用与语义：**
-
-重新实现了属性的访问函数：`QWidget::sizeHint`。
-
-### `[signal] void QProgressBar::valueChanged(int value)`
-
-**作用与语义：**
-
-该属性表示进度条当前值。
-尝试将当前值调整到超出最小-最大范围的值，对当前值没有影响。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `value` 的变化，不要把它当作普通函数主动调用。
-
-### `Qt::Alignment alignment() const`
-
-**作用与语义：**
-
-该属性表示进度条的对齐。
-
-**如何使用：** 调用 `alignment()` 读取当前值；它不会修改应用状态。
-
-### `QString format() const`
-
-**作用与语义：**
-
-该属性包含用于生成当前文本的字符串。
-%p - 被完成百分比取代。%v - 被当前值替换。%m - 被总步骤数替代。
-默认值为“%p%”。
-
-**如何使用：** 调用 `format()` 读取当前值；它不会修改应用状态。
-
-### `bool invertedAppearance() const`
-
-**作用与语义：**
-
-该属性是否存在进度条的进度反转。
-如果该属性`true`，进度条会向相反方向增长（例如从右向左）。默认情况下，进度条不会反转。
-
-**如何使用：** 调用 `invertedAppearance()` 读取当前值；它不会修改应用状态。
-
-### `bool isTextVisible() const`
-
-**作用与语义：**
-
-该属性决定当前完成百分比是否应显示。
-样式可以忽略该属性（例如，QMacStyle从不绘制文本）。
-
-**如何使用：** 调用 `isTextVisible()` 读取当前值；它不会修改应用状态。
-
-### `int maximum() const`
-
-**作用与语义：**
-
-该属性表示进度条的最大值。
-设置该属性时，必要时调整`minimum`以确保范围有效。如果当前值超出新范围，进度条会随`reset()`重置。
-
-**如何使用：** 调用 `maximum()` 读取当前值；它不会修改应用状态。
-
-### `int minimum() const`
-
-**作用与语义：**
-
-该属性表示进度条的最小值。
-设置该属性时，如有必要会调整`maximum`以确保范围有效。如果当前值超出新范围，进度条将随`reset()`重置。
-
-**如何使用：** 调用 `minimum()` 读取当前值；它不会修改应用状态。
-
-### `Qt::Orientation orientation() const`
-
-**作用与语义：**
-
-此属性保存进度条的方向。
-方向必须为 `Qt::Horizontal`（默认值）或 `Qt::Vertical`。
-
-**如何使用：** 调用 `orientation()` 读取当前值；它不会修改应用状态。
-
-### `void resetFormat()`
-
-**作用与语义：**
-
-该属性包含用于生成当前文本的字符串。
-%p - 被完成百分比取代。%v - 被当前值替换。%m - 被总步骤数替代。
-默认值为“%p%”。
-
-**如何使用：** 调用 `resetFormat()` 撤销对 `format` 的显式覆盖，让它重新采用继承值或默认值。
-
-### `void setAlignment(Qt::Alignment alignment)`
-
-**作用与语义：**
-
-该属性表示进度条的对齐。
-
-**如何使用：** 调用 `setAlignment(...)` 修改 `alignment`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setFormat(const QString &format)`
-
-**作用与语义：**
-
-该属性包含用于生成当前文本的字符串。
-%p - 被完成百分比取代。%v - 被当前值替换。%m - 被总步骤数替代。
-默认值为“%p%”。
-
-**如何使用：** 调用 `setFormat(...)` 修改 `format`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setInvertedAppearance(bool invert)`
-
-**作用与语义：**
-
-该属性是否存在进度条的进度反转。
-如果该属性`true`，进度条会向相反方向增长（例如从右向左）。默认情况下，进度条不会反转。
-
-**如何使用：** 调用 `setInvertedAppearance(...)` 修改 `invertedAppearance`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setTextDirection(QProgressBar::Direction textDirection)`
-
-**作用与语义：**
-
-该属性表示垂直进度条`text`的读取方向。
-该属性不影响水平进度条。默认情况下，阅读方向为`QProgressBar::TopToBottom`。
-
-**如何使用：** 调用 `setTextDirection(...)` 修改 `textDirection`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setTextVisible(bool visible)`
-
-**作用与语义：**
-
-该属性决定当前完成百分比是否应显示。
-样式可以忽略该属性（例如，QMacStyle从不绘制文本）。
-
-**如何使用：** 调用 `setTextVisible(...)` 修改 `textVisible`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `virtual QString text() const`
-
-**作用与语义：**
-
-此属性保存与进度条显示的描述性文本。
-返回的文本与显示在进度条中心（或某些样式中显示在左侧）的文本相同。
-文本中显示的进度可能小于最小值，表示进度条处于“重置”状态，还未设置任何进度。
-在默认实现中，文本包含表示当前进度的百分比值，或者为空，因为进度条处于重置状态。
-
-**如何使用：** 调用 `text()` 读取当前值；它不会修改应用状态。
-
-### `QProgressBar::Direction textDirection() const`
-
-**作用与语义：**
-
-该属性表示垂直进度条`text`的读取方向。
-该属性不影响水平进度条。默认情况下，阅读方向为`QProgressBar::TopToBottom`。
-
-**如何使用：** 调用 `textDirection()` 读取当前值；它不会修改应用状态。
-
-### `int value() const`
-
-**作用与语义：**
-
-该属性表示进度条当前值。
-尝试将当前值调整到超出最小-最大范围的值，对当前值没有影响。
-
-**如何使用：** 调用 `value()` 读取当前值；它不会修改应用状态。
-
-### `void setMaximum(int maximum)`
-
-**作用与语义：**
-
-该属性表示进度条的最大值。
-设置该属性时，必要时调整`minimum`以确保范围有效。如果当前值超出新范围，进度条会随`reset()`重置。
-
-**如何使用：** 调用 `setMaximum(...)` 修改 `maximum`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setMinimum(int minimum)`
-
-**作用与语义：**
-
-该属性表示进度条的最小值。
-设置该属性时，如有必要会调整`maximum`以确保范围有效。如果当前值超出新范围，进度条将随`reset()`重置。
-
-**如何使用：** 调用 `setMinimum(...)` 修改 `minimum`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setOrientation(Qt::Orientation)`
-
-**作用与语义：**
-
-此属性保存进度条的方向。
-方向必须为 `Qt::Horizontal`（默认值）或 `Qt::Vertical`。
-
-**如何使用：** 调用 `setOrientation(...)` 修改 `orientation`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setValue(int value)`
-
-**作用与语义：**
-
-该属性表示进度条当前值。
-尝试将当前值调整到超出最小-最大范围的值，对当前值没有影响。
-
-**如何使用：** 调用 `setValue(...)` 修改 `value`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QProgressBar` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+有些 style 不显示文字。关键任务名、错误、速度、剩余时间最好放独立 label。

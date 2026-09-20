@@ -1,263 +1,70 @@
 # QAccessibleWidget
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QAccessibleWidget`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleWidget` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QAccessibleWidget` 是 QWidget 的无障碍接口基类。它把一个可见控件转换成辅助技术能理解的对象：名字是什么、角色是什么、在哪里、是否可用、有哪些动作、子对象是谁。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+屏幕阅读器、自动化测试、系统辅助功能都依赖这些信息。自定义控件如果只画得漂亮但没有无障碍语义，对很多用户来说就是不可用的。
 
-### 这是什么
+## 2. 类说明
 
-`QAccessibleWidget` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QAccessibleWidget` 继承自 `QAccessibleObject` 并实现 `QAccessibleActionInterface`。它包装一个 `QWidget`，默认从 widget 的属性、geometry、palette、focus、enabled/visible 状态中推导无障碍信息。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+自定义 widget 无法被 Qt 默认准确描述时，可以继承它，覆盖 `role()`、`text()`、`state()`、`child()`、`childCount()`、`doAction()` 等函数。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QAccessibleWidget(QWidget *, Role)` | 为 widget 创建无障碍对象并指定角色。 |
+| `QAccessibleWidget(QWidget *, Role, QString)` | 创建时指定角色和名称。 |
+| `widget()` | 返回被包装的 QWidget。 |
+| `parentObject()` | 返回父对象。 |
+| `role()` | 返回控件角色，如 Button、Client、Slider。 |
+| `text(QAccessible::Text)` | 返回名称、描述、值等文本。 |
+| `state()` | 返回可见、可用、焦点、选中等状态。 |
+| `rect()` | 返回屏幕坐标中的可访问区域。 |
+| `childCount()` / `child()` | 暴露可访问子对象。 |
+| `parent()` / `indexOfChild()` | 描述可访问树关系。 |
+| `focusChild()` | 返回当前焦点子对象。 |
+| `actionNames()` | 返回支持的动作，如 press。 |
+| `doAction()` | 执行无障碍动作。 |
+| `keyBindingsForAction()` | 返回动作快捷键。 |
+| `addControllingSignal()` | 声明某信号会影响被控制对象。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+自定义控件工厂通常返回派生接口：
 
-- 头文件：`#include <QAccessibleWidget>`
-- 继承自：QAccessibleObject、QAccessibleActionInterface
-- 直接派生类：未在类页中列出
+```cpp
+class AccessibleKnob : public QAccessibleWidget {
+public:
+    AccessibleKnob(QWidget *w)
+        : QAccessibleWidget(w, QAccessible::Slider) {}
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+    QString text(QAccessible::Text t) const override
+    {
+        if (t == QAccessible::Name)
+            return "Gain";
+        return QAccessibleWidget::text(t);
+    }
+};
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+然后通过 Qt 无障碍工厂机制注册，让辅助技术能获取它。
 
-### 工作机制
+## 5. 使用场景
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+适合自定义 widget、复杂绘制控件、非标准按钮/滑块/图表交互、需要屏幕阅读器正确读出的专业软件。
 
-### 状态、生命周期和线程
+普通 Qt 标准控件通常已有无障碍实现；重点检查自绘控件和图形化控件。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+## 6. 常见坑与经验
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+无障碍名称不是 tooltip。名称要短而稳定，描述可以补充更多语义。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+角色要准确。把滑块报成普通 Client，辅助技术就不知道它有值、范围和可调动作。
 
-## 3. 直接使用
-
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleWidget(QWidget *w, QAccessible::Role role = QAccessible::Client)`
-- `QAccessibleWidget(QWidget *w, QAccessible::Role role, const QString &name)`
-
-### 重实现的公有函数
-
-- `virtual QStringList actionNames() const override`
-- `virtual QColor backgroundColor() const override`
-- `virtual QAccessibleInterface * child(int index) const override`
-- `virtual int childCount() const override`
-- `virtual void doAction(const QString &actionName) override`
-- `virtual QAccessibleInterface * focusChild() const override`
-- `virtual QColor foregroundColor() const override`
-- `virtual int indexOfChild(const QAccessibleInterface *child) const override`
-- `virtual void * interface_cast(QAccessible::InterfaceType t) override`
-- `virtual bool isValid() const override`
-- `virtual QStringList keyBindingsForAction(const QString &actionName) const override`
-- `virtual QAccessibleInterface * parent() const override`
-- `virtual QRect rect() const override`
-- `virtual QList<std::pair<QAccessibleInterface *, QAccessible::Relation>> relations(QAccessible::Relation match = QAccessible::AllRelations) const override`
-- `virtual QAccessible::Role role() const override`
-- `virtual QAccessible::State state() const override`
-- `virtual QString text(QAccessible::Text t) const override`
-- `virtual QWindow * window() const override`
-
-### 保护函数
-
-- `virtual ~QAccessibleWidget()`
-- `void addControllingSignal(const QString &signal)`
-- `QObject * parentObject() const`
-- `QWidget * widget() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QAccessibleWidget::QAccessibleWidget(QWidget *w, QAccessible::Role role = QAccessible::Client)`
-
-**作用与语义：**
-
-为控件`w`创建QAccessibleWidget对象。`role`是一个可选参数，用于设置对象的角色属性。
-
-### `[explicit] QAccessibleWidget::QAccessibleWidget(QWidget *w, QAccessible::Role role, const QString &name)`
-
-**作用与语义：**
-
-为控件`w`创建QAccessibleWidget对象。`role`和`name`是可选参数，用于设置对象的角色和名称属性。
-
-### `[virtual noexcept protected] QAccessibleWidget::~QAccessibleWidget()`
-
-**作用与语义：**
-
-摧毁这个物体。
-
-### `[override virtual] QStringList QAccessibleWidget::actionNames() const`
-
-**作用与语义：**
-
-重装：`QAccessibleActionInterface::actionNames()` const.
-
-### `[protected] void QAccessibleWidget::addControllingSignal(const QString &signal)`
-
-**作用与语义：**
-
-将`signal`视为控制信号。
-对象是连接到控制信号的其他物体的控制器。
-
-### `[override virtual] QColor QAccessibleWidget::backgroundColor() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::backgroundColor()` const.
-
-### `[override virtual] QAccessibleInterface *QAccessibleWidget::child(int index) const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::child`（int index）const.
-
-### `[override virtual] int QAccessibleWidget::childCount() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::childCount()` const.
-
-### `[override virtual] void QAccessibleWidget::doAction(const QString &actionName)`
-
-**作用与语义：**
-
-重实现自：`QAccessibleActionInterface::doAction`（const QString &actionName）。
-
-### `[override virtual] QAccessibleInterface *QAccessibleWidget::focusChild() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::focusChild()` const.
-
-### `[override virtual] QColor QAccessibleWidget::foregroundColor() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::foregroundColor()` const.
-
-### `[override virtual] int QAccessibleWidget::indexOfChild(const QAccessibleInterface *child) const`
-
-**作用与语义：**
-
-返回 `child` 在当前控件可访问子对象列表中的从 0 开始索引；不是直接子对象时返回 -1。传入接口必须仍然有效，结果应与 `childCount()` 和 `child(index)` 使用同一顺序。
-
-### `[override virtual] void *QAccessibleWidget::interface_cast(QAccessible::InterfaceType t)`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::interface_cast`（QAccessible：：InterfaceType 类型）。
-
-### `[override virtual] bool QAccessibleWidget::isValid() const`
-
-**作用与语义：**
-
-重装：`QAccessibleObject::isValid()` const.
-
-### `[override virtual] QStringList QAccessibleWidget::keyBindingsForAction(const QString &actionName) const`
-
-**作用与语义：**
-
-重实现自：：`QAccessibleActionInterface::keyBindingsForAction`（const QString &actionName） const.
-
-### `[override virtual] QAccessibleInterface *QAccessibleWidget::parent() const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::parent()` const.
-
-### `[protected] QObject *QAccessibleWidget::parentObject() const`
-
-**作用与语义：**
-
-返回关联小部件的父对象，该对象要么是父小部件，要么是顶层小部件的 `qApp`。
-
-### `[override virtual] QRect QAccessibleWidget::rect() const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleObject::rect()` const.
-
-### `[override virtual] QList<std::pair<QAccessibleInterface *, QAccessible::Relation>> QAccessibleWidget::relations(QAccessible::Relation match = QAccessible::AllRelations) const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::relations`（QAccessible：：Relation match）const.
-
-### `[override virtual] QAccessible::Role QAccessibleWidget::role() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::role()` const.
-
-### `[override virtual] QAccessible::State QAccessibleWidget::state() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::state()` const.
-
-### `[override virtual] QString QAccessibleWidget::text(QAccessible::Text t) const`
-
-**作用与语义：**
-
-重实现自：`QAccessibleInterface::text`（QAccessible：：Text t） const.
-
-### `[protected] QWidget *QAccessibleWidget::widget() const`
-
-**作用与语义：**
-
-返回关联的小部件。
-
-### `[override virtual] QWindow *QAccessibleWidget::window() const`
-
-**作用与语义：**
-
-重装：`QAccessibleInterface::window()` const.
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleWidget` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+控件状态变化时要发送合适的无障碍事件，否则屏幕阅读器不会知道内容变了。

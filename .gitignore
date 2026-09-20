@@ -1,4 +1,9 @@
 build/
 .vs/
 out/
+dist/
+qtAPI知识/_viewer/
+qtAPI知识/**/.vendor/
+qtAPI知识/**/__pycache__/
+qtAPI知识/**/node_modules/
 

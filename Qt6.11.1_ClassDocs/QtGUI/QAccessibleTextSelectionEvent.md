@@ -1,123 +1,73 @@
 # QAccessibleTextSelectionEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleTextSelectionEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleTextSelectionEvent` 是 Qt 的值类型，围绕“Accessible文本选择事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QAccessibleTextSelectionEvent` 通知辅助技术：文本对象的选区发生了变化。它记录新的选区起点和终点，并继承光标位置能力，让读屏能知道选择结束后插入点在哪里。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它描述的是文本选区，不是列表项选择。列表、表格、图形对象的选择应使用 `QAccessibleSelectionInterface` 或表格相关接口。
 
-### 这是什么
-
-`QAccessibleTextSelectionEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
-
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
-
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleTextSelectionEvent>`
-- 继承自：QAccessibleTextCursorEvent
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QAccessibleTextCursorEvent`
+- 区间规则：选区采用半开区间 `[start, end)`。
 
-CMake 配置：
+大多数控件只有一个选区，但 `QAccessibleTextInterface` 支持多个选区。这个事件表达一段新的选择范围；复杂多选区编辑器还应保证文本接口能查询完整选择列表。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleTextSelectionEvent(object, start, end)` | 为 QObject 构造选区变化事件。 |
+| `QAccessibleTextSelectionEvent(iface, start, end)` | 为可访问接口构造选区变化事件。 |
+| `selectionStart()` | 返回选区起始文本偏移。 |
+| `selectionEnd()` | 返回选区结束文本偏移。 |
+| `setSelection(start, end)` | 修改事件中的选区范围。 |
+| `cursorPosition()` / `setCursorPosition()` | 读取或设置事件携带的光标位置。 |
+
+## 4. 关键用法
+
+```cpp
+void Editor::setSelection(int anchor, int cursor)
+{
+    const int start = qMin(anchor, cursor);
+    const int end = qMax(anchor, cursor);
+
+    document()->setSelection(start, end);
+
+    QAccessibleTextSelectionEvent event(this, start, end);
+    event.setCursorPosition(cursor);
+    QAccessible::updateAccessibility(&event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+选区范围通常按从小到大的文本偏移表示，但光标位置可能位于选区起点或终点，这取决于用户拖选方向或 Shift+方向键的锚点逻辑。若方向对你的编辑器很重要，应正确设置 `cursorPosition()`。
 
-### 工作机制
+## 5. 使用场景
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+| 场景 | 建议 |
+|---|---|
+| 用户拖选文本 | 发送选区事件，可合并高频中间变化。 |
+| Shift+方向键扩展选择 | 发送选区事件并设置真实光标端。 |
+| Ctrl+A 全选文本 | 范围为 `[0, characterCount())`。 |
+| 清除选择但保留光标 | 可发送空范围 `[pos, pos)`。 |
+| 多光标/多选区编辑器 | 事件之外，文本接口必须能返回所有选区。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+- `selectionEnd()` 是第一个未被选中的偏移，不是最后一个被选中字符的索引。
+- 不要把视觉行列坐标当作选区偏移；选区必须与 `QAccessibleTextInterface::selection()` 一致。
+- 高频拖选时不要每个鼠标移动都制造大量读屏输出；可在状态稳定时发送或按控件策略节流。
+- 文本替换、删除选区时，选区事件和文本更新事件要保持顺序一致。
+- 密码输入框通常不应暴露真实选中文本，但仍可表达选择范围或光标位置，具体取决于平台策略。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleTextSelectionEvent(QAccessibleInterface *iface, int start, int end)`
-- `QAccessibleTextSelectionEvent(QObject *object, int start, int end)`
-- `int selectionEnd() const`
-- `int selectionStart() const`
-- `void setSelection(int start, int end)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QAccessibleTextSelectionEvent::QAccessibleTextSelectionEvent(QAccessibleInterface *iface, int start, int end)`
-
-**作用与语义：**
-
-为`iface`构建一个新的QAccessibleTextSelectionEvent。该事件通知的新选择是从位置`start`到`end`。
-
-### `QAccessibleTextSelectionEvent::QAccessibleTextSelectionEvent(QObject *object, int start, int end)`
-
-**作用与语义：**
-
-为`object`构建一个新的QAccessibleTextSelectionEvent。该事件通知的新选择是从位置`start`到`end`。
-
-### `int QAccessibleTextSelectionEvent::selectionEnd() const`
-
-**作用与语义：**
-
-返回最后选中的角色位置。
-
-### `int QAccessibleTextSelectionEvent::selectionStart() const`
-
-**作用与语义：**
-
-返回第一个被选中角色的位置。
-
-### `void QAccessibleTextSelectionEvent::setSelection(int start, int end)`
-
-**作用与语义：**
-
-从`start`到`end`的选拔顺序。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleTextSelectionEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 文本选区事件与文本选择接口
+- 半开区间和光标端方向
+- 全选、清除选择、多选区编辑器
+- 高频选择变化的事件节流
+- 选区、删除和替换事件的顺序一致性

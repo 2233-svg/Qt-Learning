@@ -1,194 +1,66 @@
 # QTextListFormat
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QTextListFormat`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是格式或能力描述类型，重点关注可用格式、属性查询和与实际数据对象之间的转换。
+`QTextListFormat` 描述列表的编号或项目符号样式、缩进、编号前后缀等。它作用在 `QTextList` 上，列表中的每一项本质上仍然是 `QTextBlock`。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
-
-### 这是什么
-
-`QTextListFormat` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QTextListFormat>`
-- 继承自：QTextFormat
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QTextFormat`
+- 协作类：`QTextList`、`QTextCursor`
 
-CMake 配置：
+列表样式和段落缩进相关，但它不是普通 `QTextBlockFormat`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `setStyle()` / `style()` | 设置项目符号或编号样式 |
+| `setIndent()` / `indent()` | 列表缩进层级 |
+| `setNumberPrefix()` / `numberPrefix()` | 编号前缀 |
+| `setNumberSuffix()` / `numberSuffix()` | 编号后缀 |
+
+## 4. 样式速查
+
+| 样式 | 说明 |
+| --- | --- |
+| `ListDisc` / `ListCircle` / `ListSquare` | 无序列表符号 |
+| `ListDecimal` | 1, 2, 3 |
+| `ListLowerAlpha` / `ListUpperAlpha` | a, b 或 A, B |
+| `ListLowerRoman` / `ListUpperRoman` | 罗马数字 |
+
+## 5. 关键用法
+
+```cpp
+QTextListFormat lf;
+lf.setStyle(QTextListFormat::ListDecimal);
+lf.setIndent(1);
+cursor.insertList(lf);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+自定义编号外观：
 
-### 工作机制
+```cpp
+lf.setNumberPrefix("[");
+lf.setNumberSuffix("]");
+```
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 6. 使用场景
 
-### 状态、生命周期和线程
+- Markdown/HTML 列表导入。
+- 富文本编辑器的有序/无序列表按钮。
+- 报表条目编号。
+- 多级列表缩进。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 7. 常见坑与经验
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- 列表项是 block，移动、删除、合并段落都会影响列表结构。
+- 缩进层级影响视觉缩进，不等同于嵌套数据结构。
+- 列表编号样式不是纯文本，导出纯文本时格式会丢失或被转换。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 8. 知识点覆盖
 
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum Style { ListDisc, ListCircle, ListSquare, ListDecimal, ListLowerAlpha, …, ListUpperRoman }`
-
-### 公有函数
-
-- `QTextListFormat()`
-- `int indent() const`
-- `bool isValid() const`
-- `QString numberPrefix() const`
-- `QString numberSuffix() const`
-- `void setIndent(int indentation)`
-- `void setNumberPrefix(const QString &numberPrefix)`
-- `void setNumberSuffix(const QString &numberSuffix)`
-- `(since 6.6) void setStart(int start)`
-- `void setStyle(QTextListFormat::Style style)`
-- `(since 6.6) int start() const`
-- `QTextListFormat::Style style() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QTextListFormat::Style`
-
-**作用与语义：**
-
-本枚举描述了用于装饰清单项目的符号：
-- `QTextListFormat::ListDisc`：`-1`;一个填充的圆
-- `QTextListFormat::ListCircle`：`-2`;一个空圆圈
-- `QTextListFormat::ListSquare`：`-3`;一个填充的正方形
-- `QTextListFormat::ListDecimal`：`-4`;小数点按升序排列
-- `QTextListFormat::ListLowerAlpha`：`-5`;按字母顺序排列的小写拉丁字母
-- `QTextListFormat::ListUpperAlpha`：`-6`;按字母顺序排列的大写拉丁字母
-- `QTextListFormat::ListLowerRoman`：`-7`;小写罗马数字（仅支持最多4999个项目）
-- `QTextListFormat::ListUpperRoman`：`-8`;大写罗马数字（最多支持4999项）
-
-### `QTextListFormat::QTextListFormat()`
-
-**作用与语义：**
-
-构建一个新的列表格式对象。
-
-### `int QTextListFormat::indent() const`
-
-**作用与语义：**
-
-返回列表格式的缩进。缩进乘以`QTextDocument::indentWidth`属性，得到像素数的有效缩进。
-
-### `bool QTextListFormat::isValid() const`
-
-**作用与语义：**
-
-如果该列表格式有效，返回`true`;否则返回`false`。
-
-### `QString QTextListFormat::numberPrefix() const`
-
-**作用与语义：**
-
-返回列表格式的数字前缀。
-
-### `QString QTextListFormat::numberSuffix() const`
-
-**作用与语义：**
-
-返回列表格式的数字后缀。
-
-### `void QTextListFormat::setIndent(int indentation)`
-
-**作用与语义：**
-
-设置列表格式的 `indentation`。缩进乘以 `QTextDocument::indentWidth` 属性，得到像素数的有效缩进。
-
-### `void QTextListFormat::setNumberPrefix(const QString &numberPrefix)`
-
-**作用与语义：**
-
-将列表格式的数字前缀设置为`numberPrefix`指定的字符串。这适用于所有有序列表类型。对未排序列表类型没有影响。
-默认前缀是空字符串。
-
-### `void QTextListFormat::setNumberSuffix(const QString &numberSuffix)`
-
-**作用与语义：**
-
-将列表格式的数字后缀设置为`numberSuffix`指定的字符串。该功能可用于所有有序列表类型。对未排序列表类型没有影响。
-默认后缀为“.”。
-
-### `[since 6.6] void QTextListFormat::setStart(int start)`
-
-**作用与语义：**
-
-设置列表格式的`start`索引。
-这允许你用非1的索引开始列表。这适用于所有有序列表类型：例如，如果`style()`是`QTextListFormat::ListLowerAlpha`，`start()`是`4`，第一个列表项目以“d”开头。它对未排序列表类型没有影响。
-默认起始是`1`。
-
-### `void QTextListFormat::setStyle(QTextListFormat::Style style)`
-
-**作用与语义：**
-
-确定列表格式的规范`style`。
-
-### `[since 6.6] int QTextListFormat::start() const`
-
-**作用与语义：**
-
-如果`style()` `QTextListFormat::ListDecimal`，返回第一个列表项显示的数字，或者用来抵消其他排序列表类型。
-
-### `QTextListFormat::Style QTextListFormat::style() const`
-
-**作用与语义：**
-
-恢复列表格式的样式。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QTextListFormat` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+本页覆盖：列表样式、编号前后缀、缩进层级、block 和 list 的关系、有序无序列表。

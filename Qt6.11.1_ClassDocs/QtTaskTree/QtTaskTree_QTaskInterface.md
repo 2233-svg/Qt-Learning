@@ -1,123 +1,35 @@
 # QtTaskTree::QTaskInterface
+> Qt 6.11.1 · Qt TaskTree · 来自 `QtTaskTree::QTaskInterface`
 
-> Qt 6.11.1 · Qt TaskTree
+## 作用定位
 
-## 1. 先建立直觉
+`QTaskInterface` 是自定义任务向 TaskTree 报告完成结果的桥。适配器启动任务后，任务最终通过它的 `reportDone()` 把 `DoneResult` 交回调度器。
 
-**一句话定位：** `QtTaskTree::QTaskInterface` 是并发执行或同步类型，负责任务、线程、future、promise 或共享资源的协调。
-
-**模块背景：** 这是 Qt TaskTree 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QtTaskTree::QTaskInterface` 是 Qt TaskTree 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
-
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
-
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
-
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <qtasktree.h>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- 继承：`QObject`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS TaskTree)
-target_link_libraries(mytarget PRIVATE Qt6::TaskTree)
-```
+| API | 说明 |
+| --- | --- |
+| `reportDone(result)` | 向 TaskTree 报告当前任务完成、失败或取消等结果。 |
+| `event(event)` | 内部事件分发，TaskTree 用它把完成报告切回合适上下文。 |
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+## 使用场景
 
-### 工作机制
+- 编写自定义 task adapter。
+- 把外部异步对象的完成信号接回 TaskTree。
+- 对复杂任务手动控制何时报告完成。
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+## 常见坑与经验
+- 每个任务通常只能报告一次完成；重复报告会破坏调度语义。
+- 不要长期保存 interface 指针超过任务生命周期。
+- 跨线程报告完成时，依赖 Qt 事件投递，目标线程需要事件循环。
 
-### 状态、生命周期和线程
+## 知识点覆盖
 
-**生命周期：** 任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-**状态与结果：** 区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-**线程与事件循环：** GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-## 3. 直接使用
-
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `void reportDone(QtTaskTree::DoneResult result)`
-
-### 重实现的保护函数
-
-- `virtual bool event(QEvent *event) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[override virtual protected] bool QTaskInterface::event(QEvent *event)`
-
-**作用与语义：**
-
-重实现自：`QObject::event`（QEvent *e）。
-
-### `void QTaskInterface::reportDone(QtTaskTree::DoneResult result)`
-
-**作用与语义：**
-
-该方法应在通过自定义适配器适应的任务完成后调用，传递任务执行`result`。
-假设Worker输出的是完成（bool）信号，适配器可能看起来像：
-
-**官方示例：**
-
-```cpp
- class WorkerTaskAdapter
- {
- public:
-     void operator()(Worker *task, QTaskInterface *iface) {
-         connect(task, &Worker::finished, iface, [iface](bool success) {
-             iface->reportDone(toDoneResult(success));
-         });
-         task->execute();
-     }
- };
-
- using WorkerTask = QCustomTask<Worker, WorkerTaskAdapter>;
-```
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-### 状态和错误边界
-
-区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-### 线程边界
-
-GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QtTaskTree::QTaskInterface` 所属机制类型：并发与任务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 自定义任务完成报告
+- DoneResult 传播
+- Qt 事件投递与线程边界

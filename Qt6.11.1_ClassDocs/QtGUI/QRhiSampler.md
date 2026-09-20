@@ -1,237 +1,98 @@
 # QRhiSampler
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI Private · 来自 `QRhiSampler`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiSampler` 描述 shader 采样纹理时的规则：纹理坐标超出范围时怎么包裹，放大/缩小时用最近邻还是线性过滤，是否使用 mipmap，以及采样深度纹理时是否做比较。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+纹理保存数据，sampler 决定怎样读数据。同一张纹理可以配不同 sampler 得到不同视觉效果：像素风用 nearest，普通图片缩放用 linear，重复平铺用 repeat，UI 图标常用 clamp-to-edge。
 
-### 这是什么
-
-`QRhiSampler` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：QRhiResource
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::GuiPrivate`
+- 继承自：`QRhiResource`
+- 创建入口：`QRhi::newSampler(...)`
+- 使用入口：`QRhiShaderResourceBinding::sampledTexture(...)`
 
-CMake 配置：
+sampler 创建后通常长期复用。大量材质共享同样过滤和包裹规则时，不要为每个对象重复创建完全相同的 sampler。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `Filter::Nearest` | 最近邻采样，适合像素风、数据纹理。 |
+| `Filter::Linear` | 线性过滤，适合图片平滑缩放。 |
+| `Filter::None` | 仅用于 mipmap mode，表示不使用 mipmap。 |
+| `AddressMode::Repeat` | 纹理坐标重复平铺。 |
+| `AddressMode::ClampToEdge` | 超出范围时夹到边缘，常用于 UI/图集。 |
+| `AddressMode::Mirror` | 镜像重复。 |
+| `CompareOp` | 深度比较采样使用的比较函数。 |
+| `setMagFilter()` / `magFilter()` | 设置/读取放大过滤。 |
+| `setMinFilter()` / `minFilter()` | 设置/读取缩小过滤。 |
+| `setMipmapMode()` / `mipmapMode()` | 设置/读取 mipmap 过滤。 |
+| `setAddressU/V/W()` | 设置 U/V/W 坐标包裹模式。 |
+| `setTextureCompareOp()` | 设置深度纹理比较操作。 |
+| `resourceType()` | 返回 `QRhiResource::Sampler`。 |
+
+## 4. 关键用法
+
+### 普通图片采样
+
+```cpp
+QRhiSampler *sampler = rhi->newSampler(QRhiSampler::Linear,
+                                       QRhiSampler::Linear,
+                                       QRhiSampler::Linear,
+                                       QRhiSampler::ClampToEdge,
+                                       QRhiSampler::ClampToEdge);
+sampler->create();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这适合 UI 图片或普通纹理缩放。使用 mipmap mode 为 `Linear` 前，纹理本身需要有 mip levels。
 
-### 工作机制
+### 像素风或数据纹理
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+QRhiSampler *nearest = rhi->newSampler(QRhiSampler::Nearest,
+                                       QRhiSampler::Nearest,
+                                       QRhiSampler::None,
+                                       QRhiSampler::ClampToEdge,
+                                       QRhiSampler::ClampToEdge);
+```
 
-### 状态、生命周期和线程
+nearest 避免插值，适合颜色表、mask、整数编码纹理、像素艺术。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 阴影深度比较
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+```cpp
+sampler->setTextureCompareOp(QRhiSampler::LessOrEqual);
+```
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+比较采样用于 shadow map 一类深度纹理场景。shader、纹理格式和资源绑定也要按比较采样语义准备。
 
-## 3. 直接使用
+## 5. 使用场景
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+- UI 纹理、图集、材质贴图采样。
+- 平铺背景或 repeat 纹理。
+- 像素风 nearest 采样。
+- mipmapped 远距离纹理过滤。
+- shadow map 深度比较采样。
+- 3D 纹理或 cubemap 的 U/V/W 包裹控制。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 6. 常见坑与经验
 
-### 公有类型
+- **sampler 不保存纹理数据。** 它只描述采样规则。
+- **mipmap mode 要和纹理 mip levels 配套。** 没有 mipmap 的纹理不要随便设置 mipmap filtering。
+- **ClampToEdge 可避免图集边缘串色。** 图集采样常配合 padding 和 clamp。
+- **Repeat 对 NPOT 纹理可能有后端限制。** 旧 GLES 场景要查 `NPOTTextureRepeat`。
+- **比较采样不是普通颜色采样。** 需要深度纹理、合适 shader 声明和 compare op。
+- **创建后改参数通常要重新创建。** 把 sampler 当不可变状态对象缓存更自然。
 
-- `enum AddressMode { Repeat, ClampToEdge, Mirror }`
-- `enum CompareOp { Never, Less, Equal, LessOrEqual, Greater, …, Always }`
-- `enum Filter { None, Nearest, Linear }`
+## 7. 知识点覆盖
 
-### 公有函数
-
-- `QRhiSampler::AddressMode addressU() const`
-- `QRhiSampler::AddressMode addressV() const`
-- `QRhiSampler::AddressMode addressW() const`
-- `QRhiSampler::Filter magFilter() const`
-- `QRhiSampler::Filter minFilter() const`
-- `QRhiSampler::Filter mipmapMode() const`
-- `void setAddressU(QRhiSampler::AddressMode mode)`
-- `void setAddressV(QRhiSampler::AddressMode mode)`
-- `void setAddressW(QRhiSampler::AddressMode mode)`
-- `void setMagFilter(QRhiSampler::Filter f)`
-- `void setMinFilter(QRhiSampler::Filter f)`
-- `void setMipmapMode(QRhiSampler::Filter f)`
-- `void setTextureCompareOp(QRhiSampler::CompareOp op)`
-- `QRhiSampler::CompareOp textureCompareOp() const`
-
-### 重实现的公有函数
-
-- `virtual QRhiResource::Type resourceType() const override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QRhiSampler::AddressMode`
-
-**作用与语义：**
-
-指定寻址模式。
-- `QRhiSampler::Repeat`：`0`
-- `QRhiSampler::ClampToEdge`：`1`
-- `QRhiSampler::Mirror`：`2`
-
-### `enum QRhiSampler::CompareOp`
-
-**作用与语义：**
-
-指定纹理比较函数。
-- `QRhiSampler::Never`: `0`；（默认）
-- `QRhiSampler::Less`: `1`
-- `QRhiSampler::Equal`: `2`
-- `QRhiSampler::LessOrEqual`: `3`
-- `QRhiSampler::Greater`: `4`
-- `QRhiSampler::NotEqual`: `5`
-- `QRhiSampler::GreaterOrEqual`: `6`
-- `QRhiSampler::Always`: `7`
-
-### `enum QRhiSampler::Filter`
-
-**作用与语义：**
-
-指定了缩小、放大或多重映射滤波。
-- `QRhiSampler::None`：`0`;仅适用于`mipmapMode()`，表示不使用mipmap。
-- `QRhiSampler::Nearest`：`1`
-- `QRhiSampler::Linear`：`2`
-
-### `QRhiSampler::AddressMode QRhiSampler::addressU() const`
-
-**作用与语义：**
-
-恢复水平包裹模式。
-
-### `QRhiSampler::AddressMode QRhiSampler::addressV() const`
-
-**作用与语义：**
-
-返回垂直包裹模式。
-
-### `QRhiSampler::AddressMode QRhiSampler::addressW() const`
-
-**作用与语义：**
-
-返回深度包裹模式。
-
-### `QRhiSampler::Filter QRhiSampler::magFilter() const`
-
-**作用与语义：**
-
-返回放大滤镜模式。
-
-### `QRhiSampler::Filter QRhiSampler::minFilter() const`
-
-**作用与语义：**
-
-返回压缩滤波器模式。
-
-### `QRhiSampler::Filter QRhiSampler::mipmapMode() const`
-
-**作用与语义：**
-
-返回mipmap滤波模式。
-
-### `[override virtual] QRhiResource::Type QRhiSampler::resourceType() const`
-
-**作用与语义：**
-
-重装：`QRhiResource::resourceType()` const.
-返回资源类型。
-返回资源类型。
-
-### `void QRhiSampler::setAddressU(QRhiSampler::AddressMode mode)`
-
-**作用与语义：**
-
-这样可以`mode`水平包裹。
-
-### `void QRhiSampler::setAddressV(QRhiSampler::AddressMode mode)`
-
-**作用与语义：**
-
-设置垂直包裹的`mode`。
-
-### `void QRhiSampler::setAddressW(QRhiSampler::AddressMode mode)`
-
-**作用与语义：**
-
-设置深度缠绕`mode`。
-
-### `void QRhiSampler::setMagFilter(QRhiSampler::Filter f)`
-
-**作用与语义：**
-
-将放大滤镜模式设置为`f`。
-
-### `void QRhiSampler::setMinFilter(QRhiSampler::Filter f)`
-
-**作用与语义：**
-
-将缩小滤波器模式设置为`f`。
-
-### `void QRhiSampler::setMipmapMode(QRhiSampler::Filter f)`
-
-**作用与语义：**
-
-将mipmap滤波模式设置为`f`。
-当纹理没有 mip 级别，或者不考虑 mip 级别时，将此设置设置为 None。
-
-### `void QRhiSampler::setTextureCompareOp(QRhiSampler::CompareOp op)`
-
-**作用与语义：**
-
-设置纹理比较函数`op`。
-
-### `QRhiSampler::CompareOp QRhiSampler::textureCompareOp() const`
-
-**作用与语义：**
-
-返回纹理比较函数。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiSampler` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 纹理数据与采样状态的分离
+- min/mag/mipmap filter 的区别
+- U/V/W address mode 和图集边缘问题
+- mipmap、NPOT、深度比较采样
+- sampler 复用和材质系统设计

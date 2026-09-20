@@ -1,143 +1,79 @@
 # QtConcurrent::QTaskBuilder
-
-> Qt 6.11.1 · Qt Concurrent
+> Qt 6.11.1 · Qt Concurrent · 来自 `QtConcurrent::QTaskBuilder`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QtConcurrent::QTaskBuilder` 是并发执行或同步类型，负责任务、线程、future、promise 或共享资源的协调。
+`QTaskBuilder` 是 `QtConcurrent::task()` 返回的任务装配器。它不负责“写并发算法”，而是把一个普通 callable 包装成可提交到 Qt 线程池的任务：选择线程池、传入参数、设定优先级，然后决定是拿到 `QFuture` 观察结果，还是只把任务丢出去执行。
 
-**模块背景：** Qt Concurrent 提供线程池、异步计算和 QFuture 相关并发抽象。
+它适合处理“我有一个明确函数，想把它异步跑起来”的场景；如果要做 map/filter/reduce 一类批处理，`QtConcurrent::mapped()`、`filtered()`、`run()` 等接口通常更直接。`QTaskBuilder` 的价值在于把任务配置拆成链式步骤，可读性比把所有参数塞进一个调用强。
 
-### 这是什么
+## 2. 类说明
 
-`QtConcurrent::QTaskBuilder` 是 并发与任务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QTaskBuilder<Task, Args...>` 是模板类，`Task` 是被执行的函数对象，`Args...` 是最终交给任务的实参类型。对象本身只是“待提交任务”的描述，真正的执行发生在 `spawn()` 之后。
 
-**内部模型：** 并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
+| 对象 | 关系 |
+| --- | --- |
+| `QtConcurrent::task(callable)` | 创建 `QTaskBuilder` 的入口。 |
+| `QThreadPool` | 决定任务交给哪个线程池排队执行。 |
+| `QFuture<T>` | `spawn()` 返回的结果/状态句柄。 |
+| `QFutureWatcher<T>` | 在 GUI 或 QObject 世界里接收任务完成、进度、结果信号。 |
 
-**适用场景：** 先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `withArguments(Args &&...args)` | 给任务绑定实参。只应该调用一次；没有参数时不要调用它。 |
+| `onThreadPool(QThreadPool &threadPool)` | 指定任务提交到哪个线程池，而不是使用全局线程池。 |
+| `withPriority(int newPriority)` | 设置线程池队列优先级；影响排队顺序，不等于操作系统线程优先级。 |
+| `spawn()` | 提交任务并返回 `QFuture<InvokeResultType>`，可观察完成、取消、结果。 |
+| `spawn(QtConcurrent::FutureResult)` | 提交任务但不要求保存普通返回值，适合 fire-and-forget 工作。 |
+| `InvokeResultType` | 任务调用表达式的返回类型，也就是 `QFuture` 里的结果类型。 |
 
-**先记住的坑：** 不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QTaskBuilder>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Concurrent)
-target_link_libraries(mytarget PRIVATE Qt6::Concurrent)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-并发 API 解决的是执行上下文、任务调度、共享数据和完成通知的组合问题。`QThread` 提供线程事件循环，线程池/Future 适合任务调度，同步原语保护共享状态；它们不会自动替你设计取消、异常和退出协议。
-
-### 状态、生命周期和线程
-
-**生命周期：** 任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
-
-**状态与结果：** 区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
-
-**线程与事件循环：** GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
-
-## 3. 直接使用
-
-先定义数据所有权和退出条件，再选择 worker + QThread、QThreadPool、Qt Concurrent 或同步原语。把工作拆成可取消、可报告进度、可处理错误的步骤，完成后通过信号回到界面线程。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QtConcurrent::QTaskBuilder<Task, Args...> & onThreadPool(QThreadPool &newThreadPool)`
-- `QFuture<QtConcurrent::InvokeResultType> spawn()`
-- `void spawn(QtConcurrent::FutureResult)`
-- `QtConcurrent::QTaskBuilder<Task, ExtraArgs...> withArguments(ExtraArgs &&... args)`
-- `QtConcurrent::QTaskBuilder<Task, Args...> & withPriority(int newPriority)`
-
-### 相关非成员函数
-
-- `InvokeResultType`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QtConcurrent::QTaskBuilder<Task, Args...> &QTaskBuilder::onThreadPool(QThreadPool &newThreadPool)`
-
-**作用与语义：**
-
-设置任务调用的线程池 `newThreadPool`。
-
-### `QFuture<QtConcurrent::InvokeResultType> QTaskBuilder::spawn()`
-
-**作用与语义：**
-
-在独立线程中运行任务，并立即返回未来对象。这是一个非阻塞调用。任务可能不会立即启动。
-
-### `void QTaskBuilder::spawn(QtConcurrent::FutureResult)`
-
-**作用与语义：**
-
-在独立线程中运行任务。这是一个非阻塞调用。任务可能不会立即启动。
-
-### `template <typename... ExtraArgs> QtConcurrent::QTaskBuilder<Task, ExtraArgs...> QTaskBuilder::withArguments(ExtraArgs &&... args)`
-
-**作用与语义：**
-
-设置调用任务`args`参数。代码为格式错误（导致编译错误），如果：
-- 该函数被调用不止一次。
-- 参数计数为零。
-
-### `QtConcurrent::QTaskBuilder<Task, Args...> &QTaskBuilder::withPriority(int newPriority)`
-
-**作用与语义：**
-
-设定任务调用的优先级`newPriority`。
-
-### `[alias] InvokeResultType`
-
-**作用与语义：**
-
-这种类型的简化定义如下：
-实际实现还包含一个编译时检查，以确定任务是否可以使用指定的参数调用。
-
-**官方示例：**
+## 4. 关键用法
 
 ```cpp
- template <class Task, class ...Args>
- using InvokeResultType = std::invoke_result_t<std::decay_t<Task>, std::decay_t<Args>...>;
+auto future = QtConcurrent::task(parseFile)
+        .withArguments(fileName)
+        .onThreadPool(workerPool)
+        .withPriority(1)
+        .spawn();
 ```
 
-## 6. 深入实践与常见坑
+当任务要把结果送回界面，不要在任务线程直接操作 widget 或 QML 对象。更稳的方式是用 `QFutureWatcher` 连接 `finished()`，在接收者所属线程读取结果：
 
-### 生命周期和资源边界
+```cpp
+auto *watcher = new QFutureWatcher<Result>(this);
+connect(watcher, &QFutureWatcher<Result>::finished, this, [this, watcher] {
+    showResult(watcher->result());
+    watcher->deleteLater();
+});
+watcher->setFuture(QtConcurrent::task(loadResult).withArguments(path).spawn());
+```
 
-任务必须有明确的开始、完成、取消和销毁路径。线程退出前先停止接受新任务，等待 worker 安全结束，再释放线程依赖；对象的线程归属和 QThread 对象本身所在的线程不能混为一谈。
+## 5. 使用场景
 
-### 状态和错误边界
+| 场景 | 为什么适合 |
+| --- | --- |
+| 后台解析文件、压缩图片、生成索引 | 输入明确，输出单一，天然是一个 callable。 |
+| 插件或工具中给不同任务指定独立线程池 | `onThreadPool()` 能避免把全局线程池占满。 |
+| 把“配置任务”和“提交任务”分开写 | 链式 API 让优先级、线程池、参数一眼可见。 |
+| 临时 fire-and-forget 后台工作 | 可以提交无需直接返回给调用处的任务，但仍要设计好生命周期。 |
 
-区分任务未开始、运行中、暂停、取消请求、已取消、失败和成功。发出取消请求不代表任务已经停止，资源释放要等任务确认结束；Future 的完成也不一定表示业务结果有效。
+## 6. 常见坑与经验
 
-### 线程边界
+`spawn()` 只是提交任务，不保证马上开始执行。线程池满了、优先级低、最大线程数受限时，任务会排队。
 
-GUI 线程只负责启动任务、接收结果和更新界面；共享数据要么转移所有权，要么用锁/原子/消息传递保护。queued slot 需要目标线程事件循环，阻塞 worker 则不能依赖它接收 queued 控制命令。
+`withArguments()` 绑定的是任务执行时要使用的参数。跨线程后最怕悬空引用：传引用、指针、`QStringView`、外部 buffer 时，要确认被引用对象活得比任务久；不确定就传值或移动拥有数据的对象。
 
-### 最容易出现的错误
+`QFuture` 不是“强制停止按钮”。取消能否生效，取决于任务代码是否检查取消状态，或者使用的 Qt Concurrent 算法是否支持取消。普通 lambda 里写死一个长循环，调用取消并不会自动中断 CPU 指令。
 
-不要在 GUI 线程等待线程结束；不要从错误线程操作 worker；不要只调用 `requestInterruption()` 就假设任务停止；锁的获取顺序必须稳定，线程结束时不能留下悬空回调。
+优先级只影响 `QThreadPool` 内部队列调度。它不会让已经运行的任务让出 CPU，也不应该拿来做实时音视频、低延迟输入这类硬实时保证。
 
-### 版本和平台
+## 7. 知识点覆盖
 
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QtConcurrent::QTaskBuilder` 所属机制类型：并发与任务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- `QtConcurrent::task()` 与 `QTaskBuilder` 的关系。
+- `QThreadPool` 全局池和自定义池的取舍。
+- `QFuture`/`QFutureWatcher` 的结果观察模型。
+- C++ callable、lambda 捕获、移动语义和引用生命周期。
+- GUI 线程边界：后台计算可以并发，界面对象不能随便跨线程改。
+- 任务取消、排队、优先级和线程池容量之间的区别。

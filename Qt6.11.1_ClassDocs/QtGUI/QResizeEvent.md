@@ -1,109 +1,81 @@
 # QResizeEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QResizeEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QResizeEvent` 是 Qt 的值类型，围绕“Resize事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QResizeEvent` 表示控件或窗口的大小发生变化。它携带新尺寸和旧尺寸，适合重建与尺寸绑定的资源，例如绘制缓存、视口映射、OpenGL 后备缓冲、图像缩放结果或布局辅助数据。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是绘制事件。尺寸变化后通常会导致重绘，但真正绘制仍应放在 `paintEvent()` 或对应渲染函数里。`resizeEvent()` 更像是“尺寸配置发生改变，请调整依赖尺寸的状态”。
 
-### 这是什么
+## 2. 类说明
 
-`QResizeEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QResizeEvent` 继承自 `QEvent`。Widgets 常通过 `QWidget::resizeEvent()` 接收，也可以在 `event()` 中处理 `QEvent::Resize`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QResizeEvent`：它只关心新旧尺寸，位置变化由 `QMoveEvent` 表达；完整几何变化需要结合位置和尺寸两类事件。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QResizeEvent(size, oldSize)` | 构造尺寸变化事件，指定新尺寸和旧尺寸。 |
+| `size() const` | 返回调整后的新尺寸，通常等同于控件当前 `size()`。 |
+| `oldSize() const` | 返回调整前的旧尺寸，可用于判断是否真的跨过阈值。 |
+| `type()` | 来自 `QEvent`，尺寸变化事件通常为 `QEvent::Resize`。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 重建尺寸相关缓存
 
-- 头文件：`#include <QResizeEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+```cpp
+void ChartWidget::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+    if (event->size() != event->oldSize()) {
+        m_plotArea = calculatePlotArea(event->size());
+        m_gridCache = QPixmap(event->size() * devicePixelRatioF());
+        m_gridCache.setDevicePixelRatio(devicePixelRatioF());
+        rebuildGridCache();
+    }
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+和尺寸强相关的缓存可以在这里更新；真正的曲线绘制仍放在绘制阶段。
 
-### 工作机制
+### 只在跨阈值时调整模式
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+```cpp
+void ResponsivePanel::resizeEvent(QResizeEvent *event)
+{
+    const bool wasCompact = event->oldSize().width() < 480;
+    const bool isCompact = event->size().width() < 480;
 
-### 状态、生命周期和线程
+    if (wasCompact != isCompact)
+        setCompactMode(isCompact);
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+    QWidget::resizeEvent(event);
+}
+```
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+频繁 resize 时，不要每一像素变化都重建全部 UI；很多逻辑只需要在状态阈值变化时触发。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+## 5. 使用场景
 
-## 3. 直接使用
+`QResizeEvent` 用于自定义绘图控件、图像查看器、视频窗口、OpenGL/QRhi 渲染视口、响应式面板、复杂表格、嵌入式原生窗口和高 DPI 后备缓存。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+它也适合做资源预算。窗口变大时可能需要更大的缓冲区，窗口变小时可以释放多余缓存；这些操作放在尺寸变化点，比每次绘制检查更清晰。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 6. 常见坑与经验
 
-### 公有函数
+不要在 `resizeEvent()` 里直接做全部重绘逻辑。调用 `update()` 请求重绘即可，Qt 会合并绘制请求。
 
-- `QResizeEvent(const QSize &size, const QSize &oldSize)`
-- `const QSize & oldSize() const`
-- `const QSize & size() const`
+不要无条件调用 `resize()` 或改变布局约束，容易造成递归 resize。需要修正尺寸时，优先通过 `sizeHint()`、`minimumSizeHint()`、布局策略或外层逻辑处理。
 
-## 5. API 逐个说明
+不要忘记高 DPI。为像素缓存分配内存时，要考虑 `devicePixelRatioF()`，否则图像可能模糊或尺寸不匹配。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要把旧尺寸永远当作有效业务尺寸。首次显示或平台初始化阶段，旧尺寸可能是特殊值或不符合你的业务假设。
 
-### `QResizeEvent::QResizeEvent(const QSize &size, const QSize &oldSize)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-构造一个包含新旧控件大小（分别为`size`和 `oldSize`）的调整事件。
-
-### `const QSize &QResizeEvent::oldSize() const`
-
-**作用与语义：**
-
-返回小部件的旧尺寸。
-
-### `const QSize &QResizeEvent::size() const`
-
-**作用与语义：**
-
-返回小部件的新大小。这和`QWidget::size()`一样。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QResizeEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QResizeEvent` 应覆盖控件尺寸生命周期、绘制缓存、视口重建、高 DPI 后备存储、响应式阈值、布局递归风险、`update()` 与 `paintEvent()` 分工、OpenGL/QRhi 视口调整。

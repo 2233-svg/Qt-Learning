@@ -1,223 +1,89 @@
 # QAccessibleActionInterface
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleActionInterface`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是一个抽象接口或框架基类，重点是理解它定义的协议，并通过具体子类、工厂或回调来使用。
+`QAccessibleActionInterface` 让屏幕阅读器、语音控制或自动化工具能“操作”一个对象，而不仅是朗读它。它把点击、切换、增减、显示菜单、聚焦、翻页和滚动等用户可执行意图抽象为稳定的动作名称。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它通常作为 `QAccessibleInterface` 的可选子接口出现。不要把它理解成普通 Qt 槽函数列表：辅助技术调用 `doAction()` 后，行为必须等价于用户通过鼠标、键盘或触摸触发同一控件。
 
-### 这是什么
-
-`QAccessibleActionInterface` 是 Qt GUI 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
-
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
-
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
-
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleActionInterface>`
-- 继承自：未在类页中列出
-- 直接派生类：QAccessibleWidget
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 来源类：抽象接口；由自定义 `QAccessibleInterface::interface_cast()` 返回。
+- 典型对象：按钮、复选框、滑块、可展开项目、分页视图、可滚动画布。
 
-CMake 配置：
+若控件只是显示信息，不应勉强实现动作接口。若动作当前不可用，则不要把它放进 `actionNames()`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `actionNames()` | 返回当前可执行的非本地化动作名，按重要性排序。 |
+| `doAction(name)` | 执行指定动作。 |
+| `keyBindingsForAction(name)` | 返回可触发动作的快捷键列表。 |
+| `localizedActionName(name)` | 将动作名转为用户语言中的短名称。 |
+| `localizedActionDescription(name)` | 返回更完整的本地化动作说明。 |
+| `pressAction()` | 标准“按下/激活”动作。 |
+| `toggleAction()` | 标准“切换开关状态”动作。 |
+| `increaseAction()` / `decreaseAction()` | 标准增减值动作。 |
+| `showMenuAction()` | 打开关联菜单。 |
+| `setFocusAction()` | 将键盘焦点移到对象上。 |
+| `nextPageAction()` / `previousPageAction()` | 翻页。 |
+| `scrollUp/Down/Left/RightAction()` | 按方向滚动。 |
+
+## 4. 关键用法
+
+```cpp
+QStringList AccessibleMeter::actionNames() const
+{
+    if (!meter()->isEnabled())
+        return {};
+    return { increaseAction(), decreaseAction(), setFocusAction() };
+}
+
+void AccessibleMeter::doAction(const QString &name)
+{
+    if (name == increaseAction())
+        meter()->stepUp();       // 与真实 UI 的操作路径一致
+    else if (name == decreaseAction())
+        meter()->stepDown();
+    else if (name == setFocusAction())
+        meter()->setFocus();
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+不要自行拼接 `"increase"` 或把本地化文字作为协议值；始终使用本类提供的标准动作名称。`doAction()` 的参数来自 `actionNames()`，不是展示给终端用户的翻译文本。
 
-### 工作机制
+## 5. 实现策略
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+| 控件语义 | 推荐动作 | 关键状态 |
+|---|---|---|
+| 普通按钮 | `pressAction()` | 禁用时不返回动作。 |
+| 复选框、开关 | `toggleAction()` | 同步更新 `checked` / mixed 状态并发送事件。 |
+| 滑块、步进器 | `increaseAction()`、`decreaseAction()` | 同时实现 `QAccessibleValueInterface`。 |
+| 菜单按钮 | `pressAction()`、`showMenuAction()` | 菜单可见性变化要通知。 |
+| 树节点 | `toggleAction()` | 语义应是展开/折叠，维护 `expanded`。 |
+| 视图/页面容器 | 翻页或滚动动作 | 不要把每个视觉手势都暴露为动作。 |
 
-### 状态、生命周期和线程
+## 6. 使用场景
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+这个接口适合那些“辅助技术需要替用户执行动作”的控件：自绘按钮、非 QWidget 的图形节点、可展开面板、虚拟列表项、画布上的缩放控件、没有原生控件语义的开关和步进器。若对象只是文本说明或状态展示，只实现名称、角色、状态和值接口即可，不要为了完整而暴露无意义动作。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 常见坑与经验
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+- `actionNames()` 是当前状态的快照。控件禁用、到达最小值或没有下一页时，应移除相应动作。
+- `doAction()` 不能只改内部变量；必须走正常业务路径，以获得重绘、信号、验证、撤销栈和无障碍事件。
+- 快捷键字符串应反映真实可用按键，不要为“方便读屏”虚构绑定。
+- 动作名称非本地化，本地化只由 `localizedActionName()` / `localizedActionDescription()` 处理。
+- 动作调用通常发生在 GUI 语义上下文，后台线程不得直接操纵 QWidget。
 
-## 3. 直接使用
+## 8. 知识点覆盖
 
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QAccessibleActionInterface()`
-- `virtual QStringList actionNames() const = 0`
-- `virtual void doAction(const QString &actionName) = 0`
-- `virtual QStringList keyBindingsForAction(const QString &actionName) const = 0`
-- `virtual QString localizedActionDescription(const QString &actionName) const`
-- `virtual QString localizedActionName(const QString &actionName) const`
-
-### 静态公有成员
-
-- `const QString & decreaseAction()`
-- `const QString & increaseAction()`
-- `QString nextPageAction()`
-- `const QString & pressAction()`
-- `QString previousPageAction()`
-- `QString scrollDownAction()`
-- `QString scrollLeftAction()`
-- `QString scrollRightAction()`
-- `QString scrollUpAction()`
-- `const QString & setFocusAction()`
-- `const QString & showMenuAction()`
-- `const QString & toggleAction()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QAccessibleActionInterface::~QAccessibleActionInterface()`
-
-**作用与语义：**
-
-摧毁了`QAccessibleActionInterface`。
-
-### `[pure virtual] QStringList QAccessibleActionInterface::actionNames() const`
-
-**作用与语义：**
-
-返回该可访问对象支持的动作列表。返回的动作应按优先顺序排列，即用户最可能触发的动作应优先返回，而最不可能的动作应最后返回。
-列表只包含可调用的操作。它不会返回禁用的操作，也不会返回与禁用的UI控件相关的操作。
-名单可以是空的。
-请注意，该列表并非本地化。对于局部化表示，请重新实现`localizedActionName()`和 `localizedActionDescription()`。
-
-### `[static] const QString &QAccessibleActionInterface::decreaseAction()`
-
-**作用与语义：**
-
-返回减少默认动作的名称。
-
-### `[pure virtual] void QAccessibleActionInterface::doAction(const QString &actionName)`
-
-**作用与语义：**
-
-调用`actionName`指定的操作。注意`actionName`是`actionNames()`返回的非本地化名称。该函数通常通过调用其他用户交互（如点击对象）会触发的相同函数来实现。
-
-### `[static] const QString &QAccessibleActionInterface::increaseAction()`
-
-**作用与语义：**
-
-返回增加默认动作的名称。
-
-### `[pure virtual] QStringList QAccessibleActionInterface::keyBindingsForAction(const QString &actionName) const`
-
-**作用与语义：**
-
-返回用于调用名为`actionName`的动作的快捷键列表。
-这对于让用户通过强调键盘来学习应用的替代使用方式非常重要。
-
-### `[virtual] QString QAccessibleActionInterface::localizedActionDescription(const QString &actionName) const`
-
-**作用与语义：**
-
-返回动作`actionName`的局部动作描述。
-使用默认名称时，你可以在`QAccessibleActionInterface`调用这个函数获取本地化字符串。
-
-### `[virtual] QString QAccessibleActionInterface::localizedActionName(const QString &actionName) const`
-
-**作用与语义：**
-
-返回一个局部动作名为`actionName`。
-对于自定义动作，这个函数需要重新实现。使用默认名称时，你可以在 `QAccessibleActionInterface` 调用该函数获取本地化字符串。
-
-### `[static] QString QAccessibleActionInterface::nextPageAction()`
-
-**作用与语义：**
-
-返回下一页默认动作的名称。
-
-### `[static] const QString &QAccessibleActionInterface::pressAction()`
-
-**作用与语义：**
-
-返回按下默认动作的名称。
-
-### `[static] QString QAccessibleActionInterface::previousPageAction()`
-
-**作用与语义：**
-
-返回上一页默认动作的名称。
-
-### `[static] QString QAccessibleActionInterface::scrollDownAction()`
-
-**作用与语义：**
-
-返回向下滚动的默认动作名称。
-
-### `[static] QString QAccessibleActionInterface::scrollLeftAction()`
-
-**作用与语义：**
-
-返回滚动左侧默认动作的名称。
-
-### `[static] QString QAccessibleActionInterface::scrollRightAction()`
-
-**作用与语义：**
-
-返回向右滚动的默认动作名称。
-
-### `[static] QString QAccessibleActionInterface::scrollUpAction()`
-
-**作用与语义：**
-
-返回向上滚动的默认动作名称。
-
-### `[static] const QString &QAccessibleActionInterface::setFocusAction()`
-
-**作用与语义：**
-
-返回设置焦点的默认动作名称。
-
-### `[static] const QString &QAccessibleActionInterface::showMenuAction()`
-
-**作用与语义：**
-
-返回显示菜单默认动作的名称。
-
-### `[static] const QString &QAccessibleActionInterface::toggleAction()`
-
-**作用与语义：**
-
-返回切换默认动作的名称。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleActionInterface` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 可访问性动作协议与标准动作名称
+- 自定义接口的动态能力暴露
+- 可用性状态和动作列表同步
+- 本地化展示与机器协议值分离
+- 通过同一业务路径保持交互一致性

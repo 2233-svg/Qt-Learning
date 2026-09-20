@@ -1,442 +1,76 @@
 # QLCDNumber
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QLCDNumber`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QLCDNumber` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QLCDNumber` 是一个“数码管风格”的只读数字显示控件。它适合显示计数、计时、测量值、仪表盘数值、状态编号这类需要强视觉识别的数字，不适合承担普通文本标签的职责。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它的核心不是输入，而是显示：你给它一个数字或字符串，它按 LCD 段码风格绘制。和 `QLabel` 相比，它更像仪表；和 `QSpinBox` 相比，它没有编辑能力；和图表相比，它只强调当前值，不表达趋势。
 
-### 这是什么
+## 2. 类说明
 
-`QLCDNumber` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QLCDNumber` 继承自 `QFrame`，因此可以拥有边框外观，同时提供不同进制和段码样式。它支持十进制、十六进制、八进制、二进制显示，也能显示小数点和少量字符。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+设计时要先想清楚：这个数值是否需要“像设备读数一样被看见”。如果只是表单里的普通数值，用 `QLabel` 更自然；如果用户要修改数值，用 `QSpinBox` / `QDoubleSpinBox`；如果是实时读数、倒计时、分数板，`QLCDNumber` 的识别度会更好。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QLCDNumber(QWidget *)` | 创建默认位数的 LCD 显示控件。 |
+| `QLCDNumber(uint, QWidget *)` | 创建指定显示位数的 LCD 控件，适合固定宽度读数。 |
+| `display(int)` | 显示整数，是计数器和状态码最常用入口。 |
+| `display(double)` | 显示浮点数；注意位数不足时可能溢出。 |
+| `display(const QString &)` | 显示可被段码表达的字符串，例如简单编号。 |
+| `value()` | 返回当前显示值的浮点形式。 |
+| `intValue()` | 返回当前显示值的整数形式。 |
+| `setDigitCount(int)` / `digitCount()` | 设置或读取显示位数。位数太少会触发溢出。 |
+| `setMode(Mode)` / `mode()` | 设置数字进制：`Dec`、`Hex`、`Oct`、`Bin`。 |
+| `setSegmentStyle(SegmentStyle)` / `segmentStyle()` | 设置段码外观：`Outline`、`Filled`、`Flat`。 |
+| `setSmallDecimalPoint(bool)` | 使用较小的小数点，减少小数点占用的视觉空间。 |
+| `checkOverflow(int)` / `checkOverflow(double)` | 在显示前判断位数是否足够，避免读数被截断或显示异常。 |
+| `overflow()` | 当显示值超出可显示范围时发出，适合提示用户或自动扩展位数。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+固定读数位数时，优先先设置 `digitCount`，再显示数值：
 
-- 头文件：`#include <QLCDNumber>`
-- 继承自：QFrame
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+auto *lcd = new QLCDNumber(6, this);
+lcd->setMode(QLCDNumber::Dec);
+lcd->setSegmentStyle(QLCDNumber::Filled);
+lcd->display(1250);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+如果显示值可能增长，要在更新前做溢出判断：
 
-### 工作机制
+```cpp
+if (lcd->checkOverflow(total)) {
+    lcd->setDigitCount(lcd->digitCount() + 1);
+}
+lcd->display(total);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+进制显示常用于调试工具、嵌入式配置面板或协议观察器：
 
-### 状态、生命周期和线程
+```cpp
+lcd->setMode(QLCDNumber::Hex);
+lcd->display(registerValue);
+```
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+这里的 `display(int)` 会按当前 `mode()` 解释为对应进制的可视结果，而不是把数字转成普通文本标签。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+## 5. 使用场景
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+`QLCDNumber` 适合倒计时、秒表、计数器、仪器读数、串口/传感器面板、考试计时器、分数牌、生产线状态看板，以及需要让数字在界面上被快速扫到的地方。
 
-## 3. 直接使用
+不建议把它用于大段文本、带单位的复杂数值、需要复制的结果、金融金额录入或精确格式化报表。那些场景里 `QLabel` 加明确格式化字符串更可控。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
+## 6. 常见坑与经验
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+`digitCount` 是 `QLCDNumber` 的关键约束。读数显示不完整时，首先检查位数，而不是怀疑布局或字体。
 
-### 公有类型
+LCD 段码不是通用字体。有些字符不适合显示，字符串模式只适合短标识或数字混合片段。
 
-- `enum Mode { Hex, Dec, Oct, Bin }`
-- `enum SegmentStyle { Outline, Filled, Flat }`
-
-### 属性
-
-- `digitCount : int`
-- `intValue : int`
-- `mode : Mode`
-- `segmentStyle : SegmentStyle`
-- `smallDecimalPoint : bool`
-- `value : double`
-
-### 公有函数
-
-- `QLCDNumber(QWidget *parent = nullptr)`
-- `QLCDNumber(uint numDigits, QWidget *parent = nullptr)`
-- `virtual ~QLCDNumber()`
-- `bool checkOverflow(double num) const`
-- `bool checkOverflow(int num) const`
-- `int digitCount() const`
-- `int intValue() const`
-- `QLCDNumber::Mode mode() const`
-- `QLCDNumber::SegmentStyle segmentStyle() const`
-- `void setDigitCount(int numDigits)`
-- `void setMode(QLCDNumber::Mode)`
-- `void setSegmentStyle(QLCDNumber::SegmentStyle)`
-- `bool smallDecimalPoint() const`
-- `double value() const`
-
-### 重实现的公有函数
-
-- `virtual QSize sizeHint() const override`
-
-### 公有槽函数
-
-- `void display(const QString &s)`
-- `void display(double num)`
-- `void display(int num)`
-- `void setBinMode()`
-- `void setDecMode()`
-- `void setHexMode()`
-- `void setOctMode()`
-- `void setSmallDecimalPoint(bool)`
-
-### 信号
-
-- `void overflow()`
-
-### 重实现的保护函数
-
-- `virtual bool event(QEvent *e) override`
-- `virtual void paintEvent(QPaintEvent *) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QLCDNumber::Mode`
-
-**作用与语义：**
-
-这种类型决定了数字的显示方式。
-- `QLCDNumber::Hex`：`0`;十六进制
-- `QLCDNumber::Dec`：`1`;十进制
-- `QLCDNumber::Oct`：`2`;八进制
-- `QLCDNumber::Bin`：`3`;二进制
-如果显示设置为十六进制、八进制或二进制，则显示该值的整数等价值。
-
-### `enum QLCDNumber::SegmentStyle`
-
-**作用与语义：**
-
-这种类型决定了`QLCDNumber`小部件的视觉外观。
-- `QLCDNumber::Outline`：`0`;给出填充背景色的凸起部分。
-- `QLCDNumber::Filled`：`1`;给出填充 windowText 颜色的凸起段。
-- `QLCDNumber::Flat`：`2`;给出填充 windowText 颜色的平面段。
-
-### `digitCount : int`
-
-**作用与语义：**
-
-该属性包含当前显示的数字数。
-对应当前数字。如果`QLCDNumber::smallDecimalPoint`为假，小数点占据一个数字位置。
-默认情况下，该属性包含5的值。
-
-**如何使用：** 调用 `digitCount()` 读取当前值；它不会修改应用状态。
-
-### `intValue : int`
-
-**作用与语义：**
-
-该属性将显示值四舍五入至最接近的整数。
-该属性对应于LCDNumber显示的当前值最接近的整数。这是用于十六进制、八进制和二进制模式的值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `intValue()` 读取当前值；它不会修改应用状态。
-
-### `mode : Mode`
-
-**作用与语义：**
-
-该属性表示当前显示模式（数字基数）。
-对应当前显示模式，包括`Bin`、`Oct`、`Dec`（默认）和`Hex`。`Dec`模式可以显示浮点数值，其他模式显示整数等效值。
-
-**如何使用：** 调用 `mode()` 读取当前值；它不会修改应用状态。
-
-### `segmentStyle : SegmentStyle`
-
-**作用与语义：**
-
-该物业拥有LCDNumber的风格。
-- `Style`：结果
-- `Outline`：产生填充背景色的凸起段
-- `Filled`（默认）。'：生成填充前景色的凸起段。
-- `Flat`：产生填充前景色的平面段。
-`Outline`和`Filled`还会用`QPalette::light()`和`QPalette::dark()`来做阴影效果。
-
-**如何使用：** 调用 `segmentStyle()` 读取当前值；它不会修改应用状态。
-
-### `smallDecimalPoint : bool`
-
-**作用与语义：**
-
-该属性表示小数点的样式。
-如果为真，小数点位于两个数字位置之间。否则它占据独立的数字位置，即绘制在数字位置。默认为假。
-当数字之间的小数点被画出时，数字间距会稍微变宽。
-
-**如何使用：** 调用 `smallDecimalPoint()` 读取当前值；它不会修改应用状态。
-
-### `value : double`
-
-**作用与语义：**
-
-该属性表示显示价值。
-该属性对应于LCDNumber显示的当前值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `value()` 读取当前值；它不会修改应用状态。
-
-### `[explicit] QLCDNumber::QLCDNumber(QWidget *parent = nullptr)`
-
-**作用与语义：**
-
-构建液晶数字，将数字数设置为5，底部为十进制，小数点模式为“小”，框架样式为凸起方格。`segmentStyle()`设置为`Outline`。
-`parent`参数传递给`QFrame`构造器。
-
-### `[explicit] QLCDNumber::QLCDNumber(uint numDigits, QWidget *parent = nullptr)`
-
-**作用与语义：**
-
-构建LCD编号，将数字数设置为`numDigits`，底部为十进制，小数点模式为“小”，框架样式为凸起方格。`segmentStyle()`设置为`Filled`。
-`parent`参数传递给`QFrame`构造函数。
-
-### `[virtual noexcept] QLCDNumber::~QLCDNumber()`
-
-**作用与语义：**
-
-会破坏LCD编号。
-
-### `bool QLCDNumber::checkOverflow(double num) const`
-
-**作用与语义：**
-
-如果`num`太大无法完整显示，则返回`true`;否则返回`false`。
-
-### `bool QLCDNumber::checkOverflow(int num) const`
-
-**作用与语义：**
-
-如果`num`太大无法完整显示，则返回`true`;否则返回`false`。
-
-### `int QLCDNumber::digitCount() const`
-
-**作用与语义：**
-
-返回当前数字数。
-注意：属性 digitCount 的 Getter 函数。
-
-### `[slot] void QLCDNumber::display(const QString &s)`
-
-**作用与语义：**
-
-该属性将显示值四舍五入至最接近的整数。
-该属性对应于LCDNumber显示的当前值最接近的整数。这是用于十六进制、八进制和二进制模式的值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `display()` 读取当前值；它不会修改应用状态。
-
-### `[slot] void QLCDNumber::display(double num)`
-
-**作用与语义：**
-
-该属性将显示值四舍五入至最接近的整数。
-该属性对应于LCDNumber显示的当前值最接近的整数。这是用于十六进制、八进制和二进制模式的值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `display()` 读取当前值；它不会修改应用状态。
-
-### `[slot] void QLCDNumber::display(int num)`
-
-**作用与语义：**
-
-该属性将显示值四舍五入至最接近的整数。
-该属性对应于LCDNumber显示的当前值最接近的整数。这是用于十六进制、八进制和二进制模式的值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `display()` 读取当前值；它不会修改应用状态。
-
-### `[override virtual protected] bool QLCDNumber::event(QEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QFrame::event`（QEvent *e）。
-
-### `[signal] void QLCDNumber::overflow()`
-
-**作用与语义：**
-
-每当`QLCDNumber`被要求显示过大数字或字符串过长时，都会发出该信号。
-它从未由`setDigitCount()`发出。
-
-### `[override virtual protected] void QLCDNumber::paintEvent(QPaintEvent *)`
-
-**作用与语义：**
-
-重实现自：`QFrame::paintEvent`（QPaintEvent *）。
-
-### `[slot] void QLCDNumber::setBinMode()`
-
-**作用与语义：**
-
-调用 `setMode`（Bin）。为方便提供（例如连接按钮）。
-
-### `[slot] void QLCDNumber::setDecMode()`
-
-**作用与语义：**
-
-调用`setMode`（12月）。为方便提供（例如连接按钮）。
-
-### `void QLCDNumber::setDigitCount(int numDigits)`
-
-**作用与语义：**
-
-该属性包含当前显示的数字数。
-对应当前数字。如果`QLCDNumber::smallDecimalPoint`为假，小数点占据一个数字位置。
-默认情况下，该属性包含5的值。
-
-**如何使用：** 调用 `setDigitCount(...)` 修改 `digitCount`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `[slot] void QLCDNumber::setHexMode()`
-
-**作用与语义：**
-
-调用`setMode`（六边形）。为方便而提供（例如连接按钮）。
-
-### `[slot] void QLCDNumber::setOctMode()`
-
-**作用与语义：**
-
-调用时间`setMode`（10月）。为方便提供（例如连接按钮）。
-
-### `[override virtual] QSize QLCDNumber::sizeHint() const`
-
-**作用与语义：**
-
-重实现自：`QFrame::sizeHint()` const.
-重新实现了属性的访问函数：`QWidget::sizeHint`。
-
-### `int intValue() const`
-
-**作用与语义：**
-
-该属性将显示值四舍五入至最接近的整数。
-该属性对应于LCDNumber显示的当前值最接近的整数。这是用于十六进制、八进制和二进制模式的值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `intValue()` 读取当前值；它不会修改应用状态。
-
-### `QLCDNumber::Mode mode() const`
-
-**作用与语义：**
-
-该属性表示当前显示模式（数字基数）。
-对应当前显示模式，包括`Bin`、`Oct`、`Dec`（默认）和`Hex`。`Dec`模式可以显示浮点数值，其他模式显示整数等效值。
-
-**如何使用：** 调用 `mode()` 读取当前值；它不会修改应用状态。
-
-### `QLCDNumber::SegmentStyle segmentStyle() const`
-
-**作用与语义：**
-
-该物业拥有LCDNumber的风格。
-- `Style`：结果
-- `Outline`：产生填充背景色的凸起段
-- `Filled`（默认）。'：生成填充前景色的凸起段。
-- `Flat`：产生填充前景色的平面段。
-`Outline`和`Filled`还会用`QPalette::light()`和`QPalette::dark()`来做阴影效果。
-
-**如何使用：** 调用 `segmentStyle()` 读取当前值；它不会修改应用状态。
-
-### `void setMode(QLCDNumber::Mode)`
-
-**作用与语义：**
-
-该属性表示当前显示模式（数字基数）。
-对应当前显示模式，包括`Bin`、`Oct`、`Dec`（默认）和`Hex`。`Dec`模式可以显示浮点数值，其他模式显示整数等效值。
-
-**如何使用：** 调用 `setMode(...)` 修改 `mode`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setSegmentStyle(QLCDNumber::SegmentStyle)`
-
-**作用与语义：**
-
-该物业拥有LCDNumber的风格。
-- `Style`：结果
-- `Outline`：产生填充背景色的凸起段
-- `Filled`（默认）。'：生成填充前景色的凸起段。
-- `Flat`：产生填充前景色的平面段。
-`Outline`和`Filled`还会用`QPalette::light()`和`QPalette::dark()`来做阴影效果。
-
-**如何使用：** 调用 `setSegmentStyle(...)` 修改 `segmentStyle`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `bool smallDecimalPoint() const`
-
-**作用与语义：**
-
-该属性表示小数点的样式。
-如果为真，小数点位于两个数字位置之间。否则它占据独立的数字位置，即绘制在数字位置。默认为假。
-当数字之间的小数点被画出时，数字间距会稍微变宽。
-
-**如何使用：** 调用 `smallDecimalPoint()` 读取当前值；它不会修改应用状态。
-
-### `double value() const`
-
-**作用与语义：**
-
-该属性表示显示价值。
-该属性对应于LCDNumber显示的当前值。
-如果显示的值不是数字，则该属性的值为0。
-默认情况下，该属性的值为0。
-
-**如何使用：** 调用 `value()` 读取当前值；它不会修改应用状态。
-
-### `void setSmallDecimalPoint(bool)`
-
-**作用与语义：**
-
-该属性表示小数点的样式。
-如果为真，小数点位于两个数字位置之间。否则它占据独立的数字位置，即绘制在数字位置。默认为假。
-当数字之间的小数点被画出时，数字间距会稍微变宽。
-
-**如何使用：** 调用 `setSmallDecimalPoint(...)` 修改 `smallDecimalPoint`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QLCDNumber` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+实时刷新时不要过度追求毫秒级重绘。对于人眼读数，合理节流通常比疯狂 `display()` 更好，也能避免界面事件循环被无意义更新占满。

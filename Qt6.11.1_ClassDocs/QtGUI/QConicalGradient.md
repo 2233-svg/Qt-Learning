@@ -1,144 +1,90 @@
 # QConicalGradient
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QConicalGradient`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QConicalGradient` 围绕一个中心按角度插值颜色。它像一张铺在圆盘上的色轮：从起始 angle 对应的方向开始，沿角度绕一整圈回到起点。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它适合颜色选择器、环形仪表、方向盘、极坐标图、角度刻度和旋转纹理。与线性、径向渐变不同，圆锥渐变天然是周期性的；因此 stop 0 和 stop 1 的颜色是否连续，直接决定圆周接缝是否明显。
 
-### 这是什么
+## 2. 类说明
 
-`QConicalGradient` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QConicalGradient` 继承自 `QGradient`。颜色 stops、坐标模式等共享配置来自父类；本类只定义中心和起始角度。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+类说明只用于表明这些 API 来自 `QConicalGradient`：渐变本身不裁剪为圆形，画成圆盘、圆环或任意路径由 `QPainter` 的填充形状决定。
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QConicalGradient()` | 构造中心为 `(0,0)`、起始角为 0 度的圆锥渐变。 |
+| `QConicalGradient(center, angle)` | 用中心点和起始角构造渐变。 |
+| `QConicalGradient(cx, cy, angle)` | 用数值坐标构造渐变。 |
+| `center() const` | 返回圆锥渐变中心。 |
+| `setCenter(point)` / `setCenter(x, y)` | 设置渐变中心。 |
+| `angle() const` | 返回起始角度。 |
+| `setAngle(angle)` | 设置起始角度。 |
+| `setColorAt()` / `setStops()` | 来自父类，定义绕圆周的色带。 |
+| `setCoordinateMode()` | 来自父类，定义中心和角度参数使用哪套坐标。 |
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 构造连续色轮
 
-- 头文件：`#include <QConicalGradient>`
-- 继承自：QGradient
-- 直接派生类：未在类页中列出
+```cpp
+QConicalGradient wheel(QPointF(width() / 2.0, height() / 2.0), 0);
+wheel.setStops({
+    {0.00, Qt::red},
+    {0.16, Qt::yellow},
+    {0.33, Qt::green},
+    {0.50, Qt::cyan},
+    {0.66, Qt::blue},
+    {0.83, Qt::magenta},
+    {1.00, Qt::red}
+});
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+painter.setBrush(wheel);
+painter.setPen(Qt::NoPen);
+painter.drawEllipse(rect());
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+stop 0 和 1 都是 red，使圆周闭合时没有突兀色缝。色轮只表达 hue，通常还需额外叠加径向白色/透明或黑色遮罩表现饱和度与明度。
 
-### 工作机制
+### 用 angle 旋转色带
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+wheel.setAngle(m_rotationDegrees);
+```
 
-### 状态、生命周期和线程
+改变 angle 会整体旋转颜色起点。它适合仪表盘主题切换、方向高亮、扇区动画；比逐个重算所有 stop 更直接。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 渐变中心和绘制形状是两回事
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+```cpp
+painter.fillPath(customRingPath, wheel);
+```
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+圆锥渐变可填充任意 path。即使形状是星形、圆环或扇形，颜色仍按相对于 center 的角度分布。
 
-## 3. 直接使用
+## 5. 使用场景
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+`QConicalGradient` 适合 HSV 色轮、圆形调色板、角度仪表、旋钮、环形状态图、极坐标可视化、雷达扇区、方向导航和旋转视觉效果。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+它也可用于圆形 loading 或装饰色带，但功能性 UI 中应保证文本与关键状态不只依赖颜色区分。
 
-### 公有函数
+## 6. 常见坑与经验
 
-- `QConicalGradient()`
-- `QConicalGradient(const QPointF &center, qreal angle)`
-- `QConicalGradient(qreal cx, qreal cy, qreal angle)`
-- `qreal angle() const`
-- `QPointF center() const`
-- `void setAngle(qreal angle)`
-- `void setCenter(const QPointF &center)`
-- `void setCenter(qreal x, qreal y)`
+不要遗漏首尾颜色连续性。0 与 1 的 stop 不协调时，会在起始 angle 形成明显接缝。
 
-## 5. API 逐个说明
+不要期待 `RepeatSpread` / `ReflectSpread` 像线性渐变一样改变圆锥渐变外部区域。圆锥渐变按完整角度周期工作，核心是环形 stop 配置。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要误以为渐变自身绘制圆。它只是颜色源，最终填充轮廓由你调用 `drawEllipse()`、`drawPath()` 或 `fillRect()` 决定。
 
-### `QConicalGradient::QConicalGradient()`
+不要把 angle 与数学坐标系方向想当然对应。屏幕坐标 y 轴向下，实际视觉方向应在目标平台和绘制上下文中验证。
 
-**作用与语义：**
+不要在色轮上只靠 hue 表示状态。色觉差异用户仍需要文字、形状或位置等冗余信息。
 
-构造一个以（0， 0）为中心的圆锥形，从角度0开始插值。
+## 7. 知识点覆盖
 
-### `QConicalGradient::QConicalGradient(const QPointF &center, qreal angle)`
-
-**作用与语义：**
-
-构造一个与给定`center`的圆锥梯度，从给定`angle`开始插值。`angle`必须以0到360度为单位指定。
-
-### `QConicalGradient::QConicalGradient(qreal cx, qreal cy, qreal angle)`
-
-**作用与语义：**
-
-构造一个以给定中心（`cx`、`cy`）为中心的锥形梯度，从给定`angle`开始插值。角度必须以0到360度为单位指定。
-
-### `qreal QConicalGradient::angle() const`
-
-**作用与语义：**
-
-返回圆锥梯度在逻辑坐标下的起始角。
-
-### `QPointF QConicalGradient::center() const`
-
-**作用与语义：**
-
-返回圆锥梯度的中心，映射逻辑坐标。
-
-### `void QConicalGradient::setAngle(qreal angle)`
-
-**作用与语义：**
-
-将`angle`设为该圆锥梯度在逻辑坐标下的起始角度。
-
-### `void QConicalGradient::setCenter(const QPointF &center)`
-
-**作用与语义：**
-
-将该圆锥梯度的中心设为逻辑坐标`center`。
-
-### `void QConicalGradient::setCenter(qreal x, qreal y)`
-
-**作用与语义：**
-
-将该圆锥梯度的中心在逻辑坐标中设为 （`x`， `y`）。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QConicalGradient` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QConicalGradient` 应覆盖角度插值、中心与起始角、色轮闭合、首尾 stop、圆环与路径填充、旋转色带、HSV 调色器、屏幕坐标方向和无障碍色彩设计。

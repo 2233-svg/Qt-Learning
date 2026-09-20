@@ -1,233 +1,64 @@
 # QDrag
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QDrag`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QDrag` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QDrag` 表示一次正在启动的拖拽操作。源控件创建它，放入 `QMimeData`，设置可选拖拽图像，然后调用 `exec()` 交给 Qt 和操作系统完成拖放协商。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它是拖拽“源端”的对象；目标端接收的是 drag enter/move/drop 事件。
 
-### 这是什么
+## 2. 类说明
 
-`QDrag` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QDrag` 继承自 `QObject`。构造时传入 drag source，`setMimeData()` 后由 `QDrag` 接管 MIME 数据所有权。`exec()` 会启动拖拽循环，并返回最终执行的 `Qt::DropAction`。
 
-**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+拖拽动作不是源端单方面决定的。源端声明支持 Copy/Move/Link，目标端选择接受哪个动作，用户修饰键也可能影响结果。
 
-**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QDrag(QObject *dragSource)` | 创建拖拽对象并指定源对象。 |
+| `setMimeData(QMimeData *)` / `mimeData()` | 设置或读取拖拽携带数据。 |
+| `setPixmap()` / `pixmap()` | 设置拖拽时跟随鼠标的图像。 |
+| `setHotSpot()` / `hotSpot()` | 设置 pixmap 中对准光标的热点。 |
+| `setDragCursor()` / `dragCursor()` | 为不同 drop action 设置光标图像。 |
+| `exec(supportedActions)` | 启动拖拽并返回最终 action。 |
+| `exec(supportedActions, defaultAction)` | 指定支持动作和默认动作。 |
+| `supportedActions()` | 返回本次拖拽支持的动作。 |
+| `defaultAction()` | 返回默认动作。 |
+| `source()` | 返回拖拽源对象。 |
+| `target()` | 返回当前目标对象。 |
+| `cancel()` | 静态函数，尝试取消当前拖拽。 |
+| `actionChanged()` | 当前 drop action 改变时发出。 |
+| `targetChanged()` | 当前目标改变时发出。 |
 
-**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+auto *drag = new QDrag(this);
+auto *mime = new QMimeData;
+mime->setText(selectedText);
+drag->setMimeData(mime);
+drag->setPixmap(renderDragPreview());
+drag->setHotSpot(QPoint(8, 8));
 
-- 头文件：`#include <QDrag>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+const Qt::DropAction result = drag->exec(Qt::CopyAction | Qt::MoveAction,
+                                         Qt::CopyAction);
+if (result == Qt::MoveAction)
+    removeOriginalSelection();
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+## 5. 使用场景
 
-### 工作机制
+适合列表/树项拖拽、文件拖出、画布对象拖放、跨应用文本/图片/URL 拖动、素材库拖到编辑区。
 
-这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+如果只是控件内部移动对象，不需要跨目标协商数据，普通 mouse move 也可能更简单。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+`setMimeData()` 后不要删除 mime 对象，`QDrag` 会接管。
 
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+Move 动作通常要等 `exec()` 返回后再删除源数据，不能一开始拖就删。
 
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-## 3. 直接使用
-
-使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDrag(QObject *dragSource)`
-- `virtual ~QDrag()`
-- `Qt::DropAction defaultAction() const`
-- `QPixmap dragCursor(Qt::DropAction action) const`
-- `Qt::DropAction exec(Qt::DropActions supportedActions = Qt::MoveAction)`
-- `Qt::DropAction exec(Qt::DropActions supportedActions, Qt::DropAction defaultDropAction)`
-- `QPoint hotSpot() const`
-- `QMimeData * mimeData() const`
-- `QPixmap pixmap() const`
-- `void setDragCursor(const QPixmap &cursor, Qt::DropAction action)`
-- `void setHotSpot(const QPoint &hotspot)`
-- `void setMimeData(QMimeData *data)`
-- `void setPixmap(const QPixmap &pixmap)`
-- `QObject * source() const`
-- `Qt::DropActions supportedActions() const`
-- `QObject * target() const`
-
-### 信号
-
-- `void actionChanged(Qt::DropAction action)`
-- `void targetChanged(QObject *newTarget)`
-
-### 静态公有成员
-
-- `void cancel()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QDrag::QDrag(QObject *dragSource)`
-
-**作用与语义：**
-
-为`dragSource`指定的控件构建一个新的拖拽对象。
-
-### `[virtual noexcept] QDrag::~QDrag()`
-
-**作用与语义：**
-
-摧毁拖拽物体。
-
-### `[signal] void QDrag::actionChanged(Qt::DropAction action)`
-
-**作用与语义：**
-
-当阻力相关的`action`发生变化时，该信号会发出。
-
-### `[static] void QDrag::cancel()`
-
-**作用与语义：**
-
-取消由Qt发起的拖拽操作。
-注意：目前该功能已在Windows和X11上实现。
-
-### `Qt::DropAction QDrag::defaultAction() const`
-
-**作用与语义：**
-
-返回该拖拽操作的默认建议投放动作。
-
-### `QPixmap QDrag::dragCursor(Qt::DropAction action) const`
-
-**作用与语义：**
-
-返回`action`的拖曳光标。
-
-### `Qt::DropAction QDrag::exec(Qt::DropActions supportedActions = Qt::MoveAction)`
-
-**作用与语义：**
-
-启动拖拽操作，完成后返回请求的投放操作值。用户可以选择的投放操作在`supportedActions`中确定。默认的拟议动作将从允许的操作中按以下顺序选择：移动、复制和链接。
-注意：在 Linux 和 macOS 上，拖拽操作可能需要一些时间，但该功能不会阻断事件循环。在操作执行期间，其他事件仍会传递给应用程序。在 Windows 上，Qt 事件循环在操作过程中会被阻断。
-
-### `Qt::DropAction QDrag::exec(Qt::DropActions supportedActions, Qt::DropAction defaultDropAction)`
-
-**作用与语义：**
-
-启动拖放操作，完成后返回请求的投放操作值。用户可选择的投放操作由 `supportedActions` 中指定。
-`defaultDropAction`决定用户在不使用修饰键的情况下拖动时，将提出哪个动作。
-注意：在 Linux 和 macOS 上，拖拽操作可能需要一些时间，但该功能不会阻止事件循环。在操作执行期间，其他事件仍会传递给应用程序。在 Windows 上，Qt 事件循环在操作过程中会被阻挡。然而，在 Windows 上`QDrag::exec()`会频繁调用 processEvents() 以保持图形界面响应。如果在拖拽操作处于激活状态时调用任何循环或操作，它会阻挡拖动操作。
-
-### `QPoint QDrag::hotSpot() const`
-
-**作用与语义：**
-
-返回热点相对于光标左上角的位置。
-
-### `QMimeData *QDrag::mimeData() const`
-
-**作用与语义：**
-
-返回被拖拽对象封装的MIME数据。
-
-### `QPixmap QDrag::pixmap() const`
-
-**作用与语义：**
-
-返回用于拖拽操作中表示数据的像素映射。
-
-### `void QDrag::setDragCursor(const QPixmap &cursor, Qt::DropAction action)`
-
-**作用与语义：**
-
-设置`action`的拖拽`cursor`。这允许你覆盖默认的原生光标。要恢复使用原生光标`action` `cursor`空`QPixmap`。
-注意：设置“忽略动作”拖曳光标可能并非所有平台都能正常工作。X11和macOS已经过测试。Windows不支持。
-
-### `void QDrag::setHotSpot(const QPoint &hotspot)`
-
-**作用与语义：**
-
-将热点相对于像素映射左上角的位置设定为`hotspot`指定点。
-注意：在X11上，如果热点导致像素图直接显示在光标下方，像素地图可能跟不上鼠标移动。
-
-### `void QDrag::setMimeData(QMimeData *data)`
-
-**作用与语义：**
-
-将数据设置为发送给给定的 MIME `data`。数据的所有权转移给 `QDrag`对象。
-
-### `void QDrag::setPixmap(const QPixmap &pixmap)`
-
-**作用与语义：**
-
-将`pixmap`设置为用于拖放操作中表示数据的像素映射。你只能在拖动开始前设置像素映射。
-
-### `QObject *QDrag::source() const`
-
-**作用与语义：**
-
-返回拖拽对象的源头。这是拖放操作的起始组件。
-
-### `Qt::DropActions QDrag::supportedActions() const`
-
-**作用与语义：**
-
-返回该拖拽操作可能的投放动作集合。
-
-### `QObject *QDrag::target() const`
-
-**作用与语义：**
-
-返回拖拽操作的目标。这是拖拽对象被丢弃的控件。
-
-### `[signal] void QDrag::targetChanged(QObject *newTarget)`
-
-**作用与语义：**
-
-当拖拽操作的目标发生变化，`newTarget`新目标时，该信号会发出。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-### 状态和错误边界
-
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-### 线程边界
-
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-### 最容易出现的错误
-
-不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDrag` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+拖拽预览 pixmap 应小而清楚。大图会拖慢拖动，也会遮挡目标。

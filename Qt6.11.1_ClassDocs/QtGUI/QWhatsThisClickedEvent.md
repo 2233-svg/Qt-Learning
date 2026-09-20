@@ -1,102 +1,72 @@
 # QWhatsThisClickedEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QWhatsThisClickedEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QWhatsThisClickedEvent` 是 Qt 的值类型，围绕“WhatsThisClicked事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QWhatsThisClickedEvent` 表示用户在 Qt 的“这是什么？”帮助文本中点击了一个链接。它把链接地址交给应用，由应用决定打开内部帮助页、跳转到设置项、定位到文档章节，还是交给外部浏览器。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是普通鼠标点击事件，也不是 tooltip 事件。它发生在 What's This 帮助内容已经显示之后，负责把帮助文本中的超链接继续连接到应用行为。
 
-### 这是什么
+## 2. 类说明
 
-`QWhatsThisClickedEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QWhatsThisClickedEvent` 继承自 `QEvent`，事件类型是 `QEvent::WhatsThisClicked`。通常在顶层窗口或帮助控制器的 `event()` 中接收。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QWhatsThisClickedEvent`：`href()` 保存被点击的链接，如何解析和导航由应用的帮助系统决定。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QWhatsThisClickedEvent(href)` | 构造一个携带链接地址的 What's This 点击事件。 |
+| `href() const` | 返回用户点击的链接地址或锚点。 |
+| `type()` | 来自 `QEvent`，通常为 WhatsThisClicked。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 根据链接决定内部导航还是外部打开
 
-- 头文件：`#include <QWhatsThisClickedEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+```cpp
+bool MainWindow::event(QEvent *event)
+{
+    if (event->type() == QEvent::WhatsThisClicked) {
+        auto *clicked = static_cast<QWhatsThisClickedEvent *>(event);
+        const QUrl url(clicked->href());
 
-CMake 配置：
+        if (url.scheme() == "app") {
+            helpBrowser->navigateTo(url.path());
+        } else {
+            QDesktopServices::openUrl(url);
+        }
+        return true;
+    }
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+    return QMainWindow::event(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+应用协议适合内部帮助，`http` / `https` 等外部协议可以交给 `QDesktopServices`。
 
-### 工作机制
+### 不要盲目信任 href
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+帮助文本可能来自配置、插件或外部文档。应限制允许的 scheme，必要时校验路径和参数，避免把帮助链接当成任意命令执行入口。
 
-### 状态、生命周期和线程
+## 5. 使用场景
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+`QWhatsThisClickedEvent` 适合带有上下文帮助、内置文档浏览器、设置页导航、设计器属性说明、插件帮助和应用内知识库的桌面程序。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+它也适合把帮助系统和产品内导航连接起来：用户在某个属性说明中点击“更多信息”，可以直接跳到对应设置页或诊断页面。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+不要只用字符串前缀拼接 URL。使用 `QUrl` 解析 scheme、path 和 query 更安全。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+不要无条件把所有 href 交给系统打开。外部链接、内部链接和非法链接应有不同策略。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+不要在事件处理里同步加载大型帮助页面。先切换界面，再异步加载内容，避免帮助点击卡住主窗口。
 
-### 公有函数
+不要把它和普通网页浏览器点击事件混淆。只有 Qt What's This 帮助体系中的链接才会进入该事件。
 
-- `QWhatsThisClickedEvent(const QString &href)`
-- `QString href() const`
+## 7. 知识点覆盖
 
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QWhatsThisClickedEvent::QWhatsThisClickedEvent(const QString &href)`
-
-**作用与语义：**
-
-当点击链接时，构建一个包含`href`指定的URL的事件，提示“这是怎么回事？”。
-
-### `QString QWhatsThisClickedEvent::href() const`
-
-**作用与语义：**
-
-返回用户在“这是什么？”文本中点击的URL。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QWhatsThisClickedEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QWhatsThisClickedEvent` 应覆盖 What's This、帮助链接、`href()`、应用内 URL scheme、`QUrl` 校验、`QDesktopServices`、事件过滤、异步帮助加载和安全边界。

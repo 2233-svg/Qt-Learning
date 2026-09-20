@@ -1,181 +1,104 @@
 # QPixmapCache
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPixmapCache`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QPixmapCache` 是 Qt 提供的进程级、内存受限、最近最少使用倾向的 `QPixmap` 缓存。它适合留住昂贵生成的缩略图、缩放图、组合背景和图标变体，避免在每次绘制时重复做 decode、缩放或 transform。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是可靠存储：条目随时可能因为内存上限被淘汰，`clear()` 也会清空全局内容。因此所有读取都必须把 miss 视为正常路径，并能从原始数据重建 pixmap。
 
-### 这是什么
-
-`QPixmapCache` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QPixmapCache>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：静态全局缓存，不需要实例化。
+- 线程：`QPixmapCache` 仅可从主线程访问。后台任务应缓存 `QImage` 或普通数据，回到 GUI 线程后再使用 pixmap cache。
+- 淘汰：插入会在必要时清除较久未访问的条目；缓存不提供固定生命周期保证。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
+| API | 用途速查 |
+| --- | --- |
+| `insert(QString, QPixmap)` | 用调用方稳定字符串键插入；成功返回 `true` |
+| `find(QString, QPixmap *)` | 通过字符串键查询；miss 时输出 pixmap 不变 |
+| `remove(QString)` | 主动移除一个字符串键条目 |
+| `insert(QPixmap)` | 让缓存生成高效的 `QPixmapCache::Key` |
+| `find(Key, QPixmap *)` | 通过内部 key 查询；miss 后 key 通常失效 |
+| `remove(Key)` | 删除内部 key 所指条目 |
+| `cacheLimit()` | 获取全局缓存上限，单位 KB |
+| `setCacheLimit(kb)` | 设置全局缓存上限，单位 KB |
+| `clear()` | 清空进程中所有 cache 条目 |
+| `QPixmapCache::Key` | 高效的一对一对象到 pixmap 的内部句柄 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 4. 关键用法
 
-### 工作机制
-
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `class Key`
-
-### 静态公有成员
-
-- `int cacheLimit()`
-- `void clear()`
-- `bool find(const QPixmapCache::Key &key, QPixmap *pixmap)`
-- `bool find(const QString &key, QPixmap *pixmap)`
-- `QPixmapCache::Key insert(const QPixmap &pixmap)`
-- `bool insert(const QString &key, const QPixmap &pixmap)`
-- `void remove(const QPixmapCache::Key &key)`
-- `void remove(const QString &key)`
-- `void setCacheLimit(int n)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[static] int QPixmapCache::cacheLimit()`
-
-**作用与语义：**
-
-返回缓存限制（以千字节为单位）。
-默认缓存限制为10240 KB。
-
-### `[static] void QPixmapCache::clear()`
-
-**作用与语义：**
-
-从缓存中移除所有像素地图。
-
-### `[static] bool QPixmapCache::find(const QPixmapCache::Key &key, QPixmap *pixmap)`
-
-**作用与语义：**
-
-在缓存中寻找与给定`key`相关的缓存像素映射。如果找到像素映射，函数将`pixmap`映射到该像素映射并返回`true`;否则保持`pixmap`状态，返回`false`。如果找不到像素映射，表示该`key`不再有效，因此将在下一次插入时释放。
-
-### `[static] bool QPixmapCache::find(const QString &key, QPixmap *pixmap)`
-
-**作用与语义：**
-
-在缓存中寻找与给定`key`相关的缓存像素映射。如果找到像素映射，函数将`pixmap`映射到该像素映射并返回`true`;否则保持`pixmap`不动，返回`false`。
-
-**官方示例：**
+### 用完整渲染参数构造字符串键
 
 ```cpp
- QPixmap pm;
- if (!QPixmapCache::find("my_big_image", &pm)) {
-     pm.load("bigimage.png");
-     QPixmapCache::insert("my_big_image", pm);
- }
- painter->drawPixmap(0, 0, pm);
+const QString key = QStringLiteral(
+    "thumb:v3:file=%1:size=%2x%3:dpr=%4:theme=%5")
+    .arg(fileId)
+    .arg(logicalSize.width())
+    .arg(logicalSize.height())
+    .arg(screenDpr, 0, 'f', 2)
+    .arg(themeRevision);
+
+QPixmap thumb;
+if (!QPixmapCache::find(key, &thumb)) {
+    const QImage image = makeThumbnail(fileId, logicalSize, screenDpr);
+    thumb = QPixmap::fromImage(image);
+    if (!thumb.isNull())
+        QPixmapCache::insert(key, thumb);
+}
+painter.drawPixmap(target, thumb);
 ```
 
-### `[static] QPixmapCache::Key QPixmapCache::insert(const QPixmap &pixmap)`
+键必须包含所有会改变像素结果的输入：源版本、目标尺寸、DPR、裁剪、颜色方案、主题、滤镜参数等。若只用文件路径作键，窗口移动到高 DPI 屏、主题切换或缩略图尺寸变化时都会复用错误资源。
 
-**作用与语义：**
+### 用内部 Key 绑定到稳定业务对象
 
-将给定`pixmap`的副本插入缓存，并返回可用于检索的密钥。
-当插入像素地图且缓存即将超过限制时，会移除像素地图，直到有足够空间插入像素地图。
-当需要更多空间时，最早的像素映射（缓存中访问时间最短的）会被删除。
+```cpp
+class PreviewItem {
+public:
+    QPixmapCache::Key cacheKey;
+};
 
-### `[static] bool QPixmapCache::insert(const QString &key, const QPixmap &pixmap)`
+QPixmap pm;
+if (!QPixmapCache::find(item.cacheKey, &pm)) {
+    pm = renderPreview(item);
+    item.cacheKey = QPixmapCache::insert(pm);
+}
+```
 
-**作用与语义：**
+`Key` 避免构造和哈希长字符串，适合一个对象只持有一张派生 pixmap 的场景。缓存淘汰后 `find()` 会失败，此 key 随后不再有效；下一次生成时用新的 `insert()` 返回值覆盖它。
 
-将与`key`关联的像素地图（pixmap）`pixmap`插入缓存中。
-Qt 库插入的所有像素映射键都以“$qt”开头，因此你的像素映射键绝不应以“$qt”开头。
-当插入像素地图且缓存即将超过限制时，会移除像素地图，直到有足够空间插入像素地图。
-当需要更多空间时，最早的像素映射（缓存中访问时间最短的）会被删除。
-如果该对象入缓存，函数返回`true`;否则返回`false`。
+### 明确调整全局内存预算
 
-### `[static] void QPixmapCache::remove(const QPixmapCache::Key &key)`
+```cpp
+const int oldLimitKb = QPixmapCache::cacheLimit();
+QPixmapCache::setCacheLimit(48 * 1024); // 48 MiB
+```
 
-**作用与语义：**
+这是进程级预算，影响 Qt 和所有依赖库的 pixmap cache 使用。不要由某个局部控件随意改大；先通过内存剖析确认需求，必要时在应用初始化配置一次。
 
-从缓存中移除与`key`关联的像素映射，并释放密钥以便未来插入。
+## 5. 使用场景
 
-### `[static] void QPixmapCache::remove(const QString &key)`
+- 项目视图、文件浏览器、图片库的大量缩略图。
+- 自绘控件中尺寸和主题稳定的复杂背景、阴影、路径栅格化结果。
+- 图标变体、状态叠加层、昂贵 transform 的 GUI 线程缓存。
+- 与业务对象一一对应且可随时重建的预览 pixmap。
 
-**作用与语义：**
+## 6. 常见坑与经验
 
-从缓存中移除与`key`关联的像素映射。
+- **缓存 miss 不是错误。** `find()` 失败应走生成路径，不能把它当作资源丢失或逻辑异常。
+- **不要用 `$qt` 前缀。** 该前缀保留给 Qt 内部键，用户键绝不应以它开头。
+- **不要缓存不可重建的唯一数据。** 条目会被淘汰；原始图像/模型数据应在别处保存。
+- **`clear()` 是全局重锤。** 它会影响应用其他组件甚至某些 Qt 内部缓存使用，主题切换也应优先做精确 key 失效。
+- **大图很快吃掉预算。** 一张 `2048x2048` ARGB pixmap 约 16 MiB；缓存缩略图时限制目标大小。
+- **不要从 worker 线程调用。** 先生成 `QImage`，通过信号把它交给 GUI 线程插入/显示。
+- **键版本化。** 算法、色彩管理或渲染规则升级后，给 key 加版本字段，避免复用旧语义结果。
 
-### `[static] void QPixmapCache::setCacheLimit(int n)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-将缓存限制设置为`n`千字节。
-默认设置是10240 KB。
-
-### `class Key`
-
-**作用与语义：**
-
-QPixmapCache：：Key 类可用于高效访问 QPixmapCache。
-使用`QPixmapCache::insert()`接收由像素地图缓存生成的密钥实例。你可以将密钥存储在自己的对象中，实现非常高效的一对一对象到像素映射。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPixmapCache` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+LRU 风格缓存、进程级内存预算、QPixmap GUI 线程约束、缓存键设计、DPR/主题维度、淘汰与失效、缩略图优化、Key 句柄。

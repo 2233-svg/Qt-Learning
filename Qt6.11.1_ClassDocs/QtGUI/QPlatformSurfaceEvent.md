@@ -1,115 +1,86 @@
 # QPlatformSurfaceEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPlatformSurfaceEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPlatformSurfaceEvent` 是 Qt 的值类型，围绕“Platform表面事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QPlatformSurfaceEvent` 通知窗口底层的原生 surface 已创建，或即将被销毁。这里的 surface 是平台窗口系统、OpenGL/EGL、Vulkan swapchain 等渲染资源依赖的原生承载面，不等同于 C++ `QWindow` 对象本身。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它最重要的时刻是 `SurfaceAboutToBeDestroyed`：事件返回后原生 surface 可能立刻失效。渲染器必须在这之前停止提交帧、释放依赖 surface 的资源，不能等到窗口对象析构时再做。
 
-### 这是什么
+## 2. 类说明
 
-`QPlatformSurfaceEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QPlatformSurfaceEvent` 继承自 `QEvent`。通常通过 `QWindow::event()`、事件过滤器或底层渲染窗口代码接收；普通 Widgets 应用一般无需直接处理。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QPlatformSurfaceEvent`：它描述 surface 生命周期边界，渲染上下文、swapchain、帧缓冲和 GPU 资源如何创建或销毁由具体图形后端决定。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `enum SurfaceEventType` | 区分原生 surface 已创建与即将销毁。 |
+| `QPlatformSurfaceEvent(surfaceEventType)` | 构造 surface 生命周期事件。 |
+| `surfaceEventType() const` | 返回事件的具体 surface 生命周期阶段。 |
+| `type()` | 来自 `QEvent`，平台 surface 事件通常为 `QEvent::PlatformSurface`。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+`SurfaceEventType` 主要包含：
 
-## 2. 依赖与对象关系
+| 枚举值 | 说明 |
+| --- | --- |
+| `SurfaceCreated` | 底层原生 surface 已可用，可以准备依赖该 surface 的渲染资源。 |
+| `SurfaceAboutToBeDestroyed` | 原生 surface 即将失效，必须停止提交并释放依赖资源。 |
 
-- 头文件：`#include <QPlatformSurfaceEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+## 4. 关键用法
 
-CMake 配置：
+### 在销毁前停止渲染
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+bool RenderWindow::event(QEvent *event)
+{
+    if (event->type() == QEvent::PlatformSurface) {
+        auto *surfaceEvent = static_cast<QPlatformSurfaceEvent *>(event);
+
+        if (surfaceEvent->surfaceEventType()
+            == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+            stopRenderLoop();
+            releaseSwapchainResources();
+        }
+    }
+
+    return QWindow::event(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+不能把 `SurfaceAboutToBeDestroyed` 当作“将来某个时候再清理”。它就是最后的同步清理窗口。
 
-### 工作机制
+### 在创建后延迟初始化依赖资源
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+```cpp
+if (surfaceEvent->surfaceEventType()
+    == QPlatformSurfaceEvent::SurfaceCreated) {
+    recreateSurfaceResources();
+    requestRender();
+}
+```
 
-### 状态、生命周期和线程
+不同后端的实际资源创建时机可能还要结合 `QWindow::isExposed()`、当前尺寸和图形上下文状态判断。surface 创建不必然代表已经适合立刻呈现一帧。
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+## 5. 使用场景
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+`QPlatformSurfaceEvent` 适合 OpenGL 窗口、Vulkan 渲染器、QRhi 窗口、视频渲染、游戏编辑器、原生图形 API 集成和多窗口 GPU 资源管理。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+窗口最小化、平台 surface 重建、屏幕变化、嵌入式窗口重挂等情况下，表面对象可能比 `QWindow` 更早或更频繁地变化，因此渲染器必须将其生命周期单独管理。
 
-## 3. 直接使用
+## 6. 常见坑与经验
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+不要在 `SurfaceAboutToBeDestroyed` 后继续调用 swap 或 present。原生句柄可能已经无效，结果通常是驱动错误、崩溃或黑屏。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+不要只在窗口析构时销毁 swapchain。surface 可以在窗口对象仍然存在时被销毁和重建。
 
-### 公有类型
+不要把 SurfaceCreated 等同于 exposed。创建完成后窗口仍可能不可见，渲染调度应继续看 `isExposed()`。
 
-- `enum SurfaceEventType { SurfaceCreated, SurfaceAboutToBeDestroyed }`
+不要在 GUI 线程之外随意销毁与窗口 surface 绑定的图形资源。具体后端对线程和当前上下文有严格要求。
 
-### 公有函数
+## 7. 知识点覆盖
 
-- `QPlatformSurfaceEvent(QPlatformSurfaceEvent::SurfaceEventType surfaceEventType)`
-- `QPlatformSurfaceEvent::SurfaceEventType surfaceEventType() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QPlatformSurfaceEvent::SurfaceEventType`
-
-**作用与语义：**
-
-本枚举描述了平台表面事件的类型。可能的类型有：
-- `QPlatformSurfaceEvent::SurfaceCreated`：`0`;底层的原生表面已被创建
-- `QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed`：`1`;该事件后，底层的天然表面将立即被破坏
-`SurfaceAboutToBeDestroyed`事件类型作为停止渲染平台窗口的手段，防止其被破坏。
-
-### `[explicit] QPlatformSurfaceEvent::QPlatformSurfaceEvent(QPlatformSurfaceEvent::SurfaceEventType surfaceEventType)`
-
-**作用与语义：**
-
-为给定`surfaceEventType`构造平台表面事件。
-
-### `QPlatformSurfaceEvent::SurfaceEventType QPlatformSurfaceEvent::surfaceEventType() const`
-
-**作用与语义：**
-
-返回特定类型的平台表面事件。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPlatformSurfaceEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QPlatformSurfaceEvent` 应覆盖原生 surface 生命周期、SurfaceCreated、SurfaceAboutToBeDestroyed、swapchain、图形上下文、OpenGL/Vulkan/QRhi、窗口最小化、surface 重建、渲染线程和资源释放顺序。

@@ -1,137 +1,74 @@
 # QAbstractItemModelTester
-
-> Qt 6.11.1 · Qt Test
+> Qt 6.11.1 · Qt Test · 来自 `QAbstractItemModelTester`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAbstractItemModelTester` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QAbstractItemModelTester` 是模型/视图开发的自动体检器。把它挂到你的 `QAbstractItemModel` 上，它会检查索引、父子关系、行列数、数据变更信号、插入删除协议等是否符合 Qt Model/View 的基本契约。
 
-**模块背景：** Qt Test 提供单元测试、数据驱动测试、基准测试和 GUI 测试支持。
+它不能证明你的业务数据正确，但很擅长抓出“模型实现不守规矩”导致的视图崩溃、断言、随机刷新错误。
 
-### 这是什么
+## 2. 类说明
 
-`QAbstractItemModelTester` 是 Qt Test 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
+保留类说明：这些 API 来自 `QAbstractItemModelTester`，属于 Qt Test 模块，用于验证 `QAbstractItemModel` 子类是否遵守模型协议。
 
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+它继承 `QObject`，通常作为测试用例对象或模型对象的子对象存在。只要 tester 活着，它就会监听模型变化并做检查。
 
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
+## 3. API 速查
 
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
+| API | 用来做什么 |
+| --- | --- |
+| `QAbstractItemModelTester(model, parent)` | 以默认 `QtTest` 失败报告模式测试模型。 |
+| `QAbstractItemModelTester(model, mode, parent)` | 指定失败报告方式。 |
+| `model()` | 返回正在测试的模型。 |
+| `failureReportingMode()` | 查询当前失败报告模式。 |
+| `setUseFetchMore(bool)` | Qt 6.4 起控制是否在测试中触发 `fetchMore()`。 |
+| `FailureReportingMode::QtTest` | 把违规报告为 Qt Test 失败。 |
+| `FailureReportingMode::Warning` | 只向 `qt.modeltest` 日志输出警告。 |
+| `FailureReportingMode::Fatal` | 违规时 `qFatal()` 终止程序。 |
 
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
+## 4. 典型流程
 
-## 2. 依赖与对象关系
+```cpp
+MyTreeModel model;
+QAbstractItemModelTester tester(
+    &model,
+    QAbstractItemModelTester::FailureReportingMode::QtTest);
 
-- 头文件：`#include <QAbstractItemModelTester>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Test)
-target_link_libraries(mytarget PRIVATE Qt6::Test)
+populateModel();
+insertRows();
+removeRows();
+changeData();
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+对懒加载模型：
 
-### 工作机制
+```cpp
+tester.setUseFetchMore(false); // 避免测试主动拉取远程/昂贵数据
+```
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+| 场景 | 为什么有用 |
+| --- | --- |
+| 新写模型类 | 快速验证 index/parent/rowCount/columnCount 契约。 |
+| 树模型调试 | 父子关系错是最常见崩溃源，tester 能早发现。 |
+| 复杂插入删除 | 检查 begin/end 信号和行列范围是否匹配。 |
+| 代理模型或懒加载模型 | 暴露源模型与代理模型的协议问题。 |
 
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+## 6. 常见坑与经验
 
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+tester 只能发现模型协议错误，不会验证你的业务值对不对。比如金额算错但信号和索引都合法，它不会帮你发现。
 
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+`fetchMore()` 可能触发数据库、网络或大文件读取。对懒加载模型，如果自动 fetch 会让测试慢或有副作用，就关闭 `setUseFetchMore(false)`，再针对加载逻辑单独测试。
 
-## 3. 直接使用
+失败模式要按环境选择。单元测试用 `QtTest`；调试应用运行期模型可以用 `Warning`；CI 中想立即停止可考虑 `Fatal`，但它会让后续诊断机会变少。
 
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
+模型必须在自己的线程里被访问。大多数模型和视图在 GUI 线程，测试也应该在同一线程操作它。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 7. 知识点覆盖
 
-### 公有类型
-
-- `enum class FailureReportingMode { QtTest, Warning, Fatal }`
-
-### 公有函数
-
-- `QAbstractItemModelTester(QAbstractItemModel *model, QObject *parent = nullptr)`
-- `QAbstractItemModelTester(QAbstractItemModel *model, QAbstractItemModelTester::FailureReportingMode mode, QObject *parent = nullptr)`
-- `QAbstractItemModelTester::FailureReportingMode failureReportingMode() const`
-- `QAbstractItemModel * model() const`
-- `(since 6.4) void setUseFetchMore(bool value)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum class QAbstractItemModelTester::FailureReportingMode`
-
-**作用与语义：**
-
-该枚举规定了`QAbstractItemModelTester`在测试`QAbstractItemModel`子类时应如何报告失败。
-- `QAbstractItemModelTester::FailureReportingMode::QtTest`：`0`;这些故障将被报告为`QtTest`测试失败。
-- `QAbstractItemModelTester::FailureReportingMode::Warning`：`1`;失败将作为`qt.modeltest`日志类别的警告消息报告。
-- `QAbstractItemModelTester::FailureReportingMode::Fatal`：`2`;失败会导致程序立即且异常终止。失败原因将通过`qFatal()`报告。
-
-### `QAbstractItemModelTester::QAbstractItemModelTester(QAbstractItemModel *model, QObject *parent = nullptr)`
-
-**作用与语义：**
-
-创建一个模型测试实例，使用给定的`parent`，用于测试模型`model`。
-故障报告模式设置为`FailureReportingMode::QtTest`。
-
-### `QAbstractItemModelTester::QAbstractItemModelTester(QAbstractItemModel *model, QAbstractItemModelTester::FailureReportingMode mode, QObject *parent = nullptr)`
-
-**作用与语义：**
-
-创建一个模型测试器实例，使用给定的`parent`，测试模型`model`，并使用指定的`mode`报告测试失败。
-
-### `QAbstractItemModelTester::FailureReportingMode QAbstractItemModelTester::failureReportingMode() const`
-
-**作用与语义：**
-
-返回该实例用于报告测试失败的模式。
-
-### `QAbstractItemModel *QAbstractItemModelTester::model() const`
-
-**作用与语义：**
-
-返回该实例正在测试的模型。
-
-### `[since 6.4] void QAbstractItemModelTester::setUseFetchMore(bool value)`
-
-**作用与语义：**
-
-如果`value`为真，则启用测试模型的动态人口，这是默认值。如果`value`为假，则禁用该模型。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-### 状态和错误边界
-
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-### 线程边界
-
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAbstractItemModelTester` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- Qt Model/View 基本契约。
+- index/parent、行列数、数据变更、插入删除信号。
+- 模型测试失败报告策略。
+- `fetchMore()` 与懒加载模型测试。
+- tester 生命周期和模型线程边界。

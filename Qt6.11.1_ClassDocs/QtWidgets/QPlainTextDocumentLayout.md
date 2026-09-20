@@ -1,201 +1,64 @@
 # QPlainTextDocumentLayout
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QPlainTextDocumentLayout`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPlainTextDocumentLayout` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QPlainTextDocumentLayout` 是 `QTextDocument` 的纯文本布局实现。它面向大段纯文本、代码、日志这类按块排列的内容，强调滚动和编辑效率，而不是富文本排版能力。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+日常使用 `QPlainTextEdit` 时通常不会直接创建它，因为 `QPlainTextEdit` 已经为文档配置了合适的布局。只有在你直接操作 `QTextDocument`，并希望它按纯文本编辑器方式布局时，才需要显式关注这个类。
 
-### 这是什么
+## 2. 类说明
 
-`QPlainTextDocumentLayout` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QPlainTextDocumentLayout` 继承自 `QAbstractTextDocumentLayout`。它负责计算文本块位置、绘制文档、命中测试、文档尺寸和光标宽度。它不负责编辑命令，也不负责滚动条；这些由 `QPlainTextEdit` 或外层视图处理。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+和富文本布局相比，它更适合“很多行、格式相对简单、需要高效滚动”的场景。代码编辑器、日志查看器、大文本预览器都更贴近它的模型。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QPlainTextDocumentLayout(QTextDocument *)` | 为指定文档创建纯文本布局。 |
+| `setCursorWidth(int)` / `cursorWidth()` | 设置或读取文本光标宽度，影响插入点显示。 |
+| `ensureBlockLayout(const QTextBlock &)` | 确保某个文本块已经完成布局，适合按需计算块几何。 |
+| `requestUpdate()` | 请求更新布局/显示，通常由编辑器内部调用。 |
+| `blockBoundingRect(const QTextBlock &)` | 返回文本块的布局矩形。 |
+| `documentSize()` | 返回整个文档布局尺寸。 |
+| `draw(QPainter *, PaintContext)` | 按给定绘图上下文绘制文档内容。 |
+| `hitTest(const QPointF &, Qt::HitTestAccuracy)` | 把坐标转换成文档字符位置。 |
+| `frameBoundingRect(QTextFrame *)` | 返回 frame 区域；纯文本场景一般较少直接依赖。 |
+| `pageCount()` | 返回页数；纯文本布局通常不是分页排版的主角。 |
+| `documentChanged(int, int, int)` | 文档内容变化后更新内部布局，子类可重写。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+直接给文档设置纯文本布局：
 
-- 头文件：`#include <QPlainTextDocumentLayout>`
-- 继承自：QAbstractTextDocumentLayout
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+auto *document = new QTextDocument(this);
+document->setDocumentLayout(new QPlainTextDocumentLayout(document));
+document->setPlainText(sourceText);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+如果你只是创建普通编辑器，更推荐：
 
-### 工作机制
+```cpp
+auto *editor = new QPlainTextEdit(this);
+editor->setPlainText(sourceText);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+后者已经把滚动、光标、选择、撤销、输入法等交互都组合好了。
 
-### 状态、生命周期和线程
+## 5. 使用场景
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+适合自定义纯文本编辑器、代码编辑器底层扩展、日志查看器、需要直接绘制 `QTextDocument` 的文本视图，以及需要按文本块计算位置的高级控件。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+如果内容包含复杂表格、图片、列表、不同 block frame 或文档级富排版，`QTextDocument` 默认富文本布局更合适；如果只是显示几行不可编辑文本，用 `QLabel` 或 `QPlainTextEdit` 即可。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+不要把它当成“布局管理器”。它布局的是文本文档，不是 widgets。界面控件排列仍然由 `QLayout` 家族负责。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
+`ensureBlockLayout()` 是面向按需布局的工具，不是刷新整篇文档的万能按钮。需要界面更新时让编辑器或文档的正常更新机制工作。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `cursorWidth : int`
-
-### 公有函数
-
-- `QPlainTextDocumentLayout(QTextDocument *document)`
-- `virtual ~QPlainTextDocumentLayout()`
-- `int cursorWidth() const`
-- `void ensureBlockLayout(const QTextBlock &block) const`
-- `void requestUpdate()`
-- `void setCursorWidth(int width)`
-
-### 重实现的公有函数
-
-- `virtual QRectF blockBoundingRect(const QTextBlock &block) const override`
-- `virtual QSizeF documentSize() const override`
-- `virtual void draw(QPainter *, const QAbstractTextDocumentLayout::PaintContext &) override`
-- `virtual QRectF frameBoundingRect(QTextFrame *) const override`
-- `virtual int hitTest(const QPointF &, Qt::HitTestAccuracy) const override`
-- `virtual int pageCount() const override`
-
-### 重实现的保护函数
-
-- `virtual void documentChanged(int from, int charsRemoved, int charsAdded) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `cursorWidth : int`
-
-**作用与语义：**
-
-该属性指定光标的宽度（像素单位）。默认值为1。
-
-**如何使用：** 调用 `cursorWidth()` 读取当前值；它不会修改应用状态。
-
-### `QPlainTextDocumentLayout::QPlainTextDocumentLayout(QTextDocument *document)`
-
-**作用与语义：**
-
-为文本`document`构建纯文本文档布局。
-
-### `[virtual noexcept] QPlainTextDocumentLayout::~QPlainTextDocumentLayout()`
-
-**作用与语义：**
-
-破坏纯文本文档布局。
-
-### `[override virtual] QRectF QPlainTextDocumentLayout::blockBoundingRect(const QTextBlock &block) const`
-
-**作用与语义：**
-
-重实现自：`QAbstractTextDocumentLayout::blockBoundingRect`（const QTextBlock & block） const.
-
-### `[override virtual protected] void QPlainTextDocumentLayout::documentChanged(int from, int charsRemoved, int charsAdded)`
-
-**作用与语义：**
-
-重实现自：`QAbstractTextDocumentLayout::documentChanged`（int position，int charsRemoved，int 字符添加）。
-
-### `[override virtual] QSizeF QPlainTextDocumentLayout::documentSize() const`
-
-**作用与语义：**
-
-重装：`QAbstractTextDocumentLayout::documentSize()` const.
-
-### `[override virtual] void QPlainTextDocumentLayout::draw(QPainter *, const QAbstractTextDocumentLayout::PaintContext &)`
-
-**作用与语义：**
-
-重实现自：`QAbstractTextDocumentLayout::draw`（QPainter *painter，cont QAbstractTextDocumentLayout：:P aintContext & context）。
-
-### `void QPlainTextDocumentLayout::ensureBlockLayout(const QTextBlock &block) const`
-
-**作用与语义：**
-
-确保`block`布局有效。
-
-### `[override virtual] QRectF QPlainTextDocumentLayout::frameBoundingRect(QTextFrame *) const`
-
-**作用与语义：**
-
-重实现自：`QAbstractTextDocumentLayout::frameBoundingRect`（QTextFrame *frame）const.
-
-### `[override virtual] int QPlainTextDocumentLayout::hitTest(const QPointF &, Qt::HitTestAccuracy) const`
-
-**作用与语义：**
-
-重现：`QAbstractTextDocumentLayout::hitTest`（const QPointF & point， Qt：：HitTestAccuracy accuracy）const.
-
-### `[override virtual] int QPlainTextDocumentLayout::pageCount() const`
-
-**作用与语义：**
-
-重实现自：`QAbstractTextDocumentLayout::pageCount()` const.
-
-### `void QPlainTextDocumentLayout::requestUpdate()`
-
-**作用与语义：**
-
-请求对所有观点进行全面更新。
-
-### `int cursorWidth() const`
-
-**作用与语义：**
-
-该属性指定光标的宽度（像素单位）。默认值为1。
-
-**如何使用：** 调用 `cursorWidth()` 读取当前值；它不会修改应用状态。
-
-### `void setCursorWidth(int width)`
-
-**作用与语义：**
-
-该属性指定光标的宽度（像素单位）。默认值为1。
-
-**如何使用：** 调用 `setCursorWidth(...)` 修改 `cursorWidth`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPlainTextDocumentLayout` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+纯文本布局并不等于没有格式。语法高亮通过 `QSyntaxHighlighter` 改变字符格式，但整体排版仍按纯文本块模型运行。

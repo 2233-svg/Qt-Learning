@@ -1,188 +1,90 @@
 # QAccessibleTableModelChangeEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleTableModelChangeEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleTableModelChangeEvent` 是 Qt 的值类型，围绕“Accessible表格模型Change事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QAccessibleTableModelChangeEvent` 用来通知辅助技术：表格的模型结构或指定单元格数据发生了变化。它面向 `QAccessibleTableInterface`，让屏幕阅读器能够丢弃旧的行列缓存、重新查询受影响区域，并避免继续朗读已经不存在的单元格。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它描述的是表格语义层的变化，不是普通视图重绘。排序、过滤、插入行、删除列、数据更新和模型重置都可能需要对应事件，但鼠标悬停或 repaint 不需要。
 
-### 这是什么
-
-`QAccessibleTableModelChangeEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
-
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
-
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleTableModelChangeEvent>`
-- 继承自：QAccessibleEvent
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QAccessibleEvent`
+- 协作接口：`QAccessibleTableInterface::modelChange()`、`QAccessible::updateAccessibility()`
 
-CMake 配置：
+事件可绑定到 `QObject` 或已存在的 `QAccessibleInterface`。范围使用行列索引描述，通常与用户当前看到的表格坐标一致。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleTableModelChangeEvent(object, type)` | 为表格对象构造模型变化事件。 |
+| `QAccessibleTableModelChangeEvent(iface, type)` | 为表格可访问接口构造模型变化事件。 |
+| `modelChangeType()` / `setModelChangeType()` | 读取或修改变化类型。 |
+| `firstRow()` / `setFirstRow()` | 变化范围起始行。 |
+| `lastRow()` / `setLastRow()` | 变化范围结束行。 |
+| `firstColumn()` / `setFirstColumn()` | 变化范围起始列。 |
+| `lastColumn()` / `setLastColumn()` | 变化范围结束列。 |
+| `ModelReset` | 表格模型整体重置，旧缓存全部无效。 |
+| `DataChanged` | 单元格仍存在，但内容或状态变化。 |
+| `RowsInserted` / `RowsRemoved` | 行插入或删除。 |
+| `ColumnsInserted` / `ColumnsRemoved` | 列插入或删除。 |
+
+## 4. 关键用法
+
+```cpp
+QAccessibleTableModelChangeEvent event(
+    tableView, QAccessibleTableModelChangeEvent::RowsInserted);
+event.setFirstRow(first);
+event.setLastRow(last);
+event.setFirstColumn(0);
+event.setLastColumn(tableModel->columnCount() - 1);
+
+QAccessible::updateAccessibility(&event);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-### 状态、生命周期和线程
-
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum ModelChangeType { ModelReset, DataChanged, RowsInserted, ColumnsInserted, RowsRemoved, ColumnsRemoved }`
-
-### 公有函数
-
-- `QAccessibleTableModelChangeEvent(QAccessibleInterface *iface, QAccessibleTableModelChangeEvent::ModelChangeType changeType)`
-- `QAccessibleTableModelChangeEvent(QObject *object, QAccessibleTableModelChangeEvent::ModelChangeType changeType)`
-- `int firstColumn() const`
-- `int firstRow() const`
-- `int lastColumn() const`
-- `int lastRow() const`
-- `QAccessibleTableModelChangeEvent::ModelChangeType modelChangeType() const`
-- `void setFirstColumn(int column)`
-- `void setFirstRow(int row)`
-- `void setLastColumn(int column)`
-- `void setLastRow(int row)`
-- `void setModelChangeType(QAccessibleTableModelChangeEvent::ModelChangeType changeType)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QAccessibleTableModelChangeEvent::ModelChangeType`
-
-**作用与语义：**
-
-该枚举描述了表格模型中不同类型的变化。
-- `QAccessibleTableModelChangeEvent::ModelReset`：`0`;模型已被重置，之前关于该模型的所有知识均无效。
-- `QAccessibleTableModelChangeEvent::DataChanged`：`1`;没有添加或移除任何单元格，但指定单元范围的数据无效。
-- `QAccessibleTableModelChangeEvent::RowsInserted`：`2`;已插入新行。
-- `QAccessibleTableModelChangeEvent::ColumnsInserted`：`3`;新增列。
-- `QAccessibleTableModelChangeEvent::RowsRemoved`：`4`;行已移除。
-- `QAccessibleTableModelChangeEvent::ColumnsRemoved`：`5`;柱子已被移除。
-
-### `QAccessibleTableModelChangeEvent::QAccessibleTableModelChangeEvent(QAccessibleInterface *iface, QAccessibleTableModelChangeEvent::ModelChangeType changeType)`
-
-**作用与语义：**
-
-构建一个新的 QAccessibleTableModelChangeEvent 用于与模型变更类型 `changeType` 的接口`iface`。
-
-### `QAccessibleTableModelChangeEvent::QAccessibleTableModelChangeEvent(QObject *object, QAccessibleTableModelChangeEvent::ModelChangeType changeType)`
-
-**作用与语义：**
-
-构造一个新的QAccessibleTableModelChangeEvent，用于`object` 和 `changeType`。
-
-### `int QAccessibleTableModelChangeEvent::firstColumn() const`
-
-**作用与语义：**
-
-返回第一个更改过的列。
-
-### `int QAccessibleTableModelChangeEvent::firstRow() const`
-
-**作用与语义：**
-
-返回第一行更改的行。
-
-### `int QAccessibleTableModelChangeEvent::lastColumn() const`
-
-**作用与语义：**
-
-返回上一次更改的列。
-
-### `int QAccessibleTableModelChangeEvent::lastRow() const`
-
-**作用与语义：**
-
-返回最后一行更改的行。
-
-### `QAccessibleTableModelChangeEvent::ModelChangeType QAccessibleTableModelChangeEvent::modelChangeType() const`
-
-**作用与语义：**
-
-返回变更类型。
-
-### `void QAccessibleTableModelChangeEvent::setFirstColumn(int column)`
-
-**作用与语义：**
-
-设定了第一个变`column`。
-
-### `void QAccessibleTableModelChangeEvent::setFirstRow(int row)`
-
-**作用与语义：**
-
-设定了第一个改变的`row`。
-
-### `void QAccessibleTableModelChangeEvent::setLastColumn(int column)`
-
-**作用与语义：**
-
-设置了最后更改的`column`。
-
-### `void QAccessibleTableModelChangeEvent::setLastRow(int row)`
-
-**作用与语义：**
-
-设置了最后一次更改的`row`。
-
-### `void QAccessibleTableModelChangeEvent::setModelChangeType(QAccessibleTableModelChangeEvent::ModelChangeType changeType)`
-
-**作用与语义：**
-
-将变更类型设置为`changeType`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleTableModelChangeEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+插入或删除行列时，范围应指向发生结构变化的位置。对于整行变化，列范围通常覆盖当前可见列；对于整列变化，行范围通常覆盖当前可见行。
+
+```cpp
+QAccessibleTableModelChangeEvent event(
+    tableView, QAccessibleTableModelChangeEvent::DataChanged);
+event.setFirstRow(topLeft.row());
+event.setLastRow(bottomRight.row());
+event.setFirstColumn(topLeft.column());
+event.setLastColumn(bottomRight.column());
+QAccessible::updateAccessibility(&event);
+```
+
+`DataChanged` 表示单元格没有新增或移除，只是文字、值、状态、格式或可访问说明需要重新查询。不要把纯数据变化报告成 `ModelReset`，否则辅助技术会丢弃过多上下文。
+
+## 5. 变化类型选择
+
+| 场景 | 类型 |
+|---|---|
+| 模型被重新设置、排序后无法保留旧索引、代理模型整体变化 | `ModelReset`。 |
+| 单元格文本、数值、勾选状态或可访问描述变化 | `DataChanged`。 |
+| 新增连续行 | `RowsInserted`。 |
+| 删除连续行 | `RowsRemoved`。 |
+| 新增连续列 | `ColumnsInserted`。 |
+| 删除连续列 | `ColumnsRemoved`。 |
+
+如果一次操作涉及多个不连续范围，优先发送多个精确事件；只有旧结构无法可靠映射时才用 `ModelReset`。
+
+## 6. 常见坑与经验
+
+- 事件范围应和 `QAccessibleTableInterface::rowCount()`、`columnCount()`、`cellAt()` 使用同一坐标体系。代理模型、隐藏列和排序会让源模型坐标不再适合直接发送。
+- 删除行列后不要让辅助技术继续访问旧单元格接口。先让内部缓存失效，再发送变化通知。
+- `ModelReset` 是最强烈的通知，会让读屏丢失上下文；能用插入、删除或数据变化表达时不要滥用。
+- 对大量连续更新，可以合并为一个范围事件；对每个单元格发送一条事件会造成明显噪声。
+- 事件对象可放在栈上，`updateAccessibility()` 返回后不再保存它。
+
+## 7. 知识点覆盖
+
+- 表格结构变化与数据变化的区别
+- 行列范围、可见坐标和代理模型
+- 表格接口缓存失效策略
+- 插入、删除、重置事件的粒度取舍
+- 与 `QAccessibleTableInterface` 和单元格接口的一致性

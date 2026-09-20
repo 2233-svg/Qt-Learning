@@ -1,133 +1,122 @@
 # QTouchEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QTouchEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QTouchEvent` 是 Qt 的值类型，围绕“Touch事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QTouchEvent` 描述触摸屏或触控设备产生的多触点事件。它继承自 `QPointerEvent`，核心不是“一个触摸坐标”，而是一组 `QEventPoint`：每个触点都有自己的 ID、位置、状态、压力和运动轨迹。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+触摸交互和鼠标最大的不同在于“并发”。两个手指可以同时按下、移动、释放；一个触点结束时，另一个触点还在继续。`QTouchEvent` 的设计就是为了让你按触点集合来思考，而不是强行压成鼠标那样的单点流程。
 
-### 这是什么
+## 2. 类说明
 
-`QTouchEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QTouchEvent` 继承自 `QPointerEvent`。它本身的 API 不多，真正丰富的数据来自父类的 `points()`、`pointCount()`、`pointById()` 和每个 `QEventPoint`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QTouchEvent`：构造触摸事件、读取目标对象、汇总触点状态，以及判断触摸事件阶段。触点坐标和设备信息仍要结合 `QPointerEvent` 与 `QEventPoint` 一起看。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QTouchEvent(eventType, device, modifiers, touchPoints)` | 构造触摸事件，通常用于测试、输入转发或自定义平台层。 |
+| `target() const` | 返回事件在窗口内对应的目标对象，常见为 `QWidget` 或 `QQuickItem`。 |
+| `touchPointStates() const` | 返回所有触点状态的按位 OR，用于快速判断是否含有按下、移动、释放等状态。 |
+| `isBeginEvent() const` | 判断事件是否包含新按下的触点。 |
+| `isUpdateEvent() const` | 判断事件是否只是触点更新，没有新按下或新释放。 |
+| `isEndEvent() const` | 判断事件是否包含新释放的触点。 |
+| `points() const` | 来自父类，读取本次事件包含的全部触点。 |
+| `pointById(int)` | 来自父类，按触点 ID 查找持续跟踪中的某个点。 |
+| `pointCount() const` | 来自父类，读取触点数量。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 启用触摸事件
 
-- 头文件：`#include <QTouchEvent>`
-- 继承自：QPointerEvent
-- 直接派生类：未在类页中列出
+Widgets 默认不一定把触摸事件直接交给控件。自定义控件通常需要启用触摸属性。
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+TouchCanvas::TouchCanvas(QWidget *parent)
+    : QWidget(parent)
+{
+    setAttribute(Qt::WA_AcceptTouchEvents);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+然后可以在 `event()` 里接收 `QEvent::TouchBegin`、`TouchUpdate`、`TouchEnd`、`TouchCancel`。
 
-### 工作机制
+```cpp
+bool TouchCanvas::event(QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel:
+        return handleTouch(static_cast<QTouchEvent *>(event));
+    default:
+        return QWidget::event(event);
+    }
+}
+```
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+### 按触点 ID 跟踪，而不是按列表顺序
 
-### 状态、生命周期和线程
+多触点列表顺序不应该成为业务状态的唯一依据。更稳妥的方式是用 `QEventPoint::id()` 关联持续轨迹。
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+```cpp
+bool TouchCanvas::handleTouch(QTouchEvent *event)
+{
+    for (const QEventPoint &point : event->points()) {
+        switch (point.state()) {
+        case QEventPoint::State::Pressed:
+            m_strokes.insert(point.id(), Stroke(point.position()));
+            break;
+        case QEventPoint::State::Updated:
+            m_strokes[point.id()].append(point.position());
+            break;
+        case QEventPoint::State::Released:
+            finishStroke(point.id(), point.position());
+            m_strokes.remove(point.id());
+            break;
+        default:
+            break;
+        }
+    }
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+    event->accept();
+    return true;
+}
+```
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+### 用状态汇总快速分流
 
-## 3. 直接使用
+`touchPointStates()` 适合做轻量级判断：本次事件是否包含新按下、是否包含释放、是否只是移动。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+```cpp
+if (event->touchPointStates().testFlag(QEventPoint::State::Pressed))
+    prepareGesture(event->points());
+```
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+之后仍应遍历每个点，因为同一个事件可能同时包含一个触点释放、另一个触点更新。
 
-### 公有函数
+## 5. 使用场景
 
-- `QTouchEvent(QEvent::Type eventType, const QPointingDevice *device = nullptr, Qt::KeyboardModifiers modifiers = Qt::NoModifier, const QList<QEventPoint> &touchPoints = {})`
-- `QObject * target() const`
-- `QEventPoint::States touchPointStates() const`
+`QTouchEvent` 适合触屏白板、图片查看器、地图、POS/工控大屏、教育软件、音乐控制台、游戏 UI、多指缩放旋转和多指绘制。
 
-### 重实现的公有函数
+它也适合构建自己的手势识别器。Qt 有 `QGestureEvent` 和现成手势，但当你需要精确控制两指旋转、三指切换、多人同时绘制时，直接处理 `QTouchEvent` 更可控。
 
-- `virtual bool isBeginEvent() const override`
-- `virtual bool isEndEvent() const override`
-- `virtual bool isUpdateEvent() const override`
+在混合输入应用中，触摸事件常和鼠标合成事件同时出现。你需要决定控件是接受触摸、让 Qt 合成鼠标，还是两者分别处理；这个策略要统一，否则容易出现一次触摸触发两套逻辑。
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要只取 `points().first()`。单指场景当然能跑，但双指缩放、误触处理、多用户触控都会被破坏。
 
-### `[explicit] QTouchEvent::QTouchEvent(QEvent::Type eventType, const QPointingDevice *device = nullptr, Qt::KeyboardModifiers modifiers = Qt::NoModifier, const QList<QEventPoint> &touchPoints = {})`
+不要假设 `TouchEnd` 表示所有手指都离开了。它表示本次事件包含释放点；是否仍有其他点存在，要看 `points()` 和各点状态。
 
-**作用与语义：**
+不要忽略 `TouchCancel`。系统可能因为窗口切换、手势被平台接管、设备中断等原因取消触摸；取消时应清理临时状态。
 
-构建一个QTouchEvent，使用事件发生时给定的`eventType`、`device`、`touchPoints`和当前键盘`modifiers`。
+不要把触摸和鼠标处理完全混在一起。可以共享底层工具逻辑，但入口层要明确事件来源，否则合成鼠标事件可能让一次操作执行两遍。
 
-### `[override virtual] bool QTouchEvent::isBeginEvent() const`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-如果该事件包含至少一个新按的触点，则返回为真。
-
-### `[override virtual] bool QTouchEvent::isEndEvent() const`
-
-**作用与语义：**
-
-如果该事件包含至少一个新发布的触点，则返回为真。
-
-### `[override virtual] bool QTouchEvent::isUpdateEvent() const`
-
-**作用与语义：**
-
-如果该事件不包括新发布或新发布的触点，则返回为真。
-
-### `QObject *QTouchEvent::target() const`
-
-**作用与语义：**
-
-返回事件发生窗口内的目标对象。通常是`QWidget`或`QQuickItem`。当没有特定目标可用时，可能是0。
-
-### `QEventPoint::States QTouchEvent::touchPointStates() const`
-
-**作用与语义：**
-
-以一个位元返回该事件所有触点状态的 OR。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QTouchEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QTouchEvent` 应覆盖触摸事件启用、触点 ID、触点状态、多点列表、触摸开始/更新/结束/取消、目标对象、触摸与鼠标合成、手势识别、事件接受策略、设备能力和跨平台触控行为。

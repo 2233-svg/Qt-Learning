@@ -1,104 +1,66 @@
 # QDBusInterface
+> Qt 6.11.1 · Qt D-Bus · 来自 `QDBusInterface`
 
-> Qt 6.11.1 · Qt D-Bus
+## 作用定位
 
-## 1. 先建立直觉
+`QDBusInterface` 是 Qt D-Bus 的动态远端接口代理。给它 service、object path、interface 和 connection，它就能用继承自 `QDBusAbstractInterface` 的 `call()`、`asyncCall()` 等函数调用远端方法。
 
-**一句话定位：** 这是一个抽象接口或框架基类，重点是理解它定义的协议，并通过具体子类、工厂或回调来使用。
+它适合没有生成专用代理类、接口数量少、调用较简单的场景。接口复杂、需要编译期类型检查时，更推荐用 XML introspection 配合 `qdbusxml2cpp` 生成强类型代理。
 
-**模块背景：** 这是 Qt D-Bus 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QDBusInterface` 是 Qt D-Bus 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
-
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
-
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
-
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QDBusInterface>`
-- 继承自：QDBusAbstractInterface
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::DBus`
+- 继承：`QDBusAbstractInterface`
+- 对象规则：QObject 派生类，受 parent 和线程归属约束
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS DBus)
-target_link_libraries(mytarget PRIVATE Qt6::DBus)
+| API | 说明 |
+| --- | --- |
+| `QDBusInterface(service, path, interface, connection, parent)` | 创建动态代理；`interface` 为空时会尝试合并对象内省到的接口。 |
+| `~QDBusInterface()` | 销毁代理对象，释放缓存和 QObject 资源。 |
+| 继承的 `call()` | 同步调用远端方法。 |
+| 继承的 `asyncCall()` | 异步调用远端方法。 |
+| 继承的 `isValid()` | 检查代理创建是否成功。 |
+| 继承的 `lastError()` | 获取创建或调用时的错误。 |
+
+## 典型用法
+
+```cpp
+QDBusInterface iface("org.example.Service",
+                     "/org/example/Object",
+                     "org.example.Interface",
+                     QDBusConnection::sessionBus());
+
+if (!iface.isValid()) {
+    qWarning() << iface.lastError().name();
+    return;
+}
+
+QDBusReply<QString> reply = iface.call("Version");
+if (reply.isValid())
+    qDebug() << reply.value();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 快速调用一个已知 D-Bus 服务的方法。
+- 调试、工具程序或插件中运行期才知道接口名。
+- 项目还没有引入 XML 生成代理，但需要先接入服务。
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- `interface` 为空会依赖内省并合并接口，遇到多个接口有同名方法时会让行为不清晰；生产代码尽量填完整接口名。
+- `isValid()` 不等于远端服务之后一直在线，调用仍可能失败。
+- 动态代理没有编译期方法名和参数检查，字符串拼错只会在运行时变成 `UnknownMethod` 或 `InvalidArgs`。
+- 高频调用建议缓存 `QDBusInterface`，避免重复内省和构造。
+- GUI 线程调用远端慢方法时，优先使用 `asyncCall()`。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 知识点覆盖
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDBusInterface(const QString &service, const QString &path, const QString &interface = QString(), const QDBusConnection &connection = QDBusConnection::sessionBus(), QObject *parent = nullptr)`
-- `virtual ~QDBusInterface()`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QDBusInterface::QDBusInterface(const QString &service, const QString &path, const QString &interface = QString(), const QDBusConnection &connection = QDBusConnection::sessionBus(), QObject *parent = nullptr)`
-
-**作用与语义：**
-
-在服务`service`路径`path`的对象上创建与接口`interface`关联的动态QDBusInterface对象，使用给定的`connection`。如果`interface`是空字符串，创建的对象将指向通过内省该对象找到的所有接口合并。否则，如果`interface`不是空的，QDBusInterface对象将被缓存以加快对同一接口的进一步创建。
-`parent`传递给基类构造函数。
-如果远程服务`service`不存在，或者在尝试获取远程接口描述`interface`时发生错误，所创建的对象将无效（见`isValid()`）。
-
-### `[virtual noexcept] QDBusInterface::~QDBusInterface()`
-
-**作用与语义：**
-
-销毁对象接口，释放所有资源。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDBusInterface` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 动态 D-Bus 代理
+- service/path/interface 三元定位
+- 内省与接口缓存
+- 同步与异步调用继承关系
+- 动态代理和生成代理的取舍

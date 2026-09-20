@@ -1,160 +1,52 @@
 # QDomDocumentType
-
-> Qt 6.11.1 · Qt XML
+> Qt 6.11.1 · Qt XML · 来自 `QDomDocumentType`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QDomDocumentType` 是结构化文档类型，负责 JSON/XML 节点、值、解析状态或流式读写。
+`QDomDocumentType` 表示 XML 的文档类型声明，也就是 `<!DOCTYPE ...>`。它保存 doctype 名称、public/system id、内部子集，以及 DTD 中声明的实体和 notation。
 
-**模块背景：** Qt XML 提供 XML 文档和 DOM 风格 XML 数据处理能力。
+## 2. 类说明
 
-### 这是什么
+保留类说明：这些 API 来自 `QDomDocumentType`，属于 Qt XML 模块，用于表示 DOM 文档类型节点。
 
-`QDomDocumentType` 是 结构化文本解析机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+它继承 `QDomNode`，节点类型是 `DocumentTypeNode`。通常通过 `QDomImplementation::createDocumentType()` 创建，或从解析后的 `QDomDocument::doctype()` 取得。
 
-**内部模型：** JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文本和层级。文档容器负责解析和序列化，具体字段/节点访问由 object、array、value 或 DOM/流式读取对象完成。
+## 3. API 速查
 
-**适用场景：** 接收字节数据后显式指定编码和解析选项，检查错误对象，再按类型访问节点，校验业务字段，最后序列化或转换成领域对象。
+| API | 用来做什么 |
+| --- | --- |
+| `name()` | 返回 doctype 名称。 |
+| `publicId()` / `systemId()` | 返回外部 DTD 标识。 |
+| `internalSubset()` | 返回内部 DTD 子集文本。 |
+| `entities()` | 返回实体声明集合。 |
+| `notations()` | 返回 notation 声明集合。 |
+| `nodeType()` | 返回 `DocumentTypeNode`。 |
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
-**先记住的坑：** 不要只检查 parse 成功；不要假设字段一定存在且类型固定；不要把用户输入直接当作可信结构；大文件不要无条件 readAll 和构造整棵树。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QDomDocumentType>`
-- 继承自：QDomNode
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Xml)
-target_link_libraries(mytarget PRIVATE Qt6::Xml)
+```cpp
+QDomDocumentType type = doc.doctype();
+if (!type.isNull()) {
+    qDebug() << type.name() << type.publicId() << type.systemId();
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 5. 使用场景
 
-### 工作机制
+| 场景 | 用法 |
+| --- | --- |
+| 保留旧 XML 格式的 DOCTYPE | 解析后输出时不丢文档类型信息。 |
+| 检查文档种类 | 用 `name()`、public/system id 判断格式。 |
+| 分析 DTD 声明 | 查看 entities/notations。 |
 
-JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文本和层级。文档容器负责解析和序列化，具体字段/节点访问由 object、array、value 或 DOM/流式读取对象完成。
+## 6. 常见坑与经验
 
-### 状态、生命周期和线程
+Qt DOM 能保存 doctype 信息，但这不等于完整 DTD 验证器。需要严格校验 DTD/Schema 时，要引入专门验证流程。
 
-**生命周期：** 解析结果通常是值对象，可在作用域内传递；流式解析器则依赖输入设备和读取顺序。解析错误、结构合法和业务字段合法是三个不同层次，必须分别检查。
+外部 DTD 的 systemId 可能指向网络或本地资源。处理不可信 XML 时，不要盲目按这些标识加载外部资源。
 
-**状态与结果：** 先判断文档是否为空、根节点类型和解析错误，再访问字段；字段缺失、类型不匹配、空值和默认值要分开处理。序列化时要明确紧凑/格式化输出和编码。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 值形式的解析结果可以复制后跨线程处理；共享设备、流对象和可变 DOM 不应无保护地跨线程使用。大文档要评估一次性树结构的内存成本，必要时用流式 API。
-
-## 3. 直接使用
-
-接收字节数据后显式指定编码和解析选项，检查错误对象，再按类型访问节点，校验业务字段，最后序列化或转换成领域对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDomDocumentType()`
-- `QDomDocumentType(const QDomDocumentType &documentType)`
-- `QDomNamedNodeMap entities() const`
-- `QString internalSubset() const`
-- `QString name() const`
-- `QDomNode::NodeType nodeType() const`
-- `QDomNamedNodeMap notations() const`
-- `QString publicId() const`
-- `QString systemId() const`
-- `QDomDocumentType & operator=(const QDomDocumentType &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QDomDocumentType::QDomDocumentType()`
-
-**作用与语义：**
-
-创建一个空的 QDomDocumentType 对象。
-
-### `QDomDocumentType::QDomDocumentType(const QDomDocumentType &documentType)`
-
-**作用与语义：**
-
-构建了`documentType`的副本。
-复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
-
-### `QDomNamedNodeMap QDomDocumentType::entities() const`
-
-**作用与语义：**
-
-返回DTD中描述的所有实体的映射。
-
-### `QString QDomDocumentType::internalSubset() const`
-
-**作用与语义：**
-
-返回文档类型的内部子集，若无内部子集则返回空字符串。
-
-### `QString QDomDocumentType::name() const`
-
-**作用与语义：**
-
-返回文档类型名称，符合<！DOCTYPE name>标签中指定的名称。
-
-### `QDomNode::NodeType QDomDocumentType::nodeType() const`
-
-**作用与语义：**
-
-始终返回 `QDomNode::DocumentTypeNode`，用于在通用 `QDomNode` 遍历中识别文档类型声明节点。
-
-### `QDomNamedNodeMap QDomDocumentType::notations() const`
-
-**作用与语义：**
-
-返回DTD中描述的所有符号映射。
-
-### `QString QDomDocumentType::publicId() const`
-
-**作用与语义：**
-
-返回外部DTD子集的公共标识符，若无公共标识符则返回空字符串。
-
-### `QString QDomDocumentType::systemId() const`
-
-**作用与语义：**
-
-返回外部DTD子集的系统标识符，若无系统标识符则返回空字符串。
-
-### `QDomDocumentType &QDomDocumentType::operator=(const QDomDocumentType &other)`
-
-**作用与语义：**
-
-为此文档类型分配`other`。
-复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-解析结果通常是值对象，可在作用域内传递；流式解析器则依赖输入设备和读取顺序。解析错误、结构合法和业务字段合法是三个不同层次，必须分别检查。
-
-### 状态和错误边界
-
-先判断文档是否为空、根节点类型和解析错误，再访问字段；字段缺失、类型不匹配、空值和默认值要分开处理。序列化时要明确紧凑/格式化输出和编码。
-
-### 线程边界
-
-值形式的解析结果可以复制后跨线程处理；共享设备、流对象和可变 DOM 不应无保护地跨线程使用。大文档要评估一次性树结构的内存成本，必要时用流式 API。
-
-### 最容易出现的错误
-
-不要只检查 parse 成功；不要假设字段一定存在且类型固定；不要把用户输入直接当作可信结构；大文件不要无条件 readAll 和构造整棵树。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDomDocumentType` 所属机制类型：结构化文本解析机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- XML DOCTYPE、publicId、systemId、internal subset。
+- 实体和 notation 声明集合。
+- doctype 信息保存与验证职责的区别。

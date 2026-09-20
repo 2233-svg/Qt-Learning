@@ -1,130 +1,47 @@
 # QQmlAbstractUrlInterceptor
+> Qt 6.11.1 · Qt QML · 来自 `QQmlAbstractUrlInterceptor`
 
-> Qt 6.11.1 · Qt Qml
+## 作用定位
 
-## 1. 先建立直觉
+`QQmlAbstractUrlInterceptor` 是 QML 资源 URL 重写接口。把实现对象加到 `QQmlEngine` 后，引擎加载 QML、JavaScript、qmldir 或解析 QML 中 URL 属性时，会先调用 `intercept()`，允许你把原 URL 改写成另一个 URL。
 
-**一句话定位：** `QQmlAbstractUrlInterceptor` 是 QML 属性绑定与场景图机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+它适合资源重定向、主题/平台变体、沙盒路径映射、热更新资源定位等场景。
 
-**模块背景：** 这是 Qt Qml 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QQmlAbstractUrlInterceptor` 是 Qt Quick/QML 体系中的公开类型，连接 C++ 对象、QML 属性绑定和场景图渲染。
-
-**内部模型：** QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
-
-**适用场景：** 需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。
-
-**典型调用链：** 注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-**先记住的坑：** 不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QQmlAbstractUrlInterceptor>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::Qml`
+- 继承：接口类
+- 注册入口：`QQmlEngine::addUrlInterceptor()`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Qml)
-target_link_libraries(mytarget PRIVATE Qt6::Qml)
-```
+| API | 说明 |
+| --- | --- |
+| `DataType::QmlFile` | 被拦截的是 QML 文件 URL。 |
+| `DataType::JavaScriptFile` | 被拦截的是导入的 JS 文件。 |
+| `DataType::QmldirFile` | 被拦截的是 qmldir 文件，可用于替换模块子树。 |
+| `DataType::UrlString` | 被拦截的是 QML 里普通 URL 属性，不一定会被引擎加载。 |
+| `intercept(url, type)` | 返回改写后的 URL；返回原 URL 表示不改写。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 将磁盘路径重定向到 `qrc:/` 资源或缓存目录。
+- 按设备、语言、主题选择不同 QML 文件。
+- 记录 QML 资源加载路径，辅助调试。
+- 给插件系统做资源命名空间隔离。
 
-QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- 拦截器会影响引擎加载路径，必须在加载 QML 前安装。
+- `QmlFile` 和 `QmldirFile` 含义不同：前者替换单个文件，后者可能改变整个模块目录。
+- 不要在 `intercept()` 里做慢 I/O；它可能处在加载关键路径。
+- URL 重写要保持相对路径关系，否则 QML 内部 import 和图片路径可能断掉。
+- 多个拦截器同时存在时，顺序会影响最终 URL，要保持规则简单可预测。
 
-**生命周期：** QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
+## 知识点覆盖
 
-**状态与结果：** 属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-**线程与事件循环：** 大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-## 3. 直接使用
-
-需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。 使用时通常按这个过程组织：注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-```cpp
-// C++ 侧暴露属性/信号后，在 QML 中建立绑定。
-// 变化时发出 notify signal，避免在绑定表达式中直接修改状态。
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum DataType { QmldirFile, JavaScriptFile, QmlFile, UrlString }`
-
-### 公有函数
-
-- `QQmlAbstractUrlInterceptor()`
-- `virtual ~QQmlAbstractUrlInterceptor()`
-- `virtual QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QQmlAbstractUrlInterceptor::DataType`
-
-**作用与语义：**
-
-指定URL拦截发生的位置。
-由于QML加载qmldir文件用于定位类型，加载QML类型涉及两个URL。用于定位类型（可能隐含的）qmldir的URL和定义类型的文件URL。两者被拦截会导致同一文件的复杂URL替换或双重URL替换。
-- `QQmlAbstractUrlInterceptor::QmldirFile`：`2`;被拦截的URL是Qmldir文件。拦截该URL但不拦截QmlFile，允许交换整个子树。
-- `QQmlAbstractUrlInterceptor::JavaScriptFile`：`1`;被拦截的URL是Javascript文件的导入。
-- `QQmlAbstractUrlInterceptor::QmlFile`：`0`;被拦截的URL是Qml文件的URL。拦截该URL但不拦截Qmldir文件，则保持QML文件的基础dir不动，类似于用另一个文件替换该文件。
-- `QQmlAbstractUrlInterceptor::UrlString`：`0x1000`;被拦截的URL是QML文件中的URL属性，不用于通过引擎加载文件。
-
-### `[constexpr noexcept] QQmlAbstractUrlInterceptor::QQmlAbstractUrlInterceptor()`
-
-**作用与语义：**
-
-QQmlAbstractUrlInterceptor 的构造器。
-
-### `[virtual constexpr noexcept] QQmlAbstractUrlInterceptor::~QQmlAbstractUrlInterceptor()`
-
-**作用与语义：**
-
-毁灭者给`QQmlAbstractUrlInterceptor`。
-
-### `[pure virtual] QUrl QQmlAbstractUrlInterceptor::intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type)`
-
-**作用与语义：**
-
-一个纯虚拟函数，你可以拦截`url`。返回的值被取为URL的新值。被拦截的URL类型由`type`变量给出。
-你对该函数的实现必须是线程安全的，因为它可以同时从多个线程调用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
-
-### 状态和错误边界
-
-属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-### 线程边界
-
-大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-### 最容易出现的错误
-
-不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QQmlAbstractUrlInterceptor` 所属机制类型：QML 属性绑定与场景图机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- QML 资源 URL 拦截
+- qmldir、QML 文件、JS 文件区别
+- 资源重定向和文件选择
+- 加载路径调试

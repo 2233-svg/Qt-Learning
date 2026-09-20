@@ -1,142 +1,63 @@
 # QRhiScissor
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI Private · 来自 `QRhiScissor`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiScissor` 是 RHI 的剪刀矩形：它限制后续 draw 只能写入矩形范围内的像素。它和 viewport 不同，viewport 决定坐标映射，scissor 决定像素裁剪范围。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+RHI 中 scissor 的位置按左下角坐标系描述，类似 OpenGL 语义。这一点和 Qt UI 常见的左上角原点不同，做 UI 裁剪或高 DPI 换算时要特别小心。
 
-### 这是什么
-
-`QRhiScissor` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::GuiPrivate`
+- 类型性质：小型值类型，可比较、可哈希
+- 使用入口：`QRhiCommandBuffer::setScissor()`
+- 前提：graphics pipeline 通常要声明 `QRhiGraphicsPipeline::UsesScissor`
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+| API | 作用 |
+| --- | --- |
+| `QRhiScissor()` | 创建空剪刀矩形。 |
+| `QRhiScissor(x, y, w, h)` | 以左下角原点坐标创建剪刀矩形。 |
+| `setScissor(x, y, w, h)` | 设置位置和尺寸。 |
+| `scissor()` | 返回 `{x, y, w, h}`。 |
+| `operator==` / `operator!=` | 比较剪刀值。 |
+| `qHash()` | 用作缓存键或哈希容器键。 |
+
+## 4. 关键用法
+
+```cpp
+ps->setFlags(ps->flags() | QRhiGraphicsPipeline::UsesScissor);
+
+cb->setGraphicsPipeline(ps);
+cb->setScissor(QRhiScissor(x, y, w, h));
+cb->draw(vertexCount);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+如果 pipeline 没声明使用 scissor，却调用 `setScissor()`，不同后端可能表现不一致。把它当成 pipeline 动态状态的一部分来管理。
 
-### 工作机制
+## 5. 使用场景
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+- UI 子区域裁剪。
+- 渲染图集或 tiled rendering。
+- 只允许某个面板、视口、分屏区域写入。
+- 调试脏区和局部重绘。
+- 与 viewport 配合实现多视口渲染。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- **坐标原点是左下角。** UI 左上角坐标要换算到 render target 像素坐标。
+- **宽高不能为负。** 负宽高会被 command buffer 忽略。
+- **scissor 不改变投影。** 它只裁剪像素输出，不影响顶点坐标映射。
+- **要和 DPR 一起考虑。** 逻辑像素矩形要转成 render target 像素。
+- **pipeline 需要动态状态 flag。** 不声明 `UsesScissor` 就不要依赖运行时 scissor。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QRhiScissor()`
-- `QRhiScissor(int x, int y, int w, int h)`
-- `std::array<int, 4> scissor() const`
-- `void setScissor(int x, int y, int w, int h)`
-
-### 相关非成员函数
-
-- `size_t qHash(const QRhiScissor &key, size_t seed = 0)`
-- `bool operator!=(const QRhiScissor &a, const QRhiScissor &b)`
-- `bool operator==(const QRhiScissor &a, const QRhiScissor &b)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[constexpr noexcept] QRhiScissor::QRhiScissor()`
-
-**作用与语义：**
-
-构造了一个空剪刀。
-
-### `QRhiScissor::QRhiScissor(int x, int y, int w, int h)`
-
-**作用与语义：**
-
-构造一个矩形剪剪，矩形由`x`、`y`、`w`和`h`指定。
-注意：`x`和`y`假定为左下角位置。不允许负`w`或`h`，`QRhiCommandBuffer`会忽略此类剪刀矩形。除此之外，灵活的OpenGL语义适用：负x和y、部分越界矩形等将优雅处理，并根据需要夹紧。
-
-### `std::array<int, 4> QRhiScissor::scissor() const`
-
-**作用与语义：**
-
-返回剪刀的位置和尺寸。
-
-### `void QRhiScissor::setScissor(int x, int y, int w, int h)`
-
-**作用与语义：**
-
-将剪刀位置和尺寸设置为`x`、`y`、`w`、`h`。
-注意：位置始终应指定在原点位于左下角的坐标系中，如OpenGL。
-
-### `[noexcept] size_t qHash(const QRhiScissor &key, size_t seed = 0)`
-
-**作用与语义：**
-
-返回`key`的哈希值，使用`seed`来做种。
-
-### `[noexcept] bool operator!=(const QRhiScissor &a, const QRhiScissor &b)`
-
-**作用与语义：**
-
-如果两个 `QRhiScissor` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
-
-### `[noexcept] bool operator==(const QRhiScissor &a, const QRhiScissor &b)`
-
-**作用与语义：**
-
-如果两个`QRhiScissor`对象`a`和`b`的值相等，返回`true`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiScissor` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- scissor 与 viewport 的区别
+- 左下角原点和高 DPI 换算
+- 动态 pipeline 状态
+- 局部裁剪和多视口渲染

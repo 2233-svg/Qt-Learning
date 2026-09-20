@@ -1,170 +1,46 @@
 # QQmlScriptString
+> Qt 6.11.1 · Qt QML · 来自 `QQmlScriptString`
 
-> Qt 6.11.1 · Qt Qml
+## 作用定位
 
-## 1. 先建立直觉
+`QQmlScriptString` 表示 QML 中传给 C++ 的脚本文本。它保留“这是脚本表达式，而不是普通字符串”的语义，C++ 可以检查它是否为字面量，也可以用 `QQmlExpression` 在合适上下文中求值。
 
-**一句话定位：** `QQmlScriptString` 是 QML 属性绑定与场景图机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+它常用于自定义 QML 类型的属性：你希望 QML 用户写一段表达式，C++ 稍后决定如何执行。
 
-**模块背景：** 这是 Qt Qml 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QQmlScriptString` 是 Qt Quick/QML 体系中的公开类型，连接 C++ 对象、QML 属性绑定和场景图渲染。
-
-**内部模型：** QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
-
-**适用场景：** 需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。
-
-**典型调用链：** 注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-**先记住的坑：** 不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QQmlScriptString>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::Qml`
+- 继承：无公开 QObject 继承
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Qml)
-target_link_libraries(mytarget PRIVATE Qt6::Qml)
-```
+| API | 说明 |
+| --- | --- |
+| 构造/赋值/比较 | 值语义保存脚本文本引用。 |
+| `isEmpty()` | 是否为空脚本。 |
+| `isNullLiteral()` | 是否是 `null` 字面量。 |
+| `isUndefinedLiteral()` | 是否是 `undefined` 字面量。 |
+| `booleanLiteral(ok)` | 如果是布尔字面量，取出 bool。 |
+| `numberLiteral(ok)` | 如果是数字字面量，取出 qreal。 |
+| `stringLiteral()` | 如果是字符串字面量，取出字符串。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 自定义 QML 属性接收表达式，而不是立即求值结果。
+- 延迟执行用户提供的表达式。
+- 在执行前快速识别常量字面量，避免创建表达式求值器。
 
-QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- `QQmlScriptString` 本身不执行脚本；执行要交给 `QQmlExpression`。
+- 字符串字面量和任意表达式结果为字符串不是同一回事，`stringLiteral()` 只识别字面量。
+- 求值时要传入正确 context 和 scope，否则表达式里的 id、属性名无法解析。
+- 动态脚本是代码执行入口，要谨慎控制能访问的上下文对象。
 
-**生命周期：** QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
+## 知识点覆盖
 
-**状态与结果：** 属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-**线程与事件循环：** 大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-## 3. 直接使用
-
-需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。 使用时通常按这个过程组织：注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
-
-```cpp
-// C++ 侧暴露属性/信号后，在 QML 中建立绑定。
-// 变化时发出 notify signal，避免在绑定表达式中直接修改状态。
-```
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QQmlScriptString()`
-- `QQmlScriptString(const QQmlScriptString &other)`
-- `bool booleanLiteral(bool *ok) const`
-- `bool isEmpty() const`
-- `bool isNullLiteral() const`
-- `bool isUndefinedLiteral() const`
-- `qreal numberLiteral(bool *ok) const`
-- `QString stringLiteral() const`
-- `bool operator!=(const QQmlScriptString &other) const`
-- `QQmlScriptString & operator=(const QQmlScriptString &other)`
-- `bool operator==(const QQmlScriptString &other) const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QQmlScriptString::QQmlScriptString()`
-
-**作用与语义：**
-
-构造一个空实例。
-
-### `QQmlScriptString::QQmlScriptString(const QQmlScriptString &other)`
-
-**作用与语义：**
-
-复印件`other`。
-
-### `bool QQmlScriptString::booleanLiteral(bool *ok) const`
-
-**作用与语义：**
-
-如果`QQmlScriptString`内容是布尔文字，则返回布尔值，并将`ok`设为真。否则返回false，`ok`设为false。
-
-### `bool QQmlScriptString::isEmpty() const`
-
-**作用与语义：**
-
-返回`QQmlScriptString`是否空。
-
-### `bool QQmlScriptString::isNullLiteral() const`
-
-**作用与语义：**
-
-返回`QQmlScriptString`内容是否为`null`字面。
-
-### `bool QQmlScriptString::isUndefinedLiteral() const`
-
-**作用与语义：**
-
-返回`QQmlScriptString`的内容是否为`undefined`字面。
-
-### `qreal QQmlScriptString::numberLiteral(bool *ok) const`
-
-**作用与语义：**
-
-如果`QQmlScriptString`内容是数字字面值，则返回该数字并将`ok`设为真。否则返回0.0，并将`ok`设为假。
-
-### `QString QQmlScriptString::stringLiteral() const`
-
-**作用与语义：**
-
-如果`QQmlScriptString`内容是字符串字面值，则返回该字符串。否则返回空`QString`。
-
-### `bool QQmlScriptString::operator!=(const QQmlScriptString &other) const`
-
-**作用与语义：**
-
-如果这个对象和`other` `QQmlScriptString`对象不同，返回`true`。
-
-### `QQmlScriptString &QQmlScriptString::operator=(const QQmlScriptString &other)`
-
-**作用与语义：**
-
-给`other`分配了这件事。
-
-### `bool QQmlScriptString::operator==(const QQmlScriptString &other) const`
-
-**作用与语义：**
-
-如果这个和`other` `QQmlScriptString`对象相等，返回`true`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
-
-### 状态和错误边界
-
-属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-### 线程边界
-
-大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-### 最容易出现的错误
-
-不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QQmlScriptString` 所属机制类型：QML 属性绑定与场景图机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- QML 脚本属性
+- 字面量识别
+- 延迟表达式求值
+- 与 `QQmlExpression` 的配合

@@ -1,778 +1,235 @@
 # QMainWindow
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QMainWindow`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QMainWindow` 是桌面应用主窗口框架，集中管理中央控件、菜单栏、工具栏、状态栏和停靠窗口。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+**一句话定位：** `QMainWindow` 是传统桌面应用的主窗口框架，专门管理中央内容区、菜单栏、工具栏、状态栏和可停靠面板。
 
 ### 这是什么
 
-`QMainWindow` 是桌面应用主窗口框架，集中管理中央控件、菜单栏、工具栏、状态栏和停靠窗口。
+`QMainWindow` 不是“更大的 QWidget”，它有一套专用布局。主窗口中心只有一个 central widget；菜单栏、工具栏、状态栏和 dock widget 都放在主窗口预定义区域里，而不是通过 `setLayout()` 管理。
 
-**内部模型：** QMainWindow 有自己的特殊布局，中央区域只能通过 setCentralWidget 设置；工具栏和停靠窗口不是普通 layout 子项。把内容控件、命令 QAction 和窗口框架分开设计，后续扩展更稳定。
+写主窗口时，最稳的结构是：业务内容放进 central widget，命令抽象成 `QAction`，菜单和工具栏复用这些 action，辅助面板用 `QDockWidget`，临时信息放状态栏。
 
-**适用场景：** 有菜单、工具栏、状态栏、多个编辑区或可停靠面板的桌面应用使用；只有一个简单控件的窗口可以直接用 QWidget。
+### 适合使用的场景
 
-**典型调用链：** 构造主窗口 -> 创建 QAction -> addMenu/addToolBar -> setCentralWidget -> addDockWidget -> statusBar()->showMessage -> saveState/restoreState。
+- 带菜单、工具栏、状态栏的桌面软件。
+- 文档编辑器、IDE、数据分析工具、图像工具等有中央工作区和侧边面板的应用。
+- 需要停靠面板、标签化 dock、保存/恢复窗口布局。
 
-**先记住的坑：** 不要给 QMainWindow 直接 setLayout；中央控件只能有一个；saveState/restoreState 要配合稳定的 objectName；工具栏和 dock 的所有权通常由主窗口接管。
+### 不适合的场景
 
-## 2. 依赖与对象关系
+- 只有一个简单控件的窗口：直接用 QWidget。
+- 表单式弹窗：用 QDialog。
+- 想用普通 layout 任意摆放菜单栏/工具栏/dock：QMainWindow 已经有固定布局模型。
 
-- 头文件：`#include <QMainWindow>`
-- 继承自：QWidget
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
-
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-QMainWindow 有自己的特殊布局，中央区域只能通过 setCentralWidget 设置；工具栏和停靠窗口不是普通 layout 子项。把内容控件、命令 QAction 和窗口框架分开设计，后续扩展更稳定。
-
-### 状态、生命周期和线程
-
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-有菜单、工具栏、状态栏、多个编辑区或可停靠面板的桌面应用使用；只有一个简单控件的窗口可以直接用 QWidget。 使用时通常按这个过程组织：构造主窗口 -> 创建 QAction -> addMenu/addToolBar -> setCentralWidget -> addDockWidget -> statusBar()->showMessage -> saveState/restoreState。
+### 最小示例
 
 ```cpp
 #include <QApplication>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMenuBar>
+#include <QStatusBar>
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+
     QMainWindow window;
-    window.setWindowTitle(QStringLiteral("Main Window"));
-    window.setCentralWidget(new QLabel(QStringLiteral("Content"), &window));
+    window.setWindowTitle(QStringLiteral("Editor"));
+    window.setCentralWidget(new QLabel(QStringLiteral("Document area"), &window));
+    window.menuBar()->addMenu(QObject::tr("&File"));
+    window.statusBar()->showMessage(QObject::tr("Ready"));
+    window.resize(900, 600);
     window.show();
-    return app.exec();
+
+    return QApplication::exec();
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+**先记住的坑：** 不要对 QMainWindow 调用 `setLayout()`；central widget 只有一个；保存/恢复 dock 和 toolbar 状态前要给相关对象设置稳定 `objectName`；`removeDockWidget()` 和 `removeToolBar()` 只是从主窗口移除，不一定删除对象。
 
-### 公有类型
+## 2. 依赖与对象关系
 
-- `enum DockOption { AnimatedDocks, AllowNestedDocks, AllowTabbedDocks, ForceTabbedDocks, VerticalTabs, GroupedDragging }`
-- `flags DockOptions`
+- 头文件：`#include <QMainWindow>`
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QWidget`
+- 协作类：`QAction`、`QMenuBar`、`QToolBar`、`QStatusBar`、`QDockWidget`
 
-### 属性
+### 主窗口布局模型
 
-- `animated : bool`
-- `dockNestingEnabled : bool`
-- `dockOptions : DockOptions`
-- `documentMode : bool`
-- `iconSize : QSize`
-- `tabShape : QTabWidget::TabShape`
-- `toolButtonStyle : Qt::ToolButtonStyle`
-- `unifiedTitleAndToolBarOnMac : bool`
+主窗口由中央区域和四周框架区域组成。`setCentralWidget()` 管中央区域；`menuBar()`/`setMenuBar()` 管菜单栏；`addToolBar()` 管工具栏区域；`addDockWidget()` 管 dock 区域；`statusBar()` 管底部状态栏。它们不是普通子控件布局关系。
 
-### 公有函数
+### 所有权
 
-- `QMainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
-- `virtual ~QMainWindow()`
-- `void addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget)`
-- `void addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget, Qt::Orientation orientation)`
-- `void addToolBar(Qt::ToolBarArea area, QToolBar *toolbar)`
-- `void addToolBar(QToolBar *toolbar)`
-- `QToolBar * addToolBar(const QString &title)`
-- `void addToolBarBreak(Qt::ToolBarArea area = Qt::TopToolBarArea)`
-- `QWidget * centralWidget() const`
-- `Qt::DockWidgetArea corner(Qt::Corner corner) const`
-- `virtual QMenu * createPopupMenu()`
-- `QMainWindow::DockOptions dockOptions() const`
-- `Qt::DockWidgetArea dockWidgetArea(QDockWidget *dockwidget) const`
-- `bool documentMode() const`
-- `QSize iconSize() const`
-- `void insertToolBar(QToolBar *before, QToolBar *toolbar)`
-- `void insertToolBarBreak(QToolBar *before)`
-- `bool isAnimated() const`
-- `bool isDockNestingEnabled() const`
-- `QMenuBar * menuBar() const`
-- `QWidget * menuWidget() const`
-- `void removeDockWidget(QDockWidget *dockwidget)`
-- `void removeToolBar(QToolBar *toolbar)`
-- `void removeToolBarBreak(QToolBar *before)`
-- `void resizeDocks(const QList<QDockWidget *> &docks, const QList<int> &sizes, Qt::Orientation orientation)`
-- `bool restoreDockWidget(QDockWidget *dockwidget)`
-- `bool restoreState(const QByteArray &state, int version = 0)`
-- `QByteArray saveState(int version = 0) const`
-- `void setCentralWidget(QWidget *widget)`
-- `void setCorner(Qt::Corner corner, Qt::DockWidgetArea area)`
-- `void setDockOptions(QMainWindow::DockOptions options)`
-- `void setDocumentMode(bool enabled)`
-- `void setIconSize(const QSize &iconSize)`
-- `void setMenuBar(QMenuBar *menuBar)`
-- `void setMenuWidget(QWidget *menuBar)`
-- `void setStatusBar(QStatusBar *statusbar)`
-- `void setTabPosition(Qt::DockWidgetAreas areas, QTabWidget::TabPosition tabPosition)`
-- `void setTabShape(QTabWidget::TabShape tabShape)`
-- `void setToolButtonStyle(Qt::ToolButtonStyle toolButtonStyle)`
-- `void splitDockWidget(QDockWidget *first, QDockWidget *second, Qt::Orientation orientation)`
-- `QStatusBar * statusBar() const`
-- `QTabWidget::TabPosition tabPosition(Qt::DockWidgetArea area) const`
-- `QTabWidget::TabShape tabShape() const`
-- `QList<QDockWidget *> tabifiedDockWidgets(QDockWidget *dockwidget) const`
-- `void tabifyDockWidget(QDockWidget *first, QDockWidget *second)`
-- `QWidget * takeCentralWidget()`
-- `Qt::ToolBarArea toolBarArea(const QToolBar *toolbar) const`
-- `bool toolBarBreak(QToolBar *toolbar) const`
-- `Qt::ToolButtonStyle toolButtonStyle() const`
-- `bool unifiedTitleAndToolBarOnMac() const`
+传给 `setCentralWidget()`、`setMenuBar()`、`setStatusBar()`、`addToolBar()`、`addDockWidget()` 的控件通常由主窗口接管或重新设置 parent。用 `takeCentralWidget()` 可以取回中央控件所有权；移除 toolbar/dock 后是否删除由你自己决定。
 
-### 公有槽函数
+### 状态持久化
 
-- `void setAnimated(bool enabled)`
-- `void setDockNestingEnabled(bool enabled)`
-- `void setUnifiedTitleAndToolBarOnMac(bool set)`
+`saveState()` 保存 toolbar/dock 布局，`restoreState()` 恢复。它依赖每个 dock 和 toolbar 的 `objectName()`，所以这些名字必须稳定，不能每次启动随机生成。
 
-### 信号
+## 3. API 速查
 
-- `void iconSizeChanged(const QSize &iconSize)`
-- `void tabifiedDockWidgetActivated(QDockWidget *dockWidget)`
-- `void toolButtonStyleChanged(Qt::ToolButtonStyle toolButtonStyle)`
+| API | 用途速查 |
+|---|---|
+| `DockOption` / `DockOptions` | 控制 dock 是否动画、嵌套、标签化、强制标签化、垂直标签和分组拖动。 |
+| `animated` / `setAnimated()` | 控制 dock 和 toolbar 拖动时是否使用动画。 |
+| `dockNestingEnabled` / `setDockNestingEnabled()` | 是否允许 dock 区域再分割嵌套。 |
+| `dockOptions` / `setDockOptions()` | 一次性设置 dock 行为组合。 |
+| `documentMode` / `setDocumentMode()` | 让标签化 dock 使用文档模式外观。 |
+| `iconSize` / `setIconSize()` / `iconSizeChanged()` | 控制主窗口工具栏图标尺寸。 |
+| `tabShape` / `setTabShape()` | 控制 dock 标签页形状。 |
+| `toolButtonStyle` / `setToolButtonStyle()` | 控制工具栏按钮图标/文字显示方式。 |
+| `unifiedTitleAndToolBarOnMac` | macOS 上是否尝试统一标题栏和工具栏。 |
+| `setCentralWidget()` / `centralWidget()` / `takeCentralWidget()` | 设置、读取、取出唯一中央控件。 |
+| `menuBar()` / `setMenuBar()` / `menuWidget()` / `setMenuWidget()` | 管理主窗口菜单栏或自定义菜单控件。 |
+| `statusBar()` / `setStatusBar()` | 管理状态栏。 |
+| `addToolBar()` / `insertToolBar()` / `removeToolBar()` | 添加、插入、移除工具栏。 |
+| `addToolBarBreak()` / `insertToolBarBreak()` / `removeToolBarBreak()` / `toolBarBreak()` | 管理工具栏换行分隔。 |
+| `toolBarArea()` | 查询工具栏所在区域。 |
+| `addDockWidget()` / `removeDockWidget()` / `dockWidgetArea()` | 添加、移除、查询 dock 面板位置。 |
+| `splitDockWidget()` / `tabifyDockWidget()` / `tabifiedDockWidgets()` | 分割或标签化 dock 面板。 |
+| `resizeDocks()` | 按方向调整一组 dock 的尺寸比例。 |
+| `setCorner()` / `corner()` | 决定四个角落归哪个 dock 区域使用。 |
+| `setTabPosition()` / `tabPosition()` | 设置指定 dock 区域的标签位置。 |
+| `saveState()` / `restoreState()` / `restoreDockWidget()` | 保存、恢复主窗口 dock/toolbar 布局。 |
+| `createPopupMenu()` / `contextMenuEvent()` | 生成或处理 toolbar/dock 显示开关菜单。 |
+| `tabifiedDockWidgetActivated()` | 标签化 dock 当前页变化时发出。 |
 
-### 重实现的保护函数
+## 4. API 逐项说明
 
-- `virtual void contextMenuEvent(QContextMenuEvent *event) override`
-- `virtual bool event(QEvent *event) override`
+### `DockOption` / `DockOptions`
 
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QMainWindow::DockOptionflags QMainWindow::DockOptions`
-
-**作用与语义：**
-
-该枚举包含指定`QMainWindow`对接行为的标志。
-- `QMainWindow::AnimatedDocks`：`0x01`;与`animated`属性相同。
-- `QMainWindow::AllowNestedDocks`：`0x02`;与`dockNestingEnabled`属性相同。
-- `QMainWindow::AllowTabbedDocks`：`0x04`;用户可以将一个 dock 小部件“叠加”在另一个小部件之上。两个小部件叠加，并出现一个标签栏，用于选择哪个小部件可见。
-- `QMainWindow::ForceTabbedDocks`：`0x08`;每个码头区域包含一组标签页码头组件。换句话说，码头组件不能在码头区域内相邻放置。如果设置了该选项，AllowNestedDocks 不会生效。
-- `QMainWindow::VerticalTabs`：`0x10`;主窗口两侧的两个垂直插页区域垂直显示其标签。如果未设置此选项，所有插坞区域的标签页会显示在底部。这意味着允许TabbedDocks。参见`setTabPosition()`。
-- `QMainWindow::GroupedDragging`：`0x20`;拖动dock标题栏时，所有与该标签绑定的标签页都会被拖动。这意味着AllowTabbedDocks。如果某些QDockWidget在允许区域有限制，则效果不佳。（该枚举值是在Qt 5.6中添加的。）
-这些选项仅控制码头小部件在`QMainWindow`中如何被丢弃。它们不会重新排列码头控件以符合指定选项。因此，应在任何码头组件添加到主窗口之前设置。例外是 AnimatedDocks 和 VerticalTabs 选项，这些选项可以随时设置。
-DockOptions 类型是 QFlags 的 typedef<DockOption>。它存储 DockOption 值的 OR 组合。
+`DockOption` 是 dock 行为开关，`DockOptions` 是它们的 flags 组合。`AnimatedDocks` 控制动画，`AllowNestedDocks` 允许区域分割，`AllowTabbedDocks` 允许标签化，`ForceTabbedDocks` 强制每个区域标签化，`VerticalTabs` 让侧边区域标签竖排，`GroupedDragging` 拖动一个标签时带着同组标签一起移动。除动画和垂直标签外，大多数选项最好在添加 dock 前设置。
 
 ### `animated : bool`
 
-**作用与语义：**
-
-该属性决定了操作 dock 控件和工具栏是否会被动画化。
-当停靠点小部件或工具栏被拖曳到主窗口上时，主窗口会调整其内容，指示如果停靠点小部件或工具栏被放下，将停靠在哪里。设置该属性后，`QMainWindow`会以平滑的动画移动其内容。清除该属性后，内容物会自动吸附到新位置。
-默认情况下，该属性是设置的。如果主窗口中存在的控件在调整大小或重新绘制时较慢，可能会清除该属性。
-设置此属性与使用 `setDockOptions()` 设置 `AnimatedDocks` 选项相同。
-
-**如何使用：** 调用 `animated()` 读取当前值；它不会修改应用状态。
+控制拖动 dock 或 toolbar 时是否有动画反馈。界面复杂、重绘慢或远程桌面场景可以关闭，减少拖动卡顿。它等价于 `dockOptions` 中的 `AnimatedDocks`。
 
 ### `dockNestingEnabled : bool`
 
-**作用与语义：**
-
-该属性决定码头是否可以嵌套。
-如果该属性`false`，停靠区域只能包含一行（水平或垂直）的停靠组件。如果该属性`true`，则停靠小部件所占用的区域可以向任一方向分割，以容纳更多的停靠小部件。
-Dock嵌套仅在包含大量Dock小部件的应用中才是必要的。它让用户在组织主窗口时有更大的自由。然而，当将Dock小部件拖到主窗口上时，Dock嵌套会导致行为更复杂（且不那么直观），因为放置的Dock小部件可以有更多方式放置在Dock区域。
-设置该属性与使用 `setDockOptions()` 设置 `AllowNestedDocks` 选项相同。
-
-**如何使用：** 调用 `dockNestingEnabled()` 读取当前值；它不会修改应用状态。
+控制 dock 区域是否可以嵌套分割。面板很多的 IDE 类应用适合打开；普通应用打开后会增加放置复杂度，用户不一定容易理解。
 
 ### `dockOptions : DockOptions`
 
-**作用与语义：**
-
-该属性具有`QMainWindow`的对接行为。
-默认值为`AnimatedDocks` |`AllowTabbedDocks`。
-
-**如何使用：** 调用 `dockOptions()` 读取当前值；它不会修改应用状态。
+集中配置 dock 行为。默认通常包含动画和标签化 dock。要稳定控制布局能力，建议在创建/添加所有 dock 前一次性设置。
 
 ### `documentMode : bool`
 
-**作用与语义：**
-
-该属性是否将标签页 DockWidgets 的标签栏设置为文档模式。
-默认是假的。
-
-**如何使用：** 调用 `documentMode()` 读取当前值；它不会修改应用状态。
+控制标签化 dock 的标签栏是否采用文档模式外观。它主要影响视觉风格，不改变 dock 的结构语义。
 
 ### `iconSize : QSize`
 
-**作用与语义：**
-
-主窗口中工具栏图标的大小。
-默认是GUI样式的工具栏图标大小。请注意，所用图标必须至少达到这个大小，因为图标只是缩小了。
-
-**如何使用：** 调用 `iconSize()` 读取当前值；它不会修改应用状态。
+主窗口工具栏默认图标尺寸。设置后会影响主窗口管理的工具栏，并发出 `iconSizeChanged()`。如果单个 toolbar 需要例外，可在 toolbar 自身设置。
 
 ### `tabShape : QTabWidget::TabShape`
 
-**作用与语义：**
-
-该属性保留了用于标签式 Dock 控件的制表形状。
-默认是`QTabWidget::Rounded`。
-
-**如何使用：** 调用 `tabShape()` 读取当前值；它不会修改应用状态。
+设置 dock 标签页形状。它影响标签化 dock 的外观，通常和平台风格保持一致即可。
 
 ### `toolButtonStyle : Qt::ToolButtonStyle`
 
-**作用与语义：**
-
-工具栏按钮的样式。
-为了让工具按钮的样式符合系统设置，请将该属性设置为`Qt::ToolButtonFollowStyle`。在 Unix 上，用户的设置将被使用桌面环境。在其他平台上，`Qt::ToolButtonFollowStyle` 仅指图标。
-默认是`Qt::ToolButtonIconOnly`。
-
-**如何使用：** 调用 `toolButtonStyle()` 读取当前值；它不会修改应用状态。
+控制工具栏按钮显示图标、文字或二者。桌面应用常用 `Qt::ToolButtonIconOnly` 或 `Qt::ToolButtonTextUnderIcon`。变化会发出 `toolButtonStyleChanged()`。
 
 ### `unifiedTitleAndToolBarOnMac : bool`
 
-**作用与语义：**
+macOS 专用外观选项，尝试把标题栏和工具栏统一。只在 macOS 上有意义，且取决于平台风格和窗口配置。
 
-该属性决定了窗口是否使用macOS统一的标题和工具栏外观。
-注意，Qt 5 的实现相比 Qt 4 存在若干限制：
-- 不支持在 Windows 中使用 OpenGL 内容。这包括 `QOpenGLWidget`。
-- 使用可停靠或可移动工具栏可能导致涂装错误，不建议使用
+### `QMainWindow(QWidget *parent, Qt::WindowFlags flags)`
 
-**如何使用：** 调用 `unifiedTitleAndToolBarOnMac()` 读取当前值；它不会修改应用状态。
+创建主窗口。它可以有 QObject/QWidget parent，但常见主窗口通常是顶层窗口。`flags` 控制平台窗口类型和装饰。
 
-### `[explicit] QMainWindow::QMainWindow(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
+### `~QMainWindow()`
 
-**作用与语义：**
+销毁主窗口和由它拥有的菜单栏、状态栏、工具栏、dock、central widget 等子对象。退出时不要让后台任务继续回调已销毁窗口。
 
-构建一个包含给定`parent`和指定控件`flags`的QMainWindow。
-QMainWindow 本身设置了`Qt::Window`标志，因此始终作为顶层控件创建。
+### `setCentralWidget(QWidget *widget)` / `centralWidget()` / `takeCentralWidget()`
 
-### `[virtual noexcept] QMainWindow::~QMainWindow()`
+中央控件是主窗口的主要内容区，只能有一个。复杂内容应先放进一个容器 QWidget，再把容器设为 central widget。`takeCentralWidget()` 会把当前中央控件从主窗口移走并交还给调用者，适合动态替换工作区。
 
-**作用与语义：**
+### `menuBar()` / `setMenuBar()` / `setMenuWidget()`
 
-会破坏主窗户。
+`menuBar()` 懒创建并返回默认菜单栏；`setMenuBar()` 安装自定义 `QMenuBar`；`setMenuWidget()` 可以放任意 QWidget 作为菜单栏区域。标准桌面应用优先用 `menuBar()` 加菜单和 QAction。
 
-### `void QMainWindow::addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget)`
+### `statusBar()` / `setStatusBar()`
 
-**作用与语义：**
+`statusBar()` 懒创建状态栏。短消息用 `showMessage()`，常驻状态控件可加到 status bar。`setStatusBar()` 用于替换成自定义状态栏对象。
 
-将给定`dockwidget`加到指定的`area`上。
+### `addToolBar()` / `insertToolBar()` / `removeToolBar()`
 
-### `void QMainWindow::addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget, Qt::Orientation orientation)`
+工具栏承载 QAction，是菜单命令的可视快捷入口。`addToolBar()` 可指定区域或直接追加；`insertToolBar()` 插到已有 toolbar 前；`removeToolBar()` 只从主窗口拿掉，不等于删除对象。
 
-**作用与语义：**
+### `addToolBarBreak()` / `insertToolBarBreak()` / `removeToolBarBreak()` / `toolBarBreak()`
 
-在`orientation`指定方向上向给定`area`加`dockwidget`。
+这些 API 控制工具栏区域换行。工具栏很多时可以把它们分行显示。过度依赖固定换行会降低不同屏幕尺寸下的适应性。
 
-### `void QMainWindow::addToolBar(Qt::ToolBarArea area, QToolBar *toolbar)`
+### `toolBarArea(const QToolBar *toolbar)`
 
-**作用与语义：**
+查询工具栏当前所在区域。保存自定义设置或根据位置更新 UI 时有用。
 
-将`toolbar`添加到主窗口的指定`area`中。`toolbar`放置在当前工具栏块的末尾（即行）。如果主窗口已经能`toolbar`，那么它只会将工具栏移动到`area`。
+### `addDockWidget()` / `removeDockWidget()` / `dockWidgetArea()`
 
-### `void QMainWindow::addToolBar(QToolBar *toolbar)`
+Dock 面板用于属性面板、项目树、日志窗口、搜索结果等辅助区域。`addDockWidget()` 把 dock 放到指定区域；带 orientation 的重载控制与已有 dock 的分割方向；`removeDockWidget()` 只是移除。`dockWidgetArea()` 查询当前位置。
 
-**作用与语义：**
+### `splitDockWidget()` / `tabifyDockWidget()` / `tabifiedDockWidgets()`
 
-相当于调用 addToolBar（`Qt::TopToolBarArea`， `toolbar`）。
+`splitDockWidget()` 把两个 dock 分割并排；`tabifyDockWidget()` 把第二个 dock 标签化到第一个 dock 所在组；`tabifiedDockWidgets()` 查询同一标签组中的其他 dock。IDE 类布局常用这些 API 设置初始工作区。
 
-### `QToolBar *QMainWindow::addToolBar(const QString &title)`
+### `resizeDocks()`
 
-**作用与语义：**
+按水平或垂直方向调整一组 dock 的尺寸。传入的 sizes 是相对权重，Qt 会受最小尺寸和可用空间约束。适合恢复用户布局后的微调。
 
-创建一个`QToolBar`对象，将其窗口标题设置为`title`，并将其插入顶部工具栏区域。
+### `setCorner()` / `corner()`
 
-### `void QMainWindow::addToolBarBreak(Qt::ToolBarArea area = Qt::TopToolBarArea)`
+四个角落会同时接触两个 dock 区域，`setCorner()` 决定角落属于哪一侧。侧边栏和底部面板同时存在时，这会影响可用空间分配。
 
-**作用与语义：**
+### `setTabPosition()` / `tabPosition()`
 
-在所有其他存在的对象之后，给给定的`area`添加一个工具栏断开。
+设置某些 dock 区域标签页出现的位置。侧边 dock 可用左右标签，底部 dock 可用上下标签。视觉上要考虑平台习惯和可读性。
 
-### `QWidget *QMainWindow::centralWidget() const`
+### `saveState(int version)` / `restoreState(const QByteArray &state, int version)`
 
-**作用与语义：**
+保存和恢复 toolbar/dock 布局。`version` 是你自己的布局版本号；改变 dock 结构或 objectName 后应升级版本或处理恢复失败。恢复前要先创建并命名所有相关 toolbar/dock。
 
-返回主窗口的中央控件。如果中央控件尚未设置，该函数返回`nullptr`。
+### `restoreDockWidget(QDockWidget *dockwidget)`
 
-### `[override virtual protected] void QMainWindow::contextMenuEvent(QContextMenuEvent *event)`
+在主窗口状态已经恢复后，把稍后创建的 dock 放回保存状态中的位置。插件式界面很有用。前提仍然是 objectName 稳定。
 
-**作用与语义：**
+### `createPopupMenu()` / `contextMenuEvent()`
 
-重实现自：`QWidget::contextMenuEvent`（QContextMenuEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收控件上下文菜单事件。
-当控件的 `contextMenuPolicy` `Qt::DefaultContextMenu`时调用处理器。
-默认实现忽略上下文事件。详情请参见`QContextMenuEvent`文档。
+默认右键主窗口 toolbar/dock 区域时，会生成一个可勾选显示隐藏 toolbar/dock 的菜单。重写 `createPopupMenu()` 可以定制这个菜单；重写 `contextMenuEvent()` 则能完全改右键行为。
 
-### `Qt::DockWidgetArea QMainWindow::corner(Qt::Corner corner) const`
+### `event(QEvent *event)`
 
-**作用与语义：**
+处理主窗口内部事件。通常不用重写；如果重写，不处理的事件交给基类，避免破坏 dock、toolbar、菜单等框架行为。
 
-返回占据指定`corner`的停靠坞小部件区域。
+### `iconSizeChanged()` / `toolButtonStyleChanged()`
 
-### `[virtual] QMenu *QMainWindow::createPopupMenu()`
+当主窗口工具栏图标尺寸或工具按钮样式变化时发出。自定义工具栏或外部设置页可连接它同步显示。
 
-**作用与语义：**
+### `tabifiedDockWidgetActivated(QDockWidget *dockWidget)`
 
-返回一个弹出菜单，包含主窗口中工具栏和停靠点小部件的可勾选条目。如果没有工具栏和停靠小部件，该函数返回`nullptr`。
-默认情况下，当用户激活右键菜单时，通常通过右键点击工具栏或 Dock 小部件，主窗口调用此功能。
-如果你想创建自定义弹窗菜单，可以重新实现这个功能，并返回新创建的弹窗菜单。弹窗菜单的所有权会转移给调用者。
+标签化 dock 当前页变化时发出。可用来更新属性面板状态、懒加载 dock 内容或记录用户最近使用的面板。
 
-### `Qt::DockWidgetArea QMainWindow::dockWidgetArea(QDockWidget *dockwidget) const`
+## 5. 深入实践与常见坑
 
-**作用与语义：**
+### 不要 setLayout
 
-返回`dockwidget`的`Qt::DockWidgetArea`。如果主窗口中没有添加`dockwidget`，该函数返回`Qt::NoDockWidgetArea`。
+`QMainWindow` 已经有自己的内部布局。应用内容放到 central widget，central widget 内部再用普通布局。
 
-### `[override virtual protected] bool QMainWindow::event(QEvent *event)`
+### QAction 是命令中心
 
-**作用与语义：**
+菜单项、工具栏按钮和快捷键应尽量共享同一个 QAction。这样启用状态、文本、图标、快捷键和 triggered 逻辑只维护一份。
 
-重实现自：`QWidget::event`（QEvent *事件）。
+### objectName 决定恢复质量
 
-### `[signal] void QMainWindow::iconSizeChanged(const QSize &iconSize)`
+`saveState()` 依靠 toolbar/dock 的 `objectName()` 匹配对象。名字变了，恢复就会失败或错位。用户配置版本升级时要认真处理。
 
-**作用与语义：**
+### Dock 能力不要一次全开
 
-当窗口中图标的大小发生变化时，会发出该信号。新的图标大小会在`iconSize`中传递。
-你可以将该信号连接到其他组件，以帮助保持应用外观的一致性。
+嵌套、标签化、分组拖动都很强，但也会增加用户理解成本。普通应用通常允许标签化就够了；IDE 类应用才需要更复杂的 dock 自由度。
 
-### `void QMainWindow::insertToolBar(QToolBar *before, QToolBar *toolbar)`
+### 主窗口只是壳
 
-**作用与语义：**
-
-将`toolbar`插入`before`工具栏所在的区域，使其显示在其前方。例如，在正常的从左到右布局操作中，这意味着`toolbar`会出现在`before`指定的工具栏左侧的水平工具栏区域。
-
-### `void QMainWindow::insertToolBarBreak(QToolBar *before)`
-
-**作用与语义：**
-
-在`before`指定的工具栏前插入一个工具栏断开。
-
-### `QMenuBar *QMainWindow::menuBar() const`
-
-**作用与语义：**
-
-返回主窗口的菜单栏。如果菜单栏不存在，这个函数会创建并返回一个空菜单栏。
-如果你想让 Mac 应用中的所有窗口共享一个菜单栏，不要用这个函数来创建它，因为这里创建的菜单栏会以该`QMainWindow`作为父。相反，你必须创建一个没有父的菜单栏，然后可以在所有 Mac 窗口之间共享。通过这种方式创建一个无父菜单栏：
-
-**官方示例：**
-
-```cpp
- QMenuBar *menuBar = new QMenuBar(nullptr);
-```
-
-### `QWidget *QMainWindow::menuWidget() const`
-
-**作用与语义：**
-
-返回主窗口的菜单栏。如果菜单栏尚未构建，该函数返回空值。
-
-### `void QMainWindow::removeDockWidget(QDockWidget *dockwidget)`
-
-**作用与语义：**
-
-移除主窗口布局中的`dockwidget`并隐藏它。注意`dockwidget`没有被删除。
-
-### `void QMainWindow::removeToolBar(QToolBar *toolbar)`
-
-**作用与语义：**
-
-移除主窗口布局中的`toolbar`并隐藏它。注意`toolbar`没有被删除。
-
-### `void QMainWindow::removeToolBarBreak(QToolBar *before)`
-
-**作用与语义：**
-
-移除之前插入在`before`指定工具栏前的工具栏断裂点。
-
-### `void QMainWindow::resizeDocks(const QList<QDockWidget *> &docks, const QList<int> &sizes, Qt::Orientation orientation)`
-
-**作用与语义：**
-
-将列表中的码头控件调整为列表`docks` `sizes`中对应的像素大小（像素单位）。如果`orientation` `Qt::Horizontal`，则调整宽度，否则调整码头控件的高度。尺寸会被调整，以保证最大和最小尺寸得到尊重，且`QMainWindow`本身不会被调整大小。任何额外或缺失的空间会根据尺寸的相对权重分配到各个控件之间。
-如果蓝色和黄色小部件嵌套在同一层级，它们的大小会被调整，使得黄色小部件的大小是蓝色小部件的两倍。
-如果某些控件被分组在标签页中，则每个组应指定一个控件。列表中未包含的小部件可能会修改以遵守约束。
-
-**官方示例：**
-
-```cpp
-     resizeDocks({blueWidget, yellowWidget}, {20 , 40}, Qt::Horizontal);
-```
-
-### `bool QMainWindow::restoreDockWidget(QDockWidget *dockwidget)`
-
-**作用与语义：**
-
-如果状态在调用`restoreState()`后创建，则恢复`dockwidget`状态。如果状态恢复，返回`true`;否则返回`false`。
-
-### `bool QMainWindow::restoreState(const QByteArray &state, int version = 0)`
-
-**作用与语义：**
-
-恢复该主窗口工具栏和 dockwidgets 的 `state`。还恢复角位设置。`version` 数值与 `state` 中存储的数值进行比较。如果不匹配，主窗口的状态保持不变，该函数返回 `false`;否则，状态恢复，该函数返回 `true`。
-要恢复使用`QSettings`保存的几何体，可以使用以下代码：
-
-**官方示例：**
-
-```cpp
- void MainWindow::readSettings()
- {
-     QSettings settings("MyCompany", "MyApp");
-     restoreGeometry(settings.value("myWidget/geometry").toByteArray());
-     restoreState(settings.value("myWidget/windowState").toByteArray());
- }
-```
-
-### `QByteArray QMainWindow::saveState(int version = 0) const`
-
-**作用与语义：**
-
-保存该主窗口工具栏和 dockwidgets 的当前状态。这包括可以用 `setCorner()` 设置的角落设置。`version` 编号作为数据的一部分存储。
-`objectName`物业用于标识每个`QToolBar`和`QDockWidget`。你应确保每个`QToolBar`和添加`QDockWidget`的物业都是独一无二的`QMainWindow`。
-要恢复保存状态，将返回值和`version`数传递给`restoreState()`。
-为了在窗口关闭时保存几何体，你可以实现类似这样的关闭事件：
-
-**官方示例：**
-
-```cpp
- void MyMainWindow::closeEvent(QCloseEvent *event)
- {
-     QSettings settings("MyCompany", "MyApp");
-     settings.setValue("geometry", saveGeometry());
-     settings.setValue("windowState", saveState());
-     QMainWindow::closeEvent(event);
- }
-```
-
-### `void QMainWindow::setCentralWidget(QWidget *widget)`
-
-**作用与语义：**
-
-将给定`widget`设置为主窗口的中央控件。
-注意：`QMainWindow`会接管`widget`指针的所有权，并在适当时间删除。
-
-### `void QMainWindow::setCorner(Qt::Corner corner, Qt::DockWidgetArea area)`
-
-**作用与语义：**
-
-将给定的停靠坞小部件`area`占用指定的`corner`。
-
-### `void QMainWindow::setMenuBar(QMenuBar *menuBar)`
-
-**作用与语义：**
-
-将主窗口的菜单栏设置为`menuBar`。
-注意：`QMainWindow`会接管`menuBar`指针的所有权，并在适当时机删除。
-
-### `void QMainWindow::setMenuWidget(QWidget *menuBar)`
-
-**作用与语义：**
-
-将主窗口的菜单栏设置为`menuBar`。
-`QMainWindow`会接管`menuBar`指针，并在适当的时候删除它。
-
-### `void QMainWindow::setStatusBar(QStatusBar *statusbar)`
-
-**作用与语义：**
-
-将主窗口的状态栏设置为`statusbar`。
-将状态栏设置为`nullptr`会将其从主窗口移除。注意`QMainWindow`会获得`statusbar`指针的所有权，并在适当时间删除它。
-
-### `void QMainWindow::setTabPosition(Qt::DockWidgetAreas areas, QTabWidget::TabPosition tabPosition)`
-
-**作用与语义：**
-
-将指定底座小部件的标签位置`areas`设置为指定的`tabPosition`。默认情况下，所有底座区域底部都会显示标签页。
-注意：`VerticalTabs` 底座选项会覆盖该方法设置的标签位置。
-
-### `void QMainWindow::splitDockWidget(QDockWidget *first, QDockWidget *second, Qt::Orientation orientation)`
-
-**作用与语义：**
-
-将`first`码头小部件覆盖的空间分成两部分，将`first`码头小部件移到第一部分，`second`码头小部件移到第二部分。
-`orientation`规定了空间的划分方式：`Qt::Horizontal`分割时将第二个码头小部件置于第一个组件的右侧;`Qt::Vertical`分割时，第二个码头小部件位于第一个下方。
-注意：如果`first`当前处于标签停靠区域，`second`将作为新标签添加，而非`first`的邻居。这是因为单个标签页只能包含一个扩展坞小部件。
-注意：`Qt::LayoutDirection`会影响分割区域两部分中码头组件的顺序。当启用右向左布局方向时，码头组件的位置将被反向。
-
-### `QStatusBar *QMainWindow::statusBar() const`
-
-**作用与语义：**
-
-返回主窗口的状态栏。如果状态栏不存在，该函数会创建并返回一个空状态栏。
-
-### `QTabWidget::TabPosition QMainWindow::tabPosition(Qt::DockWidgetArea area) const`
-
-**作用与语义：**
-
-返回`area`的制表位。
-注意：底座`VerticalTabs`选项会覆盖该功能返回的标签位置。
-
-### `[signal] void QMainWindow::tabifiedDockWidgetActivated(QDockWidget *dockWidget)`
-
-**作用与语义：**
-
-当通过选择标签激活tabified的Dock小部件时，会发出该信号。激活后的Dock小部件会在`dockWidget`传递。
-
-### `QList<QDockWidget *> QMainWindow::tabifiedDockWidgets(QDockWidget *dockwidget) const`
-
-**作用与语义：**
-
-返回与`dockwidget`一起被tabify的Dock小部件。
-
-### `void QMainWindow::tabifyDockWidget(QDockWidget *first, QDockWidget *second)`
-
-**作用与语义：**
-
-将`second` Dock 小部件移到`first` Dock 小部件上，在主窗口创建一个带标签的 Dock 区域。
-
-### `QWidget *QMainWindow::takeCentralWidget()`
-
-**作用与语义：**
-
-移除主窗口中的中央小部件。
-被移除的小部件的所有权会转移给调用者。
-
-### `Qt::ToolBarArea QMainWindow::toolBarArea(const QToolBar *toolbar) const`
-
-**作用与语义：**
-
-返回`toolbar`的`Qt::ToolBarArea`。如果主窗口中未添加`toolbar`，该函数返回`Qt::NoToolBarArea`。
-
-### `bool QMainWindow::toolBarBreak(QToolBar *toolbar) const`
-
-**作用与语义：**
-
-返回是否在`toolbar`之前有工具栏中断。
-
-### `[signal] void QMainWindow::toolButtonStyleChanged(Qt::ToolButtonStyle toolButtonStyle)`
-
-**作用与语义：**
-
-当窗口中工具按钮的样式发生变化时，会发出该信号。新样式会在`toolButtonStyle`中传递。
-你可以将该信号连接到其他组件，以帮助保持应用外观的一致性。
-
-### `enum DockOption { AnimatedDocks, AllowNestedDocks, AllowTabbedDocks, ForceTabbedDocks, VerticalTabs, GroupedDragging }`
-
-**作用与语义：**
-
-该枚举包含指定`QMainWindow`对接行为的标志。
-- `QMainWindow::AnimatedDocks`：`0x01`;与`animated`属性相同。
-- `QMainWindow::AllowNestedDocks`：`0x02`;与`dockNestingEnabled`属性相同。
-- `QMainWindow::AllowTabbedDocks`：`0x04`;用户可以将一个 dock 小部件“叠加”在另一个小部件之上。两个小部件叠加，并出现一个标签栏，用于选择哪个小部件可见。
-- `QMainWindow::ForceTabbedDocks`：`0x08`;每个码头区域包含一组标签页码头组件。换句话说，码头组件不能在码头区域内相邻放置。如果设置了该选项，AllowNestedDocks 不会生效。
-- `QMainWindow::VerticalTabs`：`0x10`;主窗口两侧的两个垂直插页区域垂直显示其标签。如果未设置此选项，所有插坞区域的标签页会显示在底部。这意味着允许TabbedDocks。参见`setTabPosition()`。
-- `QMainWindow::GroupedDragging`：`0x20`;拖动dock标题栏时，所有与该标签绑定的标签页都会被拖动。这意味着AllowTabbedDocks。如果某些QDockWidget在允许区域有限制，则效果不佳。（该枚举值是在Qt 5.6中添加的。）
-这些选项仅控制码头小部件在`QMainWindow`中如何被丢弃。它们不会重新排列码头控件以符合指定选项。因此，应在任何码头组件添加到主窗口之前设置。例外是 AnimatedDocks 和 VerticalTabs 选项，这些选项可以随时设置。
-DockOptions 类型是 QFlags 的 typedef<DockOption>。它存储 DockOption 值的 OR 组合。
-
-### `flags DockOptions`
-
-**作用与语义：**
-
-该枚举包含指定`QMainWindow`对接行为的标志。
-- `QMainWindow::AnimatedDocks`：`0x01`;与`animated`属性相同。
-- `QMainWindow::AllowNestedDocks`：`0x02`;与`dockNestingEnabled`属性相同。
-- `QMainWindow::AllowTabbedDocks`：`0x04`;用户可以将一个 dock 小部件“叠加”在另一个小部件之上。两个小部件叠加，并出现一个标签栏，用于选择哪个小部件可见。
-- `QMainWindow::ForceTabbedDocks`：`0x08`;每个码头区域包含一组标签页码头组件。换句话说，码头组件不能在码头区域内相邻放置。如果设置了该选项，AllowNestedDocks 不会生效。
-- `QMainWindow::VerticalTabs`：`0x10`;主窗口两侧的两个垂直插页区域垂直显示其标签。如果未设置此选项，所有插坞区域的标签页会显示在底部。这意味着允许TabbedDocks。参见`setTabPosition()`。
-- `QMainWindow::GroupedDragging`：`0x20`;拖动dock标题栏时，所有与该标签绑定的标签页都会被拖动。这意味着AllowTabbedDocks。如果某些QDockWidget在允许区域有限制，则效果不佳。（该枚举值是在Qt 5.6中添加的。）
-这些选项仅控制码头小部件在`QMainWindow`中如何被丢弃。它们不会重新排列码头控件以符合指定选项。因此，应在任何码头组件添加到主窗口之前设置。例外是 AnimatedDocks 和 VerticalTabs 选项，这些选项可以随时设置。
-DockOptions 类型是 QFlags 的 typedef<DockOption>。它存储 DockOption 值的 OR 组合。
-
-### `QMainWindow::DockOptions dockOptions() const`
-
-**作用与语义：**
-
-该属性具有`QMainWindow`的对接行为。
-默认值为`AnimatedDocks` |`AllowTabbedDocks`。
-
-**如何使用：** 调用 `dockOptions()` 读取当前值；它不会修改应用状态。
-
-### `bool documentMode() const`
-
-**作用与语义：**
-
-该属性是否将标签页 DockWidgets 的标签栏设置为文档模式。
-默认是假的。
-
-**如何使用：** 调用 `documentMode()` 读取当前值；它不会修改应用状态。
-
-### `QSize iconSize() const`
-
-**作用与语义：**
-
-主窗口中工具栏图标的大小。
-默认是GUI样式的工具栏图标大小。请注意，所用图标必须至少达到这个大小，因为图标只是缩小了。
-
-**如何使用：** 调用 `iconSize()` 读取当前值；它不会修改应用状态。
-
-### `bool isAnimated() const`
-
-**作用与语义：**
-
-该属性决定了操作 dock 控件和工具栏是否会被动画化。
-当停靠点小部件或工具栏被拖曳到主窗口上时，主窗口会调整其内容，指示如果停靠点小部件或工具栏被放下，将停靠在哪里。设置该属性后，`QMainWindow`会以平滑的动画移动其内容。清除该属性后，内容物会自动吸附到新位置。
-默认情况下，该属性是设置的。如果主窗口中存在的控件在调整大小或重新绘制时较慢，可能会清除该属性。
-设置此属性与使用 `setDockOptions()` 设置 `AnimatedDocks` 选项相同。
-
-**如何使用：** 调用 `isAnimated()` 读取当前值；它不会修改应用状态。
-
-### `bool isDockNestingEnabled() const`
-
-**作用与语义：**
-
-该属性决定码头是否可以嵌套。
-如果该属性`false`，停靠区域只能包含一行（水平或垂直）的停靠组件。如果该属性`true`，则停靠小部件所占用的区域可以向任一方向分割，以容纳更多的停靠小部件。
-Dock嵌套仅在包含大量Dock小部件的应用中才是必要的。它让用户在组织主窗口时有更大的自由。然而，当将Dock小部件拖到主窗口上时，Dock嵌套会导致行为更复杂（且不那么直观），因为放置的Dock小部件可以有更多方式放置在Dock区域。
-设置该属性与使用 `setDockOptions()` 设置 `AllowNestedDocks` 选项相同。
-
-**如何使用：** 调用 `isDockNestingEnabled()` 读取当前值；它不会修改应用状态。
-
-### `void setDockOptions(QMainWindow::DockOptions options)`
-
-**作用与语义：**
-
-该属性具有`QMainWindow`的对接行为。
-默认值为`AnimatedDocks` |`AllowTabbedDocks`。
-
-**如何使用：** 调用 `setDockOptions(...)` 修改 `dockOptions`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setDocumentMode(bool enabled)`
-
-**作用与语义：**
-
-该属性是否将标签页 DockWidgets 的标签栏设置为文档模式。
-默认是假的。
-
-**如何使用：** 调用 `setDocumentMode(...)` 修改 `documentMode`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setIconSize(const QSize &iconSize)`
-
-**作用与语义：**
-
-主窗口中工具栏图标的大小。
-默认是GUI样式的工具栏图标大小。请注意，所用图标必须至少达到这个大小，因为图标只是缩小了。
-
-**如何使用：** 调用 `setIconSize(...)` 修改 `iconSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setTabShape(QTabWidget::TabShape tabShape)`
-
-**作用与语义：**
-
-该属性保留了用于标签式 Dock 控件的制表形状。
-默认是`QTabWidget::Rounded`。
-
-**如何使用：** 调用 `setTabShape(...)` 修改 `tabShape`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setToolButtonStyle(Qt::ToolButtonStyle toolButtonStyle)`
-
-**作用与语义：**
-
-工具栏按钮的样式。
-为了让工具按钮的样式符合系统设置，请将该属性设置为`Qt::ToolButtonFollowStyle`。在 Unix 上，用户的设置将被使用桌面环境。在其他平台上，`Qt::ToolButtonFollowStyle` 仅指图标。
-默认是`Qt::ToolButtonIconOnly`。
-
-**如何使用：** 调用 `setToolButtonStyle(...)` 修改 `toolButtonStyle`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `QTabWidget::TabShape tabShape() const`
-
-**作用与语义：**
-
-该属性保留了用于标签式 Dock 控件的制表形状。
-默认是`QTabWidget::Rounded`。
-
-**如何使用：** 调用 `tabShape()` 读取当前值；它不会修改应用状态。
-
-### `Qt::ToolButtonStyle toolButtonStyle() const`
-
-**作用与语义：**
-
-工具栏按钮的样式。
-为了让工具按钮的样式符合系统设置，请将该属性设置为`Qt::ToolButtonFollowStyle`。在 Unix 上，用户的设置将被使用桌面环境。在其他平台上，`Qt::ToolButtonFollowStyle` 仅指图标。
-默认是`Qt::ToolButtonIconOnly`。
-
-**如何使用：** 调用 `toolButtonStyle()` 读取当前值；它不会修改应用状态。
-
-### `bool unifiedTitleAndToolBarOnMac() const`
-
-**作用与语义：**
-
-该属性决定了窗口是否使用macOS统一的标题和工具栏外观。
-注意，Qt 5 的实现相比 Qt 4 存在若干限制：
-- 不支持在 Windows 中使用 OpenGL 内容。这包括 `QOpenGLWidget`。
-- 使用可停靠或可移动工具栏可能导致涂装错误，不建议使用
-
-**如何使用：** 调用 `unifiedTitleAndToolBarOnMac()` 读取当前值；它不会修改应用状态。
-
-### `void setAnimated(bool enabled)`
-
-**作用与语义：**
-
-该属性决定了操作 dock 控件和工具栏是否会被动画化。
-当停靠点小部件或工具栏被拖曳到主窗口上时，主窗口会调整其内容，指示如果停靠点小部件或工具栏被放下，将停靠在哪里。设置该属性后，`QMainWindow`会以平滑的动画移动其内容。清除该属性后，内容物会自动吸附到新位置。
-默认情况下，该属性是设置的。如果主窗口中存在的控件在调整大小或重新绘制时较慢，可能会清除该属性。
-设置此属性与使用 `setDockOptions()` 设置 `AnimatedDocks` 选项相同。
-
-**如何使用：** 调用 `setAnimated(...)` 修改 `animated`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setDockNestingEnabled(bool enabled)`
-
-**作用与语义：**
-
-该属性决定码头是否可以嵌套。
-如果该属性`false`，停靠区域只能包含一行（水平或垂直）的停靠组件。如果该属性`true`，则停靠小部件所占用的区域可以向任一方向分割，以容纳更多的停靠小部件。
-Dock嵌套仅在包含大量Dock小部件的应用中才是必要的。它让用户在组织主窗口时有更大的自由。然而，当将Dock小部件拖到主窗口上时，Dock嵌套会导致行为更复杂（且不那么直观），因为放置的Dock小部件可以有更多方式放置在Dock区域。
-设置该属性与使用 `setDockOptions()` 设置 `AllowNestedDocks` 选项相同。
-
-**如何使用：** 调用 `setDockNestingEnabled(...)` 修改 `dockNestingEnabled`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setUnifiedTitleAndToolBarOnMac(bool set)`
-
-**作用与语义：**
-
-该属性决定了窗口是否使用macOS统一的标题和工具栏外观。
-注意，Qt 5 的实现相比 Qt 4 存在若干限制：
-- 不支持在 Windows 中使用 OpenGL 内容。这包括 `QOpenGLWidget`。
-- 使用可停靠或可移动工具栏可能导致涂装错误，不建议使用
-
-**如何使用：** 调用 `setUnifiedTitleAndToolBarOnMac(...)` 修改 `unifiedTitleAndToolBarOnMac`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要给 QMainWindow 直接 setLayout；中央控件只能有一个；saveState/restoreState 要配合稳定的 objectName；工具栏和 dock 的所有权通常由主窗口接管。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QMainWindow` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+不要把所有业务逻辑都塞进 QMainWindow 子类。主窗口负责装配 action、菜单、工具栏和页面；文档状态、数据加载、模型和命令逻辑应拆到独立对象。

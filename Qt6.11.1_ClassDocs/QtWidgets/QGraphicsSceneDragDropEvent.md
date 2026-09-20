@@ -1,186 +1,69 @@
 # QGraphicsSceneDragDropEvent
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsSceneDragDropEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsSceneDragDropEvent` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsSceneDragDropEvent` 是拖放进入 Graphics View 场景或 item 时使用的事件。它承载被拖的数据、拖动来源、允许动作、当前建议动作和坐标。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它用于“把文件拖进画布”“把素材拖到节点上”“从列表拖一个组件到场景里”这类交互。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsSceneDragDropEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QGraphicsSceneDragDropEvent` 继承自 `QGraphicsSceneEvent`。它通常进入 `dragEnterEvent()`、`dragMoveEvent()`、`dragLeaveEvent()`、`dropEvent()`。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+真正的数据在 `mimeData()` 里。你需要检查格式，决定是否接受事件，并设置合适的 drop action。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `mimeData()` | 读取拖放数据，如文本、URL、自定义 MIME。 |
+| `pos()` / `scenePos()` / `screenPos()` | 读取 item、scene、screen 坐标。 |
+| `source()` | 返回拖动来源对象。 |
+| `possibleActions()` | 源支持的动作集合。 |
+| `proposedAction()` | 系统建议的动作。 |
+| `dropAction()` | 当前将执行的动作。 |
+| `setDropAction(Qt::DropAction)` | 设置实际 drop 动作。 |
+| `acceptProposedAction()` | 接受系统建议动作。 |
+| `buttons()` | 拖动时按下的鼠标按钮。 |
+| `modifiers()` | 拖动时的键盘修饰键。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QGraphicsSceneDragDropEvent>`
-- 继承自：QGraphicsSceneEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
-
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-### 状态、生命周期和线程
-
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QGraphicsSceneDragDropEvent()`
-- `void acceptProposedAction()`
-- `Qt::MouseButtons buttons() const`
-- `Qt::DropAction dropAction() const`
-- `const QMimeData * mimeData() const`
-- `Qt::KeyboardModifiers modifiers() const`
-- `QPointF pos() const`
-- `Qt::DropActions possibleActions() const`
-- `Qt::DropAction proposedAction() const`
-- `QPointF scenePos() const`
-- `QPoint screenPos() const`
-- `void setDropAction(Qt::DropAction action)`
-- `QWidget * source() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QGraphicsSceneDragDropEvent::~QGraphicsSceneDragDropEvent()`
-
-**作用与语义：**
-
-摧毁了该物体。
-
-### `void QGraphicsSceneDragDropEvent::acceptProposedAction()`
-
-**作用与语义：**
-
-将拟议动作设置为接受，即将掉落动作设置为拟议动作。这等于：
-使用该函数时，不应调用`accept()`。
-
-**官方示例：**
+## 4. 关键用法
 
 ```cpp
- setDropAction(proposedAction());
+void CanvasItem::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+    else
+        event->ignore();
+}
+
+void CanvasItem::dropEvent(QGraphicsSceneDragDropEvent *event)
+{
+    for (const QUrl &url : event->mimeData()->urls())
+        importAt(url, event->scenePos());
+    event->acceptProposedAction();
+}
 ```
 
-### `Qt::MouseButtons QGraphicsSceneDragDropEvent::buttons() const`
+要让 item 接收 drop，还需要设置：
 
-**作用与语义：**
+```cpp
+setAcceptDrops(true);
+```
 
-返回一个`Qt::MouseButtons`值，表示在生成该鼠标事件时，鼠标上被按下了哪些按钮。
+## 5. 使用场景
 
-### `Qt::DropAction QGraphicsSceneDragDropEvent::dropAction() const`
+适合拖入文件、素材库拖拽、节点创建、图形对象重排、跨应用拖文本/图片、从外部资源管理器导入内容。
 
-**作用与语义：**
+如果只是 scene 内部移动 item，普通鼠标拖动或 item flags 可能更简单；drag/drop 更适合携带 MIME 数据的拖放。
 
-返回拖拽中执行的动作。该动作应由接收方设置，并由`QDrag::exec()`返回。
+## 6. 常见坑与经验
 
-### `const QMimeData *QGraphicsSceneDragDropEvent::mimeData() const`
+`dragEnterEvent()` 不接受，后续 move/drop 往往不会到来。先做格式判断并明确 accept。
 
-**作用与语义：**
+不要只看文件后缀。拖放数据应先检查 `mimeData()` 能力，再解析内容。
 
-该函数返回事件的 MIME 数据。
-
-### `Qt::KeyboardModifiers QGraphicsSceneDragDropEvent::modifiers() const`
-
-**作用与语义：**
-
-返回创建拖放事件时按下的键盘修改键。
-
-### `QPointF QGraphicsSceneDragDropEvent::pos() const`
-
-**作用与语义：**
-
-返回事件相对于发送事件的视图的鼠标位置。
-
-### `Qt::DropActions QGraphicsSceneDragDropEvent::possibleActions() const`
-
-**作用与语义：**
-
-返回拖拽可能导致的投放动作。
-
-### `Qt::DropAction QGraphicsSceneDragDropEvent::proposedAction() const`
-
-**作用与语义：**
-
-返回被提出的落下动作，即优先选择的动作。该动作必须是`possibleActions()`定义的可能动作之一。
-
-### `QPointF QGraphicsSceneDragDropEvent::scenePos() const`
-
-**作用与语义：**
-
-返回场景坐标中鼠标的位置。
-
-### `QPoint QGraphicsSceneDragDropEvent::screenPos() const`
-
-**作用与语义：**
-
-返回鼠标相对于屏幕的位置。
-
-### `void QGraphicsSceneDragDropEvent::setDropAction(Qt::DropAction action)`
-
-**作用与语义：**
-
-这个函数允许接收方将被投放的动作设置为`action`，这应该是可能的动作之一。如果你使用这个函数，请调用`accept()`而不是`acceptProposedAction()`。
-
-### `QWidget *QGraphicsSceneDragDropEvent::source() const`
-
-**作用与语义：**
-
-该函数返回创建`QGraphicsSceneDragDropEvent`的`QGraphicsView`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsSceneDragDropEvent` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+drop 坐标通常用 scene 坐标落点最自然；放到某个 item 内部时再映射到 item 坐标。

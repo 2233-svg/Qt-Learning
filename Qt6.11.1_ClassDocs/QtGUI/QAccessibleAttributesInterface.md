@@ -1,111 +1,78 @@
 # QAccessibleAttributesInterface
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleAttributesInterface`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是一个抽象接口或框架基类，重点是理解它定义的协议，并通过具体子类、工厂或回调来使用。
+`QAccessibleAttributesInterface` 为可访问对象提供标准 Role、State、Name 之外的附加元数据。它解决的是“这是一个标题，而且是第三级”“这段文字采用不同语言”“这个控件是水平的”这类结构性信息。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+此接口用于补充语义，而不是塞进所有业务字段的杂物箱。能用明确的 Role、State、Value、Relation 或文本接口表达的内容，应优先用那些机制。
 
-### 这是什么
-
-`QAccessibleAttributesInterface` 是 Qt GUI 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
-
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
-
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
-
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleAttributesInterface>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 来源类：抽象可访问子接口；需要从主 `QAccessibleInterface` 的 `interface_cast()` 暴露。
+- 协作枚举：`QAccessible::Attribute`，在 Qt 6.8 引入，部分键有更高版本要求。
 
-CMake 配置：
+平台后端会在可支持时将这些属性桥接到 ARIA、UI Automation、AT-SPI 或 NSAccessibility 等原生概念。不能假定每个属性在每个平台的辅助技术中都有同样表现。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `attributeKeys()` | 列出当前对象实际支持的属性键。 |
+| `attributeValue(key)` | 返回指定属性的 `QVariant` 值；不支持时返回无效 `QVariant`。 |
+| `Attribute::Level` | `int`，表示标题、分组等结构层级。 |
+| `Attribute::Locale` | `QLocale`，表示此对象内容的语言/区域；Qt 6.10 起。 |
+| `Attribute::Orientation` | `Qt::Orientation`，表示横向或纵向；Qt 6.11 起。 |
+| `Attribute::Custom` | `QHash<QString, QString>`，用于平台可桥接的自定义键值对。 |
+
+## 4. 关键用法
+
+```cpp
+QList<QAccessible::Attribute> AccessibleHeading::attributeKeys() const
+{
+    return { QAccessible::Attribute::Level,
+             QAccessible::Attribute::Locale };
+}
+
+QVariant AccessibleHeading::attributeValue(QAccessible::Attribute key) const
+{
+    switch (key) {
+    case QAccessible::Attribute::Level:
+        return 2;
+    case QAccessible::Attribute::Locale:
+        return QLocale(QLocale::English, QLocale::UnitedStates);
+    default:
+        return {};
+    }
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`attributeKeys()` 与 `attributeValue()` 必须一致：不要把一个键列出来却返回无效值，也不要为未列出的键返回数据。`QVariant` 中的实际类型必须遵从对应枚举的规定，不能用字符串替代 `int`、`QLocale` 或 `Qt::Orientation`。
 
-### 工作机制
+## 5. 使用场景
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+| 需求 | 属性 | 说明 |
+|---|---|---|
+| 文档大纲、富文本标题 | `Level` | 配合 `Role::Heading` 传递层级，不靠字体大小猜测。 |
+| 多语言文档的局部段落 | `Locale` | 让读屏以更合适的语言或发音规则处理该片段。 |
+| 自定义滑轨、标签条、分割栏 | `Orientation` | 用于表达水平或垂直交互方向。 |
+| 尚无 Qt 标准键的跨平台扩展 | `Custom` | 仅作为临时或平台特定补充，键值应稳定、文档化。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- `Custom` 不是逃避语义建模的捷径。跨平台一致性最弱，优先使用强类型标准属性。
+- 属性的值可能动态变化；变化后应发送恰当的 `QAccessible::AttributeChanged` 事件，使辅助技术刷新缓存。
+- 不要把界面可视布局顺序误当层级。`Level` 描述语义结构，而不是像素 y 坐标。
+- `Locale` 适合内容语言，不是应用主题语言或日期格式偏好。
+- 接口不能孤立存在：主接口应报告 `AttributesInterface` 类型，并保持对象销毁时接口生命周期正确。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QAccessibleAttributesInterface()`
-- `virtual QList<QAccessible::Attribute> attributeKeys() const = 0`
-- `virtual QVariant attributeValue(QAccessible::Attribute key) const = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QAccessibleAttributesInterface::~QAccessibleAttributesInterface()`
-
-**作用与语义：**
-
-毁掉`QAccessibleAttributesInterface`。
-
-### `[pure virtual] QList<QAccessible::Attribute> QAccessibleAttributesInterface::attributeKeys() const`
-
-**作用与语义：**
-
-返回对象支持的所有属性的键。`QAccessible::Attribute`枚举描述了可用的键。
-
-### `[pure virtual] QVariant QAccessibleAttributesInterface::attributeValue(QAccessible::Attribute key) const`
-
-**作用与语义：**
-
-返回该对象`key`属性的值。
-如果该对象的属性被设置，`QVariant`中会返回`QAccessible::Attribute`枚举文档中所记录的类型值。
-否则，将返回无效`QVariant`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleAttributesInterface` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 可访问结构化元数据与基础语义的分工
+- `QVariant` 的严格类型契约
+- 标题层级、多语言内容与方向
+- 平台无障碍属性桥接的可移植性边界
+- 属性变更事件与缓存刷新

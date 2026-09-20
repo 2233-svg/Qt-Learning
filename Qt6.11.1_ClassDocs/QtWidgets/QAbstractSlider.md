@@ -1,603 +1,161 @@
 # QAbstractSlider
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QAbstractSlider`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAbstractSlider` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
-
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
-
 ### 这是什么
 
-`QAbstractSlider` 是 Qt Widgets 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
+`QAbstractSlider` 是 Qt Widgets 中“范围内整数位置控件”的基类。`QSlider`、`QScrollBar`、`QDial` 都使用同一套模型：有最小值、最大值、当前值、小步长、大步长、方向、拖动中的临时位置，以及一组用户动作信号。
 
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+它不只是“滑块”。更准确地说，它定义了一个可用键盘、鼠标、滚轮和重复动作改变的整数范围状态机。具体子类决定这个状态机长成水平滑条、滚动条还是旋钮。
 
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
+### 适合使用的场景
 
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
+- 理解 slider、scrollbar、dial 的共同值模型。
+- 自定义一种基于整数范围的交互控件。
+- 需要区分拖动中的 `sliderPosition` 和已经提交的 `value`。
+- 需要控制 tracking、反向外观、反向控制、重复动作。
 
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
+### 不适合的场景
+
+- 用户需要输入精确数值时，用 `QSpinBox` 或 `QLineEdit`。
+- 需要浮点范围时，用整数映射或专门控件，不要假设 slider 支持 double。
+- 数据列表滚动通常直接使用视图自带滚动条，不需要手动创建。
 
 ## 2. 依赖与对象关系
 
 - 头文件：`#include <QAbstractSlider>`
-- 继承自：QWidget
-- 直接派生类：QDial、QScrollBar,、QSlider
+- 模块：Qt Widgets
+- CMake：`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，并链接 `Qt6::Widgets`
+- 继承自：`QWidget`
+- 直接派生类：`QDial`、`QScrollBar`、`QSlider`
 
-CMake 配置：
+### 值、位置和跟踪
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
+`value` 是已提交的当前值。`sliderPosition` 是滑块手柄当前所在位置；拖动时它可以先变化。`tracking` 决定拖动过程中是否立即把 position 同步成 value 并发出 `valueChanged()`。
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+关闭 tracking 时，用户拖动中可以看到手柄移动，但真正的值通常到释放时才更新。这对昂贵预览非常有用。
 
-### 工作机制
+## 3. API 速查
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+| API | 用途速查 |
+| --- | --- |
+| `enum SliderAction` | 抽象动作：单步增减、页步增减、到最小/最大、移动。 |
+| `minimum : int` / `maximum : int` | 有效整数范围。 |
+| `value : int` | 已提交当前值。 |
+| `sliderPosition : int` | 手柄当前位置，拖动时可先于 value 变化。 |
+| `tracking : bool` | 拖动中是否实时发出值变化。 |
+| `singleStep : int` | 方向键、滚轮等小步变化量。 |
+| `pageStep : int` | PageUp/PageDown 或轨道点击的大步变化量。 |
+| `orientation : Qt::Orientation` | 水平或垂直方向。 |
+| `invertedAppearance : bool` | 是否反转最小/最大值的视觉位置。 |
+| `invertedControls : bool` | 是否反转滚轮和键盘方向。 |
+| `sliderDown : bool` | 手柄是否正被按下。 |
+| `setRange(min, max)` | 一次设置范围。 |
+| `setValue(int)` | 设置当前值并限制在范围内。 |
+| `setSliderPosition(int)` | 设置手柄位置。 |
+| `triggerAction(SliderAction)` | 程序化触发滑块动作。 |
+| `setRepeatAction(action, threshold, repeat)` | 设置按住后重复触发的动作。 |
+| `repeatAction() const` | 返回当前重复动作。 |
+| `valueChanged(int)` | 当前值变化时发出。 |
+| `sliderMoved(int)` | 用户拖动手柄时发出位置。 |
+| `sliderPressed()` / `sliderReleased()` | 手柄按下和释放。 |
+| `rangeChanged(int, int)` | 范围变化时发出。 |
+| `actionTriggered(int)` | 抽象动作触发后、value 同步前发出。 |
+| `sliderChange(SliderChange)` | 子类响应范围、步长、值、方向变化的钩子。 |
+| `keyPressEvent()` / `wheelEvent()` / `timerEvent()` | 键盘、滚轮、重复动作处理。 |
 
-### 状态、生命周期和线程
+## 4. API 逐项说明
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+### `SliderAction`
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+表示用户或程序触发的抽象动作：小步加、小步减、大步加、大步减、到最小、到最大、移动等。它比鼠标或键盘事件更高一层。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+连接 `actionTriggered(int)` 可以在 value 真正传播前调整 `sliderPosition`，适合做吸附、跳格或自定义步进。
 
-## 3. 直接使用
+### `minimum` / `maximum` / `setRange()`
 
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
+定义整数范围。设置一端时 Qt 会保持范围有效，并把当前值压回范围内。`setRange()` 更适合初始化或整体更新。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+默认常见范围是 0 到 99。使用前要设置成业务范围，否则 UI 会给用户错误边界。
 
-### 公有类型
+### `value`
 
-- `enum SliderAction { SliderNoAction, SliderSingleStepAdd, SliderSingleStepSub, SliderPageStepAdd, SliderPageStepSub, …, SliderMove }`
+已提交当前值。程序调用 `setValue()` 会限制到范围内，并在变化时发出 `valueChanged(int)`。
 
-### 属性
+如果你要响应真实业务变化，优先监听 `valueChanged()`，而不是 `sliderMoved()`。
 
-- `invertedAppearance : bool`
-- `invertedControls : bool`
-- `maximum : int`
-- `minimum : int`
-- `orientation : Qt::Orientation`
-- `pageStep : int`
-- `singleStep : int`
-- `sliderDown : bool`
-- `sliderPosition : int`
-- `tracking : bool`
-- `value : int`
+### `sliderPosition`
 
-### 公有函数
+手柄当前位置。tracking 开启时通常等于 value；tracking 关闭时，拖动过程中它可能只是临时位置。
 
-- `QAbstractSlider(QWidget *parent = nullptr)`
-- `virtual ~QAbstractSlider()`
-- `bool hasTracking() const`
-- `bool invertedAppearance() const`
-- `bool invertedControls() const`
-- `bool isSliderDown() const`
-- `int maximum() const`
-- `int minimum() const`
-- `Qt::Orientation orientation() const`
-- `int pageStep() const`
-- `void setInvertedAppearance(bool)`
-- `void setInvertedControls(bool)`
-- `void setMaximum(int)`
-- `void setMinimum(int)`
-- `void setPageStep(int)`
-- `void setSingleStep(int)`
-- `void setSliderDown(bool)`
-- `void setSliderPosition(int)`
-- `void setTracking(bool enable)`
-- `int singleStep() const`
-- `int sliderPosition() const`
-- `void triggerAction(QAbstractSlider::SliderAction action)`
-- `int value() const`
+需要在拖动时显示预览数值但不提交时，使用 `sliderMoved(int)` 或 `sliderPosition()`。
 
-### 公有槽函数
+### `tracking`
 
-- `void setOrientation(Qt::Orientation)`
-- `void setRange(int min, int max)`
-- `void setValue(int)`
+决定拖动中是否实时更新 value。默认通常开启。
 
-### 信号
+图像滤镜、昂贵计算、远程请求类场景建议关闭 tracking，然后在 `sliderReleased()` 或 `valueChanged()` 最终触发时处理。
 
-- `void actionTriggered(int action)`
-- `void rangeChanged(int min, int max)`
-- `void sliderMoved(int value)`
-- `void sliderPressed()`
-- `void sliderReleased()`
-- `void valueChanged(int value)`
+### `singleStep` / `pageStep`
 
-### 保护函数
+`singleStep` 是小步变化，常对应方向键或滚轮；`pageStep` 是大步变化，常对应 PageUp/PageDown 或点击轨道。
 
-- `QAbstractSlider::SliderAction repeatAction() const`
-- `void setRepeatAction(QAbstractSlider::SliderAction action, int thresholdTime = 500, int repeatTime = 50)`
-- `virtual void sliderChange(QAbstractSlider::SliderChange change)`
+对滑块来说，page step 也影响用户感觉“点一下轨道跳多少”。它应和范围尺度相匹配。
 
-### 重实现的保护函数
+### `orientation`
 
-- `virtual void changeEvent(QEvent *ev) override`
-- `virtual bool event(QEvent *e) override`
-- `virtual void keyPressEvent(QKeyEvent *ev) override`
-- `virtual void timerEvent(QTimerEvent *e) override`
-- `virtual void wheelEvent(QWheelEvent *e) override`
+控制水平或垂直布局。子类外观和 size hint 会随方向改变。
 
-## 5. API 逐个说明
+不要用旋转变换模拟方向，直接设置 orientation 更符合 style 和辅助功能。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+### `invertedAppearance` / `invertedControls`
 
-### `invertedAppearance : bool`
+`invertedAppearance` 反转值在视觉上的方向；`invertedControls` 反转键盘/滚轮控制方向。二者可以独立设置。
 
-**作用与语义：**
+音频、亮度这类通常最小在左/下，最大在右/上；某些坐标轴、滚动语义可能需要反转。
 
-无论滑块是否显示其数值反转，这一属性都成立。
-如果该属性为`false`（默认），则最小值和最大值会显示在继承的控件的经典位置。如果值为真，最小值和最大值则出现在它们相反的位置。
-注意：该特性对滑块和旋钮最为合理。对于滚动条，滚动条子控制的视觉效果取决于样式是否理解反转外观;大多数样式忽略了滚动条的这一特性。
+### `sliderDown`
 
-**如何使用：** 调用 `invertedAppearance()` 读取当前值；它不会修改应用状态。
+表示手柄是否正被按住。程序调用 `setSliderDown()` 会发出 pressed/released 信号。
 
-### `invertedControls : bool`
+普通代码很少主动设置它；它更多用于自定义控件同步内部状态。
 
-**作用与语义：**
+### `triggerAction()` / `setRepeatAction()` / `repeatAction()`
 
-该属性无论滑块是否反转其轮子和键事件，都成立。
-如果`false`，滚动鼠标滚轮“向上”并使用“page up”等键，可以将滑块值增加到最大值。否则按页面向上会让值向滑块最小值移动。
+`triggerAction()` 以统一方式触发滑块动作。`setRepeatAction()` 设置按住后重复触发的动作及时间参数，`repeatAction()` 读取当前重复动作。
 
-**如何使用：** 调用 `invertedControls()` 读取当前值；它不会修改应用状态。
+这些 API 常用于子类实现按钮按住、轨道按住等行为。
 
-### `maximum : int`
+### 信号组
 
-**作用与语义：**
+`valueChanged()` 表示值提交变化；`sliderMoved()` 表示用户拖动位置；`sliderPressed()` / `sliderReleased()` 表示拖动生命周期；`rangeChanged()` 表示边界变化；`actionTriggered()` 表示某个动作刚触发。
 
-该属性表示滑块的最大值。
-设置该属性时，必要时会调整`minimum`以确保范围有效。滑块当前值也会调整到新范围内。
+不要把所有逻辑都连到 `valueChanged()`。预览、提交、日志、边界同步应该选不同信号。
 
-**如何使用：** 调用 `maximum()` 读取当前值；它不会修改应用状态。
+### `sliderChange(SliderChange change)`
 
-### `minimum : int`
+子类钩子，用来响应范围、方向、步长、值变化。默认通常只是更新显示。
 
-**作用与语义：**
+自定义 slider 外观时，重写它比在多个 setter 后手动刷新更集中。
 
-该属性表示滑块的最小值。
-设置该属性时，必要时会调整`maximum`以确保范围有效。滑块当前值也会调整到新范围内。
+### 事件函数
 
-**如何使用：** 调用 `minimum()` 读取当前值；它不会修改应用状态。
+键盘、滚轮和定时器事件负责把用户输入变成 slider action。`wheelEvent()` 在表单里尤其容易误触，必要时可在具体子类中过滤。
 
-### `orientation : Qt::Orientation`
+重写事件时，未处理的情况交给基类，保留键盘可访问性和平台习惯。
 
-**作用与语义：**
+## 5. 深入实践与常见坑
 
-此属性保存滑块的方向。
-方向必须为 `Qt::Vertical`（默认值）或 `Qt::Horizontal`。
+### tracking 是性能开关
 
-**如何使用：** 调用 `orientation()` 读取当前值；它不会修改应用状态。
+实时拖动滤镜或音量很自然；实时触发网络请求或大图重算就很危险。关闭 tracking 可以让用户拖动顺滑，释放后再提交。
 
-### `pageStep : int`
+### slider 只有整数
 
-**作用与语义：**
+浮点值要映射。例如 0.0 到 1.0 可以映射到 0 到 1000，再除以 1000。文档里要写清楚映射精度。
 
-该属性包含页步。
-抽象滑块提供的两个自然步骤中较大的，通常对应用户按下PageUp或PageDown。
+### 外观反转和控制反转不是一回事
 
-**如何使用：** 调用 `pageStep()` 读取当前值；它不会修改应用状态。
-
-### `singleStep : int`
-
-**作用与语义：**
-
-该属性表示单步。
-抽象滑块提供的两个自然步骤中较小的，通常对应于用户按下方向键。
-如果在自动重复按键事件期间该属性被修改，行为则未定义。
-
-**如何使用：** 调用 `singleStep()` 读取当前值；它不会修改应用状态。
-
-### `sliderDown : bool`
-
-**作用与语义：**
-
-该属性无论滑块是否按下都成立。
-该属性由子类设置，以便抽象滑块知道`tracking`是否会产生影响。
-更改滑块向下属性会发出`sliderPressed()`和`sliderReleased()`信号。
-
-**如何使用：** 调用 `sliderDown()` 读取当前值；它不会修改应用状态。
-
-### `sliderPosition : int`
-
-**作用与语义：**
-
-该特性保持当前滑块位置。
-如果启用`tracking`（默认），这和`value`是一样的。
-
-**如何使用：** 调用 `sliderPosition()` 读取当前值；它不会修改应用状态。
-
-### `tracking : bool`
-
-**作用与语义：**
-
-该属性适用于是否启用滑块跟踪。
-如果启用了跟踪（默认），滑块在拖动时会发出`valueChanged()`信号。如果禁用跟踪，只有在用户松开滑块时，滑块才会发出`valueChanged()`信号。
-
-**如何使用：** 调用 `tracking()` 读取当前值；它不会修改应用状态。
-
-### `value : int`
-
-**作用与语义：**
-
-该属性表示滑块当前值。
-滑块强制值在法定范围内：`minimum` <= `value` <= `maximum`。
-改变数值也会影响`sliderPosition`。
-
-**如何使用：** 调用 `value()` 读取当前值；它不会修改应用状态。
-
-### `[explicit] QAbstractSlider::QAbstractSlider(QWidget *parent = nullptr)`
-
-**作用与语义：**
-
-构造一个抽象滑块。
-`parent`参数被发送给`QWidget`构造器。
-`minimum`默认为0，`maximum`为99，`singleStep`大小为1，`pageStep`大小为10，初始的 `value`为0。
-
-### `[virtual noexcept] QAbstractSlider::~QAbstractSlider()`
-
-**作用与语义：**
-
-破坏滑球。
-
-### `[signal] void QAbstractSlider::actionTriggered(int action)`
-
-**作用与语义：**
-
-当滑块动作`action`被触发时，该信号会发出。动作包括`SliderSingleStepAdd`、`SliderSingleStepSub`、`SliderPageStepAdd`、`SliderPageStepSub`、`SliderToMinimum`、`SliderToMaximum`和`SliderMove`。
-当信号发出时，`sliderPosition`已根据动作调整，但`value`尚未传播（即`valueChanged()`信号尚未发出），视觉显示也未更新。在连接到该信号的槽位中，你可以根据动作和滑块值，自己调用`setSliderPosition()`安全调整任何动作。
-
-### `[override virtual protected] void QAbstractSlider::changeEvent(QEvent *ev)`
-
-**作用与语义：**
-
-重装：`QWidget::changeEvent`（QEvent *事件）。
-该事件处理程序可以重新实现以处理状态变化。
-该事件中被更改的状态可以通过提供的`event`检索。
-变更事件包括：`QEvent::ToolBarChange`、`QEvent::ActivationChange`、`QEvent::EnabledChange`、`QEvent::FontChange`、`QEvent::StyleChange`、`QEvent::PaletteChange`、`QEvent::WindowTitleChange`、`QEvent::IconTextChange`、`QEvent::ModifiedChange`、`QEvent::MouseTrackingChange`、`QEvent::ParentChange`、`QEvent::WindowStateChange`、`QEvent::LanguageChange`、`QEvent::LocaleChange`、`QEvent::LayoutDirectionChange`、`QEvent::ReadOnlyChange`。
-
-### `[override virtual protected] bool QAbstractSlider::event(QEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QWidget::event`（QEvent *事件）。
-
-### `[override virtual protected] void QAbstractSlider::keyPressEvent(QKeyEvent *ev)`
-
-**作用与语义：**
-
-重实现自：`QWidget::keyPressEvent`（QKeyEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的按键事件。
-一个小部件必须调用`setFocusPolicy()`先接受焦点，并且必须有焦点才能接收按键事件。
-如果你重新实现这个处理器，如果你不对密钥进行操作，务必调用基类实现。
-默认实现会关闭弹出小部件，如果用户按下`QKeySequence::Cancel`的按键序列（通常是 Escape 键）。否则事件会被忽略，以便小部件的父节点能够解释。
-注意`QKeyEvent`以 isAccepted() == true 开头，所以你不需要调用 `QKeyEvent::accept()`——只要你对该键执行时不要调用基类实现即可。
-
-### `[signal] void QAbstractSlider::rangeChanged(int min, int max)`
-
-**作用与语义：**
-
-当滑块范围发生变化时，`min`为新的最小值，`max`为新的最大值，这个信号会发出来。
-
-### `[protected] QAbstractSlider::SliderAction QAbstractSlider::repeatAction() const`
-
-**作用与语义：**
-
-返回当前的重复动作。
-
-### `[slot] void QAbstractSlider::setRange(int min, int max)`
-
-**作用与语义：**
-
-将滑块的最小值设为`min`，最大值设为`max`。
-如果`max`小于`min`，`min`就成为唯一的法律价值。
-
-### `[protected] void QAbstractSlider::setRepeatAction(QAbstractSlider::SliderAction action, int thresholdTime = 500, int repeatTime = 50)`
-
-**作用与语义：**
-
-动作组`action`在初始延迟`thresholdTime`后，以`repeatTime`为间隔重复触发。
-
-### `[virtual protected] void QAbstractSlider::sliderChange(QAbstractSlider::SliderChange change)`
-
-**作用与语义：**
-
-重新实现该虚拟函数以跟踪滑块变化，如`SliderRangeChange`、`SliderOrientationChange`、`SliderStepsChange`或`SliderValueChange`。默认实现仅更新显示，忽略`change`参数。
-
-### `[signal] void QAbstractSlider::sliderMoved(int value)`
-
-**作用与语义：**
-
-该特性保持当前滑块位置。
-如果启用`tracking`（默认），这和`value`是一样的。
-
-**如何使用：** 调用 `sliderMoved()` 读取当前值；它不会修改应用状态。
-
-### `[signal] void QAbstractSlider::sliderPressed()`
-
-**作用与语义：**
-
-当用户用鼠标按下滑块时，或在调用`setSliderDown`（true）时，程序性地会发出该信号。
-
-### `[signal] void QAbstractSlider::sliderReleased()`
-
-**作用与语义：**
-
-当用户用鼠标松开滑块时，或在调用`setSliderDown`（false）时，通过程序方式发出该信号。
-
-### `[override virtual protected] void QAbstractSlider::timerEvent(QTimerEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QObject::timerEvent`（QTimerEvent *event）。
-
-### `void QAbstractSlider::triggerAction(QAbstractSlider::SliderAction action)`
-
-**作用与语义：**
-
-触发滑块`action`。可能的动作有`SliderSingleStepAdd`、`SliderSingleStepSub`、`SliderPageStepAdd`、`SliderPageStepSub`、`SliderToMinimum`、`SliderToMaximum`和`SliderMove`。
-
-### `[signal] void QAbstractSlider::valueChanged(int value)`
-
-**作用与语义：**
-
-该属性表示滑块当前值。
-滑块强制值在法定范围内：`minimum` <= `value` <= `maximum`。
-改变数值也会影响`sliderPosition`。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `value` 的变化，不要把它当作普通函数主动调用。
-
-### `[override virtual protected] void QAbstractSlider::wheelEvent(QWheelEvent *e)`
-
-**作用与语义：**
-
-重实现自：`QWidget::wheelEvent`（QWheelEvent *event）。
-该事件处理程序用于事件`event`，可以在子类中重新实现，以接收该控件的轮事件。
-如果你重新实现了这个处理程序，非常重要的是，如果你不处理事件，必须`ignore()`事件，这样小部件的父节点才能解释它。
-默认实现会忽略该事件。
-
-### `enum SliderAction { SliderNoAction, SliderSingleStepAdd, SliderSingleStepSub, SliderPageStepAdd, SliderPageStepSub, …, SliderMove }`
-
-**作用与语义：**
-
-表示要对滑块执行的逻辑动作，包括不操作、单步加减、整页加减、跳到最小/最大值以及移动到指定位置。把它传给 `triggerAction()` 会按范围、步长和反向设置更新值，并触发相应信号。
-
-### `bool hasTracking() const`
-
-**作用与语义：**
-
-该属性适用于是否启用滑块跟踪。
-如果启用了跟踪（默认），滑块在拖动时会发出`valueChanged()`信号。如果禁用跟踪，只有在用户松开滑块时，滑块才会发出`valueChanged()`信号。
-
-**如何使用：** 调用 `hasTracking()` 读取当前值；它不会修改应用状态。
-
-### `bool invertedAppearance() const`
-
-**作用与语义：**
-
-无论滑块是否显示其数值反转，这一属性都成立。
-如果该属性为`false`（默认），则最小值和最大值会显示在继承的控件的经典位置。如果值为真，最小值和最大值则出现在它们相反的位置。
-注意：该特性对滑块和旋钮最为合理。对于滚动条，滚动条子控制的视觉效果取决于样式是否理解反转外观;大多数样式忽略了滚动条的这一特性。
-
-**如何使用：** 调用 `invertedAppearance()` 读取当前值；它不会修改应用状态。
-
-### `bool invertedControls() const`
-
-**作用与语义：**
-
-该属性无论滑块是否反转其轮子和键事件，都成立。
-如果`false`，滚动鼠标滚轮“向上”并使用“page up”等键，可以将滑块值增加到最大值。否则按页面向上会让值向滑块最小值移动。
-
-**如何使用：** 调用 `invertedControls()` 读取当前值；它不会修改应用状态。
-
-### `bool isSliderDown() const`
-
-**作用与语义：**
-
-该属性无论滑块是否按下都成立。
-该属性由子类设置，以便抽象滑块知道`tracking`是否会产生影响。
-更改滑块向下属性会发出`sliderPressed()`和`sliderReleased()`信号。
-
-**如何使用：** 调用 `isSliderDown()` 读取当前值；它不会修改应用状态。
-
-### `int maximum() const`
-
-**作用与语义：**
-
-该属性表示滑块的最大值。
-设置该属性时，必要时会调整`minimum`以确保范围有效。滑块当前值也会调整到新范围内。
-
-**如何使用：** 调用 `maximum()` 读取当前值；它不会修改应用状态。
-
-### `int minimum() const`
-
-**作用与语义：**
-
-该属性表示滑块的最小值。
-设置该属性时，必要时会调整`maximum`以确保范围有效。滑块当前值也会调整到新范围内。
-
-**如何使用：** 调用 `minimum()` 读取当前值；它不会修改应用状态。
-
-### `Qt::Orientation orientation() const`
-
-**作用与语义：**
-
-此属性保存滑块的方向。
-方向必须为 `Qt::Vertical`（默认值）或 `Qt::Horizontal`。
-
-**如何使用：** 调用 `orientation()` 读取当前值；它不会修改应用状态。
-
-### `int pageStep() const`
-
-**作用与语义：**
-
-该属性包含页步。
-抽象滑块提供的两个自然步骤中较大的，通常对应用户按下PageUp或PageDown。
-
-**如何使用：** 调用 `pageStep()` 读取当前值；它不会修改应用状态。
-
-### `void setInvertedAppearance(bool)`
-
-**作用与语义：**
-
-无论滑块是否显示其数值反转，这一属性都成立。
-如果该属性为`false`（默认），则最小值和最大值会显示在继承的控件的经典位置。如果值为真，最小值和最大值则出现在它们相反的位置。
-注意：该特性对滑块和旋钮最为合理。对于滚动条，滚动条子控制的视觉效果取决于样式是否理解反转外观;大多数样式忽略了滚动条的这一特性。
-
-**如何使用：** 调用 `setInvertedAppearance(...)` 修改 `invertedAppearance`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setInvertedControls(bool)`
-
-**作用与语义：**
-
-该属性无论滑块是否反转其轮子和键事件，都成立。
-如果`false`，滚动鼠标滚轮“向上”并使用“page up”等键，可以将滑块值增加到最大值。否则按页面向上会让值向滑块最小值移动。
-
-**如何使用：** 调用 `setInvertedControls(...)` 修改 `invertedControls`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setMaximum(int)`
-
-**作用与语义：**
-
-该属性表示滑块的最大值。
-设置该属性时，必要时会调整`minimum`以确保范围有效。滑块当前值也会调整到新范围内。
-
-**如何使用：** 调用 `setMaximum(...)` 修改 `maximum`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setMinimum(int)`
-
-**作用与语义：**
-
-该属性表示滑块的最小值。
-设置该属性时，必要时会调整`maximum`以确保范围有效。滑块当前值也会调整到新范围内。
-
-**如何使用：** 调用 `setMinimum(...)` 修改 `minimum`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setPageStep(int)`
-
-**作用与语义：**
-
-该属性包含页步。
-抽象滑块提供的两个自然步骤中较大的，通常对应用户按下PageUp或PageDown。
-
-**如何使用：** 调用 `setPageStep(...)` 修改 `pageStep`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setSingleStep(int)`
-
-**作用与语义：**
-
-该属性表示单步。
-抽象滑块提供的两个自然步骤中较小的，通常对应于用户按下方向键。
-如果在自动重复按键事件期间该属性被修改，行为则未定义。
-
-**如何使用：** 调用 `setSingleStep(...)` 修改 `singleStep`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setSliderDown(bool)`
-
-**作用与语义：**
-
-该属性无论滑块是否按下都成立。
-该属性由子类设置，以便抽象滑块知道`tracking`是否会产生影响。
-更改滑块向下属性会发出`sliderPressed()`和`sliderReleased()`信号。
-
-**如何使用：** 调用 `setSliderDown(...)` 修改 `sliderDown`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setSliderPosition(int)`
-
-**作用与语义：**
-
-该特性保持当前滑块位置。
-如果启用`tracking`（默认），这和`value`是一样的。
-
-**如何使用：** 调用 `setSliderPosition(...)` 修改 `sliderPosition`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setTracking(bool enable)`
-
-**作用与语义：**
-
-该属性适用于是否启用滑块跟踪。
-如果启用了跟踪（默认），滑块在拖动时会发出`valueChanged()`信号。如果禁用跟踪，只有在用户松开滑块时，滑块才会发出`valueChanged()`信号。
-
-**如何使用：** 调用 `setTracking(...)` 修改 `tracking`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `int singleStep() const`
-
-**作用与语义：**
-
-该属性表示单步。
-抽象滑块提供的两个自然步骤中较小的，通常对应于用户按下方向键。
-如果在自动重复按键事件期间该属性被修改，行为则未定义。
-
-**如何使用：** 调用 `singleStep()` 读取当前值；它不会修改应用状态。
-
-### `int sliderPosition() const`
-
-**作用与语义：**
-
-该特性保持当前滑块位置。
-如果启用`tracking`（默认），这和`value`是一样的。
-
-**如何使用：** 调用 `sliderPosition()` 读取当前值；它不会修改应用状态。
-
-### `int value() const`
-
-**作用与语义：**
-
-该属性表示滑块当前值。
-滑块强制值在法定范围内：`minimum` <= `value` <= `maximum`。
-改变数值也会影响`sliderPosition`。
-
-**如何使用：** 调用 `value()` 读取当前值；它不会修改应用状态。
-
-### `void setOrientation(Qt::Orientation)`
-
-**作用与语义：**
-
-此属性保存滑块的方向。
-方向必须为 `Qt::Vertical`（默认值）或 `Qt::Horizontal`。
-
-**如何使用：** 调用 `setOrientation(...)` 修改 `orientation`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setValue(int)`
-
-**作用与语义：**
-
-该属性表示滑块当前值。
-滑块强制值在法定范围内：`minimum` <= `value` <= `maximum`。
-改变数值也会影响`sliderPosition`。
-
-**如何使用：** 调用 `setValue(...)` 修改 `value`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAbstractSlider` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+只反转视觉不一定反转键盘/滚轮。坐标类控件要同时考虑用户看到的方向和操作方向。

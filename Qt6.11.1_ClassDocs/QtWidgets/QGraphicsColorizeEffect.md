@@ -1,204 +1,59 @@
 # QGraphicsColorizeEffect
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QGraphicsColorizeEffect`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsColorizeEffect` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsColorizeEffect` 给目标绘制结果叠加一种颜色倾向。它不会改变原控件或 item 的调色板、图片数据或文本内容，只是在最终显示时把结果染向某个颜色。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它适合表达状态：选中高亮、警告染色、禁用弱化、搜索命中、拖拽目标提示。比直接改每个子元素颜色更省事，但也更像“后处理滤镜”。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsColorizeEffect` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QGraphicsColorizeEffect` 继承自 `QGraphicsEffect`。核心属性是 `color` 和 `strength`。`strength` 越高，目标越接近指定颜色；越低，越保留原本颜色。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+这个效果对复杂内容很方便，例如一整个图标、面板或图元组统一染色。但如果你需要语义化主题配色，改 palette、样式表或 item 自身绘制更可维护。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QGraphicsColorizeEffect(QObject *)` | 创建染色效果。 |
+| `setColor(const QColor &)` / `color()` | 设置或读取目标染色颜色。 |
+| `setStrength(qreal)` / `strength()` | 设置或读取染色强度，通常在 0 到 1 之间使用。 |
+| `colorChanged(QColor)` | 染色颜色变化时发出。 |
+| `strengthChanged(qreal)` | 强度变化时发出。 |
+| `setEnabled(bool)` | 继承自 `QGraphicsEffect`，快速开关效果。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QGraphicsColorizeEffect>`
-- 继承自：QGraphicsEffect
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+auto *effect = new QGraphicsColorizeEffect(item);
+effect->setColor(QColor("#2f80ed"));
+effect->setStrength(0.45);
+item->setGraphicsEffect(effect);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+用动画做搜索命中闪烁：
 
-### 工作机制
+```cpp
+auto *anim = new QPropertyAnimation(effect, "strength", effect);
+anim->setStartValue(0.0);
+anim->setEndValue(0.8);
+anim->setLoopCount(2);
+anim->start(QAbstractAnimation::DeleteWhenStopped);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合状态高亮、临时警告、拖放目标提示、选中对象强调、图标统一染色、禁用态快速处理。
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+不适合应用级主题系统。长期颜色规则应该进入样式、调色板、delegate 或 item 绘制逻辑。
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+染色会影响目标整体，包括图标、文字、边框和子内容。只想改文字颜色时，用文本颜色 API。
 
-## 3. 直接使用
+`strength` 过高会损失原内容层次。图标细节、图片明暗可能被压平。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `color : QColor`
-- `strength : qreal`
-
-### 公有函数
-
-- `QGraphicsColorizeEffect(QObject *parent = nullptr)`
-- `virtual ~QGraphicsColorizeEffect()`
-- `QColor color() const`
-- `qreal strength() const`
-
-### 公有槽函数
-
-- `void setColor(const QColor &c)`
-- `void setStrength(qreal strength)`
-
-### 信号
-
-- `void colorChanged(const QColor &color)`
-- `void strengthChanged(qreal strength)`
-
-### 重实现的保护函数
-
-- `virtual void draw(QPainter *painter) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `color : QColor`
-
-**作用与语义：**
-
-该属性表示效果的颜色。
-默认情况下，颜色为浅蓝色（`QColor`（0， 0， 192））。
-
-**如何使用：** 调用 `color()` 读取当前值；它不会修改应用状态。
-
-### `strength : qreal`
-
-**作用与语义：**
-
-该属性表示该效应的强度。
-默认情况下，强度为1.0。强度为0.0表示无效果，而1.0则表示完全上色。
-
-**如何使用：** 调用 `strength()` 读取当前值；它不会修改应用状态。
-
-### `QGraphicsColorizeEffect::QGraphicsColorizeEffect(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-构建一个新的 QGraphicsColorizeEffect 实例。`parent` 参数传递给 `QGraphicsEffect` 的构造器。
-
-### `[virtual noexcept] QGraphicsColorizeEffect::~QGraphicsColorizeEffect()`
-
-**作用与语义：**
-
-破坏效果。
-
-### `[signal] void QGraphicsColorizeEffect::colorChanged(const QColor &color)`
-
-**作用与语义：**
-
-该属性表示效果的颜色。
-默认情况下，颜色为浅蓝色（`QColor`（0， 0， 192））。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `color` 的变化，不要把它当作普通函数主动调用。
-
-### `[override virtual protected] void QGraphicsColorizeEffect::draw(QPainter *painter)`
-
-**作用与语义：**
-
-重实现自：`QGraphicsEffect::draw`（QPainter *画师）。
-这个纯虚拟函数绘制该效应，并在需要绘制源时调用。
-在`QGraphicsEffect`子类中重新实现该函数，以提供该效果的绘制实现，使用`painter`。
-用户不应明确调用该函数，因为它仅用于重实现。
-
-### `[signal] void QGraphicsColorizeEffect::strengthChanged(qreal strength)`
-
-**作用与语义：**
-
-该属性表示该效应的强度。
-默认情况下，强度为1.0。强度为0.0表示无效果，而1.0则表示完全上色。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `strength` 的变化，不要把它当作普通函数主动调用。
-
-### `QColor color() const`
-
-**作用与语义：**
-
-该属性表示效果的颜色。
-默认情况下，颜色为浅蓝色（`QColor`（0， 0， 192））。
-
-**如何使用：** 调用 `color()` 读取当前值；它不会修改应用状态。
-
-### `qreal strength() const`
-
-**作用与语义：**
-
-该属性表示该效应的强度。
-默认情况下，强度为1.0。强度为0.0表示无效果，而1.0则表示完全上色。
-
-**如何使用：** 调用 `strength()` 读取当前值；它不会修改应用状态。
-
-### `void setColor(const QColor &c)`
-
-**作用与语义：**
-
-该属性表示效果的颜色。
-默认情况下，颜色为浅蓝色（`QColor`（0， 0， 192））。
-
-**如何使用：** 调用 `setColor(...)` 修改 `color`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void setStrength(qreal strength)`
-
-**作用与语义：**
-
-该属性表示该效应的强度。
-默认情况下，强度为1.0。强度为0.0表示无效果，而1.0则表示完全上色。
-
-**如何使用：** 调用 `setStrength(...)` 修改 `strength`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsColorizeEffect` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+效果和源对象绘制分离。源内容改变时效果会重新作用，但业务数据本身没有被修改。

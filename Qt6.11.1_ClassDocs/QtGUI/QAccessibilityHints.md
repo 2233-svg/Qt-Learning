@@ -1,137 +1,85 @@
 # QAccessibilityHints
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibilityHints`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibilityHints` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QAccessibilityHints` 将操作系统的无障碍偏好暴露给 Qt 应用。Qt 6.11.1 中它目前提供的是用户对**对比度**的偏好，使应用能在高对比需求下调整自绘控件、图表、画布或非标准配色。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+这不是一个“开启无障碍模式”的开关，也不是对调色板的强制修改。它提供的是系统意图；应用仍要决定如何让文本、焦点框、图标边缘和状态提示真正可辨识。
 
-### 这是什么
-
-`QAccessibilityHints` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
-
-**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibilityHints>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QObject`；实例由 `QGuiApplication::styleHints()` 关联提供，不应自行创建或删除。
+- 版本：`contrastPreference` 在 Qt 6.10 引入。
 
-CMake 配置：
+典型入口：
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+QAccessibilityHints *hints = QGuiApplication::styleHints()
+    ->accessibilityHints();
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+对象随应用存活，系统设置改变时会发送信号。读取它不要求屏幕阅读器正在运行。
 
-### 工作机制
+## 3. API 速查
 
-这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+| API | 用途 |
+|---|---|
+| `contrastPreference()` | 读取系统当前的 `Qt::ContrastPreference`。 |
+| `contrastPreferenceChanged(preference)` | 系统对比度偏好改变时通知 UI 更新。 |
+| `contrastPreference` 属性 | 上述 getter 和通知的属性形式，Qt 6.10 起可用。 |
+| `event()` | Qt 内部接收平台设置变化；一般不需重写。 |
 
-### 状态、生命周期和线程
+`Qt::ContrastPreference` 应被理解为偏好提示：例如无特别偏好、偏好更高对比度或偏好降低对比度。应用不能把它简单等同于某个平台的“深色模式”，深浅色外观仍应通过调色板、样式或其他平台提示处理。
 
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+## 4. 关键用法
 
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+```cpp
+auto *hints = QGuiApplication::styleHints()->accessibilityHints();
 
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+auto applyContrastPolicy = [this](Qt::ContrastPreference preference) {
+    highContrastMode = preference == Qt::ContrastPreference::HighContrast;
+    update();
+};
 
-## 3. 直接使用
+applyContrastPolicy(hints->contrastPreference());
+connect(hints, &QAccessibilityHints::contrastPreferenceChanged,
+        this, applyContrastPolicy);
+```
 
-使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+正确顺序是“先读当前值，再订阅变化”。只连接信号会遗漏程序启动时已经存在的系统偏好。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+应用对 `HighContrast` 的实际响应通常包括：
 
-### 属性
+- 让文字与背景达到足够对比，而不是只提高饱和度。
+- 为键盘焦点提供清晰、不仅依赖颜色的轮廓。
+- 让禁用、选中、错误、悬停等状态可从形状、文字或图标区分。
+- 避免在自绘画布中用相近灰度表达重要边界。
 
-- `(since 6.10) contrastPreference : Qt::ContrastPreference`
+## 5. 使用场景
 
-### 公有函数
+| 场景 | 建议 |
+|---|---|
+| 自绘 `QWidget`、`QQuickPaintedItem` 或图表 | 根据偏好选择边框、网格、标记线和焦点指示的对比策略。 |
+| 设计系统/主题管理器 | 将偏好映射到一组语义色，不要在各控件散落硬编码颜色。 |
+| 带状态的图标按钮 | 让禁用、选中与焦点状态具有额外的形状或轮廓提示。 |
+| 纯 Qt Widgets 标准控件 | Qt 样式通常已处理一部分；自定义 stylesheet 仍需自行验证。 |
 
-- `Qt::ContrastPreference contrastPreference() const`
+## 6. 常见坑与经验
 
-### 信号
+- 不要缓存一次查询结果后永久使用；系统设置可以在应用运行中改变。
+- 不要为了“高对比”把所有背景强制改成黑白，这可能破坏品牌色、图像和用户选择的主题；应以可读性为目标。
+- 这不是屏幕阅读器 API。可访问名称、角色、值和事件仍由 `QAccessible` 体系负责。
+- `QAccessibilityHints` 是应用级对象，勿跨线程直接操作 UI；收到变化信号后在 GUI 线程刷新视图。
+- 针对高对比的界面应该同时用键盘焦点、缩放和读屏测试验证，不能只凭肉眼看一张截图。
 
-- `void contrastPreferenceChanged(Qt::ContrastPreference contrastPreference)`
+## 7. 知识点覆盖
 
-### 重实现的保护函数
-
-- `virtual bool event(QEvent *event) override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[read-only, since 6.10] contrastPreference : Qt::ContrastPreference`
-
-**作用与语义：**
-
-该属性表示系统设定的对比模态。
-应用程序可以利用该属性来确定系统当前使用的对比度设置。
-Qt样式利用这一特性来调整调色板颜色和轮廓。
-
-**如何使用：** 调用 `contrastPreference()` 读取当前值；它不会修改应用状态。
-
-### `[override virtual protected] bool QAccessibilityHints::event(QEvent *event)`
-
-**作用与语义：**
-
-重实现自：`QObject::event`（QEvent *e）。
-
-### `Qt::ContrastPreference contrastPreference() const`
-
-**作用与语义：**
-
-该属性表示系统设定的对比模态。
-应用程序可以利用该属性来确定系统当前使用的对比度设置。
-Qt样式利用这一特性来调整调色板颜色和轮廓。
-
-**如何使用：** 调用 `contrastPreference()` 读取当前值；它不会修改应用状态。
-
-### `void contrastPreferenceChanged(Qt::ContrastPreference contrastPreference)`
-
-**作用与语义：**
-
-该属性表示系统设定的对比模态。
-应用程序可以利用该属性来确定系统当前使用的对比度设置。
-Qt样式利用这一特性来调整调色板颜色和轮廓。
-
-**如何使用：** 这是变化通知信号。用 `connect()` 监听 `contrastPreference` 的变化，不要把它当作普通函数主动调用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-### 状态和错误边界
-
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-### 线程边界
-
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-### 最容易出现的错误
-
-不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibilityHints` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 平台无障碍偏好与应用主题策略
+- 初始状态读取与运行时设置变化
+- 高对比设计：文字、焦点、状态与非颜色线索
+- Qt 标准控件与自绘界面的责任边界
+- `QAccessibilityHints` 和 `QAccessible` 的分工

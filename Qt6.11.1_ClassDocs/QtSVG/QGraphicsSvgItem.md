@@ -1,197 +1,75 @@
 # QGraphicsSvgItem
-
-> Qt 6.11.1 · Qt SVG
+> Qt 6.11.1 · Qt SVG · 来自 `QGraphicsSvgItem`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QGraphicsSvgItem` 是 图形场景与项目机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QGraphicsSvgItem` 是 Graphics View 场景里的 SVG 图元。它让 SVG 像普通 `QGraphicsItem` 一样进入 `QGraphicsScene`：可以移动、缩放、旋转、参与层级和碰撞区域，也能只显示 SVG 文件中的某个 `id` 元素。
 
-**模块背景：** Qt SVG 提供 SVG 文档读取、渲染和 SVG 图形组件。
+它适合老牌 Graphics View 架构的地图、编辑器、流程图、组态画面。Qt Quick 场景里不要强行用它，应该看 Quick 侧的图像或自定义渲染方案。
 
-### 这是什么
+## 2. 类说明
 
-`QGraphicsSvgItem` 是 图形场景与项目机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QGraphicsSvgItem`，属于 Qt SVG 模块，用于在 `QGraphicsScene` 中显示 SVG 内容。
 
-**内部模型：** Graphics View/Scene Graph 类型通常把场景、项目、视图、坐标变换、布局和重绘分开。项目有自己的局部坐标，父子项目和视图变换把它映射到场景或窗口坐标。
+每个 item 可以拥有自己的 renderer，也可以通过 `setSharedRenderer()` 多个 item 共用同一个 `QSvgRenderer`。共享能省解析成本，但 renderer 的生命周期要由你保证。
 
-**适用场景：** 先建立场景和对象层级，明确坐标系和变换，再配置几何、事件和绘制；高频更新时控制刷新范围和缓存策略。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QGraphicsSvgItem(parent = nullptr)` | 创建空 SVG 图元。 |
+| `QGraphicsSvgItem(fileName, parent = nullptr)` | 创建并加载 SVG 文件。 |
+| `setSharedRenderer(QSvgRenderer *)` | 使用外部共享 renderer，避免重复解析。 |
+| `renderer() const` | 取得当前 renderer。 |
+| `setElementId(id)` / `elementId()` | 只显示 SVG 中指定 `id` 的元素。 |
+| `setMaximumCacheSize(QSize)` / `maximumCacheSize()` | 设置图元缓存的最大尺寸。 |
+| `boundingRect() const` | 返回图元边界，供场景索引和重绘使用。 |
+| `paint(QPainter *, option, widget)` | 图形视图框架调用的绘制函数。 |
+| `type() const` | 返回图元类型，便于自定义 item 判断。 |
 
-**先记住的坑：** 不要混淆局部坐标与场景坐标；不要保存已经移除项目的指针；不要在错误线程修改场景；不要在绘制回调里修改场景结构。
+## 4. 典型流程
 
-## 2. 依赖与对象关系
+```cpp
+auto *renderer = new QSvgRenderer(QStringLiteral(":/symbols/factory.svg"), scene);
 
-- 头文件：`#include <QGraphicsSvgItem>`
-- 继承自：QGraphicsObject
-- 直接派生类：未在类页中列出
+auto *pump = new QGraphicsSvgItem;
+pump->setSharedRenderer(renderer);
+pump->setElementId("pump");
+pump->setPos(40, 80);
+scene->addItem(pump);
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS SvgWidgets)
-target_link_libraries(mytarget PRIVATE Qt6::SvgWidgets)
+auto *valve = new QGraphicsSvgItem;
+valve->setSharedRenderer(renderer);
+valve->setElementId("valve");
+valve->setPos(140, 80);
+scene->addItem(valve);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+这种写法的好处是一个 SVG 文件可包含多个符号，解析一次，场景里按元素复用。
 
-### 工作机制
+## 5. 使用场景
 
-Graphics View/Scene Graph 类型通常把场景、项目、视图、坐标变换、布局和重绘分开。项目有自己的局部坐标，父子项目和视图变换把它映射到场景或窗口坐标。
+| 场景 | 用法 |
+| --- | --- |
+| 工业组态/流程图符号库 | 一个 SVG 文件存多个符号，用 `elementId` 拆出。 |
+| 地图或平面图标注 | item 可缩放、旋转、选择、拖拽。 |
+| 可视化编辑器 | SVG 图元和其它 `QGraphicsItem` 混排。 |
+| 大量重复图标 | `setSharedRenderer()` 降低解析和内存成本。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
+`setSharedRenderer()` 不接管 renderer 所有权。只要 item 还在绘制，renderer 就必须活着。最省心的做法是把 renderer 的 QObject parent 设成 scene、view 或更长寿的资源管理器。
 
-**状态与结果：** 区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
+`elementId` 只对可渲染元素有意义。设计 SVG 资源时要给目标元素设置稳定 `id`，不要依赖设计工具自动生成的临时名字。
 
-**线程与事件循环：** 图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
+缓存尺寸不是越大越好。大缓存能减少重复渲染，但会吃内存；item 经常缩放或内容很简单时，过大的 cache 反而不划算。
 
-## 3. 直接使用
+`boundingRect()` 影响场景索引、重绘区域和鼠标命中。切换 elementId 或 renderer 后，如果边界变化，要确保场景能正确更新，避免残影或命中区域不对。
 
-先建立场景和对象层级，明确坐标系和变换，再配置几何、事件和绘制；高频更新时控制刷新范围和缓存策略。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 属性
-
-- `elementId : QString`
-- `maximumCacheSize : QSize`
-
-### 公有函数
-
-- `QGraphicsSvgItem(QGraphicsItem *parent = nullptr)`
-- `QGraphicsSvgItem(const QString &fileName, QGraphicsItem *parent = nullptr)`
-- `QString elementId() const`
-- `QSize maximumCacheSize() const`
-- `QSvgRenderer * renderer() const`
-- `void setElementId(const QString &id)`
-- `void setMaximumCacheSize(const QSize &size)`
-- `void setSharedRenderer(QSvgRenderer *renderer)`
-
-### 重实现的公有函数
-
-- `virtual QRectF boundingRect() const override`
-- `virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr) override`
-- `virtual int type() const override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `elementId : QString`
-
-**作用与语义：**
-
-该属性包含元素的 XML ID。
-
-**如何使用：** 调用 `elementId()` 读取当前值；它不会修改应用状态。
-
-### `maximumCacheSize : QSize`
-
-**作用与语义：**
-
-该属性包含该项设备坐标缓存的最大大小。
-
-**如何使用：** 调用 `maximumCacheSize()` 读取当前值；它不会修改应用状态。
-
-### `QGraphicsSvgItem::QGraphicsSvgItem(QGraphicsItem *parent = nullptr)`
-
-**作用与语义：**
-
-用给定的`parent`构建一个新的SVG项目。
-
-### `QGraphicsSvgItem::QGraphicsSvgItem(const QString &fileName, QGraphicsItem *parent = nullptr)`
-
-**作用与语义：**
-
-用给定的`parent`构建一个新项目，并用指定`fileName`加载SVG文件的内容。
-
-### `[override virtual] QRectF QGraphicsSvgItem::boundingRect() const`
-
-**作用与语义：**
-
-重装：`QGraphicsItem::boundingRect()` const.
-返回该项的边界矩形。
-
-### `QString QGraphicsSvgItem::elementId() const`
-
-**作用与语义：**
-
-返回当前渲染的元素XML ID。如果渲染整个文件，返回一个空字符串。
-注意：属性elementId的Getter函数。
-
-### `QSize QGraphicsSvgItem::maximumCacheSize() const`
-
-**作用与语义：**
-
-返回该项当前设备坐标缓存的最大大小。如果该项使用`QGraphicsItem::DeviceCoordinateCache`模式缓存，且该项在设备坐标中的扩展大于最大大小，则缓存会被绕过。
-默认的最大缓存大小为1024x768。`QPixmapCache::cacheLimit()` 表示整个缓存的累计边界，而 maximumCacheSize() 表示该特定项的最大缓存大小。
-注意：属性 maxumCacheSize 的获取函数。
-
-### `[override virtual] void QGraphicsSvgItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = nullptr)`
-
-**作用与语义：**
-
-由图形视图框架调用，使用关联的 `QSvgRenderer` 把 SVG 内容绘制到图元边界内。`option` 描述当前绘制状态，`widget` 可能为 `nullptr`；应用通常通过设置共享渲染器和元素 ID 控制内容。
-
-### `QSvgRenderer *QGraphicsSvgItem::renderer() const`
-
-**作用与语义：**
-
-退还当前使用的`QSvgRenderer`。
-
-### `void QGraphicsSvgItem::setElementId(const QString &id)`
-
-**作用与语义：**
-
-该属性包含元素的 XML ID。
-
-**如何使用：** 调用 `setElementId(...)` 修改 `elementId`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void QGraphicsSvgItem::setMaximumCacheSize(const QSize &size)`
-
-**作用与语义：**
-
-该属性包含该项设备坐标缓存的最大大小。
-
-**如何使用：** 调用 `setMaximumCacheSize(...)` 修改 `maximumCacheSize`；传入的新值会成为后续查询和相关界面行为所使用的值。
-
-### `void QGraphicsSvgItem::setSharedRenderer(QSvgRenderer *renderer)`
-
-**作用与语义：**
-
-设置`renderer`为该项目的共享`QSvgRenderer`。通过使用该方法，可以在多个项目上共享相同的`QSvgRenderer`。这意味着SVG文件只会解析一次。传递给该方法的`QSvgRenderer`必须在该项目被使用期间一直存在。
-
-### `[override virtual] int QGraphicsSvgItem::type() const`
-
-**作用与语义：**
-
-重实现自：`QGraphicsItem::type()` const.
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-场景或父项目通常管理子项目，但视图只是观察者，不一定拥有场景。删除项目、改变父项目或切换场景时要确认索引、指针、选中状态和布局关系是否仍有效。
-
-### 状态和错误边界
-
-区分局部坐标、场景坐标、视图/窗口坐标，区分选中、悬停、焦点、可见和碰撞状态。改变几何、变换或数据后通常请求更新，而不是手动强制调用绘制函数。
-
-### 线程边界
-
-图形对象通常只能在其所属 GUI/场景线程操作；后台线程负责数据准备，结果通过信号投递后再更新场景对象。
-
-### 最容易出现的错误
-
-不要混淆局部坐标与场景坐标；不要保存已经移除项目的指针；不要在错误线程修改场景；不要在绘制回调里修改场景结构。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGraphicsSvgItem` 所属机制类型：图形场景与项目机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- Graphics View 中 SVG 图元的角色。
+- `QSvgRenderer` 共享和生命周期管理。
+- `elementId` 级别的符号复用。
+- item 缓存大小、边界和绘制流程。
+- SVG 资源制作与场景交互设计。

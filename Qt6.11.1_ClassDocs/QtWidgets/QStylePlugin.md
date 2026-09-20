@@ -1,127 +1,65 @@
 # QStylePlugin
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QStylePlugin`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QStylePlugin` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QStylePlugin` 是给 Qt 提供自定义 widget style 的插件基类。它让你的 style 可以被 `QStyleFactory` 按 key 发现并创建，而不是直接链接进应用。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它适合框架、组件库或需要独立部署主题的产品；普通应用内部自定义一个 style，通常不需要插件化。
 
-### 这是什么
+## 2. 类说明
 
-`QStylePlugin` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QStylePlugin` 继承自 `QObject`。你继承它并实现 `create(const QString &key)`，根据 key 返回对应 `QStyle` 实例。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+插件还需要 Qt 插件元数据和正确部署路径。style 插件属于 Widgets 样式插件体系，能否被发现取决于插件目录、IID、metadata 和平台加载规则。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `QStylePlugin(QObject *)` | 创建 style 插件对象。 |
+| `create(const QString &key)` | 根据 style key 创建 `QStyle`。子类必须实现。 |
+| `QStyleFactory::keys()` | 查看插件 style 是否被发现。 |
+| `QStyleFactory::create(key)` | 通过工厂创建插件提供的 style。 |
+| `Q_PLUGIN_METADATA` | 声明插件元数据。 |
+| `Q_INTERFACES` | 声明实现的插件接口。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QStylePlugin>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
-```
-
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
-
-### 状态、生命周期和线程
-
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-## 3. 直接使用
-
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QStylePlugin(QObject *parent = nullptr)`
-- `virtual ~QStylePlugin()`
-- `virtual QStyle * create(const QString &key) = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QStylePlugin::QStylePlugin(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-用给定的`parent`构建一个样式插件。
-请注意，这个构造函数是由导出插件的 moc 生成代码自动调用的，因此无需显式调用。
-
-### `[virtual noexcept] QStylePlugin::~QStylePlugin()`
-
-**作用与语义：**
-
-会破坏样式插件。
-注意，Qt 在插件不再使用时会自动销毁，因此无需显式调用 destructor。
-
-### `[pure virtual] QStyle *QStylePlugin::create(const QString &key)`
-
-**作用与语义：**
-
-为给定样式`key`创建并返回一个`QStyle`对象。如果插件无法创建样式，则应返回0。
-样式键通常是所需样式的类名。注意，键不区分大小写。例如：
-
-**官方示例：**
+## 4. 关键用法
 
 ```cpp
- QStyle *MyStylePlugin::create(const QString &key)
- {
-     QString lcKey = key.toLower();
-     if (lcKey == "rocket") {
-         return new RocketStyle;
-     } else if (lcKey == "starbuster") {
-         return new StarBusterStyle;
-     }
-     return nullptr;
- }
+class MyStylePlugin : public QStylePlugin {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QStyleFactoryInterface")
+
+public:
+    QStyle *create(const QString &key) override
+    {
+        if (key.compare("MyStyle", Qt::CaseInsensitive) == 0)
+            return new MyStyle;
+        return nullptr;
+    }
+};
 ```
 
-## 6. 深入实践与常见坑
+应用侧：
 
-### 生命周期和资源边界
+```cpp
+auto *style = QStyleFactory::create("MyStyle");
+if (style)
+    qApp->setStyle(style);
+```
 
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+## 5. 使用场景
 
-### 状态和错误边界
+适合主题插件、企业统一控件风格、可选皮肤包、第三方 style 分发、无需重新编译主程序即可添加外观。
 
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+如果 style 只给当前应用使用，直接编译进程序更简单，调试和部署也更省心。
 
-### 线程边界
+## 6. 常见坑与经验
 
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+插件没出现在 `QStyleFactory::keys()` 时，先查部署路径和 metadata，不要先怀疑绘制代码。
 
-### 最容易出现的错误
+`create()` 应只对自己支持的 key 返回 style，不支持就返回 `nullptr`。
 
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QStylePlugin` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+插件式 style 仍要处理所有普通 style 的责任：绘制、尺寸、状态、RTL、高 DPI 和平台差异。

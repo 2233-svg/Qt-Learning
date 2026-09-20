@@ -1,140 +1,90 @@
 # QDBusAbstractAdaptor
+> Qt 6.11.1 · Qt D-Bus · 来自 `QDBusAbstractAdaptor`
 
-> Qt 6.11.1 · Qt D-Bus
+## 作用定位
 
-## 1. 先建立直觉
+`QDBusAbstractAdaptor` 用来把一个本地 `QObject` 包装成明确的 D-Bus 接口。它通常不是业务对象本身，而是贴在业务对象上的“对外接口层”：D-Bus 看到 adaptor 暴露的属性、槽、信号和 invokable，业务代码仍然留在原来的 QObject 里。
 
-**一句话定位：** `QDBusAbstractAdaptor` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+这种设计的好处是导出面可控。你不必把内部对象的所有公开槽都暴露给进程外调用者，而是用 adaptor 定义稳定、窄小、可审计的 IPC 契约。
 
-**模块背景：** 这是 Qt D-Bus 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QDBusAbstractAdaptor` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
-
-**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QDBusAbstractAdaptor>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::DBus`
+- 继承：`QObject`
+- 构造函数是 `protected`，必须继承后使用
+- adaptor 以被包装对象作为 parent；真实对象销毁时 adaptor 会随之销毁
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS DBus)
-target_link_libraries(mytarget PRIVATE Qt6::DBus)
-```
+| API | 说明 |
+| --- | --- |
+| `QDBusAbstractAdaptor(QObject *obj)` | 创建 adaptor，并把 `obj` 作为父对象和真实承载对象。 |
+| `~QDBusAbstractAdaptor()` | 释放 adaptor；通常不要手动删除，让父对象管理生命周期。 |
+| `autoRelaySignals()` | 查询是否把真实对象上同签名信号自动转发成 adaptor 信号。 |
+| `setAutoRelaySignals(bool)` | 开关自动信号中继；适合接口信号只是业务对象信号的外壳时使用。 |
+| `Q_NOREPLY` | 宏：标记导出的 void 方法不需要 D-Bus 回复。 |
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
-
-### 工作机制
-
-这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-## 3. 直接使用
-
-使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QDBusAbstractAdaptor()`
-
-### 保护函数
-
-- `QDBusAbstractAdaptor(QObject *obj)`
-- `bool autoRelaySignals() const`
-- `void setAutoRelaySignals(bool enable)`
-
-### 公开宏
-
-- `Q_NOREPLY`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit protected] QDBusAbstractAdaptor::QDBusAbstractAdaptor(QObject *obj)`
-
-**作用与语义：**
-
-构建一个以`obj`为父对象的QDBusAbstractAdaptor。
-
-### `[virtual noexcept] QDBusAbstractAdaptor::~QDBusAbstractAdaptor()`
-
-**作用与语义：**
-
-会毁坏适配器。
-警告：当其所指的真实物体被摧毁时，适配器会自动销毁。请勿自行删除适配器。
-
-### `[protected] bool QDBusAbstractAdaptor::autoRelaySignals() const`
-
-**作用与语义：**
-
-如果启用了来自真实对象的自动信号中继（参见对象（object()）），返回`true`，否则返回`false`。
-
-### `[protected] void QDBusAbstractAdaptor::setAutoRelaySignals(bool enable)`
-
-**作用与语义：**
-
-切换来自真实物体的自动信号（参见对象）。
-自动信号中继是将父端上在两类中具有完全相同方法签名的信号进行信号对信号的连接。
-如果`enable`设置为true，则连接信号;如果设置为false，则断开所有信号。
-
-### `Q_NOREPLY`
-
-**作用与语义：**
-
-Q_NOREPLY宏可以用来标记方法的调用，而不是等待处理完成后才返回`QDBusInterface::call()`。被调用的方法不能返回任何输出参数，如果返回，这些参数也会被丢弃。
-你可以在自己的适配器中使用这个宏，方法是将它放在类声明中方法返回值（必须是“空值”）之前，如示例所示：
-它在方法实现中的存在（类声明之外）是可选的。
-
-**官方示例：**
+## 典型写法
 
 ```cpp
- Q_NOREPLY void myMethod();
+class PlayerAdaptor : public QDBusAbstractAdaptor
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.example.Player")
+    Q_PROPERTY(QString title READ title)
+
+public:
+    explicit PlayerAdaptor(Player *player)
+        : QDBusAbstractAdaptor(player), m_player(player)
+    {
+        setAutoRelaySignals(true);
+    }
+
+public slots:
+    void Play() { m_player->play(); }
+    Q_NOREPLY void Stop() { m_player->stop(); }
+
+signals:
+    void TitleChanged(const QString &title);
+
+private:
+    QString title() const { return m_player->title(); }
+    Player *m_player;
+};
 ```
 
-## 6. 深入实践与常见坑
+注册时通常配合：
 
-### 生命周期和资源边界
+```cpp
+new PlayerAdaptor(player);
+QDBusConnection::sessionBus().registerObject(
+    "/org/example/Player", player, QDBusConnection::ExportAdaptors);
+```
 
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+关键点是 `registerObject()` 注册的是真实业务对象 `player`，Qt D-Bus 会在其子对象里找到 adaptor 并导出 adaptor 描述的接口。
 
-### 状态和错误边界
+## 使用场景
 
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+- 对外发布稳定 D-Bus API，同时保留内部 C++ 对象的自由演进。
+- 一个业务对象需要导出多个 D-Bus 接口，每个接口一个 adaptor。
+- 要控制哪些槽、属性、信号被进程外访问。
+- 需要把信号名称、方法名称、属性名称整理成符合 D-Bus 风格的接口。
 
-### 线程边界
+## 常见坑与经验
 
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+- `Q_CLASSINFO("D-Bus Interface", "...")` 是接口身份的关键；忘了写会让内省信息和调用端都很难工作。
+- adaptor 不应该随便 `delete`。它的 parent 是真实对象，生命周期跟随真实对象。
+- `Q_NOREPLY` 只能用于不返回输出参数的方法；远端如果还期待返回值，会得到不匹配的行为。
+- 自动信号中继要求真实对象和 adaptor 上的信号签名完全一致；只是名字相似不够。
+- 不要把内部 QObject 的全部 API 用 `ExportAllContents` 直接暴露出去。adaptor 的价值就在于把 IPC 边界收窄。
+- D-Bus 方法会进入对象所属线程；槽函数里做慢操作会阻塞调用者和事件循环，必要时转给工作线程并使用延迟回复。
 
-### 最容易出现的错误
+## 知识点覆盖
 
-不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDBusAbstractAdaptor` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- Qt D-Bus adaptor 模式
+- QObject 元对象、属性、槽、信号如何变成 D-Bus 接口
+- D-Bus interface 的稳定契约设计
+- 自动信号中继
+- `Q_NOREPLY` 与无回复调用
+- 导出对象时 `ExportAdaptors` 的意义

@@ -1,320 +1,93 @@
 # QRgbaFloat
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QRgbaFloat`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRgbaFloat<T>` 是用浮点通道保存 RGBA 的轻量颜色值，常见别名有 `QRgbaFloat16` 和 `QRgbaFloat32`。它面向半浮点/全浮点图像格式、HDR 中间计算、线性颜色处理和需要避免整数通道量化的场景。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+和 `QRgba64` 的 16 位整数不同，`QRgbaFloat` 的通道是浮点值。很多普通颜色在 `0.0..1.0` 范围内，但浮点图像或 HDR 数据可能出现超过 1 的值；因此读取时要分清 `red()` 这类原始值和 `redNormalized()` 这类归一化值。
 
-### 这是什么
-
-`QRgbaFloat` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QRgbaFloat>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`Qt6::Gui`
+- 类型性质：模板值类型，通道类型由 `T` 决定
+- 常用别名：`QRgbaFloat16`、`QRgbaFloat32`
+- 典型场景：浮点 `QImage` 格式、HDR、颜色处理、渲染中间结果
 
-CMake 配置：
+`QRgbaFloat` 更偏底层像素/颜色计算，不提供 `QColor` 那种颜色模型转换和命名色能力。它适合在你明确知道通道语义时使用。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `FastType` | 计算时更快的浮点类型别名，便于内部实现和高效访问。 |
+| `fromRgba(r,g,b,a)` | 从 8 位通道创建浮点颜色。 |
+| `fromRgba64(r,g,b,a)` | 从 16 位整数通道创建浮点颜色。 |
+| `fromArgb32(uint)` | 从 32 位 ARGB 创建。 |
+| `red()` / `green()` / `blue()` / `alpha()` | 读取原始浮点通道值。 |
+| `redNormalized()` / `greenNormalized()` / `blueNormalized()` / `alphaNormalized()` | 读取归一化到常规范围的通道值。 |
+| `red8()` / `green8()` / `blue8()` / `alpha8()` | 转成 8 位通道。 |
+| `red16()` / `green16()` / `blue16()` / `alpha16()` | 转成 16 位整数通道。 |
+| `setRed()` / `setGreen()` / `setBlue()` / `setAlpha()` | 设置浮点通道。 |
+| `isOpaque()` | alpha 是否为完全不透明。 |
+| `isTransparent()` | alpha 是否为完全透明。 |
+| `premultiplied()` | 返回预乘 alpha 后的颜色。 |
+| `unpremultiplied()` | 从预乘形式还原为非预乘颜色。 |
+| `toArgb32()` | 转为传统 32 位 ARGB，会量化/裁剪。 |
+| `QRgbaFloat16` | 半浮点版本，内存更省，精度低于 32 位 float。 |
+| `QRgbaFloat32` | 单精度 float 版本，适合更高精度计算。 |
+
+## 4. 关键用法
+
+### 浮点颜色计算
+
+```cpp
+QRgbaFloat32 c = QRgbaFloat32::fromRgba(128, 64, 32, 255);
+c.setRed(c.red() * 1.2f);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+浮点通道适合做连续计算。输出到 8 位或 16 位时再调用 `toArgb32()`、`red8()`、`red16()` 等转换函数。
 
-### 工作机制
+### normalized 读取
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+float displayRed = color.redNormalized();
+```
 
-### 状态、生命周期和线程
+当源数据可能超出常规范围时，normalized 访问器更适合用于 UI 显示、预览或转换到普通颜色范围。原始 `red()` 则保留计算值。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 预乘 alpha
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+```cpp
+QRgbaFloat16 pm = color.premultiplied();
+```
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+浮点颜色同样要区分预乘和非预乘。图像合成、滤镜链路、GPU 上传格式不一致时，半透明边缘错误往往就来自这个边界。
 
-## 3. 直接使用
+## 5. 使用场景
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+- HDR 或浮点图像格式的像素处理。
+- 在线性颜色空间中做滤镜、混合、曝光、色调映射。
+- 需要半浮点节省内存的中间缓存。
+- 需要全浮点保持高精度的渲染/图像计算。
+- 从 8/16 位颜色转换到浮点域做处理。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 6. 常见坑与经验
 
-### 公有类型
+- **浮点值不一定限制在 0..1。** HDR 或中间计算可能超过 1，也可能出现需要裁剪的值。
+- **normalized 和原始值用途不同。** 原始值用于计算，normalized 更适合输出/显示语义。
+- **转 8 位会量化。** `red8()` 和 `toArgb32()` 都会损失浮点精度。
+- **半浮点更省内存但精度有限。** 大量中间处理或敏感渐变时，`QRgbaFloat32` 更稳。
+- **预乘状态要贯穿管线。** 不要把 premultiplied 和 straight alpha 混在同一条计算链里。
+- **它不是颜色管理系统。** 色彩空间、ICC、显示转换需要 `QColorSpace` 或更高层逻辑配合。
 
-- `FastType`
+## 7. 知识点覆盖
 
-### 公有函数
-
-- `quint8 alpha8() const`
-- `quint16 alpha16() const`
-- `float alpha() const`
-- `float alphaNormalized() const`
-- `quint8 blue8() const`
-- `quint16 blue16() const`
-- `float blue() const`
-- `float blueNormalized() const`
-- `quint8 green8() const`
-- `quint16 green16() const`
-- `float green() const`
-- `float greenNormalized() const`
-- `bool isOpaque() const`
-- `bool isTransparent() const`
-- `QRgbaFloat<T> premultiplied() const`
-- `quint8 red8() const`
-- `quint16 red16() const`
-- `float red() const`
-- `float redNormalized() const`
-- `void setAlpha(float alpha)`
-- `void setBlue(float blue)`
-- `void setGreen(float green)`
-- `void setRed(float red)`
-- `uint toArgb32() const`
-- `QRgbaFloat<T> unpremultiplied() const`
-
-### 静态公有成员
-
-- `QRgbaFloat<T> fromArgb32(uint rgb)`
-- `QRgbaFloat<T> fromRgba64(quint16 red, quint16 green, quint16 blue, quint16 alpha)`
-- `QRgbaFloat<T> fromRgba(quint8 red, quint8 green, quint8 blue, quint8 alpha)`
-
-### 相关非成员函数
-
-- `QRgbaFloat16`
-- `QRgbaFloat32`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[alias] QRgbaFloat::FastType`
-
-**作用与语义：**
-
-浮水的别名。
-
-### `[constexpr] quint8 QRgbaFloat::alpha8() const`
-
-**作用与语义：**
-
-将alpha通道返回为8位。
-
-### `[constexpr] quint16 QRgbaFloat::alpha16() const`
-
-**作用与语义：**
-
-返回阿尔法通道为16位整数。
-
-### `[constexpr] float QRgbaFloat::alpha() const`
-
-**作用与语义：**
-
-返回阿尔法通道。
-
-### `[constexpr] float QRgbaFloat::alphaNormalized() const`
-
-**作用与语义：**
-
-返回归一化为`0.0f`到`1.0f`之间的α通道。
-
-### `[constexpr] quint8 QRgbaFloat::blue8() const`
-
-**作用与语义：**
-
-将蓝色分量返回为8位。
-
-### `[constexpr] quint16 QRgbaFloat::blue16() const`
-
-**作用与语义：**
-
-返回蓝色分量为16位整数。
-
-### `[constexpr] float QRgbaFloat::blue() const`
-
-**作用与语义：**
-
-返回蓝色分量。
-
-### `[constexpr] float QRgbaFloat::blueNormalized() const`
-
-**作用与语义：**
-
-返回归一化为`0.0f`到`1.0f`之间的蓝色分量。
-
-### `[static constexpr] QRgbaFloat<T> QRgbaFloat::fromArgb32(uint rgb)`
-
-**作用与语义：**
-
-从32位ARGB值`rgb`构造`QRgbaFloat`值。
-
-### `[static constexpr] QRgbaFloat<T> QRgbaFloat::fromRgba64(quint16 red, quint16 green, quint16 blue, quint16 alpha)`
-
-**作用与语义：**
-
-从四个16位整数色彩通道`red`、`green`、`blue`和`alpha`构建`QRgbaFloat`值。
-
-### `[static constexpr] QRgbaFloat<T> QRgbaFloat::fromRgba(quint8 red, quint8 green, quint8 blue, quint8 alpha)`
-
-**作用与语义：**
-
-从四个8位色彩通道 `red`、`green`、`blue` 和 `alpha` 构建`QRgbaFloat`值。
-
-### `[constexpr] quint8 QRgbaFloat::green8() const`
-
-**作用与语义：**
-
-返回绿色分量为8位。
-
-### `[constexpr] quint16 QRgbaFloat::green16() const`
-
-**作用与语义：**
-
-返回绿色分量为16位整数。
-
-### `[constexpr] float QRgbaFloat::green() const`
-
-**作用与语义：**
-
-返回绿色分量。
-
-### `[constexpr] float QRgbaFloat::greenNormalized() const`
-
-**作用与语义：**
-
-返回归一化为`0.0f`到`1.0f`之间的绿色分量。
-
-### `[constexpr] bool QRgbaFloat::isOpaque() const`
-
-**作用与语义：**
-
-返回颜色是否完全不透明。
-
-### `[constexpr] bool QRgbaFloat::isTransparent() const`
-
-**作用与语义：**
-
-返回颜色是否完全透明。
-
-### `[constexpr] QRgbaFloat<T> QRgbaFloat::premultiplied() const`
-
-**作用与语义：**
-
-返回带有预乘数的颜色。
-
-### `[constexpr] quint8 QRgbaFloat::red8() const`
-
-**作用与语义：**
-
-红色分量以8位返回。
-
-### `[constexpr] quint16 QRgbaFloat::red16() const`
-
-**作用与语义：**
-
-返回红色分量为16位整数。
-
-### `[constexpr] float QRgbaFloat::red() const`
-
-**作用与语义：**
-
-返回红色分量。
-
-### `[constexpr] float QRgbaFloat::redNormalized() const`
-
-**作用与语义：**
-
-返回红色分量，归一化为`0.0f`到`1.0f`之间的值。
-
-### `void QRgbaFloat::setAlpha(float alpha)`
-
-**作用与语义：**
-
-将该颜色的α值设为`alpha`。
-
-### `void QRgbaFloat::setBlue(float blue)`
-
-**作用与语义：**
-
-将该颜色的蓝色分量设置为`blue`。
-
-### `void QRgbaFloat::setGreen(float green)`
-
-**作用与语义：**
-
-将该颜色的绿色分量设置为`green`。
-
-### `void QRgbaFloat::setRed(float red)`
-
-**作用与语义：**
-
-将该颜色的红色分量设置为`red`。
-
-### `[constexpr] uint QRgbaFloat::toArgb32() const`
-
-**作用与语义：**
-
-返回颜色的 32 位 ARGB 值。
-
-### `[constexpr] QRgbaFloat<T> QRgbaFloat::unpremultiplied() const`
-
-**作用与语义：**
-
-返回带有未预代乘的alpha的颜色。
-
-### `QRgbaFloat16`
-
-**作用与语义：**
-
-一个64位数据结构，包含四个16位浮点色彩通道：红、绿、蓝和阿尔法。
-
-### `QRgbaFloat32`
-
-**作用与语义：**
-
-一个128位数据结构，包含四个32位浮点色彩通道：红、绿、蓝和阿尔法。
-
-### `FastType`
-
-**作用与语义：**
-
-浮水的别名。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRgbaFloat` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 浮点 RGBA 与整数 RGBA 的差异
+- `QRgbaFloat16`、`QRgbaFloat32` 的精度/内存取舍
+- HDR、线性颜色、normalized 输出和通道裁剪
+- premultiplied alpha 在浮点管线中的语义
+- 8 位、16 位、32 位 ARGB 与浮点通道互转
+- 与 `QImage` 浮点格式和颜色处理流程的关系

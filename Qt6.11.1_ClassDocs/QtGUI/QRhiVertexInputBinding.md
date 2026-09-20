@@ -1,181 +1,76 @@
 # QRhiVertexInputBinding
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI [Private] · 来自 `QRhiVertexInputBinding`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiVertexInputBinding` 描述一个顶点 buffer 槽位怎样被读取：每条记录的 `stride` 是多少，是每个顶点推进一次，还是每个实例推进一次。它回答的是“buffer 这一行怎么走”，而不是“行里的字段是什么”。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+字段位置由 `QRhiVertexInputAttribute` 描述；两者组合成 `QRhiVertexInputLayout`。
 
-### 这是什么
-
-`QRhiVertexInputBinding` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)`
+- 类型：值类型，可比较、可哈希
+- 归属：RHI 私有接口，来自 `QRhiVertexInputBinding`
 
-CMake 配置：
+一个 graphics pipeline 可以有多个 binding，例如 binding 0 放 per-vertex mesh 数据，binding 1 放 per-instance transform 数据。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| 默认构造 | 创建默认 binding，通常随后设置 stride |
+| `QRhiVertexInputBinding(stride, classification, stepRate)` | 一次性描述 stride、推进方式和步率 |
+| `stride()` / `setStride()` | 每条顶点或实例记录的字节宽度 |
+| `classification()` / `setClassification()` | `PerVertex` 或 `PerInstance` |
+| `instanceStepRate()` / `setInstanceStepRate()` | 每多少个实例推进到下一条记录 |
+| `operator==` / `operator!=` / `qHash()` | 用于布局比较和 pipeline 缓存 |
+
+## 4. Classification 速查
+
+| 枚举 | 含义 | 常见用途 |
+| --- | --- | --- |
+| `PerVertex` | 每处理一个顶点读取下一条记录 | mesh 顶点、线条顶点、sprite 顶点 |
+| `PerInstance` | 每处理一个实例读取下一条记录 | 实例矩阵、实例颜色、每实例参数 |
+
+`instanceStepRate` 让 per-instance 数据不是每个实例都推进。它依赖后端能力，设计跨平台渲染器时应先检查相关 feature，或保持默认的 1。
+
+## 5. 关键用法
+
+单 buffer 顶点布局：
+
+```cpp
+QRhiVertexInputBinding vertexBinding(sizeof(Vertex));
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+mesh 数据和实例数据分离：
 
-### 工作机制
+```cpp
+inputLayout.setBindings({
+    QRhiVertexInputBinding(sizeof(Vertex), QRhiVertexInputBinding::PerVertex),
+    QRhiVertexInputBinding(sizeof(InstanceData), QRhiVertexInputBinding::PerInstance)
+});
+```
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+此时 attribute 通过自己的 `binding` 字段选择读哪个 buffer。`QRhiCommandBuffer::setVertexInput()` 也要在对应槽位绑定 buffer，否则 pipeline 布局和实际命令不匹配。
 
-### 状态、生命周期和线程
+## 6. 使用场景
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- 静态或动态 mesh 顶点读取。
+- 实例化绘制，把大量对象的 transform 放在 per-instance buffer。
+- 多流顶点数据，position/normal 与 uv/color 分 buffer 以便按需更新。
+- 粒子系统，用实例数据表达每个粒子的状态。
+- pipeline key 构建，用 binding 列表区分不同 vertex layout。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 常见坑与经验
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+- `stride` 必须覆盖该 binding 下最大 attribute offset 加格式大小，且通常应按结构体实际 `sizeof` 填。
+- binding 编号是布局内的槽位，不是 `QRhiBuffer` 对象的编号。
+- per-instance attribute 的 shader location 看起来和 per-vertex 一样，差别在 binding 的推进方式。
+- step rate 不等于 instance count；它表示输入记录推进频率。
+- 一个 binding 可以没有 attribute，但通常是配置错误，除非你在构造通用布局时临时占位。
 
-## 3. 直接使用
+## 8. 知识点覆盖
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum Classification { PerVertex, PerInstance }`
-
-### 公有函数
-
-- `QRhiVertexInputBinding()`
-- `QRhiVertexInputBinding(quint32 stride, QRhiVertexInputBinding::Classification cls = PerVertex, quint32 stepRate = 1)`
-- `QRhiVertexInputBinding::Classification classification() const`
-- `quint32 instanceStepRate() const`
-- `void setClassification(QRhiVertexInputBinding::Classification c)`
-- `void setInstanceStepRate(quint32 rate)`
-- `void setStride(quint32 s)`
-- `quint32 stride() const`
-
-### 相关非成员函数
-
-- `size_t qHash(const QRhiVertexInputBinding &key, size_t seed = 0)`
-- `bool operator!=(const QRhiVertexInputBinding &a, const QRhiVertexInputBinding &b)`
-- `bool operator==(const QRhiVertexInputBinding &a, const QRhiVertexInputBinding &b)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QRhiVertexInputBinding::Classification`
-
-**作用与语义：**
-
-描述输入数据分类。
-- `QRhiVertexInputBinding::PerVertex`：`0`;数据是每个顶点的
-- `QRhiVertexInputBinding::PerInstance`：`1`;数据是每个实例的数据
-
-### `[constexpr noexcept] QRhiVertexInputBinding::QRhiVertexInputBinding()`
-
-**作用与语义：**
-
-构建默认的顶点输入绑定描述。
-
-### `QRhiVertexInputBinding::QRhiVertexInputBinding(quint32 stride, QRhiVertexInputBinding::Classification cls = PerVertex, quint32 stepRate = 1)`
-
-**作用与语义：**
-
-构造一个顶点输入绑定描述，包含指定的`stride`、分类`cls`和实例步率`stepRate`。
-注意：除1 `stepRate`，只有在报告支持`QRhi::CustomInstanceStepRate`时才支持。
-
-### `QRhiVertexInputBinding::Classification QRhiVertexInputBinding::classification() const`
-
-**作用与语义：**
-
-返回输入数据分类。
-
-### `quint32 QRhiVertexInputBinding::instanceStepRate() const`
-
-**作用与语义：**
-
-返回实例步率。
-
-### `void QRhiVertexInputBinding::setClassification(QRhiVertexInputBinding::Classification c)`
-
-**作用与语义：**
-
-设置输入数据分类`c`。默认情况下，该分类设置为`PerVertex`。
-
-### `void QRhiVertexInputBinding::setInstanceStepRate(quint32 rate)`
-
-**作用与语义：**
-
-设置实例步`rate`。默认情况下，这个步骤设置为1。
-
-### `void QRhiVertexInputBinding::setStride(quint32 s)`
-
-**作用与语义：**
-
-为大步调`s`。
-
-### `quint32 QRhiVertexInputBinding::stride() const`
-
-**作用与语义：**
-
-返回步进（字节单位）。
-
-### `[noexcept] size_t qHash(const QRhiVertexInputBinding &key, size_t seed = 0)`
-
-**作用与语义：**
-
-返回`key`的哈希值，使用`seed`来做种。
-
-### `[noexcept] bool operator!=(const QRhiVertexInputBinding &a, const QRhiVertexInputBinding &b)`
-
-**作用与语义：**
-
-如果两个 `QRhiVertexInputBinding` 对象 `a` 和 `b` 中的值相等，则返回 `false`；否则返回 `true`。
-
-### `[noexcept] bool operator==(const QRhiVertexInputBinding &a, const QRhiVertexInputBinding &b)`
-
-**作用与语义：**
-
-如果两个`QRhiVertexInputBinding`对象`a`和`b`的值相等，返回`true`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiVertexInputBinding` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+本页覆盖：vertex buffer slot、stride、per-vertex/per-instance 分类、instance step rate、多流顶点布局、attribute 与 buffer 绑定关系。

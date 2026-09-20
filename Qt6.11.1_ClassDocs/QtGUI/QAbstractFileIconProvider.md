@@ -1,176 +1,83 @@
 # QAbstractFileIconProvider
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAbstractFileIconProvider`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是一个抽象接口或框架基类，重点是理解它定义的协议，并通过具体子类、工厂或回调来使用。
+`QAbstractFileIconProvider` 定义“根据文件或特殊位置提供图标和类型文字”的协议。文件浏览器模型会把 `QFileInfo` 交给它，由实现决定显示文件夹、磁盘、网络位置或某个文件的图标；Qt 自带的实用实现是 `QFileIconProvider`。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+这个类看似只是图标查询，实际会触及文件系统和桌面主题。尤其是网络共享、U 盘与自定义文件夹图标，查询成本可能远高于一次普通 `QIcon` 查找。
 
-### 这是什么
-
-`QAbstractFileIconProvider` 是 Qt GUI 中的抽象协议类型，通常通过具体子类、模型、插件或工厂来使用。
-
-**内部模型：** 抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
-
-**适用场景：** 当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。
-
-**典型调用链：** 选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-
-**先记住的坑：** 不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAbstractFileIconProvider>`
-- 继承自：未在类页中列出
-- 直接派生类：QFileIconProvider
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 来源类：抽象基类；通常直接使用 `QFileIconProvider`，仅在文件浏览器需要替换图标策略时派生。
+- 核心输入：`QFileInfo`，它描述路径、文件类型、权限和文件系统状态。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途 |
+|---|---|
+| `icon(const QFileInfo &info)` | 为具体文件或目录返回图标。 |
+| `icon(IconType type)` | 为计算机、桌面、磁盘、文件夹等通用位置返回图标。 |
+| `type(const QFileInfo &info)` | 返回面向用户显示的文件类型字符串。 |
+| `options()` / `setOptions()` | 读取或设置图标查询策略。 |
+| `DontUseCustomDirectoryIcons` | 忽略目录自定义图标，换取稳定性能。 |
+| `Computer` / `Desktop` / `Trashcan` / `Network` | 系统位置图标类别。 |
+| `Drive` / `Folder` / `File` | 通用驱动器、目录与文件图标类别。 |
+
+## 4. 关键用法
+
+### 为自定义文件列表提供图标
+
+```cpp
+#include <QFileIconProvider>
+#include <QFileInfo>
+
+QFileIconProvider provider;
+const QFileInfo info(u"/tmp/report.pdf"_s);
+const QIcon icon = provider.icon(info);
+const QString label = provider.type(info);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+文件路径不存在时，`QFileInfo` 仍是可构造的对象，但图标和类型可能退化为通用结果。界面层不应以“图标为空”判断路径有效性，路径检查应使用 `QFileInfo::exists()` 等文件信息 API。
 
-### 工作机制
+### 为远程或大量目录扫描优化
 
-抽象类的核心不是直接创建对象，而是理解它规定的虚函数、状态和通知协议。阅读时先列出必须实现的纯虚函数，再看框架何时调用它们。
+```cpp
+QFileIconProvider provider;
+provider.setOptions(
+    QAbstractFileIconProvider::DontUseCustomDirectoryIcons);
+```
 
-### 状态、生命周期和线程
+此选项的语义不是换一个主题，而是禁止探测目录自定义图标。对于网络挂载、可移动介质或几千个目录的树视图，它可以避免 UI 因文件系统元数据查询而卡顿；代价是显示的目录图标不再体现用户的个性化设置。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 自定义扩展名图标策略
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+派生时可重写 `icon(info)`：先根据业务扩展名、工作区状态或版本控制状态返回自定义 `QIcon`，其余路径交给基类/默认提供者。不要在该函数中同步读取大文件、请求网络服务或启动外部进程，因为模型通常会频繁调用它。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 5. 使用场景
 
-## 3. 直接使用
+| 场景 | 建议 |
+|---|---|
+| 文件选择器、资源管理器、项目树 | 使用 `QFileIconProvider` 或将其交给文件系统模型。 |
+| 特殊文件类型的品牌图标 | 继承后按 `QFileInfo` 规则覆盖 `icon(info)`。 |
+| 远程目录和海量目录 | 启用 `DontUseCustomDirectoryIcons` 并缓存可复用结果。 |
+| 只需固定系统图标 | 调用 `icon(Folder)`、`icon(Drive)` 等，不必伪造路径。 |
+| 需要 MIME 类型或真实内容识别 | 图标提供者只负责表现；另用 `QMimeDatabase` 或业务解析。 |
 
-当 Qt 的现成子类不能满足需求，需要自定义数据源、渲染器、处理器或插件时继承它。 使用时通常按这个过程组织：选择合适的具体抽象基类 -> 实现纯虚函数和必要通知 -> 交给 Qt 框架注册/绑定 -> 遵守生命周期和线程约束。
-## 4. API 速查
+## 6. 常见坑与经验
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+- `type(info)` 是用于界面显示的本地化文本，不是稳定的机器可读文件类别；不要据此写业务分支。
+- 图标会受操作系统、当前主题和文件管理器策略影响，不能把像素外观当作跨平台约定。
+- 缓存键至少应考虑文件/目录属性和主题变化；单按扩展名缓存会误伤可执行文件、符号链接或特殊目录。
+- 默认实现涉及桌面平台资源，应在 GUI 线程为界面生成和使用 `QIcon`。
 
-### 公有类型
+## 7. 知识点覆盖
 
-- `enum IconType { Computer, Desktop, Trashcan, Network, Drive, …, File }`
-- `enum Option { DontUseCustomDirectoryIcons }`
-- `flags Options`
-
-### 公有函数
-
-- `QAbstractFileIconProvider()`
-- `virtual ~QAbstractFileIconProvider()`
-- `virtual QIcon icon(QAbstractFileIconProvider::IconType type) const`
-- `virtual QIcon icon(const QFileInfo &info) const`
-- `virtual QAbstractFileIconProvider::Options options() const`
-- `virtual void setOptions(QAbstractFileIconProvider::Options options)`
-- `virtual QString type(const QFileInfo &info) const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QAbstractFileIconProvider::Optionflags QAbstractFileIconProvider::Options`
-
-**作用与语义：**
-
-- `QAbstractFileIconProvider::DontUseCustomDirectoryIcons`：`0x00000001`;始终使用默认目录图标。部分平台允许用户设置不同的图标。自定义图标查找会在网络或可移动驱动器上造成显著性能影响。
-Options 类型是 QFlags 的 typedef<Option>。它存储 Option 值的 OR 组合。
-
-### `QAbstractFileIconProvider::QAbstractFileIconProvider()`
-
-**作用与语义：**
-
-构建文件图标提供者。
-
-### `[virtual noexcept] QAbstractFileIconProvider::~QAbstractFileIconProvider()`
-
-**作用与语义：**
-
-会摧毁文件图标提供者。
-
-### `[virtual] QIcon QAbstractFileIconProvider::icon(QAbstractFileIconProvider::IconType type) const`
-
-**作用与语义：**
-
-返回给定`type`的图标集，使用当前图标主题。
-
-### `[virtual] QIcon QAbstractFileIconProvider::icon(const QFileInfo &info) const`
-
-**作用与语义：**
-
-返回`info`描述的文件图标，使用当前图标主题。
-
-### `[virtual] QAbstractFileIconProvider::Options QAbstractFileIconProvider::options() const`
-
-**作用与语义：**
-
-返回所有影响图标提供者的选项。默认情况下，所有选项均被禁用。
-
-### `[virtual] void QAbstractFileIconProvider::setOptions(QAbstractFileIconProvider::Options options)`
-
-**作用与语义：**
-
-影响图标提供者的集合`options`。
-
-### `[virtual] QString QAbstractFileIconProvider::type(const QFileInfo &info) const`
-
-**作用与语义：**
-
-返回`info`描述的文件类型。
-
-### `enum IconType { Computer, Desktop, Trashcan, Network, Drive, …, File }`
-
-**作用与语义：**
-
-- `QAbstractFileIconProvider::Computer`：`0`;用于整个计算设备的图标
-- `QAbstractFileIconProvider::Desktop`：`1`;用户特殊“桌面”目录的图标
-- `QAbstractFileIconProvider::Trashcan`：`2`;用户在桌面文件管理器中“垃圾桶”位置的图标
-- `QAbstractFileIconProvider::Network`：`3`;“网络服务器”图标位于桌面文件管理器中，网络内的工作组
-- `QAbstractFileIconProvider::Drive`：`4`;用于磁盘驱动器的图标
-- `QAbstractFileIconProvider::Folder`：`5`;用于表示本地文件系统目录的标准文件夹图标
-- `QAbstractFileIconProvider::File`：`6`;用于通用文本文件类型的图标
-
-### `enum Option { DontUseCustomDirectoryIcons }`
-
-**作用与语义：**
-
-- `QAbstractFileIconProvider::DontUseCustomDirectoryIcons`：`0x00000001`;始终使用默认目录图标。部分平台允许用户设置不同的图标。自定义图标查找会在网络或可移动驱动器上造成显著性能影响。
-Options 类型是 QFlags 的 typedef<Option>。它存储 Option 值的 OR 组合。
-
-### `flags Options`
-
-**作用与语义：**
-
-- `QAbstractFileIconProvider::DontUseCustomDirectoryIcons`：`0x00000001`;始终使用默认目录图标。部分平台允许用户设置不同的图标。自定义图标查找会在网络或可移动驱动器上造成显著性能影响。
-Options 类型是 QFlags 的 typedef<Option>。它存储 Option 值的 OR 组合。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要绕过 begin/end 或状态通知；纯虚函数返回值和调用线程要按文档约定；抽象对象通常不能直接实例化。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAbstractFileIconProvider` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- `QFileInfo` 驱动的文件表现层
+- 抽象图标提供者与 `QFileIconProvider`
+- 系统图标类别、主题与本地化类型名称
+- 文件系统 I/O 对界面性能的影响
+- 自定义策略与缓存边界

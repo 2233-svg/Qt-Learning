@@ -1,204 +1,112 @@
 # QPointerEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPointerEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPointerEvent` 是 Qt 的值类型，围绕“Pointer事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QPointerEvent` 是 Qt 6 统一指针输入模型的核心类。这里的“pointer”不是 C++ 指针，而是“能指向屏幕上某个位置的输入设备”：鼠标、触摸点、触摸板、手写笔、橡皮擦端等都属于这个范围。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它解决的问题是：过去鼠标事件、触摸事件、平板笔事件各有一套坐标和状态字段，复杂应用很难用一套逻辑处理。`QPointerEvent` 把这些事件抽象成“一个设备产生了一个或多个 `QEventPoint`”，再由 `QMouseEvent`、`QTouchEvent`、`QTabletEvent` 等子类提供更具体的语义。
 
-### 这是什么
+## 2. 类说明
 
-`QPointerEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QPointerEvent` 继承自 `QInputEvent`，直接派生类包括 `QSinglePointEvent` 和 `QTouchEvent`。它主要暴露触点列表、设备信息、指针类型以及事件点的 grabber 关系。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+对 Widgets 应用来说，你多数时候会直接处理 `QMouseEvent`、`QWheelEvent` 或 `QTouchEvent`；但一旦要做跨设备绘制、手势识别、多触点编辑、Qt Quick 与 Widgets 混合输入分析，`QPointerEvent` 的模型就非常重要。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+最值得建立的概念是：一个 pointer 事件可以包含多个点，每个点可以有自己的位置、状态、接受情况和抓取对象。不要把它想成“只有一个坐标的鼠标事件”。
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+## 3. API 速查
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+| API | 用途速查 |
+| --- | --- |
+| `points() const` | 取得本次事件包含的所有 `QEventPoint`。 |
+| `point(qsizetype i)` | 按索引取得可修改的事件点引用，适合底层输入处理器使用。 |
+| `pointById(int id)` | 按触点 ID 查找事件点，常用于多触点跟踪。 |
+| `pointCount() const` | 返回事件点数量，鼠标通常是 1，触摸可能大于 1。 |
+| `pointingDevice() const` | 取得更具体的 `QPointingDevice`，比 `QInputDevice` 更适合指针设备分析。 |
+| `pointerType() const` | 判断指针形态，例如普通指针、手写笔、橡皮擦等。 |
+| `allPointsAccepted() const` | 判断所有事件点是否都已被接受。 |
+| `setAccepted(bool)` | 设置整个事件的接受状态，并影响点级接受逻辑。 |
+| `allPointsGrabbed() const` | 判断所有点是否都已被独占或被动抓取。 |
+| `exclusiveGrabber(point) const` | 查询某个点当前的独占抓取对象。 |
+| `setExclusiveGrabber(point, object)` | 为某个点设置后续事件的独占接收者。 |
+| `passiveGrabbers(point) const` | 查询某个点的被动抓取对象列表。 |
+| `addPassiveGrabber(point, object)` | 为某个点添加被动抓取对象。 |
+| `removePassiveGrabber(point, object)` | 移除某个点的被动抓取对象。 |
+| `clearPassiveGrabbers(point)` | 清空某个点的被动抓取对象。 |
 
-## 2. 依赖与对象关系
+## 4. 关键用法
 
-- 头文件：`#include <QPointerEvent>`
-- 继承自：QInputEvent
-- 直接派生类：QSinglePointEvent、QTouchEvent
+### 用 `points()` 建立多触点逻辑
 
-CMake 配置：
+触摸事件最自然的处理方式不是只读第一个点，而是根据点数量决定交互模式。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+bool Canvas::handlePointerEvent(QPointerEvent *event)
+{
+    if (event->pointCount() == 1) {
+        const QEventPoint &p = event->points().first();
+        updateStroke(p.position(), p.pressure());
+        event->accept();
+        return true;
+    }
+
+    if (event->pointCount() == 2) {
+        updatePinchGesture(event->points());
+        event->accept();
+        return true;
+    }
+
+    return false;
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+鼠标事件也可以进入这个模型，只是点数量通常为 1。这个统一性是 Qt 6 输入模型相比 Qt 5 更值得利用的地方。
 
-### 工作机制
+### 用 `pointingDevice()` 和 `pointerType()` 区分笔、鼠标和橡皮擦
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+绘图、批注、白板应用里，手写笔的笔尖和橡皮擦端往往需要进入完全不同的工具。
 
-### 状态、生命周期和线程
+```cpp
+void PaintTool::handlePointer(QPointerEvent *event)
+{
+    if (event->pointerType() == QPointingDevice::PointerType::Eraser) {
+        eraseAt(event->points().first().position());
+        event->accept();
+        return;
+    }
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+    drawWithDevice(event->pointingDevice(), event->points().first());
+}
+```
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+如果只按鼠标按钮判断，平板笔的一些能力会被浪费；如果只按设备类型判断，又可能漏掉同一设备上的不同端。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+### 理解 grabber：谁能继续收到这个点的后续事件
 
-## 3. 直接使用
+`exclusiveGrabber()` 和 passive grabber 主要服务 Qt 的输入分发机制，尤其是 Qt Quick。它们描述“某个事件点后续更新应该继续送给谁”。独占抓取者像是拖拽过程中锁定的目标；被动抓取者则像旁听者，可以继续收到相关更新但不阻止正常分发。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+Widgets 业务代码一般不需要主动设置这些 grabber。除非你在写输入框架、嵌入 Qt Quick、或实现非常底层的触点路由，否则把它们当成诊断和高级机制理解即可。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 5. 使用场景
 
-### 公有函数
+`QPointerEvent` 适合做跨设备交互抽象：画布、地图、CAD 视图、时间轴编辑器、音乐控制面板、触控大屏应用，都可以把鼠标、触摸和笔输入汇总到同一套处理逻辑里。
 
-- `bool addPassiveGrabber(const QEventPoint &point, QObject *grabber)`
-- `bool allPointsAccepted() const`
-- `bool allPointsGrabbed() const`
-- `void clearPassiveGrabbers(const QEventPoint &point)`
-- `QObject * exclusiveGrabber(const QEventPoint &point) const`
-- `QList<QPointer<QObject>> passiveGrabbers(const QEventPoint &point) const`
-- `QEventPoint & point(qsizetype i)`
-- `QEventPoint * pointById(int id)`
-- `qsizetype pointCount() const`
-- `QPointingDevice::PointerType pointerType() const`
-- `const QPointingDevice * pointingDevice() const`
-- `const QList<QEventPoint> & points() const`
-- `bool removePassiveGrabber(const QEventPoint &point, QObject *grabber)`
-- `void setExclusiveGrabber(const QEventPoint &point, QObject *exclusiveGrabber)`
+它也适合做多点手势的前置分析。比如一个控件既支持单指绘制，又支持双指缩放旋转，就可以先读取 `pointCount()` 和每个 `QEventPoint` 的状态，再决定交给绘制工具还是手势工具。
 
-### 重实现的公有函数
+在调试输入问题时，`QPointerEvent` 能帮助你确认事件到底来自哪个 `QPointingDevice`、包含几个点、是不是已经被某个对象抓取。这比只看 `event->type()` 更接近真实原因。
 
-- `virtual void setAccepted(bool accepted) override`
+## 6. 常见坑与经验
 
-## 5. API 逐个说明
+不要假设 pointer 事件只有一个点。`QSinglePointEvent` 的子类可以这样理解，但 `QTouchEvent` 明确可能包含多个点。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要把事件级 `accepted` 和点级接受状态混为一谈。多触点事件里，一个点被某个对象处理，另一个点可能仍需要继续分发；这也是 `allPointsAccepted()` 存在的意义。
 
-### `bool QPointerEvent::addPassiveGrabber(const QEventPoint &point, QObject *grabber)`
+不要随意调用 grabber 修改函数。它们看起来像普通公开 API，但实际更偏向 Qt 内部和高级输入分发场景。常规控件只要正确 `accept()` / `ignore()` 即可。
 
-**作用与语义：**
+不要长期保存 `QEventPoint &` 或 `QEventPoint *`。事件对象生命周期结束后，这些引用和指针也就失效了；需要记录轨迹时，复制坐标、压力、ID 和状态等数据。
 
-通知交付逻辑，给定`grabber`将接收所有未来的更新事件以及包含该`point`的发布事件，无论这些事件可能在其他地方传递。
-它只供 Qt 快速输入处理器使用。
-如果`grabber`已经添加，退货`false`，否则`true`。
+## 7. 知识点覆盖
 
-### `bool QPointerEvent::allPointsAccepted() const`
-
-**作用与语义：**
-
-如果isPointAccepted()对`points()`中的每个点都`true`，则返回`true`;否则`false`。
-
-### `bool QPointerEvent::allPointsGrabbed() const`
-
-**作用与语义：**
-
-如果`points()`中的每个点都有一个`exclusiveGrabber()`或一个或多个`passiveGrabbers()`，则返回`true`。
-
-### `void QPointerEvent::clearPassiveGrabbers(const QEventPoint &point)`
-
-**作用与语义：**
-
-移除给定`point`中所有被动抓取者。
-它只供 Qt 快速输入处理器使用。
-
-### `QObject *QPointerEvent::exclusiveGrabber(const QEventPoint &point) const`
-
-**作用与语义：**
-
-返回已设置为接收所有未来更新事件和包含该`point`的发布事件的对象。
-目前主要用于Qt Quick。
-
-### `QList<QPointer<QObject>> QPointerEvent::passiveGrabbers(const QEventPoint &point) const`
-
-**作用与语义：**
-
-返回被请求接收所有未来更新事件的对象列表，以及包含该更新`point`的发布事件。
-它只供 Qt 快速输入处理器使用。
-
-### `QEventPoint &QPointerEvent::point(qsizetype i)`
-
-**作用与语义：**
-
-返回索引`i`点的`QEventPoint`引用。
-
-### `QEventPoint *QPointerEvent::pointById(int id)`
-
-**作用与语义：**
-
-返回`id`与给定`id`匹配的点，若未找到该点则返回`nullptr`。
-
-### `qsizetype QPointerEvent::pointCount() const`
-
-**作用与语义：**
-
-返回该指针事件中的得分。
-
-### `QPointingDevice::PointerType QPointerEvent::pointerType() const`
-
-**作用与语义：**
-
-返回产生事件的点类型。
-
-### `const QPointingDevice *QPointerEvent::pointingDevice() const`
-
-**作用与语义：**
-
-返回该事件起源的源设备。
-这和`QInputEvent::device()`一样，但为了方便被定型了。
-
-### `const QList<QEventPoint> &QPointerEvent::points() const`
-
-**作用与语义：**
-
-返回该指针事件中的点列表。
-
-### `bool QPointerEvent::removePassiveGrabber(const QEventPoint &point, QObject *grabber)`
-
-**作用与语义：**
-
-如果被动`grabber`之前被添加，则从给定`point`中移除。如果之前是被动抓取者，则返回`true`;如果不是，`false`返回。
-它只供 Qt 快速输入处理器使用。
-
-### `void QPointerEvent::setExclusiveGrabber(const QEventPoint &point, QObject *exclusiveGrabber)`
-
-**作用与语义：**
-
-通知交付逻辑，给定`exclusiveGrabber`将接收所有未来的更新事件和包含该`point`的发布事件，且可以跳过对其他项目的交付。
-目前主要用于Qt Quick。
-
-### `virtual void setAccepted(bool accepted) override`
-
-**作用与语义：**
-
-设置整个指针事件的接受状态。传入 `true` 表示接收者已经处理该事件，并会隐式接受事件携带的所有触点；传入 `false` 允许未处理事件继续传播。若只想接受某个触点，应设置对应 `QEventPoint` 的接受状态。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPointerEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QPointerEvent` 应覆盖 Qt 6 指针输入统一模型、`QEventPoint`、多触点状态、输入设备能力、指针类型、事件接受策略、事件抓取机制、Qt Quick 输入路由、Widgets 触摸支持以及鼠标事件与触摸事件的关系。它是理解现代 Qt 输入系统的关键节点。

@@ -1,116 +1,87 @@
 # QInputMethodQueryEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QInputMethodQueryEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QInputMethodQueryEvent` 是 Qt 的值类型，围绕“输入Method查询事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QInputMethodQueryEvent` 是输入法向当前焦点编辑器发出的“信息请求单”。输入法要决定候选窗放在哪里、如何做上下文预测、是否有选中内容、当前输入方向是什么，就必须向控件查询光标矩形、周围文本、选区、字体等信息。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它和 `QInputMethodEvent` 构成双向协议：前者是输入法问编辑器“你现在是什么状态”，后者是输入法告诉编辑器“用户确认了什么、预编辑文本是什么”。
 
-### 这是什么
+## 2. 类说明
 
-`QInputMethodQueryEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QInputMethodQueryEvent` 继承自 `QEvent`，通常由 Qt 在 `QWidget::inputMethodQuery()` 或 `event()` 流程中处理。事件构造时带有一组 `Qt::InputMethodQuery` 位标志，控件只需为请求的项目填写值。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QInputMethodQueryEvent`：具体查询项由 `Qt::InputMethodQuery` 枚举定义，控件需要根据自己的文本模型提供相应 `QVariant`。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QInputMethodQueryEvent(queries)` | 构造携带多个输入法查询请求的事件。 |
+| `queries() const` | 返回输入法实际请求的查询位标志集合。 |
+| `setValue(query, value)` | 为某一查询项写入答案。 |
+| `value(query) const` | 读取已填写的查询结果，常用于测试、代理或调试。 |
+| `type()` | 来自 `QEvent`，通常为 `QEvent::InputMethodQuery`。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+常见查询项包括 `Qt::ImCursorRectangle`、`Qt::ImAnchorRectangle`、`Qt::ImSurroundingText`、`Qt::ImCurrentSelection`、`Qt::ImCursorPosition`、`Qt::ImAnchorPosition`、`Qt::ImInputItemClipRectangle`、`Qt::ImHints` 和 `Qt::ImPreferredLanguage`。
 
-## 2. 依赖与对象关系
+## 4. 关键用法
 
-- 头文件：`#include <QInputMethodQueryEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+### 只回答输入法真正请求的内容
 
-CMake 配置：
+```cpp
+bool CustomEditor::event(QEvent *event)
+{
+    if (event->type() == QEvent::InputMethodQuery) {
+        auto *queryEvent = static_cast<QInputMethodQueryEvent *>(event);
+        const auto queries = queryEvent->queries();
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+        if (queries.testFlag(Qt::ImCursorRectangle))
+            queryEvent->setValue(Qt::ImCursorRectangle, cursorRectInWindow());
+        if (queries.testFlag(Qt::ImSurroundingText))
+            queryEvent->setValue(Qt::ImSurroundingText, surroundingText());
+        if (queries.testFlag(Qt::ImCursorPosition))
+            queryEvent->setValue(Qt::ImCursorPosition, cursorPosition());
+        if (queries.testFlag(Qt::ImCurrentSelection))
+            queryEvent->setValue(Qt::ImCurrentSelection, selectedText());
+
+        queryEvent->accept();
+        return true;
+    }
+
+    return QWidget::event(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+先检查 `queries()` 能避免为了不需要的信息做昂贵文本提取。大型文档编辑器尤其应该这样写。
 
-### 工作机制
+### 候选窗位置取决于正确的光标矩形
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+`ImCursorRectangle` 的坐标必须符合输入法预期的窗口坐标体系。自定义画布或有滚动/缩放变换的编辑器，必须把文档光标位置正确映射出来，否则候选窗会漂移到错误位置。
 
-### 状态、生命周期和线程
+### 周围文本需要控制范围
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+`ImSurroundingText` 让输入法理解上下文，但没必要每次传整篇文档。通常返回光标附近合理窗口范围，并确保 cursor/anchor position 与返回字符串坐标一致。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 5. 使用场景
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+`QInputMethodQueryEvent` 用于自定义文本编辑器、富文本编辑器、代码编辑器、终端、表格单元格编辑器、游戏内聊天框和任何自行维护文字与光标的控件。
 
-## 3. 直接使用
+使用 Qt 标准编辑控件时，框架已处理这些查询。只有当你自己实现文本模型或自绘文本时，才需要直接回答。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+## 6. 常见坑与经验
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+不要只实现 `QInputMethodEvent` 而忽略 query。没有光标矩形和周围文本，输入法候选窗与预测功能常常异常。
 
-### 公有函数
+不要为未请求的 query 强行计算全部数据。输入法查询可能高频发生，复杂文本提取应按需执行。
 
-- `QInputMethodQueryEvent(Qt::InputMethodQueries queries)`
-- `Qt::InputMethodQueries queries() const`
-- `void setValue(Qt::InputMethodQuery query, const QVariant &value)`
-- `QVariant value(Qt::InputMethodQuery query) const`
+不要返回错误类型。每个 `Qt::InputMethodQuery` 对应期望的 `QVariant` 载荷，例如矩形、字符串、整数、布局方向或 hints。
 
-## 5. API 逐个说明
+不要让 surrounding text 中的光标位置和实际 `ImCursorPosition` 不一致。输入法会据此做替换与候选推断。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要泄露敏感输入内容。密码框和隐私字段应通过 input method hints 与查询策略限制周围文本暴露。
 
-### `[explicit] QInputMethodQueryEvent::QInputMethodQueryEvent(Qt::InputMethodQueries queries)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-构造由`queries`给定的属性的查询事件。
-
-### `Qt::InputMethodQueries QInputMethodQueryEvent::queries() const`
-
-**作用与语义：**
-
-返回事件查询的属性。
-
-### `void QInputMethodQueryEvent::setValue(Qt::InputMethodQuery query, const QVariant &value)`
-
-**作用与语义：**
-
-将属性`query`设置为`value`。
-
-### `QVariant QInputMethodQueryEvent::value(Qt::InputMethodQuery query) const`
-
-**作用与语义：**
-
-回报物业价值`query`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QInputMethodQueryEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QInputMethodQueryEvent` 应覆盖输入法双向协议、`Qt::InputMethodQueries`、光标矩形、锚点矩形、周围文本、选择文本、光标位置、滚动/缩放坐标映射、输入法性能和隐私字段。

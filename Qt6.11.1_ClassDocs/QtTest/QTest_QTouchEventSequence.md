@@ -1,140 +1,70 @@
 # QTest::QTouchEventSequence
-
-> Qt 6.11.1 · Qt Test
+> Qt 6.11.1 · Qt Test · 来自 `QTest::QTouchEventSequence`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 Qt Test 中围绕“Touch事件Sequence”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
+`QTouchEventSequence` 用来在测试里构造一帧或一组触摸点状态：某根手指按下、移动、保持不动、释放，然后 `commit()` 发出去。它面向 `QWindow`/窗口级触摸输入，是测试手势、触控控件和多点触摸逻辑的基础工具。
 
-**模块背景：** Qt Test 提供单元测试、数据驱动测试、基准测试和 GUI 测试支持。
+## 2. 类说明
 
-### 这是什么
+保留类说明：这些 API 来自 `QTest::QTouchEventSequence`，属于 Qt Test 模块，用于模拟触摸事件序列。
 
-`QTest::QTouchEventSequence` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+它使用链式 API。每个 `touchId` 表示一根手指；同一帧中没动但仍按住的手指，需要用 `stationary()` 明确保留。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 3. API 速查
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+| API | 用来做什么 |
+| --- | --- |
+| `press(touchId, pt, window)` | 添加某触点按下。 |
+| `move(touchId, pt, window)` | 添加某触点移动。 |
+| `stationary(touchId)` | 标记某触点保持不动但仍参与当前事件。 |
+| `release(touchId, pt, window)` | 添加某触点释放。 |
+| `commit(processEvents = true)` | 提交当前序列；可选择是否处理事件循环。 |
+| `~QTouchEventSequence()` | 销毁序列对象。 |
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+```cpp
+QTest::touchEvent(window, device)
+    .press(0, QPoint(20, 20), window)
+    .commit();
 
-## 2. 依赖与对象关系
+QTest::touchEvent(window, device)
+    .move(0, QPoint(80, 20), window)
+    .commit();
 
-- 头文件：`#include <QTouchEventSequence>`
-- 继承自：未在类页中列出
-- 直接派生类：QTest::QTouchEventWidgetSequence
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Test)
-target_link_libraries(mytarget PRIVATE Qt6::Test)
+QTest::touchEvent(window, device)
+    .release(0, QPoint(80, 20), window)
+    .commit();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+多点缩放时，两根手指要在每帧都表达状态：
 
-### 工作机制
+```cpp
+seq.move(0, p0).move(1, p1).commit();
+seq.stationary(0).move(1, p2).commit();
+```
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+| 场景 | 检查重点 |
+| --- | --- |
+| 自定义触控控件 | press/move/release 后状态是否正确。 |
+| 多点手势 | 每个 touchId 的生命周期和坐标变化。 |
+| 触摸取消/边界移动 | 移出窗口、释放顺序、stationary 点处理。 |
+| Window 级输入 | 适合 QWindow 或 Quick 底层窗口相关测试。 |
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 6. 常见坑与经验
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+触点 ID 要稳定：同一根手指从 press 到 release 都用同一个 id。复用已释放 id 可以，但不要在同一活动手势里混乱切换。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+多点触摸中，没移动的手指也常常要 `stationary()`。否则被测对象可能以为那根手指消失或没有参与当前帧，手势识别结果会偏。
 
-## 3. 直接使用
+`commit(true)` 会处理事件，方便多数同步测试；如果你要精细控制事件循环，才考虑传 `false` 并自己推进。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `virtual ~QTouchEventSequence()`
-- `virtual bool commit(bool processEvents = true)`
-- `QTest::QTouchEventSequence & move(int touchId, const QPoint &pt, QWindow *window = nullptr)`
-- `QTest::QTouchEventSequence & press(int touchId, const QPoint &pt, QWindow *window = nullptr)`
-- `QTest::QTouchEventSequence & release(int touchId, const QPoint &pt, QWindow *window = nullptr)`
-- `virtual QTest::QTouchEventSequence & stationary(int touchId)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[virtual noexcept] QTouchEventSequence::~QTouchEventSequence()`
-
-**作用与语义：**
-
-提交这组触碰事件，除非自动提交被禁用，并释放分配的资源。
-
-### `[virtual] bool QTouchEventSequence::commit(bool processEvents = true)`
-
-**作用与语义：**
-
-将该触碰事件提交到事件系统，并在交付后返回是否被接受。
-通常不需要调用该函数，因为它是从结构函数中调用的。然而，如果禁用了自动提交，事件只有在显式调用该函数时才会被提交。显式调用的另一个原因是检查返回值。
-在特殊情况下，测试可能希望禁用事件处理。这可以通过将 `processEvents` 设置为 false 来实现。这实际上只是排队事件：事件循环不会被强制处理。
-是否在交付后事件被接受，返回。
-
-### `QTest::QTouchEventSequence &QTouchEventSequence::move(int touchId, const QPoint &pt, QWindow *window = nullptr)`
-
-**作用与语义：**
-
-在该序列中添加`pt`位置触点`touchId`的移动事件，并返回该`QTouchEventSequence`的引用。
-位置`pt`相对于`window`解释为相对于。如果`window`是空指针，那么`pt`相对于实例化该`QTouchEventSequence`时提供的窗口。
-模拟用户移动了`touchId`识别的手指。
-
-### `QTest::QTouchEventSequence &QTouchEventSequence::press(int touchId, const QPoint &pt, QWindow *window = nullptr)`
-
-**作用与语义：**
-
-在该序列中添加一个`pt`位置触点`touchId`的按键事件，并返回该`QTouchEventSequence`的引用。
-位置`pt`相对于`window`解释为相对于。如果`window`是空指针，那么`pt`相对于实例化该`QTouchEventSequence`时所提供的窗口。
-模拟用户用`touchId`识别的手指按下触摸屏或触摸板。
-
-### `QTest::QTouchEventSequence &QTouchEventSequence::release(int touchId, const QPoint &pt, QWindow *window = nullptr)`
-
-**作用与语义：**
-
-在该序列中添加`pt`位置触点`touchId`的释放事件，并返回该`QTouchEventSequence`的引用。
-位置`pt`相对于`window`被解释为相对于。如果`window`是空指针，那么`pt`相对于实例化该`QTouchEventSequence`时所提供的窗口。
-模拟用户抬起`touchId`识别的手指。
-
-### `[virtual] QTest::QTouchEventSequence &QTouchEventSequence::stationary(int touchId)`
-
-**作用与语义：**
-
-为该序列添加一个平稳事件作为触点`touchId`，并返回该`QTouchEventSequence`的引用。
-模拟用户没有移动`touchId`识别的手指。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QTest::QTouchEventSequence` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 触点 ID、触摸生命周期和多点状态帧。
+- press/move/stationary/release 的组合。
+- `QWindow` 目标和事件循环提交。
+- 手势测试的稳定性和坐标设计。

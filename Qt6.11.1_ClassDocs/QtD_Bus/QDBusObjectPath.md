@@ -1,154 +1,47 @@
 # QDBusObjectPath
+> Qt 6.11.1 · Qt D-Bus · 来自 `QDBusObjectPath`
 
-> Qt 6.11.1 · Qt D-Bus
+## 作用定位
 
-## 1. 先建立直觉
+`QDBusObjectPath` 是 D-Bus 对象路径的类型包装。对象路径不是普通字符串；它是远端对象树中的地址，例如 `/org/freedesktop/DBus`。用专门类型能让 Qt D-Bus 生成正确签名 `o`，也能让接口声明更准确。
 
-**一句话定位：** 这是 Qt D-Bus 中围绕“DBus对象路径”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
-
-**模块背景：** 这是 Qt D-Bus 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
-
-### 这是什么
-
-`QDBusObjectPath` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 类说明
 
 - 头文件：`#include <QDBusObjectPath>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：链接 `Qt6::DBus`
+- 继承：无公开 QObject 继承
+- Qt 6.8 起支持 `QDebug << QDBusObjectPath`
 
-CMake 配置：
+## API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS DBus)
-target_link_libraries(mytarget PRIVATE Qt6::DBus)
-```
+| API | 说明 |
+| --- | --- |
+| `QDBusObjectPath()` | 创建空路径对象。 |
+| `QDBusObjectPath(QLatin1StringView)` | 从 Latin-1 字符串构造路径。 |
+| `QDBusObjectPath(const QString &)` | 从 `QString` 构造路径。 |
+| `QDBusObjectPath(const char *)` | 从 C 字符串构造路径。 |
+| `path()` | 返回路径字符串。 |
+| `setPath()` | 修改路径。 |
+| `operator QVariant()` | 作为 QVariant 传入 D-Bus 参数。 |
+| `swap()` | 快速交换路径对象。 |
+| `operator<<(QDebug, path)` | 调试输出路径。 |
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 使用场景
 
-### 工作机制
+- 远端方法返回对象路径，下一步要对该对象再创建 `QDBusInterface`。
+- 方法参数签名明确要求 object path，而不是普通 string。
+- 导出或管理树状对象模型，例如 `/org/example/Device/0`。
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 常见坑与经验
 
-### 状态、生命周期和线程
+- D-Bus 对象路径通常以 `/` 开头，路径段不要使用任意文件系统字符；它不是文件路径。
+- `QString` 发送出去会生成字符串签名 `s`，`QDBusObjectPath` 才是对象路径签名 `o`。
+- 对象路径只是地址，不代表对象一定存在；调用前仍可能得到 `UnknownObject`。
+- 如果使用 `ExportChildObjects`，子对象的 `objectName()` 会参与路径生成，命名要稳定。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 知识点覆盖
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDBusObjectPath()`
-- `QDBusObjectPath(QLatin1StringView path)`
-- `QDBusObjectPath(const QString &path)`
-- `QDBusObjectPath(const char *path)`
-- `QString path() const`
-- `void setPath(const QString &path)`
-- `void swap(QDBusObjectPath &other)`
-- `operator QVariant() const`
-
-### 相关非成员函数
-
-- `(since 6.8) QDebug operator<<(QDebug dbg, const QDBusObjectPath &path)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[noexcept] QDBusObjectPath::QDBusObjectPath()`
-
-**作用与语义：**
-
-构建一条新的对象路径。
-
-### `[explicit] QDBusObjectPath::QDBusObjectPath(QLatin1StringView path)`
-
-**作用与语义：**
-
-从`path`查看的拉丁-1字符串构造一条新的对象路径。
-
-### `[explicit] QDBusObjectPath::QDBusObjectPath(const QString &path)`
-
-**作用与语义：**
-
-从给定`path`构造一条新的对象路径。
-
-### `[explicit] QDBusObjectPath::QDBusObjectPath(const char *path)`
-
-**作用与语义：**
-
-从给定`path`构造一条新的对象路径。
-
-### `QString QDBusObjectPath::path() const`
-
-**作用与语义：**
-
-返回该对象路径。
-
-### `void QDBusObjectPath::setPath(const QString &path)`
-
-**作用与语义：**
-
-将给定`path`的值赋予该对象路径。
-
-### `[noexcept] void QDBusObjectPath::swap(QDBusObjectPath &other)`
-
-**作用与语义：**
-
-将该对象路径与`other`交换。此操作非常快速且从未失败。
-
-### `QDBusObjectPath::operator QVariant() const`
-
-**作用与语义：**
-
-隐式转换为 `QVariant`。等同于用此对象作为参数调用 `QVariant::fromValue()`。
-
-### `[since 6.8] QDebug operator<<(QDebug dbg, const QDBusObjectPath &path)`
-
-**作用与语义：**
-
-将 `path` 的内容写入 `dbg`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDBusObjectPath` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- D-Bus object path 类型签名 `o`
+- 对象树寻址模型
+- 对象路径与服务名、接口名的区别
+- QVariant 包装特殊 D-Bus 类型

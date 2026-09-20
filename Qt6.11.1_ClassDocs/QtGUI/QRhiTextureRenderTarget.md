@@ -1,180 +1,75 @@
 # QRhiTextureRenderTarget
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI [Private] · 来自 `QRhiTextureRenderTarget`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiTextureRenderTarget` 是把一组纹理或渲染缓冲区组织成“可以被开始一次 render pass 的目标”的对象。它不是纹理本身，也不是 pipeline；它更像一次离屏渲染通道的落点说明：颜色写到哪些附件，深度模板用哪里，开始时要不要保留旧内容。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它属于 RHI 私有接口，需要 `Qt6::GuiPrivate`。这类 API 很适合写 Qt 内部风格的渲染器、嵌入自定义 scene graph、做离屏 pass、后处理、阴影图或 G-buffer；但它不承诺像公开 Qt API 那样稳定。
 
-### 这是什么
-
-`QRhiTextureRenderTarget` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：QRhiRenderTarget
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)`
+- 继承：`QRhiRenderTarget`
+- 典型创建者：`QRhi::newTextureRenderTarget()`
+- 协作类：`QRhiTextureRenderTargetDescription`、`QRhiColorAttachment`、`QRhiRenderPassDescriptor`、`QRhiGraphicsPipeline`
 
-CMake 配置：
+这个类的核心规则是：先把 `description` 和 `flags` 定好，再生成兼容的 render pass descriptor，最后 `create()`。pipeline 也必须使用兼容的 render pass descriptor，否则命令录制阶段可能失败或在后端验证层里报错。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `create()` | 创建或重建底层图形资源；要求已设置 render pass descriptor |
+| `setDescription(desc)` / `description()` | 设置或读取颜色、深度、resolve、VRS 等附件组合 |
+| `setFlags(f)` / `flags()` | 控制附件开始和结束时的 load/store 策略 |
+| `newCompatibleRenderPassDescriptor()` | 基于当前描述生成与目标、pipeline 兼容的 render pass descriptor |
+| `resourceType()` | 返回 RHI 资源类型，主要给框架和调试使用 |
+| `PreserveColorContents` | 开始渲染时保留颜色附件旧内容 |
+| `PreserveDepthStencilContents` | 深度纹理作为附件时，开始渲染保留旧深度/模板 |
+| `DoNotStoreDepthStencilContents` | 结束渲染时不写回深度/模板纹理内容 |
+
+## 4. 关键用法
+
+标准离屏 pass 通常这样组织：
+
+```cpp
+QRhiTextureRenderTargetDescription desc(
+    QRhiColorAttachment(colorTexture),
+    depthStencilBuffer);
+
+QRhiTextureRenderTarget *rt = rhi->newTextureRenderTarget(desc);
+QRhiRenderPassDescriptor *rp = rt->newCompatibleRenderPassDescriptor();
+rt->setRenderPassDescriptor(rp);
+
+if (!rt->create())
+    return;
+
+pipeline->setRenderPassDescriptor(rp);
+pipeline->create();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+顺序很重要。`newCompatibleRenderPassDescriptor()` 读取的是当前 `description()` 与 `flags()`，所以如果后续改了附件数量、格式、sample count、shading rate map 或 load/store 标志，就要重新取得 descriptor，并连带重建使用它的 graphics pipeline。
 
-### 工作机制
+多个 render target 只要附件数量、类型、格式、sample count 和相关 flags 兼容，可以共享同一个 `QRhiRenderPassDescriptor`。这对 ping-pong blur、双缓冲离屏纹理、每帧重建目标对象的场景很有价值。
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+- 后处理链：第一 pass 渲染到纹理，后续 pass 把该纹理作为 shader resource。
+- 阴影图或深度预通道：只关心深度附件，颜色附件可以减少或省略，取决于实际 pass。
+- 多渲染目标：一次 fragment shader 写入 albedo、normal、material 等多个颜色附件。
+- MSAA 离屏渲染：颜色附件和 resolve texture 组合使用，结束 pass 后得到单采样纹理。
+- Qt Quick 或自定义渲染嵌入：把 RHI 资源接到 Qt 的渲染循环里。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+## 6. 常见坑与经验
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+- `description()` 里引用的 `QRhiTexture`、`QRhiRenderBuffer` 必须已经 `create()`；target 只是引用它们，不负责替你创建。
+- `PreserveColorContents` 在 tile-based GPU 上可能代价明显，因为它迫使驱动加载旧 tile 内容。只有真的需要叠加旧画面时再开。
+- MSAA 场景不要把 `PreserveColorContents` 当成跨后端可靠的“保留多采样中间数据”机制，有些 OpenGL ES 扩展里的多采样存储是隐式的。
+- 深度数据只是测试用时优先用 `QRhiRenderBuffer`；需要后续采样或多视图时才选择 depth texture。
+- render pass descriptor 不是“随便共享”的标签，它是 pipeline 兼容性的一部分。改附件形态后忘了重建 pipeline 是 RHI 代码里很常见的隐性错误。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+## 7. 知识点覆盖
 
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum Flag { PreserveColorContents, PreserveDepthStencilContents, DoNotStoreDepthStencilContents }`
-- `flags Flags`
-
-### 公有函数
-
-- `virtual bool create() = 0`
-- `QRhiTextureRenderTargetDescription description() const`
-- `QRhiTextureRenderTarget::Flags flags() const`
-- `virtual QRhiRenderPassDescriptor * newCompatibleRenderPassDescriptor() = 0`
-- `void setDescription(const QRhiTextureRenderTargetDescription &desc)`
-- `void setFlags(QRhiTextureRenderTarget::Flags f)`
-
-### 重实现的公有函数
-
-- `virtual QRhiResource::Type resourceType() const override`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QRhiTextureRenderTarget::Flagflags QRhiTextureRenderTarget::Flags`
-
-**作用与语义：**
-
-描述渲染目标加载/存储行为的标志值。加载/存储行为可能在原生资源中内置，具体取决于后端，因此必须事先明确，且不能更改，除非重建（因此需要发布和创建新的原生资源）。
-- `QRhiTextureRenderTarget::PreserveColorContents`：`1 << 0`;表示在开始渲染时加载颜色附件的内容，而不是清除。这在移动（铺砌）GPU上可能更昂贵，但允许在切换之间保留现有内容。在使用解析纹理集进行多采样渲染时，设置该标志也会要求将多采样色彩数据存储（写出）到多采样纹理或渲染缓冲区。（对于非多采样渲染，颜色数据始终被存储，但对于MSAA存储多重采样数据会降低某些GPU架构的效率，因此默认不写出）但请注意，这不可移植：在某些情况下，图形API层面没有中间多采样纹理，例如使用OpenGL ES的`GL_EXT_multisampled_render_to_texture`时，这些纹理都是隐式的，由OpenGL ES实现处理。在这种情况下，PreserveColorContents很可能没有影响。因此，使用多采样渲染时避免依赖该标志，颜色附加是多采样`QRhiTexture`（而非多采样`QRhiRenderBuffer`）。
-- `QRhiTextureRenderTarget::PreserveDepthStencilContents`：`1 << 1`;表示深度纹理的内容应在开始渲染时加载，而非清除。仅适用于纹理作为深度缓冲区（`QRhiTextureRenderTargetDescription::depthTexture()`已设置）时，因为深度/模板渲染缓冲区可能没有任何物理支撑，且数据可能根本不会写入。
-- `QRhiTextureRenderTarget::DoNotStoreDepthStencilContents`：`1 << 2`;表示深度纹理的内容无需写出。仅在深度模板缓冲区使用`QRhiTexture`而非`QRhiRenderBuffer`时相关，因为对`QRhiRenderBuffer`来说这是隐含的。当设置了depthResolveTexture时，该标志不相关，因为行为视同标志被设置。该枚举值在Qt 6.8中引入。
-Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
-
-### `[pure virtual] bool QRhiTextureRenderTarget::create()`
-
-**作用与语义：**
-
-创建对应的本地图形资源。如果由于之前的 create() 已有资源存在且没有相应的 `destroy()`，则 `destroy()` 会先隐式调用。
-注意：`renderPassDescriptor()`必须在调用create()之前设置好。要获得与渲染目标兼容的`QRhiRenderPassDescriptor`，请在创建()之前、但在设置所有其他参数（如`description()`和`flags()`）后调用`newCompatibleRenderPassDescriptor()`。为了节省资源，尽可能用多个`QRhiTextureRenderTarget`实例重用同一`QRhiRenderPassDescriptor`。只有当渲染目标拥有相同数量和类型的附件（实际纹理可能不同）以及相同的标志时，才可能共享相同的渲染通行描述符。
-注意：`description()`中引用的资源，如`QRhiTexture`实例，必须已经调用了create()。
-成功时返回`true`，`false`图形操作失败时返回。无论返回值如何，调用`destroy()`始终安全。
-
-### `QRhiTextureRenderTargetDescription QRhiTextureRenderTarget::description() const`
-
-**作用与语义：**
-
-返回渲染目标描述。
-
-### `QRhiTextureRenderTarget::Flags QRhiTextureRenderTarget::flags() const`
-
-**作用与语义：**
-
-返回当前设置的标志。
-
-### `[pure virtual] QRhiRenderPassDescriptor *QRhiTextureRenderTarget::newCompatibleRenderPassDescriptor()`
-
-**作用与语义：**
-
-返回一个新的 `QRhiRenderPassDescriptor`，它与此渲染目标兼容。 返回值有两种用途：可以传递给 `setRenderPassDescriptor()` 和 `QRhiGraphicsPipeline::setRenderPassDescriptor()`。渲染通道描述符描述了附件（颜色、深度/模板）以及可以由 `flags()` 影响的加载/存储行为。`QRhiGraphicsPipeline` 只能与具有 `compatible` `QRhiRenderPassDescriptor` 设置的渲染目标一起使用。 只要具有相同数量和类型的附件，两个 `QRhiTextureRenderTarget` 实例可以共享同一渲染通道描述符。相关的 `QRhiTexture` 或 `QRhiRenderBuffer` 实例不属于渲染通道描述符，因此在两个 `QRhiTextureRenderTarget` 实例中可以不同。 注意：在 `description()` 中引用的资源（例如 `QRhiTexture` 实例）必须已经调用过 `create()`。
-
-### `[override virtual] QRhiResource::Type QRhiTextureRenderTarget::resourceType() const`
-
-**作用与语义：**
-
-重装：`QRhiResource::resourceType()` const.
-返回资源类型。
-返回资源类型。
-
-### `void QRhiTextureRenderTarget::setDescription(const QRhiTextureRenderTargetDescription &desc)`
-
-**作用与语义：**
-
-设置渲染目标描述`desc`。
-
-### `void QRhiTextureRenderTarget::setFlags(QRhiTextureRenderTarget::Flags f)`
-
-**作用与语义：**
-
-把标志设为`f`。
-
-### `enum Flag { PreserveColorContents, PreserveDepthStencilContents, DoNotStoreDepthStencilContents }`
-
-**作用与语义：**
-
-描述渲染目标加载/存储行为的标志值。加载/存储行为可能在原生资源中内置，具体取决于后端，因此必须事先明确，且不能更改，除非重建（因此需要发布和创建新的原生资源）。
-- `QRhiTextureRenderTarget::PreserveColorContents`：`1 << 0`;表示在开始渲染时加载颜色附件的内容，而不是清除。这在移动（铺砌）GPU上可能更昂贵，但允许在切换之间保留现有内容。在使用解析纹理集进行多采样渲染时，设置该标志也会要求将多采样色彩数据存储（写出）到多采样纹理或渲染缓冲区。（对于非多采样渲染，颜色数据始终被存储，但对于MSAA存储多重采样数据会降低某些GPU架构的效率，因此默认不写出）但请注意，这不可移植：在某些情况下，图形API层面没有中间多采样纹理，例如使用OpenGL ES的`GL_EXT_multisampled_render_to_texture`时，这些纹理都是隐式的，由OpenGL ES实现处理。在这种情况下，PreserveColorContents很可能没有影响。因此，使用多采样渲染时避免依赖该标志，颜色附加是多采样`QRhiTexture`（而非多采样`QRhiRenderBuffer`）。
-- `QRhiTextureRenderTarget::PreserveDepthStencilContents`：`1 << 1`;表示深度纹理的内容应在开始渲染时加载，而非清除。仅适用于纹理作为深度缓冲区（`QRhiTextureRenderTargetDescription::depthTexture()`已设置）时，因为深度/模板渲染缓冲区可能没有任何物理支撑，且数据可能根本不会写入。
-- `QRhiTextureRenderTarget::DoNotStoreDepthStencilContents`：`1 << 2`;表示深度纹理的内容无需写出。仅在深度模板缓冲区使用`QRhiTexture`而非`QRhiRenderBuffer`时相关，因为对`QRhiRenderBuffer`来说这是隐含的。当设置了depthResolveTexture时，该标志不相关，因为行为视同标志被设置。该枚举值在Qt 6.8中引入。
-Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
-
-### `flags Flags`
-
-**作用与语义：**
-
-描述渲染目标加载/存储行为的标志值。加载/存储行为可能在原生资源中内置，具体取决于后端，因此必须事先明确，且不能更改，除非重建（因此需要发布和创建新的原生资源）。
-- `QRhiTextureRenderTarget::PreserveColorContents`：`1 << 0`;表示在开始渲染时加载颜色附件的内容，而不是清除。这在移动（铺砌）GPU上可能更昂贵，但允许在切换之间保留现有内容。在使用解析纹理集进行多采样渲染时，设置该标志也会要求将多采样色彩数据存储（写出）到多采样纹理或渲染缓冲区。（对于非多采样渲染，颜色数据始终被存储，但对于MSAA存储多重采样数据会降低某些GPU架构的效率，因此默认不写出）但请注意，这不可移植：在某些情况下，图形API层面没有中间多采样纹理，例如使用OpenGL ES的`GL_EXT_multisampled_render_to_texture`时，这些纹理都是隐式的，由OpenGL ES实现处理。在这种情况下，PreserveColorContents很可能没有影响。因此，使用多采样渲染时避免依赖该标志，颜色附加是多采样`QRhiTexture`（而非多采样`QRhiRenderBuffer`）。
-- `QRhiTextureRenderTarget::PreserveDepthStencilContents`：`1 << 1`;表示深度纹理的内容应在开始渲染时加载，而非清除。仅适用于纹理作为深度缓冲区（`QRhiTextureRenderTargetDescription::depthTexture()`已设置）时，因为深度/模板渲染缓冲区可能没有任何物理支撑，且数据可能根本不会写入。
-- `QRhiTextureRenderTarget::DoNotStoreDepthStencilContents`：`1 << 2`;表示深度纹理的内容无需写出。仅在深度模板缓冲区使用`QRhiTexture`而非`QRhiRenderBuffer`时相关，因为对`QRhiRenderBuffer`来说这是隐含的。当设置了depthResolveTexture时，该标志不相关，因为行为视同标志被设置。该枚举值在Qt 6.8中引入。
-Flags 类型是 QFlags 的 typedef<Flag>。它存储 Flag 值的 OR 组合。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiTextureRenderTarget` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+掌握本类时应同时理解：RHI 私有 API 风险、离屏渲染、render pass descriptor 兼容性、颜色/深度/模板附件、MSAA resolve、load/store 操作、tile GPU 性能、pipeline 与 render target 的绑定关系。

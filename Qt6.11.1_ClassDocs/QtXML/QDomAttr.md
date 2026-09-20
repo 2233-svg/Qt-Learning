@@ -1,153 +1,56 @@
 # QDomAttr
-
-> Qt 6.11.1 · Qt XML
+> Qt 6.11.1 · Qt XML · 来自 `QDomAttr`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QDomAttr` 是结构化文档类型，负责 JSON/XML 节点、值、解析状态或流式读写。
+`QDomAttr` 表示 XML 元素的属性节点，例如 `<item id="42">` 中的 `id="42"`。日常读写属性时通常用 `QDomElement::attribute()` 和 `setAttribute()`，只有需要把属性当节点处理时才直接用 `QDomAttr`。
 
-**模块背景：** Qt XML 提供 XML 文档和 DOM 风格 XML 数据处理能力。
+## 2. 类说明
 
-### 这是什么
+保留类说明：这些 API 来自 `QDomAttr`，属于 Qt XML 模块，用于表示 DOM 属性节点。
 
-`QDomAttr` 是 结构化文本解析机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+属性节点继承 `QDomNode`，但它不是元素的普通 child。它属于元素的属性集合，通过 `ownerElement()` 找到所属元素。
 
-**内部模型：** JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文本和层级。文档容器负责解析和序列化，具体字段/节点访问由 object、array、value 或 DOM/流式读取对象完成。
+## 3. API 速查
 
-**适用场景：** 接收字节数据后显式指定编码和解析选项，检查错误对象，再按类型访问节点，校验业务字段，最后序列化或转换成领域对象。
+| API | 用来做什么 |
+| --- | --- |
+| `name()` | 返回属性名。 |
+| `value()` / `setValue()` | 读取或设置属性值。 |
+| `ownerElement()` | 返回拥有该属性的元素。 |
+| `specified()` | 判断属性是否被显式指定。 |
+| `nodeType()` | 返回 `AttributeNode`。 |
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
-**先记住的坑：** 不要只检查 parse 成功；不要假设字段一定存在且类型固定；不要把用户输入直接当作可信结构；大文件不要无条件 readAll 和构造整棵树。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QDomAttr>`
-- 继承自：QDomNode
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Xml)
-target_link_libraries(mytarget PRIVATE Qt6::Xml)
+```cpp
+QDomAttr attr = doc.createAttribute("id");
+attr.setValue("42");
+element.setAttributeNode(attr);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+多数时候更简单：
 
-### 工作机制
+```cpp
+element.setAttribute("id", "42");
+```
 
-JSON 通常表示为 value/object/array 树，XML 则包含元素、属性、文本和层级。文档容器负责解析和序列化，具体字段/节点访问由 object、array、value 或 DOM/流式读取对象完成。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+| 场景 | 为什么用 attr 节点 |
+| --- | --- |
+| 需要遍历属性集合 | 从 `QDomNamedNodeMap` 取出并转为 attr。 |
+| 移动/替换属性节点 | 使用 `setAttributeNode()`。 |
+| 区分属性节点和普通元素子节点 | 通用 DOM 工具里按 nodeType 分派。 |
 
-**生命周期：** 解析结果通常是值对象，可在作用域内传递；流式解析器则依赖输入设备和读取顺序。解析错误、结构合法和业务字段合法是三个不同层次，必须分别检查。
+## 6. 常见坑与经验
 
-**状态与结果：** 先判断文档是否为空、根节点类型和解析错误，再访问字段；字段缺失、类型不匹配、空值和默认值要分开处理。序列化时要明确紧凑/格式化输出和编码。
+属性不是 child node。`element.childNodes()` 不会列出属性；要用 `element.attributes()` 或属性专用 API。
 
-**线程与事件循环：** 值形式的解析结果可以复制后跨线程处理；共享设备、流对象和可变 DOM 不应无保护地跨线程使用。大文档要评估一次性树结构的内存成本，必要时用流式 API。
+属性值永远是字符串层面的 XML 属性值。需要 int、bool、enum 时要自己转换并校验失败情况。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-接收字节数据后显式指定编码和解析选项，检查错误对象，再按类型访问节点，校验业务字段，最后序列化或转换成领域对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QDomAttr()`
-- `QDomAttr(const QDomAttr &attr)`
-- `QString name() const`
-- `QDomNode::NodeType nodeType() const`
-- `QDomElement ownerElement() const`
-- `void setValue(const QString &value)`
-- `bool specified() const`
-- `QString value() const`
-- `QDomAttr & operator=(const QDomAttr &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QDomAttr::QDomAttr()`
-
-**作用与语义：**
-
-构造一个空属性。
-
-### `QDomAttr::QDomAttr(const QDomAttr &attr)`
-
-**作用与语义：**
-
-构建了一份`attr`的复制品。
-复制的数据是共享的（浅副本）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
-
-### `QString QDomAttr::name() const`
-
-**作用与语义：**
-
-返回属性名称。
-
-### `QDomNode::NodeType QDomAttr::nodeType() const`
-
-**作用与语义：**
-
-回归 `AttributeNode`。
-
-### `QDomElement QDomAttr::ownerElement() const`
-
-**作用与语义：**
-
-返回该属性所附加的元素节点，或者如果该属性未关联到任何元素，则返回空节点。
-
-### `void QDomAttr::setValue(const QString &value)`
-
-**作用与语义：**
-
-将属性值设置为`value`。
-
-### `bool QDomAttr::specified() const`
-
-**作用与语义：**
-
-如果属性是用户用`setValue()`设置的，返回 `true`。如果该值未被指定或设置，返回 `false`。
-
-### `QString QDomAttr::value() const`
-
-**作用与语义：**
-
-返回属性值，若未指定属性则返回空字符串。
-
-### `QDomAttr &QDomAttr::operator=(const QDomAttr &other)`
-
-**作用与语义：**
-
-为该DOM属性分配`other`。
-复制的数据是共享的（浅层复制）：修改一个节点也会改变另一个节点。如果你想做深度复制，可以用`cloneNode()`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-解析结果通常是值对象，可在作用域内传递；流式解析器则依赖输入设备和读取顺序。解析错误、结构合法和业务字段合法是三个不同层次，必须分别检查。
-
-### 状态和错误边界
-
-先判断文档是否为空、根节点类型和解析错误，再访问字段；字段缺失、类型不匹配、空值和默认值要分开处理。序列化时要明确紧凑/格式化输出和编码。
-
-### 线程边界
-
-值形式的解析结果可以复制后跨线程处理；共享设备、流对象和可变 DOM 不应无保护地跨线程使用。大文档要评估一次性树结构的内存成本，必要时用流式 API。
-
-### 最容易出现的错误
-
-不要只检查 parse 成功；不要假设字段一定存在且类型固定；不要把用户输入直接当作可信结构；大文件不要无条件 readAll 和构造整棵树。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QDomAttr` 所属机制类型：结构化文本解析机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- XML 属性节点和元素属性 API。
+- owner element、specified、AttributeNode。
+- 属性集合与子节点的区别。

@@ -1,145 +1,69 @@
 # QRhiTextureUploadEntry
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI [Private] · 来自 `QRhiTextureUploadEntry`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QRhiTextureUploadEntry` 是“把这份子资源数据写到纹理的哪一层、哪一级 mip”的三元组：`layer`、`level`、`description`。它不关心整个上传批次，也不关心目标纹理对象；这些由外层的 `QRhiTextureUploadDescription` 和 `uploadTexture()` 负责。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
-
-### 这是什么
-
-`QRhiTextureUploadEntry` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <rhi/qrhi.h>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)`
+- 类型：值类型
+- 归属：RHI 私有接口，来自 `QRhiTextureUploadEntry`
 
-CMake 配置：
+默认构造的 entry 指向 layer 0、level 0，但没有有效数据描述。实际提交前必须设置 `QRhiTextureSubresourceUploadDescription`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS GuiPrivate)
-target_link_libraries(mytarget PRIVATE Qt6::GuiPrivate)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| 默认构造 | layer 和 level 默认为 0，description 为空 |
+| `QRhiTextureUploadEntry(layer, level, desc)` | 一次性指定目标层级和上传内容 |
+| `setLayer()` / `layer()` | 设置或读取数组层、cubemap 面等 layer 索引 |
+| `setLevel()` / `level()` | 设置或读取 mip level |
+| `setDescription()` / `description()` | 设置或读取该 layer/level 的实际上传数据 |
+
+## 4. 关键用法
+
+把 `QImage` 上传到普通 2D 纹理：
+
+```cpp
+QRhiTextureSubresourceUploadDescription sub(image);
+QRhiTextureUploadEntry entry(0, 0, sub);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+上传 mip level 2：
 
-### 工作机制
+```cpp
+entry.setLevel(2);
+entry.setDescription(QRhiTextureSubresourceUploadDescription(mip2Image));
+```
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+上传数组纹理第 3 层：
 
-### 状态、生命周期和线程
+```cpp
+QRhiTextureUploadEntry layerEntry(3, 0, QRhiTextureSubresourceUploadDescription(layerImage));
+```
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+这里的 layer 语义由目标纹理类型决定：2D 纹理通常只有 0；纹理数组表示数组层；cubemap 通常对应不同面。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 5. 使用场景
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+- 普通贴图的一次 level 0 上传。
+- cubemap 的每个面分别构造一个 entry。
+- 数组纹理批量填充多层图片。
+- 自己生成 mip chain，然后逐级 entry 上传。
+- atlas 局部更新时，同一 layer/level 下放多个 entry。
 
-## 3. 直接使用
+## 6. 常见坑与经验
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+- 不要把 `level` 当成缩放比例，它是 mip 索引；level 1 的尺寸通常是 level 0 的一半，但边界要按纹理实际规则计算。
+- `layer` 越界不会因为 entry 是值类型就变安全，错误会在上传或后端验证时暴露。
+- 默认构造 entry 只是占位。没有 description 的 entry 不该被提交。
+- description 里的 source/destination 矩形描述的是该 layer/level 内部的位置，不会改变 entry 的 layer/level。
+- cubemap 面顺序要和 Qt/RHI 对该纹理类型的约定保持一致，最好集中封装，不要在多处硬编码数字。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 7. 知识点覆盖
 
-### 公有函数
-
-- `QRhiTextureUploadEntry()`
-- `QRhiTextureUploadEntry(int layer, int level, const QRhiTextureSubresourceUploadDescription &desc)`
-- `QRhiTextureSubresourceUploadDescription description() const`
-- `int layer() const`
-- `int level() const`
-- `void setDescription(const QRhiTextureSubresourceUploadDescription &desc)`
-- `void setLayer(int layer)`
-- `void setLevel(int level)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[noexcept] QRhiTextureUploadEntry::QRhiTextureUploadEntry()`
-
-**作用与语义：**
-
-构建一个空的QRhiTextureUploadEntry目标层0和0级。
-注意：空的 QRhiTextureUploadEntry 在未通过 `setDescription()` 设置`QRhiTextureSubresourceUploadDescription`之前不应提交。
-
-### `QRhiTextureUploadEntry::QRhiTextureUploadEntry(int layer, int level, const QRhiTextureSubresourceUploadDescription &desc)`
-
-**作用与语义：**
-
-构建一个针对给定`layer`和MIP `level`的QRhiTextureUploadEntry，`desc`描述了子资源内容。
-
-### `QRhiTextureSubresourceUploadDescription QRhiTextureUploadEntry::description() const`
-
-**作用与语义：**
-
-返回当前设置的子资源描述。
-
-### `int QRhiTextureUploadEntry::layer() const`
-
-**作用与语义：**
-
-返回当前设置的图层索引（立方体映射面，数组图层）。默认值为0。
-
-### `int QRhiTextureUploadEntry::level() const`
-
-**作用与语义：**
-
-返回当前设置的MIP电平。默认为0。
-
-### `void QRhiTextureUploadEntry::setDescription(const QRhiTextureSubresourceUploadDescription &desc)`
-
-**作用与语义：**
-
-将子资源描述设置为`desc`。
-
-### `void QRhiTextureUploadEntry::setLayer(int layer)`
-
-**作用与语义：**
-
-设定`layer`。
-
-### `void QRhiTextureUploadEntry::setLevel(int level)`
-
-**作用与语义：**
-
-设置MIP的`level`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QRhiTextureUploadEntry` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+本页覆盖：纹理层与 mip level、entry 与 subresource 的边界、普通 2D/数组/cubemap 上传差异、局部更新、越界与格式兼容检查。

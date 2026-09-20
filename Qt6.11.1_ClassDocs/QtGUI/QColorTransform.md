@@ -1,151 +1,85 @@
 # QColorTransform
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QColorTransform`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QColorTransform` 是预先计算好的颜色变换对象。它通常由源 `QColorSpace` 调用 `transformationToColorSpace(target)` 得到，然后被重复应用到颜色、8-bit 像素、16-bit 像素或浮点像素。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它的意义是把“理解两个色彩空间差异”的成本从每次映射中抽出来。对一整张图、视频帧或大量色样做转换时，应构造一次 transform 并复用，而不是每个像素重新推导色彩空间关系。
 
-### 这是什么
+## 2. 类说明
 
-`QColorTransform` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QColorTransform` 是值类型，不继承 `QObject`。它没有公开构造器，通常由 `QColorSpace::transformationToColorSpace()` 获得。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+类说明只用于表明这些 API 来自 `QColorTransform`：它只负责映射颜色数据；色彩空间的定义、ICC profile 解析和图像批处理由 `QColorSpace`、`QImage` 或你的图像管线负责。
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `isIdentity() const` | 判断是否为恒等变换，可跳过无意义映射。 |
+| `map(QColor)` | 映射一个 `QColor`。 |
+| `map(QRgb)` | 映射一个 8-bit 非预乘或不透明 ARGB 像素。 |
+| `map(QRgba64)` | 映射一个 16-bit 非预乘或不透明 RGBA 像素。 |
+| `map(QRgbaFloat16)` | 映射一个 half-float RGBA 像素。 |
+| `map(QRgbaFloat32)` | 映射一个 float RGBA 像素。 |
+| `operator==` / `operator!=` | 比较两个 transform 的变换定义是否相同。 |
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 从源空间创建到目标空间的 transform
 
-- 头文件：`#include <QColorTransform>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+```cpp
+const QColorSpace source(QColorSpace::DisplayP3);
+const QColorSpace target(QColorSpace::SRgb);
+const QColorTransform transform = source.transformationToColorSpace(target);
 
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+const QColor converted = transform.map(QColor("#ff4d4f"));
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+实际项目中，颜色值必须确实按 source space 解释。给一个“默认 sRGB 的 QColor”套 Display P3 transform 并不会自动让它变成正确的 P3 颜色。
 
-### 工作机制
+### 批量像素处理时缓存 transform
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+const QColorTransform transform =
+    sourceSpace.transformationToColorSpace(targetSpace);
 
-### 状态、生命周期和线程
+for (QRgb &pixel : pixels) {
+    pixel = transform.map(pixel);
+}
+```
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+若 `transform.isIdentity()` 为真，可以直接跳过循环，避免额外读写和色彩计算。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+### 高动态范围和浮点像素使用浮点重载
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+```cpp
+QRgbaFloat32 pixel = readLinearPixel();
+pixel = transform.map(pixel);
+```
 
-## 3. 直接使用
+HDR 或宽色域中间处理不要过早压缩到 `QRgb`。8-bit 映射会带来量化和超色域裁剪风险；尽量在高位深或浮点格式完成处理后再输出。
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 5. 使用场景
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+`QColorTransform` 适合图像查看器、照片导入、HDR 预览、颜色采样工具、色彩校正、打印预处理、视频帧处理、跨显示器显示和专业图形软件。
 
-### 公有函数
+它也适合将一个稳定的调色板从工作色彩空间转换为目标显示空间。不过普通 GUI 主题通常使用 sRGB，不应为了简单按钮颜色引入复杂颜色管理。
 
-- `(since 6.4) bool isIdentity() const`
-- `QRgb map(QRgb argb) const`
-- `QRgba64 map(QRgba64 rgba64) const`
-- `(since 6.4) QRgbaFloat16 map(QRgbaFloat16 rgbafp16) const`
-- `(since 6.4) QRgbaFloat32 map(QRgbaFloat32 rgbafp32) const`
-- `QColor map(const QColor &color) const`
+## 6. 常见坑与经验
 
-### 相关非成员函数
+不要把预乘 alpha 像素直接传给 `map(QRgb)` / `map(QRgba64)`。这些重载期望不透明或非预乘输入；需要时先 unpremultiply，再按你的管线重新 premultiply。
 
-- `(since 6.4) bool operator!=(const QColorTransform &ct1, const QColorTransform &ct2)`
-- `(since 6.4) bool operator==(const QColorTransform &ct1, const QColorTransform &ct2)`
+不要期望 `map(QColor)` 保存图像级 ICC 元数据。它只映射颜色值；整张图的色彩空间标签和像素格式要由图像 API 维护。
 
-## 5. API 逐个说明
+不要每个像素构造 transform。变换构建比单次 map 更昂贵，应按源/目标空间组合缓存。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要忽略 identity 变换。源目标相同时跳过转换既更快，也减少不必要的数值舍入。
 
-### `[noexcept, since 6.4] bool QColorTransform::isIdentity() const`
+不要把颜色空间映射与 alpha 合成混成同一步。通常应在适当的线性空间中做合成，再按显示空间编码输出。
 
-**作用与语义：**
+## 7. 知识点覆盖
 
-如果颜色变换是恒等变换，则返回为真。
-
-### `QRgb QColorTransform::map(QRgb argb) const`
-
-**作用与语义：**
-
-对`QRgb`值`argb`应用颜色变换。
-输入应为不透明或非预乘。
-
-### `QRgba64 QColorTransform::map(QRgba64 rgba64) const`
-
-**作用与语义：**
-
-对`QRgba64`值 `rgba64` 应用颜色变换。
-输入应为不透明或非预乘。
-
-### `[since 6.4] QRgbaFloat16 QColorTransform::map(QRgbaFloat16 rgbafp16) const`
-
-**作用与语义：**
-
-对`QRgbaFloat16`值的`rgbafp16`应用颜色变换。
-输入应为不透明或非预乘。
-
-### `[since 6.4] QRgbaFloat32 QColorTransform::map(QRgbaFloat32 rgbafp32) const`
-
-**作用与语义：**
-
-对`QRgbaFloat32`值`rgbafp32`应用颜色变换。
-输入应为不透明或非预乘。
-
-### `QColor QColorTransform::map(const QColor &color) const`
-
-**作用与语义：**
-
-对`QColor`值的`color`应用颜色变换。
-
-### `[since 6.4] bool operator!=(const QColorTransform &ct1, const QColorTransform &ct2)`
-
-**作用与语义：**
-
-如果`ct1`不定义与`ct2`相同的变换，则返回为真。
-
-### `[since 6.4] bool operator==(const QColorTransform &ct1, const QColorTransform &ct2)`
-
-**作用与语义：**
-
-如果`ct1`定义的颜色变换与`ct2`相同，则返回为真。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QColorTransform` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QColorTransform` 应覆盖源/目标色彩空间、恒等变换、像素位深、8-bit/16-bit/浮点 RGBA、预乘 alpha、transform 缓存、HDR、宽色域、批量图像处理和线性光合成。

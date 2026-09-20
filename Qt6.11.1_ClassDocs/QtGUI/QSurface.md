@@ -1,172 +1,84 @@
 # QSurface
-
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QSurface`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QSurface` 是可被图形 API 渲染到的表面的抽象基类。实际对象通常是 `QWindow` 或 `QOffscreenSurface`：前者有屏幕窗口，后者用于离屏上下文或资源共享。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它回答的问题是：这个 surface 是窗口还是离屏？适合哪种渲染 API？大小和格式是什么？底层平台句柄在哪里？
 
-### 这是什么
-
-`QSurface` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QSurface>`
-- 继承自：未在类页中列出
-- 直接派生类：QOffscreenSurface、QWindow
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 直接派生：`QWindow`、`QOffscreenSurface`
+- 类型：抽象基类
+- 协作类：`QSurfaceFormat`、`QOpenGLContext`、Vulkan/Metal/Direct3D 平台接口
 
-CMake 配置：
+应用一般不直接继承 `QSurface`，而是使用 `QWindow` 或 `QOffscreenSurface`。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 作用 |
+| --- | --- |
+| `surfaceClass()` | 返回 `Window` 或 `Offscreen` |
+| `surfaceType()` | 返回 raster/OpenGL/Vulkan/Metal/Direct3D 等 surface 类型 |
+| `format()` | 返回实际或请求的 surface format |
+| `size()` | 返回 surface 像素尺寸 |
+| `supportsOpenGL()` | 是否能配合 `QOpenGLContext` |
+| `surfaceHandle()` | 返回平台层 surface 句柄 |
+
+## 4. 类型速查
+
+| 枚举 | 说明 |
+| --- | --- |
+| `SurfaceClass::Window` | 实际对象是 `QWindow` |
+| `SurfaceClass::Offscreen` | 实际对象是 `QOffscreenSurface` |
+| `RasterSurface` | 软件光栅绘制 surface |
+| `OpenGLSurface` | OpenGL 兼容 surface |
+| `VulkanSurface` | Vulkan 兼容 surface |
+| `MetalSurface` | Apple 平台 Metal surface |
+| `Direct3DSurface` | Windows Direct3D surface |
+| `OpenVGSurface` | OpenVG surface |
+
+## 5. 关键用法
+
+OpenGL 代码常先检查 surface：
+
+```cpp
+if (!surface->supportsOpenGL())
+    return;
+
+context->makeCurrent(surface);
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+离屏资源初始化通常用 `QOffscreenSurface`：
 
-### 工作机制
+```cpp
+QOffscreenSurface surface;
+surface.setFormat(format);
+surface.create();
+context->makeCurrent(&surface);
+```
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+`format()` 可能是平台协商后的结果，不一定和你请求的 `QSurfaceFormat` 完全一致。
 
-### 状态、生命周期和线程
+## 6. 使用场景
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+- OpenGL context 绑定窗口或离屏 surface。
+- 后台创建纹理、FBO、shader 等 GL 资源。
+- 检查 `QWindow` 当前图形 API 类型。
+- 平台集成层拿到底层 surface handle。
+- 多后端渲染框架区分 Vulkan/Metal/D3D/OpenGL。
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+## 7. 常见坑与经验
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+- `QSurface` 不是 `QObject`，不要期待信号或 parent 生命周期。
+- surface 类型要在窗口创建前设置；创建后再改通常无效或需要重建。
+- `size()` 通常是像素尺寸，高 DPI 下不要直接混用逻辑尺寸。
+- `surfaceHandle()` 是平台私有层，除非写平台集成代码，否则不要依赖。
+- OpenGL context 的 format 与 surface format 需要兼容，否则 `makeCurrent()` 可能失败。
 
-## 3. 直接使用
+## 8. 知识点覆盖
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum SurfaceClass { Window, Offscreen }`
-- `enum SurfaceType { RasterSurface, OpenGLSurface, OpenVGSurface, VulkanSurface, MetalSurface, Direct3DSurface }`
-
-### 公有函数
-
-- `virtual ~QSurface()`
-- `virtual QSurfaceFormat format() const = 0`
-- `virtual QSize size() const = 0`
-- `bool supportsOpenGL() const`
-- `QSurface::SurfaceClass surfaceClass() const`
-- `virtual QPlatformSurface * surfaceHandle() const = 0`
-- `virtual QSurface::SurfaceType surfaceType() const = 0`
-
-### 保护函数
-
-- `QSurface(QSurface::SurfaceClass type)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QSurface::SurfaceClass`
-
-**作用与语义：**
-
-SurfaceClass 枚举描述了该表面的实际子类。
-- `QSurface::Window`：`0`;该曲面是`QWindow`的一个实例。
-- `QSurface::Offscreen`：`1`;表面是`QOffscreenSurface`的一个实例。
-
-### `enum QSurface::SurfaceType`
-
-**作用与语义：**
-
-SurfaceType 枚举描述了该曲面的类型。
-- `QSurface::RasterSurface`：`0`;表面由像素组成，可以使用软件光栅器渲染，如Qt的光栅绘图引擎。
-- `QSurface::OpenGLSurface`：`1`;该曲面兼容OpenGL，可与`QOpenGLContext`配合使用。
-- `QSurface::OpenVGSurface`：`3`;该曲面兼容 OpenVG 曲面，可与 OpenVG 上下文配合使用。
-- `QSurface::VulkanSurface`：`4`;该表面兼容Vulkan，可与Vulkan图形API配合使用。
-- `QSurface::MetalSurface`：`5`;Surface 是兼容 Metal 的 surface，可以与苹果的 Metal 图形 API 配合使用。该 Surface 类型仅支持 macOS 和 iOS。
-- `QSurface::Direct3DSurface`：`6`;该曲面兼容 Direct 3D 11 和 12，可与 DXGI 和 Direct3D API 配合使用。该曲面类型仅支持 Windows。
-
-### `[explicit protected] QSurface::QSurface(QSurface::SurfaceClass type)`
-
-**作用与语义：**
-
-创建具有给定`type`的曲面。
-
-### `[virtual noexcept] QSurface::~QSurface()`
-
-**作用与语义：**
-
-会摧毁地表。
-
-### `[pure virtual] QSurfaceFormat QSurface::format() const`
-
-**作用与语义：**
-
-返回表面的格式。
-
-### `[pure virtual] QSize QSurface::size() const`
-
-**作用与语义：**
-
-返回表面的像素大小。
-
-### `bool QSurface::supportsOpenGL() const`
-
-**作用与语义：**
-
-如果表面兼容OpenGL，且可与`QOpenGLContext`配合使用，则返回真;否则返回假。
-
-### `QSurface::SurfaceClass QSurface::surfaceClass() const`
-
-**作用与语义：**
-
-返回该曲面的曲面类。
-
-### `[pure virtual] QPlatformSurface *QSurface::surfaceHandle() const`
-
-**作用与语义：**
-
-返回一个句柄到平台特定的 Surface 实现。
-
-### `[pure virtual] QSurface::SurfaceType QSurface::surfaceType() const`
-
-**作用与语义：**
-
-返回表面类型。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QSurface` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+本页覆盖：窗口/离屏 surface、渲染 API 类型、surface format、OpenGL current surface、平台句柄、高 DPI 像素尺寸。

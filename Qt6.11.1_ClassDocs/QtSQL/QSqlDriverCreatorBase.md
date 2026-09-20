@@ -1,113 +1,45 @@
 # QSqlDriverCreatorBase
-
-> Qt 6.11.1 · Qt SQL
+> Qt 6.11.1 · Qt SQL · 来自 `QSqlDriverCreatorBase`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QSqlDriverCreatorBase` 是 Qt SQL 的“Sql驱动Creator基类”类型，参与数据库连接、SQL 执行、事务或结果模型。
+`QSqlDriverCreatorBase` 是自定义 SQL 驱动创建器的抽象基类。`QSqlDatabase::registerSqlDriver()` 需要的就是这种创建器：Qt 根据驱动名请求它 new 出一个 `QSqlDriver` 实例。
 
-**模块背景：** Qt SQL 提供数据库连接、查询、事务和 SQL 模型/视图集成。
+普通数据库应用几乎不会用它；只有你要注册自定义驱动，或把非标准数据库后端接入 Qt SQL 时才需要。
 
-### 这是什么
+## 2. 类说明
 
-`QSqlDriverCreatorBase` 是 Qt SQL 连接、查询与事务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QSqlDriverCreatorBase`，属于 Qt SQL 模块，用于抽象 SQL driver 工厂。
 
-**内部模型：** Qt SQL 把驱动、连接、查询游标和模型分成不同对象。连接决定驱动和数据库会话，`QSqlQuery` 代表语句及其结果游标，事务把多条语句的提交边界固定下来，SQL 模型再把查询结果接到视图。
+它只有一个核心纯虚函数 `createObject()`。模板类 `QSqlDriverCreator<T>` 是它最常用的实现。
 
-**适用场景：** 创建连接并检查 open，使用 prepare/bindValue 分离 SQL 结构和用户数据，执行后检查返回值和 lastError，遍历结果，必要时用 transaction/commit/rollback 包住一组操作。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `~QSqlDriverCreatorBase()` | 虚析构，允许通过基类指针销毁创建器。 |
+| `createObject() const` | 创建一个新的 `QSqlDriver` 实例。 |
 
-**先记住的坑：** 不要拼接用户输入形成 SQL；不要把 exec 成功当作有数据；不要在连接仍被引用时 removeDatabase；不要忽略驱动是否可用、字段类型转换和事务失败回滚。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QSqlDriverCreatorBase>`
-- 继承自：未在类页中列出
-- 直接派生类：QSqlDriverCreator
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Sql)
-target_link_libraries(mytarget PRIVATE Qt6::Sql)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-Qt SQL 把驱动、连接、查询游标和模型分成不同对象。连接决定驱动和数据库会话，`QSqlQuery` 代表语句及其结果游标，事务把多条语句的提交边界固定下来，SQL 模型再把查询结果接到视图。
-
-### 状态、生命周期和线程
-
-**生命周期：** 连接由连接名识别，查询和模型引用连接。关闭或移除连接前必须销毁仍引用它的 query、model 和 database 句柄；不同线程不要共用连接。
-
-**状态与结果：** 区分连接是否打开、语句是否执行成功、游标是否定位在有效行、字段是否存在以及事务是否提交成功。`exec()` 成功不代表有结果行，`next()` 成功后才可以安全读取当前行。
-
-**线程与事件循环：** Qt SQL 连接有线程归属，每个线程应建立自己的连接并使用唯一连接名；不要把一个线程创建的 QSqlDatabase 或 QSqlQuery 传到另一个线程继续使用。
-
-## 3. 直接使用
-
-创建连接并检查 open，使用 prepare/bindValue 分离 SQL 结构和用户数据，执行后检查返回值和 lastError，遍历结果，必要时用 transaction/commit/rollback 包住一组操作。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
 ```cpp
-QSqlQuery query(database);
-query.prepare(QStringLiteral("SELECT name FROM users WHERE id = :id"));
-query.bindValue(QStringLiteral(":id"), id);
-if (query.exec()) {
-    while (query.next()) {
-        const QVariant value = query.value(0);
-    }
-}
+QSqlDatabase::registerSqlDriver(
+    "MYDRIVER",
+    new QSqlDriverCreator<MyDriver>);
+
+QSqlDatabase db = QSqlDatabase::addDatabase("MYDRIVER");
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+Qt 会接管传给 `registerSqlDriver()` 的 creator 指针。
 
-### 公有函数
+## 5. 常见坑与经验
 
-- `virtual ~QSqlDriverCreatorBase()`
-- `virtual QSqlDriver * createObject() const = 0`
+创建器负责创建 driver，不负责打开连接。连接参数仍由 `QSqlDatabase` 传给 driver 的 `open()`。
 
-## 5. API 逐个说明
+如果 driver 需要外部库初始化，要明确初始化时机和线程规则。不要把昂贵初始化藏在每次 `createObject()` 中反复执行。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 6. 知识点覆盖
 
-### `[virtual noexcept] QSqlDriverCreatorBase::~QSqlDriverCreatorBase()`
-
-**作用与语义：**
-
-它会摧毁SQL驱动创建对象。
-
-### `[pure virtual] QSqlDriver *QSqlDriverCreatorBase::createObject() const`
-
-**作用与语义：**
-
-重新实现该函数，返回一个`QSqlDriver`子类的新实例。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-连接由连接名识别，查询和模型引用连接。关闭或移除连接前必须销毁仍引用它的 query、model 和 database 句柄；不同线程不要共用连接。
-
-### 状态和错误边界
-
-区分连接是否打开、语句是否执行成功、游标是否定位在有效行、字段是否存在以及事务是否提交成功。`exec()` 成功不代表有结果行，`next()` 成功后才可以安全读取当前行。
-
-### 线程边界
-
-Qt SQL 连接有线程归属，每个线程应建立自己的连接并使用唯一连接名；不要把一个线程创建的 QSqlDatabase 或 QSqlQuery 传到另一个线程继续使用。
-
-### 最容易出现的错误
-
-不要拼接用户输入形成 SQL；不要把 exec 成功当作有数据；不要在连接仍被引用时 removeDatabase；不要忽略驱动是否可用、字段类型转换和事务失败回滚。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QSqlDriverCreatorBase` 所属机制类型：Qt SQL 连接、查询与事务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 自定义 SQL 驱动注册机制。
+- driver 工厂对象和 `QSqlDatabase::addDatabase()` 的关系。
+- 基类工厂与模板工厂的分工。

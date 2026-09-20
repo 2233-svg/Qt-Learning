@@ -1,110 +1,55 @@
 # QActionEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QActionEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QActionEvent` 是 Qt 的值类型，围绕“动作事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QActionEvent` 是 Qt 在 action 容器发生变化时发送的事件。比如某个 widget、menu、toolbar 增加了 action、移除了 action，或 action 状态变化，Qt 会用它通知相关对象。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+普通应用很少手动创建它；自定义能承载 actions 的控件时，才需要在 `actionEvent()` 里读取它。
 
-### 这是什么
+## 2. 类说明
 
-`QActionEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QActionEvent` 继承自 `QEvent`。它携带两个指针：`action()` 是被添加/移除/修改的 action，`before()` 表示插入位置之前的 action。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+事件类型通常是 `QEvent::ActionAdded`、`ActionRemoved`、`ActionChanged`。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `QActionEvent(int type, QAction *action, QAction *before)` | 构造 action 事件。通常由 Qt 内部使用。 |
+| `action()` | 返回发生变化的 action。 |
+| `before()` | 返回插入时位于其后的 action；为空表示追加或无位置含义。 |
+| `QWidget::actionEvent()` | QWidget 接收 action 变化的处理入口。 |
+| `QEvent::ActionAdded` | action 被加入。 |
+| `QEvent::ActionRemoved` | action 被移除。 |
+| `QEvent::ActionChanged` | action 属性发生变化。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QActionEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+```cpp
+void CommandBar::actionEvent(QActionEvent *event)
+{
+    if (event->type() == QEvent::ActionAdded)
+        insertButtonFor(event->action(), event->before());
+    else if (event->type() == QEvent::ActionRemoved)
+        removeButtonFor(event->action());
+    else if (event->type() == QEvent::ActionChanged)
+        updateButtonFor(event->action());
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 5. 使用场景
 
-### 工作机制
+适合自定义工具栏、命令栏、可显示 actions 的控件、需要同步 action 列表和 UI 子控件的容器。
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+普通菜单和工具栏已经处理这些事件，不需要你手写。
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+`before()` 只在插入语义中有意义。处理 changed/removed 时不要依赖它。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+事件里的 action 指针不代表所有权转移。删除 action 仍由 parent 或创建者负责。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QActionEvent(int type, QAction *action, QAction *before = nullptr)`
-- `QAction * action() const`
-- `QAction * before() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QActionEvent::QActionEvent(int type, QAction *action, QAction *before = nullptr)`
-
-**作用与语义：**
-
-构造一个动作事件。`type`可以是`ActionChanged`、`ActionAdded`或`ActionRemoved`。
-`action` 是被更改、添加或移除的动作。如果 `type` 是 ActionAdded，则该动作应在动作`before`之前插入。如果`before` `nullptr`，则该动作被附加。
-
-### `QAction *QActionEvent::action() const`
-
-**作用与语义：**
-
-返回被更改、添加或移除的动作。
-
-### `QAction *QActionEvent::before() const`
-
-**作用与语义：**
-
-如果`type()` `ActionAdded`，返回应出现在 `action()` 之前的动作。如果该函数返回`nullptr`，则该动作应附加到同一小部件上已有的动作上。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QActionEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+自定义 action 容器要同时处理 added、removed、changed，否则 UI 很容易和命令状态不同步。

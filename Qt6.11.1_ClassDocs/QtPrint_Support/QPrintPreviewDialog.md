@@ -1,152 +1,59 @@
 # QPrintPreviewDialog
-
-> Qt 6.11.1 · Qt Print Support
+> Qt 6.11.1 · Qt Print Support · 来自 `QPrintPreviewDialog`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QPrintPreviewDialog` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QPrintPreviewDialog` 是带工具栏和窗口外壳的打印预览对话框。它向你发出 `paintRequested(QPrinter *)`，你用和平时打印一样的代码把页面画到这个 printer 上，Qt 再把结果显示成预览。
 
-**模块背景：** Qt Print Support 提供打印机、打印预览和打印作业相关接口。
+它的关键价值是复用同一份绘制逻辑：预览画一次，真正打印也画一次，避免“预览像这样、打印又变样”。
 
-### 这是什么
+## 2. 类说明
 
-`QPrintPreviewDialog` 是 Qt Widgets 界面机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QPrintPreviewDialog`，属于 Qt Print Support 模块，用于提供完整打印预览窗口。
 
-**内部模型：** Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成界面。控件的可见区域、sizeHint、sizePolicy、字体和平台 style 共同影响最终几何；用户输入先进入 Qt 事件系统，再由控件的事件函数、信号或快捷键处理。
+如果你想把预览嵌进自己的窗口，而不是弹出对话框，用 `QPrintPreviewWidget`。
 
-**适用场景：** 创建 QApplication 后创建控件，设置 parent 或把控件加入布局，连接用户操作信号，再显示顶层窗口。复合界面用布局嵌套；控件尺寸异常时同时检查 sizePolicy、minimum/maximum size、layout stretch、margins 和 spacing。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QPrintPreviewDialog(parent, flags)` | 创建带内部 printer 的预览对话框。 |
+| `QPrintPreviewDialog(QPrinter *printer, parent, flags)` | 基于调用者提供的 `QPrinter` 预览。 |
+| `printer()` | 返回预览使用的打印设备。 |
+| `paintRequested(QPrinter *)` | 需要生成预览页时发出；业务代码在这里绘制。 |
+| `open(receiver, member)` | 非模态打开对话框。 |
+| `done(result)` / `setVisible(visible)` | 对话框生命周期重实现。 |
 
-**先记住的坑：** 不要用固定坐标拼接响应式界面；不要给已经加入布局的控件反复 `setGeometry()`；不要在 `paintEvent()` 中修改业务状态；不要忘记窗口关闭、对象销毁和应用退出是三个不同事件。
+## 4. 典型流程
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QPrintPreviewDialog>`
-- 继承自：QDialog
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS PrintSupport)
-target_link_libraries(mytarget PRIVATE Qt6::PrintSupport)
+```cpp
+QPrintPreviewDialog preview(&printer, this);
+connect(&preview, &QPrintPreviewDialog::paintRequested,
+        this, &ReportWindow::printDocument);
+preview.exec();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`printDocument(QPrinter *)` 应该只根据 printer 和文档状态绘制，不要弹对话框、不要修改业务数据。
 
-### 工作机制
+## 5. 使用场景
 
-Widgets 通过父子控件树、布局系统、事件分发和重绘请求组成界面。控件的可见区域、sizeHint、sizePolicy、字体和平台 style 共同影响最终几何；用户输入先进入 Qt 事件系统，再由控件的事件函数、信号或快捷键处理。
+| 场景 | 为什么适合 |
+| --- | --- |
+| 标准桌面应用预览 | 自带翻页、缩放、打印入口。 |
+| 报表打印前确认 | 用户先检查分页和版式，再决定打印。 |
+| 复用现有打印函数 | 连接 `paintRequested` 到同一打印函数。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+`paintRequested` 可能被多次触发：打开预览、缩放、改方向、刷新都可能重新生成页面。绘制函数必须是可重复调用的纯输出过程，不要每次调用都消耗业务队列或递增文档状态。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+预览不是最终打印机的绝对保证。不同打印机驱动、不可打印边距、字体和 DPI 可能让最终纸面略有差异；预览主要保证你的 Qt 绘制逻辑和分页一致。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+大文档预览要注意性能。一次性绘制几百页可能卡 UI，可以考虑限制预览、缓存分页结果或优化绘制函数。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-创建 QApplication 后创建控件，设置 parent 或把控件加入布局，连接用户操作信号，再显示顶层窗口。复合界面用布局嵌套；控件尺寸异常时同时检查 sizePolicy、minimum/maximum size、layout stretch、margins 和 spacing。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QPrintPreviewDialog(QPrinter *printer, QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
-- `QPrintPreviewDialog(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
-- `virtual ~QPrintPreviewDialog()`
-- `void open(QObject *receiver, const char *member)`
-- `QPrinter * printer()`
-
-### 重实现的公有函数
-
-- `virtual void done(int result) override`
-- `virtual void setVisible(bool visible) override`
-
-### 信号
-
-- `void paintRequested(QPrinter *printer)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QPrintPreviewDialog::QPrintPreviewDialog(QPrinter *printer, QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
-
-**作用与语义：**
-
-基于`printer`构建QPrintPreviewDialog，并以`parent`为父组件。控件标志`flags`传递给`QWidget`构造器。
-
-### `[explicit] QPrintPreviewDialog::QPrintPreviewDialog(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags())`
-
-**作用与语义：**
-
-这会创建一个内部`QPrinter`对象，使用系统默认打印机。
-
-### `[virtual noexcept] QPrintPreviewDialog::~QPrintPreviewDialog()`
-
-**作用与语义：**
-
-摧毁了`QPrintPreviewDialog`。
-
-### `[override virtual] void QPrintPreviewDialog::done(int result)`
-
-**作用与语义：**
-
-重实现自：`QDialog::done`（int r）。
-
-### `void QPrintPreviewDialog::open(QObject *receiver, const char *member)`
-
-**作用与语义：**
-
-打开对话框，并将其完成（int）信号连接到`receiver`和`member`指定的槽位。
-当对话关闭时，信号会从槽函数中断开。
-
-### `[signal] void QPrintPreviewDialog::paintRequested(QPrinter *printer)`
-
-**作用与语义：**
-
-当`QPrintPreviewDialog`需要生成一组预览页面时，会发出该信号。
-提供的`printer`实例是绘图设备，你应在上面绘制每页内容，使用`QPrinter`该实例，就像直接打印时一样。
-
-### `QPrinter *QPrintPreviewDialog::printer()`
-
-**作用与语义：**
-
-返回指向当前对话`QPrinter`对象的指针。
-
-### `[override virtual] void QPrintPreviewDialog::setVisible(bool visible)`
-
-**作用与语义：**
-
-重装：`QDialog::setVisible`（布尔可见）。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-不要用固定坐标拼接响应式界面；不要给已经加入布局的控件反复 `setGeometry()`；不要在 `paintEvent()` 中修改业务状态；不要忘记窗口关闭、对象销毁和应用退出是三个不同事件。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPrintPreviewDialog` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 预览对话框与 `QPrinter` 的关系。
+- `paintRequested` 复用打印绘制逻辑。
+- 预览刷新、重复绘制和副作用控制。
+- 预览对话框与嵌入式预览控件的取舍。

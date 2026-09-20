@@ -1,110 +1,81 @@
 # QFileOpenEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QFileOpenEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QFileOpenEvent` 是 文件、设备与流机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QFileOpenEvent` 表示操作系统要求应用打开某个资源。它常见于用户双击与应用关联的文件、从文件管理器“打开方式”启动应用、拖入系统文件，或平台把 URL / deep link 转交给已运行应用。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它不是 `QFile` 的打开结果，也不保证资源一定是本地文件。`file()` 是兼容接口，`url()` 才是更完整的表达：资源可能是 `file:` URL、网页 URL、自定义 scheme，甚至没有适合直接映射为本地路径的内容。
 
-### 这是什么
+## 2. 类说明
 
-`QFileOpenEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QFileOpenEvent` 继承自 `QEvent`，类型为 `QEvent::FileOpen`。在 Qt GUI 应用中，常由 `QGuiApplication` 或主窗口的 `event()` 接收。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QFileOpenEvent`：事件只传递要打开的资源标识；权限检查、格式识别、最近文件、异步加载和错误 UI 都由应用负责。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `url() const` | 返回应用应该打开的完整 `QUrl`，优先使用。 |
+| `file() const` | 返回资源的文件名表示；不保证是可直接用 `QFile` 打开的本地路径。 |
+| `type()` | 来自 `QEvent`，通常为 `QEvent::FileOpen`。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QFileOpenEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先设置路径或设备，再 open，成功后读写/定位/刷新，最后 close；析构通常会关闭设备，但关键写入应显式 flush/close 并检查错误。相对路径依赖当前工作目录，资源路径和用户文件路径要区分。
-
-**状态与结果：** 区分设备未打开、打开成功、到达 EOF、暂时无数据、读写失败和写入尚未落盘。`readAll()` 方便小数据但可能占用大量内存，大文件应分块处理并检查返回值。
-
-**线程与事件循环：** 同一个打开设备不要跨线程并发使用，除非类明确保证线程安全；后台 I/O 通过 worker 或异步设备处理，GUI 线程只接收结果。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+### 优先按 URL 路由
 
 ```cpp
-QFile file(path);
-if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    const QByteArray data = file.readAll();
+bool AppController::event(QEvent *event)
+{
+    if (event->type() == QEvent::FileOpen) {
+        auto *openEvent = static_cast<QFileOpenEvent *>(event);
+        openResource(openEvent->url());
+        return true;
+    }
+
+    return QObject::event(event);
+}
+
+void AppController::openResource(const QUrl &url)
+{
+    if (url.isLocalFile()) {
+        openDocument(url.toLocalFile());
+    } else if (url.scheme() == "myapp") {
+        openDeepLink(url);
+    } else {
+        showUnsupportedUrl(url);
+    }
 }
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+这样既能处理文件关联，也能自然扩展到自定义 URI scheme。
 
-### 公有函数
+### 做启动早期的请求缓冲
 
-- `QString file() const`
-- `QUrl url() const`
+文件打开事件可能在主窗口完全准备好前到达。应用可以把 URL 暂存，等文档控制器、会话恢复、权限初始化完成后再打开，避免在半初始化状态直接创建文档。
 
-## 5. API 逐个说明
+### 文件访问仍要做错误处理
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+系统把 URL 交给应用不代表它可读：文件可能已删除、无权限、被占用，或者 URL 指向不支持的协议。`QFileOpenEvent` 只是请求，不是成功保证。
 
-### `QString QFileOpenEvent::file() const`
+## 5. 使用场景
 
-**作用与语义：**
+`QFileOpenEvent` 适合文档编辑器、图片查看器、播放器、IDE、设计工具、浏览器式桌面应用和支持 deep link 的客户端。
 
-返回应用程序应打开的文件名称。
-这并不保证是本地文件的路径。
+它在 macOS 文件关联、桌面文件管理器打开、单实例应用接收后续打开请求等场景尤其重要。不要只在 `main()` 读取命令行参数，否则已运行应用收到的新打开请求会漏掉。
 
-### `QUrl QFileOpenEvent::url() const`
+## 6. 常见坑与经验
 
-**作用与语义：**
+不要只调用 `file()` 后直接 `QFile::open()`。优先读取 `url()`，再通过 `isLocalFile()` 判断是否能安全转换为本地路径。
 
-返回应用应打开的URL。
+不要把事件里的路径当成可信输入。文件类型、大小、符号链接、权限和自定义 URI 参数都应按应用安全策略验证。
 
-## 6. 深入实践与常见坑
+不要阻塞事件处理去同步加载超大文件。收到事件后可启动异步加载，并及时给出加载状态或错误反馈。
 
-### 生命周期和资源边界
+不要忽略单实例语义。新文件打开请求应该进入现有会话的文档管理流程，而不是隐式创建互相独立的全局状态。
 
-先设置路径或设备，再 open，成功后读写/定位/刷新，最后 close；析构通常会关闭设备，但关键写入应显式 flush/close 并检查错误。相对路径依赖当前工作目录，资源路径和用户文件路径要区分。
+## 7. 知识点覆盖
 
-### 状态和错误边界
-
-区分设备未打开、打开成功、到达 EOF、暂时无数据、读写失败和写入尚未落盘。`readAll()` 方便小数据但可能占用大量内存，大文件应分块处理并检查返回值。
-
-### 线程边界
-
-同一个打开设备不要跨线程并发使用，除非类明确保证线程安全；后台 I/O 通过 worker 或异步设备处理，GUI 线程只接收结果。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QFileOpenEvent` 所属机制类型：文件、设备与流机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QFileOpenEvent` 应覆盖文件关联、URL 与本地路径、deep link、单实例应用、启动时序、异步文档加载、文件权限、资源路由和跨平台桌面集成。

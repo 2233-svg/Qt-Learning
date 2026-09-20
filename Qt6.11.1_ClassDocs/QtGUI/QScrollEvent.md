@@ -1,130 +1,85 @@
 # QScrollEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QScrollEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QScrollEvent` 是 Qt 的值类型，围绕“滚动事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QScrollEvent` 是 `QScroller` 在滚动过程中发送的位置更新事件。它不报告“这次手指移动了多少”，而是报告“内容现在应该处于什么位置”，并附带超出合法边界的 overshoot 距离。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+这使得控件可以把内容位置设置为确定值，而不是自己累计 delta。确定位置在触控、惯性、回弹和帧率变化下更稳定，避免累计误差。
 
-### 这是什么
+## 2. 类说明
 
-`QScrollEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
+`QScrollEvent` 继承自 `QEvent`，通常在 `event()` 中处理 `QEvent::Scroll`。它由 `QScroller` 基于此前的 `QScrollPrepareEvent` 配置生成。
 
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+类说明只用于表明这些 API 来自 `QScrollEvent`：滚动状态机、速度曲线和回弹动画由 `QScroller` 管理；控件负责把 content position 映射为自己的视图偏移并绘制 overshoot 效果。
 
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
+## 3. API 速查
 
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
+| API | 用途速查 |
+| --- | --- |
+| `enum ScrollState` | 表示一次滚动序列的开始、更新、结束。 |
+| `QScrollEvent(contentPos, overshootDistance, state)` | 构造滚动位置更新事件。 |
+| `contentPos() const` | 返回当前建议设置的内容位置。 |
+| `overshootDistance() const` | 返回超出内容边界的距离，可用于弹性视觉。 |
+| `scrollState() const` | 返回滚动阶段：Started、Updated、Finished。 |
 
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 用绝对内容位置更新视图
 
-- 头文件：`#include <QScrollEvent>`
-- 继承自：QEvent
-- 直接派生类：未在类页中列出
+```cpp
+bool CanvasView::event(QEvent *event)
+{
+    if (event->type() == QEvent::Scroll) {
+        auto *scroll = static_cast<QScrollEvent *>(event);
 
-CMake 配置：
+        m_contentOffset = scroll->contentPos();
+        m_overshoot = scroll->overshootDistance();
+        update();
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+        if (scroll->scrollState() == QScrollEvent::ScrollFinished)
+            settleAtBoundary();
+
+        scroll->accept();
+        return true;
+    }
+
+    return QWidget::event(event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+不要再把 `contentPos()` 加到旧偏移上。它已经是新位置，重复累加会让内容飞出范围。
 
-### 工作机制
+### overshoot 只用于视觉，不应修改真实范围
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+```cpp
+const QPointF visualOffset = m_contentOffset - m_overshoot * 0.35;
+drawContent(painter, visualOffset);
+```
 
-### 状态、生命周期和线程
+真实内容位置应保持在合法范围；overshoot 是为了做弹性拉伸、阴影或边缘反馈。把它写入真实滚动位置会让边界计算越来越复杂。
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+### 正确处理滚动序列边界
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+`ScrollStarted` 可用于隐藏文本选择、暂停昂贵布局或开始记录手势；`ScrollFinished` 可用于恢复选择、吸附到刻度、保存位置。一次序列若只有一个事件，开始与结束语义可能同时成立，代码不能假设它们永远是不同事件。
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+## 5. 使用场景
 
-## 3. 直接使用
+`QScrollEvent` 适合触控照片浏览器、地图、时间轴、画布、长列表、工业面板和需要惯性/回弹效果的自定义滚动区域。
 
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
+对于 `QAbstractScrollArea` 系列，滚动条和 viewport 已经处理大部分场景；只有自己接入 `QScroller` 或做特殊触控交互时才需要直接消费该事件。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 6. 常见坑与经验
 
-### 公有类型
+不要把 `contentPos()` 与 `QWheelEvent::pixelDelta()` 混淆。前者是内容的绝对目标位置，后者是本次设备输入的相对增量。
 
-- `enum ScrollState { ScrollStarted, ScrollUpdated, ScrollFinished }`
+不要忽略 `ScrollFinished`。惯性结束后常需要停止临时渲染策略、吸附刻度或恢复被隐藏的 UI。
 
-### 公有函数
+不要把 overshoot 当作错误。它是正常的弹性边界信息，尤其在触控滚动中很常见。
 
-- `QScrollEvent(const QPointF &contentPos, const QPointF &overshootDistance, QScrollEvent::ScrollState scrollState)`
-- `QPointF contentPos() const`
-- `QPointF overshootDistance() const`
-- `QScrollEvent::ScrollState scrollState() const`
+不要在收到滚动事件时重新配置 content range。范围应该在 `QScrollPrepareEvent` 中协商；滚动中只有内容尺寸真的改变时才需要重新处理。
 
-## 5. API 逐个说明
+## 7. 知识点覆盖
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QScrollEvent::ScrollState`
-
-**作用与语义：**
-
-该枚举描述了卷轴事件可能存在的状态。
-- `QScrollEvent::ScrollStarted`：`0`;设置为卷轴活动的第一个卷轴事件。
-- `QScrollEvent::ScrollUpdated`：`1`;设置为除卷轴活动中第一个和最后一个卷轴事件外的所有卷轴事件。
-- `QScrollEvent::ScrollFinished`：`2`;设置为卷轴活动的最后一个卷轴事件。
-
-### `QScrollEvent::QScrollEvent(const QPointF &contentPos, const QPointF &overshootDistance, QScrollEvent::ScrollState scrollState)`
-
-**作用与语义：**
-
-创建新的QScrollEvent `contentPos`是新的内容位置，`overshootDistance`是新的超跃距离，`scrollState`表示该滚动事件是第一个、最后一个还是中间的某个事件。
-
-### `QPointF QScrollEvent::contentPos() const`
-
-**作用与语义：**
-
-返回新的卷轴位置。
-
-### `QPointF QScrollEvent::overshootDistance() const`
-
-**作用与语义：**
-
-返回新的超冲距离。关于超`QScroller`一词的解释，请参见 。
-
-### `QScrollEvent::ScrollState QScrollEvent::scrollState() const`
-
-**作用与语义：**
-
-返回当前滚动状态，作为 ScrollStateFlag 值的组合。如果该滚动事件是滚动活动中的第一个（或最后一个）事件，则会设置 `ScrollStarted`（或`ScrollFinished`）。请注意，如果活动包含单一`QScrollEvent`，两个值可以同时设置。中间所有其他滚动事件的状态将设置为 `ScrollUpdated`。
-例如，小部件可以在滚动开始和停止时还原选择。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QScrollEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QScrollEvent` 应覆盖绝对内容坐标、滚动序列、惯性滚动、overshoot、边界回弹、`QScroller`、触控视图更新、吸附逻辑和 wheel delta 区别。

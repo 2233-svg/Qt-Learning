@@ -1,149 +1,60 @@
 # QSqlRelation
-
-> Qt 6.11.1 · Qt SQL
+> Qt 6.11.1 · Qt SQL · 来自 `QSqlRelation`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QSqlRelation` 是 Qt SQL 的“SqlRelation”类型，参与数据库连接、SQL 执行、事务或结果模型。
+`QSqlRelation` 描述一个外键列如何映射到另一张表的可读显示值。比如员工表 `city_id` 存整数，城市表 `id/name` 保存城市名；relation 就说明“用 city 表的 id 匹配，界面展示 name”。
 
-**模块背景：** Qt SQL 提供数据库连接、查询、事务和 SQL 模型/视图集成。
+它主要服务 `QSqlRelationalTableModel` 和 `QSqlRelationalDelegate`。
 
-### 这是什么
+## 2. 类说明
 
-`QSqlRelation` 是 Qt SQL 连接、查询与事务机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QSqlRelation`，属于 Qt SQL 模块，用于描述关系表、索引列和显示列。
 
-**内部模型：** Qt SQL 把驱动、连接、查询游标和模型分成不同对象。连接决定驱动和数据库会话，`QSqlQuery` 代表语句及其结果游标，事务把多条语句的提交边界固定下来，SQL 模型再把查询结果接到视图。
+它只是三段字符串的轻量值对象：关系表名、索引列、显示列。真正的 JOIN、查询和编辑由 relational table model 完成。
 
-**适用场景：** 创建连接并检查 open，使用 prepare/bindValue 分离 SQL 结构和用户数据，执行后检查返回值和 lastError，遍历结果，必要时用 transaction/commit/rollback 包住一组操作。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QSqlRelation()` | 创建无效关系。 |
+| `QSqlRelation(tableName, indexColumn, displayColumn)` | 创建外键关系描述。 |
+| `tableName()` | 返回被关联的表。 |
+| `indexColumn()` | 返回被关联表中用于匹配外键的列。 |
+| `displayColumn()` | 返回向用户显示的列。 |
+| `isValid()` | 判断三段信息是否构成有效关系。 |
+| `swap()` | 值类型交换。 |
 
-**先记住的坑：** 不要拼接用户输入形成 SQL；不要把 exec 成功当作有数据；不要在连接仍被引用时 removeDatabase；不要忽略驱动是否可用、字段类型转换和事务失败回滚。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QSqlRelation>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Sql)
-target_link_libraries(mytarget PRIVATE Qt6::Sql)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-Qt SQL 把驱动、连接、查询游标和模型分成不同对象。连接决定驱动和数据库会话，`QSqlQuery` 代表语句及其结果游标，事务把多条语句的提交边界固定下来，SQL 模型再把查询结果接到视图。
-
-### 状态、生命周期和线程
-
-**生命周期：** 连接由连接名识别，查询和模型引用连接。关闭或移除连接前必须销毁仍引用它的 query、model 和 database 句柄；不同线程不要共用连接。
-
-**状态与结果：** 区分连接是否打开、语句是否执行成功、游标是否定位在有效行、字段是否存在以及事务是否提交成功。`exec()` 成功不代表有结果行，`next()` 成功后才可以安全读取当前行。
-
-**线程与事件循环：** Qt SQL 连接有线程归属，每个线程应建立自己的连接并使用唯一连接名；不要把一个线程创建的 QSqlDatabase 或 QSqlQuery 传到另一个线程继续使用。
-
-## 3. 直接使用
-
-创建连接并检查 open，使用 prepare/bindValue 分离 SQL 结构和用户数据，执行后检查返回值和 lastError，遍历结果，必要时用 transaction/commit/rollback 包住一组操作。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
 ```cpp
-QSqlQuery query(database);
-query.prepare(QStringLiteral("SELECT name FROM users WHERE id = :id"));
-query.bindValue(QStringLiteral(":id"), id);
-if (query.exec()) {
-    while (query.next()) {
-        const QVariant value = query.value(0);
-    }
-}
+auto *model = new QSqlRelationalTableModel(this, db);
+model->setTable("employee");
+model->setRelation(2, QSqlRelation("city", "id", "name"));
+model->select();
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+第 2 列实际存 `city_id`，视图中显示城市名。配合 `QSqlRelationalDelegate`，编辑时通常出现下拉框。
 
-### 公有函数
+## 5. 使用场景
 
-- `QSqlRelation()`
-- `QSqlRelation(const QString &tableName, const QString &indexColumn, const QString &displayColumn)`
-- `QString displayColumn() const`
-- `QString indexColumn() const`
-- `bool isValid() const`
-- `void swap(QSqlRelation &other)`
-- `QString tableName() const`
+| 场景 | 用法 |
+| --- | --- |
+| 外键显示名称 | 把 ID 列映射成名称列。 |
+| 表格编辑外键 | 配合 relational delegate 显示候选值。 |
+| 简单引用表 | 城市、部门、分类、状态码等字典表。 |
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+relation 的列名是数据库列名，不是模型 header，也不是 SQL alias。写错不会在构造时失败，通常要到 `select()` 或显示时才暴露。
 
-### `QSqlRelation::QSqlRelation()`
+显示列不一定唯一。如果 displayColumn 有重复值，用户看到两个相同文本可能无法区分；字典表最好保证显示值唯一或用更清晰的组合字段。
 
-**作用与语义：**
+复杂多表关系、额外过滤条件、联级加载通常超出 `QSqlRelation` 的舒适区。那时写自定义 SQL model 或代理模型更可控。
 
-构造一个无效的QSqlRelation对象。
-对于这样的对象，`tableName()`、`indexColumn()`和`displayColumn()`函数返回一个空字符串。
+## 7. 知识点覆盖
 
-### `QSqlRelation::QSqlRelation(const QString &tableName, const QString &indexColumn, const QString &displayColumn)`
-
-**作用与语义：**
-
-构建一个 QSqlRelation 对象，其中 `tableName` 是外键所指的 SQL 表名，`indexColumn` 是外键，`displayColumn` 是应向用户展示的字段。
-
-### `QString QSqlRelation::displayColumn() const`
-
-**作用与语义：**
-
-返回表`tableName()`中应呈现给用户的列，而非外键。
-
-### `QString QSqlRelation::indexColumn() const`
-
-**作用与语义：**
-
-返回表`tableName()`中指向外键的索引列。
-
-### `[noexcept] bool QSqlRelation::isValid() const`
-
-**作用与语义：**
-
-如果 `QSqlRelation` 对象有效，则返回 `true`；否则返回 `false`。
-
-### `[noexcept] void QSqlRelation::swap(QSqlRelation &other)`
-
-**作用与语义：**
-
-将此关系与`other`交换。该操作非常快速且从未失败。
-
-### `QString QSqlRelation::tableName() const`
-
-**作用与语义：**
-
-返回外键所指向的表名。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-连接由连接名识别，查询和模型引用连接。关闭或移除连接前必须销毁仍引用它的 query、model 和 database 句柄；不同线程不要共用连接。
-
-### 状态和错误边界
-
-区分连接是否打开、语句是否执行成功、游标是否定位在有效行、字段是否存在以及事务是否提交成功。`exec()` 成功不代表有结果行，`next()` 成功后才可以安全读取当前行。
-
-### 线程边界
-
-Qt SQL 连接有线程归属，每个线程应建立自己的连接并使用唯一连接名；不要把一个线程创建的 QSqlDatabase 或 QSqlQuery 传到另一个线程继续使用。
-
-### 最容易出现的错误
-
-不要拼接用户输入形成 SQL；不要把 exec 成功当作有数据；不要在连接仍被引用时 removeDatabase；不要忽略驱动是否可用、字段类型转换和事务失败回滚。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QSqlRelation` 所属机制类型：Qt SQL 连接、查询与事务机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 外键列、关联表、索引列、显示列。
+- `QSqlRelationalTableModel::setRelation()`。
+- 字典表/引用表在 UI 中的显示和编辑。
+- 简单关系模型的边界。

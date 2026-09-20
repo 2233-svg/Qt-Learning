@@ -1,193 +1,108 @@
 # QBackingStore
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QBackingStore`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QBackingStore` 是 `QWindow` 的软件后备缓冲。它让你先在离屏绘制设备上用 `QPainter` 完成绘制，再把指定区域一次性 flush 到窗口 surface，避免直接在屏幕表面逐笔绘制造成闪烁或平台差异。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+它最适合没有 QWidget 层、但仍希望使用 `QPainter` 自己实现窗口渲染的场景。核心顺序固定：窗口尺寸变化时 `resize()`，绘制前 `beginPaint()`，在 `paintDevice()` 上绘制，调用 `endPaint()`，最后 `flush()`。
 
-### 这是什么
+## 2. 类说明
 
-`QBackingStore` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`QBackingStore` 不继承 `QObject`，但与一个 `QWindow` 强绑定。`paintDevice()` 返回的设备只在 `beginPaint()` 和 `endPaint()` 之间有效；底层平台 handle 也只适合非常底层的插件/平台集成，普通应用不应直接依赖。
 
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+类说明只用于表明这些 API 来自 `QBackingStore`。它是软件渲染路径，不等同于 OpenGL/Vulkan/QRhi 的 swapchain；GPU 渲染窗口应使用对应图形后端的生命周期。
 
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用途速查 |
+| --- | --- |
+| `QBackingStore(window)` | 为顶层 `QWindow` 创建后备缓冲。 |
+| `resize(size)` | 调整后备缓冲尺寸，应随窗口尺寸变化调用。 |
+| `size() const` | 返回当前后备缓冲逻辑尺寸。 |
+| `beginPaint(region)` | 开始对指定脏区域进行绘制。 |
+| `paintDevice()` | 返回当前可绘制设备，仅在 begin/end 之间有效。 |
+| `endPaint()` | 结束绘制阶段。 |
+| `flush(region, window, offset)` | 将区域提交到目标窗口或其子窗口。 |
+| `scroll(area, dx, dy)` | 尝试在后备缓冲中移动已有像素，减少重绘。 |
+| `setStaticContents(region)` | 标记静态内容区域，辅助优化 resize 或重绘。 |
+| `staticContents()` / `hasStaticContents()` | 查询已声明的静态区域。 |
+| `window() const` | 返回关联的顶层窗口。 |
+| `handle() const` | 返回平台后备缓冲 handle，通常只供平台插件使用。 |
 
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+### 最小渲染循环
 
-- 头文件：`#include <QBackingStore>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+```cpp
+void RasterWindow::renderNow()
+{
+    if (!isExposed())
+        return;
 
-CMake 配置：
+    const QRegion dirty(rect());
+    m_backingStore.beginPaint(dirty);
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+    QPainter painter(m_backingStore.paintDevice());
+    painter.fillRect(rect(), Qt::white);
+    painter.drawText(rect(), Qt::AlignCenter, tr("Software-rendered window"));
+
+    m_backingStore.endPaint();
+    m_backingStore.flush(dirty);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`QPainter` 的作用域必须在 `endPaint()` 前结束。最简单的写法是像示例这样把 painter 放在局部块中，确保其析构后再调用 `endPaint()`。
 
-### 工作机制
+### resize 时同步后备缓冲
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+void RasterWindow::resizeEvent(QResizeEvent *event)
+{
+    m_backingStore.resize(event->size());
+    renderNow();
+}
+```
 
-### 状态、生命周期和线程
+如果不 resize，后备缓冲尺寸与窗口不一致，轻则内容拉伸或缺边，重则绘制越界或提交异常。
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+### 用 `scroll()` 复用已有像素
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+```cpp
+if (m_backingStore.scroll(viewportRegion, 0, -lineHeight)) {
+    updateOnlyExposedStrip();
+} else {
+    repaintViewport();
+}
+```
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+它适合文本视图、终端、时间轴等大部分内容只是平移的情况。返回 false 时必须准备完整重绘，因为平台后备存储不一定支持像素滚动优化。
 
-## 3. 直接使用
+### 子窗口 flush 要传对 offset
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+如果为 transient 或 child `QWindow` flush，region 使用子窗口局部坐标，offset 是它相对于顶层 backing-store 窗口的位置。普通顶层窗口可直接使用默认参数。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 5. 使用场景
 
-### 公有函数
+`QBackingStore` 适合纯 `QWindow` 软件渲染、嵌入式设备 UI、简单 2D 可视化、无 Widgets 的工具窗口、平台插件开发和需要完全控制脏区域的渲染循环。
 
-- `QBackingStore(QWindow *window)`
-- `~QBackingStore()`
-- `void beginPaint(const QRegion &region)`
-- `void endPaint()`
-- `void flush(const QRegion &region, QWindow *window = nullptr, const QPoint &offset = QPoint())`
-- `QPlatformBackingStore * handle() const`
-- `bool hasStaticContents() const`
-- `QPaintDevice * paintDevice()`
-- `void resize(const QSize &size)`
-- `bool scroll(const QRegion &area, int dx, int dy)`
-- `void setStaticContents(const QRegion &region)`
-- `QSize size() const`
-- `QRegion staticContents() const`
-- `QWindow * window() const`
+使用 `QWidget` 时，Qt 已经维护内部后备缓冲；使用 `QOpenGLWindow`、Vulkan 或 QRhi 时，有各自的 GPU 渲染路径。不要为了“更底层”而把成熟控件硬改成手工 backing store。
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要缓存 `paintDevice()` 返回指针。它只在 begin/end 绘制区间内有效。
 
-### `[explicit] QBackingStore::QBackingStore(QWindow *window)`
+不要遗漏 `endPaint()` 或在它之后继续绘制。这样会破坏后备存储状态，后续 flush 行为不可预测。
 
-**作用与语义：**
+不要只调用 `beginPaint()` 而从不 `flush()`。离屏缓冲里的内容不会自动显示到窗口。
 
-为给定的顶层`window`构造一个空曲面。
+不要在窗口未 exposed 时频繁 flush。结合 `QWindow::isExposed()` 合并渲染请求，可以避免最小化或遮挡时浪费绘制。
 
-### `[noexcept] QBackingStore::~QBackingStore()`
+不要把 static contents 当成永远不会变的硬约束。只有确实长期不变的区域才标记，否则优化提示会反过来造成残影。
 
-**作用与语义：**
+不要跨线程访问关联窗口或后备缓冲。窗口和 GUI 绘制必须遵守 GUI 线程规则。
 
-会破坏这个表面。
+## 7. 知识点覆盖
 
-### `void QBackingStore::beginPaint(const QRegion &region)`
-
-**作用与语义：**
-
-在指定`region`开始在背衬表面上作画。
-你应该在用`paintDevice()`来绘画之前调用这个函数。
-
-### `void QBackingStore::endPaint()`
-
-**作用与语义：**
-
-画完。
-你应该在`paintDevice()`结束后调用这个功能。
-
-### `void QBackingStore::flush(const QRegion &region, QWindow *window = nullptr, const QPoint &offset = QPoint())`
-
-**作用与语义：**
-
-将指定`window`的`region`冲入屏幕。
-`window`必须是该 backingstore 代表的顶层窗口，或该窗口的非瞬态子窗口。传递`nullptr`则回归使用backingstore的顶层窗口。
-如果 `window` 是子窗口，`region` 应该在子窗口坐标中，`offset` 应该是子窗口相对于 backingstore 顶层窗口的偏移量。
-你应该在用`endPaint()`结束绘画后调用这个函数。
-
-### `QPlatformBackingStore *QBackingStore::handle() const`
-
-**作用与语义：**
-
-返回指向 QPlatformBackingStore 实现的指针。
-
-### `bool QBackingStore::hasStaticContents() const`
-
-**作用与语义：**
-
-返回一个布尔值，表示该窗口是否有静态内容。
-
-### `QPaintDevice *QBackingStore::paintDevice()`
-
-**作用与语义：**
-
-退还了该表面的喷漆设备。
-警告：该设备仅在调用`beginPaint()`和`endPaint()`之间有效。你不应缓存返回的值。
-
-### `void QBackingStore::resize(const QSize &size)`
-
-**作用与语义：**
-
-将窗户表面的尺寸设置为`size`。
-
-### `bool QBackingStore::scroll(const QRegion &area, int dx, int dy)`
-
-**作用与语义：**
-
-将给定的`area` `dx`像素向右滚动，向下`dy`滚动;`dx`和`dy`都可能是负数。
-如果该区域成功滚动，返回`true`;否则返回。
-
-### `void QBackingStore::setStaticContents(const QRegion &region)`
-
-**作用与语义：**
-
-将`region`设为该窗口的静态内容。
-
-### `QSize QBackingStore::size() const`
-
-**作用与语义：**
-
-返回当前窗口表面的大小。
-
-### `QRegion QBackingStore::staticContents() const`
-
-**作用与语义：**
-
-返回一个表示窗口中静态内容区域的`QRegion`。
-
-### `QWindow *QBackingStore::window() const`
-
-**作用与语义：**
-
-返回指向该表面对应的顶层窗口的指针。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QBackingStore` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QBackingStore` 应覆盖软件双缓冲、`QWindow` 渲染循环、脏区域、begin/end/flush 协议、`QPainter` 生命周期、窗口 resize、像素滚动优化、静态内容、子窗口 offset、exposed 状态和 GUI 线程。

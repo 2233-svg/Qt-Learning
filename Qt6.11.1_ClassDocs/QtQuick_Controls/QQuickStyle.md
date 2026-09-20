@@ -1,119 +1,67 @@
 # QQuickStyle
-
-> Qt 6.11.1 · Qt Quick Controls
+> Qt 6.11.1 · Qt Quick Controls · 来自 `QQuickStyle`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QQuickStyle` 是 QML 属性绑定与场景图机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QQuickStyle` 控制 Qt Quick Controls 使用哪套控件样式。它影响的是 `Button`、`TextField`、`ComboBox`、`Slider` 这类 Controls 的外观和部分行为，不是给所有 QML Item 套皮肤的全局魔法。
 
-**模块背景：** 这是 Qt Quick Controls 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+最重要的规则只有一条：样式要在加载任何导入 Qt Quick Controls 的 QML 之前设置。Controls 类型一旦注册和实例化，样式选择就基本定型了。
 
-### 这是什么
+## 2. 类说明
 
-`QQuickStyle` 是 Qt Quick/QML 体系中的公开类型，连接 C++ 对象、QML 属性绑定和场景图渲染。
+`QQuickStyle` 是静态工具类，没有实例生命周期。它的 API 用于设置主样式、备用样式，以及查询最终采用的样式名称。
 
-**内部模型：** QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
+保留类说明：这些 API 来自 `QQuickStyle`，它属于 Qt Quick Controls 模块，作用范围集中在 Quick Controls 样式解析。
 
-**适用场景：** 需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。
+## 3. API 速查
 
-**典型调用链：** 注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
+| API | 用来做什么 |
+| --- | --- |
+| `setStyle(const QString &style)` | 设置主样式名称，例如 Material、Fusion、Imagine、Universal、Basic。 |
+| `setFallbackStyle(const QString &style)` | 设置自定义样式缺少控件实现时回退到哪套内置样式。 |
+| `name()` | 返回当前解析出的样式名称。 |
 
-**先记住的坑：** 不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QQuickStyle>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS QuickControls2)
-target_link_libraries(mytarget PRIVATE Qt6::QuickControls2)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-QML 属性绑定是声明式依赖关系，C++ 侧的属性、信号和对象生命周期会直接影响绑定是否更新。涉及渲染线程的类型不能随意在 GUI 线程之外操作。
-
-### 状态、生命周期和线程
-
-**生命周期：** QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
-
-**状态与结果：** 属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-**线程与事件循环：** 大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-## 3. 直接使用
-
-需要 QML 界面、动画、场景图或把 C++ 数据暴露给 QML 时使用。 使用时通常按这个过程组织：注册/创建类型 -> 暴露 properties/signals/invokables -> QML 创建和绑定 -> 在 C++ 中通过信号更新状态 -> 按线程规则处理渲染资源。
+## 4. 典型流程
 
 ```cpp
-// C++ 侧暴露属性/信号后，在 QML 中建立绑定。
-// 变化时发出 notify signal，避免在绑定表达式中直接修改状态。
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
+
+    QQuickStyle::setStyle("Material");
+    QQuickStyle::setFallbackStyle("Fusion");
+
+    QQmlApplicationEngine engine;
+    engine.loadFromModule("Demo", "Main");
+    return app.exec();
+}
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+如果项目允许命令行或环境变量配置样式，需要明确优先级。工程里常见做法是：开发/测试通过命令行切换，产品发布时在 C++ 或配置文件里固定默认样式。
 
-### 静态公有成员
+## 5. 使用场景
 
-- `QString name()`
-- `void setFallbackStyle(const QString &style)`
-- `void setStyle(const QString &style)`
+| 场景 | 建议 |
+| --- | --- |
+| 桌面工具想接近 QWidget/Fusion 质感 | 使用 `Fusion`，便于跨平台保持稳定。 |
+| 移动或嵌入式触控界面 | 选择 Material、Universal 或自定义 style，注意控件尺寸和触摸热区。 |
+| 品牌化 Quick Controls | 自定义 style 加 `setFallbackStyle()`，只重写真正需要品牌表达的控件。 |
+| 测试不同平台表现 | 在启动参数或环境变量中切换样式，避免频繁改代码。 |
 
-## 5. API 逐个说明
+## 6. 常见坑与经验
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+不要在 QML 已经加载后再调用 `setStyle()` 期待现有控件重绘成另一套样式。运行时主题色可以用 palette、附加属性或自定义样式属性处理；“换整套 style”通常是启动时决策。
 
-### `[static] QString QQuickStyle::name()`
+`setFallbackStyle()` 主要服务自定义样式：当你的 style 目录里没有实现某个 Control 时，Qt 可以从备用样式拿默认实现。备用样式最好选择 Qt 自带样式，避免 fallback 链条复杂到难以定位。
 
-**作用与语义：**
+`name()` 查询的是当前样式解析结果。太早调用时，命令行参数、环境变量、配置文件和 C++ 设置之间的最终结果可能还没完全体现；调试时最好在应用和 QML 初始化路径固定后观察。
 
-返回应用样式的名称。
-注意：应用程序样式可以通过传递`-style`命令行参数来指定。因此，如果在构建`QGuiApplication`之前调用，`name()`可能无法返回完全解析的值。
+样式不负责你的自定义 `Rectangle`、`Item`、`Canvas` 外观。那些元素没有 Controls 的 style 查找机制，需要你自己用主题对象、palette 或设计 token 维护一致性。
 
-### `[static] void QQuickStyle::setFallbackStyle(const QString &style)`
+## 7. 知识点覆盖
 
-**作用与语义：**
-
-将应用的备用样式设置为`style`。
-注意：备用样式必须是内置的 Qt 快速控制风格之一的名称，例如“Material”。
-注意：格式必须在加载导入 Qt 快速控件的 QML 前配置。在 QML 类型注册后，无法更改样式。
-也可以通过设置`QT_QUICK_CONTROLS_FALLBACK_STYLE`环境变量来指定后备样式。
-
-### `[static] void QQuickStyle::setStyle(const QString &style)`
-
-**作用与语义：**
-
-将应用样式设置为`style`。
-注意：格式必须在加载导入 Qt 快速控件的 QML 前配置。在 QML 类型注册后，无法更改样式。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-QML 引擎、上下文和对象所有权必须明确。由 QML 创建的对象通常由引擎管理；通过 context property 或 C++ 暴露的对象要决定由 C++ 持有还是转移给 QML，不能让绑定指向悬空对象。
-
-### 状态和错误边界
-
-属性绑定和直接赋值不是一回事：直接给被绑定属性赋值通常会打破原有绑定。C++ 属性要有正确的 notify signal，QML 才能在数据变化时更新；信号参数和属性当前值要保持一致。
-
-### 线程边界
-
-大多数 QML 对象和 GUI 操作在 GUI 线程，场景图渲染还可能在 render thread。不要在渲染阶段调用 GUI 对象 API；后台数据通过线程安全的信号/槽边界送入 QML。
-
-### 最容易出现的错误
-
-不要在 QML 绑定中产生副作用；注意 QObject 所有权；区分 GUI 线程和 render thread；注册类型版本要稳定。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QQuickStyle` 所属机制类型：QML 属性绑定与场景图机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- Qt Quick Controls 样式选择时机。
+- 内置样式、自定义样式、fallback style 的职责。
+- C++ API、环境变量、命令行参数之间的配置边界。
+- Controls 样式与普通 QML Item 外观的区别。
+- 启动期决策和运行时主题切换的不同设计。

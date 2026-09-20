@@ -1,133 +1,68 @@
 # QWhatsThis
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QWhatsThis`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QWhatsThis` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QWhatsThis` 是 Qt Widgets 的“这是什么？”上下文帮助机制。用户进入该模式后点击某个控件，应用可以展示一段更详细的解释，帮助用户理解这个控件的用途、影响和边界。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它和 `QToolTip` 的差别很明显：tooltip 是短提示，适合解释一个按钮名；What's This 是小型说明，适合解释复杂设置。它也不同于状态栏提示，状态栏更偏即时动作反馈，而 `QWhatsThis` 偏帮助文档的就地入口。
 
-### 这是什么
+## 2. 类说明
 
-`QWhatsThis` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QWhatsThis` 不是可实例化控件，而是一组静态函数。它负责进入/离开 What's This 模式、显示/隐藏说明文本，并能创建一个标准 `QAction` 供菜单或工具栏触发。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+具体帮助文本通常设置在 widget 或 action 上，例如 `QWidget::setWhatsThis()`、`QAction::setWhatsThis()`。`QWhatsThis` 负责模式和弹出展示，文本内容仍由你的界面对象提供。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `createAction(QObject *)` | 创建标准“这是什么？”动作，适合放到帮助菜单或工具栏。 |
+| `enterWhatsThisMode()` | 让应用进入 What's This 模式，下一次点击控件时显示对应说明。 |
+| `leaveWhatsThisMode()` | 主动退出 What's This 模式。 |
+| `inWhatsThisMode()` | 判断当前是否处于 What's This 模式。 |
+| `showText(const QPoint &, const QString &, QWidget *)` | 在全局位置显示一段 What's This 文本。 |
+| `hideText()` | 隐藏当前显示的 What's This 弹窗。 |
+| `QWidget::setWhatsThis()` | 给控件绑定说明文本，和 `QWhatsThis` 配合使用。 |
+| `QAction::setWhatsThis()` | 给菜单项或工具栏动作绑定说明文本。 |
+| `QEvent::EnterWhatsThisMode` | 进入模式时发给顶层窗口，复杂 UI 可据此调整状态。 |
+| `QEvent::LeaveWhatsThisMode` | 离开模式时发给顶层窗口。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+给控件设置帮助文本：
 
-- 头文件：`#include <QWhatsThis>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+```cpp
+ui->cacheSizeSpinBox->setWhatsThis(
+    tr("Controls how much memory is reserved for recently opened documents. "
+       "Larger values make switching faster but increase memory usage."));
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+把标准入口加到菜单：
 
-### 工作机制
+```cpp
+helpMenu->addAction(QWhatsThis::createAction(this));
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+也可以在自己的帮助按钮里直接进入模式：
 
-### 状态、生命周期和线程
+```cpp
+connect(helpButton, &QToolButton::clicked, this, [] {
+    QWhatsThis::enterWhatsThisMode();
+});
+```
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+## 5. 使用场景
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+适合解释偏专业的设置项、配置页里不常用但影响较大的参数、图形软件工具选项、管理员控制台中的策略开关、带副作用的高级功能。
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+不适合放置长篇教程。What's This 文本应该能在当前界面旁边读完；如果需要多步骤教学，应该跳转到帮助文档、引导页或示例工程。
 
-## 3. 直接使用
+## 6. 常见坑与经验
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
+不要把 tooltip 和 What's This 写成同一句。tooltip 说“这是什么按钮”，What's This 说“什么时候用、改了会怎样”。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+`showText()` 的位置是全局坐标，不是控件局部坐标。通常要用 `widget->mapToGlobal()` 计算。
 
-### 静态公有成员
-
-- `QAction * createAction(QObject *parent = nullptr)`
-- `void enterWhatsThisMode()`
-- `void hideText()`
-- `bool inWhatsThisMode()`
-- `void leaveWhatsThisMode()`
-- `void showText(const QPoint &pos, const QString &text, QWidget *w = nullptr)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[static] QAction *QWhatsThis::createAction(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-返回一个现成的 `QAction`，用于调用“这是什么？”上下文帮助，并附上给出的 `parent`。
-退回`QAction`方便用户进入“这是什么？”模式。
-
-### `[static] void QWhatsThis::enterWhatsThisMode()`
-
-**作用与语义：**
-
-该功能将用户界面切换到“这是什么？”模式。用户可以通过点击或按 Esc 切换回正常模式，或通过程序调用 `leaveWhatsThisMode()` 来切换。
-进入“这是什么？”模式时，会发送一个类型为 Qt：：EnterWhatsThisMode 的 `QEvent`到所有顶层控件。
-
-### `[static] void QWhatsThis::hideText()`
-
-**作用与语义：**
-
-如果显示“这是什么？”窗口，这个窗口就会被破坏。
-
-### `[static] bool QWhatsThis::inWhatsThisMode()`
-
-**作用与语义：**
-
-如果用户界面处于“这是什么？”模式，返回`true`;否则返回`false`。
-
-### `[static] void QWhatsThis::leaveWhatsThisMode()`
-
-**作用与语义：**
-
-如果用户界面处于“这是什么？”模式，该功能会切换回正常模式;否则则无效。
-当离开“这是什么？”模式时，会向所有顶层控件发送 Qt：：LeaveWhatsThisMode 类型的`QEvent`。
-
-### `[static] void QWhatsThis::showText(const QPoint &pos, const QString &text, QWidget *w = nullptr)`
-
-**作用与语义：**
-
-在全局位置`pos`显示`text`为“这是什么？”窗口。可选的控件参数`w`用于多头系统中确定合适的屏幕。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QWhatsThis` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+帮助文本也需要维护。配置项改名、默认值变化、风险边界变化时，What's This 比普通 UI 文案更容易被忘掉，但它往往正是用户困惑时会读的内容。

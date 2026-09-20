@@ -1,336 +1,110 @@
 # QGenericMatrix
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QGenericMatrix<N, M, T>`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 这是 GUI 基础类型，常用于绘制、输入、图像、字体或窗口系统集成。
+`QGenericMatrix` 是固定尺寸的通用矩阵值类型。它适合小型、维度在编译期已知的数学矩阵，例如颜色变换的 `3x3` 矩阵、图形管线中的 `3x4` 矩阵或自定义线性代数计算；它不是动态矩阵库，也不替代 `QMatrix4x4` 的图形变换接口。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+模板参数的顺序非常重要：`QGenericMatrix<N, M, T>` 中 `N` 是**列数**，`M` 是**行数**，元素类型为 `T`。因此 `QGenericMatrix<3, 2, float>` 表示 2 行 3 列，而不是 3 行 2 列。
 
-### 这是什么
-
-`QGenericMatrix` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QGenericMatrix>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 对象模型：轻量值类型；可按值复制、放在容器中或作为计算结果返回。
+- 常用别名：`QMatrix2x2`、`QMatrix3x3`、`QMatrix4x3` 等均是以 `float` 为元素类型的预定义实例。
 
-CMake 配置：
+它的元素索引使用 `matrix(row, column)`，但内部原始存储采用**列主序**。这是本类最关键的约定：索引看起来像普通数学矩阵，`data()` 却适合直接交给使用列主序的图形 API。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QGenericMatrix()` | 构造零矩阵。 |
+| `QGenericMatrix(values)` | 从**行主序**数组读取元素并构造矩阵。 |
+| `operator()(row, column)` | 按数学行、列读取或修改单个元素。 |
+| `data()` / `constData()` | 访问内部**列主序**连续内存。 |
+| `copyDataTo(values)` | 将内容按**行主序**拷贝到外部数组。 |
+| `fill(value)` | 以同一值填满所有元素。 |
+| `setToIdentity()` / `isIdentity()` | 设置或检查单位矩阵。 |
+| `transposed()` | 返回转置后的 `QGenericMatrix<M, N, T>`。 |
+| `+=` / `-=` | 同尺寸矩阵逐元素加减。 |
+| `*=` / `/=` | 所有元素乘除同一标量。 |
+| `operator*(m1, m2)` | 按线性代数规则相乘；内维度必须匹配。 |
+| `operator<<` / `operator>>` | 通过 `QDataStream` 序列化或反序列化。 |
+
+## 4. 关键用法
+
+### 用索引表达矩阵，而不是猜测内存下标
+
+```cpp
+#include <QGenericMatrix>
+
+QGenericMatrix<3, 2, float> m; // 2 行、3 列
+m.fill(0.0f);
+m(0, 0) = 1.0f;
+m(0, 1) = 2.0f;
+m(1, 2) = 6.0f;
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`operator()(row, column)` 是业务代码最清楚的访问方式。`row` 必须在 `[0, M)`，`column` 必须在 `[0, N)`；越界属于未定义行为，不能期待运行时检查。
 
-### 工作机制
+### 行主序输入与列主序原始数据
 
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
+```cpp
+const float rowMajor[] = {
+    1, 2, 3,
+    4, 5, 6
+};
 
-### 状态、生命周期和线程
+QGenericMatrix<3, 2, float> m(rowMajor);
+Q_ASSERT(m(1, 2) == 6.0f);
 
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
+const float *columnMajor = m.constData();
+// columnMajor 为：1, 4, 2, 5, 3, 6
+```
 
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
+构造函数的输入和 `copyDataTo()` 的输出都是行主序，便于与表格、CSV 或多数 CPU 侧算法对接；`data()` / `constData()` 则暴露列主序内存，适合 OpenGL 风格的数据接口。两者不能混用，否则矩阵会表现为转置或产生更隐蔽的错误。
 
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
+### 单位矩阵、转置与乘法
 
-## 3. 直接使用
+```cpp
+QMatrix3x3 identity;
+identity.setToIdentity();
 
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+QMatrix3x3 transpose = identity.transposed();
+Q_ASSERT(transpose.isIdentity());
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+QGenericMatrix<2, 3, float> a; // 3 行 2 列
+QGenericMatrix<4, 2, float> b; // 2 行 4 列
+const auto product = a * b;     // 3 行 4 列，即 QGenericMatrix<4, 3, float>
+```
 
-### 公有函数
+矩阵乘法不是逐元素相乘。`a * b` 只有在 `a` 的列数等于 `b` 的行数时才可编译，返回值的行数来自 `a`，列数来自 `b`。若只是逐元素缩放，使用标量乘法；若需要逐元素矩阵乘法，需要自行明确实现。
 
-- `QGenericMatrix()`
-- `QGenericMatrix(const T *values)`
-- `const T * constData() const`
-- `void copyDataTo(T *values) const`
-- `T * data()`
-- `const T * data() const`
-- `void fill(T value)`
-- `bool isIdentity() const`
-- `void setToIdentity()`
-- `QGenericMatrix<M, N, T> transposed() const`
-- `bool operator!=(const QGenericMatrix<N, M, T> &other) const`
-- `T & operator()(int row, int column)`
-- `const T & operator()(int row, int column) const`
-- `QGenericMatrix<N, M, T> & operator*=(T factor)`
-- `QGenericMatrix<N, M, T> & operator+=(const QGenericMatrix<N, M, T> &other)`
-- `QGenericMatrix<N, M, T> & operator-=(const QGenericMatrix<N, M, T> &other)`
-- `QGenericMatrix<N, M, T> & operator/=(T divisor)`
-- `bool operator==(const QGenericMatrix<N, M, T> &other) const`
+## 5. 使用场景
 
-### 相关非成员函数
+| 场景 | 建议 |
+|---|---|
+| 自定义颜色校正、坐标基变换 | 用 `QMatrix3x3`，维度固定且代码可读。 |
+| 向着色器或图形接口传小矩阵 | 使用 `constData()`，并确认目标接口也按列主序解释。 |
+| 与文件、数组、数学教材中的表格交换 | 使用构造函数或 `copyDataTo()`，它们使用行主序。 |
+| 常见 4x4 图形变换 | 优先 `QMatrix4x4`；它提供平移、旋转、投影、求逆等高层操作。 |
+| 运行时可变维度的数值计算 | 改用专门线性代数库；本类的维度是编译期常量。 |
 
-- `QMatrix2x2`
-- `QMatrix2x3`
-- `QMatrix2x4`
-- `QMatrix3x2`
-- `QMatrix3x3`
-- `QMatrix3x4`
-- `QMatrix4x2`
-- `QMatrix4x3`
-- `QGenericMatrix<N, M, T> operator*(T factor, const QGenericMatrix<N, M, T> &matrix)`
-- `QGenericMatrix<M1, M2, TT> operator*(const QGenericMatrix<NN, M2, TT> &m1, const QGenericMatrix<M1, NN, TT> &m2)`
-- `QGenericMatrix<N, M, T> operator*(const QGenericMatrix<N, M, T> &matrix, T factor)`
-- `QGenericMatrix<N, M, T> operator+(const QGenericMatrix<N, M, T> &m1, const QGenericMatrix<N, M, T> &m2)`
-- `QGenericMatrix<N, M, T> operator-(const QGenericMatrix<N, M, T> &m1, const QGenericMatrix<N, M, T> &m2)`
-- `QGenericMatrix<N, M, T> operator-(const QGenericMatrix<N, M, T> &matrix)`
-- `QGenericMatrix<N, M, T> operator/(const QGenericMatrix<N, M, T> &matrix, T divisor)`
-- `QDataStream & operator<<(QDataStream &stream, const QGenericMatrix<N, M, T> &matrix)`
-- `QDataStream & operator>>(QDataStream &stream, QGenericMatrix<N, M, T> &matrix)`
+## 6. 常见坑与经验
 
-## 5. API 逐个说明
+- 默认构造得到的是零矩阵，不是单位矩阵。做变换累积前应显式 `setToIdentity()`。
+- `QGenericMatrix` 的“`N x M`”命名是列 x 行，阅读别名或乘法表达式时先转换成行 x 列思考。
+- 浮点矩阵不宜用 `operator==` 判断计算结果是否“接近”；应逐元素采用容差比较。
+- `data()` 返回的是对象内部地址。只要矩阵对象被销毁，该指针立即失效；不要将它保存到异步任务中。
+- `operator/=` 的除数不能为零。对浮点数还要防范 NaN 与无穷值进入后续图形或几何运算。
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+## 7. 知识点覆盖
 
-### `QGenericMatrix::QGenericMatrix()`
-
-**作用与语义：**
-
-构造一个NxM恒定矩阵。
-
-### `[explicit] QGenericMatrix::QGenericMatrix(const T *values)`
-
-**作用与语义：**
-
-从给定的N * M浮点`values`构造一个矩阵。数组内容`values`假设按行大序排列。
-
-### `const T *QGenericMatrix::constData() const`
-
-**作用与语义：**
-
-返回该矩阵原始数据的常数指针。
-
-### `void QGenericMatrix::copyDataTo(T *values) const`
-
-**作用与语义：**
-
-检索该矩阵中的N * M项，并按行大序复制到`values`。
-
-### `T *QGenericMatrix::data()`
-
-**作用与语义：**
-
-返回指向该矩阵原始数据的指针。
-
-### `const T *QGenericMatrix::data() const`
-
-**作用与语义：**
-
-返回该矩阵原始数据的常数指针。
-
-### `void QGenericMatrix::fill(T value)`
-
-**作用与语义：**
-
-用`value`填充该矩阵的所有元素。
-
-### `bool QGenericMatrix::isIdentity() const`
-
-**作用与语义：**
-
-如果该矩阵是单位元，则返回`true`;否则为假。
-
-### `void QGenericMatrix::setToIdentity()`
-
-**作用与语义：**
-
-将该矩阵映射为恒等式。
-
-### `QGenericMatrix<M, N, T> QGenericMatrix::transposed() const`
-
-**作用与语义：**
-
-返回该矩阵，并围绕其对角线进行换置。
-
-### `bool QGenericMatrix::operator!=(const QGenericMatrix<N, M, T> &other) const`
-
-**作用与语义：**
-
-如果该矩阵与`other`不相同，返回`true`;否则为假。
-
-### `T &QGenericMatrix::operator()(int row, int column)`
-
-**作用与语义：**
-
-返回该矩阵中位置（`row`， `column`）的元素的引用，以便将该元素分配到。
-
-### `const T &QGenericMatrix::operator()(int row, int column) const`
-
-**作用与语义：**
-
-返回该矩阵中位置（`row`， `column`）元素的常量引用。
-
-### `QGenericMatrix<N, M, T> &QGenericMatrix::operator*=(T factor)`
-
-**作用与语义：**
-
-将该矩阵的所有元素乘以`factor`。
-
-### `QGenericMatrix<N, M, T> &QGenericMatrix::operator+=(const QGenericMatrix<N, M, T> &other)`
-
-**作用与语义：**
-
-将`other`的内容添加到该矩阵中。
-
-### `QGenericMatrix<N, M, T> &QGenericMatrix::operator-=(const QGenericMatrix<N, M, T> &other)`
-
-**作用与语义：**
-
-从该矩阵中减去`other`的内容。
-
-### `QGenericMatrix<N, M, T> &QGenericMatrix::operator/=(T divisor)`
-
-**作用与语义：**
-
-将该矩阵的所有元素除以`divisor`。
-
-### `bool QGenericMatrix::operator==(const QGenericMatrix<N, M, T> &other) const`
-
-**作用与语义：**
-
-如果该矩阵与`other`相同，则返回`true`;否则为假。
-
-### `QMatrix2x2`
-
-**作用与语义：**
-
-QMatrix2x2 类型为 2 列、2 行和浮点（float）定义了 `QGenericMatrix` 模板的便捷实例化。
-
-### `QMatrix2x3`
-
-**作用与语义：**
-
-QMatrix2x3类型定义了2列3行的`QGenericMatrix`模板的便捷实例，float作为元素类型。
-
-### `QMatrix2x4`
-
-**作用与语义：**
-
-QMatrix2x4 类型为 2 列、4 行和 float 定义了 `QGenericMatrix` 模板的便捷实例化，作为元素类型。
-
-### `QMatrix3x2`
-
-**作用与语义：**
-
-QMatrix3x2类型定义了3列、2行和float作为元素类型，方便地实现`QGenericMatrix`模板。
-
-### `QMatrix3x3`
-
-**作用与语义：**
-
-QMatrix3x3 类型为 3 列、3 行和 float 定义了 `QGenericMatrix` 模板的便捷实例化。
-
-### `QMatrix3x4`
-
-**作用与语义：**
-
-QMatrix3x4类型为`QGenericMatrix`模板的3列4行和float作为元素类型提供了便捷的实例化。
-
-### `QMatrix4x2`
-
-**作用与语义：**
-
-QMatrix4x2 类型为 4 列、2 行和浮点（float）定义了 `QGenericMatrix` 模板的便捷实例化。
-
-### `QMatrix4x3`
-
-**作用与语义：**
-
-QMatrix4x3 类型为 4 列、3 行和浮点（float）定义了 `QGenericMatrix` 模板的便捷实例化。
-
-### `template < int N, int M, typename T > QGenericMatrix<N, M, T> operator*(T factor, const QGenericMatrix<N, M, T> &matrix)`
-
-**作用与语义：**
-
-返回将`matrix`的所有元素乘以`factor`的结果。
-
-### `template < int NN, int M1, int M2, typename TT > QGenericMatrix<M1, M2, TT> operator*(const QGenericMatrix<NN, M2, TT> &m1, const QGenericMatrix<M1, NN, TT> &m2)`
-
-**作用与语义：**
-
-返回 NNxM2 矩阵的乘积`m1` 与 M1xNN 矩阵的乘积，`m2`生成 M1xM2 矩阵结果。
-
-### `template < int N, int M, typename T > QGenericMatrix<N, M, T> operator*(const QGenericMatrix<N, M, T> &matrix, T factor)`
-
-**作用与语义：**
-
-返回将`matrix`的所有元素乘以`factor`的结果。
-
-### `template < int N, int M, typename T > QGenericMatrix<N, M, T> operator+(const QGenericMatrix<N, M, T> &m1, const QGenericMatrix<N, M, T> &m2)`
-
-**作用与语义：**
-
-返回`m1`和`m2`的总和。
-
-### `template < int N, int M, typename T > QGenericMatrix<N, M, T> operator-(const QGenericMatrix<N, M, T> &m1, const QGenericMatrix<N, M, T> &m2)`
-
-**作用与语义：**
-
-返回`m1`和`m2`的差额。
-
-### `template < int N, int M, typename T > QGenericMatrix<N, M, T> operator-(const QGenericMatrix<N, M, T> &matrix)`
-
-**作用与语义：**
-
-返回`matrix`的否定。
-
-### `template < int N, int M, typename T > QGenericMatrix<N, M, T> operator/(const QGenericMatrix<N, M, T> &matrix, T divisor)`
-
-**作用与语义：**
-
-返回将`matrix`的所有元素除以`divisor`的结果。
-
-### `template < int N, int M, typename T > QDataStream &operator<<(QDataStream &stream, const QGenericMatrix<N, M, T> &matrix)`
-
-**作用与语义：**
-
-将给定`matrix`写入给定`stream`，并返回流的引用。
-
-### `template < int N, int M, typename T > QDataStream &operator>>(QDataStream &stream, QGenericMatrix<N, M, T> &matrix)`
-
-**作用与语义：**
-
-将给定`stream`中的NxM矩阵读取到给定`matrix`，并返回对流的引用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QGenericMatrix` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 编译期维度与模板类型
+- 行、列、转置和矩阵乘法的维度规则
+- 行主序数据交换与列主序内存布局
+- 值类型生命周期与原始指针有效期
+- 图形计算中的单位矩阵、精度与容差比较

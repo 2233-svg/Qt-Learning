@@ -1,110 +1,76 @@
 # QIconEnginePlugin
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QIconEnginePlugin`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QIconEnginePlugin` 是 Qt 对象机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QIconEnginePlugin` 是 `QIconEngine` 的发现工厂。Qt 根据图标文件的后缀/插件元数据加载它，并调用 `create(filename)` 获得一个能解释该文件的图标引擎。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+普通应用无需手动调用这个类；它只服务于扩展 Qt 图标格式的插件作者。若图标来自 SVG、PNG、资源文件或主题，直接构造 `QIcon` 更简单。
 
-### 这是什么
-
-`QIconEnginePlugin` 是 Qt 对象机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
-
-**适用场景：** 使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QIconEnginePlugin>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(plugin PRIVATE Qt6::Gui)`
+- 继承：`QObject` 与 Qt 图标引擎工厂接口。
+- 核心职责：由 `create()` 为某个文件创建独立 `QIconEngine`；plugin 自身不负责逐次绘制。
+- 通过 `Q_PLUGIN_METADATA` 与 JSON 元数据被 Qt 发现；动态插件路径与依赖部署正确才会生效。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途速查 |
+| --- | --- |
+| `QIconEnginePlugin(parent)` | 创建插件 QObject，通常由 Qt plugin loader 管理 |
+| `create(filename)` | 必须实现：根据文件名创建新的 `QIconEngine` |
+| `Q_PLUGIN_METADATA` | 声明插件 IID 与 JSON 信息，供 Qt 发现 |
+| JSON `Keys` | 声明插件处理的文件后缀/键 |
+| `QIconEngine::key()` | engine 返回的稳定类型标识，辅助序列化和诊断 |
+
+## 4. 关键用法
+
+```cpp
+class AcmeIconPlugin final : public QIconEnginePlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QIconEngineFactoryInterface"
+                      FILE "acmeicon.json")
+
+public:
+    QIconEngine *create(const QString &filename) override
+    {
+        if (filename.isEmpty())
+            return new AcmeIconEngine;
+        return AcmeIconEngine::fromFile(filename);
+    }
+};
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+`create()` 每次都应返回一个新的 engine，或在失败时返回空指针。不要让所有 `QIcon` 共用一个会变的 engine：`QIcon` 是值类型，资源、状态、缓存和生命周期都应隔离。
 
-### 工作机制
+示例元数据：
 
-这类对象通常参与 Qt 元对象系统。类声明中的 `Q_OBJECT`、信号、槽、属性和可调用函数会被元对象注册；Qt 可以据此完成类型查询、信号槽连接、属性访问和事件分发。对象还带有线程归属，事件和 queued connection 会投递到对象所属线程的事件循环。
+```json
+{
+  "Keys": [ "aicon" ]
+}
+```
 
-### 状态、生命周期和线程
+键与文件扩展名/格式发现路径匹配。实际 IID、插件目录和部署方式要以当前 Qt 插件接口和构建系统为准。
 
-**生命周期：** 先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
+## 5. 使用场景
 
-**状态与结果：** QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
+- 将专有矢量图标容器接入 `QIcon("file.aicon")`。
+- 向设计资产管线提供可参数化、可多状态生成的图标格式。
+- 让插件在不改应用业务代码的前提下扩展图标加载能力。
 
-**线程与事件循环：** QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
+## 6. 常见坑与经验
 
-## 3. 直接使用
+- **不要用 plugin 承担图标渲染。** 渲染、DPR、Mode/State 选择都应在返回的 `QIconEngine` 内完成。
+- **plugin JSON 与二进制部署缺一不可。** 开发环境可用、发布版失效通常是插件目录、依赖库或元数据 key 的问题。
+- **QObject 不代表自动线程安全。** 避免 plugin 实例里持有未同步的可变全局缓存；engine 也应按 GUI 资源规则使用。
+- **`filename` 不能盲信。** 私有图标格式也应验证头部、尺寸和输入范围，不能只按后缀解析。
+- **不要直接析构 Qt 创建/管理的 plugin。** 交给 plugin loader 的生命周期机制；你的责任是正确返回 engine。
 
-使用这类对象时，先创建并确定 parent/线程归属，再配置属性和连接信号，最后调用产生异步或状态变化的函数。耗时工作不要塞进 GUI 线程的槽函数；退出时先停止异步操作，再销毁对象。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+## 7. 知识点覆盖
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QIconEnginePlugin(QObject *parent = nullptr)`
-- `virtual ~QIconEnginePlugin()`
-- `virtual QIconEngine * create(const QString &filename = QString()) = 0`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QIconEnginePlugin::QIconEnginePlugin(QObject *parent = nullptr)`
-
-**作用与语义：**
-
-基于给定`parent`构建一个图标引擎插件。插件加载器会自动调用该插件。
-
-### `[virtual noexcept] QIconEnginePlugin::~QIconEnginePlugin()`
-
-**作用与语义：**
-
-会破坏图标引擎插件。
-你从不需要明确调用它。Qt 会自动销毁插件，当它不再使用时。
-
-### `[pure virtual] QIconEngine *QIconEnginePlugin::create(const QString &filename = QString())`
-
-**作用与语义：**
-
-创建并返回给定`filename`的图标的`QIconEngine`对象。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确定对象由谁拥有：设置 parent 后，父对象析构会递归销毁子对象；没有 parent 时可放在栈上或显式使用 `deleteLater()`。跨线程对象不能随意直接删除、移动或调用其依赖线程的成员。异步回调应使用 context 或连接到对象生命周期。
-
-### 状态和错误边界
-
-QObject 派生对象的状态通常通过属性、状态查询函数和信号变化共同表达。信号是通知，不是返回值；收到通知后应读取当前状态并处理异常路径，不能假设每个信号只会出现一次。
-
-### 线程边界
-
-QObject 本身属于一个线程，但它的成员函数不会因为继承 QObject 就自动变成线程安全。直接调用仍在调用者线程执行；跨线程通信应使用 queued connection、信号槽或明确的同步机制。目标线程必须有事件循环，定时器和异步 I/O 才能工作。
-
-### 最容易出现的错误
-
-不能复制 QObject；不能把属于其他线程的对象当作普通值直接操作；不能在信号回调中阻塞事件循环；`deleteLater()` 依赖事件循环，线程即将退出时要安排好退出和清理顺序。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QIconEnginePlugin` 所属机制类型：Qt 对象机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+Qt 动态插件、工厂模式、QObject 生命周期、图标格式发现、JSON 元数据、QIconEngine 分层、发布部署、输入验证。

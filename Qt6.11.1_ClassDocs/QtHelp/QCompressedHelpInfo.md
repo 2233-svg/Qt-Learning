@@ -1,175 +1,52 @@
 # QCompressedHelpInfo
-
-> Qt 6.11.1 · Qt Help
+> Qt 6.11.1 · Qt Help · 来自 `QCompressedHelpInfo`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QCompressedHelpInfo` 是 Qt 的值类型，围绕“Compressed帮助Info”保存可复制的数据，并提供查询、转换或修改 API。
+`QCompressedHelpInfo` 是 `.qch` 压缩帮助文件的轻量元信息。它不加载全部文档内容，只读取帮助文件声明的 namespace、component 和 version，适合在注册前做检查和展示。
 
-**模块背景：** 这是 Qt Help 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+## 2. 类说明
 
-### 这是什么
+保留类说明：这些 API 来自 `QCompressedHelpInfo`，属于 Qt Help 模块，用于读取压缩帮助文件的身份信息。
 
-`QCompressedHelpInfo` 是 Qt 值类型与隐式共享机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+`.qch` 是单个文档包，`.qhc` 是 collection 文件，负责登记多个 `.qch`。这个类只关心 `.qch` 自己是谁。
 
-**内部模型：** 这类类型通常可以按值传递、复制和返回。许多 Qt 容器、字符串和图像采用隐式共享：复制时共享数据，发生写操作时才 detach。这样便于 API 传值，但获取原始指针或长期持有引用时必须考虑对象修改和生命周期。
+## 3. API 速查
 
-**适用场景：** 先确认值的有效性和表示格式，再调用查询、转换或修改 API；处理文本时区分 Unicode 和字节编码，处理图像时确认 format，处理 URL/路径时使用 Qt 的解析 API 而不是手写字符串规则。
+| API | 用来做什么 |
+| --- | --- |
+| `fromCompressedHelpFile(file)` | 从 `.qch` 文件读取元信息。 |
+| `namespaceName()` | 返回帮助包 namespace，是注册和资源定位的核心身份。 |
+| `component()` | 返回组件名，用于过滤和分类。 |
+| `version()` | 返回版本号。 |
+| `isNull()` | 判断读取是否失败或对象为空。 |
+| 拷贝/移动/赋值/swap | 值类型操作。 |
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+## 4. 典型流程
 
-**先记住的坑：** 不要把空值当成业务成功；不要保存临时对象的内部指针；不要把 QString 当二进制缓冲区；不要假定隐式共享让并发写入自动安全。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QCompressedHelpInfo>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Help)
-target_link_libraries(mytarget PRIVATE Qt6::Help)
+```cpp
+QCompressedHelpInfo info =
+    QCompressedHelpInfo::fromCompressedHelpFile("qtwidgets.qch");
+if (!info.isNull())
+    qDebug() << info.namespaceName() << info.component() << info.version();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+## 5. 使用场景
 
-### 工作机制
+| 场景 | 用法 |
+| --- | --- |
+| 注册前校验 qch | 先读 namespace，避免重复或错误包。 |
+| 插件帮助包管理 | 展示组件和版本。 |
+| 自动更新帮助文档 | 对比 version 决定是否替换。 |
 
-这类类型通常可以按值传递、复制和返回。许多 Qt 容器、字符串和图像采用隐式共享：复制时共享数据，发生写操作时才 detach。这样便于 API 传值，但获取原始指针或长期持有引用时必须考虑对象修改和生命周期。
+## 6. 常见坑与经验
 
-### 状态、生命周期和线程
+namespace 是帮助包身份，不是文件名。改了文件名不代表 namespace 变化；注册冲突通常看 namespace。
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+`isNull()` 必须检查。文件不存在、不是合法 qch、版本不兼容都可能读不到信息。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-先确认值的有效性和表示格式，再调用查询、转换或修改 API；处理文本时区分 Unicode 和字节编码，处理图像时确认 format，处理 URL/路径时使用 Qt 的解析 API 而不是手写字符串规则。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QCompressedHelpInfo()`
-- `QCompressedHelpInfo(const QCompressedHelpInfo &other)`
-- `QCompressedHelpInfo(QCompressedHelpInfo &&other)`
-- `~QCompressedHelpInfo()`
-- `QString component() const`
-- `bool isNull() const`
-- `QString namespaceName() const`
-- `void swap(QCompressedHelpInfo &other)`
-- `QVersionNumber version() const`
-- `QCompressedHelpInfo & operator=(QCompressedHelpInfo &&other)`
-- `QCompressedHelpInfo & operator=(const QCompressedHelpInfo &other)`
-
-### 静态公有成员
-
-- `QCompressedHelpInfo fromCompressedHelpFile(const QString &documentationFileName)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QCompressedHelpInfo::QCompressedHelpInfo()`
-
-**作用与语义：**
-
-构建关于压缩帮助文件的空信息。
-
-### `QCompressedHelpInfo::QCompressedHelpInfo(const QCompressedHelpInfo &other)`
-
-**作用与语义：**
-
-复制了`other`。
-
-### `QCompressedHelpInfo::QCompressedHelpInfo(QCompressedHelpInfo &&other)`
-
-**作用与语义：**
-
-Move构建了一个QCompressedHelpInfo实例，使其指向`other`指向的同一对象，从而包含`other`所用信息。
-
-### `[noexcept] QCompressedHelpInfo::~QCompressedHelpInfo()`
-
-**作用与语义：**
-
-摧毁了`QCompressedHelpInfo`。
-
-### `QString QCompressedHelpInfo::component() const`
-
-**作用与语义：**
-
-返回压缩后的帮助文件组件。
-
-### `[static] QCompressedHelpInfo QCompressedHelpInfo::fromCompressedHelpFile(const QString &documentationFileName)`
-
-**作用与语义：**
-
-返回现有 qch 文件中 `documentationFileName` 的 `QCompressedHelpInfo` 实例。
-
-### `bool QCompressedHelpInfo::isNull() const`
-
-**作用与语义：**
-
-如果信息无效，会`true`返回，否则返回`false`。
-
-### `QString QCompressedHelpInfo::namespaceName() const`
-
-**作用与语义：**
-
-返回压缩后的帮助文件命名空间名称。
-
-### `[noexcept] void QCompressedHelpInfo::swap(QCompressedHelpInfo &other)`
-
-**作用与语义：**
-
-将压缩后的帮助文件`other`与该压缩帮助文件交换。这个操作非常快，从未失败过。
-
-### `QVersionNumber QCompressedHelpInfo::version() const`
-
-**作用与语义：**
-
-返回压缩后的帮助文件版本。
-
-### `QCompressedHelpInfo &QCompressedHelpInfo::operator=(QCompressedHelpInfo &&other)`
-
-**作用与语义：**
-
-Move-assign `other`到该`QCompressedHelpInfo`实例。
-
-### `QCompressedHelpInfo &QCompressedHelpInfo::operator=(const QCompressedHelpInfo &other)`
-
-**作用与语义：**
-
-将这个 QHelpCollectionDetails 变成 `other` 的副本，使两者完全相同，并返回对该 QHelpCollectionDetails 的引用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要把空值当成业务成功；不要保存临时对象的内部指针；不要把 QString 当二进制缓冲区；不要假定隐式共享让并发写入自动安全。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QCompressedHelpInfo` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- `.qch` 元信息读取。
+- namespace/component/version 的意义。
+- `.qch` 与 `.qhc` 的分工。

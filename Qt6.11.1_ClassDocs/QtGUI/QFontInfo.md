@@ -1,219 +1,96 @@
 # QFontInfo
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QFontInfo`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QFontInfo` 是 Qt 的值类型，围绕“字体Info”保存可复制的数据，并提供查询、转换或修改 API。
+`QFont` 是“我希望使用什么字体”的请求；`QFontInfo` 是 Qt 结合当前绘制设备和系统字体库以后，“实际选中了什么字体”的结果快照。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+这一区分在跨平台程序里很重要：请求 `Inter, 13pt, Bold` 不代表机器真的安装了 Inter，也不代表打印机和屏幕会选到同一张字体。`QFontInfo` 用来诊断回退、确认字号和样式是否被满足，而不是用来配置字体。
 
-### 这是什么
-
-`QFontInfo` 是 Qt 值类型与隐式共享机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这类类型通常可以按值传递、复制和返回。许多 Qt 容器、字符串和图像采用隐式共享：复制时共享数据，发生写操作时才 detach。这样便于 API 传值，但获取原始指针或长期持有引用时必须考虑对象修改和生命周期。
-
-**适用场景：** 先确认值的有效性和表示格式，再调用查询、转换或修改 API；处理文本时区分 Unicode 和字节编码，处理图像时确认 format，处理 URL/路径时使用 Qt 的解析 API 而不是手写字符串规则。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要把空值当成业务成功；不要保存临时对象的内部指针；不要把 QString 当二进制缓冲区；不要假定隐式共享让并发写入自动安全。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QFontInfo>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(app PRIVATE Qt6::Gui)`
+- 类型：轻量值类型；构造时保存匹配结果，之后原 `QFont` 改动不会同步过来。
+- 更准确的来源：在绘制中优先用 `QPainter::fontInfo()`，它反映该 painter 当前设备上的真实匹配结果。
 
-CMake 配置：
+## 3. API 速查
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+| API | 用途速查 |
+| --- | --- |
+| `QFontInfo(font)` | 为屏幕兼容的字体请求创建匹配结果快照 |
+| `QPainter::fontInfo()` | 查询当前 painter、当前设备实际使用的字体 |
+| `family()` / `styleName()` | 查看最终选中的字族和样式名 |
+| `exactMatch()` | 判断系统是否完全满足请求，而非发生回退或近似匹配 |
+| `pointSize()` / `pointSizeF()` / `pixelSize()` | 读取最终字号表示 |
+| `weight()` / `bold()` / `italic()` / `style()` | 检查最终粗细和倾斜样式 |
+| `fixedPitch()` | 判断最终字体是否为等宽字体 |
+| `styleHint()` | 查看匹配时采用的风格提示 |
+| `variableAxes()` | Qt 6.9 起，取得最终可变字体提供的轴描述 |
+| `swap()` | 常数时间交换两个结果对象 |
+
+## 4. 关键用法
+
+### 查清字体是否发生了回退
+
+```cpp
+QFont requested("JetBrains Mono", 11);
+requested.setStyleHint(QFont::Monospace);
+
+QFontInfo actual(requested);
+qDebug() << "requested:" << requested.families();
+qDebug() << "matched:" << actual.family()
+         << actual.styleName()
+         << actual.pointSizeF()
+         << "exact:" << actual.exactMatch()
+         << "fixed:" << actual.fixedPitch();
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`exactMatch()` 为 `false` 不等于失败。它常常只表示系统选了替代字族、替代字重，或应用了字体合成；对普通 UI 这是正常现象。只有品牌字体、代码编辑器的列对齐、排版验收等场景，才应把它当作需要处理的信号。
 
-### 工作机制
+### 查询打印或高 DPI 设备上的实际字体
 
-这类类型通常可以按值传递、复制和返回。许多 Qt 容器、字符串和图像采用隐式共享：复制时共享数据，发生写操作时才 detach。这样便于 API 传值，但获取原始指针或长期持有引用时必须考虑对象修改和生命周期。
+```cpp
+void ReportWidget::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setFont(reportFont);
+    const QFontInfo info = p.fontInfo();
+    p.drawText(rect(), Qt::AlignCenter, info.family());
+}
+```
 
-### 状态、生命周期和线程
+不要用先前根据屏幕构造的 `QFontInfo` 推断打印机结果。字体匹配和点到像素的换算都依赖绘制设备；`QPainter::fontInfo()` 才与当前输出介质一致。
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+### 用可变轴信息建立字体选择器
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+```cpp
+QFontInfo info(font);
+for (const QFontVariableAxis &axis : info.variableAxes()) {
+    qDebug() << axis.tag() << axis.name()
+             << axis.minimumValue() << axis.defaultValue()
+             << axis.maximumValue();
+}
+```
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
+这只是“已匹配字体支持哪些轴”的查询。要设置轴值，应对 `QFont` 调用 `setVariableAxis()`。
 
-## 3. 直接使用
+## 5. 使用场景
 
-先确认值的有效性和表示格式，再调用查询、转换或修改 API；处理文本时区分 Unicode 和字节编码，处理图像时确认 format，处理 URL/路径时使用 Qt 的解析 API 而不是手写字符串规则。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
+- 启动时记录“指定品牌字体是否安装、实际回退到什么”。
+- 在等宽编辑器、终端模拟器中验证 `fixedPitch()`，并仍用 `QFontMetrics` 验证实际列宽。
+- 生成问题报告时采集系统真实使用的字族、样式与字号。
+- 将字体请求交给 `QPainter` 后，检查打印预览或高 DPI 输出的匹配结果。
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+## 6. 常见坑与经验
 
-### 公有函数
+- **它不是实时观察器。** `QFontInfo(font)` 建立后，`font.setBold()` 不会更新已有的 `QFontInfo`。
+- **`family()` 是结果，不是偏好列表。** 多族回退由 `QFont::families()` 表达；这里返回最终被选中的那一个。
+- **屏幕与打印机不一定一致。** 构造函数面向屏幕兼容字体；设备相关查询请从 painter 取。
+- **“精确”不等于“视觉相同”。** `exactMatch()` 比较请求与窗口系统匹配，不能替代截图或排版测试。
+- **不要据此计算文本尺寸。** 宽度、基线、裁剪范围应交给 `QFontMetrics`、`QFontMetricsF` 或 `QTextLayout`。
 
-- `QFontInfo(const QFont &font)`
-- `QFontInfo(const QFontInfo &fi)`
-- `~QFontInfo()`
-- `bool bold() const`
-- `bool exactMatch() const`
-- `QString family() const`
-- `bool fixedPitch() const`
-- `bool italic() const`
-- `int pixelSize() const`
-- `int pointSize() const`
-- `qreal pointSizeF() const`
-- `QFont::Style style() const`
-- `QFont::StyleHint styleHint() const`
-- `QString styleName() const`
-- `void swap(QFontInfo &other)`
-- `(since 6.9) QList<QFontVariableAxis> variableAxes() const`
-- `int weight() const`
-- `QFontInfo & operator=(const QFontInfo &fi)`
+## 7. 知识点覆盖
 
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QFontInfo::QFontInfo(const QFont &font)`
-
-**作用与语义：**
-
-为`font`构建一个字体信息对象。
-字体必须兼容屏幕，即你在`widgets`或`pixmaps`中绘制文字时使用的字体，而非`QPicture`或`QPrinter`。
-font info 对象保存在构建函数中传递的字体信息，如果字体属性后来被更改，则不会更新。
-在绘制时使用`QPainter::fontInfo()`获取字体信息。这样在不兼容屏幕的绘画设备上绘制时也能获得正确的结果。
-
-### `QFontInfo::QFontInfo(const QFontInfo &fi)`
-
-**作用与语义：**
-
-构建了一份`fi`的复制品。
-
-### `[noexcept] QFontInfo::~QFontInfo()`
-
-**作用与语义：**
-
-它会破坏字体信息对象。
-
-### `bool QFontInfo::bold() const`
-
-**作用与语义：**
-
-如果`weight()`返回的值大于`QFont::Normal`，则返回`true`;否则返回`false`。
-
-### `bool QFontInfo::exactMatch() const`
-
-**作用与语义：**
-
-如果匹配的窗口系统字体与字体指定的字体完全相同，返回`true`;否则返回`false`。
-
-### `QString QFontInfo::family() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的族名。
-
-### `bool QFontInfo::fixedPitch() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的固定音高值。
-
-### `bool QFontInfo::italic() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的斜体值。
-
-### `int QFontInfo::pixelSize() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的像素大小。
-
-### `int QFontInfo::pointSize() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的点大小。
-
-### `qreal QFontInfo::pointSizeF() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的点大小。
-
-### `QFont::Style QFontInfo::style() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的样式值。
-
-### `QFont::StyleHint QFontInfo::styleHint() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的样式。
-目前只返回`QFont`的风格提示。
-
-### `QString QFontInfo::styleName() const`
-
-**作用与语义：**
-
-在支持该格式的系统上返回匹配窗口系统字体的样式名称。
-
-### `[noexcept] void QFontInfo::swap(QFontInfo &other)`
-
-**作用与语义：**
-
-将这个字体信息实例与 `other` 交换。这个操作非常快，而且从未失败过。
-
-### `[since 6.9] QList<QFontVariableAxis> QFontInfo::variableAxes() const`
-
-**作用与语义：**
-
-如果字体是可变字体，该函数会返回该字体支持的轴列表。
-关于变轴的更多细节，请参见`setVariableAxis()`。
-
-### `int QFontInfo::weight() const`
-
-**作用与语义：**
-
-返回匹配窗口系统字体的权重。
-
-### `QFontInfo &QFontInfo::operator=(const QFontInfo &fi)`
-
-**作用与语义：**
-
-`fi`中分配字体信息。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要把空值当成业务成功；不要保存临时对象的内部指针；不要把 QString 当二进制缓冲区；不要假定隐式共享让并发写入自动安全。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QFontInfo` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+字体回退、字体匹配、绘制设备差异、点与像素、等宽字体、可变字体轴、值类型快照、跨平台排版诊断。

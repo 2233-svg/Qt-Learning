@@ -1,138 +1,64 @@
 # QAudioListener
-
-> Qt 6.11.1 · Qt Spatial Audio
+> Qt 6.11.1 · Qt Spatial Audio · 来自 `QAudioListener`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAudioListener` 是 Qt Multimedia 的“音频Listener”类型，参与媒体源、设备、格式、播放/采集状态或音视频数据处理。
+`QAudioListener` 表示空间音频世界里的“耳朵”。所有 `QSpatialSound` 的左右、远近、前后、方向感，最终都要相对于 listener 的位置和朝向来计算。
 
-**模块背景：** 这是 Qt Spatial Audio 模块中的公开 C++ API，具体职责以类摘要和继承关系为准。
+在 3D 应用里，它通常跟摄像机或玩家头部绑定；在普通 2.5D 场景里，它可以固定在屏幕中心或用户角色位置。
 
-### 这是什么
+## 2. 类说明
 
-`QAudioListener` 是 多媒体设备与会话机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
+保留类说明：这些 API 来自 `QAudioListener`，属于 Qt Spatial Audio 模块，用于描述听者的空间位置和方向。
 
-**内部模型：** 多媒体类型通常把设备、媒体会话、格式、播放状态和异步错误分开。硬件能力、平台后端、权限和资源状态会影响结果；请求成功发起不等于设备已准备好。
+一个 `QAudioListener` 总是和某个 `QAudioEngine` 一起使用。没有 engine，它没有独立播放能力；没有正确更新位置和旋转，空间声源就会像“世界动了但耳朵没动”一样失真。
 
-**适用场景：** 先检查平台能力和权限，再创建会话/设备，设置格式和源，连接状态与错误信号，执行开始/暂停/停止并在结束后清理。
+## 3. API 速查
 
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
+| API | 用来做什么 |
+| --- | --- |
+| `QAudioListener(QAudioEngine *engine)` | 为指定引擎创建听者。 |
+| `engine() const` | 返回所属音频引擎。 |
+| `setPosition(QVector3D)` / `position()` | 设置或读取听者在 3D 世界中的位置。 |
+| `setRotation(QQuaternion)` / `rotation()` | 设置或读取听者朝向。 |
+| `positionChanged()` | 位置变化信号。 |
+| `rotationChanged()` | 朝向变化信号。 |
 
-**先记住的坑：** 不要假设所有平台支持相同编解码器和格式；不要忽略权限和后端错误；不要在状态未准备好时连续调用控制 API；媒体对象销毁前先停止使用。
+## 4. 典型流程
 
-## 2. 依赖与对象关系
+```cpp
+auto *listener = new QAudioListener(engine);
 
-- 头文件：`#include <QAudioListener>`
-- 继承自：QObject
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS SpatialAudio)
-target_link_libraries(mytarget PRIVATE Qt6::SpatialAudio)
+void SceneAudio::syncFromCamera(const Camera &camera)
+{
+    listener->setPosition(camera.position());
+    listener->setRotation(camera.orientation());
+}
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+同步时要确认坐标系一致。图形场景常见 `-Z` 为前方，而音频参数如果按另一个前向约定理解，左右和前后会反过来。
 
-### 工作机制
+## 5. 使用场景
 
-多媒体类型通常把设备、媒体会话、格式、播放状态和异步错误分开。硬件能力、平台后端、权限和资源状态会影响结果；请求成功发起不等于设备已准备好。
+| 场景 | 用法 |
+| --- | --- |
+| 第一人称视角 | listener 绑定玩家头部或摄像机。 |
+| 第三人称游戏 | listener 可在摄像机和角色之间折中，避免镜头太远导致声音距离怪异。 |
+| 2D 地图或编辑器 | listener 固定在观察点，声源按场景坐标移动。 |
+| VR/AR | listener 需要高频同步头显姿态，对延迟更敏感。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 设备或媒体对象要在使用期间保持有效，开始前配置输入/输出和格式，停止后释放会话或解除设备占用。状态、媒体状态和错误信号共同决定下一步操作。
+位置更新频率要和场景运动匹配。角色高速移动但 listener 每秒只更新几次，会出现声音跳变；相反，没变也每帧发 changed 信号，会增加无意义计算。
 
-**状态与结果：** 区分无媒体、加载中、已加载、播放中、暂停、停止、结束和错误。进度、时长、缓冲和设备可用性不是同一个状态，不能只用一个 bool 表示。
+旋转建议使用归一化的 `QQuaternion`。从欧拉角反复转换时要注意轴顺序和单位，尤其是 yaw/pitch/roll 的定义在引擎或项目中可能不同。
 
-**线程与事件循环：** 媒体对象通常依赖事件循环和平台线程边界；GUI 展示对象在 GUI 线程，后台处理要使用类明确支持的线程模型。
+listener 不等于摄像机，但经常绑定摄像机。第三人称游戏里完全绑定摄像机可能让角色脚步声变远；完全绑定角色又可能让镜头外危险声不符合用户视觉。要按交互体验选择。
 
-## 3. 直接使用
+## 7. 知识点覆盖
 
-先检查平台能力和权限，再创建会话/设备，设置格式和源，连接状态与错误信号，执行开始/暂停/停止并在结束后清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAudioListener(QAudioEngine *engine)`
-- `virtual ~QAudioListener() override`
-- `QAudioEngine * engine() const`
-- `QVector3D position() const`
-- `QQuaternion rotation() const`
-- `void setPosition(QVector3D pos)`
-- `void setRotation(const QQuaternion &q)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `[explicit] QAudioListener::QAudioListener(QAudioEngine *engine)`
-
-**作用与语义：**
-
-为`engine`创建空间音频引擎的监听器。
-注意：必须有有效电话联系`QAudioEngine`。
-
-### `[override virtual noexcept] QAudioListener::~QAudioListener()`
-
-**作用与语义：**
-
-毁掉听众。
-
-### `QAudioEngine *QAudioListener::engine() const`
-
-**作用与语义：**
-
-返回与该监听器关联的引擎。
-
-### `QVector3D QAudioListener::position() const`
-
-**作用与语义：**
-
-返回监听器的当前位置。
-
-### `QQuaternion QAudioListener::rotation() const`
-
-**作用与语义：**
-
-返回听者在三维空间中的方向。
-
-### `void QAudioListener::setPosition(QVector3D pos)`
-
-**作用与语义：**
-
-将听者在三维空间中的位置设置为`pos`。单位默认为厘米。
-
-### `void QAudioListener::setRotation(const QQuaternion &q)`
-
-**作用与语义：**
-
-将听者在三维空间中的方向设置为`q`。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-设备或媒体对象要在使用期间保持有效，开始前配置输入/输出和格式，停止后释放会话或解除设备占用。状态、媒体状态和错误信号共同决定下一步操作。
-
-### 状态和错误边界
-
-区分无媒体、加载中、已加载、播放中、暂停、停止、结束和错误。进度、时长、缓冲和设备可用性不是同一个状态，不能只用一个 bool 表示。
-
-### 线程边界
-
-媒体对象通常依赖事件循环和平台线程边界；GUI 展示对象在 GUI 线程，后台处理要使用类明确支持的线程模型。
-
-### 最容易出现的错误
-
-不要假设所有平台支持相同编解码器和格式；不要忽略权限和后端错误；不要在状态未准备好时连续调用控制 API；媒体对象销毁前先停止使用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAudioListener` 所属机制类型：多媒体设备与会话机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 听者位置/朝向对空间音频的基准作用。
+- `QVector3D` 坐标和 `QQuaternion` 旋转。
+- 图形坐标系与音频坐标系一致性。
+- 摄像机、角色、头显与 listener 的绑定策略。
+- 属性变化信号和更新频率控制。

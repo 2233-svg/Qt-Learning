@@ -1,404 +1,120 @@
 # QPen
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QPen`
 
 ## 1. 先建立直觉
 
-**一句话定位：** 轮廓绘制属性，负责线宽、颜色、线型、端点和连接样式。
+`QPen` 描述如何描绘路径轮廓：颜色或画刷、线宽、实线/虚线、端点样式、折角连接方式和 miter 限制。它决定的是路径“边缘长什么样”，不是路径内部填充。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+一支 pen 不只是“颜色加宽度”。放大画布后线是否变粗、虚线是否按宽度同比例放大、尖角是否拉出长刺、线段末端是否圆润，都由 `QPen` 的具体设置决定。
 
-### 这是什么
+## 2. 类说明
 
-`QPen`：轮廓绘制属性，负责线宽、颜色、线型、端点和连接样式。
+`QPen` 是值类型，常配合 `QPainter::setPen()`、`drawLine()`、`drawPath()`、`drawRect()` 使用。它内部用一个 `QBrush` 填充笔触，因此描边也可以是渐变或纹理，而不只是一种纯色。
 
-**内部模型：** 绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
+类说明只用于表明这些 API 来自 `QPen`：填充属性由 `QBrush` 表达，路径几何由 `QPainterPath` 或图元提供，实际坐标缩放由 painter transform 决定。
 
-**适用场景：** 开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。
+## 3. API 速查
 
-**典型调用链：** 构造或取得有效对象 -> 检查初始状态 -> 调用与本类职责对应的 API -> 验证返回值/通知 -> 处理无效值和资源边界。
+| API | 用途速查 |
+| --- | --- |
+| `QPen()` | 构造默认黑色、宽 1、实线的画笔。 |
+| `QPen(color)` | 构造指定颜色的实线画笔。 |
+| `QPen(style)` | 构造指定线型的黑色画笔。 |
+| `QPen(brush, width, style, cap, join)` | 完整构造画笔，支持渐变/纹理描边。 |
+| `brush()` / `setBrush()` | 查询或设置笔触填充画刷。 |
+| `color()` / `setColor()` | 查询或设置纯色描边颜色。 |
+| `width()` / `widthF()` | 查询整数或浮点逻辑线宽。 |
+| `setWidth()` / `setWidthF()` | 设置逻辑线宽；0 表示 cosmetic pen。 |
+| `isCosmetic()` / `setCosmetic()` | 查询或设置是否保持设备像素宽度。 |
+| `style()` / `setStyle()` | 查询或设置 Solid、Dash、Dot、DashDot、CustomDash 等线型。 |
+| `dashPattern()` / `setDashPattern()` | 查询或设置自定义虚线与间隙序列。 |
+| `dashOffset()` / `setDashOffset()` | 查询或设置虚线图案起始偏移，可用于流动动画。 |
+| `capStyle()` / `setCapStyle()` | 设置线段端点为 Flat、Square、Round。 |
+| `joinStyle()` / `setJoinStyle()` | 设置折角为 Miter、Bevel、Round。 |
+| `miterLimit()` / `setMiterLimit()` | 限制 MiterJoin 尖角最大伸出长度。 |
+| `isSolid()` | 判断是否为实线。 |
+| `swap(other)` | 高效交换画笔。 |
+| `operator==` / `operator!=` | 比较画笔配置。 |
 
-**先记住的坑：** 不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QPen>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-绘制对象维护一组状态：画笔、画刷、字体、变换、裁剪、合成模式和渲染提示。每次 draw 调用都会使用当前状态；坐标通常经过当前 transform 映射到目标设备。
-
-### 状态、生命周期和线程
-
-**生命周期：** 绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-**状态与结果：** `save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-**线程与事件循环：** 同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-## 3. 直接使用
-
-开始绘制后配置必要状态，使用 save/restore 包围局部变换，按设备坐标绘制，结束时让上下文析构或调用 end。绘制文本和图片时同时考虑字体度量、devicePixelRatio、裁剪和性能。 使用时通常按这个过程组织：构造或取得有效对象 -> 检查初始状态 -> 调用与本类职责对应的 API -> 验证返回值/通知 -> 处理无效值和资源边界。
+### 普通逻辑线宽随缩放变化
 
 ```cpp
-void Widget::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    painter.save();
-    // 设置画笔、画刷、字体或变换后进行绘制
-    painter.restore();
-}
+QPen pen(QColor("#0f172a"));
+pen.setWidthF(2.0);
+painter.setPen(pen);
+
+painter.scale(2.0, 2.0);
+painter.drawLine(QPointF(0, 0), QPointF(80, 0));
 ```
-## 4. API 速查
 
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
+这类非 cosmetic pen 会随 painter 的缩放放大。它适合 CAD、矢量图、流程图等“线条属于场景”的绘制。
 
-### 公有函数
+### cosmetic pen 保持屏幕像素宽度
 
-- `QPen()`
-- `QPen(Qt::PenStyle style)`
-- `QPen(const QColor &color)`
-- `QPen(const QBrush &brush, qreal width, Qt::PenStyle style = Qt::SolidLine, Qt::PenCapStyle cap = Qt::SquareCap, Qt::PenJoinStyle join = Qt::BevelJoin)`
-- `QPen(const QPen &pen)`
-- `QPen(QPen &&pen)`
-- `~QPen()`
-- `QBrush brush() const`
-- `Qt::PenCapStyle capStyle() const`
-- `QColor color() const`
-- `qreal dashOffset() const`
-- `QList<qreal> dashPattern() const`
-- `bool isCosmetic() const`
-- `bool isSolid() const`
-- `Qt::PenJoinStyle joinStyle() const`
-- `qreal miterLimit() const`
-- `void setBrush(const QBrush &brush)`
-- `void setCapStyle(Qt::PenCapStyle style)`
-- `void setColor(const QColor &color)`
-- `void setCosmetic(bool cosmetic)`
-- `void setDashOffset(qreal offset)`
-- `void setDashPattern(const QList<qreal> &pattern)`
-- `void setJoinStyle(Qt::PenJoinStyle style)`
-- `void setMiterLimit(qreal limit)`
-- `void setStyle(Qt::PenStyle style)`
-- `void setWidth(int width)`
-- `void setWidthF(qreal width)`
-- `Qt::PenStyle style() const`
-- `void swap(QPen &other)`
-- `int width() const`
-- `qreal widthF() const`
-- `operator QVariant() const`
-- `bool operator!=(const QPen &pen) const`
-- `QPen & operator=(QPen &&other)`
-- `QPen & operator=(const QPen &pen)`
-- `(since 6.9) QPen & operator=(QColor color)`
-- `(since 6.9) QPen & operator=(Qt::PenStyle style)`
-- `bool operator==(const QPen &pen) const`
+```cpp
+QPen gridPen(QColor(100, 116, 139, 120));
+gridPen.setWidth(0);
+gridPen.setCosmetic(true);
+painter.setPen(gridPen);
+```
 
-### 相关非成员函数
+cosmetic pen 无论缩放多少，视觉上通常保持约一个设备像素宽，适合辅助网格、选择框、参考线。它不适合需要随导出比例或打印比例变粗的正式图形。
 
-- `QDataStream & operator<<(QDataStream &stream, const QPen &pen)`
-- `QDataStream & operator>>(QDataStream &stream, QPen &pen)`
+### 用 cap 和 join 控制线条风格
 
-## 5. API 逐个说明
+```cpp
+QPen stroke(QColor("#2563eb"), 8);
+stroke.setCapStyle(Qt::RoundCap);
+stroke.setJoinStyle(Qt::RoundJoin);
+painter.setPen(stroke);
+painter.drawPath(path);
+```
 
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
+RoundCap 让线段末端圆润，RoundJoin 让折角平滑，常用于手写笔迹、地图路径和圆角图标。SquareCap 会比终点多延长半个线宽，做精确对齐时要算进去。
 
-### `QPen::QPen()`
+### 自定义虚线按“笔宽单位”定义
 
-**作用与语义：**
+```cpp
+QPen dashed(QColor("#334155"), 2.0);
+dashed.setDashPattern({3.0, 1.5});
+dashed.setDashOffset(m_dashPhase);
+painter.setPen(dashed);
+```
 
-构建一个默认的黑色实心线笔，宽度为1。
+这里 3.0 和 1.5 是笔宽倍数，不是固定屏幕像素。线宽从 2 变为 4 时，虚线和间隙都会放大两倍。动画虚线时只更新 `dashOffset()` 即可。
 
-### `QPen::QPen(Qt::PenStyle style)`
+### MiterJoin 要设置合理上限
 
-**作用与语义：**
+```cpp
+pen.setJoinStyle(Qt::MiterJoin);
+pen.setMiterLimit(3.0);
+```
 
-构造一支宽度为1、`style`为的黑色笔。
+尖锐夹角下 miter 会拉得很长。miter limit 超出后 Qt 会退化处理，避免出现针刺般的长角。地图、折线图、机械图纸应根据线宽和角度验证视觉效果。
 
-### `QPen::QPen(const QColor &color)`
+## 5. 使用场景
 
-**作用与语义：**
+`QPen` 适合图形轮廓、连接线、图表曲线、选区边框、手写轨迹、CAD 辅助线、地图路径、虚线边界、网格、标尺和打印输出。
 
-构建一个宽度为1、`color`为的实心线笔。
+渐变 `QBrush` 作为 pen 适合光谱曲线、热度描边或装饰线，但高对比数据图形通常使用稳定纯色更易读。
 
-### `QPen::QPen(const QBrush &brush, qreal width, Qt::PenStyle style = Qt::SolidLine, Qt::PenCapStyle cap = Qt::SquareCap, Qt::PenJoinStyle join = Qt::BevelJoin)`
+## 6. 常见坑与经验
 
-**作用与语义：**
+不要把线宽 0 理解为“不画线”。它表示 cosmetic pen，通常仍会绘制一设备像素宽的线。
 
-构建具备指定`brush`、`width`、笔型`style`、`cap`样式和 `join` 样式的笔。
+不要把 dash pattern 写成奇数项、负数或零值。应使用偶数个正数，交替表示实线段和间隙。
 
-### `[noexcept] QPen::QPen(const QPen &pen)`
+不要忘记 cap 会改变可见长度。FlatCap、SquareCap、RoundCap 在线端视觉范围不同。
 
-**作用与语义：**
+不要在缩放场景里无意使用 cosmetic pen。导出高分辨率图片或打印时，它的固定像素宽度可能显得过细。
 
-构建一支复制给定`pen`的笔。
+不要只调颜色不调 join。复杂折线的锯齿、尖刺、交汇不自然，往往是 join/miter 而不是抗锯齿的问题。
 
-### `[constexpr noexcept] QPen::QPen(QPen &&pen)`
+不要假设 `setStyle()` 会保留虚线 offset。切换 style 时虚线相关状态可能重置，动画逻辑要重新设置。
 
-**作用与语义：**
+## 7. 知识点覆盖
 
-构造一个从给定`pen`移动的笔。
-移出笔只能被分配、复制或销毁。在分配之前的任何操作都会导致行为不明确。
-
-### `[noexcept] QPen::~QPen()`
-
-**作用与语义：**
-
-毁了笔。
-
-### `QBrush QPen::brush() const`
-
-**作用与语义：**
-
-返回用来填充这支笔生成笔画的画笔。
-
-### `Qt::PenCapStyle QPen::capStyle() const`
-
-**作用与语义：**
-
-笔帽样式还原了。
-
-### `QColor QPen::color() const`
-
-**作用与语义：**
-
-还原这支笔笔的颜色。
-
-### `qreal QPen::dashOffset() const`
-
-**作用与语义：**
-
-还原了笔的破折号偏移。
-
-### `QList<qreal> QPen::dashPattern() const`
-
-**作用与语义：**
-
-返回这支笔的破折号图案。
-
-### `bool QPen::isCosmetic() const`
-
-**作用与语义：**
-
-如果笔是美观的，返回`true`;否则返回`false`。
-美观钢笔用于绘制无论对所用的`QPainter`施加任何变换，笔廓宽度均为恒定。用美观笔绘制形状可以确保其轮廓在不同比例尺下厚度相同。
-零宽度的笔默认是外观问题。
-
-### `bool QPen::isSolid() const`
-
-**作用与语义：**
-
-如果笔有实心填充，则返回`true`，否则为假。
-
-### `Qt::PenJoinStyle QPen::joinStyle() const`
-
-**作用与语义：**
-
-恢复笔的连接方式。
-
-### `qreal QPen::miterLimit() const`
-
-**作用与语义：**
-
-返回笔的斜口限值。斜口限值仅在连接样式设置为`Qt::MiterJoin`时才相关。
-
-### `void QPen::setBrush(const QBrush &brush)`
-
-**作用与语义：**
-
-将用来填充笔触的笔刷设置为给定的`brush`。
-
-### `void QPen::setCapStyle(Qt::PenCapStyle style)`
-
-**作用与语义：**
-
-将笔的笔帽样式设置为给定的 `style`。默认值是 `Qt::SquareCap`。
-
-### `void QPen::setColor(const QColor &color)`
-
-**作用与语义：**
-
-将这支笔笔的颜色设置为给定的`color`。
-
-### `void QPen::setCosmetic(bool cosmetic)`
-
-**作用与语义：**
-
-根据`cosmetic`值，将笔设置为外观或非装饰。
-
-### `void QPen::setDashOffset(qreal offset)`
-
-**作用与语义：**
-
-将该笔的破折号偏移量（破折号图案的起点）设置为指定的`offset`。偏移量以指定破折号图案的单位来衡量。
-- “'：例如，画成线条时，每笔画长四个单位，后面有两个单位的间隙，画成线条时会以画笔开始。但如果划线偏移设置为4.0，任何画线都会以空隙开头。偏移值在4.0以内时，划线部分会先画;偏移值介于4.0到6.0之间时，线条会以部分空隙开始。
-注意：这隐含地将笔的风格转变为`Qt::CustomDashLine`。
-
-### `void QPen::setDashPattern(const QList<qreal> &pattern)`
-
-**作用与语义：**
-
-将该笔的破折号图案设置为给定的`pattern`。这隐含地将笔的样式转换为`Qt::CustomDashLine`。
-该模式必须指定为偶数个正元素，其中1、3、5......是划号，2、4、6......是空格。例如：
-- '`: `QPen' 笔;
-`QList`<`qreal`>破折号;
-`qreal`空间 = 4;
-破折号<<1<<空格<<3<<空格<<9<<空格。
-<<27个<<空间<<9个<<空间;
-pen.setDashPattern（破折号）;
-破折号图案以笔宽度为单位表示;例如，长度为5、宽度为10的破折号长度为50像素。注意，宽度为0的笔等同于宽度为1像素的装饰笔。
-每个破折号也受大写样式影响，比如1的破折号设置为方形大写，会向每个方向延伸0.5像素，总宽度为2。
-注意默认的顶端样式是`Qt::SquareCap`，意味着方形线端覆盖端点，并且延伸到线宽的一半。
-
-### `void QPen::setJoinStyle(Qt::PenJoinStyle style)`
-
-**作用与语义：**
-
-将笔的连接样式设置为给定的`style`。默认值为`Qt::BevelJoin`。
-
-### `void QPen::setMiterLimit(qreal limit)`
-
-**作用与语义：**
-
-将该笔的斜切极限设定为给定的`limit`。
-斜口极限描述了斜口连接从连接点延伸的距离。这用于减少线连接间接近平行线条之间的伪影。
-该数值仅在笔型设置为`Qt::MiterJoin`时生效。该数值以笔宽为单位表示，例如宽度为5的斜切限制10为50像素。默认斜切限制为2，即笔宽的两倍像素数。
-
-### `void QPen::setStyle(Qt::PenStyle style)`
-
-**作用与语义：**
-
-将笔式设置为给定的 `style`。
-请参阅 `Qt::PenStyle` 文档，查看可用样式列表。自 Qt 4.1 起，还可以使用 `setDashPattern()` 函数指定自定义破折号图案，该函数隐式将笔的样式转换为 `Qt::CustomDashLine`。
-注意：该功能会将仪表盘偏移重置为零。
-
-### `void QPen::setWidth(int width)`
-
-**作用与语义：**
-
-以整数精度将笔宽设置为像素`width`。
-线宽为零表示为美观钢笔。这意味着笔宽始终绘制为一个像素宽，与画家的 `transformation` 设置无关。
-不支持将笔宽设置为负值。
-
-### `void QPen::setWidthF(qreal width)`
-
-**作用与语义：**
-
-以浮点精度将笔宽设置为像素`width`。
-线宽为零表示是美观笔。这意味着笔宽总是画成一个像素宽，与画家的 `transformation` 无关。
-不支持将笔宽设置为负值。
-
-### `Qt::PenStyle QPen::style() const`
-
-**作用与语义：**
-
-还原了笔式。
-
-### `[noexcept] void QPen::swap(QPen &other)`
-
-**作用与语义：**
-
-把这支笔和`other`互换。这个操作非常快，而且从未失败过。
-
-### `int QPen::width() const`
-
-**作用与语义：**
-
-以整数精度返回笔宽。
-
-### `qreal QPen::widthF() const`
-
-**作用与语义：**
-
-以浮点精度返回笔宽。
-
-### `QPen::operator QVariant() const`
-
-**作用与语义：**
-
-把笔当作`QVariant`还回来。
-
-### `bool QPen::operator!=(const QPen &pen) const`
-
-**作用与语义：**
-
-如果笔与给定`pen`不同，则返回`true`;否则为假。如果两支笔的样式、宽度或颜色不同，则它们是不同的。
-
-### `[noexcept] QPen &QPen::operator=(QPen &&other)`
-
-**作用与语义：**
-
-Move-Assign `other`到这个`QPen`实例。
-
-### `[noexcept] QPen &QPen::operator=(const QPen &pen)`
-
-**作用与语义：**
-
-将给定的`pen`分配给这支笔，并返回对该笔的引用。
-
-### `[since 6.9] QPen &QPen::operator=(QColor color)`
-
-**作用与语义：**
-
-让这支笔变成一支实心笔，颜色相同，默认的顶部和连接样式，并返回对这支笔的引用。
-
-### `[since 6.9] QPen &QPen::operator=(Qt::PenStyle style)`
-
-**作用与语义：**
-
-让这支笔变成一本实心黑色的笔，默认采用封顶和连接样式，并返回对这支笔的引用。
-
-### `bool QPen::operator==(const QPen &pen) const`
-
-**作用与语义：**
-
-如果笔等于给定`pen`，则返回`true`;否则为假。如果两支笔的样式、宽度和颜色相等，则它们相等。
-
-### `QDataStream &operator<<(QDataStream &stream, const QPen &pen)`
-
-**作用与语义：**
-
-将给定`pen`写入给定`stream`，并返回对`stream`的引用。
-
-### `QDataStream &operator>>(QDataStream &stream, QPen &pen)`
-
-**作用与语义：**
-
-将给定`stream`中的笔读入给定`pen`，并返回对`stream`的引用。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-绘制上下文必须绑定有效的 paint device，并在合法的绘制阶段使用。QWidget 上通常只在 `paintEvent()` 内创建 painter；离屏图像、打印设备和 pixmap 则有各自的设备生命周期。
-
-### 状态和错误边界
-
-`save()`/`restore()` 用于隔离局部状态；改变坐标系、画笔或合成模式后要么恢复，要么明确后续绘制也需要该状态。重绘请求和真正绘制是两个阶段，业务状态变化应调用 `update()`。
-
-### 线程边界
-
-同一个 GUI 控件的绘制在 GUI 线程完成；离屏 QImage 可以按数据所有权在后台处理，但不要让后台线程直接绘制或访问正在显示的 QWidget/QPixmap 资源。
-
-### 最容易出现的错误
-
-不要直接调用 paintEvent；不要在绘制函数里修改会再次触发绘制的状态；不要假定所有图像都是四字节像素；不要忘记 transform 会影响坐标和 boundingRect。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QPen` 所属机制类型：二维绘制状态机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+学习 `QPen` 应覆盖逻辑线宽、浮点线宽、cosmetic pen、实线与虚线、dash pattern、dash offset、cap、join、miter limit、渐变描边、缩放与打印、路径轮廓质量。

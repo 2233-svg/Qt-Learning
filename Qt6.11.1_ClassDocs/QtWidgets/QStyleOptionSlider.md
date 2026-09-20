@@ -1,208 +1,70 @@
 # QStyleOptionSlider
 
-> Qt 6.11.1 · Qt Widgets
+> Qt 6.11.1 · Qt Widgets · 来自 `QStyleOptionSlider`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QStyleOptionSlider` 是 Qt Widgets 界面机制 中的类型，负责把这一机制中的数据、状态或资源交给其他 Qt 对象使用。
+`QStyleOptionSlider` 是滑块类范围控件的绘制参数包。`QSlider`、`QScrollBar`、`QDial` 这类控件都需要向 style 描述最小值、最大值、当前位置、方向、刻度和是否倒置。
 
-**模块背景：** Qt Widgets 提供传统桌面应用的控件、布局、模型/视图、窗口和交互组件。
+它继承自 `QStyleOptionComplex`，因为滑块控件往往有 groove、handle、add/sub page 等子区域。
 
-### 这是什么
+## 2. 类说明
 
-`QStyleOptionSlider` 是 Qt Widgets 界面体系中的组件，负责一段可见 UI 或交互行为。
+`QStyleOptionSlider` 不保存业务模型，只保存一次绘制/命中所需状态。style 使用它绘制 `CC_Slider`、`CC_ScrollBar`、`CC_Dial` 等 complex control。
 
-**内部模型：** 先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+范围值和像素位置之间的转换应交给 style 相关工具和控件逻辑处理，不要在绘制里随意硬算。
 
-**适用场景：** 需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。
+## 3. API 速查
 
-**典型调用链：** 创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
+| API | 用途速查 |
+| --- | --- |
+| `minimum` / `maximum` | 范围上下限。 |
+| `sliderPosition` | 滑块位置，通常是拖动中的即时位置。 |
+| `sliderValue` | 当前实际值。 |
+| `singleStep` / `pageStep` | 单步和页步长。 |
+| `orientation` | 水平或垂直。 |
+| `upsideDown` | 值增长方向是否反转。 |
+| `tickPosition` / `tickInterval` | 刻度显示位置和间隔。 |
+| `dialWrapping` | dial 是否首尾相接。 |
+| `notchTarget` | dial notch 目标密度。 |
+| `subControls` / `activeSubControls` | 复杂控件子区域和当前活动区域。 |
+| `QStyle::CC_Slider` | 绘制 slider。 |
+| `QStyle::CC_ScrollBar` | 绘制 scrollbar。 |
+| `QStyle::CC_Dial` | 绘制 dial。 |
 
-**先记住的坑：** 优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
+## 4. 关键用法
 
-## 2. 依赖与对象关系
+```cpp
+QStyleOptionSlider opt;
+opt.initFrom(this);
+opt.orientation = Qt::Horizontal;
+opt.minimum = minimum();
+opt.maximum = maximum();
+opt.sliderPosition = sliderPosition();
+opt.sliderValue = value();
+opt.singleStep = singleStep();
+opt.pageStep = pageStep();
 
-- 头文件：`#include <QStyleOptionSlider>`
-- 继承自：QStyleOptionComplex
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(mytarget PRIVATE Qt6::Widgets)
+QStylePainter p(this);
+p.drawComplexControl(QStyle::CC_Slider, opt);
 ```
 
-**继承带来的规则：** 它属于 QObject 对象模型（直接或间接继承 QObject），因此父对象、信号与槽、事件循环和线程归属是使用主线。
+命中 handle：
 
-### 工作机制
+```cpp
+auto hit = style()->hitTestComplexControl(QStyle::CC_Slider, &opt, pos, this);
+```
 
-先区分它是顶层窗口、容器、输入控件、显示控件还是视图；再理解 parent、layout、model、signals 和事件之间的关系。
+## 5. 使用场景
 
-### 状态、生命周期和线程
+适合自定义范围控件、style 实现、需要平台一致滑块外观的控件、delegate 中绘制进度/滑块交互。
 
-**生命周期：** 控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
+普通业务只用 `QSlider` / `QScrollBar` API 即可。
 
-**状态与结果：** 控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
+## 6. 常见坑与经验
 
-**线程与事件循环：** 所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
+`sliderPosition` 和 `sliderValue` 可能不同。拖动但尚未提交时尤其要区分。
 
-## 3. 直接使用
+RTL、垂直方向、`invertedAppearance` 都会影响增长方向，别只按从左到右硬算。
 
-需要桌面控件、布局、用户输入、选择或模型/视图展示时使用。 使用时通常按这个过程组织：创建并设置 parent -> 配置属性和布局 -> connect 用户动作信号 -> show -> 按需处理事件/更新状态。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有类型
-
-- `enum StyleOptionType { Type }`
-- `enum StyleOptionVersion { Version }`
-
-### 公有函数
-
-- `QStyleOptionSlider()`
-- `QStyleOptionSlider(const QStyleOptionSlider &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `enum QStyleOptionSlider::StyleOptionType`
-
-**作用与语义：**
-
-该枚举用于保存样式选项类型的信息，并为每个`QStyleOption`子类定义。
-- `QStyleOptionSlider::Type`：`SO_Slider`;提供样式选项（本类别`SO_Slider`）。
-类型由`QStyleOption`、其子职业和`qstyleoption_cast()`内部使用，用来确定风格类型选项。一般来说，除非你想创建自己的`QStyleOption`子职业和风格，否则不必太担心。
-
-### `enum QStyleOptionSlider::StyleOptionVersion`
-
-**作用与语义：**
-
-这个枚举用于保存样式选项版本的信息，并为每个`QStyleOption`子类定义。
-- `QStyleOptionSlider::Version`：`1`;1
-该版本被`QStyleOption`子类用于实现扩展而不破坏兼容性。如果你用`qstyleoption_cast()`，通常不需要检查。
-
-### `QStyleOptionSlider::QStyleOptionSlider()`
-
-**作用与语义：**
-
-构建一个 QStyleOptionSlider，将成员变量初始化为默认值。
-
-### `QStyleOptionSlider::QStyleOptionSlider(const QStyleOptionSlider &other)`
-
-**作用与语义：**
-
-构建`other`样式选项的副本。
-
-### `bool QStyleOptionSlider::dialWrapping`
-
-**作用与语义：**
-
-该变量决定表盘是否应环绕。
-默认值为假，即表盘未被包裹。
-
-### `int QStyleOptionSlider::maximum`
-
-**作用与语义：**
-
-该变量保持滑块的最大值。
-默认值是0。
-
-### `int QStyleOptionSlider::minimum`
-
-**作用与语义：**
-
-该变量保持滑块的最小值。
-默认值是0。
-
-### `qreal QStyleOptionSlider::notchTarget`
-
-**作用与语义：**
-
-该变量表示凹槽之间的像素数。
-默认值为0.0。
-
-### `Qt::Orientation QStyleOptionSlider::orientation`
-
-**作用与语义：**
-
-该变量表示滑块的方向（水平或垂直）。
-默认的方向是`Qt::Horizontal`。
-
-### `int QStyleOptionSlider::pageStep`
-
-**作用与语义：**
-
-该变量表示滑块的页面步长。
-默认值是0。
-
-### `int QStyleOptionSlider::singleStep`
-
-**作用与语义：**
-
-该变量表示滑块单步长的大小。
-默认值是0。
-
-### `int QStyleOptionSlider::sliderPosition`
-
-**作用与语义：**
-
-该变量保持滑块手柄的位置。
-如果滑块有主动反馈（即`QAbstractSlider::tracking`为真），这个值与`sliderValue`相同。否则，它将保持手柄当前的位置。默认值为0。
-
-### `int QStyleOptionSlider::sliderValue`
-
-**作用与语义：**
-
-该变量保持滑块的值。
-如果滑块有主动反馈（即`QAbstractSlider::tracking`为真），这个值与`sliderPosition`相同。否则，它将保持滑块在鼠标被按下前的值。
-默认值是0。
-
-### `int QStyleOptionSlider::tickInterval`
-
-**作用与语义：**
-
-该变量表示应在刻度之间绘制的区间。
-默认值是0。
-
-### `QSlider::TickPosition QStyleOptionSlider::tickPosition`
-
-**作用与语义：**
-
-该变量表示滑块刻度标记的位置（如果有的话）。
-默认值是`QSlider::NoTicks`。
-
-### `bool QStyleOptionSlider::upsideDown`
-
-**作用与语义：**
-
-该变量保持滑块控制方向。
-通常滑块在向上或向右移动时会增加;upsideDown 表示它应该相反（随着向下或向左移动而增加）。默认值为假，即滑块随着向上或向右移动而增加。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-控件有 parent 时通常由父控件管理销毁；顶层窗口可以放在栈上，也可以由应用对象或业务对象持有。隐藏控件仍然存在，关闭窗口也不一定等于删除对象或退出应用，必须明确 `WA_DeleteOnClose`、parent 和应用退出策略。
-
-### 状态和错误边界
-
-控件状态由属性、焦点、启用/禁用、可见性、选择状态和模型数据共同决定。改变属性可能触发重新布局或重绘；需要刷新界面时通常调用 `update()`，需要重新计算几何时让布局系统处理，不要直接调用 `paintEvent()`。
-
-### 线程边界
-
-所有 QWidget 的创建、访问、布局和绘制都应在 GUI 线程完成。后台线程通过信号把结果投递回来；不要从 worker 线程直接修改控件，也不要在 GUI 线程用 `waitFor...` 或长循环阻塞事件循环。
-
-### 最容易出现的错误
-
-优先用 layout 管理几何；控件只能在 GUI 线程访问；自定义绘制放在 paintEvent；不要阻塞信号槽回调。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QStyleOptionSlider` 所属机制类型：Qt Widgets 界面机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+handle 命中区域由 style 决定，用 `hitTestComplexControl()` 比自己猜矩形可靠。

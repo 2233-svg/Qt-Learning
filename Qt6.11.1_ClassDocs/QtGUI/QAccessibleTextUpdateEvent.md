@@ -1,123 +1,71 @@
 # QAccessibleTextUpdateEvent
 
-> Qt 6.11.1 · Qt GUI
+> Qt 6.11.1 · Qt GUI · 来自 `QAccessibleTextUpdateEvent`
 
 ## 1. 先建立直觉
 
-**一句话定位：** `QAccessibleTextUpdateEvent` 是 Qt 的值类型，围绕“Accessible文本Update事件”保存可复制的数据，并提供查询、转换或修改 API。
+`QAccessibleTextUpdateEvent` 用于描述一次文本替换：从某个位置移除 `oldText`，再插入 `text`。它比“先删除再插入”更紧凑，适合自动更正、替换选区、格式化重写、输入法提交后替换预编辑内容等场景。
 
-**模块背景：** Qt GUI 负责窗口系统集成、绘制、颜色、字体、图像、输入事件和底层 GUI 资源。
+事件携带旧文本和新文本，辅助技术可以据此朗读“某段内容被替换为另一段内容”，而不必把两个孤立事件自行拼起来。
 
-### 这是什么
-
-`QAccessibleTextUpdateEvent` 是事件或输入数据对象，描述 Qt 在事件分发过程中传递的状态。
-
-**内部模型：** 事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
-
-**适用场景：** 重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。
-
-**典型调用链：** Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-
-**先记住的坑：** 不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-## 2. 依赖与对象关系
+## 2. 类说明
 
 - 头文件：`#include <QAccessibleTextUpdateEvent>`
-- 继承自：QAccessibleTextCursorEvent
-- 直接派生类：未在类页中列出
+- CMake：`target_link_libraries(mytarget PRIVATE Qt6::Gui)`
+- 继承：`QAccessibleTextCursorEvent`
+- 语义：在 `position` 处，`oldText` 被删除，`text` 被插入。
 
-CMake 配置：
+更新事件仍要和最终文本模型一致。发送事件后，`QAccessibleTextInterface::text()` 应能查询到替换完成后的新内容。
 
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Gui)
-target_link_libraries(mytarget PRIVATE Qt6::Gui)
+## 3. API 速查
+
+| API | 用途 |
+|---|---|
+| `QAccessibleTextUpdateEvent(object, position, oldText, text)` | 为 QObject 构造文本替换事件。 |
+| `QAccessibleTextUpdateEvent(iface, position, oldText, text)` | 为可访问接口构造文本替换事件。 |
+| `changePosition()` | 返回替换发生的起始偏移。 |
+| `textRemoved()` | 返回被替换掉的旧文本。 |
+| `textInserted()` | 返回替换后的新文本。 |
+| `cursorPosition()` / `setCursorPosition()` | 读取或设置更新后的光标位置。 |
+
+## 4. 关键用法
+
+```cpp
+void Editor::replaceRange(int start, int end, const QString &replacement)
+{
+    const QString oldText = document()->text(start, end);
+    document()->replace(start, end - start, replacement);
+
+    QAccessibleTextUpdateEvent event(this, start, oldText, replacement);
+    event.setCursorPosition(start + replacement.size());
+    QAccessible::updateAccessibility(&event);
+}
 ```
 
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
+`oldText` 必须来自替换前的文档。若替换后再读取，就只能拿到新文本，辅助技术会失去“原来是什么”的信息。
 
-### 工作机制
+## 5. 使用场景
 
-事件对象通常由 Qt 创建并只在处理函数调用期间有效；重点是读取类型、接受/忽略事件，并决定是否交给基类继续处理。
+| 场景 | 建议 |
+|---|---|
+| 自动更正 “teh” -> “the” | 使用更新事件，old/new 都明确。 |
+| 粘贴覆盖选区 | 使用更新事件或删除+插入；更新事件上下文更完整。 |
+| 输入法提交替换预编辑区域 | 使用更新事件，注意最终光标位置。 |
+| 批量格式化整个文档 | 若替换范围很大，考虑是否需要更高层重置或分块通知。 |
+| 只改变字体/颜色不改变文本 | 不使用文本更新事件；应更新属性或状态。 |
 
-### 状态、生命周期和线程
+## 6. 常见坑与经验
 
-**生命周期：** 值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
+- `textRemoved()` 和 `textInserted()` 都是逻辑文本，不是显示 glyph 或按键名称。
+- 如果新旧文本相同但属性变化，不应发送文本更新；应通过文本属性或对象状态变化表达。
+- 替换后选区通常会改变，必要时再发送选区事件或保证文本接口返回最新选择。
+- 对非常长的替换文本要避免过度频繁发送，尤其是实时格式化器和协同编辑场景。
+- 处理 Unicode 复杂文本时，`position` 和文本长度应遵循编辑器合法文本边界。
 
-**状态与结果：** 重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
+## 7. 知识点覆盖
 
-**线程与事件循环：** 值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-## 3. 直接使用
-
-重实现 QWidget/QWindow/对象的事件处理函数，或在事件过滤器中区分输入行为时使用。 使用时通常按这个过程组织：Qt 创建事件 -> event/eventFilter 收到 -> 检查字段和 modifiers -> accept/ignore -> 必要时调用基类实现。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QAccessibleTextUpdateEvent(QAccessibleInterface *iface, int position, const QString &oldText, const QString &text)`
-- `QAccessibleTextUpdateEvent(QObject *object, int position, const QString &oldText, const QString &text)`
-- `int changePosition() const`
-- `QString textInserted() const`
-- `QString textRemoved() const`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QAccessibleTextUpdateEvent::QAccessibleTextUpdateEvent(QAccessibleInterface *iface, int position, const QString &oldText, const QString &text)`
-
-**作用与语义：**
-
-为`iface`构建一个新的QAccessibleTextUpdateEvent。文本变更发生在`position`，`oldText`被移除并插入`text`。
-
-### `QAccessibleTextUpdateEvent::QAccessibleTextUpdateEvent(QObject *object, int position, const QString &oldText, const QString &text)`
-
-**作用与语义：**
-
-为`object`构建一个新的QAccessibleTextUpdateEvent。文本变更发生在`position`，`oldText`被移除并`text`插入。
-
-### `int QAccessibleTextUpdateEvent::changePosition() const`
-
-**作用与语义：**
-
-变更发生的地方的退货。
-
-### `QString QAccessibleTextUpdateEvent::textInserted() const`
-
-**作用与语义：**
-
-返回插入的文本。
-
-### `QString QAccessibleTextUpdateEvent::textRemoved() const`
-
-**作用与语义：**
-
-返回已删除的文本。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-值对象由作用域、容器或调用者管理，不使用 parent 和 deleteLater。跨线程传递副本通常比传递 QObject 安全，但共享数据在写入时仍可能发生复制，性能和内存峰值要结合数据规模判断。
-
-### 状态和错误边界
-
-重点区分空值、无效值、默认值和已初始化值。例如空字符串、空 URL、null 图像和无效索引不一定表示同一件事；转换函数的失败结果要通过对应的状态查询确认。
-
-### 线程边界
-
-值类型本身通常可以复制后跨线程传递；不要把 data()/bits()/constData() 得到的指针当成跨线程长期有效的所有权。大对象频繁写入会触发 detach，应避免不必要的复制和格式转换。
-
-### 最容易出现的错误
-
-不要保存短生命周期事件指针；不要无条件吞掉事件；坐标系、设备像素比和键盘自动重复都要按事件类型处理。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QAccessibleTextUpdateEvent` 所属机制类型：Qt 值类型与隐式共享机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+- 文本替换事件的 old/new 语义
+- 替换前保存旧文本和替换后查询新模型
+- 自动更正、粘贴覆盖、输入法提交
+- 更新事件与删除/插入事件的取舍
+- 光标、选区和属性变化的同步

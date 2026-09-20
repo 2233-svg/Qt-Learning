@@ -1,167 +1,21 @@
 # QByteArrayMatcher
+> Qt 6.11.1 · Qt Core · 来自 `QByteArrayMatcher`
 
-> Qt 6.11.1 · Qt Core
+## 作用定位
+`QByteArrayMatcher` 为固定模式预处理查找状态，适合在大量字节块中重复搜索同一子串。
 
-## 1. 先建立直觉
+## API 速查
+| API | 是做什么的 |
+|---|---|
+| `setPattern()` | 设置要搜索的固定模式。|
+| `pattern()` | 读取模式。|
+| `indexIn()` | 在目标字节串中查找首次匹配。|
 
-**一句话定位：** 这是 Qt Core 中围绕“Byte数组Matcher”职责设计的公开 C++ 类型，先从输入、输出、生命周期和它与相邻类型的协作关系入手。
+## 使用场景
+流协议不断查找分隔符、日志解析反复查找固定标记。
 
-**模块背景：** Qt Core 提供对象模型、事件循环、容器、字符串、文件、线程、时间和元对象系统等基础能力。
+## 常见坑与经验
+- 它不替代完整流分帧；分隔符可能跨两个接收块，需要保留尾部数据。
 
-### 这是什么
-
-`QByteArrayMatcher` 是 Qt 类型机制 中的公开类型，作用是把这一机制里的一个职责封装成可组合的 API。
-
-**内部模型：** 这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-**适用场景：** 围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。
-
-**典型调用链：** 准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-
-**先记住的坑：** 不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-## 2. 依赖与对象关系
-
-- 头文件：`#include <QByteArrayMatcher>`
-- 继承自：未在类页中列出
-- 直接派生类：未在类页中列出
-
-CMake 配置：
-
-```cmake
-find_package(Qt6 REQUIRED COMPONENTS Core)
-target_link_libraries(mytarget PRIVATE Qt6::Core)
-```
-
-**继承带来的规则：** 它是值类型或不直接使用 QObject 对象模型，重点放在数据语义、拷贝/移动成本和参数有效性。
-
-### 工作机制
-
-这个类的行为由它的继承关系、构造参数、公开状态和成员函数协议共同决定。使用时要把创建、配置、核心操作、结果/通知和清理看成一条闭环，而不是孤立调用某个函数。
-
-### 状态、生命周期和线程
-
-**生命周期：** 先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-**状态与结果：** 把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-**线程与事件循环：** 如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-## 3. 直接使用
-
-围绕这个类的核心职责建立最小闭环：准备依赖 -> 创建/取得对象 -> 设置必要配置 -> 调用核心 API -> 检查返回值和状态 -> 处理结果/错误 -> 结束时清理。 使用时通常按这个过程组织：准备依赖和输入 -> 创建或取得对象 -> 设置必要状态 -> 调用核心 API -> 检查返回值/状态/错误 -> 处理通知或结果 -> 按所有权规则结束和清理。
-## 4. API 速查
-
-下面列出这个类页面中的公开 API。签名保留 C++ 写法，具体参数含义和使用边界在下一节直接说明。继承而来的常用 API 会在相关类的正文中一并解释。
-
-### 公有函数
-
-- `QByteArrayMatcher()`
-- `QByteArrayMatcher(const QByteArray &pattern)`
-- `QByteArrayMatcher(const char *pattern, qsizetype length = -1)`
-- `(since 6.3) QByteArrayMatcher(QByteArrayView pattern)`
-- `QByteArrayMatcher(const QByteArrayMatcher &other)`
-- `~QByteArrayMatcher()`
-- `qsizetype indexIn(const char *str, qsizetype len, qsizetype from = 0) const`
-- `(since 6.3) qsizetype indexIn(QByteArrayView data, qsizetype from = 0) const`
-- `QByteArray pattern() const`
-- `void setPattern(const QByteArray &pattern)`
-- `QByteArrayMatcher & operator=(const QByteArrayMatcher &other)`
-
-## 5. API 逐个说明
-
-本节依据 Qt 6.11.1 原始类页逐项整理。每个条目先说明它实际解决的问题，再说明调用方式、返回结果和容易忽略的限制；不再用函数名拆词猜测用途。
-
-### `QByteArrayMatcher::QByteArrayMatcher()`
-
-**作用与语义：**
-
-构造一个空字节数组匹配器，不会匹配任何东西。调用`setPattern()`给它匹配的模式。
-
-### `[explicit] QByteArrayMatcher::QByteArrayMatcher(const QByteArray &pattern)`
-
-**作用与语义：**
-
-构建一个字节数组匹配器，用于搜索`pattern`。调用`indexIn()`进行搜索。
-
-### `[explicit] QByteArrayMatcher::QByteArrayMatcher(const char *pattern, qsizetype length = -1)`
-
-**作用与语义：**
-
-从`pattern`构造一个字节数组匹配器。`pattern`具有给定的`length`。调用`indexIn()`进行搜索。
-注意：`pattern`引用的数据在使用该对象期间必须保持有效。
-
-### `[explicit, since 6.3] QByteArrayMatcher::QByteArrayMatcher(QByteArrayView pattern)`
-
-**作用与语义：**
-
-构建一个字节数组匹配器，用于搜索`pattern`。调用`indexIn()`进行搜索。
-注意：`pattern`引用的数据必须在使用该对象期间保持有效。
-
-### `QByteArrayMatcher::QByteArrayMatcher(const QByteArrayMatcher &other)`
-
-**作用与语义：**
-
-将`other`字节数组匹配器复制到该字节数组匹配器上。
-
-### `[noexcept] QByteArrayMatcher::~QByteArrayMatcher()`
-
-**作用与语义：**
-
-会破坏字节数组匹配器。
-
-### `qsizetype QByteArrayMatcher::indexIn(const char *str, qsizetype len, qsizetype from = 0) const`
-
-**作用与语义：**
-
-从字节位置`from`（默认0，即从第一个字节开始）搜索长度为`len`的char字符串`str`，查找构造函数中或最近调用`setPattern()`中设置的字节数组`pattern()`。返回`pattern()`在`str`中匹配的位置，若未匹配则返回-1。
-
-### `[since 6.3] qsizetype QByteArrayMatcher::indexIn(QByteArrayView data, qsizetype from = 0) const`
-
-**作用与语义：**
-
-从字节位置`from`（默认0，即从第一个字节起）搜索字节数组`data`，查找构造函数中或最近调用`setPattern()`时设置的字节数组`pattern()`。返回`pattern()`匹配的位置，`data`中返回位置，若未匹配则返回-1。
-
-### `QByteArray QByteArrayMatcher::pattern() const`
-
-**作用与语义：**
-
-返回该字节数组匹配器将搜索的字节数组模式。
-
-### `void QByteArrayMatcher::setPattern(const QByteArray &pattern)`
-
-**作用与语义：**
-
-将该字节数组匹配器将搜索的字节数组设置为`pattern`。
-
-### `QByteArrayMatcher &QByteArrayMatcher::operator=(const QByteArrayMatcher &other)`
-
-**作用与语义：**
-
-将`other`字节数组匹配器分配给该字节数组匹配器。
-
-## 6. 深入实践与常见坑
-
-### 生命周期和资源边界
-
-先确认对象是值类型还是 QObject 派生对象，再确定所有权、有效期、拷贝成本和销毁方式。返回的句柄、索引、reply、设备或迭代器可能有独立的有效期，不能只看 C++ 指针是否非空。
-
-### 状态和错误边界
-
-把返回值、状态查询、错误信息和通知信号分开判断。调用成功可能只表示请求被接受，真正完成还要等待状态变化或完成信号；读取数据前先检查对象和结果是否有效。
-
-### 线程边界
-
-如果类型直接或间接参与 QObject、GUI、设备或异步框架，就必须确认线程归属和事件循环；值类型虽然可以复制，也要注意内部指针、共享数据和并发写入。
-
-### 最容易出现的错误
-
-不要忽略构造失败、空返回、默认值和版本限制；不要把异步 API 当同步 API；不要在没有确认所有权和线程的情况下保存指针或跨线程调用。
-
-### 版本和平台
-
-本文档以 Qt 6.11.1 为依据。涉及平台后端、编解码器、数据库驱动、窗口风格、编译器特性或标注了版本号的 API 时，要把版本条件当作使用约束，而不是只看函数是否能补全。
-
-## 7. 使用边界
-
-`QByteArrayMatcher` 所属机制类型：Qt 类型机制。遇到重载时，优先对照参数类型、返回值和对象所有权；遇到布局、事件循环、线程、绘制或模型/视图问题时，要同时考虑本类与协作类之间的协议。
+## 知识点覆盖
+子串搜索、预处理、流分帧、缓冲拼接、性能。
