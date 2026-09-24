@@ -3,9 +3,26 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QApplication>
+#include <QPushButton>
 #include <QToolBar>
 #include <QWindow>
 #include <QtGui>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPlainTextEdit>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QtConcurrent/QtConcurrent>
+#include <QDebug>
+#include <QThread>
+#include <Qlist>
+#include <QStringList>
+#include "MyQwidgets.h"
+#include <QMutex>
+#include <QMutexLocker>
+#include <thread>
+#include <mutex>
+#include <atomic>
 //QCoreApplication: 为非GUI应用程序提供主事件循环
 //                  处理和分发来自操作系统和其他源的所有事件
 //                  处理应用程序的初始化与终止
@@ -41,16 +58,24 @@
 //	return a.exec();
 //}
 
-int main(int argc, char* argv[])//argc：表示传递给程序的参数数量，包括程序本身的名称
-							    //argv：包含了每一个传递给程序的参数
+//int main(int argc, char* argv[])//argc：表示传递给程序的参数数量，包括程序本身的名称
+////argv：包含了每一个传递给程序的参数
+//{
+//	QApplication a(argc, argv);//进入主事件循环并等待直到调用exec（）
+//
+//	MainWindow window;
+//	window.show();
+//
+//	//qApp:
+//	//	   同上
+//}
+
+int main(int argc, char* argv[])
 {
-	QApplication a(argc,argv);//进入主事件循环并等待直到调用exec（）
+	QApplication app(argc, argv);
 
-	MainWindow window;
-	window.show();
+	MainWindow* main_window = new MainWindow;
+	main_window->show();
 
-	//qApp:
-	//	   同上
-
-	return a.exec();
+	return app.exec();
 }

@@ -17,7 +17,11 @@ file(GLOB_RECURSE BASIC_QT_WINDOW_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/project/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/project/*.ui"
     "${CMAKE_CURRENT_SOURCE_DIR}/PublicInterFace/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/QMyWidgets/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/QMyWidgets/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/Qt-Learing/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Qt-Learing/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/*.qrc"
 )
 
 qt_add_executable(BasicQtWindow
@@ -27,14 +31,24 @@ qt_add_executable(BasicQtWindow
 
 target_include_directories(BasicQtWindow PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/PublicInterFace"
+    "${CMAKE_CURRENT_SOURCE_DIR}/QMyWidgets/WidgetsInterface"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Qt-Learing/LearningInterface"
 )
 
 target_link_libraries(BasicQtWindow PRIVATE Qt6::Widgets)
 
 if(WIN32)
-    set(QT_WINDEPLOYQT "D:/QTforGui/qt/6.11.1/mingw_64/bin/windeployqt.exe")
+    get_target_property(QT6_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+    if(NOT QT6_QMAKE_EXECUTABLE)
+        get_target_property(QT6_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION_RELEASE)
+    endif()
 
-    if(EXISTS "${QT_WINDEPLOYQT}")
+    if(QT6_QMAKE_EXECUTABLE)
+        get_filename_component(QT6_BIN_DIR "${QT6_QMAKE_EXECUTABLE}" DIRECTORY)
+        set(QT_WINDEPLOYQT "${QT6_BIN_DIR}/windeployqt.exe")
+    endif()
+
+    if(QT_WINDEPLOYQT AND EXISTS "${QT_WINDEPLOYQT}")
         add_custom_command(TARGET BasicQtWindow POST_BUILD
             COMMAND "${QT_WINDEPLOYQT}"
                 --no-translations

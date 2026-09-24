@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/resources">
+        <file alias="logo.jpg">logo.jpg</file>
+        <file alias="minimize.png">缩小.png</file>
+        <file alias="maximize.png">扩大.png</file>
+        <file alias="close.png">关闭.png</file>
+	    <file alias="title.png">title.png</file>
+    </qresource>
+</RCC>
