@@ -20,7 +20,7 @@ public:
 
     QSize sizeHint() const override;
     void insertMenuBar(MainMenuBar* menu_bar);
-
+    auto titleRect() const -> QRect;
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;

@@ -68,6 +68,11 @@ void MainTitleBar::paintEvent(QPaintEvent* event)
     paintButton(painter, Button::Close, buttonRect(Button::Close));
 }
 
+auto MainTitleBar::titleRect() const -> QRect
+{
+    return QRect(40, 0, width() - 3 * kButtonWidth - 40, height());
+}
+
 void MainTitleBar::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() != Qt::LeftButton) {
@@ -280,7 +285,7 @@ void MainTitleBar::updateMenuBarGeometry()
     const QSize menuSize = m_menuBar->sizeHint();
     m_menuBar->resize(menuSize);
 
-    const int x = qMax(0, (width() - menuSize.width()) / 3);
+    const int x = qMax(0,titleRect().x()*3 -10 );
     const int y = qMax(0, (height() - menuSize.height()) / 2);
     m_menuBar->move(x, y);
 }
